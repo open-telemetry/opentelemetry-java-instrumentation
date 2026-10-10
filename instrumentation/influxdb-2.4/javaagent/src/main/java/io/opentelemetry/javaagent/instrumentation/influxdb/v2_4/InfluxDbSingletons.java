@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-@SuppressWarnings("deprecation") // to support old semconv
 public class InfluxDbSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.influxdb-2.4";
@@ -32,10 +31,9 @@ public class InfluxDbSingletons {
         Instrumenter.<InfluxDbQuery, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.createWithGenericOldSpanName(queryAttributesGetter))
+                DbClientSpanNameExtractor.create(queryAttributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(queryAttributesGetter)
-                    .setTableAttribute(null)
                     .setQuerySanitizationEnabled(
                         DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "influxdb"))
                     .build())

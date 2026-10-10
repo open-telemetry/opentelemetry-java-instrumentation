@@ -33,9 +33,8 @@ public final class AwsSdkTelemetryBuilder {
    * Configures which message headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
-   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
-   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
-   * preserved.
+   * {@code <name>} part in the attribute key is the header name with its original spelling,
+   * including dashes.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
    * of characters, including none. Excluded patterns take precedence over included patterns. A
@@ -150,8 +149,7 @@ public final class AwsSdkTelemetryBuilder {
    * configured messaging propagator; the {@code AWSTraceHeader} system attribute does not use those
    * slots.
    *
-   * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
-   * enabled by default.
+   * <p>This option is enabled by default.
    */
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(

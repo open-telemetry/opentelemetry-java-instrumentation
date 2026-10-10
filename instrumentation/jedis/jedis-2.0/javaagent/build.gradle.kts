@@ -9,7 +9,7 @@ muzzle {
     versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("jedis-2.3-cluster")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -19,7 +19,7 @@ muzzle {
     versions.set("[2.3.0,3.0.0)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("jedis-2.0-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisInstrumentationModule")
   }
 }
 
@@ -48,14 +48,6 @@ testing {
         implementation(project(":instrumentation-api-incubator"))
         implementation("redis.clients:jedis:2.0.0")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("version23Test") {
@@ -73,19 +65,19 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .matching { it.name != "unitTests" }
     .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
+      register<Test>("${suite.name}PreviewSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
       }
     }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites, previewSemconvSuites)
   }
 }

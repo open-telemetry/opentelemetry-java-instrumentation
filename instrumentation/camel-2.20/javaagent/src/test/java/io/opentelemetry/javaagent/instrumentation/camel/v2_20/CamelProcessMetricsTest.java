@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -45,7 +43,6 @@ class CamelProcessMetricsTest {
 
   @BeforeEach
   void setUp() throws Exception {
-    assumeTrue(emitStableMessagingSemconv());
     assumeFalse(v3Preview());
     DefaultCamelContext context = new DefaultCamelContext();
     try {
@@ -194,10 +191,6 @@ class CamelProcessMetricsTest {
 
   private static Class<?> camelHelperClass(String simpleName) throws ReflectiveOperationException {
     String className = INSTRUMENTATION_PACKAGE + simpleName;
-    if (!Boolean.getBoolean("otel.javaagent.experimental.indy")) {
-      return Class.forName(className);
-    }
-
     Class<?> registryClass =
         AgentClassLoaderAccess.loadClass(
             "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");

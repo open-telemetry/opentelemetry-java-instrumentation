@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExtraClientAttributes;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
@@ -233,13 +233,13 @@ public abstract class AbstractGrpcStreamingTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
                                     equalTo(
-                                        RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
+                                        RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
                                     equalTo(
                                         RPC_SERVICE,
                                         emitOldRpcSemconv() ? "example.Greeter" : null),
                                     equalTo(
                                         RPC_METHOD,
-                                        emitStableRpcSemconv()
+                                        emitPreviewRpcSemconv()
                                             ? "example.Greeter/Conversation"
                                             : "Conversation"),
                                     equalTo(
@@ -247,7 +247,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                                     equalTo(
                                         RPC_RESPONSE_STATUS_CODE,
-                                        emitStableRpcSemconv() ? Status.Code.OK.name() : null),
+                                        emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .satisfies(
@@ -265,12 +265,12 @@ public abstract class AbstractGrpcStreamingTest {
                                 experimentalSatisfies(
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
                                 equalTo(
                                     RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "example.Greeter/Conversation"
                                         : "Conversation"),
                                 equalTo(
@@ -278,7 +278,7 @@ public abstract class AbstractGrpcStreamingTest {
                                     emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                                 equalTo(
                                     RPC_RESPONSE_STATUS_CODE,
-                                    emitStableRpcSemconv() ? Status.Code.OK.name() : null),
+                                    emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
@@ -315,7 +315,7 @@ public abstract class AbstractGrpcStreamingTest {
                                               RPC_GRPC_STATUS_CODE,
                                               (long) Status.Code.OK.value())))));
     }
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",
@@ -358,7 +358,7 @@ public abstract class AbstractGrpcStreamingTest {
                                           equalTo(
                                               NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)))));
     }
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",

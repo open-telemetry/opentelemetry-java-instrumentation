@@ -10,7 +10,7 @@ muzzle {
     versions.set("[3.2.0,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-3.4.3-protostellar")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.CouchbaseProtostellarInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - Couchbase Protostellar instrumentation only, the directive
@@ -21,7 +21,7 @@ muzzle {
     versions.set("[3.4.3,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-3.2-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.CouchbaseInstrumentationModule")
   }
 }
 
@@ -62,13 +62,6 @@ testing {
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.3")
       }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("version344Test") {
@@ -79,13 +72,6 @@ testing {
       }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.4")
-      }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
       }
     }
   }
@@ -98,23 +84,15 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
   val testStableSemconvExperimental = register<Test>("testStableSemconvExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
-      "-Dotel.semconv-stability.opt-in=database",
       "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
     systemProperty(
       "metadataConfig",
-      "otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.emit-experimental-telemetry=true",
+      "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
   }
 
@@ -154,7 +132,6 @@ tasks {
   check {
     dependsOn(
       testing.suites,
-      testStableSemconv,
       testStableSemconvExperimental,
       testV3Preview,
       testV3PreviewExperimental,

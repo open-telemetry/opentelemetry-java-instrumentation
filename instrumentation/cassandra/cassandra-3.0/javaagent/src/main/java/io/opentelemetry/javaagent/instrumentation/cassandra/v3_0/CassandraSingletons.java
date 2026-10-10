@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
@@ -17,7 +16,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class CassandraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-3.0";
 
@@ -33,7 +31,6 @@ class CassandraSingletons {
                 DbClientSpanNameExtractor.create(attributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
-                    .setTableAttribute(DB_CASSANDRA_TABLE)
                     .setSingleOperationAndCollection(true)
                     .setQuerySanitizationEnabled(
                         DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "cassandra"))

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ApacheShenYuInstrumentationModule extends InstrumentationModule {
   public ApacheShenYuInstrumentationModule() {
-    super("apache-shenyu", "apache-shenyu-2.4");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "apache-shenyu-2.4" : "apache-shenyu",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"apache-shenyu"}
+            : new String[] {"apache-shenyu-2.4"});
   }
 
   @Override

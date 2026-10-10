@@ -5,16 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.INFLUXDB;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -76,24 +73,15 @@ class InfluxDbQuerySanitizationDisabledTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SELECT cpu_load"
-                                : "SELECT " + DATABASE_NAME)
+                    span.hasName("SELECT cpu_load")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
-                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "SELECT * FROM cpu_load where test1 = 'influxDb'"),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT cpu_load" : null))));
+                                DB_QUERY_TEXT, "SELECT * FROM cpu_load where test1 = 'influxDb'"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
   }
 }

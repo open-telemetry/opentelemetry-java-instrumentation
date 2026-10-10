@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -16,15 +13,10 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -89,40 +81,19 @@ public abstract class AbstractOpenSearchRestTest {
   void shouldGetStatusWithTraces() throws IOException {
     Response response = client.performRequest(new Request("GET", "_cluster/health"));
     assertThat(getResponseStatus(response)).isEqualTo(200);
-    String responseAddress = getResponseAddress(response);
 
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
-                                    : "GET")
+                        span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv() ? null : "GET _cluster/health"),
-                                equalTo(
-                                    NETWORK_PEER_ADDRESS,
-                                    emitOldDatabaseSemconv() ? responseAddress : null),
-                                equalTo(
-                                    NETWORK_TYPE,
-                                    emitOldDatabaseSemconv() && responseAddress != null
-                                        ? (responseAddress.contains(":") ? "ipv6" : "ipv4")
-                                        : null),
-                                equalTo(
-                                    SERVER_ADDRESS,
-                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
-                                equalTo(
-                                    SERVER_PORT,
-                                    emitStableDatabaseSemconv()
-                                        ? Long.valueOf(httpHost.getPort())
-                                        : null)),
+                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                                equalTo(DB_OPERATION_NAME, "GET"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -180,7 +151,6 @@ public abstract class AbstractOpenSearchRestTest {
       throw exception.get();
     }
     assertThat(getResponseStatus(requestResponse.get())).isEqualTo(200);
-    String responseAddress = getResponseAddress(requestResponse.get());
 
     getTesting()
         .waitAndAssertTraces(
@@ -188,34 +158,14 @@ public abstract class AbstractOpenSearchRestTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
-                                    : "GET")
+                        span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv() ? null : "GET _cluster/health"),
-                                equalTo(
-                                    NETWORK_PEER_ADDRESS,
-                                    emitOldDatabaseSemconv() ? responseAddress : null),
-                                equalTo(
-                                    NETWORK_TYPE,
-                                    emitOldDatabaseSemconv() && responseAddress != null
-                                        ? (responseAddress.contains(":") ? "ipv6" : "ipv4")
-                                        : null),
-                                equalTo(
-                                    SERVER_ADDRESS,
-                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
-                                equalTo(
-                                    SERVER_PORT,
-                                    emitStableDatabaseSemconv()
-                                        ? Long.valueOf(httpHost.getPort())
-                                        : null)),
+                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                                equalTo(DB_OPERATION_NAME, "GET"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -256,9 +206,9 @@ public abstract class AbstractOpenSearchRestTest {
         buildRestClient(opensearch.getHttpHostAddress(), alternateHostAddress());
     cleanup.deferCleanup(nodeListClient);
 
-    Response response = nodeListClient.performRequest(new Request("GET", "_cluster/health"));
+    nodeListClient.performRequest(new Request("GET", "_cluster/health"));
 
-    assertConfiguredTarget(nodeList(), null, getResponseAddress(response));
+    assertConfiguredTarget(nodeList(), null);
   }
 
   @Test
@@ -269,10 +219,9 @@ public abstract class AbstractOpenSearchRestTest {
     // continue to reflect the nodes supplied when the client was built.
     resetNodes(singleNodeClient, opensearch.getHttpHostAddress(), alternateHostAddress());
 
-    Response response = singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
+    singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
 
-    assertConfiguredTarget(
-        httpHost.getHost(), Long.valueOf(httpHost.getPort()), getResponseAddress(response));
+    assertConfiguredTarget(httpHost.getHost(), Long.valueOf(httpHost.getPort()));
   }
 
   private String alternateHostAddress() {
@@ -283,32 +232,17 @@ public abstract class AbstractOpenSearchRestTest {
     return "127.0.0.1:" + httpHost.getPort() + "," + httpHost.getHost() + ":" + httpHost.getPort();
   }
 
-  private void assertConfiguredTarget(
-      String serverAddress, Long serverPort, String responseAddress) {
+  private void assertConfiguredTarget(String serverAddress, Long serverPort) {
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 assertThat(trace.getSpan(0))
-                    .hasName(
-                        emitStableDatabaseSemconv()
-                            ? "GET " + serverAddress + (serverPort != null ? ":" + serverPort : "")
-                            : "GET")
+                    .hasName("GET " + serverAddress + (serverPort != null ? ":" + serverPort : ""))
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                        equalTo(maybeStable(DB_OPERATION), "GET"),
-                        equalTo(
-                            maybeStable(DB_STATEMENT),
-                            emitStableDatabaseSemconv() ? null : "GET _cluster/health"),
-                        equalTo(
-                            NETWORK_PEER_ADDRESS,
-                            emitOldDatabaseSemconv() ? responseAddress : null),
-                        equalTo(
-                            NETWORK_TYPE,
-                            emitOldDatabaseSemconv() && responseAddress != null
-                                ? (responseAddress.contains(":") ? "ipv6" : "ipv4")
-                                : null),
-                        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? serverAddress : null),
-                        equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? serverPort : null)));
+                        equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(SERVER_ADDRESS, serverAddress),
+                        equalTo(SERVER_PORT, serverPort)));
   }
 }

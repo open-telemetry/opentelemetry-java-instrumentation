@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -90,16 +89,12 @@ class ReactorKafkaOwnershipTest {
       assertThat(spans)
           .extracting(SpanData::getParentSpanId)
           .containsExactly(firstProducer.getSpanId(), secondProducer.getSpanId());
-      if (emitStableMessagingSemconv()) {
-        assertThat(spans.get(0).getLinks())
-            .extracting(link -> link.getSpanContext().getSpanId())
-            .containsExactly(firstProducer.getSpanId());
-        assertThat(spans.get(1).getLinks())
-            .extracting(link -> link.getSpanContext().getSpanId())
-            .containsExactly(secondProducer.getSpanId());
-      } else {
-        assertThat(spans).allSatisfy(span -> assertThat(span.getLinks()).isEmpty());
-      }
+      assertThat(spans.get(0).getLinks())
+          .extracting(link -> link.getSpanContext().getSpanId())
+          .containsExactly(firstProducer.getSpanId());
+      assertThat(spans.get(1).getLinks())
+          .extracting(link -> link.getSpanContext().getSpanId())
+          .containsExactly(secondProducer.getSpanId());
       assertThat(Span.current().getSpanContext().isValid()).isFalse();
 
       assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", "group", "0", 2, null);
@@ -265,7 +260,8 @@ class ReactorKafkaOwnershipTest {
 
   private static void prepareContexts(
       ConsumerRecords<?, ?> records, SpanContext... producerContexts) {
-    KafkaConsumerContext batchContext = KafkaConsumerContextUtil.create(null, "group", "client");
+    KafkaConsumerContext batchContext =
+        KafkaConsumerContextUtil.create(null, "group", "client", null);
     KafkaConsumerContextUtil.set(records, batchContext);
     List<ConsumerRecord<?, ?>> recordList = recordsIn(records);
     for (int i = 0; i < recordList.size(); i++) {
@@ -282,7 +278,7 @@ class ReactorKafkaOwnershipTest {
                     .getBytes(UTF_8));
       }
       KafkaConsumerContextUtil.set(
-          record, KafkaConsumerContextUtil.create(context, "group", "client"));
+          record, KafkaConsumerContextUtil.create(context, "group", "client", null));
     }
   }
 

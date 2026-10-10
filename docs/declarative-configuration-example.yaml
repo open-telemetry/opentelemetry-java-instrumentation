@@ -10,16 +10,6 @@ file_format: '1.0'
 
 instrumentation/development:
   general:
-    code:
-      semconv:
-        # With `version: 1`, emits both the old and the stable code semantic conventions. Not
-        # supported under v3 preview.
-        dual_emit: false
-    db:
-      semconv:
-        # With `version: 1`, emits both the old and the stable database semantic conventions. Not
-        # supported under v3 preview.
-        dual_emit: false
     http:
       client:
         # List of HTTP request headers to capture in HTTP client telemetry.
@@ -33,15 +23,6 @@ instrumentation/development:
 
         # List of HTTP response headers to capture in HTTP server telemetry.
         response_captured_headers: []
-    messaging:
-      semconv:
-        # With `version: 1` and `experimental: true`, emits both the current and the preview
-        # messaging semantic conventions. Not supported under v3 preview.
-        dual_emit: false
-
-        # With `version: 1`, selects the preview messaging semantic conventions. Required, because
-        # version 1 of the messaging semantic conventions is not yet stable.
-        experimental: false
     rpc:
       semconv:
         # With `version: 1` and `experimental: true`, emits both the current and the preview RPC
@@ -64,10 +45,7 @@ instrumentation/development:
           - sig
           - X-Goog-Signature
 
-    # Opt-in to emit stable semantic conventions instead of the old experimental semantic
-    # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
-    # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
-    # Stable semantic conventions will become the default in version 3.0 of the agent.
+    # A comma-separated list of stable semantic convention groups to opt into.
     stability_opt_in_list: ''
   java:
     apache_elasticjob:
@@ -115,19 +93,6 @@ instrumentation/development:
           # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING:
           # augmenting queries with tracing context will make query texts unique, which may have
           # adverse impact on database performance.
-          enabled: false
-      enduser:
-        id:
-          # Enables capturing the enduser.id attribute. This property and the associated attribute
-          # are not supported when v3 preview is enabled.
-          enabled: false
-        role:
-          # Enables capturing the enduser.role attribute. This property and the associated attribute
-          # are not supported when v3 preview is enabled.
-          enabled: false
-        scope:
-          # Enables capturing the enduser.scope attribute when v3 preview is not enabled. This
-          # property is not honored when v3 preview is enabled.
           enabled: false
       gen_ai:
         # Determines whether Generative AI events include full content of user and assistant
@@ -187,9 +152,9 @@ instrumentation/development:
           # attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs,
           # Logback Logstash markers, and Logstash structured arguments. "*" matches any number of
           # characters and "?" matches one character. Excluded patterns take precedence. An
-          # exclude-only selector captures every key not excluded. Under v3-preview, an absent or
-          # empty selector captures all structured attributes by default. MDC and logger-context
-          # attributes remain separate and opt-in.
+          # exclude-only selector captures every key not excluded. An absent or empty selector
+          # captures all structured attributes by default. MDC and logger-context attributes remain
+          # separate and opt-in.
           included: []
 
         # Specifies the key name used to store the trace flags in the logging context.
@@ -217,8 +182,7 @@ instrumentation/development:
           included: []
         message_create_spans:
           # Provides the default for whether to create a producer span for each eligible message in
-          # a batch send when stable messaging semantic conventions are enabled. An
-          # instrumentation-specific setting takes precedence.
+          # a batch send. An instrumentation-specific setting takes precedence.
           enabled: true
         receive_telemetry/development:
           # Enables experimental receive telemetry, which will cause consumers to start a new trace,
@@ -243,18 +207,16 @@ instrumentation/development:
       span_suppression_strategy: semconv
       user:
         name:
-          # Enables capturing the user.name attribute when v3 preview is enabled. This property and
-          # the associated attribute are not supported when v3 preview is disabled.
+          # Enables capturing the `user.name` identity attribute. Identity attributes are not
+          # captured by default.
           enabled: false
         roles:
-          # Enables capturing the user.roles attribute when v3 preview is enabled. This property and
-          # the associated attribute are not supported when v3 preview is disabled.
+          # Enables capturing the `user.roles` identity attribute. Identity attributes are not
+          # captured by default.
           enabled: false
 
-      # Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the
-      # stable database and code semantic conventions and the new messaging semantic conventions by
-      # default, and ignoring deprecated settings. The set of changes it enables can grow in any
-      # release.
+      # Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring
+      # deprecated settings. The set of changes it enables can grow in any release.
       v3_preview: false
       view_telemetry:
         # Enables the creation of experimental view spans.
@@ -411,6 +373,12 @@ instrumentation/development:
         # that are not excluded are collected. With neither selector property configured, all
         # metrics are collected.
         excluded: []
+        experimental:
+          # Comma-separated list of case-sensitive glob patterns for unstable (experimental) bundled
+          # metric names to opt in to. "*" matches any number of characters and "?" matches one
+          # character. Normal metric include and exclude filters also apply. Custom metric
+          # definitions do not require experimental opt-in.
+          included: []
 
         # Comma-separated list of case-sensitive glob patterns for metric names to collect. "*"
         # matches any number of characters and "?" matches one character. Excluded patterns take
@@ -418,9 +386,6 @@ instrumentation/development:
         # that are not excluded are collected. With neither selector property configured, all
         # metrics are collected.
         included: []
-      target:
-        # List of predefined JMX target systems to collect metrics for.
-        system: []
     jsp:
       # Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`,
       # and `jsp.classFQCN`.
@@ -571,10 +536,6 @@ instrumentation/development:
     opentelemetry_instrumentation_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
       exclude_methods: ''
-    oshi:
-      experimental_metrics/development:
-        # Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics.
-        enabled: false
     powerjob:
       # Enables experimental span attributes `job.system`, `scheduling.powerjob.job.id`,
       # `scheduling.powerjob.job.param`, `scheduling.powerjob.job.instance.param`, and
@@ -589,7 +550,8 @@ instrumentation/development:
       experimental_span_attributes/development: false
     rabbitmq:
       # Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
-      # `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.
+      # `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `messaging.rabbitmq.vhost.name`, and
+      # `messaging.rabbitmq.cluster.name`.
       experimental_span_attributes/development: false
     reactor:
       # Enables the capture of the experimental `reactor.canceled` attribute on spans when reactive
@@ -605,9 +567,9 @@ instrumentation/development:
       # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
       experimental_span_attributes/development: false
       message_create_spans:
-        # Enables per-message Create spans for batch sends when stable messaging semantic
-        # conventions are enabled. Overrides the common messaging setting. Disabling this retains
-        # Send spans and context propagation and does not affect single-message sends.
+        # Enables per-message Create spans for batch sends. Overrides the common messaging setting.
+        # Disabling this retains Send spans and context propagation and does not affect
+        # single-message sends.
         enabled: true
     runtime_telemetry:
       # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
@@ -692,22 +654,10 @@ instrumentation/development:
       # Adds the experimental span attribute `job.system` with the value `spring_scheduling`.
       experimental_span_attributes/development: false
     spring_security:
-      enduser:
-        role:
-          # Prefix of granted authorities identifying roles to capture in the `enduser.role`
-          # semantic attribute. This property is not honored when v3 preview is enabled; use the
-          # `user.roles` variant instead.
-          granted_authority_prefix: ROLE_
-        scope:
-          # Prefix of granted authorities identifying scopes to capture in the `enduser.scope`
-          # semantic attribute. This property and the associated attribute are not supported when v3
-          # preview is enabled.
-          granted_authority_prefix: SCOPE_
       user:
         roles:
           # Prefix of granted authorities identifying roles to capture in the `user.roles` semantic
-          # attribute when v3 preview is enabled. This property is not honored when v3 preview is
-          # disabled; use the `enduser.role` variant instead.
+          # attribute.
           granted_authority_prefix: ROLE_
     spring_webmvc:
       # Enables the capture of experimental span attributes `spring-webmvc.view.name` and

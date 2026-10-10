@@ -11,8 +11,8 @@ muzzle {
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-network")
-    excludeInstrumentationName("couchbase-2.6")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -22,8 +22,8 @@ muzzle {
     versions.set("[2,2.6)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-core")
-    excludeInstrumentationName("couchbase-2.6")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the first directive is the range we document
@@ -35,8 +35,8 @@ muzzle {
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-core")
-    excludeInstrumentationName("couchbase-2.0-network")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
   }
   fail {
     group.set("com.couchbase.client")
@@ -87,17 +87,6 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      isEnabled = named<Test>(suite.name).get().enabled
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-    }
-  }
-
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
     register<Test>("${suite.name}Experimental") {
       isEnabled = named<Test>(suite.name).get().enabled
@@ -120,7 +109,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig)
+    dependsOn(testing.suites, experimentalSuites, version26TestLegacyConfig)
   }
 
   if (otelProps.denyUnsafe) {

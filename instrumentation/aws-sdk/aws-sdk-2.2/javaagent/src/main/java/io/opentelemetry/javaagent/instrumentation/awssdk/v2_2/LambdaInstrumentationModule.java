@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.LambdaImpl;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -19,7 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public LambdaInstrumentationModule() {
-    super("aws-sdk-2.2-lambda");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-2.2" : "aws-sdk",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"aws-sdk-lambda", "aws-sdk"}
+            : new String[] {"aws-sdk-2.2", "aws-sdk-2.2-lambda"});
   }
 
   @Override

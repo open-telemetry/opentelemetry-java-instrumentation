@@ -42,10 +42,12 @@ val generateJflex = tasks.register<JavaExec>("generateJflex") {
 
   doFirst {
     val outputDir = outputDirProvider.get().asFile
+    check(outputDir.deleteRecursively()) {
+      "Failed to clear generated JFlex sources: $outputDir"
+    }
     outputDir.mkdirs()
     val specFiles = listOf(
       sourceDir.asFile.resolve("SqlSanitizer.jflex"),
-      sourceDir.asFile.resolve("SqlSanitizerWithSummary.jflex"),
     )
     args(
       listOf("-d", outputDir.absolutePath, "--nobak") + specFiles.map { it.absolutePath },
@@ -67,7 +69,6 @@ tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
     exclude("**/AutoSqlSanitizer.java")
-    exclude("**/AutoSqlSanitizerWithSummary.java")
   }
 
   // Work around https://github.com/jflex-de/jflex/issues/762
@@ -89,19 +90,17 @@ tasks {
     }
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer,rpc")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
     inputs.dir(jflexOutputDir)
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup,service.peer/dup,rpc/dup")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer/dup")
     inputs.dir(jflexOutputDir)
   }
 
@@ -121,7 +120,7 @@ tasks {
 
   check {
     dependsOn(
-      testStableSemconv,
+      testPreviewSemconv,
       testBothSemconv,
       testExceptionSignalLogs,
       testExceptionSignalLogsDup,

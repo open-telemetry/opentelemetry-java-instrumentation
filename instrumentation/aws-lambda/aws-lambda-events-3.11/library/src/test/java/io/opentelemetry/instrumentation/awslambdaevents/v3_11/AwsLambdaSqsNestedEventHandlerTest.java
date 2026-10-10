@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -56,13 +55,11 @@ class AwsLambdaSqsNestedEventHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("my_function").hasKind(SpanKind.SERVER),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
+                    span.hasName("process queue1")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
+                    span.hasName("process queue1")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 2, null);

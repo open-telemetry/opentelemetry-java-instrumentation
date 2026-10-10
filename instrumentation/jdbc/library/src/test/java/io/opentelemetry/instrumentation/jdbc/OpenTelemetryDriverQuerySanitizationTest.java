@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -173,8 +172,6 @@ class OpenTelemetryDriverQuerySanitizationTest {
             span ->
                 assertThat(span)
                     .hasAttribute(
-                        equalTo(
-                            maybeStable(DB_STATEMENT),
-                            expected ? "SELECT ?" : "SELECT 'test-value'")));
+                        equalTo(DB_QUERY_TEXT, expected ? "SELECT ?" : "SELECT 'test-value'")));
   }
 }

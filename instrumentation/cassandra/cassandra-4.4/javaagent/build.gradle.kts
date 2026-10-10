@@ -47,20 +47,11 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
   // Run these tests with the shaded driver because the response-channel instrumentation
   // must also match and work with the driver's relocated Netty classes.
   fun registerShadedTest(
     name: String,
     version: String,
-    semconvOptIn: String? = null,
   ): org.gradle.api.tasks.TaskProvider<Test> {
     val shadedClasspath =
       configurations.create("${name}RuntimeClasspath") {
@@ -80,27 +71,16 @@ tasks {
       if (otelProps.denyUnsafe) {
         systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
       }
-      if (semconvOptIn != null) {
-        jvmArgs("-Dotel.semconv-stability.opt-in=$semconvOptIn")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=$semconvOptIn")
-      }
     }
   }
 
   val testShaded = registerShadedTest("testShaded", "4.4.0")
-  val testShadedStableSemconv =
-    registerShadedTest("testShadedStableSemconv", "4.4.0", semconvOptIn = "database")
   val testShadedLatest = registerShadedTest("testShadedLatest", "4.17.0")
-  val testShadedLatestStableSemconv =
-    registerShadedTest("testShadedLatestStableSemconv", "4.17.0", semconvOptIn = "database")
 
   check {
     dependsOn(
-      testStableSemconv,
       testShaded,
-      testShadedStableSemconv,
       testShadedLatest,
-      testShadedLatestStableSemconv,
     )
   }
 }

@@ -72,3 +72,10 @@ of where its implementation lives.
   `AgentDistributionConfig`. Outside javaagent instrumentation, direct reads remain valid when
   required by an SDK SPI or bridge contract. Structured YAML-only settings need declarative-mode
   coverage.
+
+## Documentation
+
+- Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
+  READMEs and usage documentation should describe current supported behavior without migration
+  sections or historical comparisons. PR descriptions may include migration guidance, old/new
+  examples, and removed properties or APIs.

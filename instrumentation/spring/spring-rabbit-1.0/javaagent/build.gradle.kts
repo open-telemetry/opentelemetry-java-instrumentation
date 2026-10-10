@@ -44,15 +44,6 @@ testing {
         implementation("org.testcontainers:testcontainers")
         implementation("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.preview=messaging")
-            systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("version20Test") {
@@ -60,15 +51,6 @@ testing {
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
         implementation("org.testcontainers:testcontainers")
         implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.preview=messaging")
-            systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-          }
-        }
       }
     }
   }
@@ -83,31 +65,11 @@ tasks {
       systemProperty("collectMetadata", otelProps.collectMetadata)
     }
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
 
-  named<Test>("unitTests") {
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    // add byte buddy agent for mockito
+    configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
+      jvmArgs("-javaagent:$absolutePath")
+    }
   }
 
   val testSpringDisabled = register<Test>("testSpringDisabled") {
@@ -118,15 +80,15 @@ tasks {
       includeTestsMatching("*SpringRabbitTemplateTest")
     }
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.spring-rabbit.enabled=false,otel.semconv-stability.preview=messaging",
+      "otel.instrumentation.spring-rabbit.enabled=false",
     )
   }
 
   check {
-    dependsOn(testing.suites, testMessagingPreview, testBothSemconv, testV3Preview, testSpringDisabled)
+    dependsOn(testing.suites, testSpringDisabled)
   }
 }
 

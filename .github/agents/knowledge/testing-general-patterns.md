@@ -331,7 +331,8 @@ expected:
 
 - Experimental attributes (`-Dotel.instrumentation.<module>.experimental-*=true`) — see
   [testing-experimental-flags.md](testing-experimental-flags.md).
-- Semconv stability (`-Dotel.semconv-stability.opt-in=...`) — see
+- Semconv selection (`-Dotel.semconv-stability.opt-in=<domain>` for selectable stable
+  conventions or `-Dotel.semconv-stability.preview=<domain>` for preview conventions), see
   [testing-semconv-stability.md](testing-semconv-stability.md).
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
@@ -345,33 +346,24 @@ site.
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.opt-in=<domain>`       | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.preview=<domain>`      | the domain's `emitOld*Semconv()` / `emitPreview*Semconv()` accessors                                               | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
+
+Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
+and `emitPreview*Semconv()` for preview selection.
 
 ### Mode-dependent expected values
 
-Database instrumentation tests run either the default or stable database
-semconv mode. Do not add `database/dup` test tasks or expand assertions to
-cover both modes at once. Duplicate-mode coverage belongs in tests for the
-semconv stability API itself.
-
-Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
-carry the same expected value:
+Assert keys and values directly when expectations do not depend on a mode:
 
 ```java
-equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH)
-equalTo(maybeStable(DB_OPERATION), "info")
+equalTo(DB_SYSTEM_NAME, ELASTICSEARCH)
+equalTo(DB_OPERATION_NAME, "info")
+equalTo(ERROR_TYPE, "42601")
 ```
 
-Do not replace these with separate null-gated assertions for the old and stable
-keys:
-
-```java
-equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)
-equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null)
-```
-
-When no established semconv utility applies, put the ternary inside the
+For selectable domains, when no established semconv utility applies, put the ternary inside the
 `equalTo` value or single attribute key. Do not duplicate two whole
 `hasAttributesSatisfyingExactly(...)` blocks under a `flag ? a : b`. This
 includes attributes that exist in only one mode and attributes whose expected
@@ -379,8 +371,8 @@ values differ by mode. The assertion API treats `null` as "expect attribute
 absent":
 
 ```java
-equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
-equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
+equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null)
+equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null)
 equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
@@ -404,20 +396,20 @@ derivation only:
 
 ```java
 // Bad: the helper conditionally builds a list and hides the expected shape.
-private static List<AttributeAssertion> databaseAttributes() {
+private static List<AttributeAssertion> rpcAttributes() {
   List<AttributeAssertion> attributes = new ArrayList<>();
-  if (emitOldDatabaseSemconv()) {
-    attributes.add(equalTo(DB_USER, USER_DB));
+  if (emitOldRpcSemconv()) {
+    attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
   }
-  if (emitStableDatabaseSemconv()) {
-    attributes.add(equalTo(ERROR_TYPE, "42601"));
+  if (emitPreviewRpcSemconv()) {
+    attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
   }
   return attributes;
 }
-span.hasAttributesSatisfyingExactly(databaseAttributes());
+span.hasAttributesSatisfyingExactly(rpcAttributes());
 
 // Good: pass each assertion directly and keep its mode check visible.
 span.hasAttributesSatisfyingExactly(
-    equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
-    equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
+    equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
+    equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
 ```

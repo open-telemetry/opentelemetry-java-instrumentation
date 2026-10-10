@@ -21,10 +21,16 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
 
   public SpringSecurityConfigWebFluxInstrumentationModule() {
     super(
-        "spring-security-config",
-        "spring-security-config-6.0",
-        "spring-security-config-webflux",
-        "spring-security-config-webflux-6.0");
+        AgentCommonConfig.get().isV3Preview()
+            ? "spring-security-config-6.0"
+            : "spring-security-config",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-security-config"}
+            : new String[] {
+              "spring-security-config-6.0",
+              "spring-security-config-webflux",
+              "spring-security-config-webflux-6.0"
+            });
   }
 
   @Override
@@ -44,11 +50,11 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
   public boolean defaultEnabled() {
     return super.defaultEnabled()
         /*
-         * Since the only thing this module currently does is capture enduser attributes,
-         * the module can be completely disabled if enduser attributes are disabled.
+         * Since the only thing this module currently does is capture user identity attributes,
+         * the module can be completely disabled if user identity capture is disabled.
          *
-         * If any functionality not related to enduser attributes is added to this module,
-         * then this check will need to move elsewhere to only guard the enduser attributes logic.
+         * If any functionality not related to user identity attributes is added to this module,
+         * then this check will need to move elsewhere to only guard the identity capture logic.
          */
         && AgentCommonConfig.get().getUserConfig().isAnyEnabled();
   }

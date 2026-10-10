@@ -30,6 +30,11 @@ For Gradle, add to your dependencies:
 implementation("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.17:OPENTELEMETRY_VERSION")
 ```
 
+If Log4j layouts need trace or span IDs, also add
+`io.opentelemetry.instrumentation:opentelemetry-log4j-context-data-2.17-autoconfigure`.
+See the [context-data autoconfigure documentation](../../log4j-context-data/log4j-context-data-2.17/library-autoconfigure/README.md)
+for dependency declarations and logging key configuration.
+
 ### Usage
 
 The following demonstrates how you might configure the appender in your `log4j2.xml` configuration:
@@ -86,8 +91,8 @@ Setting can be configured as XML attributes, for example:
       captureMarkerAttribute="true"
       contextDataAttributesIncluded="request-*,user-?"
       contextDataAttributesExcluded="*-secret"
-      mapMessageAttributesIncluded="order-*"
-      mapMessageAttributesExcluded="*-secret"
+      structuredAttributesIncluded="order-*"
+      structuredAttributesExcluded="*-secret"
   />
 </Appenders>
 ```
@@ -101,9 +106,8 @@ The available settings are:
 | `captureMarkerAttribute`           | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                                                                                                                                                                                                                                                  |
 | `captureTemplate`                  | Boolean | `false` | Enable the capture of the log message template (if arguments are provided).                                                                                                                                                                                                                                                                         |
 | `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                                                                                                                                                                    |
-| `mapMessageAttributesIncluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for `MapMessage` keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all `MapMessage` attributes.                                                                                                                           |
-| `mapMessageAttributesExcluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for `MapMessage` keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                                                                                                                                                              |
-| `captureMapMessageAttributes`      | Boolean | `false` | Deprecated boolean compatibility setting, where `true` captures all `MapMessage` attributes and `false` captures none. Use `mapMessageAttributesIncluded` instead. May be removed in the next minor release.                                                                                                                                        |
+| `structuredAttributesIncluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for structured attribute keys from `MapMessage` entries. `*` matches any number of characters and `?` matches one character. An absent or empty selector captures all structured attributes.                                                                                                   |
+| `structuredAttributesExcluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for structured attribute keys not to capture. Excluded patterns take precedence over included patterns. `*` excludes all structured attributes.                                                                                                                                                |
 | `contextDataAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all context data attributes.                                                                                                                           |
 | `contextDataAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                                                                                                                                                              |
 | `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. It does not support glob patterns: a list containing only `*` captures all context data attributes, and otherwise every entry, including one containing `*` or `?`, is matched as a literal context data key. Use `contextDataAttributesIncluded` instead. May be removed in the next minor release. |
@@ -120,7 +124,7 @@ OpenTelemetryAppender appender =
                 .setIncluded("request-*", "user-?")
                 .setExcluded("*-secret")
                 .build())
-        .setMapMessageAttributes(
+        .setStructuredAttributes(
             IncludeExclude.builder().setIncluded("order-*").setExcluded("*-secret").build())
         .build();
 ```
@@ -135,12 +139,15 @@ and `contextDataAttributesExcluded` settings, which in turn take precedence over
 does not disable capture and the next configured source is used instead. No context data attributes
 are captured only when every one of these sources is absent or empty.
 
-`MapMessage` attributes are selected the same way, with the same pattern syntax, case sensitivity,
-and precedence. Only a non-empty selector set with `setMapMessageAttributes(IncludeExclude)` takes
-precedence over the `mapMessageAttributesIncluded` and `mapMessageAttributesExcluded` settings,
-which in turn take precedence over the deprecated `captureMapMessageAttributes` setting. No
-`MapMessage` attributes are captured when the selector and the pattern settings are absent or empty
-and `captureMapMessageAttributes` is `false`, which is also its default.
+Structured attributes from `MapMessage` entries are captured by default. The structured selector
+uses the same pattern syntax, case sensitivity, and exclusion precedence as the context data
+selector. Only a non-empty selector set with `setStructuredAttributes(IncludeExclude)` takes
+precedence over `structuredAttributesIncluded` and `structuredAttributesExcluded`.
+An absent or empty selector captures all structured attributes.
+Use `structuredAttributesExcluded="*"` to exclude all of them. Context data capture remains
+separate and opt-in.
+
+`MapMessage` keys are emitted as their original log attribute names.
 
 Captured context data and `MapMessage` attributes may contain sensitive information. Configure included and excluded patterns to limit the data exported as log attributes.
 
@@ -148,28 +155,29 @@ The `otel.event.name` key is supported in `MapMessage` entries and context data 
 
 #### Async Loggers
 
-When using Log4j async loggers, for example `AsyncRoot`, `AsyncLogger`, or Log4j's built-in
-`AsyncAppender`, Log4j creates the `LogEvent` on the application thread and later invokes appenders
-on a background thread. To make the `OpenTelemetryAppender` emit logs with the application thread's
-full OpenTelemetry `Context`, configure Log4j to use the OpenTelemetry appender context data
-injector:
+When using Log4j async loggers, for example `AsyncRoot`, `AsyncLogger`, or
+Log4j's built-in `AsyncAppender`, Log4j creates the `LogEvent` on the
+application thread and later invokes appenders on a background thread. To make
+the `OpenTelemetryAppender` emit logs with the application thread's full
+OpenTelemetry `Context`, configure Log4j to use the OpenTelemetry appender
+context data injector:
 
 ```properties
 log4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector
 ```
 
-This is a Log4j component property and must be configured before Log4j initializes, for example via
-a JVM system property:
+This is a Log4j component property and must be configured before Log4j
+initializes, for example via a JVM system property:
 
 ```shell
 -Dlog4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector
 ```
 
-or in a `log4j2.component.properties` file on the classpath. It cannot be configured reliably from
-`log4j2.xml`.
+or in a `log4j2.component.properties` file on the classpath. It cannot be
+configured reliably from `log4j2.xml`.
 
-With the component property set, the `log4j2.xml` configuration can use normal Log4j async logger
-configuration:
+With the component property set, the `log4j2.xml` configuration can use normal
+Log4j async logger configuration:
 
 ```xml
 <Configuration status="WARN">
@@ -185,8 +193,8 @@ configuration:
 </Configuration>
 ```
 
-If your application already configures a custom `log4j2.ContextDataInjector`, configure it as the
-OpenTelemetry injector's delegate:
+If your application already configures a custom `log4j2.ContextDataInjector`,
+configure it as the OpenTelemetry injector's delegate:
 
 ```properties
 log4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector
@@ -196,8 +204,9 @@ otel.instrumentation.log4j-appender.context-data-injector.delegate=com.example.C
 The OpenTelemetry injector will call the delegate injector first, then add the OpenTelemetry
 `Context` to the Log4j event context data.
 
-This adds an internal `otel.internal.context` context data entry to carry the OpenTelemetry `Context`.
-Applications that render all Log4j context data, for example with `%X` or JSON layouts, should
-exclude this key from log output because its value is not stable and may change without notice.
+This adds an internal `otel.internal.context` context data entry to carry the
+OpenTelemetry `Context`. Applications that render all Log4j context data, for
+example with `%X` or JSON layouts, should exclude this key from log output
+because its value is not stable and may change without notice.
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

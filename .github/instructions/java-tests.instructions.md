@@ -12,6 +12,10 @@ convention not caught by CI.
 
 ## Behavior coverage
 
+- Test supported behavior. Do not add or request tests that only prove
+  removed settings are ignored, or preview variants that repeat the same behavior.
+  When configuration wiring changes, test the real initialization path and emitted
+  telemetry, not just helpers.
 - For a javaagent change supporting multiple runtime library versions,
   look for tests with the installed agent against the required versions.
   Direct helper tests and `javaagent-unit-tests` do not exercise class
@@ -139,31 +143,28 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 ## [Testing] Mode-Dependent Expected Values
 
 - Use the shared static `TestLatestDeps.testLatestDeps()` and
-  `SemconvStability.emitOld*Semconv()` / `emitStable*Semconv()` accessors,
+  `SemconvStability.emitOld*Semconv()`, `emitStable*Semconv()`, or `emitPreview*Semconv()` accessors,
   preferably via static imports, rather than repeating inline
   `Boolean.getBoolean(...)` calls with the mode property names. A
   module-specific experimental flag may use a per-class constant such as
   `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
   helper for attribute values absent when the flag is off.
-- Database instrumentation tests run either the default or stable database
-  semconv mode. Do not add `database/dup` test tasks or expand assertions to
-  cover both modes at once.
-- Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
-  carry the same expected value:
+- Name stable-selection accessors `emitStable*Semconv()` and preview-selection
+  accessors `emitPreview*Semconv()`.
+- Assert keys and values directly when expectations do not depend on a mode:
 
   ```java
-  equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH);
-  equalTo(maybeStable(DB_OPERATION), "info");
+  equalTo(DB_SYSTEM_NAME, ELASTICSEARCH);
+  equalTo(DB_OPERATION_NAME, "info");
+  equalTo(ERROR_TYPE, "42601");
   ```
 
-  Do not replace these with separate null-gated assertions for the old and
-  stable keys.
 - Keep short conditional expected values directly in the assertion when the
   expected values differ by mode or an attribute exists in only one mode:
 
   ```java
-  span.hasName(emitStableMessagingSemconv() ? "send orders" : "orders publish");
-  equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null);
+  span.hasName(emitPreviewRpcSemconv() ? "Greeter/SayHello" : "helloworld.Greeter/SayHello");
+  equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null);
   ```
 
 - Do not extract the ternary into a helper such as `spanName(...)`,
@@ -177,22 +178,22 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   ```java
   // Bad: the helper conditionally builds a list and hides the expected shape.
-  private static List<AttributeAssertion> databaseAttributes() {
+  private static List<AttributeAssertion> rpcAttributes() {
     List<AttributeAssertion> attributes = new ArrayList<>();
-    if (emitOldDatabaseSemconv()) {
-      attributes.add(equalTo(DB_USER, USER_DB));
+    if (emitOldRpcSemconv()) {
+      attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
     }
-    if (emitStableDatabaseSemconv()) {
-      attributes.add(equalTo(ERROR_TYPE, "42601"));
+    if (emitPreviewRpcSemconv()) {
+      attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
     }
     return attributes;
   }
-  span.hasAttributesSatisfyingExactly(databaseAttributes());
+  span.hasAttributesSatisfyingExactly(rpcAttributes());
 
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
-      equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
-      equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
+      equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
+      equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.

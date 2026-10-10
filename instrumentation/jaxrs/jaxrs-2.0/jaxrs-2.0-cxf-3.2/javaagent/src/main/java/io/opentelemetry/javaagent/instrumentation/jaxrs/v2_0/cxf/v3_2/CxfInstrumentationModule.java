@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class CxfInstrumentationModule extends InstrumentationModule {
   public CxfInstrumentationModule() {
-    super("jaxrs", "jaxrs-2.0", "cxf", "cxf-3.2");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jaxrs-2.0-cxf-3.2" : "jaxrs",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jaxrs-cxf", "jaxrs"}
+            : new String[] {"jaxrs-2.0", "cxf", "cxf-3.2"});
   }
 
   @Override

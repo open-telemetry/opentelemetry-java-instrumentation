@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -15,12 +13,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -32,10 +26,78 @@ import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class DbClientAttributesExtractorTest {
+
+  @Test
+  void shouldRetainNetworkPeerWithoutProtocolAttributes() {
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        DbClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getNetworkPeerAddress(Map<String, String> request, Void response) {
+                return "192.0.2.1";
+              }
+
+              @Override
+              public Integer getNetworkPeerPort(Map<String, String> request, Void response) {
+                return 5432;
+              }
+
+              @Override
+              public String getNetworkTransport(Map<String, String> request, Void response) {
+                return "tcp";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(NETWORK_PEER_ADDRESS, "192.0.2.1"), entry(NETWORK_PEER_PORT, 5432L));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "h2database",
+        "oracle.db",
+        "ibm.db2",
+        "ibm.informix",
+        "microsoft.sql_server",
+        "sap.hana",
+        "myDb"
+      })
+  void shouldEmitDatabaseAttributes(String dbSystemName) {
+    Map<String, String> request = new HashMap<>();
+    request.put("db.system.name", dbSystemName);
+    request.put("db.namespace", "potatoes");
+    request.put("db.collection.name", "potato");
+    request.put("db.query.text", "SELECT * FROM potato");
+    request.put("db.query_summary", "SELECT potato");
+    request.put("db.operation.name", "SELECT");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        DbClientAttributesExtractor.create(new TestAttributesGetter());
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(DB_SYSTEM_NAME, dbSystemName),
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_COLLECTION_NAME, "potato"),
+            entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
+            entry(DB_QUERY_SUMMARY, "SELECT potato"),
+            entry(DB_OPERATION_NAME, "SELECT"));
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(SchemaUrls.V1_44_0);
+    assertThat(DbClientSpanNameExtractor.create(new TestAttributesGetter()).extract(request))
+        .isEqualTo("SELECT potato");
+  }
 
   @Test
   void shouldProvideSchemaUrl() {
@@ -43,19 +105,13 @@ class DbClientAttributesExtractorTest {
         DbClientAttributesExtractor.create(new TestAttributesGetter());
 
     assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(emitStableDatabaseSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0);
+        .isEqualTo(SchemaUrls.V1_44_0);
   }
 
   static class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>, Void> {
     @Override
     public String getDbSystemName(Map<String, String> map) {
-      return map.get("db.system");
-    }
-
-    @Deprecated
-    @Override
-    public String getUser(Map<String, String> map) {
-      return map.get("db.user");
+      return map.get("db.system.name");
     }
 
     @Override
@@ -68,18 +124,11 @@ class DbClientAttributesExtractorTest {
       return map.get("db.collection.name");
     }
 
-    @Deprecated
-    @Override
-    public String getConnectionString(Map<String, String> map) {
-      return map.get("db.connection_string");
-    }
-
     @Override
     public String getDbQueryText(Map<String, String> map) {
       return map.get("db.query.text");
     }
 
-    @Nullable
     @Override
     public String getDbQuerySummary(Map<String, String> map) {
       return map.get("db.query_summary");
@@ -89,27 +138,17 @@ class DbClientAttributesExtractorTest {
     public String getDbOperationName(Map<String, String> map) {
       return map.get("db.operation.name");
     }
-
-    @Deprecated
-    @Override
-    public String getDbOperation(Map<String, String> map) {
-      return map.get("db.operation");
-    }
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void shouldExtractAllAvailableAttributes() {
     // given
     Map<String, String> request = new HashMap<>();
-    request.put("db.system", "myDb");
-    request.put("db.user", "username");
+    request.put("db.system.name", "myDb");
     request.put("db.namespace", "potatoes");
     request.put("db.collection.name", "potato");
-    request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.query.text", "SELECT * FROM potato");
     request.put("db.query_summary", "SELECT potato");
-    request.put("db.operation", "old SELECT");
     request.put("db.operation.name", "SELECT");
 
     Context context = Context.root();
@@ -125,41 +164,14 @@ class DbClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM, "myDb"),
-              entry(DB_SYSTEM_NAME, "myDb"),
-              entry(DB_USER, "username"),
-              entry(DB_NAME, "potatoes"),
-              entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
-              entry(DB_STATEMENT, "SELECT * FROM potato"),
-              entry(DB_OPERATION, "old SELECT"),
-              entry(DB_COLLECTION_NAME, "potato"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
-              entry(DB_QUERY_SUMMARY, "SELECT potato"),
-              entry(DB_OPERATION_NAME, "SELECT"));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM, "myDb"),
-              entry(DB_USER, "username"),
-              entry(DB_NAME, "potatoes"),
-              entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
-              entry(DB_STATEMENT, "SELECT * FROM potato"),
-              entry(DB_OPERATION, "old SELECT"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM_NAME, "myDb"),
-              entry(DB_COLLECTION_NAME, "potato"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
-              entry(DB_QUERY_SUMMARY, "SELECT potato"),
-              entry(DB_OPERATION_NAME, "SELECT"));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_SYSTEM_NAME, "myDb"),
+            entry(DB_COLLECTION_NAME, "potato"),
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
+            entry(DB_QUERY_SUMMARY, "SELECT potato"),
+            entry(DB_OPERATION_NAME, "SELECT"));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
@@ -186,11 +198,7 @@ class DbClientAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     underTest.onEnd(attributes, Context.root(), emptyMap(), null, error);
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
-    } else {
-      assertThat(attributes.build().isEmpty()).isTrue();
-    }
+    assertThat(attributes.build())
+        .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
   }
 }

@@ -11,8 +11,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
@@ -36,6 +34,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
+import io.opentelemetry.semconv.SchemaUrls;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;
@@ -47,7 +46,7 @@ class CamelSingletons {
   private static final DecoratorRegistry registry = new DecoratorRegistry();
   private static final Instrumenter<CamelRequest, Void> instrumenter = createInstrumenter();
   private static final Instrumenter<CamelRequest, Void> databaseInstrumenter =
-      createInstrumenter(databaseSchemaUrl());
+      createInstrumenter(SchemaUrls.V1_44_0);
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", true);
   private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =
@@ -83,32 +82,20 @@ class CamelSingletons {
   private static Instrumenter<CamelRequest, Void> createMessagingInstrumenter(
       MessagingOperationType operationType, String operationName, boolean exposeSpanKey) {
     MessagingAttributesGetter<CamelRequest, Void> getter = new CamelMessagingAttributesGetter();
-    SpanNameExtractor<CamelRequest> legacySpanNameExtractor =
-        request ->
-            request
-                .getSpanDecorator()
-                .getOperationName(
-                    request.getExchange(), request.getEndpoint(), request.getCamelDirection());
     SpanNameExtractor<CamelRequest> spanNameExtractor =
-        emitStableMessagingSemconv()
-            ? MessagingSpanNameExtractor.create(getter, operationType, operationName)
-            : legacySpanNameExtractor;
+        MessagingSpanNameExtractor.create(getter, operationType, operationName);
     InstrumenterBuilder<CamelRequest, Void> builder =
         instrumenterBuilder(spanNameExtractor).setSchemaUrl(messagingSchemaUrl());
-    if (emitStableMessagingSemconv()) {
-      AttributesExtractor<CamelRequest, Void> attributesExtractor =
-          MessagingAttributesExtractor.create(getter, operationType, operationName);
-      builder.addAttributesExtractor(
-          exposeSpanKey
-              ? attributesExtractor
-              : new KeylessAttributesExtractor(attributesExtractor));
-      builder.addContextCustomizer((context, request, startAttributes) -> enable(context));
-    }
+    AttributesExtractor<CamelRequest, Void> attributesExtractor =
+        MessagingAttributesExtractor.create(getter, operationType, operationName);
+    builder.addAttributesExtractor(
+        exposeSpanKey ? attributesExtractor : new KeylessAttributesExtractor(attributesExtractor));
+    builder.addContextCustomizer((context, request, startAttributes) -> enable(context));
 
     if (operationType == SEND) {
-      builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+      builder.addOperationMetrics(MessagingProducerMetrics.get());
     }
-    if (operationType == PROCESS && emitStableMessagingSemconv()) {
+    if (operationType == PROCESS) {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
       builder.addContextCustomizer(
           (context, request, startAttributes) ->
@@ -119,15 +106,11 @@ class CamelSingletons {
       return MessagingProcessInstrumenterFactory.create(
           builder,
           CamelPropagationUtil.messagingPropagator(),
-          CamelPropagationUtil.messagingGetter(),
-          false);
+          CamelPropagationUtil.messagingGetter());
     }
-    if (emitStableMessagingSemconv()) {
-      return builder.buildInstrumenter(
-          MessagingSpanKindExtractor.create(
-              operationType, CamelRequest::isMessagingSpanContextPropagated));
-    }
-    return builder.buildInstrumenter(CamelRequest::getSpanKind);
+    return builder.buildInstrumenter(
+        MessagingSpanKindExtractor.create(
+            operationType, CamelRequest::isMessagingSpanContextPropagated));
   }
 
   private static InstrumenterBuilder<CamelRequest, Void> instrumenterBuilder(

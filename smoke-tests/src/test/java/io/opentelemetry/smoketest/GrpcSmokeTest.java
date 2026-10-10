@@ -32,7 +32,7 @@ class GrpcSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 25})
+  @ValueSource(ints = {8, 11, 17, 21, 25, 27})
   void grpcSmokeTest(int jdk) {
     SmokeTestOutput output = start(jdk);
     ManagedChannel channel = null;

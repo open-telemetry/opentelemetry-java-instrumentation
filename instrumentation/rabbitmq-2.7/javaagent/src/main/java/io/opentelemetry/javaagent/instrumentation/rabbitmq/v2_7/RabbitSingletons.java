@@ -11,10 +11,9 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static java.util.Collections.emptyMap;
 
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -71,6 +70,13 @@ public class RabbitSingletons {
   static final ContextKey<RabbitChannelAndMethodHolder> CHANNEL_AND_METHOD_CONTEXT_KEY =
       ContextKey.named("opentelemetry-rabbitmq-channel-and-method-context-key");
 
+  /**
+   * The virtual host of a connection. {@link Connection} has never exposed it, so it is read off
+   * {@code AMQConnection} and remembered here.
+   */
+  public static final VirtualField<Connection, String> VIRTUAL_HOST =
+      VirtualField.find(Connection.class, String.class);
+
   public static Instrumenter<ChannelAndMethod, Void> channelInstrumenter(
       ChannelAndMethod channelAndMethod) {
     if (channelAndMethod.isPublish()) {
@@ -100,8 +106,13 @@ public class RabbitSingletons {
                 (context, request, startAttributes) ->
                     context.with(
                         CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()));
-    if (messagingOperation && emitStableMessagingSemconv()) {
+    if (messagingOperation) {
       builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
+    }
+    if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      builder.addAttributesExtractor(
+          new RabbitConnectionAttributesExtractor<>(
+              channelAndMethod -> channelAndMethod.getChannel().getConnection()));
     }
     return builder;
   }
@@ -123,16 +134,13 @@ public class RabbitSingletons {
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, PUBLISH_OPERATION_NAME))
             .addAttributesExtractor(new RabbitChannelExtraAttributesExtractor())
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingProducerMetrics.get());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildInstrumenter(channelAndMethod -> PRODUCER);
   }
 
   private static Map<String, Instrumenter<ChannelAndMethod, Void>>
       createChannelSettleInstrumenters() {
-    if (!emitStableMessagingSemconv()) {
-      return emptyMap();
-    }
     Map<String, Instrumenter<ChannelAndMethod, Void>> instrumenters = new HashMap<>();
     instrumenters.put(
         ChannelAndMethod.ACK_METHOD, createChannelSettleInstrumenter(ACK_OPERATION_NAME));
@@ -155,7 +163,7 @@ public class RabbitSingletons {
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SETTLE, operationName))
             .addAttributesExtractor(new RabbitChannelSettleAttributesExtractor())
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingConsumerMetrics.get());
     setMessagingSettleExceptionEventExtractor(builder);
     return builder.buildInstrumenter(
         MessagingSpanKindExtractor.create(MessagingOperationType.SETTLE));
@@ -170,26 +178,20 @@ public class RabbitSingletons {
     extractors.add(new RabbitReceiveExtraAttributesExtractor());
     RabbitReceiveNetAttributesGetter netAttributesGetter = new RabbitReceiveNetAttributesGetter();
     extractors.add(NetworkAttributesExtractor.create(netAttributesGetter));
-    if (emitStableMessagingSemconv()) {
-      extractors.add(ServerAttributesExtractor.create(netAttributesGetter));
-    }
+    extractors.add(ServerAttributesExtractor.create(netAttributesGetter));
     if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
+      extractors.add(new RabbitConnectionAttributesExtractor<>(ReceiveRequest::getConnection));
     }
 
     SpanNameExtractor<ReceiveRequest> spanNameExtractor =
-        emitStableMessagingSemconv()
-            ? MessagingSpanNameExtractor.create(
-                getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME)
-            : ReceiveRequest::spanName;
+        MessagingSpanNameExtractor.create(
+            getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME);
     InstrumenterBuilder<ReceiveRequest, GetResponse> builder =
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractors(extractors)
-            .setEnabled(
-                emitStableMessagingSemconv()
-                    || ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType())
+            .addOperationMetrics(MessagingConsumerMetrics.get())
             .addSpanLinksExtractor(
                 new PropagatorBasedSpanLinksExtractor<>(
                     GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
@@ -207,19 +209,16 @@ public class RabbitSingletons {
             getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME));
     RabbitDeliveryNetAttributesGetter netAttributesGetter = new RabbitDeliveryNetAttributesGetter();
     extractors.add(NetworkAttributesExtractor.create(netAttributesGetter));
-    if (emitStableMessagingSemconv()) {
-      extractors.add(ServerAttributesExtractor.create(netAttributesGetter));
-    }
+    extractors.add(ServerAttributesExtractor.create(netAttributesGetter));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
+      extractors.add(new RabbitConnectionAttributesExtractor<>(DeliveryRequest::getConnection));
     }
 
     SpanNameExtractor<DeliveryRequest> spanNameExtractor =
-        emitStableMessagingSemconv()
-            ? MessagingSpanNameExtractor.create(
-                getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)
-            : DeliveryRequest::spanName;
+        MessagingSpanNameExtractor.create(
+            getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME);
     InstrumenterBuilder<DeliveryRequest, Void> builder =
         Instrumenter.<DeliveryRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
@@ -230,8 +229,7 @@ public class RabbitSingletons {
     return MessagingProcessInstrumenterFactory.create(
         builder,
         GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
-        new DeliveryRequestGetter(),
-        false);
+        new DeliveryRequestGetter());
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(

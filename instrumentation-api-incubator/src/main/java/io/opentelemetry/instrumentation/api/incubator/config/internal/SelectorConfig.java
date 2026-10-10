@@ -24,13 +24,13 @@ import javax.annotation.Nullable;
  * Resolves an {@code included}/{@code excluded} selector and its deprecated include-only
  * predecessor, so that precedence and deprecation warnings are uniform across instrumentations.
  *
- * <p>The property names are derived from the instrumentation and selector names. For {@code
- * ("messaging", "headers")}, experimental resolution reads the {@code headers/development} node and
- * {@code otel.instrumentation.messaging.experimental.headers.included|excluded}. Stable resolution
- * reads the {@code headers} node and {@code
- * otel.instrumentation.messaging.headers.included|excluded}. Both modes fall back to the deprecated
- * experimental {@code capture_headers/development} node and {@code
- * otel.instrumentation.messaging.experimental.capture-headers} flat property.
+ * <p>The property names are derived from the instrumentation and selector names. Experimental
+ * resolution reads the {@code <selector>/development} node and the corresponding {@code
+ * otel.instrumentation.<instrumentation>.experimental.<selector>.included|excluded} flat
+ * properties. Stable resolution reads the {@code <selector>} node and the corresponding {@code
+ * otel.instrumentation.<instrumentation>.<selector>.included|excluded} properties. Both modes fall
+ * back to the deprecated experimental {@code capture_<selector>/development} node and {@code
+ * otel.instrumentation.<instrumentation>.experimental.capture-<selector>} flat property.
  *
  * <p>Flat system properties are read directly only when {@code systemPropertyFallback} is {@code
  * true}; otherwise the flat names describe the equivalent form of the supplied declarative

@@ -70,7 +70,7 @@ public class TracedDelegatingConsumer implements Consumer {
     }
 
     Context parentContext = Context.current();
-    DeliveryRequest request = DeliveryRequest.create(queue, envelope, connection, properties, body);
+    DeliveryRequest request = DeliveryRequest.create(queue, envelope, connection, properties);
 
     if (!deliverInstrumenter().shouldStart(parentContext, request)) {
       delegate.handleDelivery(consumerTag, envelope, properties, body);

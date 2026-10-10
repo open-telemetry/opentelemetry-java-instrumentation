@@ -163,7 +163,6 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.http.known-methods`                                       | `java.common.http.known_methods`                                  |
 | `otel.instrumentation.http.client.emit-experimental-telemetry`                  | `java.common.http.client.emit_experimental_telemetry/development` |
 | `otel.instrumentation.http.server.emit-experimental-telemetry`                  | `java.common.http.server.emit_experimental_telemetry/development` |
-| `otel.instrumentation.messaging.experimental.capture-headers`                   | `java.common.messaging.capture_headers/development`               |
 | `otel.instrumentation.genai.capture-message-content`                            | `java.common.gen_ai.capture_message_content`                      |
 | `otel.instrumentation.experimental.span-suppression-strategy`                   | `java.common.span_suppression_strategy/development`               |
 | `otel.instrumentation.opentelemetry-annotations.exclude-methods`                | `java.opentelemetry_extension_annotations.exclude_methods`        |
@@ -191,7 +190,6 @@ Examples:
 | `otel.instrumentation.grpc.experimental-span-attributes`                     | `java.grpc.experimental_span_attributes/development`        |
 | `otel.instrumentation.aws-sdk.experimental-span-attributes`                  | `java.aws_sdk.experimental_span_attributes/development`     |
 | `otel.instrumentation.logback-appender.experimental.capture-code-attributes` | `java.logback_appender.capture_code_attributes/development` |
-| `otel.instrumentation.common.experimental.controller-telemetry.enabled`      | `java.common.controller_telemetry/development.enabled`      |
 | `otel.instrumentation.common.controller-telemetry.enabled`                   | `java.common.controller_telemetry.enabled`                  |
 
 **Key distinction**:
@@ -206,12 +204,17 @@ Add `examples` only for module-specific configs with non-obvious format (lists, 
 **Never add for**: `general.*`, `java.common.*`, or boolean configs.
 
 ```yaml
-- name: otel.instrumentation.grpc.capture-metadata.client.request
-  declarative_name: java.grpc.capture_metadata.client.request
+- name: otel.instrumentation.grpc.client.request-metadata.included
+  declarative_name: java.grpc.client.request_metadata.included
   type: list
   examples:
     - "custom-request-header"
-    - "header1,header2,header3"
+    - "my-*-key,another-metadata-key"
+- name: otel.instrumentation.grpc.client.request-metadata.excluded
+  declarative_name: java.grpc.client.request_metadata.excluded
+  type: list
+  examples:
+    - "authorization,*-token"
 ```
 
 ## Checking an Edited Metadata File

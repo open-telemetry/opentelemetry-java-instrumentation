@@ -68,11 +68,11 @@ tasks {
     }
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
       excludeTestsMatching("Netty41ClientSslTest")
@@ -80,7 +80,7 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionSpan, testStableSemconv)
+    dependsOn(testConnectionSpan, testPreviewSemconv)
   }
 }
 

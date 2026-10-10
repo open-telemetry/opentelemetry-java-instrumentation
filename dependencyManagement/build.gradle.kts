@@ -7,7 +7,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.66.0"
 val otelZipkinVersion = "1.64.0" // last published version, remove with Zipkin support in 3.0
-val otelContribVersion = "1.60.0-alpha"
+val otelContribVersion = "1.61.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -29,7 +29,7 @@ val DEPENDENCY_BOMS = listOf(
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
   "com.fasterxml.jackson:jackson-bom:2.22.3",
-  "com.google.guava:guava-bom:33.7.1-jre",
+  "com.google.guava:guava-bom:33.7.2-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -105,7 +105,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.11.1-alpha",
   "io.opentelemetry:opentelemetry-exporter-zipkin:${otelZipkinVersion}",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",

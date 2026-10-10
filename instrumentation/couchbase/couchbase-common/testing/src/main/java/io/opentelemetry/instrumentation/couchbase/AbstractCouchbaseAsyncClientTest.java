@@ -6,20 +6,17 @@
 package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -118,28 +115,20 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Cluster.openBucket 127.0.0.1"
-                                : "Cluster.openBucket")
+                    span.hasName("Cluster.openBucket 127.0.0.1")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(
-                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_OPERATION_NAME, "Cluster.openBucket"),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1")),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "ClusterManager.hasBucket 127.0.0.1"
-                                : "ClusterManager.hasBucket")
+                    span.hasName("ClusterManager.hasBucket 127.0.0.1")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "ClusterManager.hasBucket"),
-                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_OPERATION_NAME, "ClusterManager.hasBucket"),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
@@ -178,29 +167,21 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Cluster.openBucket 127.0.0.1"
-                                : "Cluster.openBucket")
+                    span.hasName("Cluster.openBucket 127.0.0.1")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(
-                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_OPERATION_NAME, "Cluster.openBucket"),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1")),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Bucket.upsert " + bucketSettings.name()
-                                : "Bucket.upsert")
+                    span.hasName("Bucket.upsert " + bucketSettings.name())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
-                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_NAMESPACE, bucketSettings.name()),
+                            equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
@@ -247,29 +228,21 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Cluster.openBucket 127.0.0.1"
-                                : "Cluster.openBucket")
+                    span.hasName("Cluster.openBucket 127.0.0.1")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(
-                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_OPERATION_NAME, "Cluster.openBucket"),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1")),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Bucket.upsert " + bucketSettings.name()
-                                : "Bucket.upsert")
+                    span.hasName("Bucket.upsert " + bucketSettings.name())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
-                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_NAMESPACE, bucketSettings.name()),
+                            equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
@@ -279,17 +252,13 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(
                                 stringKey("couchbase.operation_id"), experimentalOperationId())),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Bucket.get " + bucketSettings.name()
-                                : "Bucket.get")
+                    span.hasName("Bucket.get " + bucketSettings.name())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.get"),
-                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_NAMESPACE, bucketSettings.name()),
+                            equalTo(DB_OPERATION_NAME, "Bucket.get"),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
@@ -332,33 +301,23 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Cluster.openBucket 127.0.0.1"
-                                : "Cluster.openBucket")
+                    span.hasName("Cluster.openBucket 127.0.0.1")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            equalTo(
-                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_OPERATION_NAME, "Cluster.openBucket"),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1")),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SELECT"
-                                : "SELECT " + bucketCouchbase.name())
+                    span.hasName("SELECT")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT), val -> val.startsWith("SELECT mockrow")),
-                            equalTo(
-                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
-                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_NAMESPACE, bucketCouchbase.name()),
+                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("SELECT mockrow")),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT"),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
@@ -398,28 +357,21 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Cluster.openBucket 127.0.0.1"
-                                : "Cluster.openBucket")
+                    span.hasName("Cluster.openBucket 127.0.0.1")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_OPERATION_NAME, "Cluster.openBucket"),
                             equalTo(SERVER_ADDRESS, configuredServerAddress())),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Bucket.upsert " + bucketSettings.name()
-                                : "Bucket.upsert")
+                    span.hasName("Bucket.upsert " + bucketSettings.name())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
-                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_NAMESPACE, bucketSettings.name()),
+                            equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
@@ -429,17 +381,13 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(
                                 stringKey("couchbase.operation_id"), experimentalOperationId())),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "Bucket.upsert " + bucketSettings.name()
-                                : "Bucket.upsert")
+                    span.hasName("Bucket.upsert " + bucketSettings.name())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
-                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                            equalTo(DB_NAMESPACE, bucketSettings.name()),
+                            equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
                             satisfies(SERVER_ADDRESS, serverAddress()),

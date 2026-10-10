@@ -26,57 +26,25 @@ class SemconvSelectionResolver {
   // SystemProperty-backed otel.semconv-stability.opt-in values.
   private final Set<String> stableFlags;
 
-  // Preview flags for service.peer, rpc, and messaging. Reads through OpenTelemetry-backed
+  // Preview flags for service.peer and rpc. Reads through OpenTelemetry-backed
   // java.common.semconv_stability.preview config, and falls back to SystemProperty for
   // otel.semconv-stability.preview in library instrumentation.
   private final Set<String> previewFlags;
 
-  // Forces database and code to stable-only emission. For preview domains, v3 preview uses only
-  // preview flags; non-preview combines stable and preview flags for backward compatibility.
-  private final boolean v3Preview;
-
-  SemconvSelectionResolver(
-      OpenTelemetry openTelemetry, DeclarativeConfigProperties generalConfig, boolean v3Preview) {
+  SemconvSelectionResolver(OpenTelemetry openTelemetry, DeclarativeConfigProperties generalConfig) {
     this(
         generalConfig,
-        v3Preview,
         resolveStableOptInValues(openTelemetry, generalConfig),
         resolvePreviewValues(openTelemetry));
   }
 
   SemconvSelectionResolver(
       DeclarativeConfigProperties structuredConfig,
-      boolean v3Preview,
       Set<String> stableFlags,
       Set<String> previewFlags) {
     this.structuredConfig = structuredConfig;
-    this.v3Preview = v3Preview;
     this.stableFlags = stableFlags;
     this.previewFlags = previewFlags;
-  }
-
-  SemconvMode database() {
-    SemconvDomain.Builder domain = SemconvDomain.builder("db").flagKey("database");
-    if (v3Preview) {
-      domain.defaultMode(SemconvMode.V1_STABLE);
-    } else {
-      domain
-          .defaultMode(SemconvMode.V0_STABLE)
-          .otherSupportedModes(SemconvMode.V1_STABLE, SemconvMode.V1_STABLE.withDualEmit());
-    }
-    return resolveSemconvSelection(domain.build());
-  }
-
-  SemconvMode code() {
-    SemconvDomain.Builder domain = SemconvDomain.builder("code");
-    if (v3Preview) {
-      domain.defaultMode(SemconvMode.V1_STABLE);
-    } else {
-      domain
-          .defaultMode(SemconvMode.V0_STABLE)
-          .otherSupportedModes(SemconvMode.V1_STABLE, SemconvMode.V1_STABLE.withDualEmit());
-    }
-    return resolveSemconvSelection(domain.build());
   }
 
   SemconvMode rpc() {
@@ -86,20 +54,6 @@ class SemconvSelectionResolver {
             .otherSupportedModes(
                 SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit())
             .build());
-  }
-
-  SemconvMode messaging() {
-    SemconvDomain.Builder domain = SemconvDomain.builder("messaging");
-    if (v3Preview) {
-      // will be changed in 3.0 to V0_STABLE, which becomes the one and only messaging semconv
-      domain.defaultMode(SemconvMode.V1_EXPERIMENTAL);
-    } else {
-      domain
-          .defaultMode(SemconvMode.V0_STABLE)
-          .otherSupportedModes(
-              SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit());
-    }
-    return resolveSemconvSelection(domain.build());
   }
 
   SemconvMode servicePeer() {
@@ -194,7 +148,7 @@ class SemconvSelectionResolver {
 
   private Set<String> flagsFor(Set<SemconvMode> supportedModes) {
     if (supportedModes.contains(SemconvMode.V1_EXPERIMENTAL)) {
-      return effectivePreviewFlags();
+      return previewFlags;
     }
     return stableFlags;
   }
@@ -205,13 +159,6 @@ class SemconvSelectionResolver {
       return targetMode.withDualEmit();
     }
     return targetMode;
-  }
-
-  private Set<String> effectivePreviewFlags() {
-    if (v3Preview) {
-      return previewFlags;
-    }
-    return combine(stableFlags, previewFlags);
   }
 
   private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
@@ -271,17 +218,5 @@ class SemconvSelectionResolver {
         .map(String::trim)
         .filter(v -> !v.isEmpty())
         .collect(toSet());
-  }
-
-  private static Set<String> combine(Set<String> first, Set<String> second) {
-    if (first.isEmpty()) {
-      return second;
-    }
-    if (second.isEmpty()) {
-      return first;
-    }
-    Set<String> result = new HashSet<>(first);
-    result.addAll(second);
-    return result;
   }
 }

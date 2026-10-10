@@ -125,6 +125,17 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
     assertThat(metrics.getScalarList("included", String.class)).containsExactly("jvm.*", "kafka.*");
     assertThat(metrics.getScalarList("excluded", String.class)).containsExactly("kafka.connect.*");
+
+    metrics = createConfig("otel.jmx.metrics.experimental.included", "jvm.*");
+
+    assertThat(
+            metrics
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("metrics")
+                .getStructured("experimental")
+                .getScalarList("included", String.class))
+        .containsExactly("jvm.*");
   }
 
   @Test
@@ -183,7 +194,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     Map<String, String> properties = new HashMap<>();
     properties.put("otel.instrumentation.common.messaging.headers.included", "a,b");
     properties.put("otel.instrumentation.common.messaging.headers.excluded", "c");
-    properties.put("otel.instrumentation.messaging.experimental.capture-headers", "legacy");
 
     DeclarativeConfigProperties messaging =
         DeclarativeConfigBridge.createInstrumentationConfig(
@@ -197,30 +207,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         .containsExactly("a", "b");
     assertThat(messaging.getStructured("headers").getScalarList("excluded", String.class))
         .containsExactly("c");
-    assertThat(messaging.getScalarList("capture_headers/development", String.class))
-        .containsExactly("legacy");
-  }
-
-  @Test
-  void testDeprecatedMessagingHeadersSelectorMapping() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.messaging.experimental.headers.included", "legacy");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("messaging")
-                .getStructured("headers/development")
-                .getScalarList("included", String.class))
-        .containsExactly("legacy");
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("messaging")
-                .getStructured("headers/development")
-                .getScalarList("included", String.class))
-        .isNull();
   }
 
   @Test
@@ -360,24 +346,17 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testDeprecatedGraphqlQuerySanitizerMapping() {
+  void testGraphqlOperationNameInSpanNameMapping() {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.graphql.query-sanitizer.enabled", "false");
+        createConfig("otel.instrumentation.graphql.operation-name-in-span-name.enabled", "true");
 
     assertThat(
             config
                 .getStructured("java")
                 .getStructured("graphql")
-                .getStructured("query_sanitizer")
+                .getStructured("operation_name_in_span_name")
                 .getBoolean("enabled"))
-        .isFalse();
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("graphql")
-                .getStructured("query_sanitization")
-                .getBoolean("enabled"))
-        .isNull();
+        .isTrue();
   }
 
   @Test

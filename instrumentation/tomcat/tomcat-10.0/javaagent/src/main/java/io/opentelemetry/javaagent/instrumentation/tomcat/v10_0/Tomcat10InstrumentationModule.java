@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0.TomcatServerHandlerInstrumentation;
@@ -29,7 +30,11 @@ import org.apache.coyote.Response;
 public class Tomcat10InstrumentationModule extends InstrumentationModule {
 
   public Tomcat10InstrumentationModule() {
-    super("tomcat", "tomcat-10.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "tomcat-10.0" : "tomcat",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"tomcat"}
+            : new String[] {"tomcat-10.0"});
   }
 
   @Override
