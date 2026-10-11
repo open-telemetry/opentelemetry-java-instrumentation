@@ -24,10 +24,10 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
 
-  withType<Test>().matching { it.name != "testDisabled" }.configureEach {
-    jvmArgs("-Dotel.instrumentation.twilio.enabled=true")
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.twilio.enabled=true")
+    }
   }
 
   val testExperimental = register<Test>("testExperimental") {
