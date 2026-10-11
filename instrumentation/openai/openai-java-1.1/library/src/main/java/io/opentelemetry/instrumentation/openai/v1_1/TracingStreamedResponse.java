@@ -31,8 +31,11 @@ final class TracingStreamedResponse implements StreamResponse<ChatCompletionChun
 
   @Override
   public void close() {
-    listener.endSpan(null);
-    delegate.close();
+    try {
+      listener.endSpan(null);
+    } finally {
+      delegate.close();
+    }
   }
 
   private class TracingSpliterator implements Spliterator<ChatCompletionChunk> {

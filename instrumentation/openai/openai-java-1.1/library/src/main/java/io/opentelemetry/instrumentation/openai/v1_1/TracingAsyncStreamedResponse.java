@@ -24,8 +24,13 @@ final class TracingAsyncStreamedResponse implements AsyncStreamResponse<ChatComp
 
   @Override
   public void close() {
-    listener.endSpan(null);
-    delegate.close();
+    // end the span before closing the delegate so that the user close is not reported with the
+    // error the delegate may report for the interrupted stream
+    try {
+      listener.endSpan(null);
+    } finally {
+      delegate.close();
+    }
   }
 
   @Override
@@ -63,8 +68,11 @@ final class TracingAsyncStreamedResponse implements AsyncStreamResponse<ChatComp
 
     @Override
     public void onComplete(Optional<Throwable> error) {
-      listener.endSpan(error.orElse(null));
-      delegate.onComplete(error);
+      try {
+        listener.endSpan(error.orElse(null));
+      } finally {
+        delegate.onComplete(error);
+      }
     }
   }
 }

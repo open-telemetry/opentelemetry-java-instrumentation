@@ -10,29 +10,48 @@ import static java.util.stream.Collectors.toList;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.completions.CompletionUsage;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.GuardedBy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 final class StreamListener {
 
   private final Context context;
   private final ChatCompletionRequest request;
-  private final Map<Long, StreamedMessageBuffer> choiceBuffers;
 
   private final Instrumenter<ChatCompletionRequest, ChatCompletion> instrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
   private final boolean newSpan;
-  private final AtomicBoolean hasEnded;
 
-  @Nullable private CompletionUsage usage;
-  @Nullable private String model;
-  @Nullable private String responseId;
+  // close() type of methods are exposed to the user and can be called from any thread, so they
+  // can overlap with chunk processing on the stream handler thread
+  private final Object lock = new Object();
+
+  @GuardedBy("lock")
+  private final Map<Long, StreamedMessageBuffer> choiceBuffers = new TreeMap<>();
+
+  @GuardedBy("lock")
+  private boolean hasEnded;
+
+  @GuardedBy("lock")
+  @Nullable
+  private CompletionUsage usage;
+
+  @GuardedBy("lock")
+  @Nullable
+  private String model;
+
+  @GuardedBy("lock")
+  @Nullable
+  private String responseId;
 
   StreamListener(
       Context context,
@@ -47,61 +66,91 @@ final class StreamListener {
     this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
     this.newSpan = newSpan;
-    choiceBuffers = new TreeMap<>();
-    hasEnded = new AtomicBoolean();
   }
 
   void onChunk(ChatCompletionChunk chunk) {
-    model = chunk.model();
-    responseId = chunk.id();
-    chunk.usage().ifPresent(u -> usage = u);
-
-    for (ChatCompletionChunk.Choice choice : chunk.choices()) {
-      StreamedMessageBuffer buffer =
-          choiceBuffers.computeIfAbsent(
-              choice.index(), index -> new StreamedMessageBuffer(index, captureMessageContent));
-      buffer.append(choice.delta());
-      if (choice.finishReason().isPresent()) {
-        buffer.finishReason = choice.finishReason().get().toString();
-
-        // message has ended, let's emit
-        ChatCompletionEventsHelper.emitCompletionLogEvent(
-            context, eventLogger, choice.index(), buffer.finishReason, buffer.toEventBody());
+    List<CompletedChoice> completedChoices = new ArrayList<>();
+    synchronized (lock) {
+      if (hasEnded) {
+        // the response has already been recorded
+        return;
       }
+
+      model = chunk.model();
+      responseId = chunk.id();
+      chunk.usage().ifPresent(u -> usage = u);
+
+      for (ChatCompletionChunk.Choice choice : chunk.choices()) {
+        StreamedMessageBuffer buffer =
+            choiceBuffers.computeIfAbsent(
+                choice.index(), index -> new StreamedMessageBuffer(index, captureMessageContent));
+        buffer.append(choice.delta());
+        if (choice.finishReason().isPresent()) {
+          buffer.finishReason = choice.finishReason().get().toString();
+          completedChoices.add(
+              new CompletedChoice(choice.index(), buffer.finishReason, buffer.toEventBody()));
+        }
+      }
+    }
+
+    // message has ended, let's emit
+    for (CompletedChoice completedChoice : completedChoices) {
+      ChatCompletionEventsHelper.emitCompletionLogEvent(
+          context,
+          eventLogger,
+          completedChoice.index,
+          completedChoice.finishReason,
+          completedChoice.eventBody);
     }
   }
 
   void endSpan(@Nullable Throwable error) {
-    // Use an atomic operation since close() type of methods are exposed to the user
-    // and can come from any thread.
-    if (!hasEnded.compareAndSet(false, true)) {
+    String model;
+    String responseId;
+    CompletionUsage usage;
+    List<ChatCompletion.Choice> choices;
+    synchronized (lock) {
+      if (hasEnded) {
+        return;
+      }
+      hasEnded = true;
+
+      model = this.model;
+      responseId = this.responseId;
+      usage = this.usage;
+      choices =
+          choiceBuffers.values().stream().map(StreamedMessageBuffer::toChoice).collect(toList());
+    }
+
+    if (!newSpan) {
       return;
     }
 
     if (model == null || responseId == null) {
       // Only happens if we got no chunks, so we have no response.
-      if (newSpan) {
-        instrumenter.end(context, request, null, error);
-      }
+      instrumenter.end(context, request, null, error);
       return;
     }
 
     ChatCompletion.Builder result =
-        ChatCompletion.builder()
-            .created(0)
-            .model(model)
-            .id(responseId)
-            .choices(
-                choiceBuffers.values().stream()
-                    .map(StreamedMessageBuffer::toChoice)
-                    .collect(toList()));
+        ChatCompletion.builder().created(0).model(model).id(responseId).choices(choices);
 
     if (usage != null) {
       result.usage(usage);
     }
 
-    if (newSpan) {
-      instrumenter.end(context, request, result.build(), error);
+    instrumenter.end(context, request, result.build(), error);
+  }
+
+  private static final class CompletedChoice {
+    private final long index;
+    private final String finishReason;
+    private final Value<?> eventBody;
+
+    private CompletedChoice(long index, String finishReason, Value<?> eventBody) {
+      this.index = index;
+      this.finishReason = finishReason;
+      this.eventBody = eventBody;
     }
   }
 }
