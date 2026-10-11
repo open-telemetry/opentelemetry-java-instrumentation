@@ -75,6 +75,10 @@ of where its implementation lives.
 
 ## Documentation
 
+- Write changelog entries around the user-visible change and any required migration.
+  Describe the released behavior directly, without referring to preview flags used to stage
+  the change. Omit statements about behavior that is unchanged unless they are necessary to
+  clarify the change's scope.
 - Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
   READMEs and usage documentation should describe current supported behavior without migration
   sections or historical comparisons. PR descriptions may include migration guidance, old/new
