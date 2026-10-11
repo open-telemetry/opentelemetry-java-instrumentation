@@ -32,6 +32,10 @@ tasks {
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
   }
 
+  withType<Test>().matching { it.name != "testDisabled" }.configureEach {
+    jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -46,7 +50,6 @@ tasks {
     filter {
       includeTestsMatching("*DefaultEnablementTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
   }
 
   check {

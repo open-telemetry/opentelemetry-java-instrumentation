@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Hibernate ORM (3.3, 4.0, and 6.0), Hibernate procedure-call, Hystrix 1.4, and Twilio 6.6 agent
+  instrumentations are disabled by default. Enable them with
+  `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
+  `otel.instrumentation.twilio.enabled=true`, respectively.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
