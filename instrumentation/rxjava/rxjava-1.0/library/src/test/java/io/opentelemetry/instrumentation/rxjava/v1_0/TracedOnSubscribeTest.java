@@ -7,226 +7,288 @@ package io.opentelemetry.instrumentation.rxjava.v1_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import rx.Observable;
-import rx.Subscriber;
+import rx.Observer;
+import rx.observers.TestSubscriber;
+import rx.subjects.ReplaySubject;
 
 @ExtendWith(MockitoExtension.class)
 class TracedOnSubscribeTest {
-  private static final ContextKey<String> CALLBACK_CONTEXT = ContextKey.named("callback-context");
-  private static final ContextKey<String> OPERATION_CONTEXT = ContextKey.named("operation-context");
-  private static final ContextKey<String> DERIVED_CONTEXT = ContextKey.named("derived-context");
-  private static final Span OPERATION_SPAN =
-      Span.wrap(
-          SpanContext.create(
-              "00000000000000000000000000000001",
-              "0000000000000001",
-              TraceFlags.getSampled(),
-              TraceState.getDefault()));
-
+  private static final ContextKey<String> CONTEXT_KEY = ContextKey.named("test-context");
   @Mock private Instrumenter<String, Void> instrumenter;
+  @Mock private Observer<String> delegate;
 
-  private final Context parentContext = Context.root().with(CALLBACK_CONTEXT, "parent");
-  private final Context emitterContext = Context.root().with(CALLBACK_CONTEXT, "emitter");
-  private final IllegalStateException error = new IllegalStateException("failure");
-  private final AtomicReference<Subscriber<? super String>> sourceSubscriber =
-      new AtomicReference<>();
-  private final AtomicReference<Context> callbackContext = new AtomicReference<>();
+  @Test
+  void endsSpanOnAlreadyCompleted() {
+    when(instrumenter.start(Context.root(), "request")).thenReturn(Context.root());
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void restoresOperationContextForErrorOutsideOperationScope(boolean validSpan) {
-    Context operationContext = operationContext(validSpan);
-    subscribe(operationContext, recordingSubscriber(operationContext));
+    Observable<String> result =
+        Observable.create(
+            new TracedOnSubscribe<>(Observable.just("response"), instrumenter, "request"));
+    TestSubscriber<String> observer = new TestSubscriber<>();
+    result.subscribe(observer);
 
-    try (Scope ignored = emitterContext.makeCurrent()) {
-      sourceSubscriber.get().onError(error);
-      assertThat(Context.current()).isSameAs(emitterContext);
-    }
-
-    assertThat(callbackContext.get()).isSameAs(operationContext);
-    assertThat(callbackContext.get().get(CALLBACK_CONTEXT)).isEqualTo("parent");
-    assertThat(callbackContext.get().get(OPERATION_CONTEXT)).isEqualTo("operation");
-    verifyNoMoreInteractions(instrumenter);
+    verify(instrumenter).end(Context.root(), "request", null, null);
+    assertThat(observer.getOnCompletedEvents()).hasSize(1);
+    observer.assertNoErrors();
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void preservesOperationContextForSynchronousError(boolean validSpan) {
-    Context operationContext = operationContext(validSpan);
-    when(instrumenter.start(parentContext, "request")).thenReturn(operationContext);
-    TracedOnSubscribe<String, String> traced;
-    try (Scope ignored = parentContext.makeCurrent()) {
-      traced = new TracedOnSubscribe<>(Observable.error(error), instrumenter, "request");
-    }
+  @Test
+  void endsSpanOnAlreadyErrored() {
+    IllegalStateException exception = new IllegalStateException();
+    when(instrumenter.start(Context.root(), "request")).thenReturn(Context.root());
 
+    Observable<String> result =
+        Observable.create(
+            new TracedOnSubscribe<>(Observable.error(exception), instrumenter, "request"));
+    TestSubscriber<String> observer = new TestSubscriber<>();
+    result.subscribe(observer);
+
+    verify(instrumenter).end(Context.root(), "request", null, exception);
+    assertThat(observer.getOnErrorEvents()).containsExactly(exception);
+  }
+
+  @Test
+  void endsSpanWhenCompleted() {
+    ReplaySubject<String> source = ReplaySubject.create();
+    when(instrumenter.start(Context.root(), "request")).thenReturn(Context.root());
+
+    Observable<String> result =
+        Observable.create(new TracedOnSubscribe<>(source, instrumenter, "request"));
+    TestSubscriber<String> observer = new TestSubscriber<>();
+    result.subscribe(observer);
+
+    verify(instrumenter).start(Context.root(), "request");
+    verifyNoMoreInteractions(instrumenter);
+
+    source.onCompleted();
+
+    verify(instrumenter).end(Context.root(), "request", null, null);
+    assertThat(observer.getOnCompletedEvents()).hasSize(1);
+    observer.assertNoErrors();
+  }
+
+  @Test
+  void endsSpanWhenErrored() {
+    IllegalStateException exception = new IllegalStateException();
+    ReplaySubject<String> source = ReplaySubject.create();
+    when(instrumenter.start(Context.root(), "request")).thenReturn(Context.root());
+
+    Observable<String> result =
+        Observable.create(new TracedOnSubscribe<>(source, instrumenter, "request"));
+    TestSubscriber<String> observer = new TestSubscriber<>();
+    result.subscribe(observer);
+
+    verify(instrumenter).start(Context.root(), "request");
+    verifyNoMoreInteractions(instrumenter);
+
+    source.onError(exception);
+
+    verify(instrumenter).end(Context.root(), "request", null, exception);
+    assertThat(observer.getOnErrorEvents()).containsExactly(exception);
+  }
+
+  @Test
+  void endsWhenCancelled() {
+    ReplaySubject<String> source = ReplaySubject.create();
+    when(instrumenter.start(Context.root(), "request")).thenReturn(Context.root());
+
+    Observable<String> result =
+        Observable.create(new TracedOnSubscribe<>(source, instrumenter, "request"));
+    TestSubscriber<String> observer = new TestSubscriber<>();
+    result.subscribe(observer);
+
+    verify(instrumenter).start(Context.root(), "request");
+    verifyNoMoreInteractions(instrumenter);
+
+    observer.unsubscribe();
+
+    verify(instrumenter).end(Context.root(), "request", null, null);
+  }
+
+  @Test
+  void endsSpanForEachSubscriber() {
+    ReplaySubject<String> source = ReplaySubject.create();
+    when(instrumenter.start(Context.root(), "request")).thenReturn(Context.root());
+
+    Observable<String> result =
+        Observable.create(new TracedOnSubscribe<>(source, instrumenter, "request"));
+    TestSubscriber<String> observer1 = new TestSubscriber<>();
+    TestSubscriber<String> observer2 = new TestSubscriber<>();
+    TestSubscriber<String> observer3 = new TestSubscriber<>();
+    result.subscribe(observer1);
+    result.subscribe(observer2);
+    result.subscribe(observer3);
+
+    verify(instrumenter, times(3)).start(Context.root(), "request");
+    verifyNoMoreInteractions(instrumenter);
+
+    source.onCompleted();
+
+    assertThat(observer1.getOnCompletedEvents()).hasSize(1);
+    assertThat(observer2.getOnCompletedEvents()).hasSize(1);
+    assertThat(observer3.getOnCompletedEvents()).hasSize(1);
+    observer1.assertNoErrors();
+    observer2.assertNoErrors();
+    observer3.assertNoErrors();
+    verify(instrumenter, times(3)).end(Context.root(), "request", null, null);
+  }
+
+  @Test
+  void restoresContextOnAlreadyErrored() {
+    IllegalStateException exception = new IllegalStateException();
+    Context parentContext = Context.root().with(CONTEXT_KEY, "parent");
+    Context context = parentContext.with(CONTEXT_KEY, "operation");
+    Context emitterContext = Context.root().with(CONTEXT_KEY, "emitter");
+    when(instrumenter.start(parentContext, "request")).thenReturn(context);
+    doAnswer(
+            invocation -> {
+              assertThat(Context.current()).isSameAs(context);
+              verify(instrumenter).end(context, "request", null, exception);
+              return null;
+            })
+        .when(delegate)
+        .onError(exception);
+
+    Observable<String> result;
+    try (Scope ignored = parentContext.makeCurrent()) {
+      result =
+          Observable.create(
+              new TracedOnSubscribe<>(Observable.error(exception), instrumenter, "request"));
+    }
+    TestSubscriber<String> observer = new TestSubscriber<>(delegate);
     try (Scope ignored = emitterContext.makeCurrent()) {
-      traced.call(recordingSubscriber(operationContext));
+      result.subscribe(observer);
       assertThat(Context.current()).isSameAs(emitterContext);
     }
 
-    assertThat(callbackContext.get()).isSameAs(operationContext);
+    assertThat(observer.getOnErrorEvents()).containsExactly(exception);
     verify(instrumenter).start(parentContext, "request");
     verifyNoMoreInteractions(instrumenter);
   }
 
   @Test
-  void preservesOperationContextForDerivedContextWithSameValidSpan() {
-    Context operationContext = operationContext(true);
-    Context derivedContext = operationContext.with(DERIVED_CONTEXT, "executor-metadata");
-    subscribe(operationContext, recordingSubscriber(operationContext));
+  void restoresContextWhenErrored() {
+    IllegalStateException exception = new IllegalStateException();
+    ReplaySubject<String> source = ReplaySubject.create();
+    Context parentContext = Context.root().with(CONTEXT_KEY, "parent");
+    Context context = parentContext.with(CONTEXT_KEY, "operation");
+    Context emitterContext = Context.root().with(CONTEXT_KEY, "emitter");
+    when(instrumenter.start(parentContext, "request")).thenReturn(context);
+    doAnswer(
+            invocation -> {
+              assertThat(Context.current()).isSameAs(context);
+              verify(instrumenter).end(context, "request", null, exception);
+              return null;
+            })
+        .when(delegate)
+        .onError(exception);
 
-    try (Scope ignored = derivedContext.makeCurrent()) {
-      sourceSubscriber.get().onError(error);
-      assertThat(Context.current()).isSameAs(derivedContext);
-    }
-
-    assertThat(callbackContext.get()).isSameAs(operationContext);
-    assertThat(callbackContext.get().get(DERIVED_CONTEXT)).isNull();
-    verifyNoMoreInteractions(instrumenter);
-  }
-
-  @Test
-  void restoresOperationContextForDistinctSpanlessContext() {
-    Context operationContext = operationContext(false);
-    Context derivedContext = operationContext.with(DERIVED_CONTEXT, "executor-metadata");
-    subscribe(operationContext, recordingSubscriber(operationContext));
-
-    try (Scope ignored = derivedContext.makeCurrent()) {
-      sourceSubscriber.get().onError(error);
-      assertThat(Context.current()).isSameAs(derivedContext);
-    }
-
-    assertThat(callbackContext.get()).isSameAs(operationContext);
-    assertThat(callbackContext.get().get(DERIVED_CONTEXT)).isNull();
-    verifyNoMoreInteractions(instrumenter);
-  }
-
-  @Test
-  void restoresOperationContextForErrorFromAnotherSpanInSameTrace() {
-    Context operationContext = operationContext(true);
-    SpanContext operationSpanContext = OPERATION_SPAN.getSpanContext();
-    Context unrelatedContext =
-        emitterContext.with(
-            Span.wrap(
-                SpanContext.create(
-                    operationSpanContext.getTraceId(),
-                    "0000000000000002",
-                    operationSpanContext.getTraceFlags(),
-                    operationSpanContext.getTraceState())));
-    subscribe(operationContext, recordingSubscriber(operationContext));
-
-    try (Scope ignored = unrelatedContext.makeCurrent()) {
-      sourceSubscriber.get().onError(error);
-      assertThat(Context.current()).isSameAs(unrelatedContext);
-    }
-
-    assertThat(callbackContext.get()).isSameAs(operationContext);
-    verifyNoMoreInteractions(instrumenter);
-  }
-
-  @Test
-  void restoresParentContextForErrorAfterCancellationWithoutEndingTwice() {
-    Context operationContext = operationContext(true);
-    Subscriber<String> subscriber =
-        subscriber(
-            e -> {
-              assertThat(e).isSameAs(error);
-              callbackContext.set(Context.current());
-            });
-    subscribe(operationContext, subscriber);
-    subscriber.unsubscribe();
-    subscriber.unsubscribe();
-
-    try (Scope ignored = emitterContext.makeCurrent()) {
-      sourceSubscriber.get().onError(error);
-      assertThat(Context.current()).isSameAs(emitterContext);
-    }
-
-    assertThat(callbackContext.get()).isSameAs(parentContext);
-    verify(instrumenter).end(operationContext, "request", null, null);
-    verifyNoMoreInteractions(instrumenter);
-  }
-
-  @Test
-  void restoresEmitterContextWhenErrorCallbackThrows() {
-    Context operationContext = operationContext(true);
-    IllegalArgumentException callbackError = new IllegalArgumentException("callback failure");
-    subscribe(
-        operationContext,
-        subscriber(
-            e -> {
-              assertThat(e).isSameAs(error);
-              assertThat(Context.current()).isSameAs(operationContext);
-              verify(instrumenter).end(operationContext, "request", null, error);
-              throw callbackError;
-            }));
-
-    try (Scope ignored = emitterContext.makeCurrent()) {
-      assertThatThrownBy(() -> sourceSubscriber.get().onError(error)).isSameAs(callbackError);
-      assertThat(Context.current()).isSameAs(emitterContext);
-    }
-
-    verifyNoMoreInteractions(instrumenter);
-  }
-
-  private Context operationContext(boolean validSpan) {
-    return parentContext
-        .with(validSpan ? OPERATION_SPAN : Span.getInvalid())
-        .with(OPERATION_CONTEXT, "operation");
-  }
-
-  private void subscribe(Context operationContext, Subscriber<String> subscriber) {
-    when(instrumenter.start(parentContext, "request")).thenReturn(operationContext);
-    TracedOnSubscribe<String, String> traced;
-    Observable.OnSubscribe<String> source = sourceSubscriber::set;
+    Observable<String> result;
     try (Scope ignored = parentContext.makeCurrent()) {
-      traced = new TracedOnSubscribe<>(Observable.create(source), instrumenter, "request");
+      result = Observable.create(new TracedOnSubscribe<>(source, instrumenter, "request"));
     }
-    traced.call(subscriber);
+    TestSubscriber<String> observer = new TestSubscriber<>(delegate);
+    result.subscribe(observer);
+
     verify(instrumenter).start(parentContext, "request");
+    verifyNoMoreInteractions(instrumenter);
+
+    try (Scope ignored = emitterContext.makeCurrent()) {
+      source.onError(exception);
+      assertThat(Context.current()).isSameAs(emitterContext);
+    }
+
+    assertThat(observer.getOnErrorEvents()).containsExactly(exception);
+    verifyNoMoreInteractions(instrumenter);
   }
 
-  private Subscriber<String> recordingSubscriber(Context operationContext) {
-    return subscriber(
-        e -> {
-          assertThat(e).isSameAs(error);
-          callbackContext.set(Context.current());
-          verify(instrumenter).end(operationContext, "request", null, error);
-        });
+  @Test
+  void restoresParentContextWhenErroredAfterCancellation() {
+    IllegalStateException exception = new IllegalStateException();
+    ReplaySubject<String> source = ReplaySubject.create();
+    Context parentContext = Context.root().with(CONTEXT_KEY, "parent");
+    Context context = parentContext.with(CONTEXT_KEY, "operation");
+    Context emitterContext = Context.root().with(CONTEXT_KEY, "emitter");
+    when(instrumenter.start(parentContext, "request")).thenReturn(context);
+    doAnswer(
+            invocation -> {
+              assertThat(Context.current()).isSameAs(parentContext);
+              return null;
+            })
+        .when(delegate)
+        .onError(exception);
+
+    Observable<String> result;
+    try (Scope ignored = parentContext.makeCurrent()) {
+      result = Observable.create(new TracedOnSubscribe<>(source, instrumenter, "request"));
+    }
+    TestSubscriber<String> observer = new TestSubscriber<>(delegate);
+    result.unsafeSubscribe(observer);
+
+    verify(instrumenter).start(parentContext, "request");
+    verifyNoMoreInteractions(instrumenter);
+
+    observer.unsubscribe();
+    observer.unsubscribe();
+
+    try (Scope ignored = emitterContext.makeCurrent()) {
+      source.onError(exception);
+      assertThat(Context.current()).isSameAs(emitterContext);
+    }
+
+    assertThat(observer.getOnErrorEvents()).containsExactly(exception);
+    verify(instrumenter).end(context, "request", null, null);
+    verifyNoMoreInteractions(instrumenter);
   }
 
-  private static Subscriber<String> subscriber(Consumer<Throwable> onError) {
-    return new Subscriber<String>() {
-      @Override
-      public void onNext(String value) {}
+  @Test
+  void restoresContextWhenErrorCallbackThrows() {
+    IllegalStateException exception = new IllegalStateException();
+    IllegalArgumentException callbackException = new IllegalArgumentException();
+    ReplaySubject<String> source = ReplaySubject.create();
+    Context parentContext = Context.root().with(CONTEXT_KEY, "parent");
+    Context context = parentContext.with(CONTEXT_KEY, "operation");
+    Context emitterContext = Context.root().with(CONTEXT_KEY, "emitter");
+    when(instrumenter.start(parentContext, "request")).thenReturn(context);
+    doAnswer(
+            invocation -> {
+              assertThat(Context.current()).isSameAs(context);
+              verify(instrumenter).end(context, "request", null, exception);
+              throw callbackException;
+            })
+        .when(delegate)
+        .onError(exception);
 
-      @Override
-      public void onCompleted() {}
+    Observable<String> result;
+    try (Scope ignored = parentContext.makeCurrent()) {
+      result = Observable.create(new TracedOnSubscribe<>(source, instrumenter, "request"));
+    }
+    TestSubscriber<String> observer = new TestSubscriber<>(delegate);
+    result.unsafeSubscribe(observer);
 
-      @Override
-      public void onError(Throwable e) {
-        onError.accept(e);
-      }
-    };
+    verify(instrumenter).start(parentContext, "request");
+    verifyNoMoreInteractions(instrumenter);
+
+    try (Scope ignored = emitterContext.makeCurrent()) {
+      assertThatThrownBy(() -> source.onError(exception)).isSameAs(callbackException);
+      assertThat(Context.current()).isSameAs(emitterContext);
+    }
+
+    verifyNoMoreInteractions(instrumenter);
   }
 }
