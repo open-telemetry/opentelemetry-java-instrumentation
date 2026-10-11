@@ -3,7 +3,7 @@
 Read [CONTRIBUTING.md](CONTRIBUTING.md) first. It is the source of truth for repository layout,
 build and test commands, style expectations, and scope.
 
-## Pull request titles and descriptions
+## Pull request descriptions
 
 - Skip `Summary`, `Details`, and `Testing` headings, validation lists, and checklists unless requested or
   template-required. Open directly with what changes and why.
