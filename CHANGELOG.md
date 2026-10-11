@@ -4,6 +4,16 @@
 
 ### ⚠️ Breaking changes
 
+- Remove the retired flat settings `otel.instrumentation.common.db-statement-sanitizer.enabled`
+  and `otel.instrumentation.<module>.statement-sanitizer.enabled`; use
+  `otel.instrumentation.common.db.query-sanitization.enabled` and
+  `otel.instrumentation.<module>.query-sanitization.enabled` instead. In declarative configuration,
+  replace `java.common.database.statement_sanitizer.enabled` and
+  `java.common.db_statement_sanitizer.enabled` with `java.common.db.query_sanitization.enabled`,
+  and `java.<module>.statement_sanitizer.enabled` with `java.<module>.query_sanitization.enabled`.
+  Replace `java.common.database.sqlcommenter/development.enabled` with
+  `java.common.db.sqlcommenter/development.enabled`; the flat setting
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` remains supported.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
