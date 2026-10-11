@@ -567,6 +567,11 @@ explicit type constraint only when every matched signature has a separate runtim
 guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
 prevent `ClassCastException`.
 
+Argument matchers check declared parameter types, not runtime value types. Match supported
+declarations compatible with the advice binding. These may be subtypes of the advice parameter's type
+or differ across supported library versions. A short matcher comment is useful to explain the
+supported signatures or concrete-type assumption when the choice is not obvious.
+
 ### Rules
 
 - Do not change the visibility of advice classes solely for style.
