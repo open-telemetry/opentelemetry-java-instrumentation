@@ -46,10 +46,43 @@ dependencies {
 }
 
 tasks {
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    timeout.set(Duration.ofMinutes(30))
+  val containerTestClasses = listOf(
+    "ActiveMqTest",
+    "CamelTest",
+    "CassandraTest",
+    "HadoopTest",
+    "JettyTest",
+    "JvmTest",
+    "TomcatTest",
+    "WildflyTest",
+    "kafka.KafkaBrokerTest",
+    "kafka.KafkaConnectTest",
+  ).map { "io.opentelemetry.instrumentation.jmx.rules.$it" }
 
+  test {
+    filter {
+      containerTestClasses.forEach { excludeTestsMatching(it) }
+    }
+  }
+
+  val containerTests = containerTestClasses.map { testClass ->
+    register<Test>("test${testClass.substringAfterLast('.').removeSuffix("Test")}") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching(testClass)
+      }
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+      // Restore the standard timeout after repeated cold CI runs demonstrate sufficient headroom.
+      timeout.set(Duration.ofMinutes(30))
+    }
+  }
+
+  check {
+    dependsOn(containerTests)
+  }
+
+  withType<Test>().configureEach {
     // the base agent only contains the agent machinery and the internal instrumentations that it
     // requires, the JMX instrumentation is added on top of it. Using the full agent would capture
     // telemetry from the target systems that is unrelated to JMX metrics.
