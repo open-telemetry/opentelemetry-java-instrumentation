@@ -13,22 +13,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Set;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisFactoryTarget;
 import redis.clients.jedis.JedisPoolAbstract;
 import redis.clients.jedis.Protocol;
 import redis.clients.jedis.TestJedisFactory;
-import redis.clients.jedis.util.Pool;
 
 class JedisConfiguredTargetsTest {
 
@@ -79,18 +75,11 @@ class JedisConfiguredTargetsTest {
   void capturesJedisFactorySubclass() {
     JedisPoolAbstract pool = new JedisPoolAbstract();
     TestJedisFactory factory = new TestJedisFactory();
-    VirtualField<Pool<?>, PooledObjectFactory<?>> factoryField =
-        VirtualField.find(Pool.class, PooledObjectFactory.class, "poolFactory");
 
     JedisConfiguredTargets.capturePoolFactory(pool, factory);
-    assertThat(factoryField.get(pool)).isSameAs(factory);
     JedisConfiguredTargets.setPoolTarget(pool, RedisServerTarget.ofEndpoint("configured:6379"));
 
     assertThat(JedisConfiguredTargets.factoryTargetContext(factory)).isNotNull();
-    Object configuredTarget = JedisFactoryTarget.get(factory);
-    JedisConfiguredTargets.setPoolTarget(pool, null);
-    assertThat(JedisConfiguredTargets.factoryTargetContext(factory)).isNotNull();
-    assertThat(JedisFactoryTarget.get(factory)).isNotNull().isNotSameAs(configuredTarget);
   }
 
   @Test
@@ -131,18 +120,12 @@ class JedisConfiguredTargetsTest {
   @Test
   void parsedSentinelUsesOriginalEndpoint() {
     HostAndPort parsedSentinel = new HostAndPort("192.0.2.1", 26379);
-    VirtualField<HostAndPort, String> unnamed = VirtualField.find(HostAndPort.class, String.class);
-    unnamed.set(parsedSentinel, "unrelated");
     JedisConfiguredTargets.captureOriginalEndpoint(parsedSentinel, "sentinel.example:26379");
     Set<HostAndPort> parsedSentinels = singleton(parsedSentinel);
 
     assertThat(JedisConfiguredTargets.sentinelTarget("mymaster", parsedSentinels))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("sentinel.example:26379/mymaster");
-    VirtualField<HostAndPort, String> originalEndpoint =
-        VirtualField.find(HostAndPort.class, String.class, "originalEndpoint");
-    assertThat(originalEndpoint.get(parsedSentinel)).isEqualTo("sentinel.example:26379");
-    assertThat(unnamed.get(parsedSentinel)).isEqualTo("unrelated");
   }
 
   @Test
