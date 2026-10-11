@@ -52,7 +52,7 @@ public final class AwsLambdaFunctionAttributesExtractor
       getFunctionVersion =
           lookup.findVirtual(
               Context.class, "getFunctionVersion", MethodType.methodType(String.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       getFunctionVersion = null;
     }
     GET_FUNCTION_VERSION = getFunctionVersion;
