@@ -185,11 +185,13 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   @Override
   public boolean isString(String name) {
+    // Flat configuration stores strings, so no parsing can fail.
     return getString(name) != null;
   }
 
   @Override
   public boolean isBoolean(String name) {
+    // Boolean.parseBoolean() returns false for unrecognized values instead of throwing.
     return getBoolean(name) != null;
   }
 
