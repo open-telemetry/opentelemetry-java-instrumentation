@@ -36,7 +36,6 @@ import org.junitpioneer.jupiter.ClearSystemProperty;
 
 @ClearSystemProperty(key = "otel.instrumentation.jdbc.query-sanitization.enabled")
 @ClearSystemProperty(key = "otel.instrumentation.common.db.query-sanitization.enabled")
-@ClearSystemProperty(key = "otel.instrumentation.common.db-statement-sanitizer.enabled")
 class OpenTelemetryDriverQuerySanitizationTest {
 
   @RegisterExtension
@@ -55,7 +54,6 @@ class OpenTelemetryDriverQuerySanitizationTest {
   @MethodSource("sanitizationSettings")
   void systemProperties(Boolean jdbcEnabled, Boolean commonEnabled, boolean expected)
       throws SQLException {
-    System.setProperty("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
     if (jdbcEnabled != null) {
       System.setProperty(
           "otel.instrumentation.jdbc.query-sanitization.enabled", jdbcEnabled.toString());
@@ -108,12 +106,8 @@ class OpenTelemetryDriverQuerySanitizationTest {
     when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(jdbcConfig);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(jdbcConfig.get("query_sanitization").getBoolean("enabled")).thenReturn(jdbcEnabled);
-    when(jdbcConfig.get("statement_sanitizer").getBoolean("enabled")).thenReturn(false);
     when(commonConfig.get("db").get("query_sanitization").getBoolean("enabled"))
         .thenReturn(commonEnabled);
-    when(commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled"))
-        .thenReturn(false);
-    when(commonConfig.get("db_statement_sanitizer").getBoolean("enabled")).thenReturn(false);
 
     return openTelemetry;
   }

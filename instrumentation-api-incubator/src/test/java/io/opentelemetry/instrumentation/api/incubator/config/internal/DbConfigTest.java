@@ -68,60 +68,13 @@ class DbConfigTest {
   }
 
   @Test
-  void newCommonQuerySanitizationTakesPrecedenceOverDeprecatedConfig() {
+  void commonQuerySanitizationSettingEnablesSanitization() {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(commonConfig.get("db").get("query_sanitization").getBoolean("enabled")).thenReturn(true);
-    when(commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled"))
-        .thenReturn(false);
-
     assertThat(DbConfig.isCommonQuerySanitizationEnabled(openTelemetry)).isTrue();
-  }
-
-  @Test
-  void deprecatedCommonStatementSanitizerConfigIsIgnored() {
-    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-    DeclarativeConfigProperties commonConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(commonConfig.get("db").get("query_sanitization").getBoolean("enabled")).thenReturn(null);
-    when(commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled"))
-        .thenReturn(false);
-
-    assertThat(DbConfig.isCommonQuerySanitizationEnabled(openTelemetry)).isTrue();
-  }
-
-  @Test
-  void deprecatedCommonStatementSanitizerPropertyIsIgnored() {
-    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-    DeclarativeConfigProperties commonConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(commonConfig.get("db").get("query_sanitization").getBoolean("enabled")).thenReturn(null);
-    when(commonConfig.get("db_statement_sanitizer").getBoolean("enabled")).thenReturn(false);
-
-    assertThat(DbConfig.isCommonQuerySanitizationEnabled(openTelemetry)).isTrue();
-  }
-
-  @Test
-  void deprecatedCommonSqlCommenterConfigIsIgnored() {
-    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-    DeclarativeConfigProperties commonConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    DeclarativeConfigProperties instrumentationConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(instrumentationConfig);
-    when(instrumentationConfig.get("sqlcommenter/development").getBoolean("enabled"))
-        .thenReturn(null);
-    when(commonConfig.get("db").get("sqlcommenter/development").getBoolean("enabled"))
-        .thenReturn(null);
-    when(commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled"))
-        .thenReturn(true);
-
-    assertThat(DbConfig.isSqlCommenterEnabled(openTelemetry, "jdbc")).isFalse();
   }
 
   @ParameterizedTest
@@ -151,35 +104,16 @@ class DbConfigTest {
         .thenReturn(instrumentationEnabled);
     when(commonConfig.get("db").get("sqlcommenter/development").getBoolean("enabled"))
         .thenReturn(commonEnabled);
-    when(commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled"))
-        .thenReturn(true);
-
     assertThat(DbConfig.isSqlCommenterEnabled(openTelemetry, "jdbc")).isEqualTo(expected);
   }
 
   @Test
-  void newInstrumentationQuerySanitizationTakesPrecedenceOverDeprecatedConfig() {
+  void instrumentationQuerySanitizationSettingEnablesSanitization() {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties instrumentationConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(instrumentationConfig);
     when(instrumentationConfig.get("query_sanitization").getBoolean("enabled")).thenReturn(true);
-    when(instrumentationConfig.get("statement_sanitizer").getBoolean("enabled")).thenReturn(false);
-
-    assertThat(DbConfig.isQuerySanitizationEnabled(openTelemetry, "jdbc")).isTrue();
-  }
-
-  @Test
-  void deprecatedInstrumentationQuerySanitizationConfigIsIgnored() {
-    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-    DeclarativeConfigProperties instrumentationConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(instrumentationConfig);
-    when(openTelemetry.getInstrumentationConfig("common"))
-        .thenReturn(DeclarativeConfigProperties.empty());
-    when(instrumentationConfig.get("query_sanitization").getBoolean("enabled")).thenReturn(null);
-    when(instrumentationConfig.get("statement_sanitizer").getBoolean("enabled")).thenReturn(false);
-
     assertThat(DbConfig.isQuerySanitizationEnabled(openTelemetry, "jdbc")).isTrue();
   }
 
@@ -194,14 +128,8 @@ class DbConfigTest {
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(instrumentationConfig);
     when(instrumentationConfig.get("query_sanitization").getBoolean("enabled")).thenReturn(null);
-    when(instrumentationConfig.get("statement_sanitizer").getBoolean("enabled"))
-        .thenReturn(!commonEnabled);
     when(commonConfig.get("db").get("query_sanitization").getBoolean("enabled"))
         .thenReturn(commonEnabled);
-    when(commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled"))
-        .thenReturn(!commonEnabled);
-    when(commonConfig.get("db_statement_sanitizer").getBoolean("enabled"))
-        .thenReturn(!commonEnabled);
 
     assertThat(DbConfig.isQuerySanitizationEnabled(openTelemetry, "jdbc")).isEqualTo(commonEnabled);
     assertThat(DbConfig.isCommonQuerySanitizationEnabled(openTelemetry)).isEqualTo(commonEnabled);
