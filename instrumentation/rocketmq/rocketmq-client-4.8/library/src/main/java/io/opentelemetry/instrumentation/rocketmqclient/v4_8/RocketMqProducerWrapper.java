@@ -46,7 +46,7 @@ final class RocketMqProducerWrapper implements InvocationHandler {
   }
 
   @SuppressWarnings(
-      "deprecation") // send-hook registration is exposed by the producer implementation
+      "deprecation") // Hook registration requires the deprecated implementation accessor.
   static MQProducer wrap(
       DefaultMQProducer producer,
       Instrumenter<SendMessageContext, Void> instrumenter,
