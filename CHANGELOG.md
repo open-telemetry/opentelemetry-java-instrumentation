@@ -8,8 +8,7 @@
   `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
   The Java agent also disables thread details by default; set `otel.javaagent.add-thread-details=true`
-  to capture `thread.id` and `thread.name` on spans. Declarative configuration retains its default-off
-  behavior and supports opt-in through `distribution.javaagent.thread_details_enabled: true`.
+  to capture `thread.id` and `thread.name` on spans.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
