@@ -73,8 +73,6 @@ tasks {
         includeTestsMatching(testClass)
       }
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-      // Restore the standard timeout after repeated cold CI runs demonstrate sufficient headroom.
-      timeout.set(Duration.ofMinutes(30))
     }
   }
 
