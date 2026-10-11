@@ -75,6 +75,8 @@ abstract class AbstractPulsarClientTest {
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
+  // Pulsar 2.8 transaction clients lack the coordinator-connect handshake required by newer
+  // brokers.
   private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse(System.getProperty("pulsarBrokerImage", "apachepulsar/pulsar:2.8.0"));
 

@@ -25,8 +25,8 @@ dependencies {
   testLibrary("org.apache.pulsar:pulsar-client-admin:2.8.0")
 
   // Pulsar 5 uses a different artifact and is covered by version5Test.
-latestDepTestLibrary("org.apache.pulsar:pulsar-client:4.+") // see test suite below
-latestDepTestLibrary("org.apache.pulsar:pulsar-client-admin:4.+") // see test suite below
+  latestDepTestLibrary("org.apache.pulsar:pulsar-client:4.+") // see test suite below
+  latestDepTestLibrary("org.apache.pulsar:pulsar-client-admin:4.+") // see test suite below
 }
 
 testing {
@@ -49,6 +49,7 @@ testing {
             excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
           }
           jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+          // The v5 API requires a 5.x broker, including for regular topics.
           systemProperty("pulsarBrokerImage", "apachepulsar/pulsar:5.0.0")
           systemProperty(
             "metadataConfig",
