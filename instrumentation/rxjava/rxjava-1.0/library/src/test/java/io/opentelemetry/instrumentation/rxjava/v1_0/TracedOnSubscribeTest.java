@@ -54,7 +54,7 @@ class TracedOnSubscribeTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void restoresParentContextForExternallyDrivenError(boolean validSpan) {
+  void restoresParentContextForErrorOutsideOperationScope(boolean validSpan) {
     Context operationContext = operationContext(validSpan);
     subscribe(operationContext, recordingSubscriber(operationContext));
 
@@ -89,10 +89,9 @@ class TracedOnSubscribeTest {
     verifyNoMoreInteractions(instrumenter);
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void selectsContextForErrorFromDerivedOperationContext(boolean validSpan) {
-    Context operationContext = operationContext(validSpan);
+  @Test
+  void preservesOperationContextForDerivedContextWithSameValidSpan() {
+    Context operationContext = operationContext(true);
     Context derivedContext = operationContext.with(DERIVED_CONTEXT, "executor-metadata");
     subscribe(operationContext, recordingSubscriber(operationContext));
 
@@ -101,7 +100,23 @@ class TracedOnSubscribeTest {
       assertThat(Context.current()).isSameAs(derivedContext);
     }
 
-    assertThat(callbackContext.get()).isSameAs(validSpan ? operationContext : parentContext);
+    assertThat(callbackContext.get()).isSameAs(operationContext);
+    assertThat(callbackContext.get().get(DERIVED_CONTEXT)).isNull();
+    verifyNoMoreInteractions(instrumenter);
+  }
+
+  @Test
+  void restoresParentContextForDistinctSpanlessContext() {
+    Context operationContext = operationContext(false);
+    Context derivedContext = operationContext.with(DERIVED_CONTEXT, "executor-metadata");
+    subscribe(operationContext, recordingSubscriber(operationContext));
+
+    try (Scope ignored = derivedContext.makeCurrent()) {
+      sourceSubscriber.get().onError(error);
+      assertThat(Context.current()).isSameAs(derivedContext);
+    }
+
+    assertThat(callbackContext.get()).isSameAs(parentContext);
     assertThat(callbackContext.get().get(DERIVED_CONTEXT)).isNull();
     verifyNoMoreInteractions(instrumenter);
   }
