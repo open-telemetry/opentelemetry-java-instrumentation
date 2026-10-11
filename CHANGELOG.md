@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
+  function version when available, as required by the FaaS semantic conventions. For example, an ARN
+  ending in `:prod` becomes `:42`. Update telemetry queries and dashboards that match alias-qualified
+  ARNs to use version-qualified ARNs.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
