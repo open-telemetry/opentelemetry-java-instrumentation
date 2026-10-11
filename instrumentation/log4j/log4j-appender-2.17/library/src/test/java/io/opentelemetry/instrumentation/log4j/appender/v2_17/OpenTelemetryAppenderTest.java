@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.Con
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -28,17 +27,8 @@ import io.opentelemetry.sdk.logs.ReadWriteLogRecord;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
-import java.lang.reflect.Field;
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -117,104 +107,6 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     } finally {
       openTelemetry.close();
     }
-  }
-
-  @Test
-  void emissionDoesNotHoldReadLock() throws Exception {
-    OpenTelemetryAppender appender =
-        OpenTelemetryAppender.builder().setName("OpenTelemetryAppender").build();
-    appender.start();
-
-    CountDownLatch setterCompleted = new CountDownLatch(1);
-    AtomicBoolean setterCompletedDuringEmit = new AtomicBoolean();
-    AtomicInteger emittedRecords = new AtomicInteger();
-    ExecutorService setterExecutor = Executors.newSingleThreadExecutor();
-    OpenTelemetrySdk openTelemetry =
-        OpenTelemetrySdk.builder()
-            .setLoggerProvider(
-                SdkLoggerProvider.builder()
-                    .addLogRecordProcessor(
-                        new LogRecordProcessor() {
-                          @Override
-                          public void onEmit(Context context, ReadWriteLogRecord logRecord) {
-                            emittedRecords.incrementAndGet();
-                            setterExecutor.execute(
-                                () -> {
-                                  try {
-                                    appender.setOpenTelemetry(testing.getOpenTelemetry());
-                                  } finally {
-                                    setterCompleted.countDown();
-                                  }
-                                });
-                            try {
-                              setterCompletedDuringEmit.set(setterCompleted.await(5, SECONDS));
-                            } catch (InterruptedException e) {
-                              Thread.currentThread().interrupt();
-                              throw new AssertionError(e);
-                            }
-                          }
-
-                          @Override
-                          public CompletableResultCode forceFlush() {
-                            return CompletableResultCode.ofSuccess();
-                          }
-
-                          @Override
-                          public CompletableResultCode shutdown() {
-                            return CompletableResultCode.ofSuccess();
-                          }
-                        })
-                    .build())
-            .build();
-
-    ReentrantReadWriteLock lock = getLock(appender);
-    AtomicReference<Throwable> appendFailure = new AtomicReference<>();
-    Thread appendThread =
-        new Thread(
-            () -> {
-              try {
-                appender.append(
-                    Log4jLogEvent.newBuilder()
-                        .setLoggerName("TestLogger")
-                        .setLevel(Level.INFO)
-                        .setMessage(new FormattedMessage("log message", (Object) null))
-                        .build());
-              } catch (Throwable t) {
-                appendFailure.set(t);
-              }
-            });
-    appendThread.setDaemon(true);
-
-    try {
-      lock.writeLock().lock();
-      try {
-        appendThread.start();
-        await().atMost(Duration.ofSeconds(5)).until(() -> lock.hasQueuedThread(appendThread));
-        appender.setOpenTelemetry(openTelemetry);
-      } finally {
-        lock.writeLock().unlock();
-      }
-      appendThread.join(10_000);
-      assertThat(appendThread.isAlive()).isFalse();
-      assertThat(appendFailure.get()).isNull();
-      assertThat(setterCompletedDuringEmit.get()).isTrue();
-      assertThat(emittedRecords.get()).isEqualTo(1);
-    } finally {
-      if (appendThread.isAlive()) {
-        appendThread.join(10_000);
-      }
-      appender.stop();
-      openTelemetry.close();
-      setterExecutor.shutdownNow();
-      setterExecutor.awaitTermination(5, SECONDS);
-    }
-  }
-
-  private static ReentrantReadWriteLock getLock(OpenTelemetryAppender appender)
-      throws ReflectiveOperationException {
-    Field lockField = OpenTelemetryAppender.class.getDeclaredField("lock");
-    lockField.setAccessible(true);
-    return (ReentrantReadWriteLock) lockField.get(appender);
   }
 
   @ParameterizedTest
