@@ -53,10 +53,10 @@ tasks {
     "HadoopTest",
     "JettyTest",
     "JvmTest",
+    "KafkaBrokerTest",
+    "KafkaConnectTest",
     "TomcatTest",
     "WildflyTest",
-    "kafka.KafkaBrokerTest",
-    "kafka.KafkaConnectTest",
   ).map { "io.opentelemetry.instrumentation.jmx.rules.$it" }
 
   test {

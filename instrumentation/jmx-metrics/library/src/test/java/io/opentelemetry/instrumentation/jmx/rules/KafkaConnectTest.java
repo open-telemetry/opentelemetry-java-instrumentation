@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.rules.kafka;
+package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
@@ -19,8 +19,6 @@ import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping;
-import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
-import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;

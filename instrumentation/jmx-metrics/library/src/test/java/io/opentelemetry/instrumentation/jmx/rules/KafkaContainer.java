@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.rules.kafka;
+package io.opentelemetry.instrumentation.jmx.rules;
 
 import java.time.Duration;
 import org.testcontainers.containers.GenericContainer;
