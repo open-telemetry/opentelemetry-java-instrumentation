@@ -9,24 +9,18 @@
   that match `io.opentelemetry.runtime-telemetry-java8` or
   `io.opentelemetry.runtime-telemetry-java17`.
 - JMX `jvm.gc.duration` metrics always include `jvm.gc.cause`. Remove
-  `otel.instrumentation.runtime-telemetry.capture-gc-cause` or declarative
-  `java.runtime_telemetry.capture_gc_cause`; GC cause is no longer configurable.
+  `otel.instrumentation.runtime-telemetry.capture-gc-cause`; GC cause is no longer configurable.
 - Remove the deprecated runtime telemetry configuration properties and their declarative forms:
   - Replace `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry` with
-    `otel.instrumentation.runtime-telemetry.emit-experimental-metrics`, or declarative
-    `java.runtime_telemetry.emit_experimental_metrics/development`.
+    `otel.instrumentation.runtime-telemetry.emit-experimental-metrics`.
   - Replace `otel.instrumentation.runtime-telemetry.package-emitter.*` with
-    `otel.instrumentation.runtime-telemetry.experimental.package-emitter.*`, or declarative
-    `java.runtime_telemetry.package_emitter/development`.
+    `otel.instrumentation.runtime-telemetry.experimental.package-emitter.*`.
   - Replace `otel.instrumentation.runtime-telemetry-java17.enabled` with
-    `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics`, or declarative
-    `java.runtime_telemetry.emit_experimental_jfr_metrics/development`.
+    `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics`.
   - Replace `otel.instrumentation.runtime-telemetry-java17.enable-all` with
-    `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*`, or declarative
-    `java.runtime_telemetry.jfr_metrics/development.included: ["*"]`.
+    `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*`.
   - Replace `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` with explicit metric
-    selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`, or
-    declarative `java.runtime_telemetry.jfr_metrics/development.included`.
+    selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`.
 - Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
