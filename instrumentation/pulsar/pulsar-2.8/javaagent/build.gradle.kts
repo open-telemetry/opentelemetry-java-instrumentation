@@ -49,8 +49,6 @@ testing {
             excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
           }
           jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-          // The v5 API requires a 5.x broker, including for regular topics.
-          systemProperty("pulsarBrokerImage", "apachepulsar/pulsar:5.0.0")
           systemProperty(
             "metadataConfig",
             "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
