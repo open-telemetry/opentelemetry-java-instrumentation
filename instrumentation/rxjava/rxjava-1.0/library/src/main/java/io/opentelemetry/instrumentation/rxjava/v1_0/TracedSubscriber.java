@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.rxjava.v1_0;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -79,26 +77,12 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
   @Override
   public void onError(Throwable e) {
     Context operationContext = contextRef.getAndSet(null);
-    Context callbackContext = parentContext;
     if (operationContext != null) {
-      if (shouldRetainOperationContext(operationContext)) {
-        callbackContext = operationContext;
-      }
       instrumenter.end(operationContext, request, null, e);
     }
+    Context callbackContext = operationContext != null ? operationContext : parentContext;
     try (Scope ignored = callbackContext.makeCurrent()) {
       delegate.onError(e);
     }
-  }
-
-  private static boolean shouldRetainOperationContext(Context operationContext) {
-    // Hystrix creates its fallback observable in onError and captures the current
-    // context as its parent. Retain the operation context when the error arrives
-    // under it, including executor-derived contexts with the same valid SpanContext.
-    Context currentContext = Context.current();
-    SpanContext operationSpanContext = Span.fromContext(operationContext).getSpanContext();
-    return currentContext == operationContext
-        || (operationSpanContext.isValid()
-            && operationSpanContext.equals(Span.fromContext(currentContext).getSpanContext()));
   }
 }

@@ -54,7 +54,7 @@ class TracedOnSubscribeTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void restoresParentContextForErrorOutsideOperationScope(boolean validSpan) {
+  void restoresOperationContextForErrorOutsideOperationScope(boolean validSpan) {
     Context operationContext = operationContext(validSpan);
     subscribe(operationContext, recordingSubscriber(operationContext));
 
@@ -63,9 +63,9 @@ class TracedOnSubscribeTest {
       assertThat(Context.current()).isSameAs(emitterContext);
     }
 
-    assertThat(callbackContext.get()).isSameAs(parentContext);
+    assertThat(callbackContext.get()).isSameAs(operationContext);
     assertThat(callbackContext.get().get(CALLBACK_CONTEXT)).isEqualTo("parent");
-    assertThat(callbackContext.get().get(OPERATION_CONTEXT)).isNull();
+    assertThat(callbackContext.get().get(OPERATION_CONTEXT)).isEqualTo("operation");
     verifyNoMoreInteractions(instrumenter);
   }
 
@@ -106,7 +106,7 @@ class TracedOnSubscribeTest {
   }
 
   @Test
-  void restoresParentContextForDistinctSpanlessContext() {
+  void restoresOperationContextForDistinctSpanlessContext() {
     Context operationContext = operationContext(false);
     Context derivedContext = operationContext.with(DERIVED_CONTEXT, "executor-metadata");
     subscribe(operationContext, recordingSubscriber(operationContext));
@@ -116,13 +116,13 @@ class TracedOnSubscribeTest {
       assertThat(Context.current()).isSameAs(derivedContext);
     }
 
-    assertThat(callbackContext.get()).isSameAs(parentContext);
+    assertThat(callbackContext.get()).isSameAs(operationContext);
     assertThat(callbackContext.get().get(DERIVED_CONTEXT)).isNull();
     verifyNoMoreInteractions(instrumenter);
   }
 
   @Test
-  void restoresParentContextForErrorFromAnotherSpanInSameTrace() {
+  void restoresOperationContextForErrorFromAnotherSpanInSameTrace() {
     Context operationContext = operationContext(true);
     SpanContext operationSpanContext = OPERATION_SPAN.getSpanContext();
     Context unrelatedContext =
@@ -140,7 +140,7 @@ class TracedOnSubscribeTest {
       assertThat(Context.current()).isSameAs(unrelatedContext);
     }
 
-    assertThat(callbackContext.get()).isSameAs(parentContext);
+    assertThat(callbackContext.get()).isSameAs(operationContext);
     verifyNoMoreInteractions(instrumenter);
   }
 
@@ -176,7 +176,7 @@ class TracedOnSubscribeTest {
         subscriber(
             e -> {
               assertThat(e).isSameAs(error);
-              assertThat(Context.current()).isSameAs(parentContext);
+              assertThat(Context.current()).isSameAs(operationContext);
               verify(instrumenter).end(operationContext, "request", null, error);
               throw callbackError;
             }));
