@@ -9,8 +9,9 @@ build and test commands, style expectations, and scope.
   template-required. Open directly with what changes and why.
 - Omit implementation details obvious from the diff; keep user-visible behavior and useful rationale,
   compatibility/migration notes, risks, or constraints.
-- For public APIs or user/operator configuration changes, put a small example near the top. Cover
-  relevant forms such as flat properties and YAML; show old/new forms only for migration.
+- For public APIs or user/operator configuration changes, put a small example near the top. Use flat
+  properties by default; include YAML only when behavior differs, migration is distinct, or configuration
+  is unavailable through flat properties. Show old/new forms only for migration.
 - After implementation changes, check the final diff and update only stale or misleading PR metadata.
 - Never hard wrap PR text.
 
