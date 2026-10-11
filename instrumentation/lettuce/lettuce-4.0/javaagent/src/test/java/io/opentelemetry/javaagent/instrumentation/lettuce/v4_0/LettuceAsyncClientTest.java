@@ -152,7 +152,7 @@ class LettuceAsyncClientTest {
     // (+ 1 connect trace per client when connection telemetry is enabled). Older lettuce connects
     // synchronously and nests the SELECT under CONNECT, while newer lettuce connects asynchronously
     // and starts a new trace for it.
-    testing.waitForTraces(connectionTelemetryEnabled() ? (testLatestDeps() ? 4 : 3) : 2);
+    testing.waitForTraces(connectionTelemetryEnabled() ? testLatestDeps() ? 4 : 3 : 2);
   }
 
   private static boolean connectionTelemetryEnabled() {

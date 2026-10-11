@@ -273,7 +273,7 @@ class CassandraClientTest {
     ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
     InetSocketAddress coordinatorAddress =
         resultSet.getExecutionInfo().getQueriedHost().getSocketAddress();
-    Long expectedServerPort = (expectedPort == null ? null : Long.valueOf(expectedPort));
+    Long expectedServerPort = expectedPort == null ? null : Long.valueOf(expectedPort);
 
     testing.waitAndAssertTraces(
         trace ->
