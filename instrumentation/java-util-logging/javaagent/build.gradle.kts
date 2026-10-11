@@ -11,14 +11,14 @@ dependencies {
 }
 
 tasks {
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
   }
 
-  val testCaptureTemplateAndArguments = register<Test>("testCaptureTemplateAndArguments") {
+  val testCaptureTemplateAndArguments by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

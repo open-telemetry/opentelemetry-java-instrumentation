@@ -37,20 +37,19 @@ tasks.withType<Test>().configureEach {
 
 tasks {
 
-  val testReceiveTelemetry =
-    register<Test>("testReceiveTelemetry") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")
-      }
-
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true"
-      )
+  val testReceiveTelemetry by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")
     }
+
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true"
+    )
+  }
 
   check {
     dependsOn(

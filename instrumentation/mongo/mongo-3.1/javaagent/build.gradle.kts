@@ -73,7 +73,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val version37TestV3Preview = register<Test>("version37TestV3Preview") {
+  val version37TestV3Preview by registering(Test::class) {
     val sourceTask = named<Test>("version37Test").get()
     setJvmArgs(sourceTask.jvmArgs)
     setSystemProperties(sourceTask.systemProperties)
@@ -87,7 +87,7 @@ tasks {
     isEnabled = sourceTask.enabled
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testV3Preview by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

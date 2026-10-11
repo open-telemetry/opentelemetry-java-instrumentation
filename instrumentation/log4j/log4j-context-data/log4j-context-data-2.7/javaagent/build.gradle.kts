@@ -31,7 +31,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
 
-  val testAddBaggage = register<Test>("testAddBaggage") {
+  val testAddBaggage by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -40,7 +40,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
   }
 
-  val testLoggingKeys = register<Test>("testLoggingKeys") {
+  val testLoggingKeys by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

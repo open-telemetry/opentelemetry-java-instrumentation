@@ -38,7 +38,7 @@ tasks {
     jvmArgs("-Drocketmq.broker.diskSpaceWarningLevelRatio=1.0")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -46,20 +46,19 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.rocketmq-client.experimental-span-attributes=true")
   }
 
-  val testCreateSpansDisabled =
-    register<Test>("testCreateSpansDisabled") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
+  val testCreateSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-      jvmArgs("-Dotel.instrumentation.rocketmq-client.message-create-spans.enabled=false")
-      systemProperty("testBatchCreateSpansDisabled", "true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.rocketmq-client.message-create-spans.enabled=false",
-      )
-    }
+    jvmArgs("-Dotel.instrumentation.rocketmq-client.message-create-spans.enabled=false")
+    systemProperty("testBatchCreateSpansDisabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.rocketmq-client.message-create-spans.enabled=false",
+    )
+  }
 
-  val testBatchSendSuppression = register<Test>("testBatchSendSuppression") {
+  val testBatchSendSuppression by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

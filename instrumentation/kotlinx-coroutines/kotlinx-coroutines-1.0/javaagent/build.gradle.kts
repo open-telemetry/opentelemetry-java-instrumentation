@@ -104,7 +104,7 @@ tasks {
     enabled = false
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testV3Preview by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")

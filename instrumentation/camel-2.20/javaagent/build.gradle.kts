@@ -115,7 +115,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -123,7 +123,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -131,24 +131,23 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.experimental.span-suppression-strategy=semconv")
   }
 
-  val testStableSemconvWithReceiveTelemetry =
-    register<Test>("testStableSemconvWithReceiveTelemetry") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
+  val testStableSemconvWithReceiveTelemetry by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-      jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.experimental.span-suppression-strategy=semconv," +
-          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-      )
-      filter {
-        includeTestsMatching("*KafkaCamelTest")
-      }
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.experimental.span-suppression-strategy=semconv," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
+    filter {
+      includeTestsMatching("*KafkaCamelTest")
     }
+  }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testV3Preview by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -157,7 +156,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
-  val testStableSemconvNoLowerMessaging = register<Test>("testStableSemconvNoLowerMessaging") {
+  val testStableSemconvNoLowerMessaging by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -175,23 +174,22 @@ tasks {
     }
   }
 
-  val testStableSemconvSjmsWithoutCamelJms =
-    register<Test>("testStableSemconvSjmsWithoutCamelJms") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath =
-        sourceSets.test.get().runtimeClasspath.filter {
-          !it.name.startsWith("camel-jms-")
-        }
-
-      jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-      systemProperty("metadataConfig", "otel.instrumentation.experimental.span-suppression-strategy=semconv")
-      filter {
-        includeTestsMatching("*SjmsCamelTest")
-        includeTestsMatching("*SjmsRegisteredListenerTest")
+  val testStableSemconvSjmsWithoutCamelJms by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath =
+      sourceSets.test.get().runtimeClasspath.filter {
+        !it.name.startsWith("camel-jms-")
       }
-    }
 
-  val testStableSemconvCamelDisabled = register<Test>("testStableSemconvCamelDisabled") {
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    systemProperty("metadataConfig", "otel.instrumentation.experimental.span-suppression-strategy=semconv")
+    filter {
+      includeTestsMatching("*SjmsCamelTest")
+      includeTestsMatching("*SjmsRegisteredListenerTest")
+    }
+  }
+
+  val testStableSemconvCamelDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -210,7 +208,7 @@ tasks {
     }
   }
 
-  val testStableSemconvAdaptersDisabled = register<Test>("testStableSemconvAdaptersDisabled") {
+  val testStableSemconvAdaptersDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

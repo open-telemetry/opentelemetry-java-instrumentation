@@ -29,7 +29,7 @@ dependencies {
 }
 
 tasks {
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -37,7 +37,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -45,7 +45,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
   }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
+  val testBothSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -53,7 +53,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+  val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

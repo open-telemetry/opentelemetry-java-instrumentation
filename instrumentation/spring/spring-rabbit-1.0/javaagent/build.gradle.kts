@@ -72,7 +72,7 @@ tasks {
     }
   }
 
-  val testSpringDisabled = register<Test>("testSpringDisabled") {
+  val testSpringDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

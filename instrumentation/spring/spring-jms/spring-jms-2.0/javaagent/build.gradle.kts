@@ -86,7 +86,7 @@ tasks {
     )
   }
 
-  val testJmsDisabled = register<Test>("testJmsDisabled") {
+  val testJmsDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

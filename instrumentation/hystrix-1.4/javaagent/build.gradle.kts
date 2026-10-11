@@ -32,7 +32,7 @@ tasks {
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -40,7 +40,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hystrix.experimental-span-attributes=true")
   }
 
-  val testDisabled = register<Test>("testDisabled") {
+  val testDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

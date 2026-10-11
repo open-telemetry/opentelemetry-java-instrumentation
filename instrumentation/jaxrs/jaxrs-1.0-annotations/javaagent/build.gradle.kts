@@ -42,7 +42,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testV3Preview by registering(Test::class) {
     testClassesDirs = test.get().testClassesDirs
     classpath = test.get().classpath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")

@@ -40,7 +40,7 @@ tasks {
     systemProperty("testMdcConfiguration", "new")
   }
 
-  val testCaptureTemplateAndArguments = register<Test>("testCaptureTemplateAndArguments") {
+  val testCaptureTemplateAndArguments by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -50,7 +50,7 @@ tasks {
     )
   }
 
-  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
+  val testLegacyMdcAttributes by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -58,7 +58,7 @@ tasks {
     systemProperty("testMdcConfiguration", "legacy")
   }
 
-  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
+  val testMdcAttributePrecedence by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -69,7 +69,7 @@ tasks {
     systemProperty("testMdcConfiguration", "precedence")
   }
 
-  val testExcludedOnlyMdcAttributes = register<Test>("testExcludedOnlyMdcAttributes") {
+  val testExcludedOnlyMdcAttributes by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

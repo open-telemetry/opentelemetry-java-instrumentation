@@ -64,14 +64,14 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=rpc")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
   }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
+  val testBothSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")

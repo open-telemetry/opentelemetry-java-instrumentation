@@ -127,7 +127,7 @@ tasks {
 
   val slf4j2ApiTestSourceSet = sourceSets.named("slf4j2ApiTest")
 
-  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
+  val testMdcAttributeExclusionsOnly by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*LogbackMdcSelectorTest")
@@ -136,7 +136,7 @@ tasks {
     systemProperty("testMdcConfiguration", "exclude-only")
   }
 
-  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
+  val testLegacyMdcAttributes by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*LogbackMdcSelectorTest")
@@ -147,7 +147,7 @@ tasks {
     systemProperty("testMdcConfiguration", "legacy")
   }
 
-  val testLegacyMdcAttributesCaptureAll = register<Test>("testLegacyMdcAttributesCaptureAll") {
+  val testLegacyMdcAttributesCaptureAll by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*LogbackMdcSelectorTest")
@@ -156,7 +156,7 @@ tasks {
     systemProperty("testMdcConfiguration", "legacy-all")
   }
 
-  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
+  val testMdcAttributePrecedence by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*LogbackMdcSelectorTest")
@@ -168,7 +168,7 @@ tasks {
     systemProperty("testMdcConfiguration", "precedence")
   }
 
-  val testLoggerContextAttributeExclusionsOnly = register<Test>("testLoggerContextAttributeExclusionsOnly") {
+  val testLoggerContextAttributeExclusionsOnly by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
@@ -177,7 +177,7 @@ tasks {
     systemProperty("testLoggerContextConfiguration", "exclude-only")
   }
 
-  val testLegacyLoggerContextAttributes = register<Test>("testLegacyLoggerContextAttributes") {
+  val testLegacyLoggerContextAttributes by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
@@ -186,7 +186,7 @@ tasks {
     systemProperty("testLoggerContextConfiguration", "legacy")
   }
 
-  val testLoggerContextAttributePrecedence = register<Test>("testLoggerContextAttributePrecedence") {
+  val testLoggerContextAttributePrecedence by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
@@ -202,7 +202,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
   }
 
-  val testLogstashMarkerAttributeExclusionsOnly = register<Test>("testLogstashMarkerAttributeExclusionsOnly") {
+  val testLogstashMarkerAttributeExclusionsOnly by registering(Test::class) {
     testClassesDirs = sourceSets["logstashMarkerTest"].output.classesDirs
     classpath = sourceSets["logstashMarkerTest"].runtimeClasspath
 
@@ -214,7 +214,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
   }
 
-  val testLogstashStructuredArgumentAttributeExclusionsOnly = register<Test>("testLogstashStructuredArgumentAttributeExclusionsOnly") {
+  val testLogstashStructuredArgumentAttributeExclusionsOnly by registering(Test::class) {
     testClassesDirs = sourceSets["logstashStructuredArgsTest"].output.classesDirs
     classpath = sourceSets["logstashStructuredArgsTest"].runtimeClasspath
 

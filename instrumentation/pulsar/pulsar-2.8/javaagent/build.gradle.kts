@@ -30,7 +30,7 @@ tasks {
     systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
   }
 
-  val testReceiveSpanDisabled = register<Test>("testReceiveSpanDisabled") {
+  val testReceiveSpanDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -39,7 +39,7 @@ tasks {
     include("**/PulsarClientSuppressReceiveSpansTest.*")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

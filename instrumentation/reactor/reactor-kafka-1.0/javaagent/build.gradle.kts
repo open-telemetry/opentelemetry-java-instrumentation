@@ -150,7 +150,7 @@ tasks {
       }
     }
 
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
+  val testReceiveSpansDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

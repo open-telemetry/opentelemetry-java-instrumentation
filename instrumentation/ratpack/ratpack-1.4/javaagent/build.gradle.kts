@@ -91,7 +91,7 @@ tasks {
     systemProperty("ratpack14Test", true)
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=service.peer")
@@ -99,14 +99,14 @@ tasks {
     systemProperty("ratpack14Test", true)
   }
 
-  val version17TestPreviewSemconv = register<Test>("version17TestPreviewSemconv") {
+  val version17TestPreviewSemconv by registering(Test::class) {
     testClassesDirs = version17Test.get().sources.output.classesDirs
     classpath = version17Test.get().sources.runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val version17TestV3Preview = register<Test>("version17TestV3Preview") {
+  val version17TestV3Preview by registering(Test::class) {
     testClassesDirs = version17Test.get().sources.output.classesDirs
     classpath = version17Test.get().sources.runtimeClasspath
     filter {

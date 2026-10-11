@@ -52,7 +52,7 @@ tasks {
     }
   }
 
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
+  val testReceiveSpansDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -61,7 +61,7 @@ tasks {
     include("**/KafkaStreamsSuppressReceiveSpansTest.*")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

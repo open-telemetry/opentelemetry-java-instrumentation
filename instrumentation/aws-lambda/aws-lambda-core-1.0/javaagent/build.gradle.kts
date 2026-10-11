@@ -30,7 +30,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+  val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

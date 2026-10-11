@@ -116,7 +116,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+  val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
 
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")

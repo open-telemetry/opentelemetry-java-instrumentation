@@ -25,7 +25,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=ignored-*")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

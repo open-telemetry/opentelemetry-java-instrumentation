@@ -47,7 +47,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testConnectionSpan = register<Test>("testConnectionSpan") {
+  val testConnectionSpan by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -70,7 +70,7 @@ tasks {
     }
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=service.peer")

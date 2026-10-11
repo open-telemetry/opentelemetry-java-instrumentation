@@ -26,7 +26,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testReceiveSpanDisabled = register<Test>("testReceiveSpanDisabled") {
+  val testReceiveSpanDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -37,17 +37,16 @@ tasks {
 
   // A SimpleConsumer pull has no process span, so it gets a receive span even when receive
   // telemetry is disabled by default.
-  val testSimpleConsumerReceiveTelemetryDisabled =
-    register<Test>("testSimpleConsumerReceiveTelemetryDisabled") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching(
-          "RocketMqSimpleConsumerTest.shouldInstrumentReceiveWhenReceiveTelemetryDisabled",
-        )
-      }
-      include("**/RocketMqSimpleConsumerTest.*")
+  val testSimpleConsumerReceiveTelemetryDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching(
+        "RocketMqSimpleConsumerTest.shouldInstrumentReceiveWhenReceiveTelemetryDisabled",
+      )
     }
+    include("**/RocketMqSimpleConsumerTest.*")
+  }
 
   test {
     filter {

@@ -33,7 +33,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testPropagationDisabled = register<Test>("testPropagationDisabled") {
+  val testPropagationDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -44,7 +44,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kafka.producer-propagation.enabled=false")
   }
 
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
+  val testReceiveSpansDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -53,7 +53,7 @@ tasks {
     include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testV3Preview by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -67,7 +67,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

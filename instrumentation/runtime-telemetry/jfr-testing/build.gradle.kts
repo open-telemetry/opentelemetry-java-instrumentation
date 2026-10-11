@@ -18,7 +18,7 @@ tasks {
     }
   }
 
-  val testBackcompat = register<Test>("testBackcompat") {
+  val testBackcompat by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

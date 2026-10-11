@@ -142,7 +142,7 @@ tasks {
     }
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -150,7 +150,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
   }
 
-  val testConnectionTelemetryEnabled = register<Test>("testConnectionTelemetryEnabled") {
+  val testConnectionTelemetryEnabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -180,23 +180,22 @@ tasks {
       }
     }
 
-  val testConnectionTelemetryEnabledPreviewSemconv =
-    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      jvmArgs(
-        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.preview=service.peer"
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
-      )
-    }
+  val testConnectionTelemetryEnabledPreviewSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs(
+      "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
+      "-Dotel.semconv-stability.preview=service.peer"
+    )
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
+    )
+  }
 
   // exercises the v3-preview path, where this advice-based module supersedes the SPI-based
   // lettuce-5.1 javaagent module (which is disabled under v3-preview)
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testV3Preview by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")

@@ -90,28 +90,28 @@ tasks {
     }
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
     inputs.dir(jflexOutputDir)
   }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
+  val testBothSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer/dup")
     inputs.dir(jflexOutputDir)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+  val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     inputs.dir(jflexOutputDir)
   }
 
-  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
+  val testExceptionSignalLogsDup by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")

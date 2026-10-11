@@ -26,7 +26,7 @@ dependencies {
 }
 
 tasks {
-  val testChunkRootSpan = register<Test>("testChunkRootSpan") {
+  val testChunkRootSpan by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -40,7 +40,7 @@ tasks {
     )
   }
 
-  val testItemLevelSpan = register<Test>("testItemLevelSpan") {
+  val testItemLevelSpan by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -52,7 +52,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-batch.item.enabled=true")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

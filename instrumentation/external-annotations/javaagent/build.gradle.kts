@@ -45,7 +45,7 @@ testing {
 }
 
 tasks {
-  val testIncludeProperty = register<Test>("testIncludeProperty") {
+  val testIncludeProperty by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -56,7 +56,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.external.annotations.OuterClass\$InterestingMethod")
   }
 
-  val testDeclarativeConfigInclude = register<Test>("testDeclarativeConfigInclude") {
+  val testDeclarativeConfigInclude by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -69,7 +69,7 @@ tasks {
     )
   }
 
-  val testExcludeMethodsProperty = register<Test>("testExcludeMethodsProperty") {
+  val testExcludeMethodsProperty by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -82,7 +82,7 @@ tasks {
     )
   }
 
-  val testDeclarativeConfigExcludeMethods = register<Test>("testDeclarativeConfigExcludeMethods") {
+  val testDeclarativeConfigExcludeMethods by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

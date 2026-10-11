@@ -46,19 +46,18 @@ dependencies {
 }
 
 tasks {
-  val testAmqpHandoffWithRabbitInstrumentation =
-    register<Test>("testAmqpHandoffWithRabbitInstrumentation") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching("MessageProducerSupportInstrumentationTest")
-      }
-      include("**/MessageProducerSupportInstrumentationTest.*")
-      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-      systemProperty("springIntegrationRabbitHandoffTest", "true")
+  val testAmqpHandoffWithRabbitInstrumentation by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("MessageProducerSupportInstrumentationTest")
     }
+    include("**/MessageProducerSupportInstrumentationTest.*")
+    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+    systemProperty("springIntegrationRabbitHandoffTest", "true")
+  }
 
-  val testWithRabbitInstrumentation = register<Test>("testWithRabbitInstrumentation") {
+  val testWithRabbitInstrumentation by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -70,7 +69,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
   }
 
-  val testWithProducerInstrumentation = register<Test>("testWithProducerInstrumentation") {
+  val testWithProducerInstrumentation by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -83,7 +82,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
   }
 
-  val testProducerEnabled = register<Test>("testProducerEnabled") {
+  val testProducerEnabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

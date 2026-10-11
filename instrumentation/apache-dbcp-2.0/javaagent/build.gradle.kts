@@ -30,18 +30,17 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testWithCommonsPoolInstrumentation =
-    register<Test>("testWithCommonsPoolInstrumentation") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching(
-          "ApacheDbcpInstrumentationTest.shouldNotReportCommonsPoolMetrics",
-        )
-      }
-
-      jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
+  val testWithCommonsPoolInstrumentation by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching(
+        "ApacheDbcpInstrumentationTest.shouldNotReportCommonsPoolMetrics",
+      )
     }
+
+    jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
+  }
 
   check {
     dependsOn(testWithCommonsPoolInstrumentation)

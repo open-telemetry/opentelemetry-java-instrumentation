@@ -27,7 +27,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -35,7 +35,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
   }
 
-  val testConnectionTelemetryEnabled = register<Test>("testConnectionTelemetryEnabled") {
+  val testConnectionTelemetryEnabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -43,26 +43,25 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val testConnectionTelemetryEnabledPreviewSemconv =
-    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      jvmArgs(
-        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.preview=service.peer"
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
-      )
-    }
+  val testConnectionTelemetryEnabledPreviewSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs(
+      "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
+      "-Dotel.semconv-stability.preview=service.peer"
+    )
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
+    )
+  }
 
   check {
     dependsOn(

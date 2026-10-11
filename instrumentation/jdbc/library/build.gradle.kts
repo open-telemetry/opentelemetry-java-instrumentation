@@ -64,7 +64,7 @@ tasks {
     include("io/opentelemetry/javaagent/bootstrap/**")
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+  val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

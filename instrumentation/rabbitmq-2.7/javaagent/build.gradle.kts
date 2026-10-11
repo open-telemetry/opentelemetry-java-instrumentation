@@ -49,7 +49,7 @@ tasks {
     }
   }
 
-  val testExperimental = register<Test>("testExperimental") {
+  val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -57,7 +57,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.rabbitmq.experimental-span-attributes=true")
   }
 
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
+  val testReceiveSpansDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")

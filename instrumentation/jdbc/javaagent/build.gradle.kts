@@ -44,7 +44,7 @@ dependencies {
 }
 
 tasks {
-  val testSlick = register<Test>("testSlick") {
+  val testSlick by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -54,7 +54,7 @@ tasks {
     include("**/SlickTest.*")
   }
 
-  val testSqlCommenter = register<Test>("testSqlCommenter") {
+  val testSqlCommenter by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -68,7 +68,7 @@ tasks {
     jvmArgs("-Dotel.testing.sqlcommenter.enabled=true")
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -82,7 +82,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val testCaptureParameters = register<Test>("testCaptureParameters") {
+  val testCaptureParameters by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -92,7 +92,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+  val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

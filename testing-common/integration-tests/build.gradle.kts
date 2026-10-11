@@ -28,7 +28,7 @@ dependencies {
 }
 
 tasks {
-  val testFieldInjectionDisabled = register<Test>("testFieldInjectionDisabled") {
+  val testFieldInjectionDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -38,7 +38,7 @@ tasks {
     jvmArgs("-Dotel.javaagent.experimental.field-injection.enabled=false")
   }
 
-  val testFieldBackedImplementation = register<Test>("testFieldBackedImplementation") {
+  val testFieldBackedImplementation by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

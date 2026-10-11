@@ -56,7 +56,7 @@ tasks {
     }
   }
 
-  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
+  val testQuerySanitizationDisabled by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -67,7 +67,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
   }
 
-  val testQuerySanitizationEnabledOverride = register<Test>("testQuerySanitizationEnabledOverride") {
+  val testQuerySanitizationEnabledOverride by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

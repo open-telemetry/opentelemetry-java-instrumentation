@@ -54,7 +54,7 @@ tasks {
     )
   }
 
-  val testAsync = register<Test>("testAsync") {
+  val testAsync by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
@@ -66,7 +66,7 @@ tasks {
     )
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testV3Preview by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
@@ -78,7 +78,7 @@ tasks {
     )
   }
 
-  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
+  val testLegacyMdcAttributes by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*Log4jMdcSelectorTest")
@@ -89,7 +89,7 @@ tasks {
     systemProperty("testMdcConfiguration", "legacy")
   }
 
-  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
+  val testMdcAttributeExclusionsOnly by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*Log4jMdcSelectorTest")
@@ -98,7 +98,7 @@ tasks {
     systemProperty("testMdcConfiguration", "exclude-only")
   }
 
-  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
+  val testMdcAttributePrecedence by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*Log4jMdcSelectorTest")
@@ -110,7 +110,7 @@ tasks {
     systemProperty("testMdcConfiguration", "precedence")
   }
 
-  val testStructuredAttributesExcludeOnly = register<Test>("testStructuredAttributesExcludeOnly") {
+  val testStructuredAttributesExcludeOnly by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
@@ -136,7 +136,7 @@ tasks {
     }
   }
 
-  val testStructuredAttributesExcludedAll = register<Test>("testStructuredAttributesExcludedAll") {
+  val testStructuredAttributesExcludedAll by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*Log4jMapMessageSelectorTest")

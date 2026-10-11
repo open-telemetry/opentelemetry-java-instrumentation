@@ -82,7 +82,7 @@ tasks {
     exclude("**/server/**")
   }
 
-  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
+  val testControllerTelemetry by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     include("**/server/**")
@@ -93,7 +93,7 @@ tasks {
     )
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     exclude("**/server/**")
@@ -101,7 +101,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val testControllerTelemetryPreviewSemconv = register<Test>("testControllerTelemetryPreviewSemconv") {
+  val testControllerTelemetryPreviewSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     include("**/server/**")
@@ -114,7 +114,7 @@ tasks {
     )
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+  val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")

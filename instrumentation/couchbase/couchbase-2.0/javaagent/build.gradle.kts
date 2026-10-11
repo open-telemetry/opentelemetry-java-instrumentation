@@ -98,7 +98,7 @@ tasks {
     }
   }
 
-  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
+  val version26TestLegacyConfig by registering(Test::class) {
     val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
     isEnabled = named<Test>(suite.name).get().enabled
     testClassesDirs = suite.sources.output.classesDirs
