@@ -75,6 +75,9 @@ of where its implementation lives.
 
 ## Documentation
 
+- Document flat properties without repeating equivalent declarative configuration.
+  Include declarative configuration only when it has different behavior, requires a distinct
+  migration, or supports configuration unavailable through flat properties.
 - Write changelog entries around the user-visible change and any required migration.
   Describe the released behavior directly, without referring to preview flags used to stage
   the change. Omit statements about behavior that is unchanged unless they are necessary to
