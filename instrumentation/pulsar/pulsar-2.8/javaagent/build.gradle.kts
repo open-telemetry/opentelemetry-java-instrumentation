@@ -25,8 +25,8 @@ dependencies {
   testLibrary("org.apache.pulsar:pulsar-client-admin:2.8.0")
 
   // Pulsar 5 uses a different artifact and is covered by version5Test.
-  latestDepTestLibrary("org.apache.pulsar:pulsar-client:4.+") // documented limitation
-  latestDepTestLibrary("org.apache.pulsar:pulsar-client-admin:4.+") // documented limitation
+latestDepTestLibrary("org.apache.pulsar:pulsar-client:4.+") // see test suite below
+latestDepTestLibrary("org.apache.pulsar:pulsar-client-admin:4.+") // see test suite below
 }
 
 testing {
