@@ -78,22 +78,27 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
 
   @Override
   public void onError(Throwable e) {
-    Context context = contextRef.getAndSet(null);
+    Context operationContext = contextRef.getAndSet(null);
     Context callbackContext = parentContext;
-    if (context != null) {
-      // Hystrix creates its fallback wrapper in onError, so retain the operation context when
-      // it is already current, including contexts derived by executor propagation.
-      Context currentContext = Context.current();
-      SpanContext operationSpanContext = Span.fromContext(context).getSpanContext();
-      if (currentContext == context
-          || (operationSpanContext.isValid()
-              && operationSpanContext.equals(Span.fromContext(currentContext).getSpanContext()))) {
-        callbackContext = context;
+    if (operationContext != null) {
+      if (shouldRetainOperationContext(operationContext)) {
+        callbackContext = operationContext;
       }
-      instrumenter.end(context, request, null, e);
+      instrumenter.end(operationContext, request, null, e);
     }
     try (Scope ignored = callbackContext.makeCurrent()) {
       delegate.onError(e);
     }
+  }
+
+  private static boolean shouldRetainOperationContext(Context operationContext) {
+    // Hystrix creates its fallback observable in onError and captures the current
+    // context as its parent. Retain the operation context when the error arrives
+    // under it, including executor-derived contexts with the same valid SpanContext.
+    Context currentContext = Context.current();
+    SpanContext operationSpanContext = Span.fromContext(operationContext).getSpanContext();
+    return currentContext == operationContext
+        || (operationSpanContext.isValid()
+            && operationSpanContext.equals(Span.fromContext(currentContext).getSpanContext()));
   }
 }
