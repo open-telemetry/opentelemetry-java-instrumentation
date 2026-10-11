@@ -67,7 +67,8 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         named("handleException").and(takesArgument(0, Throwable.class)),
         getClass().getName() + "$HandleExceptionAdvice");
 
-    // Vert.x 3 versions declare the response as either the interface or its implementation.
+    // handleResponse declares HttpClientResponseImpl in Vert.x 3.0
+    // and HttpClientResponse in Vert.x 3.9.
     transformer.applyAdviceToMethod(
         named("handleResponse")
             .and(

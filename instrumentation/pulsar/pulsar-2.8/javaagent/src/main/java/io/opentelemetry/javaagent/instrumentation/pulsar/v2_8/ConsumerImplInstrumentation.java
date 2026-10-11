@@ -30,7 +30,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
-import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 
 class ConsumerImplInstrumentation implements TypeInstrumentation {
@@ -44,7 +43,6 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // Advice binds PulsarClient but needs PulsarClientImpl for lookup access.
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(0, named("org.apache.pulsar.client.impl.PulsarClientImpl"))),
@@ -83,10 +81,9 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void after(
-        @Advice.This Consumer<?> consumer, @Advice.Argument(value = 0) PulsarClient client) {
+        @Advice.This Consumer<?> consumer, @Advice.Argument(value = 0) PulsarClientImpl client) {
 
-      PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
-      String url = pulsarClient.getLookup().getServiceUrl();
+      String url = client.getLookup().getServiceUrl();
       VirtualFieldStore.inject(consumer, url);
     }
   }
