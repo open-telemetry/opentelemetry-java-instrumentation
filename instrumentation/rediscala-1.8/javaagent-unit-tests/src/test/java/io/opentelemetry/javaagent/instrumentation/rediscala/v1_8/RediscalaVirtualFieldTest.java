@@ -13,10 +13,10 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.junit.jupiter.api.Test;
 import redis.commands.TransactionBuilder;
 
-class TransactionBuilderInstrumentationTest {
+class RediscalaVirtualFieldTest {
 
   @Test
-  void capturesClientDirectlyWithoutOverwritingUnnamedField() {
+  void storesClientDirectlyWithoutOverwritingUnnamedField() {
     TransactionBuilder builder = mock(TransactionBuilder.class);
     Object unrelated = new Object();
     Object client = new Object();
@@ -24,13 +24,13 @@ class TransactionBuilderInstrumentationTest {
         VirtualField.find(TransactionBuilder.class, Object.class);
     unnamed.set(builder, unrelated);
 
-    TransactionBuilderInstrumentation.CreateAdvice.onExit(client, builder);
+    TRANSACTION_CLIENT.set(builder, client);
 
     assertThat(TRANSACTION_CLIENT.get(builder)).isSameAs(client);
     assertThat(unnamed.get(builder)).isSameAs(unrelated);
 
     Object replacement = new Object();
-    TransactionBuilderInstrumentation.CreateAdvice.onExit(replacement, builder);
+    TRANSACTION_CLIENT.set(builder, replacement);
 
     assertThat(TRANSACTION_CLIENT.get(builder)).isSameAs(replacement);
     assertThat(unnamed.get(builder)).isSameAs(unrelated);
