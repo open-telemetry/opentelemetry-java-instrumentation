@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -194,17 +195,29 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   @Override
   public boolean isInt(String name) {
-    return getInt(name) != null;
+    try {
+      return getInt(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
   }
 
   @Override
   public boolean isLong(String name) {
-    return getLong(name) != null;
+    try {
+      return getLong(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
   }
 
   @Override
   public boolean isDouble(String name) {
-    return getDouble(name) != null;
+    try {
+      return getDouble(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
   }
 
   /**
