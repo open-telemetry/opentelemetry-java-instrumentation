@@ -4,6 +4,15 @@
 
 ### ⚠️ Breaking changes
 
+- JMX metric collection now always uses instrumentation selectors, including
+  `otel.instrumentation.jmx.enabled` and `otel.instrumentation.common.default-enabled`.
+  The deprecated `otel.jmx.enabled` and `otel.jmx.target.system` settings are removed.
+  For declarative configuration, use `distribution.javaagent.instrumentation.enabled` /
+  `distribution.javaagent.instrumentation.disabled` selectors instead of `java.jmx.enabled`,
+  and remove `java.jmx.target.system`.
+  Stable bundled metrics are collected automatically except JVM rules, which overlap with runtime
+  telemetry. Use `otel.jmx.metrics.experimental.included` (declarative
+  `java.jmx.metrics.experimental.included`) to opt in to unstable metrics by name.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
