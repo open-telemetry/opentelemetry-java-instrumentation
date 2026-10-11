@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rxjava.v1_0;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -17,16 +19,19 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
   private final Instrumenter<REQUEST, ?> instrumenter;
   private final AtomicReference<Context> contextRef;
   private final REQUEST request;
+  private final Context parentContext;
 
   TracedSubscriber(
       Subscriber<? super T> delegate,
       Instrumenter<REQUEST, ?> instrumenter,
       AtomicReference<Context> contextRef,
-      REQUEST request) {
+      REQUEST request,
+      Context parentContext) {
     this.delegate = delegate;
     this.instrumenter = instrumenter;
     this.contextRef = contextRef;
     this.request = request;
+    this.parentContext = parentContext;
 
     delegate.add(new SpanFinishingSubscription<>(instrumenter, contextRef, request));
   }
@@ -74,10 +79,21 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
   @Override
   public void onError(Throwable e) {
     Context context = contextRef.getAndSet(null);
+    Context callbackContext = parentContext;
     if (context != null) {
+      // Hystrix creates its fallback wrapper in onError, so retain the operation context when
+      // it is already current, including contexts derived by executor propagation.
+      Context currentContext = Context.current();
+      SpanContext operationSpanContext = Span.fromContext(context).getSpanContext();
+      if (currentContext == context
+          || (operationSpanContext.isValid()
+              && operationSpanContext.equals(Span.fromContext(currentContext).getSpanContext()))) {
+        callbackContext = context;
+      }
       instrumenter.end(context, request, null, e);
     }
-    // TODO (trask) should this be wrapped in parent of context(?)
-    delegate.onError(e);
+    try (Scope ignored = callbackContext.makeCurrent()) {
+      delegate.onError(e);
+    }
   }
 }
