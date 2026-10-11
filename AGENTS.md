@@ -5,24 +5,14 @@ build and test commands, style expectations, and scope.
 
 ## Pull request titles and descriptions
 
-For PR creation and updates, follow `CONTRIBUTING.md`, required title conventions, and the PR template.
-
-- Before finishing, compare the title and body with the complete final PR diff. Fix misleading text,
-  but leave accurate metadata alone. Preserve confirmed user intent; never change sound code to fit
-  stale metadata or rewrite descriptions to excuse bugs.
-- Use a short, specific, nonempty, one-line title. The body may be empty; otherwise open with one or
-  two short sentences saying what changes and why, without a generic heading.
-- Keep user-visible behavior, rationale, compatibility/migration notes, risks, and non-obvious
-  constraints. Remove filler, repetition, obvious implementation details, and change-log-style updates.
-- For changed public/programmatic APIs or user/operator configuration, put a small useful example near
-  the top. Show old/new forms only for migration; cover relevant forms such as flat properties and YAML
-  without redundant spellings. Internal CI/build/maintenance settings are not user-facing interfaces.
-- Use short paragraphs, concise bullets, and meaningful headings only for substantial topics. Preserve
-  useful context and examples when compressing drafts. Never hard wrap GitHub text.
-- Omit `Summary`, `Details`, and `Testing` headings, validation lists, and checklist boilerplate unless
-  explicitly requested or required by the template.
-
-These rules do not authorize comments, thread resolution, or changing an existing PR's draft status.
+- Skip `Summary`, `Details`, and `Testing` headings, validation lists, and checklists unless requested or
+  template-required. Open directly with what changes and why.
+- Omit implementation details obvious from the diff; keep user-visible behavior and useful rationale,
+  compatibility/migration notes, risks, or constraints.
+- For public APIs or user/operator configuration changes, put a small example near the top. Cover
+  relevant forms such as flat properties and YAML; show old/new forms only for migration.
+- After implementation changes, check the final diff and update only stale or misleading PR metadata.
+- Never hard wrap PR text.
 
 ## Knowledge Loading
 
