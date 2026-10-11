@@ -556,12 +556,6 @@ explicit type constraint only when every matched signature has a separate runtim
 guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
 prevent `ClassCastException`.
 
-Omit return-type predicates unless needed to select supported methods or prevent a concrete
-incompatibility. A typed `@Advice.Return` alone does not justify a predicate; consider the supported
-API contract, covariant returns, and the actual transformation pipeline. If advice replaces the
-return value, ensure the replacement fits the method's declared return type; replacement alone does
-not require a predicate.
-
 ### Rules
 
 - Do not change the visibility of advice classes solely for style.
