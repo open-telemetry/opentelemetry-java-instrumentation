@@ -503,20 +503,20 @@ public class OpenTelemetryAppender extends AbstractAppender {
     readLock.lock();
     try {
       openTelemetry = this.openTelemetry;
-      if (openTelemetry != null) {
-        emit(openTelemetry, event);
-        return;
-      }
+      if (openTelemetry == null) {
+        LogEventToReplay logEventToReplay = new LogEventToReplay(event, captureCodeAttributes);
 
-      LogEventToReplay logEventToReplay = new LogEventToReplay(event, captureCodeAttributes);
-
-      if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
-        String message =
-            "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
-        System.err.println(message);
+        if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
+          String message =
+              "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
+          System.err.println(message);
+        }
       }
     } finally {
       readLock.unlock();
+    }
+    if (openTelemetry != null) {
+      emit(openTelemetry, event);
     }
   }
 
