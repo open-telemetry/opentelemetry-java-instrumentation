@@ -36,7 +36,10 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     transformer.applyAdviceToMethod(
         named("executeListener")
             .and(takesArguments(2))
-            .and(takesArgument(0, named("com.rabbitmq.client.Channel"))),
+            .and(takesArgument(0, named("com.rabbitmq.client.Channel")))
+            .and(
+                takesArgument(1, Object.class)
+                    .or(takesArgument(1, named("org.springframework.amqp.core.Message")))),
         getClass().getName() + "$ExecuteListenerAdvice");
     transformer.applyAdviceToMethod(
         named("invokeListener")
