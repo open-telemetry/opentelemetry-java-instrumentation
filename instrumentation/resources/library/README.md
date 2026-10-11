@@ -71,10 +71,11 @@ Implemented attributes:
 - `process.command_args` (note this includes all system properties and arguments when running)
 - `process.command_line` (note this includes all system properties and arguments when running)
 
-When `otel.instrumentation.common.v3-preview=true` is enabled, `process.command_args` and
-`process.command_line` are only populated when
-`otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` is also
-enabled.
+`process.command_args` and `process.command_line` are disabled by default because they may contain
+sensitive information. Enable them by setting
+`otel.instrumentation.resources.experimental.process-command-attributes.enabled=true`.
+This setting applies to flat configuration; the declarative process detector has no equivalent
+toggle and does not populate these attributes.
 
 ### Java Runtime
 
