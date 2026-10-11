@@ -54,7 +54,7 @@ class XxlJobTest extends AbstractXxlJobTest {
 
   @BeforeAll
   static void start() throws Exception {
-    adminServer = HttpServer.create(new InetSocketAddress("localhost", findOpenPort()), 0);
+    adminServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     adminServer.createContext(
         "/api",
         exchange -> {
