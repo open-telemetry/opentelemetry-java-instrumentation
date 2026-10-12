@@ -499,24 +499,27 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return;
     }
 
+    LogEventToReplay logEventToReplay = new LogEventToReplay(event, captureCodeAttributes);
+    boolean logReplayLimitWarning = false;
     Lock readLock = lock.readLock();
     readLock.lock();
     try {
       openTelemetry = this.openTelemetry;
       if (openTelemetry == null) {
-        LogEventToReplay logEventToReplay = new LogEventToReplay(event, captureCodeAttributes);
-
-        if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
-          String message =
-              "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
-          System.err.println(message);
-        }
+        logReplayLimitWarning =
+            !eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true);
       }
     } finally {
       readLock.unlock();
     }
+    if (logReplayLimitWarning) {
+      String message =
+          "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
+      System.err.println(message);
+    }
     if (openTelemetry != null) {
-      emit(openTelemetry, event);
+      // Reuse the snapshot to avoid formatting the original message again.
+      emit(openTelemetry, logEventToReplay);
     }
   }
 
