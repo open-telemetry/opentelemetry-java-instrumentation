@@ -4,10 +4,9 @@
 
 ### ⚠️ Breaking changes
 
-- OpenTelemetry API bridges and instrumentation annotations remain enabled when
+- OpenTelemetry API bridges remain enabled when
   `otel.instrumentation.common.default-enabled=false`. Disable them explicitly with
-  `otel.instrumentation.opentelemetry-api.enabled=false` and
-  `otel.instrumentation.opentelemetry-instrumentation-annotations.enabled=false`.
+  `otel.instrumentation.opentelemetry-api.enabled=false`.
   Version-specific selectors now take precedence over these versionless selectors.
   Replace `otel.instrumentation.annotations.enabled` with
   `otel.instrumentation.opentelemetry-instrumentation-annotations.enabled`, and

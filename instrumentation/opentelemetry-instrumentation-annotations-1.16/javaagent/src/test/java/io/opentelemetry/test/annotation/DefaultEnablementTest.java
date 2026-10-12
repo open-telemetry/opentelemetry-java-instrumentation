@@ -18,7 +18,8 @@ class DefaultEnablementTest {
   private static final boolean INSTRUMENTATION_ENABLED =
       Boolean.parseBoolean(
           System.getProperty(
-              "otel.instrumentation.opentelemetry-instrumentation-annotations.enabled", "true"));
+              "otel.instrumentation.opentelemetry-instrumentation-annotations.enabled",
+              System.getProperty("otel.instrumentation.common.default-enabled", "true")));
 
   @RegisterExtension
   private static final AgentInstrumentationExtension testing =

@@ -24,11 +24,6 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean defaultEnabled() {
-    return true;
-  }
-
-  @Override
   public int order() {
     // Run after other instrumentations.
     return 1000;

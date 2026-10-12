@@ -68,7 +68,10 @@ tasks {
     filter {
       includeTestsMatching("*DefaultEnablementTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.default-enabled=false")
+    jvmArgs(
+      "-Dotel.instrumentation.common.default-enabled=false",
+      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
+    )
   }
 
   val testDisabled = register<Test>("testDisabled") {
@@ -79,7 +82,8 @@ tasks {
     }
     jvmArgs(
       "-Dotel.instrumentation.common.default-enabled=false",
-      "-Dotel.instrumentation.opentelemetry-api.enabled=false"
+      "-Dotel.instrumentation.opentelemetry-api.enabled=false",
+      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
     )
   }
 
