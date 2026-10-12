@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
+  starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.

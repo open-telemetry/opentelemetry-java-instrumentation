@@ -1,2 +1,1 @@
-io.opentelemetry.instrumentation.exporter.internal.ZipkinExporterRemovalDeclarativeCustomizerProvider
 io.opentelemetry.instrumentation.sampler.internal.RuleBasedRoutingSamplerDeprecationCustomizerProvider
