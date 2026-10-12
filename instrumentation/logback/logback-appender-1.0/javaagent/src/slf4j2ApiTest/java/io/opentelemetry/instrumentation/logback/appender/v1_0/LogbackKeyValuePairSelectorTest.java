@@ -68,9 +68,6 @@ class LogbackKeyValuePairSelectorTest {
 
   private static Map<String, String> expectedKeyValuePairAttributes() {
     String configuration = System.getProperty("testKeyValuePairConfiguration");
-    if ("all".equals(configuration)) {
-      return new HashMap<>(KEY_VALUE_PAIRS);
-    }
     if ("none".equals(configuration)) {
       return emptyMap();
     }
