@@ -67,10 +67,9 @@ class OpenTelemetryDriverQuerySanitizationTest {
   }
 
   @ParameterizedTest
-  @MethodSource("sanitizationSettings")
-  void declarativeConfiguration(Boolean jdbcEnabled, Boolean commonEnabled, boolean expected)
-      throws SQLException {
-    assertQuerySanitization(configuredOpenTelemetry(jdbcEnabled, commonEnabled), expected);
+  @ValueSource(booleans = {true, false})
+  void declarativeConfiguration(boolean enabled) throws SQLException {
+    assertQuerySanitization(configuredOpenTelemetry(enabled, null), enabled);
   }
 
   @ParameterizedTest
