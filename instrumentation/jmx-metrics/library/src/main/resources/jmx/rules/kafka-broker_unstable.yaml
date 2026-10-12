@@ -12,23 +12,23 @@ rules:
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec
     metricAttribute:
-      type: const(fetch)
+      kafka.request.type: const(fetch)
     mapping:
       Count:
         metric: kafka.request.count
         type: counter
         desc: The number of requests received by the broker
-        unit: "{requests}"
+        unit: "{request}"
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec
     metricAttribute:
-      type: const(produce)
+      kafka.request.type: const(produce)
     mapping:
       Count:
         metric: kafka.request.count
         type: counter
         desc: The number of requests received by the broker
-        unit: "{requests}"
+        unit: "{request}"
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
     metricAttribute:
