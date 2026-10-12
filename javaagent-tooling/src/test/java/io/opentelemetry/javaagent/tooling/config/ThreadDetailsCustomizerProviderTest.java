@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -43,25 +43,25 @@ class ThreadDetailsCustomizerProviderTest {
       properties.put("otel.javaagent.add-thread-details", value);
     }
 
+    InMemorySpanExporter exporter = InMemorySpanExporter.create();
     try (OpenTelemetrySdk sdk =
         AutoConfiguredOpenTelemetrySdk.builder()
             .addPropertiesSupplier(() -> properties)
+            .addTracerProviderCustomizer(
+                (builder, config) -> builder.addSpanProcessor(SimpleSpanProcessor.create(exporter)))
             .build()
             .getOpenTelemetrySdk()) {
-      assertThreadAttributes(sdk, expected);
-    }
-  }
+      sdk.getTracer("test").spanBuilder("test").startSpan().end();
 
-  private static void assertThreadAttributes(OpenTelemetrySdk sdk, boolean expected) {
-    Span span = sdk.getTracer("test").spanBuilder("test").startSpan();
-    try {
-      Attributes attributes = ((ReadableSpan) span).toSpanData().getAttributes();
-      assertThat(attributes.get(THREAD_ID))
-          .isEqualTo(expected ? Thread.currentThread().getId() : null);
-      assertThat(attributes.get(THREAD_NAME))
-          .isEqualTo(expected ? Thread.currentThread().getName() : null);
-    } finally {
-      span.end();
+      assertThat(exporter.getFinishedSpanItems())
+          .singleElement()
+          .satisfies(
+              span ->
+                  assertThat(span)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(THREAD_ID, expected ? Thread.currentThread().getId() : null),
+                          equalTo(
+                              THREAD_NAME, expected ? Thread.currentThread().getName() : null)));
     }
   }
 }
