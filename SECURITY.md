@@ -7,8 +7,13 @@ applies to this repository, including its security model and supported-version p
 
 This policy covers the artifacts published from this repository:
 
-- The Maven artifacts published from this repository.
-- The Gradle plugins published from this repository.
+- Maven artifacts under these group IDs:
+  - `io.opentelemetry.instrumentation`
+  - `io.opentelemetry.javaagent`
+  - `io.opentelemetry.javaagent.instrumentation`
+- Gradle plugins with these IDs:
+  - `io.opentelemetry.instrumentation.muzzle-check`
+  - `io.opentelemetry.instrumentation.muzzle-generation`
 
 ## Reporting
 
