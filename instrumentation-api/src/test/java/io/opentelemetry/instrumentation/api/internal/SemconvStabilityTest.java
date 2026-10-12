@@ -419,6 +419,31 @@ class SemconvStabilityTest {
     }
 
     @Override
+    public boolean isString(String name) {
+      return getString(name) != null;
+    }
+
+    @Override
+    public boolean isBoolean(String name) {
+      return getBoolean(name) != null;
+    }
+
+    @Override
+    public boolean isInt(String name) {
+      return getInt(name) != null;
+    }
+
+    @Override
+    public boolean isLong(String name) {
+      return getLong(name) != null;
+    }
+
+    @Override
+    public boolean isDouble(String name) {
+      return getDouble(name) != null;
+    }
+
+    @Override
     public <T> List<T> getScalarList(String name, Class<T> type) {
       Object value = values.get(name);
       if (!(value instanceof List<?>)) {
