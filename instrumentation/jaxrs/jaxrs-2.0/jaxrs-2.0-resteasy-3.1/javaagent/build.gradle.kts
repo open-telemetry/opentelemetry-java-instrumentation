@@ -62,6 +62,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
@@ -70,7 +71,11 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.jaxrs.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.controller-telemetry.enabled=true," +
+        "otel.instrumentation.jaxrs.experimental-span-attributes=true",
+    )
   }
 
   check {

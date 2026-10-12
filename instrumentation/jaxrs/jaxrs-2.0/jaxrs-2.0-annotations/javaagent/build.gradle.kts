@@ -30,5 +30,6 @@ dependencies {
 tasks.test {
   jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 
+  systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }

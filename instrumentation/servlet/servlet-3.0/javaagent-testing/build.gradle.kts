@@ -29,6 +29,11 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.servlet.experimental.request-parameters.included=test-*," +
+        "otel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret",
+    )
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
