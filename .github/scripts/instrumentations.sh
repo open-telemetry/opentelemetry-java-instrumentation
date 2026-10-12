@@ -188,6 +188,7 @@ readonly INSTRUMENTATIONS=(
   "lettuce:lettuce-5.0:javaagent:testPreviewSemconv"
   "lettuce:lettuce-5.0:javaagent:testConnectionTelemetryEnabled"
   "lettuce:lettuce-5.0:javaagent:testConnectionTelemetryEnabledPreviewSemconv"
+  "lettuce:lettuce-5.0:javaagent:testV3Preview"
   "lettuce:lettuce-5.0:javaagent:lettuce51Test"
   "lettuce:lettuce-5.0:javaagent:lettuce60Test"
   "lettuce:lettuce-5.0:javaagent:lettuce65Test"
