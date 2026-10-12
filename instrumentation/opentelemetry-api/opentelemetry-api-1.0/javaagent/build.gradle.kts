@@ -46,6 +46,7 @@ configurations.configureEach {
     resolutionStrategy {
       // earliest version that works with our test harness
       force("io.opentelemetry:opentelemetry-api:1.4.0")
+      force("io.opentelemetry:opentelemetry-context:1.4.0")
       // SDK 1.67 requires AttributesBuilder.removeIf(), which is absent from API 1.4.
       force("io.opentelemetry:opentelemetry-sdk:1.66.0")
       force("io.opentelemetry:opentelemetry-sdk-common:1.66.0")
