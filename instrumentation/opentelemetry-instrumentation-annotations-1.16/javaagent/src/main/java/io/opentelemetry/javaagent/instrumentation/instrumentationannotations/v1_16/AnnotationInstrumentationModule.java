@@ -11,17 +11,21 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.FallbackEnabledInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AnnotationInstrumentationModule extends FallbackEnabledInstrumentationModule {
+public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   public AnnotationInstrumentationModule() {
     super(
         "opentelemetry-instrumentation-annotations-1.16",
         "opentelemetry-instrumentation-annotations");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return true;
   }
 
   @Override

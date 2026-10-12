@@ -19,10 +19,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-class FallbackEnabledInstrumentationModuleTest {
+class InstrumentationModuleEnablementTest {
 
   private final InstrumentationModule module =
-      new FallbackEnabledInstrumentationModule("first", "second") {
+      new InstrumentationModule("first", "second") {
+        @Override
+        public boolean defaultEnabled() {
+          return true;
+        }
+
         @Override
         public List<TypeInstrumentation> typeInstrumentations() {
           return emptyList();

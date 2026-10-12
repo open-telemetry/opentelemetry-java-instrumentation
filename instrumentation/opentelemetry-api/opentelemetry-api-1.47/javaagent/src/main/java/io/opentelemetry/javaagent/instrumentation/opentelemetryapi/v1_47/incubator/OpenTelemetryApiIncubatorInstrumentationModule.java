@@ -12,15 +12,18 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.FallbackEnabledInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiIncubatorInstrumentationModule
-    extends FallbackEnabledInstrumentationModule {
+public class OpenTelemetryApiIncubatorInstrumentationModule extends InstrumentationModule {
   public OpenTelemetryApiIncubatorInstrumentationModule() {
     super("opentelemetry-api-1.47", "opentelemetry-api-incubator", "opentelemetry-api");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return true;
   }
 
   @Override
