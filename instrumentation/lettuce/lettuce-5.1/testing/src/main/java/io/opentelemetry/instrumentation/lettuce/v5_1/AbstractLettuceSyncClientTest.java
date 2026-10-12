@@ -137,7 +137,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
                                     equalTo(DB_OPERATION_NAME, "SET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
 
     List<AttributeKey<?>> expected =
         new ArrayList<>(
@@ -179,7 +179,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
                                     equalTo(DB_OPERATION_NAME, "GET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -205,7 +205,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
                                     equalTo(DB_OPERATION_NAME, "GET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -231,7 +231,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
                                     equalTo(DB_OPERATION_NAME, "RANDOMKEY")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -268,7 +268,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "LPUSH TESTLIST ?"),
                                     equalTo(DB_OPERATION_NAME, "LPUSH")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -328,7 +328,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(
                                         DB_QUERY_TEXT, "HMSET user firstname ? lastname ? age ?"),
                                     equalTo(DB_OPERATION_NAME, "HMSET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -354,7 +354,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "HGETALL TESTHM"),
                                     equalTo(DB_OPERATION_NAME, "HGETALL")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -391,7 +391,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "EVAL " + b64Script + " 1 TESTLIST ? ?"),
                                     equalTo(DB_OPERATION_NAME, "EVAL")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -416,7 +416,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "MSET key1 ? key2 ?"),
                                     equalTo(DB_OPERATION_NAME, "MSET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -510,7 +510,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(DB_SYSTEM_NAME, REDIS),
                                       equalTo(DB_QUERY_TEXT, "DEBUG SEGFAULT"),
                                       equalTo(DB_OPERATION_NAME, "DEBUG")))
-                              .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                              .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
     }
   }
 
@@ -549,14 +549,11 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       testLatestDeps() ? "io.lettuce.core.RedisException" : null)));
                       if (testLatestDeps()) {
                         // Seems to only be treated as an error with Lettuce 6+
-                        // and also produces an exception event in addition to encode events
+                        // and also produces an exception event
                         span.hasException(new RedisException("Connection disconnected"))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"),
-                                event -> event.hasName("exception"));
+                            .hasEventsSatisfyingExactly(event -> event.hasName("exception"));
                       } else {
-                        span.satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents);
+                        span.satisfies(AbstractLettuceClientTest::assertCommandEvents);
                       }
                     }));
   }

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.resource.ClientResources;
-import io.opentelemetry.instrumentation.lettuce.v5_1.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -23,10 +22,11 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
 
   @Override
   protected RedisClient createClient(String uri) {
-    LettuceTelemetryBuilder builder = LettuceTelemetry.builder(testing().getOpenTelemetry());
-    Experimental.setEncodingSpanEventsEnabled(builder, true);
     return RedisClient.create(
-        ClientResources.builder().tracing(builder.build().createTracing()).build(), uri);
+        ClientResources.builder()
+            .tracing(LettuceTelemetry.create(testing().getOpenTelemetry()).createTracing())
+            .build(),
+        uri);
   }
 
   @Override

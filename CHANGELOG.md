@@ -169,9 +169,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled`. Use
-  `io.opentelemetry.instrumentation.lettuce.v5_1.internal.Experimental.setEncodingSpanEventsEnabled`
-  instead.
+- Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` and command-encoding event support
+  from the standalone Lettuce library. There is no replacement API.
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
   runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
   specifying the metrics to source from JFR.

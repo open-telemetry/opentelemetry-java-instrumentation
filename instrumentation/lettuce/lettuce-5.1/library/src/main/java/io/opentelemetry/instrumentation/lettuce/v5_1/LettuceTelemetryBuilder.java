@@ -18,20 +18,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.lettuce.v5_1.internal.Experimental;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
 
-  static {
-    Experimental.internalSetEncodingSpanEventsEnabled(
-        (builder, enabled) -> builder.encodingEventsEnabled = enabled);
-  }
-
   private final OpenTelemetry openTelemetry;
 
   private boolean querySanitizationEnabled = true;
-  private boolean encodingEventsEnabled = false;
 
   LettuceTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -76,6 +69,6 @@ public final class LettuceTelemetryBuilder {
     Instrumenter<LettuceRequest, LettuceResponse> instrumenter =
         builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
-    return new LettuceTelemetry(instrumenter, querySanitizationEnabled, encodingEventsEnabled);
+    return new LettuceTelemetry(instrumenter, querySanitizationEnabled);
   }
 }

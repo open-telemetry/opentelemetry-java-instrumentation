@@ -168,7 +168,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
                                     equalTo(DB_OPERATION_NAME, "SET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 
   @Test
@@ -249,8 +249,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(DB_SYSTEM_NAME, REDIS),
                                           equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
                                           equalTo(DB_OPERATION_NAME, "GET")))
-                                  .satisfies(
-                                      AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                  .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
 
               if (testCallback()) {
                 spanAsserts.add(
@@ -327,8 +326,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(DB_SYSTEM_NAME, REDIS),
                                           equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
                                           equalTo(DB_OPERATION_NAME, "GET")))
-                                  .satisfies(
-                                      AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                  .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
 
               if (testCallback()) {
                 spanAsserts.addAll(
@@ -392,8 +390,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(DB_SYSTEM_NAME, REDIS),
                                           equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
                                           equalTo(DB_OPERATION_NAME, "RANDOMKEY")))
-                                  .satisfies(
-                                      AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                  .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
 
               if (testCallback()) {
                 spanAsserts.add(
@@ -452,7 +449,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(
                                         DB_QUERY_TEXT, "HMSET TESTHM firstname ? lastname ? age ?"),
                                     equalTo(DB_OPERATION_NAME, "HMSET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)),
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -467,6 +464,6 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "HGETALL TESTHM"),
                                     equalTo(DB_OPERATION_NAME, "HGETALL")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
   }
 }
