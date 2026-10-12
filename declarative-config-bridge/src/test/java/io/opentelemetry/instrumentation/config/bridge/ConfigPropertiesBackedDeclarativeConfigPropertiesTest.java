@@ -8,9 +8,11 @@ package io.opentelemetry.instrumentation.config.bridge;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
 import java.util.List;
@@ -344,6 +346,12 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     assertThat(mappings.get(0).getString("service_name")).isEqualTo("FooService");
     // service_namespace is not supported in flat config
     assertThat(mappings.get(0).getString("service_namespace")).isNull();
+    assertThat(mappings.get(0).isString("peer")).isTrue();
+    assertThat(mappings.get(0).isString("service_namespace")).isFalse();
+    assertThat(mappings.get(0).isBoolean("peer")).isFalse();
+    assertThat(mappings.get(0).isInt("peer")).isFalse();
+    assertThat(mappings.get(0).isLong("peer")).isFalse();
+    assertThat(mappings.get(0).isDouble("peer")).isFalse();
   }
 
   @Test
@@ -353,6 +361,8 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
     assertThat(config.getStructured("java").getStructured("aws_lambda").getInt("flush_timeout"))
         .isEqualTo(5000);
+    assertThat(config.getStructured("java").getStructured("aws_lambda").isInt("flush_timeout"))
+        .isTrue();
   }
 
   @Test
@@ -382,11 +392,67 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testIsInvalidNumber() {
+    DeclarativeConfigProperties config = createConfig("otel.instrumentation.test.value", "abc");
+    DeclarativeConfigProperties test = config.getStructured("java").getStructured("test");
+
+    assertThat(test.isInt("value")).isFalse();
+    assertThat(test.isLong("value")).isFalse();
+    assertThat(test.isDouble("value")).isFalse();
+  }
+
+  @Test
+  void testIsInt_outOfRange() {
+    DeclarativeConfigProperties test =
+        createConfig("otel.instrumentation.test.value", "2147483648")
+            .getStructured("java")
+            .getStructured("test");
+
+    assertThat(test.isInt("value")).isFalse();
+    assertThatThrownBy(() -> test.getInt("value")).isInstanceOf(ConfigurationException.class);
+  }
+
+  @Test
+  void testIsLong_jmxDiscoveryDelay() {
+    DeclarativeConfigProperties test =
+        createConfig("otel.jmx.discovery.delay", "30s")
+            .getStructured("java")
+            .getStructured("jmx")
+            .getStructured("discovery");
+    assertThat(test.isLong("delay")).isTrue();
+
+    test =
+        createConfig("otel.metric.export.interval", "30s")
+            .getStructured("java")
+            .getStructured("jmx")
+            .getStructured("discovery");
+    assertThat(test.isLong("delay")).isTrue();
+
+    test =
+        createConfig("otel.jmx.discovery.delay", "invalid")
+            .getStructured("java")
+            .getStructured("jmx")
+            .getStructured("discovery");
+    assertThat(test.isLong("delay")).isFalse();
+
+    test =
+        createConfig("otel.metric.export.interval", "invalid")
+            .getStructured("java")
+            .getStructured("jmx")
+            .getStructured("discovery");
+    assertThat(test.isLong("delay")).isFalse();
+  }
+
+  @Test
   void testGetDouble() {
     DeclarativeConfigProperties config = createConfig("otel.instrumentation.test.ratio", "0.5");
 
-    assertThat(config.getStructured("java").getStructured("test").getDouble("ratio"))
-        .isEqualTo(0.5);
+    DeclarativeConfigProperties test = config.getStructured("java").getStructured("test");
+
+    assertThat(test.getDouble("ratio")).isEqualTo(0.5);
+    assertThat(test.isString("ratio")).isTrue();
+    assertThat(test.isDouble("ratio")).isTrue();
+    assertThat(test.isDouble("missing")).isFalse();
   }
 
   @Test
