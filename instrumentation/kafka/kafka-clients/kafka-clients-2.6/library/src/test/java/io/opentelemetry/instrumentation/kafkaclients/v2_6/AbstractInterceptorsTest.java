@@ -66,6 +66,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   protected abstract boolean captureExperimentalSpanAttributes();
 
+  protected boolean captureHeaders() {
+    return false;
+  }
+
   protected boolean receiveTelemetryEnabled() {
     return true;
   }
@@ -140,44 +144,79 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   void assertTraces() {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
 
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "poll " + SHARED_TOPIC, "producer callback"),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName("send " + SHARED_TOPIC)
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          publishAttributes(captureExperimentalSpanAttributes())),
-              span ->
-                  span.hasName("process " + SHARED_TOPIC)
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
-                      .hasAttributesSatisfyingExactly(
-                          processAttributes(captureExperimentalSpanAttributes())),
-              span ->
-                  span.hasName("process child")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(2)));
-          producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
-        },
-        trace ->
+    if (receiveTelemetryEnabled()) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("parent", "poll " + SHARED_TOPIC, "producer callback"),
+          trace -> {
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("poll " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
-                        .hasAttributesSatisfyingExactly(receiveAttributes())),
-        // ideally we'd want producer callback to be part of the main trace,
-        // we just aren't able to instrument that
-        trace ->
-            trace.hasSpansSatisfyingExactly(
+                    span.hasName("send " + SHARED_TOPIC)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            publishAttributes(
+                                captureExperimentalSpanAttributes(), captureHeaders())),
                 span ->
-                    span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+                    span.hasName("process " + SHARED_TOPIC)
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(
+                                captureExperimentalSpanAttributes(), captureHeaders())),
+                span ->
+                    span.hasName("process child")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2)));
+            producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
+          },
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
+                          .hasAttributesSatisfyingExactly(
+                              interceptorReceiveAttributes(captureHeaders()))),
+          // ideally we'd want producer callback to be part of the main trace,
+          // we just aren't able to instrument that
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    } else {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("parent", "producer callback"),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      span.hasName("send " + SHARED_TOPIC)
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              publishAttributes(
+                                  captureExperimentalSpanAttributes(), captureHeaders())),
+                  span ->
+                      span.hasName("process " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes(
+                                  captureExperimentalSpanAttributes(), captureHeaders())),
+                  span ->
+                      span.hasName("process child")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(2))),
+          // ideally we'd want producer callback to be part of the main trace,
+          // we just aren't able to instrument that
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    }
   }
 
   private static SpanContext asRemote(SpanContext spanContext) {
@@ -192,11 +231,11 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     return LinkData.create(producerSpanContext, Attributes.of(MESSAGING_KAFKA_OFFSET, offset));
   }
 
-  private static List<AttributeAssertion> publishAttributes(boolean experimental) {
+  private static List<AttributeAssertion> publishAttributes(
+      boolean experimental, boolean captureHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -208,33 +247,38 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                         val.matches("^localhost:\\d+(,localhost:\\d+)*$");
                       }
                     })));
+    if (captureHeaders) {
+      assertions.add(0, equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
+    }
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
-  private static List<AttributeAssertion> receiveAttributes() {
+  private static List<AttributeAssertion> interceptorReceiveAttributes(boolean captureHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "poll"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+    if (captureHeaders) {
+      assertions.add(0, equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
+    }
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
-  private static List<AttributeAssertion> processAttributes(boolean experimental) {
+  private static List<AttributeAssertion> processAttributes(
+      boolean experimental, boolean captureHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -250,6 +294,9 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                       }
                     })));
 
+    if (captureHeaders) {
+      assertions.add(0, equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
+    }
     assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
     assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));

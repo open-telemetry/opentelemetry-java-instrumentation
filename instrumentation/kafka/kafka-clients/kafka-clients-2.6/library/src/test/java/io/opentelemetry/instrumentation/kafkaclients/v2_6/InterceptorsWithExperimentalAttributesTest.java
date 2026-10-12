@@ -29,4 +29,9 @@ class InterceptorsWithExperimentalAttributesTest extends AbstractInterceptorsTes
   protected boolean captureExperimentalSpanAttributes() {
     return true;
   }
+
+  @Override
+  protected boolean captureHeaders() {
+    return true;
+  }
 }
