@@ -12,10 +12,6 @@ This policy covers the source code and published artifacts produced by this repo
   instrumentation and Java agent extension APIs, annotations, and BOMs.
 - The Gradle plugins published from this repository.
 
-This repository does not operate a production service or website.
-Report vulnerabilities in the OpenTelemetry website to the
-[website repository](https://github.com/open-telemetry/opentelemetry.io/security/advisories/new).
-
 ## Reporting
 
 For suspected vulnerabilities, use
