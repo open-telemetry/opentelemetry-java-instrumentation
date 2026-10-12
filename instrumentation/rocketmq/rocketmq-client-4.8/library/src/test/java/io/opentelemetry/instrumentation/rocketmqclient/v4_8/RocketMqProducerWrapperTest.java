@@ -494,7 +494,7 @@ class RocketMqProducerWrapperTest {
                             equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, (long) count),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
                             equalTo(MESSAGING_MESSAGE_ID, null))));
   }
 }
