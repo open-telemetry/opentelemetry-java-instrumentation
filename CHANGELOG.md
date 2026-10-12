@@ -7,12 +7,6 @@
 - OpenTelemetry API bridges remain enabled when
   `otel.instrumentation.common.default-enabled=false`. Disable them explicitly with
   `otel.instrumentation.opentelemetry-api.enabled=false`.
-  Version-specific selectors now take precedence over these versionless selectors.
-  Replace `otel.instrumentation.annotations.enabled` with
-  `otel.instrumentation.opentelemetry-instrumentation-annotations.enabled`, and
-  `otel.instrumentation.opentelemetry-api-incubator-<version>.enabled` with
-  `otel.instrumentation.opentelemetry-api-incubator.enabled` or the corresponding
-  `otel.instrumentation.opentelemetry-api-<version>.enabled` selector.
 - The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
   starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
