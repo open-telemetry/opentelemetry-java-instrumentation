@@ -22,7 +22,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:lettuce:lettuce-4.0:javaagent"))
 
-  latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+")
+  latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see test suite below
 }
 
 testing {
