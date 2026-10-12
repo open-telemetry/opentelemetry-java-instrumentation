@@ -8,7 +8,7 @@ rules:
         metric: kafka.message.count
         type: counter
         desc: The number of messages received by the broker
-        unit: "{messages}"
+        unit: "{message}"
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec
     metricAttribute:
