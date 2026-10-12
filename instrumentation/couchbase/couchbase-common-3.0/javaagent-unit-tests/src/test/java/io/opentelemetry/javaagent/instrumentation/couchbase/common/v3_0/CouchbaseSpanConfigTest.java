@@ -20,8 +20,8 @@ class CouchbaseSpanConfigTest {
   @ValueSource(booleans = {true, false})
   void experimentalTelemetryConfigControlsAllExperimentalTelemetry(boolean enabled) {
     DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
-    when(config.getBoolean("emit_experimental_telemetry/development")).thenReturn(enabled);
+    when(config.getBoolean("emit_experimental_telemetry/development", false)).thenReturn(enabled);
     assertThat(CouchbaseSpan.emitExperimentalTelemetry(config)).isEqualTo(enabled);
-    verify(config).getBoolean("emit_experimental_telemetry/development");
+    verify(config).getBoolean("emit_experimental_telemetry/development", false);
   }
 }

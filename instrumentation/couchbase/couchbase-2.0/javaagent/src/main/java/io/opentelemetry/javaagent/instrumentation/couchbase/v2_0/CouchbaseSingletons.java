@@ -42,7 +42,7 @@ public class CouchbaseSingletons {
 
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
-    if (captureExperimentalTelemetry(config)) {
+    if (config.getBoolean("emit_experimental_telemetry/development", false)) {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 
@@ -51,10 +51,6 @@ public class CouchbaseSingletons {
 
   public static Instrumenter<CouchbaseRequestInfo, Void> instrumenter() {
     return instrumenter;
-  }
-
-  private static boolean captureExperimentalTelemetry(DeclarativeConfigProperties config) {
-    return Boolean.TRUE.equals(config.getBoolean("emit_experimental_telemetry/development"));
   }
 
   private CouchbaseSingletons() {}

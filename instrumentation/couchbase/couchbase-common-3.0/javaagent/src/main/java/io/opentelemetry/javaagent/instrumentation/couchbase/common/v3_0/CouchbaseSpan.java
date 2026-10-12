@@ -164,6 +164,6 @@ public final class CouchbaseSpan {
 
   // visible for testing
   static boolean emitExperimentalTelemetry(DeclarativeConfigProperties config) {
-    return Boolean.TRUE.equals(config.getBoolean("emit_experimental_telemetry/development"));
+    return config.getBoolean("emit_experimental_telemetry/development", false);
   }
 }
