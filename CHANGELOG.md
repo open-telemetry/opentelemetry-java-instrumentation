@@ -4,8 +4,7 @@
 
 ### ⚠️ Breaking changes
 
-- The Java agent no longer instruments Jedis 1.x. Upgrade to Jedis 2.0 or later to continue receiving
-  automatic Redis database client spans and metrics.
+- The Java agent no longer instruments Jedis 1.x.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.
