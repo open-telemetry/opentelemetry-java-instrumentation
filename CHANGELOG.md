@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking changes
 
+- Remove bundled support for the contrib `otel.traces.sampler=linksbased_parentbased_always_on` and
+  declarative `rule_based_routing` samplers. The links-based sampler has no replacement. For
+  compatible rule-based policies, consider the SDK incubator declarative `composite/development`
+  `rule_based` sampler; its rules use case-sensitive exact/wildcard matching and per-rule samplers,
+  and unmatched spans are dropped. This differs from the contrib sampler's regex, action, and
+  fallback behavior.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.
@@ -306,10 +312,6 @@ for more details.
   `otel.instrumentation.couchbase.emit-experimental-telemetry`, a broader name for experimental
   attributes and internal spans from the underlying Couchbase client.
   ([#20117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20117))
-- Deprecate `otel.traces.sampler=linksbased_parentbased_always_on` with no replacement and
-  declarative `rule_based_routing` in favor of the SDK incubator composite/development `rule_based`
-  sampler, whose configuration and matching behavior differ.
-  ([#20249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20249))
 - Promote controller and view telemetry configuration to the stable properties
   `otel.instrumentation.common.controller-telemetry.enabled` and
   `otel.instrumentation.common.view-telemetry.enabled`, deprecating
