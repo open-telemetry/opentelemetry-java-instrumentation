@@ -10040,10 +10040,8 @@ libraries:
         type: STRING
 - name: hibernate-3.3
   display_name: Hibernate
-  description: |
-    This instrumentation enables spans for Hibernate ORM operations. It is disabled by default.
+  description: This instrumentation enables spans for Hibernate ORM operations.
   library_link: https://hibernate.org/
-  disabled_by_default: true
   source_path: instrumentation/hibernate/hibernate-3.3
   scope:
     name: io.opentelemetry.hibernate-3.3
@@ -10070,10 +10068,8 @@ libraries:
         type: STRING
 - name: hibernate-4.0
   display_name: Hibernate
-  description: |
-    This instrumentation enables spans for Hibernate ORM operations. It is disabled by default.
+  description: This instrumentation enables spans for Hibernate ORM operations.
   library_link: https://hibernate.org/
-  disabled_by_default: true
   source_path: instrumentation/hibernate/hibernate-4.0
   scope:
     name: io.opentelemetry.hibernate-4.0
@@ -10100,10 +10096,8 @@ libraries:
         type: STRING
 - name: hibernate-6.0
   display_name: Hibernate
-  description: |
-    This instrumentation enables spans for Hibernate ORM operations. It is disabled by default.
+  description: This instrumentation enables spans for Hibernate ORM operations.
   library_link: https://hibernate.org/
-  disabled_by_default: true
   source_path: instrumentation/hibernate/hibernate-6.0
   minimum_java_version: 11
   scope:
@@ -10131,10 +10125,8 @@ libraries:
         type: STRING
 - name: hibernate-procedure-call-4.3
   display_name: Hibernate
-  description: |
-    This instrumentation enables spans for Hibernate stored procedure calls. It is disabled by default.
+  description: This instrumentation enables spans for Hibernate stored procedure calls.
   library_link: https://hibernate.org/
-  disabled_by_default: true
   source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
   scope:
     name: io.opentelemetry.hibernate-procedure-call-4.3
@@ -10262,10 +10254,9 @@ libraries:
         type: STRING
 - name: hystrix-1.4
   display_name: Netflix Hystrix
-  description: |
-    This instrumentation enables spans for Hystrix command executions and fallbacks. It is disabled by default.
+  description: This instrumentation enables spans for Hystrix command executions and
+    fallbacks.
   library_link: https://github.com/Netflix/Hystrix
-  disabled_by_default: true
   source_path: instrumentation/hystrix-1.4
   scope:
     name: io.opentelemetry.hystrix-1.4
@@ -18801,9 +18792,8 @@ libraries:
 - name: twilio-6.6
   display_name: Twilio
   description: |
-    This instrumentation enables client spans for Twilio SDK API calls such as sending messages and making phone calls. It is disabled by default.
+    This instrumentation enables client spans for Twilio SDK API calls such as sending messages and making phone calls.
   library_link: https://github.com/twilio/twilio-java
-  disabled_by_default: true
   source_path: instrumentation/twilio-6.6
   scope:
     name: io.opentelemetry.twilio-6.6
