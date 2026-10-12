@@ -5,11 +5,9 @@ applies to this repository, including its security model and supported-version p
 
 ## Scope
 
-This policy covers the source code and published artifacts produced by this repository, including:
+This policy covers the artifacts published from this repository:
 
-- The OpenTelemetry Java agent and its bundled instrumentation.
-- Maven artifacts, including standalone instrumentation libraries, Spring Boot starters,
-  instrumentation and Java agent extension APIs, annotations, and BOMs.
+- The Maven artifacts published from this repository.
 - The Gradle plugins published from this repository.
 
 ## Reporting
