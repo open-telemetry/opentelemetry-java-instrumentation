@@ -67,14 +67,14 @@ class KafkaBrokerTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier(boolean useZookeeper) {
 
-    AttributeMatcherGroup fetchType = attributeGroup(attribute("type", "fetch"));
-    AttributeMatcherGroup produceType = attributeGroup(attribute("type", "produce"));
+    AttributeMatcherGroup fetchType = attributeGroup(attribute("kafka.request.type", "fetch"));
+    AttributeMatcherGroup produceType = attributeGroup(attribute("kafka.request.type", "produce"));
 
-    AttributeMatcherGroup requestTypeProduce = attributeGroup(attribute("type", "Produce"));
+    AttributeMatcherGroup requestTypeProduce = attributeGroup(attribute("kafka.request.type", "produce"));
     AttributeMatcherGroup requestTypeFetchConsumer =
-        attributeGroup(attribute("type", "FetchConsumer"));
+        attributeGroup(attribute("kafka.request.type", "fetchconsumer"));
     AttributeMatcherGroup requestTypeFetchFollower =
-        attributeGroup(attribute("type", "FetchFollower"));
+        attributeGroup(attribute("kafka.request.type", "fetchfollower"));
 
     MetricsVerifier verifier =
         MetricsVerifier.create()
@@ -99,12 +99,15 @@ class KafkaBrokerTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("{requests}")
+                        .hasUnit("{request}")
                         .hasDescription(
                             "The number of requests to the broker resulting in a failure")
                         .hasDataPointsWithAttributes(fetchType, produceType))
+
+            // WIP line ---
+
             .add(
-                "kafka.request.time.total",
+                "kafka.request.time.total", // TODO: not sure if this is a relevant metric
                 metric ->
                     metric
                         .isCounter()
