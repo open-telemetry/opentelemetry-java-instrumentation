@@ -235,39 +235,48 @@ class SemconvStabilityTest {
     assertThat(domain.equals("rpc") ? resolver.rpc() : resolver.servicePeer()).isEqualTo(expected);
   }
 
-  @ParameterizedTest
-  @MethodSource("previewSelections")
-  void previewSelectionFromDeclarativeConfig(
-      String domain, String optIn, String preview, SemconvMode expected) {
+  @Test
+  @SetSystemProperty(key = "otel.semconv-stability.preview", value = "rpc/dup,service.peer")
+  void declarativePreviewOverridesSystemPropertyFallback() {
     String yaml =
         "file_format: 1.1\n"
             + "instrumentation/development:\n"
-            + "  general:\n"
-            + "    stability_opt_in_list: '"
-            + optIn
-            + "'\n"
             + "  java:\n"
             + "    common:\n"
             + "      semconv_stability:\n"
-            + "        preview: ["
-            + preview
-            + "]\n";
+            + "        preview: [rpc, service.peer/dup]\n";
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
     ConfigProvider configProvider =
         SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
 
     OpenTelemetry openTelemetry = openTelemetry(configProvider);
-    assertThat(
-            domain.equals("rpc")
-                ? emitOldRpcSemconv(openTelemetry)
-                : emitOldServicePeerSemconv(openTelemetry))
-        .isEqualTo(expected.version() == 0 || expected.dualEmit());
-    assertThat(
-            domain.equals("rpc")
-                ? emitPreviewRpcSemconv(openTelemetry)
-                : emitPreviewServicePeerSemconv(openTelemetry))
-        .isEqualTo(expected.version() >= 1);
+    assertThat(emitOldRpcSemconv(openTelemetry)).isFalse();
+    assertThat(emitPreviewRpcSemconv(openTelemetry)).isTrue();
+    assertThat(emitOldServicePeerSemconv(openTelemetry)).isTrue();
+    assertThat(emitPreviewServicePeerSemconv(openTelemetry)).isTrue();
+  }
+
+  @Test
+  @SetSystemProperty(key = "otel.semconv-stability.preview", value = "rpc/dup,service.peer/dup")
+  void emptyDeclarativePreviewDisablesSystemPropertyFallback() {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  java:\n"
+            + "    common:\n"
+            + "      semconv_stability:\n"
+            + "        preview: []\n";
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    ConfigProvider configProvider =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
+
+    OpenTelemetry openTelemetry = openTelemetry(configProvider);
+    assertThat(emitOldRpcSemconv(openTelemetry)).isTrue();
+    assertThat(emitPreviewRpcSemconv(openTelemetry)).isFalse();
+    assertThat(emitOldServicePeerSemconv(openTelemetry)).isTrue();
+    assertThat(emitPreviewServicePeerSemconv(openTelemetry)).isFalse();
   }
 
   @ParameterizedTest
