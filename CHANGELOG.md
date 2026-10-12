@@ -4,6 +4,13 @@
 
 ### ⚠️ Breaking changes
 
+- The Java agent no longer bundles the Zipkin exporter, and the dedicated Spring Boot Zipkin
+  starter has been removed. To keep using Zipkin with Spring Boot, use the regular Spring Boot
+  starter and add a compatible `opentelemetry-exporter-zipkin` dependency. To keep using Zipkin
+  with the Java agent, provide a compatible `SpanExporter` provider in an extension loaded through
+  `otel.javaagent.extensions`.
+  The SDK Zipkin exporter artifact remains available; this change only removes it from these
+  distributions. Use `otel.traces.exporter=otlp` only when the receiving backend accepts OTLP.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.
