@@ -10718,8 +10718,6 @@ libraries:
         type: STRING
       - name: db.operation.batch.size
         type: LONG
-      - name: db.operation.name
-        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -10742,6 +10740,36 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+  - when: otel.instrumentation.jdbc.experimental.capture-query-parameters=true
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.query.parameter.0
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+  - when: otel.instrumentation.jdbc.experimental.transaction.enabled=true
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-18bcff8b
@@ -10752,8 +10780,6 @@ libraries:
         type: STRING
       - name: db.operation.batch.size
         type: LONG
-      - name: db.operation.name
-        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -10786,8 +10812,6 @@ libraries:
         type: STRING
       - name: db.operation.batch.size
         type: LONG
-      - name: db.operation.name
-        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.query.text
