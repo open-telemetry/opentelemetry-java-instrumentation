@@ -70,7 +70,8 @@ class KafkaBrokerTest extends TargetSystemTest {
     AttributeMatcherGroup fetchType = attributeGroup(attribute("kafka.request.type", "fetch"));
     AttributeMatcherGroup produceType = attributeGroup(attribute("kafka.request.type", "produce"));
 
-    AttributeMatcherGroup requestTypeProduce = attributeGroup(attribute("kafka.request.type", "produce"));
+    AttributeMatcherGroup requestTypeProduce =
+        attributeGroup(attribute("kafka.request.type", "produce"));
     AttributeMatcherGroup requestTypeFetchConsumer =
         attributeGroup(attribute("kafka.request.type", "fetchconsumer"));
     AttributeMatcherGroup requestTypeFetchFollower =
@@ -104,35 +105,34 @@ class KafkaBrokerTest extends TargetSystemTest {
                             "The number of requests to the broker resulting in a failure")
                         .hasDataPointsWithAttributes(fetchType, produceType))
 
-            // WIP line ---
-
             .add(
-                "kafka.request.time.total", // TODO: not sure if this is a relevant metric
+                "kafka.request.duration.count", // TODO: not sure if this is a relevant metric
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("ms")
-                        .hasDescription("The total time the broker has taken to service requests")
+                        .hasUnit("{request}")
+                        .hasDescription(
+                            "The number of requests the broker has measured the service duration of")
                         .hasDataPointsWithAttributes(
                             requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
             .add(
-                "kafka.request.time.50p",
+                "kafka.request.duration.p50",
                 metric ->
                     metric
                         .isGauge()
-                        .hasUnit("ms")
+                        .hasUnit("s")
                         .hasDescription(
-                            "The 50th percentile time the broker has taken to service requests")
+                            "The 50th percentile duration the broker has taken to service requests")
                         .hasDataPointsWithAttributes(
                             requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
             .add(
-                "kafka.request.time.99p",
+                "kafka.request.duration.p99",
                 metric ->
                     metric
                         .isGauge()
-                        .hasUnit("ms")
+                        .hasUnit("s")
                         .hasDescription(
-                            "The 99th percentile time the broker has taken to service requests")
+                            "The 99th percentile duration the broker has taken to service requests")
                         .hasDataPointsWithAttributes(
                             requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
             .add(
@@ -140,7 +140,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{requests}")
+                        .hasUnit("{request}")
                         .hasDescription("Size of the request queue")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -151,24 +151,24 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasUnit("By")
                         .hasDescription("The bytes received or sent by the broker")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("direction", "in")),
-                            attributeGroup(attribute("direction", "out"))))
+                            attributeGroup(attribute("kafka.network.io.direction", "in")),
+                            attributeGroup(attribute("kafka.network.io.direction", "out"))))
             .add(
                 "kafka.purgatory.size",
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{requests}")
+                        .hasUnit("{request}")
                         .hasDescription("The number of requests waiting in purgatory")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("type", "Produce")),
-                            attributeGroup(attribute("type", "Fetch"))))
+                            attributeGroup(attribute("kafka.request.type", "produce")),
+                            attributeGroup(attribute("kafka.request.type", "fetch"))))
             .add(
                 "kafka.partition.count",
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{partitions}")
+                        .hasUnit("{partition}")
                         .hasDescription("The number of partitions on the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -176,34 +176,34 @@ class KafkaBrokerTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{partitions}")
+                        .hasUnit("{partition}")
                         .hasDescription("The number of partitions offline")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.partition.underReplicated",
+                "kafka.partition.under_replicated",
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{partitions}")
-                        .hasDescription("The number of under replicated partitions")
+                        .hasUnit("{partition}")
+                        .hasDescription("The number of under-replicated partitions")
                         .hasDataPointsWithoutAttributes())
             .add(
                 "kafka.isr.operation.count",
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{operations}")
+                        .hasUnit("{operation}")
                         .hasDescription(
-                            "The number of in-sync replica shrink and expand operations")
+                            "The number of in-sync replica operations")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("operation", "shrink")),
-                            attributeGroup(attribute("operation", "expand"))))
+                            attributeGroup(attribute("kafka.isr.operation", "shrink")),
+                            attributeGroup(attribute("kafka.isr.operation", "expand"))))
             .add(
                 "kafka.lag.max",
                 metric ->
                     metric
                         .isGauge()
-                        .hasUnit("{messages}")
+                        .hasUnit("{message}")
                         .hasDescription(
                             "The max lag in messages between follower and leader replicas")
                         .hasDataPointsWithoutAttributes())
@@ -212,53 +212,53 @@ class KafkaBrokerTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{controllers}")
+                        .hasUnit("{controller}")
                         .hasDescription("The number of controllers active on the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.Count",
+                "kafka.logs.flush.count",
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("ms")
+                        .hasUnit("{flush}")
                         .hasDescription("Log flush count")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.time.50p",
+                "kafka.logs.flush.duration.p50",
                 metric ->
                     metric
                         .isGauge()
-                        .hasUnit("ms")
-                        .hasDescription("Log flush time - 50th percentile")
+                        .hasUnit("s")
+                        .hasDescription("Log flush duration 50th percentile")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.time.99p",
+                "kafka.logs.flush.duration.p99",
                 metric ->
                     metric
                         .isGauge()
-                        .hasUnit("ms")
-                        .hasDescription("Log flush time - 99th percentile")
+                        .hasUnit("s")
+                        .hasDescription("Log flush duration 99th percentile")
                         .hasDataPointsWithoutAttributes());
 
     if (useZookeeper) {
       // those metrics are only reported when using zookeeper
       verifier
           .add(
-              "kafka.leaderElection.count",
+              "kafka.leader_election.count",
               metric ->
                   metric
                       .isCounter()
-                      .hasUnit("{elections}")
+                      .hasUnit("{election}")
                       .hasDescription("The leader election count")
                       .hasDataPointsWithoutAttributes())
           .add(
-              "kafka.leaderElection.unclean.count",
+              "kafka.leader_election.unclean.count",
               metric ->
                   metric
                       .isCounter()
-                      .hasUnit("{elections}")
+                      .hasUnit("{election}")
                       .hasDescription(
-                          "Unclean leader election count - increasing indicates broker failures")
+                          "Unclean leader election count")
                       .hasDataPointsWithoutAttributes());
     }
     return verifier;

@@ -58,18 +58,22 @@ rules:
       kafka.request.type: lowercase(param(request))
     mapping:
       Count:
-        # seems bogus metric here as it's count not total
-        metric: kafka.request.time.total
+        metric: kafka.request.duration.count
         type: counter
-        desc: The total time the broker has taken to service requests
+        desc: The number of requests the broker has measured the service duration of
+        unit: "{request}"
       50thPercentile:
-        metric: kafka.request.time.50p
+        metric: kafka.request.duration.p50
         type: gauge
-        desc: The 50th percentile time the broker has taken to service requests
+        desc: The 50th percentile duration the broker has taken to service requests
+        sourceUnit: ms
+        unit: s
       99thPercentile:
-        metric: kafka.request.time.99p
+        metric: kafka.request.duration.p99
         type: gauge
-        desc: The 99th percentile time the broker has taken to service requests
+        desc: The 99th percentile duration the broker has taken to service requests
+        sourceUnit: ms
+        unit: s
 
   - bean: kafka.network:type=RequestChannel,name=RequestQueueSize
     mapping:
@@ -77,11 +81,11 @@ rules:
         metric: kafka.request.queue
         type: updowncounter
         desc: Size of the request queue
-        unit: "{requests}"
+        unit: "{request}"
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec
     metricAttribute:
-      direction: const(in)
+      kafka.network.io.direction: const(in)
     mapping:
       Count:
         metric: kafka.network.io
@@ -183,7 +187,7 @@ rules:
       Count:
         metric: kafka.leader_election.unclean.count
         type: counter
-        desc: Unclean leader election count - increasing indicates broker failures
+        desc: Unclean leader election count
         unit: "{election}"
 
   # Log metrics
@@ -199,11 +203,11 @@ rules:
         desc: Log flush count
       50thPercentile:
         metric: duration.p50
-        desc: Log flush duration - 50th percentile
+        desc: The 50th percentile of log flush duration
         sourceUnit: ms
         unit: s
       99thPercentile:
         metric: duration.p99
-        desc: Log flush duration - 99th percentile
+        desc: The 99th percentile of log flush duration
         sourceUnit: ms
         unit: s
