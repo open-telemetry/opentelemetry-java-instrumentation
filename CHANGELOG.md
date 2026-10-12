@@ -4,6 +4,13 @@
 
 ### ⚠️ Breaking changes
 
+- Remove the retired flat settings `otel.instrumentation.common.db-statement-sanitizer.enabled`
+  and `otel.instrumentation.<module>.statement-sanitizer.enabled`; use
+  `otel.instrumentation.common.db.query-sanitization.enabled` and
+  `otel.instrumentation.<module>.query-sanitization.enabled` instead.
+  Replace `java.common.database.sqlcommenter/development.enabled` with
+  `java.common.db.sqlcommenter/development.enabled`; the flat setting
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` remains supported.
 - Apache Wicket resource requests now always use the resource reference class name for `http.route`
   and the HTTP server span name, instead of the servlet wildcard route.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
