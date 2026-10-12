@@ -122,9 +122,7 @@ class CouchbaseClient30Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(PEER_SERVICE, experimental("kv")),
-                            equalTo(
-                                stringKey("couchbase.operation_id"),
-                                experimental("0x")),
+                            equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
                             equalTo(stringKey("couchbase.document_id"), experimental("id"))));
           }
         });
@@ -162,11 +160,8 @@ class CouchbaseClient30Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(PEER_SERVICE, experimental("kv")),
-                            equalTo(
-                                stringKey("couchbase.operation_id"),
-                                experimental("0x")),
-                            equalTo(
-                                stringKey("couchbase.document_id"), experimental("async-id"))));
+                            equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
+                            equalTo(stringKey("couchbase.document_id"), experimental("async-id"))));
           }
         });
   }
