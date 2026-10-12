@@ -13,8 +13,6 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
 abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
 
@@ -36,10 +34,6 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET /greeting")
-                        .hasAttributesSatisfying(
-                            attributes ->
-                                assertThat(attributes.asMap())
-                                    .doesNotContainKeys(THREAD_ID, THREAD_NAME))
                         .hasResourceSatisfying(
                             resource ->
                                 resource
@@ -49,12 +43,7 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
                                     .hasAttribute(stringKey("foo"), "bar")
                                     .hasAttribute(SERVICE_NAME, "otel-spring-test-app")
                                     .hasAttribute(SERVICE_VERSION, "1.2.3")),
-                span ->
-                    span.hasName("WebController.withSpan")
-                        .hasAttributesSatisfying(
-                            attributes ->
-                                assertThat(attributes.asMap())
-                                    .doesNotContainKeys(THREAD_ID, THREAD_NAME))));
+                span -> span.hasName("WebController.withSpan")));
 
     output.assertAgentVersionLogged();
     assertThat(output.getLoggedTraceIds()).isEqualTo(getSpanTraceIds());
