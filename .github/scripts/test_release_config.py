@@ -49,31 +49,33 @@ def workflow_script(filename, step):
 
 class ReleaseConfigTest(unittest.TestCase):
     def test_development_streams(self):
-        for ref, version in (("main", "3.0.0-SNAPSHOT"), ("2.x", "2.33.0-SNAPSHOT")):
+        for ref, version, release, next_version, release_branch in (
+            ("main", "3.0.0-SNAPSHOT", "3.0.0", "3.1.0-SNAPSHOT", "release/v3.0.x"),
+            ("maintenance/v2.x", "2.33.0-SNAPSHOT", "2.33.0", "2.34.0-SNAPSHOT", "release/v2.33.x"),
+            ("maintenance/v3.x", "3.12.0-SNAPSHOT", "3.12.0", "3.13.0-SNAPSHOT", "release/v3.12.x"),
+            ("maintenance/v4.x", "4.8.0-SNAPSHOT", "4.8.0", "4.9.0-SNAPSHOT", "release/v4.8.x"),
+        ):
             with self.subTest(ref=ref):
                 config = release_config.development_config(ref, version)
                 self.assertEqual(config["DEVELOPMENT_BRANCH"], ref)
-                self.assertEqual(
-                    config["NEXT_VERSION"],
-                    "3.1.0-SNAPSHOT" if ref == "main" else "2.34.0-SNAPSHOT",
-                )
-                self.assertEqual(
-                    config["RELEASE_BRANCH_NAME"],
-                    "release/v3.0.x" if ref == "main" else "release/v2.33.x",
-                )
-                self.assertEqual(
-                    config["VERSION"],
-                    "3.0.0" if ref == "main" else "2.33.0",
-                )
+                self.assertEqual(config["NEXT_VERSION"], next_version)
+                self.assertEqual(config["RELEASE_BRANCH_NAME"], release_branch)
+                self.assertEqual(config["VERSION"], release)
 
     def test_invalid_development_inputs(self):
         for ref, version in (
             ("release/2.x", "2.33.0-SNAPSHOT"),
             ("release/v2.33.x", "2.33.0-SNAPSHOT"),
-            ("2.x", "3.0.0-SNAPSHOT"),
-            ("2.x", "2.33.1-SNAPSHOT"),
-            ("2.x", "2.33.0"),
-            ("2.x", "2.33.0-alpha-SNAPSHOT"),
+            ("2.x", "2.33.0-SNAPSHOT"),
+            ("maintenance/2.x", "2.33.0-SNAPSHOT"),
+            ("maintenance/vnext.x", "2.33.0-SNAPSHOT"),
+            ("maintenance/v02.x", "2.33.0-SNAPSHOT"),
+            ("maintenance/v2.x", "3.0.0-SNAPSHOT"),
+            ("maintenance/v3.x", "2.33.0-SNAPSHOT"),
+            ("maintenance/v4.x", "3.12.0-SNAPSHOT"),
+            ("maintenance/v2.x", "2.33.1-SNAPSHOT"),
+            ("maintenance/v2.x", "2.33.0"),
+            ("maintenance/v2.x", "2.33.0-alpha-SNAPSHOT"),
         ):
             with self.subTest(ref=ref, version=version):
                 with self.assertRaises(ValueError):
@@ -84,17 +86,18 @@ class ReleaseConfigTest(unittest.TestCase):
             with self.subTest(version=version):
                 self.assertEqual(
                     release_config.release_config(
-                        "release/v2.33.x", version, "## Version 2.32.0 (2026-10-03)\n"
+                        "release/v2.33.x", version, "## Version 2.32.0 (2026-10-03)\n",
+                        "maintenance/v2.x",
                     ),
                     {
                         "VERSION": version,
-                        "DEVELOPMENT_BRANCH": "2.x",
+                        "DEVELOPMENT_BRANCH": "maintenance/v2.x",
                         "PRIOR_VERSION": prior,
                     },
                 )
         self.assertEqual(
             release_config.release_config(
-                "release/v3.1.x", "3.1.0", "## Version 3.0.0 (2026-10-03)\n"
+                "release/v3.1.x", "3.1.0", "## Version 3.0.0 (2026-10-03)\n", "main"
             ),
             {
                 "VERSION": "3.1.0",
@@ -110,6 +113,7 @@ class ReleaseConfigTest(unittest.TestCase):
                 "3.0.0",
                 "## Version 2.9.9 (2026-01-01)\n## Version 2.32.0 (2026-10-03)\n"
                 "## Version 2.32.10 (2026-10-05)\n## Version 2.32.9 (2026-10-04)\n",
+                "main",
             )["PRIOR_VERSION"],
             "2.32.10",
         )
@@ -121,6 +125,7 @@ class ReleaseConfigTest(unittest.TestCase):
                 "2.33.0",
                 "## Version 2.33.0 (2026-10-06)\n## Version 2.32.0 (2026-10-03)\n"
                 "## Version 2.32.10 (2026-10-05)\n## Version 2.32.9 (2026-10-04)\n",
+                "maintenance/v2.x",
             )["PRIOR_VERSION"],
             "2.32.10",
         )
@@ -128,6 +133,7 @@ class ReleaseConfigTest(unittest.TestCase):
             release_config.release_config(
                 "release/v2.29.x", "2.29.0",
                 (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"),
+                "maintenance/v2.x",
             )["PRIOR_VERSION"],
             "2.28.1",
         )
@@ -135,17 +141,19 @@ class ReleaseConfigTest(unittest.TestCase):
     def test_invalid_release_inputs(self):
         for ref, version in (
             ("main", "3.0.0"),
-            ("2.x", "2.33.0"),
+            ("maintenance/v2.x", "2.33.0"),
             ("release/v2.32.x", "2.33.0"),
             ("release/v2.33.x", "2.33.0-SNAPSHOT"),
             ("release/v2.33.x", "2.33.0-alpha"),
         ):
             with self.subTest(ref=ref, version=version):
                 with self.assertRaises(ValueError):
-                    release_config.release_config(ref, version, "")
+                    release_config.release_config(ref, version, "", "main")
         for ref, version in (("release/v3.0.x", "3.0.0"), ("release/v2.33.x", "2.33.0")):
             with self.subTest(ref=ref), self.assertRaises(ValueError):
-                release_config.release_config(ref, version, "")
+                release_config.release_config(ref, version, "", "main")
+        with self.assertRaises(ValueError):
+            release_config.release_config("release/v3.1.x", "3.1.1", "", "maintenance/v2.x")
 
     def test_latest_release_policy(self):
         self.assertTrue(release_config.make_latest("2.33.0", ["v2.32.0"]))
@@ -215,15 +223,132 @@ class ReleaseConfigTest(unittest.TestCase):
             output = io.StringIO()
             with (
                 mock.patch.object(release_config, "REPO_ROOT", root),
-                mock.patch.object(sys, "argv", ["release-config.py", "prepare", "--ref", "2.x"]),
+                mock.patch.object(sys, "argv", ["release-config.py", "prepare", "--ref", "maintenance/v2.x"]),
                 contextlib.redirect_stdout(output),
             ):
                 release_config.main()
             self.assertEqual(
                 output.getvalue(),
-                "VERSION=2.33.0\nDEVELOPMENT_BRANCH=2.x\n"
+                "VERSION=2.33.0\nDEVELOPMENT_BRANCH=maintenance/v2.x\n"
                 "RELEASE_BRANCH_NAME=release/v2.33.x\nNEXT_VERSION=2.34.0-SNAPSHOT\n",
             )
+
+
+class DevelopmentBranchResolutionTest(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        run_command(["git", "init", "--quiet", "--initial-branch", "main"], self.root)
+        run_command(["git", "config", "user.name", "Release test"], self.root)
+        run_command(["git", "config", "user.email", "release-test@example.invalid"], self.root)
+        patch = mock.patch.object(release_config, "REPO_ROOT", self.root)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def add_branch(self, branch, version):
+        (self.root / "version.gradle.kts").write_text(
+            f'val stableVersion = "{version}"\n', encoding="utf-8"
+        )
+        run_command(["git", "add", "version.gradle.kts"], self.root)
+        run_command(["git", "commit", "--quiet", "--allow-empty", "-m", branch], self.root)
+        run_command(["git", "update-ref", f"refs/remotes/origin/{branch}", "HEAD"], self.root)
+
+    def test_routes_maintenance_majors(self):
+        self.add_branch("main", "5.0.0-SNAPSHOT")
+        for branch, snapshot, version in (
+            ("maintenance/v2.x", "2.34.0-SNAPSHOT", "2.33.1"),
+            ("maintenance/v3.x", "3.13.0-SNAPSHOT", "3.12.0"),
+            ("maintenance/v4.x", "4.9.0-SNAPSHOT", "4.8.0"),
+        ):
+            with self.subTest(branch=branch):
+                self.add_branch(branch, snapshot)
+                self.assertEqual(release_config.resolve_development_branch(version), branch)
+
+    def test_main_only_when_major_matches(self):
+        for snapshot, version in (
+            ("2.34.0-SNAPSHOT", "2.33.1"),
+            ("3.1.0-SNAPSHOT", "3.0.0"),
+            ("4.1.0-SNAPSHOT", "4.0.0"),
+        ):
+            with self.subTest(version=version):
+                self.add_branch("main", snapshot)
+                self.assertEqual(release_config.resolve_development_branch(version), "main")
+        with self.assertRaisesRegex(ValueError, "does not match main"):
+            release_config.resolve_development_branch("3.0.1")
+
+    def test_matching_maintenance_takes_precedence(self):
+        self.add_branch("main", "2.34.0-SNAPSHOT")
+        self.add_branch("maintenance/v2.x", "2.35.0-SNAPSHOT")
+        self.assertEqual(
+            release_config.resolve_development_branch("2.34.0"), "maintenance/v2.x"
+        )
+
+    def test_mismatched_maintenance_does_not_fall_back_to_main(self):
+        self.add_branch("main", "2.34.0-SNAPSHOT")
+        self.add_branch("maintenance/v2.x", "3.0.0-SNAPSHOT")
+        with self.assertRaisesRegex(ValueError, "does not match development branch"):
+            release_config.resolve_development_branch("2.33.1")
+
+    def test_missing_or_invalid_development_version(self):
+        with self.assertRaisesRegex(ValueError, "no development branch"):
+            release_config.resolve_development_branch("2.33.1")
+        self.add_branch("maintenance/v2.x", "2.33.1")
+        with self.assertRaisesRegex(ValueError, "expected a minor snapshot"):
+            release_config.resolve_development_branch("2.33.1")
+
+    def test_missing_development_version_file_does_not_fall_back(self):
+        self.add_branch("main", "2.34.0-SNAPSHOT")
+        run_command(["git", "rm", "--quiet", "version.gradle.kts"], self.root)
+        run_command(["git", "commit", "--quiet", "-m", "Missing version"], self.root)
+        run_command(
+            ["git", "update-ref", "refs/remotes/origin/maintenance/v2.x", "HEAD"], self.root
+        )
+        with self.assertRaises(subprocess.CalledProcessError):
+            release_config.resolve_development_branch("2.33.1")
+
+    def test_release_cli_resolves_destination_before_emitting_config(self):
+        self.add_branch("main", "3.0.0-SNAPSHOT")
+        self.add_branch("maintenance/v2.x", "2.34.0-SNAPSHOT")
+        (self.root / "version.gradle.kts").write_text(
+            'val stableVersion = "2.33.0"\n', encoding="utf-8"
+        )
+        (self.root / "CHANGELOG.md").write_text(
+            "## Version 2.32.1 (2026-10-03)\n", encoding="utf-8"
+        )
+        output = io.StringIO()
+        with (
+            mock.patch.object(sys, "argv", ["release-config.py", "release", "--ref", "release/v2.33.x"]),
+            contextlib.redirect_stdout(output),
+        ):
+            release_config.main()
+        self.assertEqual(
+            output.getvalue(),
+            "VERSION=2.33.0\nDEVELOPMENT_BRANCH=maintenance/v2.x\nPRIOR_VERSION=2.32.1\n",
+        )
+        run_command(["git", "update-ref", "-d", "refs/remotes/origin/maintenance/v2.x"], self.root)
+        output = io.StringIO()
+        with (
+            mock.patch.object(sys, "argv", ["release-config.py", "release", "--ref", "release/v2.33.x"]),
+            contextlib.redirect_stdout(output),
+            contextlib.redirect_stderr(io.StringIO()),
+            self.assertRaises(SystemExit) as error,
+        ):
+            release_config.main()
+        self.assertEqual(error.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+
+    def test_git_subprocess_uses_no_window_flag(self):
+        with mock.patch.object(release_config.subprocess, "run") as run:
+            run.return_value.stdout = "refs/remotes/origin/main\n"
+            self.assertEqual(
+                release_config.git_output("for-each-ref"), "refs/remotes/origin/main\n"
+            )
+        self.assertTrue(run.call_args.kwargs["check"])
+        self.assertEqual(
+            run.call_args.kwargs["creationflags"],
+            subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+        )
 
 
 class WorkflowTest(unittest.TestCase):
@@ -255,15 +380,20 @@ class WorkflowTest(unittest.TestCase):
                     workflow_script("prepare-release-branch.yml", "Verify prerequisites"),
                 ]
                 if succeeds:
-                    run_command(args, root, dict(os.environ, GITHUB_REF_NAME="2.x"))
+                    run_command(args, root, dict(os.environ, GITHUB_REF_NAME="maintenance/v2.x"))
                 else:
                     with self.assertRaises(subprocess.CalledProcessError):
-                        run_command(args, root, dict(os.environ, GITHUB_REF_NAME="2.x"))
+                        run_command(args, root, dict(os.environ, GITHUB_REF_NAME="maintenance/v2.x"))
 
     def test_preparation_pr_targets(self):
         bash = shutil.which("bash")
         self.assertIsNotNone(bash, "Git Bash or bash is required")
-        for ref, version in (("main", "3.1.0-SNAPSHOT"), ("2.x", "2.33.0-SNAPSHOT")):
+        for ref, version in (
+            ("main", "3.1.0-SNAPSHOT"),
+            ("maintenance/v2.x", "2.33.0-SNAPSHOT"),
+            ("maintenance/v3.x", "3.12.0-SNAPSHOT"),
+            ("maintenance/v4.x", "4.8.0-SNAPSHOT"),
+        ):
             for step, expected_base in (
                 ("Create pull request against the release branch", "release"),
                 ("Create pull request against the development branch", ref),
@@ -294,9 +424,9 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
                     run_command([bash, "-eo", "pipefail", "-c", script], root, env)
                     calls = (root / "calls").read_text(encoding="utf-8")
                     base = config["RELEASE_BRANCH_NAME"] if expected_base == "release" else ref
-                    self.assertIn(f"--base {base}", calls)
-                    if ref == "2.x":
-                        self.assertNotIn("--base main", calls)
+                    self.assertRegex(calls, rf"--base {re.escape(base)}(?:\s|$)")
+                    if ref != "main":
+                        self.assertNotRegex(calls, r"--base main(?:\s|$)")
                     self.assertEqual(
                         run_command(["git", "show", f"{ref}:marker"], root).stdout,
                         "before\n",
@@ -312,6 +442,7 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
         self.assertIn("DEVELOPMENT_BRANCH: ${{ needs.release.outputs.development-branch }}", release)
         self.assertIn('--latest="$MAKE_LATEST"', release)
         self.assertIn("group: publish-release\n      cancel-in-progress: false", release)
+        self.assertLess(release.index("fetch-depth: 0"), release.index("Set environment variables"))
         self.assertLess(
             release.index("Determine whether to mark the release as latest"),
             release.index("Build and publish artifacts"),
@@ -323,7 +454,7 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
     def test_api_baseline_updates_selected_checkout(self):
         bash = shutil.which("bash")
         self.assertIsNotNone(bash, "Git Bash or bash is required")
-        for version, prior in (("2.33.0", "2.32.0"), ("3.1.0", "3.0.0")):
+        for version, prior in (("2.33.0", "2.32.0"), ("3.1.0", "3.0.0"), ("4.8.0", "4.7.0")):
             with self.subTest(version=version), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 version_file = root / "version.gradle.kts"
@@ -370,7 +501,7 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
                 release,
             )
         self.assertIn(
-            "if: ${{ env.DEVELOPMENT_BRANCH == '2.x' && env.UPDATE_API_BASELINE == 'true' }}",
+            "if: ${{ startsWith(env.DEVELOPMENT_BRANCH, 'maintenance/v') && env.UPDATE_API_BASELINE == 'true' }}",
             release,
         )
         self.assertLess(
@@ -462,7 +593,49 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
                         "releases/download/v2.33.0/opentelemetry-javaagent.jar\n",
                     )
         release = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-        self.assertIn("if: ${{ env.DEVELOPMENT_BRANCH == '2.x' && env.UPDATE_API_BASELINE == 'true' }}", release)
+        self.assertIn(
+            "if: ${{ startsWith(env.DEVELOPMENT_BRANCH, 'maintenance/v') && env.UPDATE_API_BASELINE == 'true' }}",
+            release,
+        )
+
+    def test_backport_branch_validation(self):
+        bash = shutil.which("bash")
+        self.assertIsNotNone(bash, "Git Bash or bash is required")
+        for branch, succeeds in (
+            ("maintenance/v2.x", True),
+            ("maintenance/v3.x", True),
+            ("maintenance/v4.x", True),
+            ("release/v2.33.x", True),
+            ("release/v4.8.x", True),
+            ("main", False),
+            ("2.x", False),
+            ("maintenance/2.x", False),
+            ("maintenance/vnext.x", False),
+            ("maintenance/v2.33.x", False),
+        ):
+            with self.subTest(branch=branch), tempfile.TemporaryDirectory() as directory:
+                args = [
+                    bash, "-eo", "pipefail", "-c",
+                    workflow_script("backport.yml", "Verify backport branch"),
+                ]
+                env = dict(os.environ, GITHUB_REF_NAME=branch)
+                if succeeds:
+                    run_command(args, Path(directory), env)
+                else:
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        run_command(args, Path(directory), env)
+
+    def test_ci_and_renovate_maintenance_branches(self):
+        for filename in (
+            "build.yml", "codeql.yml", "gradle-wrapper-validation.yml", "zizmor.yml",
+        ):
+            with self.subTest(filename=filename):
+                text = (ROOT / ".github/workflows" / filename).read_text(encoding="utf-8")
+                self.assertIn("      - maintenance/v*.x\n", text)
+                self.assertNotIn("      - 2.x\n", text)
+        renovate = (ROOT / ".github/renovate.json5").read_text(encoding="utf-8")
+        self.assertIn("'maintenance/v2.x'", renovate)
+        self.assertNotIn("'maintenance/v3.x'", renovate)
 
     def test_renovate_follow_up_hooks_remain_branch_local(self):
         for filename in ("auto-license-report.yml", "auto-update-gh-aw-lockfiles.yml"):

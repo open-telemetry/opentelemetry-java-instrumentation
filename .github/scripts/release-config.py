@@ -2,6 +2,7 @@
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -10,13 +11,14 @@ VERSION_PATTERN = r"(\d+)\.(\d+)\.(\d+)"
 
 
 def development_config(ref: str, version: str) -> dict[str, str]:
-    if ref not in ("main", "2.x"):
-        raise ValueError("release preparation must run on main or 2.x")
+    maintenance = re.fullmatch(r"maintenance/v(\d+)\.x", ref)
+    if ref != "main" and maintenance is None:
+        raise ValueError("release preparation must run on main or maintenance/v<major>.x")
     match = re.fullmatch(VERSION_PATTERN + r"-SNAPSHOT", version)
     if match is None:
         raise ValueError(f"expected a minor snapshot version, got {version}")
     major, minor, patch = map(int, match.groups())
-    if patch != 0 or (ref == "2.x" and major != 2):
+    if patch != 0 or (maintenance is not None and ref != f"maintenance/v{major}.x"):
         raise ValueError(f"version {version} does not match development branch {ref}")
     return {
         "VERSION": f"{major}.{minor}.0",
@@ -51,16 +53,59 @@ def prior_release_version(version: str, changelog: str) -> str | None:
     return ".".join(map(str, max(prior_versions)))
 
 
-def release_config(ref: str, version: str, changelog: str) -> dict[str, str]:
+def git_output(*args: str) -> str:
+    return subprocess.run(
+        ["git", *args],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=True,
+        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+    ).stdout
+
+
+def read_stable_version(version_file: str) -> str:
+    match = re.search(r'^val stableVersion = "([^"]+)"$', version_file, re.MULTILINE)
+    if match is None:
+        raise ValueError("could not determine stableVersion")
+    return match.group(1)
+
+
+def resolve_development_branch(version: str) -> str:
+    major, _, _ = parse_version(version)
+    maintenance = f"maintenance/v{major}.x"
+    refs = git_output(
+        "for-each-ref",
+        "--format=%(refname)",
+        f"refs/remotes/origin/{maintenance}",
+        "refs/remotes/origin/main",
+    ).splitlines()
+    branch = maintenance if f"refs/remotes/origin/{maintenance}" in refs else "main"
+    ref = f"refs/remotes/origin/{branch}"
+    if ref not in refs:
+        raise ValueError(f"no development branch found for {version}")
+    branch_version = read_stable_version(git_output("show", f"{ref}:version.gradle.kts"))
+    development_config(branch, branch_version)
+    if parse_version(branch_version.removesuffix("-SNAPSHOT"))[0] != major:
+        raise ValueError(f"release {version} does not match {branch} version {branch_version}")
+    return branch
+
+
+def release_config(
+    ref: str, version: str, changelog: str, development_branch: str
+) -> dict[str, str]:
     major, minor, _ = parse_version(version)
     if ref != f"release/v{major}.{minor}.x":
         raise ValueError(f"version {version} does not match release branch {ref}")
+    if development_branch not in ("main", f"maintenance/v{major}.x"):
+        raise ValueError(f"release {version} does not match development branch {development_branch}")
     prior_version = prior_release_version(version, changelog)
     if prior_version is None:
         raise ValueError(f"no previous release found for {version}")
     return {
         "VERSION": version,
-        "DEVELOPMENT_BRANCH": "2.x" if major == 2 else "main",
+        "DEVELOPMENT_BRANCH": development_branch,
         "PRIOR_VERSION": prior_version,
     }
 
@@ -109,12 +154,7 @@ def main() -> None:
             config = post_release_config(args.version, baseline_match.group(1))
         else:
             version_file = (REPO_ROOT / "version.gradle.kts").read_text(encoding="utf-8")
-            version_match = re.search(
-                r'^val stableVersion = "([^"]+)"$', version_file, re.MULTILINE
-            )
-            if version_match is None:
-                raise ValueError("could not determine stableVersion")
-            version = version_match.group(1)
+            version = read_stable_version(version_file)
             if args.command == "prepare":
                 config = development_config(args.ref, version)
             else:
@@ -122,6 +162,7 @@ def main() -> None:
                     args.ref,
                     version,
                     (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8"),
+                    resolve_development_branch(version),
                 )
     except ValueError as error:
         parser.error(str(error))

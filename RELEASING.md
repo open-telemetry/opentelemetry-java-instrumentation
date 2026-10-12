@@ -4,14 +4,27 @@ OpenTelemetry Auto-Instrumentation for Java uses [SemVer standard](https://semve
 
 The version is specified in [version.gradle.kts](version.gradle.kts).
 
+## Development and release branches
+
+| Branch | Purpose |
+| --- | --- |
+| `main` | Primary development line |
+| `maintenance/v<major>.x` | Further compatible minor releases of a supported older major |
+| `release/v<major>.<minor>.x` | Preparation and publication of a minor release and its patches |
+
+For example, `maintenance/v2.x` can prepare `release/v2.33.x` while `main` develops a newer major.
+Before activating another maintenance line, configure its branch protections, protected-environment
+access, and explicit Renovate base branch, then initialize it from a reviewed commit of that major.
+The snapshot version's major must match the maintenance branch name.
+
 ## Snapshot builds
 
 The daily build workflow on the default branch executes `./gradlew publishToSonatype`,
 which publishes a snapshot build to
 [Sonatype snapshot repository](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/).
-To publish a 2.x snapshot, manually run the
+To publish a maintenance snapshot, manually run the
 [Build (daily) workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build-daily.yml)
-with `2.x` selected.
+with the maintenance branch selected, for example `maintenance/v2.x`.
 
 ## Release cadence
 
@@ -21,7 +34,8 @@ the second Monday of the month (roughly a few days after the monthly minor relea
 
 ## Preparing a new major or minor release
 
-Choose the development branch: `main` for 3.x development, or `2.x` for 2.x development.
+Choose the development branch: `main` for the current major, or `maintenance/v<major>.x`
+for a supported maintenance major.
 Minor releases must preserve the stable compatibility contracts in [VERSIONING.md](VERSIONING.md).
 
 - Check that
@@ -30,7 +44,7 @@ Minor releases must preserve the stable compatibility contracts in [VERSIONING.m
   repository), and check that the applicable
   [renovate PRs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pulls/app%2Frenovate)
   targeting the chosen development branch have been merged.
-- For 2.x, backport the selected compatible changes and SDK upgrades to `2.x` using the
+- For a maintenance release, backport the selected compatible changes and SDK upgrades to its development branch using the
   [Backport workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/backport.yml).
 - Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
   if there is one.
@@ -80,8 +94,9 @@ and deadlocks.
   - Review and merge the post-release pull request against the development branch.
     It synchronizes the change log for every release. Only releases newer than the development branch's
     apidiff baseline update that baseline and the generated API diffs, after becoming available in Maven Central.
-    For 2.x, those newer releases also update the README download link; older maintained patches do not move it backwards.
-    Releases from `release/v2.N.x` update `2.x`; releases from the main development line update `main`.
+    On maintenance branches, those newer releases also update the README download link; older maintained patches do not move it backwards.
+    A release of major N updates `maintenance/vN.x` if that branch exists. Otherwise, it updates `main`
+    only if main's snapshot major matches N. A missing or mismatched development branch stops publication.
 
 ## Credentials
 

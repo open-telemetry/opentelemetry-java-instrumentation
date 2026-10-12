@@ -43,6 +43,8 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # all development branches are needed to resolve the release's destination
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set environment variables
@@ -131,7 +133,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # CHANGELOG_SECTION.md is also used at the end of the release workflow
-          # for copying the change log updates to main
+          # for copying the change log updates to the development branch
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/CHANGELOG_SECTION.md
 
@@ -277,7 +279,7 @@ jobs:
           ./gradlew --refresh-dependencies japicmp
 
       - name: Update development branch download link
-        if: ${{ env.DEVELOPMENT_BRANCH == '2.x' && env.UPDATE_API_BASELINE == 'true' }}
+        if: ${{ startsWith(env.DEVELOPMENT_BRANCH, 'maintenance/v') && env.UPDATE_API_BASELINE == 'true' }}
         env:
           VERSION: ${{ needs.release.outputs.version }}
         run: |
