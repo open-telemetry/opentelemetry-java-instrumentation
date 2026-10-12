@@ -224,3 +224,20 @@ Some configurations require structured data only expressible in YAML:
   discovered via `@AutoService(ComponentProvider.class)`
 
 These have no flat-property fallback, so tests must cover declarative config mode.
+
+## Configuration test ownership
+
+For ordinary settings available in both forms, prefer default-behavior and module-specific
+flat-property tests. The bridge exposes those values through the declarative API, so do not
+repeat the behavior matrix for equivalent YAML. Bridge conversion and special mappings belong
+in `ConfigPropertiesBackedDeclarativeConfigPropertiesTest`; documented name pairs are checked
+by `DeclarativeConfigValidationTest`.
+
+Test shared-helper defaults, fallback, and precedence centrally. Keep module-specific wiring
+and any additional caller-specific fallback or precedence covered. Preserve focused coverage
+for supported deprecations and distinct migration paths, structured/YAML-only settings,
+source-specific binding or initialization, and native SDK SPIs. Declarative mocks in
+single-source unit tests are not duplicate variants.
+
+See [Configuration test coverage](../../../docs/contributing/running-tests.md#configuration-test-coverage)
+for the full policy and cleanup requirements.

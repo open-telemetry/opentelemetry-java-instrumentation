@@ -16,6 +16,32 @@ for each required version. Keep tests that run on the baseline in the default `t
 place only newer-version-specific tests in a dedicated `JvmTestSuite`; do not count a unit suite
 as coverage for the missing integration runtime.
 
+## Configuration test ownership
+
+Prefer default-behavior and module-specific flat-property tests for ordinary settings available
+in both flat and declarative forms. Both sources reach the same declarative configuration API;
+repeating behavior assertions for equivalent YAML values does not exercise a distinct path.
+`ConfigPropertiesBackedDeclarativeConfigPropertiesTest` owns bridge conversion and special mappings,
+and `DeclarativeConfigValidationTest` validates documented name pairs.
+
+Shared helpers own their defaults, fallback, and precedence tests. For example, `DbConfigTest`
+covers the unset/false/true module/common query-sanitization matrix and supplied defaults.
+A delegating instrumentation tests its default telemetry and module-specific setting, rather
+than repeating that matrix. Keep additional caller-specific behavior covered, such as the
+standalone JDBC driver's system-property fallback and declarative-over-system precedence.
+When configuration wiring changes, helper tests do not replace real initialization and telemetry coverage.
+
+Retain structured/YAML-only and distinct source-specific coverage, including Spring's early
+binding and YAML sequences, native configuration initialization and class-loader forwarding,
+and SDK component or model-customizer SPIs. Declarative mocks in single-source module unit
+tests are not redundant variants. Independent feature flags, semantic-convention selection,
+v3-preview behavior, deprecation warnings, and supported-library versions still need coverage
+when they exercise supported behavior.
+
+See [Configuration test coverage](../../../docs/contributing/running-tests.md#configuration-test-coverage)
+for the repository-wide policy. Before deleting a module test, add any missing central coverage
+for shared semantics that it uniquely exercises.
+
 ## Instrumentation enablement selectors
 
 Javaagent selectors such as `otel.instrumentation.<name>.enabled` are escape
