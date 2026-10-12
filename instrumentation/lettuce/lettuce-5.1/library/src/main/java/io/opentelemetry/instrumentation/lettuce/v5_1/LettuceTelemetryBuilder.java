@@ -18,9 +18,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.lettuce.v5_1.internal.Experimental;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
+
+  static {
+    Experimental.internalSetEncodingSpanEventsEnabled(
+        (builder, enabled) -> builder.encodingEventsEnabled = enabled);
+  }
 
   private final OpenTelemetry openTelemetry;
 
@@ -45,10 +51,14 @@ public final class LettuceTelemetryBuilder {
   /**
    * Sets whether the {@code redis.encode.start} and {@code redis.encode.end} span events should be
    * emitted by the constructed {@link LettuceTelemetry}. Disabled by default.
+   *
+   * @deprecated Use {@link Experimental#setEncodingSpanEventsEnabled(LettuceTelemetryBuilder,
+   *     boolean)} instead. May be removed in the next minor release.
    */
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public LettuceTelemetryBuilder setEncodingSpanEventsEnabled(boolean encodingEventsEnabled) {
-    this.encodingEventsEnabled = encodingEventsEnabled;
+    Experimental.setEncodingSpanEventsEnabled(this, encodingEventsEnabled);
     return this;
   }
 

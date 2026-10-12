@@ -6,11 +6,9 @@
 
 - The Java agent now instruments Lettuce 5.1 and later with the Lettuce 5.0 integration, changing
   the instrumentation scope from `io.opentelemetry.lettuce-5.1` to
-  `io.opentelemetry.lettuce-5.0`. The
-  `otel.instrumentation.lettuce.experimental.command-encoding-events.enabled` setting no longer
-  enables command-encoding events in the Java agent; use the standalone Lettuce library
-  instrumentation with the Java agent's `lettuce-5.0` instrumentation disabled to collect these
-  events without duplicate spans.
+  `io.opentelemetry.lettuce-5.0`. The Java agent no longer emits command-encoding events, and
+  `otel.instrumentation.lettuce.experimental.command-encoding-events.enabled` is no longer
+  supported.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.
@@ -248,6 +246,11 @@
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
+
+### 🚫 Deprecations
+
+- Deprecate `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` in favor of
+  `io.opentelemetry.instrumentation.lettuce.v5_1.internal.Experimental.setEncodingSpanEventsEnabled`.
 
 ## Version 2.32.0 (2026-10-03)
 
