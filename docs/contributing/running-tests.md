@@ -52,41 +52,20 @@ To ignore warnings, formatting issues, or other non-fatal issues in tests, use
 
 The `dev` flag will ignore warnings in tests.
 
-## Configuration test coverage
+## Configuration tests
 
-These guidelines apply across the repository, including instrumentation, shared configuration,
-javaagent infrastructure, library instrumentation, and Spring Boot.
+For settings available in both forms, prefer default-behavior and module-specific flat-property tests.
+The bridge exposes flat properties through the declarative API; test conversion centrally rather
+than repeating behavior assertions for equivalent YAML.
 
-For ordinary settings available as both flat properties and declarative YAML, prefer default-behavior
-tests and module-specific flat-property tests. Instrumentation reads the declarative configuration API,
-and the bridge exposes flat properties through that same API. Do not repeat the behavior matrix for
-equivalent YAML values. Test conversion and special mappings in
-`ConfigPropertiesBackedDeclarativeConfigPropertiesTest`; `DeclarativeConfigValidationTest` validates
-documented flat/declarative name pairs.
+Shared helpers own defaults, fallback, and precedence tests. Keep caller-specific logic covered,
+and add missing central coverage before removing a module test.
 
-Test shared-helper defaults, fallback, and precedence centrally, rather than in every caller.
-For example, `DbConfigTest` owns module/common query-sanitization precedence; a delegating module
-needs default behavior and its own setting's effect on telemetry, not another common-setting matrix.
-When module configuration wiring changes, test its real initialization path and emitted telemetry.
-Keep additional caller-specific logic covered, such as the standalone JDBC driver's direct-system-property
-fallback and declarative-over-system precedence.
+Retain declarative tests for structured/YAML-only settings, distinct binding, parsing, initialization,
+or migration paths, and native configuration integration. Single-source declarative unit tests are not duplicates.
 
-Retain declarative or source-specific coverage when it exercises a distinct path:
-
-- Structured or YAML-only settings, including annotation exclusion lists, per-method `span_kind`,
-  and URL-template rules.
-- Different binding, coercion, parsing, or initialization, including Spring's early Logback binding,
-  indexed lists, and YAML sequences.
-- Native configuration initialization, distribution settings, starter/smoke tests, class-loader
-  forwarding, configuration providers, and SDK component or model-customizer SPIs.
-
-Declarative mocks in a single-source module unit test are not duplicate source variants.
-Keep independent feature-flag, semantic-convention, v3-preview, deprecation-warning, and supported-library
-coverage when it exercises supported behavior; using a common property does not make a variant redundant.
-
-Before removing a module test, add any missing central coverage for shared semantics that it uniquely
-exercises. Remove unused fixtures, dependencies, Gradle wiring, CI task registrations, and metadata-collection
-inputs with redundant variants. Keep metadata describing supported settings, including common settings.
+Remove unused fixtures, dependencies, task registrations, and metadata-collection inputs with redundant
+variants. Keep metadata describing supported settings.
 
 ## Smoke tests
 

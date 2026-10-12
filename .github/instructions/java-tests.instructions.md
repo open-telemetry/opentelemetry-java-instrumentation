@@ -17,20 +17,14 @@ convention not caught by CI.
   When configuration wiring changes, test the real initialization path and emitted
   telemetry, not just helpers.
 - For ordinary settings available in both forms, prefer default-behavior and
-  module-specific flat-property tests. Do not add or request duplicate behavior tests
-  for equivalent declarative YAML that uses shared configuration logic. Add declarative-mode
+  module-specific flat-property tests. Do not add or request duplicate behavior tests for
+  equivalent flat properties and declarative YAML that use shared configuration logic. Add declarative-mode
   coverage only for different behavior, new or changed mode-specific wiring or
   migration paths, structured configuration, or settings unavailable through flat properties.
-  Preserve distinct source-specific binding, parsing, and initialization, including Spring's
-  early Logback binding and YAML sequences, native configuration integration, and SDK SPIs.
   Keep mode-specific wiring tests focused rather than repeating the full behavior matrix.
-  Test shared flat-to-declarative conversion and special mappings centrally. Declarative
-  mocks in a single-source module unit test are not duplicate source variants.
-- Test shared-helper defaults, fallback, and precedence centrally, not in every
-  instrumentation that delegates to the helper. Keep module-specific setting effects
-  and additional caller-specific logic covered, such as the standalone JDBC driver's
-  direct-system-property fallback and declarative-over-system precedence. Add missing
-  central coverage before removing a module test that uniquely exercises shared semantics.
+  Test shared flat-to-declarative conversion centrally. Single-source declarative unit tests are not duplicates.
+- Test shared-helper defaults, fallback, and precedence centrally, not in every caller.
+  Keep caller-specific logic covered and add missing central coverage before removing a module test.
 - Do not add or request historical-absence assertions merely because telemetry
   or functionality was removed or made opt-in. An absence assertion must verify
   a supported contract that would merit testing even if the previous behavior

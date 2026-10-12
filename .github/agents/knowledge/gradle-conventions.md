@@ -247,15 +247,8 @@ The `otel.javaagent-instrumentation` convention plugin already provides
 
 ## Custom Test Tasks
 
-Choose variants for distinct behavior, not equivalent configuration sources. For ordinary settings
-available in both forms, keep default and module-specific flat-property behavior tests; shared helpers
-own defaults, fallback, and precedence centrally. Retain structured/YAML-only settings, source-specific
-binding or initialization, native configuration integration, and independent feature or library-version
-variants. See [Configuration test coverage](../../../docs/contributing/running-tests.md#configuration-test-coverage).
-
-Before removing a variant, add missing central coverage for any shared semantics it uniquely exercises.
-Remove its unused fixtures, dependencies, lifecycle wiring, CI task registrations, and metadata-collection
-inputs. Keep metadata documenting supported settings, including common settings.
+For when to add or remove configuration variants and their fixtures, see
+[Configuration tests](../../../docs/contributing/running-tests.md#configuration-tests).
 
 Register custom test tasks lazily with `register<Test>("testFoo")`.
 
