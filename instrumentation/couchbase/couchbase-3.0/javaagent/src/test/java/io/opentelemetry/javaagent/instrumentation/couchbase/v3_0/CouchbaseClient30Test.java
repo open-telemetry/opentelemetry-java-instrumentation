@@ -42,10 +42,6 @@ class CouchbaseClient30Test {
 
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
-  private static final boolean EXPERIMENTAL_TELEMETRY_CONFIGURED =
-      System.getProperty("otel.instrumentation.couchbase.emit-experimental-telemetry") != null;
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -102,7 +98,7 @@ class CouchbaseClient30Test {
         trace -> {
           assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
               .isEqualTo("io.opentelemetry.couchbase-3.0");
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> assertGetSpan(span, "id"),
                 span ->
@@ -122,7 +118,7 @@ class CouchbaseClient30Test {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> assertGetSpan(span, "async-id"),
                 span ->
@@ -137,7 +133,7 @@ class CouchbaseClient30Test {
 
   private static void assertGetSpan(SpanDataAssert span, String documentId) {
     span.hasKind(CLIENT).hasName("get").hasStatus(StatusData.unset()).hasNoParent();
-    if (EXPERIMENTAL_ATTRIBUTES) {
+    if (EXPERIMENTAL_TELEMETRY) {
       span.hasAttributesSatisfyingExactly(
           equalTo(PEER_SERVICE, "kv"),
           satisfies(stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
@@ -145,9 +141,5 @@ class CouchbaseClient30Test {
     } else {
       span.hasTotalAttributeCount(0);
     }
-  }
-
-  private static boolean emitSdkDetailSpans() {
-    return EXPERIMENTAL_TELEMETRY_CONFIGURED ? EXPERIMENTAL_TELEMETRY : EXPERIMENTAL_ATTRIBUTES;
   }
 }

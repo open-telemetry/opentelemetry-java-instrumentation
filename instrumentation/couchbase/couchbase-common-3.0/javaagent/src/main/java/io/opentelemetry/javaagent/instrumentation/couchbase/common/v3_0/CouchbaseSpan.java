@@ -24,25 +24,20 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.time.Instant;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public final class CouchbaseSpan {
-
-  private static final Logger logger = Logger.getLogger(CouchbaseSpan.class.getName());
 
   private static final String DB_COUCHBASE_COLLECTION = "db.couchbase.collection";
   private static final String NET_PEER_NAME = "net.peer.name";
   private static final String NET_PEER_PORT = "net.peer.port";
 
-  private static final boolean captureExperimentalAttributes;
-  private static final boolean captureExperimentalTelemetry;
+  private static final boolean EMIT_EXPERIMENTAL_TELEMETRY;
 
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
-    captureExperimentalAttributes = captureExperimentalAttributes(config);
-    captureExperimentalTelemetry = captureExperimentalTelemetry(config);
+    EMIT_EXPERIMENTAL_TELEMETRY = emitExperimentalTelemetry(config);
   }
 
   private final Span span;
@@ -87,13 +82,13 @@ public final class CouchbaseSpan {
   }
 
   public void setExperimentalAttribute(String key, @Nullable String value) {
-    if (captureExperimentalAttributes) {
+    if (EMIT_EXPERIMENTAL_TELEMETRY) {
       span.setAttribute(key, value);
     }
   }
 
   public void setExperimentalAttribute(String key, long value) {
-    if (captureExperimentalAttributes) {
+    if (EMIT_EXPERIMENTAL_TELEMETRY) {
       span.setAttribute(key, value);
     }
   }
@@ -160,38 +155,15 @@ public final class CouchbaseSpan {
   }
 
   private static boolean captureExperimentalAttribute(String key) {
-    return captureExperimentalAttributes && key.startsWith("db.couchbase.");
+    return EMIT_EXPERIMENTAL_TELEMETRY && key.startsWith("db.couchbase.");
   }
 
   static boolean emitExperimentalTelemetry() {
-    return captureExperimentalTelemetry;
+    return EMIT_EXPERIMENTAL_TELEMETRY;
   }
 
   // visible for testing
-  static boolean captureExperimentalAttributes(DeclarativeConfigProperties config) {
-    return Boolean.TRUE.equals(config.getBoolean("experimental_span_attributes/development"));
-  }
-
-  // visible for testing
-  static boolean captureExperimentalTelemetry(DeclarativeConfigProperties config) {
-    Boolean configured = config.getBoolean("emit_experimental_telemetry/development");
-    if (configured != null) {
-      return configured;
-    }
-
-    // Deprecated for Couchbase 3.x; remains active until the next minor release.
-    Boolean deprecated = config.getBoolean("experimental_span_attributes/development");
-    if (deprecated == null) {
-      return false;
-    }
-
-    logger.warning(
-        "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
-            + " equivalent declarative configuration property are deprecated for enabling SDK"
-            + " detail spans. Use"
-            + " otel.instrumentation.couchbase.emit-experimental-telemetry or the equivalent"
-            + " declarative configuration to enable those spans; retain the deprecated setting to"
-            + " capture experimental span attributes.");
-    return deprecated;
+  static boolean emitExperimentalTelemetry(DeclarativeConfigProperties config) {
+    return Boolean.TRUE.equals(config.getBoolean("emit_experimental_telemetry/development"));
   }
 }

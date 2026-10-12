@@ -45,21 +45,8 @@ tasks {
     )
   }
 
-  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=false",
-      "-Dotel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.couchbase.emit-experimental-telemetry=false,otel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
-  }
-
   check {
-    dependsOn(testExperimental, testExperimentalAttributes)
+    dependsOn(testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

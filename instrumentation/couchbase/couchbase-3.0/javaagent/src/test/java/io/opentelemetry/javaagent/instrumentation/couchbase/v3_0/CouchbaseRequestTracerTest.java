@@ -36,10 +36,6 @@ class CouchbaseRequestTracerTest {
 
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
-  private static final boolean EXPERIMENTAL_TELEMETRY_CONFIGURED =
-      System.getProperty("otel.instrumentation.couchbase.emit-experimental-telemetry") != null;
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -77,7 +73,7 @@ class CouchbaseRequestTracerTest {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 CouchbaseRequestTracerTest::assertParentSpan,
                 span -> assertRequestSpan(span, trace.getSpan(0)),
@@ -121,7 +117,7 @@ class CouchbaseRequestTracerTest {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span -> span.hasName("get").hasParent(trace.getSpan(0)),
@@ -152,12 +148,8 @@ class CouchbaseRequestTracerTest {
             equalTo(stringKey("couchbase.client_context.request_id"), experimental("abc")));
   }
 
-  private static boolean emitSdkDetailSpans() {
-    return EXPERIMENTAL_TELEMETRY_CONFIGURED ? EXPERIMENTAL_TELEMETRY : EXPERIMENTAL_ATTRIBUTES;
-  }
-
   private static <T> T experimental(T value) {
-    return EXPERIMENTAL_ATTRIBUTES ? value : null;
+    return EXPERIMENTAL_TELEMETRY ? value : null;
   }
 
   private static RequestTracer createRequestTracer() {

@@ -9,18 +9,7 @@ configurations:
   - name: otel.instrumentation.couchbase.emit-experimental-telemetry
     declarative_name: java.couchbase.emit_experimental_telemetry/development
     description: >
-      Enables the request_encoding and dispatch_to_server internal spans emitted by the Couchbase
-      SDK. Does not enable experimental span attributes.
+      Enables experimental span attributes and the request_encoding and dispatch_to_server internal
+      spans emitted by the Couchbase SDK.
     type: boolean
     default: false
-  - name: otel.instrumentation.couchbase.experimental-span-attributes
-    declarative_name: java.couchbase.experimental_span_attributes/development
-    description: >
-      Deprecated for enabling SDK detail spans; use
-      otel.instrumentation.couchbase.emit-experimental-telemetry instead. This setting independently
-      enables experimental span attributes and, while the replacement is unset, continues to enable
-      known SDK detail spans for backwards compatibility.
-    type: boolean
-    default: false
-    deprecated: true
-    replaced_by: otel.instrumentation.couchbase.emit-experimental-telemetry

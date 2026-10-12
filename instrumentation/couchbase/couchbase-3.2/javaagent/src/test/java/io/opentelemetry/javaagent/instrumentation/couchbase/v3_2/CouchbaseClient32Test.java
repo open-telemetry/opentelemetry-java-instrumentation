@@ -63,12 +63,8 @@ import org.testcontainers.couchbase.CouchbaseService;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient32Test {
-  private static final boolean LEGACY_EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
-  private static final boolean EXPERIMENTAL_TELEMETRY_CONFIGURED =
-      System.getProperty("otel.instrumentation.couchbase.emit-experimental-telemetry") != null;
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -120,7 +116,7 @@ class CouchbaseClient32Test {
     dispatchAttributes.add(equalTo(DB_SYSTEM_NAME, "couchbase"));
     dispatchAttributes.add(equalTo(DB_NAMESPACE, "test"));
     dispatchAttributes.add(equalTo(DB_COLLECTION_NAME, "_default"));
-    if (emitExperimentalAttributes()) {
+    if (EXPERIMENTAL_TELEMETRY) {
       dispatchAttributes.add(equalTo(stringKey("db.couchbase.document_id"), "id"));
       dispatchAttributes.add(
           satisfies(stringKey("db.couchbase.local_id"), val -> val.isNotBlank()));
@@ -135,7 +131,7 @@ class CouchbaseClient32Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, seedPort));
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   assertOperationSpan(
@@ -170,7 +166,7 @@ class CouchbaseClient32Test {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   assertOperationSpan(span, "upsert", "async-id", StatusData.unset());
@@ -259,17 +255,7 @@ class CouchbaseClient32Test {
             equalTo(SERVER_PORT, (long) seedPort));
   }
 
-  private static boolean emitSdkDetailSpans() {
-    return EXPERIMENTAL_TELEMETRY_CONFIGURED
-        ? EXPERIMENTAL_TELEMETRY
-        : LEGACY_EXPERIMENTAL_ATTRIBUTES;
-  }
-
-  private static boolean emitExperimentalAttributes() {
-    return LEGACY_EXPERIMENTAL_ATTRIBUTES;
-  }
-
   private static <T> T experimental(T value) {
-    return emitExperimentalAttributes() ? value : null;
+    return EXPERIMENTAL_TELEMETRY ? value : null;
   }
 }
