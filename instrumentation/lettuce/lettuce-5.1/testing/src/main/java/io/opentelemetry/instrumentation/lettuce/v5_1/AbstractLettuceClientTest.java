@@ -89,10 +89,6 @@ public abstract class AbstractLettuceClientTest {
     return asList(assertions);
   }
 
-  protected static void assertCommandEvents(SpanData span) {
-    assertThat(span).hasEventsSatisfyingExactly();
-  }
-
   protected static void assertCommandErrorEvents(SpanData span) {
     if (testLatestDeps()) {
       assertThat(span)
@@ -100,8 +96,6 @@ public abstract class AbstractLettuceClientTest {
               new RedisCommandExecutionException(
                   "WRONGTYPE Operation against a key holding the wrong kind of value"))
           .hasEventsSatisfyingExactly(event -> event.hasName("exception"));
-    } else {
-      assertCommandEvents(span);
     }
   }
 

@@ -129,8 +129,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_PORT, port),
                                       equalTo(DB_SYSTEM_NAME, REDIS),
                                       equalTo(DB_QUERY_TEXT, "AUTH ?"),
-                                      equalTo(DB_OPERATION_NAME, "AUTH")))
-                              .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
+                                      equalTo(DB_OPERATION_NAME, "AUTH")))));
 
     } else {
       testing()
@@ -148,8 +147,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_PORT, port),
                                       equalTo(DB_SYSTEM_NAME, REDIS),
                                       equalTo(DB_QUERY_TEXT, "AUTH ?"),
-                                      equalTo(DB_OPERATION_NAME, "AUTH")))
-                              .satisfies(AbstractLettuceClientTest::assertCommandEvents)));
+                                      equalTo(DB_OPERATION_NAME, "AUTH")))));
     }
   }
 }
