@@ -14,8 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.FallbackEna
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiInstrumentationModule
-    extends FallbackEnabledInstrumentationModule {
+public class OpenTelemetryApiInstrumentationModule extends FallbackEnabledInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
     super("opentelemetry-api-1.4", "opentelemetry-api");
   }
