@@ -98,6 +98,12 @@ public abstract class AbstractAws2ClientCoreTest {
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
+  public static String experimental(String value) {
+    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
+        ? value
+        : null;
+  }
+
   protected static boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
     return Boolean.getBoolean(
@@ -264,7 +270,7 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "DynamoDb"),
             equalTo(RPC_METHOD, "ListTables"),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(AWS_REQUEST_ID, "UNKNOWN"),
             equalTo(AWS_DYNAMODB_TABLE_COUNT, 1),
             equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
@@ -285,7 +291,7 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(RPC_SYSTEM, "aws-api"),
                 equalTo(RPC_SERVICE, "DynamoDb"),
                 equalTo(RPC_METHOD, operation),
-                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                 equalTo(AWS_REQUEST_ID, "UNKNOWN"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                 equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
@@ -517,7 +523,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, "DynamoDb"),
                                   equalTo(RPC_METHOD, scenario.awsOperation),
-                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                                   equalTo(AWS_REQUEST_ID, "UNKNOWN"),
                                   equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
                                   equalTo(DB_OPERATION_NAME, scenario.operationName)));

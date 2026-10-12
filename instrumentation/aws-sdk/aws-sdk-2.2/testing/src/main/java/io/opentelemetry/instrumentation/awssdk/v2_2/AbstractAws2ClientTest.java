@@ -330,7 +330,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 equalTo(RPC_SYSTEM, "aws-api"),
                 equalTo(RPC_SERVICE, service),
                 equalTo(RPC_METHOD, operation),
-                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                 equalTo(AWS_REQUEST_ID, requestId)));
 
     if (service.equals("S3")) {

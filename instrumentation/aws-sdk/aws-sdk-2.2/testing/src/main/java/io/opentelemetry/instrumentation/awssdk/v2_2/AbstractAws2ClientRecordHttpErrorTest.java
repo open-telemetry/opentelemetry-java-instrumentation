@@ -186,7 +186,9 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, service),
                                   equalTo(RPC_METHOD, operation),
-                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(
+                                      stringKey("aws.agent"),
+                                      AbstractAws2ClientCoreTest.experimental("java-aws-sdk")),
                                   equalTo(AWS_REQUEST_ID, requestId),
                                   equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                                   equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),

@@ -49,6 +49,12 @@ public abstract class AbstractBaseAwsClientTest {
   protected final MockWebServerExtension server = new MockWebServerExtension();
   protected AwsClientBuilder.EndpointConfiguration endpoint;
 
+  public static String experimental(String value) {
+    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
+        ? value
+        : null;
+  }
+
   protected abstract InstrumentationExtension testing();
 
   protected abstract boolean hasRequestId();
@@ -109,7 +115,7 @@ public abstract class AbstractBaseAwsClientTest {
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   satisfies(RPC_SERVICE, val -> val.contains(service)),
                                   equalTo(RPC_METHOD, operation),
-                                  equalTo(stringKey("aws.agent"), "java-aws-sdk")));
+                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk"))));
 
                       if (hasRequestId()) {
                         attributes.add(

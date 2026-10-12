@@ -103,7 +103,15 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+            systemProperty(
+              "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+              "true",
+            )
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.aws-sdk.experimental-span-attributes=true," +
+                "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+            )
           }
         }
       }
@@ -131,10 +139,29 @@ tasks {
 
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testDefault = register<Test>("testDefault") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter.includeTestsMatching("DynamoDbClientTest")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "false")
+  }
+
+  named<Test>("test") {
+    systemProperty("metadataConfig", "otel.instrumentation.aws-sdk.experimental-span-attributes=true")
+  }
+
+  named<Test>("testSqsNoReceiveTelemetry") {
+    systemProperty("collectMetadata", false)
+  }
+
+  check {
+    dependsOn(testDefault)
   }
 
   if (otelProps.denyUnsafe) {
