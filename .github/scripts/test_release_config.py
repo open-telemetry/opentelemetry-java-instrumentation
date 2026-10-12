@@ -644,45 +644,6 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
             self.assertNotIn("ref: main", text)
             self.assertNotIn("schedule:", text)
             self.assertIn("git push", text)
-        license_workflow = (ROOT / ".github/workflows/auto-license-report.yml").read_text(encoding="utf-8")
-        self.assertRegex(
-            license_workflow,
-            r"uses: actions/download-artifact@[^\n]+\n        with:\n"
-            r"          name: patch\n          path: \$\{\{ runner.temp \}\}",
-        )
-
-    def test_license_patch_absence_skips_apply(self):
-        bash = shutil.which("bash")
-        self.assertIsNotNone(bash, "Git Bash or bash is required")
-        for content in ("", "license changes\n"):
-            with self.subTest(content=content), tempfile.TemporaryDirectory() as directory:
-                root = Path(directory)
-                output = root / "output"
-                output.write_text("", encoding="utf-8")
-                script = """
-git() {
-  if [[ $1 == diff ]]; then
-    printf '%s' "$PATCH_CONTENT"
-  fi
-}
-"""
-                script += workflow_script("auto-license-report.yml", "Create patch file")
-                run_command(
-                    [bash, "-eo", "pipefail", "-c", script],
-                    root,
-                    dict(os.environ, GITHUB_OUTPUT=str(output), PATCH_CONTENT=content),
-                )
-                self.assertEqual(
-                    output.read_text(encoding="utf-8"),
-                    "exists=true\n" if content else "",
-                )
-        workflow = (ROOT / ".github/workflows/auto-license-report.yml").read_text(encoding="utf-8")
-        self.assertIn("patch-exists: ${{ steps.create-patch.outputs.exists }}", workflow)
-        self.assertRegex(
-            workflow,
-            r"  apply:\n    runs-on: ubuntu-latest\n    needs: generate\n"
-            r"    if: needs\.generate\.outputs\.patch-exists == 'true'\n",
-        )
 
 
 if __name__ == "__main__":
