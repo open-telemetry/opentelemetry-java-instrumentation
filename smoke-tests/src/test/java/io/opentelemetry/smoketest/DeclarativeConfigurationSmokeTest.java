@@ -54,8 +54,6 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
     client().get("/actuator/health").aggregate().join();
     client().get("/greeting").aggregate().join();
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttribute(URL_PATH, "/greeting")));
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasAttribute(URL_PATH, "/greeting")));
   }
 }
