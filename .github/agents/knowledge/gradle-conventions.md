@@ -247,12 +247,14 @@ The `otel.javaagent-instrumentation` convention plugin already provides
 
 ## Custom Test Tasks
 
-Every custom `Test` task registered with `val foo by registering(Test::class)` **must** include
+Register custom test tasks lazily with `register<Test>("testFoo")`.
+
+Every explicitly registered custom `Test` task **must** include
 `testClassesDirs` and `classpath`. Without them the task discovers no test classes and passes
 vacuously — a silent false-negative.
 
 ```kotlin
-val testFoo by registering(Test::class) {
+val testFoo = register<Test>("testFoo") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   // ... other config
@@ -437,15 +439,14 @@ form is only justified when the same `build.gradle.kts` actually registers addit
 **`latestDepTest` does not count as a second test task for this rule.** It is registered
 implicitly by the convention plugin when `testLatestDeps` is set, and it inherits the
 configuration of `tasks.test`. A module with only a `tasks.test { ... }` block and no
-`by registering(Test::class)` declarations is a single-test-task module — leave it alone
+explicitly registered additional `Test` tasks is a single-test-task module — leave it alone
 (use the simple form) even if `testLatestDeps = true`.
 
 Only consider converting to `withType<Test>().configureEach` when the **same
-`build.gradle.kts`** explicitly registers one or more additional `Test` tasks via
-`val foo by registering(Test::class)`.
+`build.gradle.kts`** explicitly registers one or more additional `Test` tasks.
 
 **How to spot violations:** If `build.gradle.kts` has both a `test { ... }` block and an
-explicit `by registering(Test::class)` custom test task (e.g., `testStableSemconv`), check
+explicitly registered custom `Test` task (e.g., `testStableSemconv`), check
 whether any `systemProperty(...)` or `jvmArgs(...)` calls appear inside the `test { }` block
 that should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
 
@@ -456,7 +457,7 @@ tasks {
     // ... other properties common to all test tasks
   }
 
-  val testPreviewSemconv by registering(Test::class) {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     // only task-specific config here
     jvmArgs("-Dotel.semconv-stability.preview=<domain>")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
@@ -485,7 +486,7 @@ When already present, verify:
   metadata migration.
 - `collectMetadata` is in `tasks.test` for single-test-task modules, or in
   `withType<Test>().configureEach` for modules that explicitly register additional `Test`
-  tasks via `by registering(Test::class)` (`latestDepTest` does not count) — never on
+  tasks (`latestDepTest` does not count) — never on
   individual tasks. Do not use
   `withType<Test>().configureEach { ... }` in single-test-task modules.
 - `metadataConfig` is on each non-default task that participates in metadata collection. It may

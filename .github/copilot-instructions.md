@@ -75,6 +75,26 @@ of where its implementation lives.
 
 ## Documentation
 
+- Document flat properties without repeating equivalent declarative configuration.
+  Include declarative configuration only when it has different behavior, requires a distinct
+  migration, or supports configuration unavailable through flat properties.
+- Add hand-written changelog entries only for deprecations or breaking changes, as specified in
+  CONTRIBUTING.md; normal changes rely on the generated changelog. Write these entries around the
+  user-visible change and any required migration. Describe the released behavior directly, without
+  referring to preview flags used to stage the change. Omit statements about behavior that is
+  unchanged unless they are necessary to clarify the change's scope.
+- Add or request README and usage documentation for a concrete reader need: setup,
+  configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
+  A code change alone does not require a README addition. Do not add prose merely to inventory
+  automatically emitted attributes or schema URLs, narrate internal build or instrumentation
+  mechanics, or list capabilities an API does not provide without a relevant usage consequence.
+  Keep required supported-library entries, configuration tables, public API Javadoc, and
+  necessary usage and compatibility guidance.
+- Update the existing settings table, API documentation, or other appropriate reference instead
+  of repeating it in extra paragraphs or multiple module and parent READMEs. Reuse existing
+  metadata and generated catalogs for telemetry inventories when they already cover the detail.
+  Targeted source comments and contributor documentation remain appropriate for non-obvious
+  implementation rationale or development workflows.
 - Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
   READMEs and usage documentation should describe current supported behavior without migration
   sections or historical comparisons. PR descriptions may include migration guidance, old/new
