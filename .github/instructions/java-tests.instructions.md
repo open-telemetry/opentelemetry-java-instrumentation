@@ -16,6 +16,13 @@ convention not caught by CI.
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted
   telemetry, not just helpers.
+- Do not add or request historical-absence assertions merely because telemetry
+  or functionality was removed or made opt-in. An absence assertion must verify
+  a supported contract that would merit testing even if the previous behavior
+  had never existed; do not mechanically replace old presence assertions with
+  absence assertions in unrelated integration or smoke tests. Keep focused
+  coverage for supported settings, changed defaults, explicit opt-in/opt-out,
+  and default enablement, as well as exact assertions of supported telemetry.
 - For a javaagent change supporting multiple runtime library versions,
   look for tests with the installed agent against the required versions.
   Direct helper tests and `javaagent-unit-tests` do not exercise class
