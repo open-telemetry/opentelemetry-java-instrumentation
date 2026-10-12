@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
+import io.lettuce.core.protocol.CommandArgs;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
 import io.lettuce.core.protocol.ProtocolKeyword;
@@ -149,10 +150,8 @@ final class OpenTelemetryTracing implements Tracing {
     }
   }
 
-  // The order that callbacks will be called in or which thread they are called from is not well
-  // defined. We go ahead and buffer all data until we know we have a span. This implementation is
-  // particularly safe, synchronizing all accesses. Relying on implementation details would allow
-  // reducing synchronization but the impact should be minimal.
+  // Lettuce configures and starts each span before publishing it to encoding and completion
+  // callbacks. The span monitor protects the state shared by those callbacks.
   private static class OpenTelemetrySpan extends Tracer.Span {
 
     private final Context parentContext;
@@ -198,19 +197,27 @@ final class OpenTelemetryTracing implements Tracing {
     // @Override
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
-    public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
+    public Tracer.Span start(RedisCommand<?, ?, ?> command) {
       // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
       // so take name from the command. Later versions already set the name correctly,
       // so only fill it in when it is still null.
       // Use toString(): name() was removed from ProtocolKeyword in 6.5.0+.
       ProtocolKeyword type = command.getType();
-      if (request.getCommand() == null && type != null) {
-        request.setCommand(type.toString());
+      String commandName;
+      synchronized (this) {
+        commandName = request.getCommand();
+      }
+      if (commandName == null && type != null) {
+        name(type.toString());
       }
 
       // Extract args BEFORE calling start() so db.query.text can include them
-      if (command.getArgs() != null) {
-        request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
+      CommandArgs<?, ?> args = command.getArgs();
+      if (args != null) {
+        List<String> argsList = OtelCommandArgsUtil.getCommandArgs(args);
+        synchronized (this) {
+          request.setArgsList(argsList);
+        }
       }
 
       start();
@@ -235,17 +242,22 @@ final class OpenTelemetryTracing implements Tracing {
     // Not called by Lettuce in 6.0+ (though we call it ourselves above).
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span start() {
+    public Tracer.Span start() {
       if (instrumenter.shouldStart(parentContext, request)) {
-        context = instrumenter.start(parentContext, request);
+        Context startedContext = instrumenter.start(parentContext, request);
+        List<Object> bufferedEvents;
+        synchronized (this) {
+          context = startedContext;
+          bufferedEvents = events;
+          events = null;
+        }
 
         // Apply buffered events
-        if (events != null) {
-          Span span = Span.fromContext(context);
-          for (int i = 0; i < events.size(); i += 2) {
-            span.addEvent((String) events.get(i), (Instant) events.get(i + 1));
+        if (bufferedEvents != null) {
+          Span span = Span.fromContext(startedContext);
+          for (int i = 0; i < bufferedEvents.size(); i += 2) {
+            span.addEvent((String) bufferedEvents.get(i), (Instant) bufferedEvents.get(i + 1));
           }
-          events = null;
         }
       }
 
@@ -260,6 +272,7 @@ final class OpenTelemetryTracing implements Tracing {
         return this;
       }
 
+      // Keep event emission ordered with the completion claim.
       if (context != null) {
         Span.fromContext(context).addEvent(value);
       } else {
@@ -303,27 +316,37 @@ final class OpenTelemetryTracing implements Tracing {
       return this;
     }
 
-    private synchronized void finishWithResponse(LettuceResponse resp) {
-      this.response = resp;
-      if (this.error == null && resp.getThrowable() != null) {
-        this.error = resp.getThrowable();
-      }
-      finish();
+    @Override
+    public void finish() {
+      finishWithResponse(null);
     }
 
-    @Override
-    public synchronized void finish() {
-      if (context != null) {
-        LettuceResponse response = this.response;
-        if (response == null && errorMessage != null) {
-          response = new LettuceResponse(errorMessage, null);
+    private void finishWithResponse(@Nullable LettuceResponse resp) {
+      Context currentContext;
+      LettuceResponse currentResponse;
+      Throwable currentError;
+      synchronized (this) {
+        if (resp != null) {
+          this.response = resp;
+          if (this.error == null && resp.getThrowable() != null) {
+            this.error = resp.getThrowable();
+          }
         }
 
-        instrumenter.end(context, request, response, error);
-        // Null out context to prevent double-ending if both the onComplete callback and Lettuce's
-        // direct finish() call execute.
+        currentContext = context;
+        if (currentContext == null) {
+          return;
+        }
+        // Claim completion before invoking code that may reenter finish().
         context = null;
+        currentResponse = this.response;
+        if (currentResponse == null && errorMessage != null) {
+          currentResponse = new LettuceResponse(errorMessage, null);
+        }
+        currentError = error;
       }
+
+      instrumenter.end(currentContext, request, currentResponse, currentError);
     }
   }
 }
