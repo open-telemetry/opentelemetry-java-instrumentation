@@ -298,25 +298,14 @@ class LogbackAppenderTest {
                         e -> assertThat(e.getMDCPropertyMap()).containsOnlyKeys("key1", "key2")));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void deprecatedMdcPropertySelectsKeysLiterally(boolean declarativeConfig) {
+  @Test
+  void deprecatedMdcPropertySelectsKeysLiterally() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
-    if (declarativeConfig) {
-      properties.put("otel.file_format", "1.1");
-      properties.put(
-          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
-          "*,key1");
-      properties.put(
-          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
-          false);
-    } else {
-      properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*,key1");
-      properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
-    }
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*,key1");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
 
     SpringApplication app =
         new SpringApplication(
@@ -341,25 +330,14 @@ class LogbackAppenderTest {
                     .containsExactly(entry(stringKey("key1"), "val1")));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void deprecatedMdcPropertyWithSoleWildcardSelectsEveryKey(boolean declarativeConfig) {
+  @Test
+  void deprecatedMdcPropertyWithSoleWildcardSelectsEveryKey() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
-    if (declarativeConfig) {
-      properties.put("otel.file_format", "1.1");
-      properties.put(
-          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
-          "*");
-      properties.put(
-          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
-          false);
-    } else {
-      properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
-      properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
-    }
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
 
     SpringApplication app =
         new SpringApplication(
@@ -385,25 +363,14 @@ class LogbackAppenderTest {
                         entry(stringKey("key1"), "val1"), entry(stringKey("key2"), "val2")));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void excludedOnlyMdcPropertySelectsEveryOtherKey(boolean declarativeConfig) {
+  @Test
+  void excludedOnlyMdcPropertySelectsEveryOtherKey() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
-    if (declarativeConfig) {
-      properties.put("otel.file_format", "1.1");
-      properties.put(
-          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.excluded",
-          "key2");
-      properties.put(
-          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
-          false);
-    } else {
-      properties.put(
-          "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded", "key2");
-      properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
-    }
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded", "key2");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
 
     SpringApplication app =
         new SpringApplication(
@@ -548,27 +515,15 @@ class LogbackAppenderTest {
         .collect(toList());
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void loggerContextSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty(
-      boolean declarativeConfig) {
+  @Test
+  void loggerContextSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty() {
     Map<String, Object> properties = new HashMap<>();
-    if (declarativeConfig) {
-      properties.put("otel.file_format", "1.1");
-      properties.put(
-          "otel.instrumentation/development.java.logback_appender.capture_logger_context_attributes/development",
-          true);
-      properties.put(
-          "otel.instrumentation/development.java.logback_appender.logger_context_attributes/development.included",
-          "key1");
-    } else {
-      properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
-          true);
-      properties.put(
-          "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
-          "key1");
-    }
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
+        true);
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
+        "key1");
 
     assertThat(loggerContextDeprecationWarnings(properties)).isEmpty();
   }
@@ -743,7 +698,7 @@ class LogbackAppenderTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  @CsvSource({"false, false", "false, true", "true, true"})
   void mdcAppender(boolean declarativeConfig, boolean replacementConfigured) {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");

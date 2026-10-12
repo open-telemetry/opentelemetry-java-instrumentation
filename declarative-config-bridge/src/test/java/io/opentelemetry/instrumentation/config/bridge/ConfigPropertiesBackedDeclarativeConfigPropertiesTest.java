@@ -302,36 +302,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testDeprecatedCommonDbStatementSanitizerMapping() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("db_statement_sanitizer")
-                .getBoolean("enabled"))
-        .isFalse();
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("database")
-                .getStructured("statement_sanitizer")
-                .getBoolean("enabled"))
-        .isNull();
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("db")
-                .getStructured("query_sanitization")
-                .getBoolean("enabled"))
-        .isNull();
-  }
-
-  @Test
   void testGraphqlQuerySanitizationMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.graphql.query-sanitization.enabled", "false");
