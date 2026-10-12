@@ -83,7 +83,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("{messages}")
+                        .hasUnit("{message}")
                         .hasDescription("The number of messages received by the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -91,7 +91,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("{requests}")
+                        .hasUnit("{request}")
                         .hasDescription("The number of requests received by the broker")
                         .hasDataPointsWithAttributes(fetchType, produceType))
             .add(
