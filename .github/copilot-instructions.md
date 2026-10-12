@@ -75,6 +75,18 @@ of where its implementation lives.
 
 ## Documentation
 
+- Add or request README and usage documentation for a concrete reader need: setup,
+  configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
+  A code change alone does not require a README addition. Do not add prose merely to inventory
+  automatically emitted attributes or schema URLs, narrate internal build or instrumentation
+  mechanics, or list capabilities an API does not provide without a relevant usage consequence.
+  Keep required supported-library entries, configuration tables, public API Javadoc, and
+  necessary usage and compatibility guidance.
+- Update the existing settings table, API documentation, or other appropriate reference instead
+  of repeating it in extra paragraphs or multiple module and parent READMEs. Reuse existing
+  metadata and generated catalogs for telemetry inventories when they already cover the detail.
+  Targeted source comments and contributor documentation remain appropriate for non-obvious
+  implementation rationale or development workflows.
 - Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
   READMEs and usage documentation should describe current supported behavior without migration
   sections or historical comparisons. PR descriptions may include migration guidance, old/new

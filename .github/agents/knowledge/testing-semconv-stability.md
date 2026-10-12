@@ -74,7 +74,7 @@ the extra build-script complexity.
 For a domain with selectable stable conventions:
 
 ```kotlin
-val testStableSemconv by registering(Test::class) {
+val testStableSemconv = register<Test>("testStableSemconv") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.semconv-stability.opt-in=<domain>")
@@ -86,14 +86,14 @@ For a preview domain, use `testPreviewSemconv` and the preview property. Add the
 task only when the domain requires duplicate-mode coverage:
 
 ```kotlin
-val testPreviewSemconv by registering(Test::class) {
+val testPreviewSemconv = register<Test>("testPreviewSemconv") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.semconv-stability.preview=<domain>")
   systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
 }
 
-val testBothSemconv by registering(Test::class) {
+val testBothSemconv = register<Test>("testBothSemconv") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.semconv-stability.preview=<domain>/dup")
