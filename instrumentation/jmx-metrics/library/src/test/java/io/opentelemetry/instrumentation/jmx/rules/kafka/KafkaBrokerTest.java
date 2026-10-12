@@ -104,7 +104,6 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription(
                             "The number of requests to the broker resulting in a failure")
                         .hasDataPointsWithAttributes(fetchType, produceType))
-
             .add(
                 "kafka.request.duration.count", // TODO: not sure if this is a relevant metric
                 metric ->
@@ -151,8 +150,8 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasUnit("By")
                         .hasDescription("The bytes received or sent by the broker")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("kafka.network.io.direction", "in")),
-                            attributeGroup(attribute("kafka.network.io.direction", "out"))))
+                            attributeGroup(attribute("kafka.network.io.direction", "receive")),
+                            attributeGroup(attribute("kafka.network.io.direction", "transmit"))))
             .add(
                 "kafka.purgatory.size",
                 metric ->
@@ -193,8 +192,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                     metric
                         .isUpDownCounter()
                         .hasUnit("{operation}")
-                        .hasDescription(
-                            "The number of in-sync replica operations")
+                        .hasDescription("The number of in-sync replica operations")
                         .hasDataPointsWithAttributes(
                             attributeGroup(attribute("kafka.isr.operation", "shrink")),
                             attributeGroup(attribute("kafka.isr.operation", "expand"))))
@@ -257,8 +255,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                   metric
                       .isCounter()
                       .hasUnit("{election}")
-                      .hasDescription(
-                          "Unclean leader election count")
+                      .hasDescription("Unclean leader election count")
                       .hasDataPointsWithoutAttributes());
     }
     return verifier;
