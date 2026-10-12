@@ -57,21 +57,27 @@ or test failure that CI will report.
   `withType<Test>().configureEach` for configuration shared by multiple explicitly declared
   test tasks; not for a module with only `tasks.test` (implicit `latestDepTest` does not count).
 - Check metadata collection when its wiring or collected telemetry changes, not as unrelated
-  cleanup. Collect default telemetry and supported non-default telemetry modes. Collected tasks need
-  `systemProperty("collectMetadata", otelProps.collectMetadata)` and registration in
-  `.github/scripts/instrumentations.sh` for automated collection.
-- `metadataConfig` labels output; verify settings are applied separately. Leave it unset for default
-  telemetry, regardless of task name. Otherwise include only non-default user-facing settings
+  cleanup. Collect default telemetry and supported non-default telemetry modes. Register
+  representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
+  instrumentation scope and telemetry shape; equivalent suites need not all collect. Collected tasks
+  need `systemProperty("collectMetadata", otelProps.collectMetadata)`.
+- `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
+  instrumentation defaults, regardless of task name or settings on `test`.
+  Otherwise include only non-default user-facing settings
   needed to describe this instrumentation's signals, span kinds, attributes, metrics, or events,
-  including inherited settings. Use comma-separated flat `key=value` conditions without `-D`,
-  with consistent spelling and ordering for the same mode. Omit test setup, unrelated instrumentation
-  settings, and whole-module enablement for default-off instrumentation. Include span suppression
-  settings only when they determine this instrumentation's telemetry. Missing labels merge optional
-  telemetry into `when: default`; labels neither enable collection nor configure instrumentation.
+  including inherited settings. Inspect JVM properties, fixtures, and library builders; split or
+  filter collected tasks that mix profiles under one label. Label non-default metric selectors,
+  not Java source-set names; document runtime prerequisites separately. Use comma-separated flat
+  `key=value` conditions without `-D`, with consistent spelling and ordering for the same mode.
+  Omit test setup, unrelated instrumentation settings, and whole-module enablement for default-off
+  instrumentation. Include span suppression settings only when they determine this instrumentation's
+  telemetry. Missing labels merge optional telemetry into `when: default`.
 - Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
-  variants based on their purpose, not their names. Keep regression tasks in `check`, but omit them
-  from `.github/scripts/instrumentations.sh` and do not give them `metadataConfig`. Override inherited
-  collection with `systemProperty("collectMetadata", false)`; omitting a label does not exclude it.
+  variants based on their purpose, not their names. A full-suite `testReceiveSpansDisabled` may
+  document default telemetry; a suppression-only regression task does not. Keep regression tasks in
+  `check`, but omit them from `.github/scripts/instrumentations.sh` and do not give them `metadataConfig`.
+  Override inherited collection with `systemProperty("collectMetadata", false)`; omitting a label
+  does not exclude it.
 - When tests exercise behavior behind an experimental feature or telemetry flag, including
   experimental metrics, cover default-off and flag-on modes in separate JVMs. Keep the flag off
   the default test task and run the flag-on assertions through a wired `testExperimental` task

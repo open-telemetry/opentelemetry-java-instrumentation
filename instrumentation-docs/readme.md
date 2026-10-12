@@ -20,24 +20,28 @@ attributes, optional metrics, and semantic convention selection.
 | Unit tests or regression-only variants   | No                 | Unset                                     |
 
 `metadataConfig` labels output; it does not configure instrumentation or enable collection.
-An absent or empty label records telemetry under `when: default`, regardless of the task name.
-The generator merges telemetry with the same label, so label non-default telemetry even on `test`.
-Use the smallest set of non-default user-facing settings that describe this instrumentation's
-signals, span kinds, attributes, metrics, or events, including relevant inherited settings.
-Separate flat `key=value` settings with commas, omit `-D`, and use consistent spelling and ordering
-for the same mode. Apply the settings separately through `jvmArgs` or `systemProperty`.
+An absent or empty label records telemetry under `when: default`. Default means instrumentation
+defaults, not the task name or settings on `test`. The generator merges telemetry with the same label.
+Include only non-default user-facing settings needed to describe this instrumentation's signals,
+span kinds, attributes, metrics, or events, including inherited, fixture, and library-builder settings.
+Split or filter collected tasks that would mix profiles under one label.
+Use comma-separated flat `key=value` conditions without `-D`, with consistent spelling and ordering
+for the same mode. Apply settings separately through JVM properties or library APIs.
+Label non-default metric selectors, not Java source-set names; document runtime prerequisites separately.
 
 Omit test setup, such as ports, timeouts, JVM access flags, and unrelated instrumentation settings.
 Enabling a whole default-off instrumentation is also setup; `disabled_by_default` records that
 requirement. Include span suppression settings only when they determine this instrumentation's
 telemetry, not merely spans from other instrumentation in the test trace.
 
-Pass through `otelProps.collectMetadata` on collected tasks and register them in
-`.github/scripts/instrumentations.sh` for automated collection. Exclude unit tests and regression-only
+Pass through `otelProps.collectMetadata` on collected tasks. Register representative tasks in
+`.github/scripts/instrumentations.sh` covering each profile's instrumentation scope and telemetry
+shape; equivalent suites need not all collect. Exclude unit tests and regression-only
 disablement, adapter-fallback, or classpath compatibility variants based on their purpose, not their
-names. Keep regression tasks in `check`, but omit them from the collection script. If an excluded task
-inherits collection, override it with `systemProperty("collectMetadata", false)`; removing its label
-alone would collect its telemetry as `default`.
+names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a suppression-only
+regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
+If an excluded task inherits collection, override it with `systemProperty("collectMetadata", false)`;
+removing its label alone would collect its telemetry as `default`.
 
 For a module collecting its default profile and an RPC preview profile:
 
