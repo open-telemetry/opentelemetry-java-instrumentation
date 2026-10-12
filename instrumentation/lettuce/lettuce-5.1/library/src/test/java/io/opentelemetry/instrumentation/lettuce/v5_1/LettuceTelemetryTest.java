@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import io.lettuce.core.protocol.Command;
+import io.lettuce.core.protocol.CommandType;
+import io.lettuce.core.protocol.RedisCommand;
 import io.lettuce.core.tracing.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -19,19 +22,19 @@ class LettuceTelemetryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void filtersEncodingAnnotations(boolean eventsBeforeStart) {
+  void filtersEncodingAnnotations(boolean eventsBeforeStart) throws ReflectiveOperationException {
     LettuceTelemetry telemetry = LettuceTelemetry.create(testing.getOpenTelemetry());
     Tracer.Span span = telemetry.createTracing().getTracerProvider().getTracer().nextSpan();
     span.name("GET");
     if (!eventsBeforeStart) {
-      span.start();
+      startSpan(span);
     }
     span.annotate("redis.encode.start");
     span.annotate("redis.encode.end");
     span.annotate("redis.encode.custom");
     span.annotate("redis.dispatch");
     if (eventsBeforeStart) {
-      span.start();
+      startSpan(span);
     }
     span.annotate("redis.encode.start");
     span.annotate("redis.encode.end");
@@ -45,5 +48,16 @@ class LettuceTelemetryTest {
                     spanAssert.hasEventsSatisfyingExactly(
                         event -> event.hasName("redis.dispatch"),
                         event -> event.hasName("redis.complete"))));
+  }
+
+  private static void startSpan(Tracer.Span span) throws ReflectiveOperationException {
+    try {
+      Tracer.Span.class.getMethod("start").invoke(span);
+    } catch (NoSuchMethodException ignored) {
+      // Newer Lettuce versions require the command when starting a span.
+      Tracer.Span.class
+          .getMethod("start", RedisCommand.class)
+          .invoke(span, new Command<>(CommandType.GET, null));
+    }
   }
 }
