@@ -24,6 +24,7 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
         .springBoot()
         .setServiceName(false)
         .env("OTEL_METRICS_EXPORTER", "otlp")
+        .env("OTEL_JAVAAGENT_ADD_THREAD_DETAILS", "true")
         .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
   }
 
