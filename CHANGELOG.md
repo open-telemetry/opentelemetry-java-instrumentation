@@ -10,6 +10,8 @@
   `rule_based` sampler; its rules use case-sensitive exact/wildcard matching and per-rule samplers,
   and unmatched spans are dropped. This differs from the contrib sampler's regex, action, and
   fallback behavior.
+- The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
+  starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.
