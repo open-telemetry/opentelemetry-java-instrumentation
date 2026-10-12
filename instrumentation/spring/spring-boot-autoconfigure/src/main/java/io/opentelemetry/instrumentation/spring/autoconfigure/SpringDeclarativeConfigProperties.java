@@ -274,7 +274,7 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Nullable
   private static String stringOrNull(@Nullable Object value) {
-    if (value == null) {
+    if (value == null || !isPrimitive(value)) {
       return null;
     }
     return value.toString();
