@@ -7,6 +7,11 @@
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
   ],
+  baseBranchPatterns: [
+    'main',
+    '2.x',
+  ],
+  useBaseBranchConfig: 'merge',
   ignorePaths: [
     // instrumentation modules intentionally pin old library versions in order to test the oldest
     // supported version, so renovate must not update their build files

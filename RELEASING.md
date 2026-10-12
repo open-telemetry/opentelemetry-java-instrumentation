@@ -6,9 +6,12 @@ The version is specified in [version.gradle.kts](version.gradle.kts).
 
 ## Snapshot builds
 
-Every successful CI build of the main branch automatically executes `./gradlew publishToSonatype`
-as the last step, which publishes a snapshot build to
+The daily build workflow on the default branch executes `./gradlew publishToSonatype`,
+which publishes a snapshot build to
 [Sonatype snapshot repository](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/).
+To publish a 2.x snapshot, manually run the
+[Build (daily) workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build-daily.yml)
+with `2.x` selected.
 
 ## Release cadence
 
@@ -18,22 +21,27 @@ the second Monday of the month (roughly a few days after the monthly minor relea
 
 ## Preparing a new major or minor release
 
+Choose the development branch: `main` for 3.x development, or `2.x` for 2.x development.
+Minor releases must preserve the stable compatibility contracts in [VERSIONING.md](VERSIONING.md).
+
 - Check that
   [renovate has run](https://developer.mend.io/github/open-telemetry/opentelemetry-java-instrumentation)
   sometime in the past day (this link is only accessible if you have write access to the
-  repository), and check that all
+  repository), and check that the applicable
   [renovate PRs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pulls/app%2Frenovate)
-  have been merged.
+  targeting the chosen development branch have been merged.
+- For 2.x, backport the selected compatible changes and SDK upgrades to `2.x` using the
+  [Backport workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/backport.yml).
 - Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
   if there is one.
-- Merge a pull request to `main` updating the `CHANGELOG.md`.
+- Merge a pull request to the chosen development branch updating the `CHANGELOG.md`.
   - The heading for the unreleased entries should be `## Unreleased`.
   - Use `python3 .github/scripts/draft-release-notes/draft-release-notes.py`
     as the starting point for writing the change log.
 - Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
-  - Press the "Run workflow" button, and leave the default branch `main` selected.
+  - Press the "Run workflow" button, and select the chosen development branch.
   - Review and merge the two pull requests that it creates
-    (one is targeted to the release branch and one is targeted to `main`).
+    (one is targeted to the release branch and one advances the snapshot version on the development branch).
 
 ## Preparing a new patch release
 
@@ -68,12 +76,10 @@ and deadlocks.
     - Publish the artifacts to Maven Central
     - Generate [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for the Java agent jar and SBOM bundle
     - Publish a GitHub release with release notes, Java agent jar, and SBOM bundle
-  - Review and merge the pull request that it creates for updating the apidiff baseline version
-    to the newly released version (note that this pull request won't be made until after the release
-    is available in maven central).
-  - Review and merge the pull request that it creates for updating the change log in main
-    (note that if this is not a patch release then the change log on main may already be up-to-date,
-    in which case no pull request will be created).
+  - Review and merge the post-release pull request against the development branch.
+    It updates the apidiff baseline and synchronizes the change log after the release is available in Maven Central.
+    For 2.x, it also updates the README download link to the released 2.x version.
+    Releases from `release/v2.N.x` update `2.x`; releases from the main development line update `main`.
 
 ## Credentials
 

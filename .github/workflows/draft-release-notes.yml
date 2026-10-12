@@ -8,7 +8,7 @@ permissions:
   copilot-requests: write
 
 concurrency:
-  group: draft-release-notes
+  group: draft-release-notes-${{ github.ref }}
 
 jobs:
   draft:
@@ -22,6 +22,9 @@ jobs:
           # the previous release tag (e.g. v2.27.0) when computing the commit range
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Verify development branch
+        run: python .github/scripts/release-config.py prepare --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       - name: Install Copilot CLI
         run: |
@@ -54,7 +57,7 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      - name: Create pull request against main
+      - name: Create pull request against the development branch
         env:
           ARTIFACT_URL: ${{ steps.upload-diagnostics.outputs.artifact-url }}
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
@@ -79,4 +82,4 @@ jobs:
           gh pr create \
             --title "$message" \
             --body "$body" \
-            --base main
+            --base "$DEVELOPMENT_BRANCH"

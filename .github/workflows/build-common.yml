@@ -140,7 +140,7 @@ jobs:
             exit 1
           fi
 
-  # shell-only checks; every check runs even if an earlier one fails so all failures are visible
+  # every check runs even if an earlier one fails so all failures are visible
   repo-checks:
     runs-on: ubuntu-slim
     steps:
@@ -148,6 +148,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Release tooling tests
+        if: ${{ !cancelled() }}
+        run: python3 -m unittest discover -s .github/scripts -p test_release_config.py
 
       # this is needed because we don't auto-update dependencies in instrumentation/**
       # and so we want to enforce that all "real" dependencies are dependency managed
