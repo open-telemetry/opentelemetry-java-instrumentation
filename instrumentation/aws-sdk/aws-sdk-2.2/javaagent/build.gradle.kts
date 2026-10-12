@@ -250,7 +250,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("Aws2SqsTracingTest")
-    filter.includeTestsMatching("Aws2SqsTracingTest")
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "false")
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")

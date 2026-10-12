@@ -104,6 +104,10 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   protected abstract BedrockRuntimeAsyncClient configureBedrockRuntimeClient(
       BedrockRuntimeAsyncClient client);
 
+  protected boolean isCaptureMessageContentEnabled() {
+    return true;
+  }
+
   protected static void configureClient(AwsClientBuilder<?, ?> builder) {
     builder
         .region(Region.US_EAST_1)
@@ -118,6 +122,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
 
   @Test
   void testConverseBasic() {
+    boolean captureMessageContent = isCaptureMessageContentEnabled();
     BedrockRuntimeClientBuilder builder = BedrockRuntimeClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -199,6 +204,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+    KeyValue[] emptyBody = {};
 
     getTesting()
         .waitAndAssertLogRecords(
@@ -207,18 +213,25 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        captureMessageContent
+                            ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
+                            : Value.of(emptyBody)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("end_turn")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content", Value.of("Hi there! How can I help you today?")))));
+                        captureMessageContent
+                            ? Value.of(
+                                KeyValue.of("finish_reason", Value.of("end_turn")),
+                                KeyValue.of("index", Value.of(0)),
+                                KeyValue.of(
+                                    "content", Value.of("Hi there! How can I help you today?")))
+                            : Value.of(
+                                KeyValue.of("finish_reason", Value.of("end_turn")),
+                                KeyValue.of("index", Value.of(0)))));
   }
 
   @Test
