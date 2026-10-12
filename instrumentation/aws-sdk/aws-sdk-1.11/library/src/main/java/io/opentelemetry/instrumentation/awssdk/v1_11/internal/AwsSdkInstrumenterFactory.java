@@ -150,9 +150,7 @@ public final class AwsSdkInstrumenterFactory {
                 for (SqsMessage message : request.getMessages()) {
                   SpanContext spanContext =
                       Span.fromContext(message.getCreationContext()).getSpanContext();
-                  if (spanContext.isValid()) {
-                    spanLinks.addLink(spanContext, messageLinkAttributes(message));
-                  }
+                  spanLinks.addLink(spanContext, messageLinkAttributes(message));
                 }
               });
         },
@@ -191,9 +189,7 @@ public final class AwsSdkInstrumenterFactory {
           // message, so that attribute belongs on the span itself, where it already is
           SpanContext creationSpanContext =
               Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
-          if (creationSpanContext.isValid()) {
-            spanLinks.addLink(creationSpanContext);
-          }
+          spanLinks.addLink(creationSpanContext);
         });
     builder.addContextCustomizer(
         MessagingProcessContextCustomizer.create(
@@ -258,9 +254,7 @@ public final class AwsSdkInstrumenterFactory {
               (spanLinks, parentContext, request) -> {
                 for (Context creationContext : SqsAccess.getBatchMessageContexts(request)) {
                   SpanContext spanContext = Span.fromContext(creationContext).getSpanContext();
-                  if (spanContext.isValid()) {
-                    spanLinks.addLink(spanContext);
-                  }
+                  spanLinks.addLink(spanContext);
                 }
               });
         },
