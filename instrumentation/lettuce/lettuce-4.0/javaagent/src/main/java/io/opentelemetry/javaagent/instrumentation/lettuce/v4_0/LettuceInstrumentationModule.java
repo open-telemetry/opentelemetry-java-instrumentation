@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class LettuceInstrumentationModule extends InstrumentationModule {
   public LettuceInstrumentationModule() {
-    super("lettuce-4.0", new String[] {"lettuce"});
+    super("lettuce-4.0", "lettuce");
   }
 
   @Override

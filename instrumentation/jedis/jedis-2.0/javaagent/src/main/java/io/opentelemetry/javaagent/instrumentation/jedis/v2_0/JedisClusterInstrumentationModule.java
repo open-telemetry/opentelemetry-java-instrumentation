@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JedisClusterInstrumentationModule extends InstrumentationModule {
 
   public JedisClusterInstrumentationModule() {
-    super("jedis-2.0", new String[] {"jedis"});
+    super("jedis-2.0", "jedis");
   }
 
   @Override
