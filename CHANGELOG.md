@@ -88,14 +88,7 @@
   `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
   `otel.instrumentation.graphql.operation-name-in-span-name.enabled` and
   `otel.instrumentation.graphql.query-sanitization.enabled`, respectively.
-- The Java agent and standalone libraries now emit messaging telemetry using schema version 1.43.0.
-  Update span-name queries, for example `orders publish` becomes `send orders`, and replace
-  `messaging.operation=publish` with `messaging.operation.name=send` and
-  `messaging.operation.type=send`. Receive spans now use `CLIENT` instead of `CONSUMER`.
-  Replace `messaging.publish.duration` and `messaging.receive.duration` with
-  `messaging.client.operation.duration`, and `messaging.receive.messages` with
-  `messaging.client.consumed.messages`. Producers also emit `messaging.client.sent.messages`;
-  processing duration uses `messaging.process.duration`.
+- The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Remove support for the deprecated controller and view telemetry aliases. Replace
   `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
   `otel.instrumentation.common.experimental.view-telemetry.enabled` with
