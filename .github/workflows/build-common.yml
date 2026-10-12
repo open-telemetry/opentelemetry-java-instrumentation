@@ -151,7 +151,9 @@ jobs:
 
       - name: Release tooling tests
         if: ${{ !cancelled() }}
-        run: python3 -m unittest discover -s .github/scripts -p test_release_config.py
+        run: |
+          python3 -m unittest discover -s .github/scripts -p test_release_config.py
+          python3 -m unittest discover -s .github/scripts/draft-release-notes -p 'test_*.py'
 
       # this is needed because we don't auto-update dependencies in instrumentation/**
       # and so we want to enforce that all "real" dependencies are dependency managed

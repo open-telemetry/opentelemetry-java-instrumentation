@@ -224,6 +224,12 @@ jobs:
           ref: ${{ env.DEVELOPMENT_BRANCH }}
           persist-credentials: false
 
+      - name: Determine whether to update the API baseline
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          python .github/scripts/release-config.py post-release --version "$VERSION" >> "$GITHUB_ENV"
+
       - name: Merge change log to the development branch
         env:
           VERSION: ${{ needs.release.outputs.version }}
@@ -233,6 +239,7 @@ jobs:
           RELEASE_DATE=$release_date .github/scripts/merge-change-log-after-release.sh
 
       - name: Wait for release to be available in maven central
+        if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         env:
           VERSION: ${{ needs.release.outputs.version }}
         run: |
@@ -247,16 +254,19 @@ jobs:
           done
 
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         with:
           cache-read-only: true
 
       - name: Update apidiff baseline
+        if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         env:
           VERSION: ${{ needs.release.outputs.version }}
           PRIOR_VERSION: ${{ needs.release.outputs.prior-version }}
@@ -267,7 +277,7 @@ jobs:
           ./gradlew --refresh-dependencies japicmp
 
       - name: Update development branch download link
-        if: ${{ env.DEVELOPMENT_BRANCH == '2.x' }}
+        if: ${{ env.DEVELOPMENT_BRANCH == '2.x' && env.UPDATE_API_BASELINE == 'true' }}
         env:
           VERSION: ${{ needs.release.outputs.version }}
         run: |

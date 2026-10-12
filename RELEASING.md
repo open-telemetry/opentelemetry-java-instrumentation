@@ -37,7 +37,8 @@ Minor releases must preserve the stable compatibility contracts in [VERSIONING.m
 - Merge a pull request to the chosen development branch updating the `CHANGELOG.md`.
   - The heading for the unreleased entries should be `## Unreleased`.
   - Use `python3 .github/scripts/draft-release-notes/draft-release-notes.py`
-    as the starting point for writing the change log.
+    as the starting point for writing the change log. The default range starts after the highest patch
+    of the preceding minor (or the highest full version of the preceding major for a major release).
 - Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
   - Press the "Run workflow" button, and select the chosen development branch.
   - Review and merge the two pull requests that it creates
@@ -77,8 +78,9 @@ and deadlocks.
     - Generate [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for the Java agent jar and SBOM bundle
     - Publish a GitHub release with release notes, Java agent jar, and SBOM bundle
   - Review and merge the post-release pull request against the development branch.
-    It updates the apidiff baseline and synchronizes the change log after the release is available in Maven Central.
-    For 2.x, it also updates the README download link to the released 2.x version.
+    It synchronizes the change log for every release. Only releases newer than the development branch's
+    apidiff baseline update that baseline and the generated API diffs, after becoming available in Maven Central.
+    For 2.x, those newer releases also update the README download link; older maintained patches do not move it backwards.
     Releases from `release/v2.N.x` update `2.x`; releases from the main development line update `main`.
 
 ## Credentials

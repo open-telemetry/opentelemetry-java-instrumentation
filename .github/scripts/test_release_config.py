@@ -83,7 +83,9 @@ class ReleaseConfigTest(unittest.TestCase):
         for version, prior in (("2.33.0", "2.32.0"), ("2.33.1", "2.33.0")):
             with self.subTest(version=version):
                 self.assertEqual(
-                    release_config.release_config("release/v2.33.x", version, ""),
+                    release_config.release_config(
+                        "release/v2.33.x", version, "## Version 2.32.0 (2026-10-03)\n"
+                    ),
                     {
                         "VERSION": version,
                         "DEVELOPMENT_BRANCH": "2.x",
@@ -91,7 +93,9 @@ class ReleaseConfigTest(unittest.TestCase):
                     },
                 )
         self.assertEqual(
-            release_config.release_config("release/v3.1.x", "3.1.0", ""),
+            release_config.release_config(
+                "release/v3.1.x", "3.1.0", "## Version 3.0.0 (2026-10-03)\n"
+            ),
             {
                 "VERSION": "3.1.0",
                 "DEVELOPMENT_BRANCH": "main",
@@ -104,9 +108,28 @@ class ReleaseConfigTest(unittest.TestCase):
             release_config.release_config(
                 "release/v3.0.x",
                 "3.0.0",
-                "## Version 2.31.1 (2026-09-01)\n## Version 2.32.0 (2026-10-03)\n",
+                "## Version 2.9.9 (2026-01-01)\n## Version 2.32.0 (2026-10-03)\n"
+                "## Version 2.32.10 (2026-10-05)\n## Version 2.32.9 (2026-10-04)\n",
             )["PRIOR_VERSION"],
-            "2.32.0",
+            "2.32.10",
+        )
+
+    def test_minor_release_uses_highest_previous_patch(self):
+        self.assertEqual(
+            release_config.release_config(
+                "release/v2.33.x",
+                "2.33.0",
+                "## Version 2.33.0 (2026-10-06)\n## Version 2.32.0 (2026-10-03)\n"
+                "## Version 2.32.10 (2026-10-05)\n## Version 2.32.9 (2026-10-04)\n",
+            )["PRIOR_VERSION"],
+            "2.32.10",
+        )
+        self.assertEqual(
+            release_config.release_config(
+                "release/v2.29.x", "2.29.0",
+                (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"),
+            )["PRIOR_VERSION"],
+            "2.28.1",
         )
 
     def test_invalid_release_inputs(self):
@@ -120,8 +143,9 @@ class ReleaseConfigTest(unittest.TestCase):
             with self.subTest(ref=ref, version=version):
                 with self.assertRaises(ValueError):
                     release_config.release_config(ref, version, "")
-        with self.assertRaises(ValueError):
-            release_config.release_config("release/v3.0.x", "3.0.0", "")
+        for ref, version in (("release/v3.0.x", "3.0.0"), ("release/v2.33.x", "2.33.0")):
+            with self.subTest(ref=ref), self.assertRaises(ValueError):
+                release_config.release_config(ref, version, "")
 
     def test_latest_release_policy(self):
         self.assertTrue(release_config.make_latest("2.33.0", ["v2.32.0"]))
@@ -132,6 +156,55 @@ class ReleaseConfigTest(unittest.TestCase):
         self.assertTrue(release_config.make_latest("2.33.0", []))
         with self.assertRaises(ValueError):
             release_config.make_latest("2.33.0-SNAPSHOT", [])
+
+    def test_post_release_baseline_is_monotonic(self):
+        for version, baseline, update in (
+            ("2.33.1", "2.34.0", False),
+            ("2.34.0", "2.34.0", False),
+            ("2.34.1", "2.34.0", True),
+            ("2.9.10", "2.10.0", False),
+            ("2.33.10", "2.33.9", True),
+            ("3.0.1", "3.1.0", False),
+            ("3.0.0", "2.32.0", True),
+        ):
+            with self.subTest(version=version, baseline=baseline):
+                self.assertEqual(
+                    release_config.post_release_config(version, baseline),
+                    {"UPDATE_API_BASELINE": str(update).lower()},
+                )
+        for version, baseline in (
+            ("2.33.0-SNAPSHOT", "2.32.0"),
+            ("2.33.0", "2.32.0-SNAPSHOT"),
+            ("2.33.0", "missing"),
+        ):
+            with self.subTest(version=version, baseline=baseline), self.assertRaises(ValueError):
+                release_config.post_release_config(version, baseline)
+
+    def test_post_release_cli_reads_baseline_not_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            version_file = root / "version.gradle.kts"
+            version_file.write_text(
+                'val stableVersion = "2.35.0-SNAPSHOT"\n'
+                'val apidiffBaselineVersion = "2.34.0"\n', encoding="utf-8"
+            )
+            output = io.StringIO()
+            with (
+                mock.patch.object(release_config, "REPO_ROOT", root),
+                mock.patch.object(sys, "argv", ["release-config.py", "post-release", "--version", "2.33.1"]),
+                contextlib.redirect_stdout(output),
+            ):
+                release_config.main()
+            self.assertEqual(output.getvalue(), "UPDATE_API_BASELINE=false\n")
+            version_file.write_text('val stableVersion = "2.35.0-SNAPSHOT"\n', encoding="utf-8")
+            with (
+                mock.patch.object(release_config, "REPO_ROOT", root),
+                mock.patch.object(sys, "argv", ["release-config.py", "post-release", "--version", "2.33.1"]),
+                contextlib.redirect_stderr(io.StringIO()),
+                self.assertRaises(SystemExit) as error,
+            ):
+                release_config.main()
+            self.assertEqual(error.exception.code, 2)
 
     def test_cli_reads_selected_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -284,6 +357,84 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
                     "--refresh-dependencies japicmp\n",
                 )
 
+    def test_post_release_workflow_gates_baseline_and_download_updates(self):
+        bash = shutil.which("bash")
+        self.assertIsNotNone(bash, "Git Bash or bash is required")
+        release = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+        for step in (
+            "Wait for release to be available in maven central",
+            "Update apidiff baseline",
+        ):
+            self.assertIn(
+                f"- name: {step}\n        if: ${{{{ env.UPDATE_API_BASELINE == 'true' }}}}",
+                release,
+            )
+        self.assertIn(
+            "if: ${{ env.DEVELOPMENT_BRANCH == '2.x' && env.UPDATE_API_BASELINE == 'true' }}",
+            release,
+        )
+        self.assertLess(
+            release.index("ref: ${{ env.DEVELOPMENT_BRANCH }}", release.index("  post-release-updates:")),
+            release.index("Determine whether to update the API baseline"),
+        )
+        self.assertLess(
+            release.index("Determine whether to update the API baseline"),
+            release.index("Wait for release to be available in maven central"),
+        )
+        self.assertIn(
+            "- name: Merge change log to the development branch\n        env:", release,
+        )
+        for version, baseline, update in (
+            ("2.33.1", "2.34.0", False),
+            ("2.34.0", "2.34.0", False),
+            ("2.34.1", "2.34.0", True),
+        ):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                scripts = root / ".github/scripts"
+                scripts.mkdir(parents=True)
+                shutil.copyfile(ROOT / ".github/scripts/release-config.py", scripts / "release-config.py")
+                version_file = root / "version.gradle.kts"
+                version_file.write_text(f'val apidiffBaselineVersion = "{baseline}"\n', encoding="utf-8")
+                readme = root / "README.md"
+                readme.write_text(
+                    "https://github.com/open-telemetry/opentelemetry-java-instrumentation/"
+                    f"releases/download/v{baseline}/opentelemetry-javaagent.jar\n",
+                    encoding="utf-8",
+                )
+                original_readme = readme.read_text(encoding="utf-8")
+                apidiffs = root / "docs/apidiffs"
+                apidiffs.mkdir(parents=True)
+                diff_file = apidiffs / "latest.txt"
+                diff_file.write_text("existing API diff\n", encoding="utf-8")
+                gradlew = root / "gradlew"
+                gradlew.write_text(
+                    '#!/bin/sh\nprintf "%s\\n" "$*" >> gradle-calls\n'
+                    'echo updated > docs/apidiffs/latest.txt\n', encoding="utf-8"
+                )
+                gradlew.chmod(0o755)
+                script = workflow_script("release.yml", "Determine whether to update the API baseline")
+                script += '\nsource "$GITHUB_ENV"\nif [[ $UPDATE_API_BASELINE == true ]]; then\n'
+                script += workflow_script("release.yml", "Update apidiff baseline") + "\n"
+                script += workflow_script("release.yml", "Update development branch download link") + "\nfi\n"
+                run_command(
+                    [bash, "-eo", "pipefail", "-c", script], root,
+                    dict(os.environ, VERSION=version, PRIOR_VERSION="2.34.0", GITHUB_ENV=str(root / "github-env")),
+                )
+                self.assertEqual(
+                    version_file.read_text(encoding="utf-8"),
+                    f'val apidiffBaselineVersion = "{version if update else baseline}"\n',
+                )
+                self.assertEqual((root / "gradle-calls").exists(), update)
+                self.assertEqual(
+                    readme.read_text(encoding="utf-8"),
+                    original_readme.replace(f"v{baseline}/", f"v{version}/") if update else original_readme,
+                )
+                self.assertEqual(
+                    diff_file.read_text(encoding="utf-8"),
+                    "updated\n" if update else "existing API diff\n",
+                )
+
     def test_download_links_follow_release_stream(self):
         bash = shutil.which("bash")
         self.assertIsNotNone(bash, "Git Bash or bash is required")
@@ -311,7 +462,7 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
                         "releases/download/v2.33.0/opentelemetry-javaagent.jar\n",
                     )
         release = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
-        self.assertIn("if: ${{ env.DEVELOPMENT_BRANCH == '2.x' }}", release)
+        self.assertIn("if: ${{ env.DEVELOPMENT_BRANCH == '2.x' && env.UPDATE_API_BASELINE == 'true' }}", release)
 
     def test_renovate_follow_up_hooks_remain_branch_local(self):
         for filename in ("auto-license-report.yml", "auto-update-gh-aw-lockfiles.yml"):

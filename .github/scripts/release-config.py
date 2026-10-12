@@ -26,24 +26,38 @@ def development_config(ref: str, version: str) -> dict[str, str]:
     }
 
 
-def release_config(ref: str, version: str, changelog: str) -> dict[str, str]:
+def parse_version(version: str) -> tuple[int, int, int]:
     match = re.fullmatch(VERSION_PATTERN, version)
     if match is None:
         raise ValueError(f"expected a release version, got {version}")
     major, minor, patch = map(int, match.groups())
+    return major, minor, patch
+
+
+def prior_release_version(version: str, changelog: str) -> str | None:
+    major, minor, patch = parse_version(version)
+    if patch > 0:
+        return f"{major}.{minor}.{patch - 1}"
+    releases = [
+        tuple(map(int, match))
+        for match in re.findall(rf"^## Version {VERSION_PATTERN}(?: |$)", changelog, re.MULTILINE)
+    ]
+    if minor > 0:
+        prior_versions = [release for release in releases if release[:2] == (major, minor - 1)]
+    else:
+        prior_versions = [release for release in releases if release[0] == major - 1]
+    if not prior_versions:
+        return None
+    return ".".join(map(str, max(prior_versions)))
+
+
+def release_config(ref: str, version: str, changelog: str) -> dict[str, str]:
+    major, minor, _ = parse_version(version)
     if ref != f"release/v{major}.{minor}.x":
         raise ValueError(f"version {version} does not match release branch {ref}")
-    if patch > 0:
-        prior_version = f"{major}.{minor}.{patch - 1}"
-    elif minor > 0:
-        prior_version = f"{major}.{minor - 1}.0"
-    else:
-        prior_minors = re.findall(
-            rf"^## Version {major - 1}\.(\d+)\.\d+ ", changelog, re.MULTILINE
-        )
-        if not prior_minors:
-            raise ValueError(f"no previous major release found for {version}")
-        prior_version = f"{major - 1}.{max(map(int, prior_minors))}.0"
+    prior_version = prior_release_version(version, changelog)
+    if prior_version is None:
+        raise ValueError(f"no previous release found for {version}")
     return {
         "VERSION": version,
         "DEVELOPMENT_BRANCH": "2.x" if major == 2 else "main",
@@ -51,11 +65,14 @@ def release_config(ref: str, version: str, changelog: str) -> dict[str, str]:
     }
 
 
+def post_release_config(version: str, baseline: str) -> dict[str, str]:
+    return {
+        "UPDATE_API_BASELINE": str(parse_version(version) > parse_version(baseline)).lower(),
+    }
+
+
 def make_latest(version: str, released_tags: list[str]) -> bool:
-    match = re.fullmatch(VERSION_PATTERN, version)
-    if match is None:
-        raise ValueError(f"expected a release version, got {version}")
-    candidate = tuple(map(int, match.groups()))
+    candidate = parse_version(version)
     for tag in released_tags:
         released = re.fullmatch("v" + VERSION_PATTERN, tag)
         if released is not None and tuple(map(int, released.groups())) > candidate:
@@ -71,6 +88,8 @@ def main() -> None:
         subparser.add_argument("--ref", required=True)
     latest = commands.add_parser("latest")
     latest.add_argument("--version", required=True)
+    post_release = commands.add_parser("post-release")
+    post_release.add_argument("--version", required=True)
     args = parser.parse_args()
 
     try:
@@ -80,6 +99,14 @@ def main() -> None:
                     make_latest(args.version, sys.stdin.read().splitlines())
                 ).lower()
             }
+        elif args.command == "post-release":
+            version_file = (REPO_ROOT / "version.gradle.kts").read_text(encoding="utf-8")
+            baseline_match = re.search(
+                r'^val apidiffBaselineVersion = "([^"]+)"$', version_file, re.MULTILINE
+            )
+            if baseline_match is None:
+                raise ValueError("could not determine apidiffBaselineVersion")
+            config = post_release_config(args.version, baseline_match.group(1))
         else:
             version_file = (REPO_ROOT / "version.gradle.kts").read_text(encoding="utf-8")
             version_match = re.search(
