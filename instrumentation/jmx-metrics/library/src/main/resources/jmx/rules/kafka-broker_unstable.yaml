@@ -32,31 +32,30 @@ rules:
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
     metricAttribute:
-      type: const(fetch)
+      kafka.request.type: const(fetch)
     mapping:
       Count:
         metric: kafka.request.failed
         type: counter
         desc: The number of requests to the broker resulting in a failure
-        unit: "{requests}"
+        unit: "{request}"
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec
     metricAttribute:
-      type: const(produce)
+      kafka.request.type: const(produce)
     mapping:
       Count:
         metric: kafka.request.failed
         type: counter
         desc: The number of requests to the broker resulting in a failure
-        unit: "{requests}"
+        unit: "{request}"
 
   - beans:
       - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce
       - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer
       - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchFollower
     metricAttribute:
-      type: param(request)
-    unit: ms
+      kafka.request.type: lowercase(param(request))
     mapping:
       Count:
         metric: kafka.request.time.total
