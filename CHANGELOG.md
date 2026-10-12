@@ -61,16 +61,11 @@
   transitively; add it separately if Log4j layouts need trace or span IDs.
   Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
   `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
-  respectively. For declarative configuration, replace
-  `java.common.logging.trace_id`, `span_id`, and `trace_flags` with
-  `java.common.logging.trace_id_key`, `span_id_key`, and `trace_flags_key`.
+  respectively.
 - Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
   `otel.instrumentation.grpc.capture-metadata.server.request`.
   Use `otel.instrumentation.grpc.client.request-metadata.included` and
   `otel.instrumentation.grpc.server.request-metadata.included`.
-  For declarative configuration, replace `java.grpc.capture_metadata.client.request` and
-  `java.grpc.capture_metadata.server.request` with `java.grpc.client.request_metadata.included` and
-  `java.grpc.server.request_metadata.included`.
 - Captured messaging header attribute keys now preserve dashes unconditionally; for example,
   `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
   `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
@@ -157,7 +152,7 @@
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
   in `opentelemetry-instrumentation-api`.
   Rename `CodeAttributesGetter#getMethodName` to `getCodeMethodName`.
-- Remove `otel.javaagent.experimental.indy` and `distribution.javaagent.indy/development`.
+- Remove `otel.javaagent.experimental.indy`.
   The javaagent now always uses non-inline advice for compatible instrumentation.
   Instrumentation that intentionally uses inline advice remains supported.
   ([#20377](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20377))
@@ -178,9 +173,8 @@
   `setKnownMethods` to `knownMethods`, `addAttributesExtractor` to `attributesExtractor`,
   `setSpanNameExtractorCustomizer` to `spanNameExtractor`, `setStatusExtractor` to
   `spanStatusExtractor`, and `setSpanKindExtractor` to `spanKindExtractor`.
-  Parameter types and behavior are unchanged.
 - Rename `setOpenTelemetry` to `openTelemetry` in Ktor 1.0 configuration and Ktor 2.0/3.0
-  client and server builders. The parameter type and initialization behavior are unchanged.
+  client and server builders.
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.
