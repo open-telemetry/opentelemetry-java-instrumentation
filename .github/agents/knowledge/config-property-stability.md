@@ -224,3 +224,6 @@ Some configurations require structured data only expressible in YAML:
   discovered via `@AutoService(ComponentProvider.class)`
 
 These have no flat-property fallback, so tests must cover declarative config mode.
+
+For settings available in both flat and declarative forms, follow the
+[configuration test guidelines](testing-general-patterns.md#configuration-test-ownership).
