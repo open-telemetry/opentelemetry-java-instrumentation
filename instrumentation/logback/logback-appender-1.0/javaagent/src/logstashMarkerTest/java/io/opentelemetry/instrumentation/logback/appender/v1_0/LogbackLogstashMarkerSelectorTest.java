@@ -78,8 +78,6 @@ class LogbackLogstashMarkerSelectorTest {
         // an empty included list captures everything not excluded
         expectedKeys = asList("key1", "key2", "keyLong");
         break;
-      case "all":
-        return new HashMap<>(MARKER_ATTRIBUTES);
       case "none":
         return emptyMap();
       default:

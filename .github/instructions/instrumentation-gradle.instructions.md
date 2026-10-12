@@ -44,6 +44,10 @@ or test failure that CI will report.
   variant of a custom `JvmTestSuite`, preserve source-suite JVM settings and create a variant
   only for suites exercising that behavior. A filtered test task copied to an irrelevant
   suite can select no tests.
+- Do not add equivalent flat/YAML behavior variants or repeat shared-helper defaults, fallback,
+  and precedence in every caller. Retain variants exercising distinct configuration paths or behavior.
+  Remove unused fixtures, dependencies, task wiring, and metadata-collection inputs with redundant
+  variants, but keep metadata describing supported settings.
 - Keep the baseline dependency in `library(...)`. Adding `testLibrary(...)` for a newer version
   of the same coordinate does not test both versions: Gradle resolves one dependency graph,
   normally selecting the higher version. Exercise the newer runtime in a wired version-specific

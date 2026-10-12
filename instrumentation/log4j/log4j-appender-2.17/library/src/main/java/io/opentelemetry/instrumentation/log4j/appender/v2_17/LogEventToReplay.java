@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static java.util.Collections.emptyMap;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
@@ -57,7 +56,7 @@ class LogEventToReplay implements LogEvent {
       // StringMapMessage objects are not reused by Log4j 2
       this.message = messageOrigin;
     } else if (messageOrigin instanceof MapMessage) {
-      this.message = new MapMessageCopy((MapMessage<?, ?>) messageOrigin);
+      this.message = new MapMessageCopy<>((MapMessage<?, ?>) messageOrigin);
     } else {
       this.message = new MessageCopy(logEvent.getMessage());
     }
@@ -187,13 +186,13 @@ class LogEventToReplay implements LogEvent {
     return 0;
   }
 
-  private static class MapMessageCopy extends MapMessage<MapMessageCopy, Object> {
+  private static class MapMessageCopy<V> extends MapMessage<MapMessageCopy<V>, V> {
 
     private static final long serialVersionUID = 1L;
     private final MessageCopy message;
 
-    MapMessageCopy(MapMessage<?, ?> message) {
-      super(new HashMap<>(message.getData()));
+    MapMessageCopy(MapMessage<?, V> message) {
+      super(message.getData());
       this.message = new MessageCopy(message);
     }
 
