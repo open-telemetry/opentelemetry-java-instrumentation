@@ -4,8 +4,6 @@
 
 ### ⚠️ Breaking changes
 
-- The Java agent no longer instruments Jedis 1.x. Upgrade to Jedis 2.0 or later to continue receiving
-  automatic Redis database client spans and metrics.
 - The Java agent now instruments Lettuce 5.1 and later with the Lettuce 5.0 integration, changing
   the instrumentation scope from `io.opentelemetry.lettuce-5.1` to
   `io.opentelemetry.lettuce-5.0`. The
