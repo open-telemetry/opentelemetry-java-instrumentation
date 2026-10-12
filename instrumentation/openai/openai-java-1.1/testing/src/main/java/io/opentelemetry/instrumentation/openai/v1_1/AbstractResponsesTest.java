@@ -46,6 +46,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -359,14 +360,14 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     OpenAIClient client =
         wrap(
             OpenAIOkHttpClient.builder()
-                .baseUrl("http://localhost:9999/v5")
+                .baseUrl("http://localhost:" + PortUtils.UNUSABLE_PORT + "/v5")
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
     OpenAIClientAsync clientAsync =
         wrap(
             OpenAIOkHttpClientAsync.builder()
-                .baseUrl("http://localhost:9999/v5")
+                .baseUrl("http://localhost:" + PortUtils.UNUSABLE_PORT + "/v5")
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
@@ -400,14 +401,14 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     OpenAIClient client =
         wrap(
             OpenAIOkHttpClient.builder()
-                .baseUrl("http://localhost:9999/v5")
+                .baseUrl("http://localhost:" + PortUtils.UNUSABLE_PORT + "/v5")
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
     OpenAIClientAsync clientAsync =
         wrap(
             OpenAIOkHttpClientAsync.builder()
-                .baseUrl("http://localhost:9999/v5")
+                .baseUrl("http://localhost:" + PortUtils.UNUSABLE_PORT + "/v5")
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
