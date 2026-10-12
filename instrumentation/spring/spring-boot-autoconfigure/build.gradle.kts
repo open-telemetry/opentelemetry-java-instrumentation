@@ -90,7 +90,6 @@ dependencies {
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
   compileOnly("io.opentelemetry:opentelemetry-exporter-otlp")
-  compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
   compileOnly(project(":instrumentation-annotations"))
 
   compileOnly(project(":instrumentation:resources:library"))
@@ -116,7 +115,6 @@ dependencies {
   testImplementation("io.opentelemetry.contrib:opentelemetry-samplers")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
-  testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation(project(":instrumentation-annotations"))
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
 

@@ -9,6 +9,8 @@
   `process.command_args` and `process.command_line`.
   The Java agent also disables thread details by default; set `otel.javaagent.add-thread-details=true`
   to capture `thread.id` and `thread.name` on spans.
+- The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
+  starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.
