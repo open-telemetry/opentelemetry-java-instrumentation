@@ -17,7 +17,7 @@ rules:
       Count:
         metric: kafka.request.count
         type: counter
-        desc: The number of requests received by the broker
+        desc: &desc The number of requests received by the broker
         unit: "{request}"
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec
@@ -27,7 +27,7 @@ rules:
       Count:
         metric: kafka.request.count
         type: counter
-        desc: The number of requests received by the broker
+        desc: *desc
         unit: "{request}"
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
@@ -37,7 +37,7 @@ rules:
       Count:
         metric: kafka.request.failed
         type: counter
-        desc: The number of requests to the broker resulting in a failure
+        desc: &desc The number of requests to the broker resulting in a failure
         unit: "{request}"
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec
@@ -47,7 +47,7 @@ rules:
       Count:
         metric: kafka.request.failed
         type: counter
-        desc: The number of requests to the broker resulting in a failure
+        desc: *desc
         unit: "{request}"
 
   - beans:
@@ -85,22 +85,22 @@ rules:
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec
     metricAttribute:
-      kafka.network.io.direction: const(in)
+      kafka.network.io.direction: const(receive)
     mapping:
       Count:
         metric: kafka.network.io
         type: counter
-        desc: The bytes received or sent by the broker
+        desc: &desc The bytes received or sent by the broker
         unit: By
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec
     metricAttribute:
-      kafka.network.io.direction: const(out)
+      kafka.network.io.direction: const(transmit)
     mapping:
       Count:
         metric: kafka.network.io
         type: counter
-        desc: The bytes received or sent by the broker
+        desc: *desc
         unit: By
 
   - beans:
@@ -136,7 +136,7 @@ rules:
       Value:
         metric: kafka.partition.under_replicated
         type: updowncounter
-        desc: The number of under replicated partitions
+        desc: The number of under-replicated partitions
         unit: "{partition}"
 
   - bean: kafka.server:type=ReplicaManager,name=IsrShrinksPerSec
@@ -146,7 +146,7 @@ rules:
       Count:
         metric: kafka.isr.operation.count
         type: updowncounter
-        desc: The number of in-sync replica shrink and expand operations
+        desc: &desc The number of in-sync replica operations
         unit: "{operation}"
 
   - bean: kafka.server:type=ReplicaManager,name=IsrExpandsPerSec
@@ -156,7 +156,7 @@ rules:
       Count:
         metric: kafka.isr.operation.count
         type: updowncounter
-        desc: The number of in-sync replica shrink and expand operations
+        desc: *desc
         unit: "{operation}"
 
   - bean: kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica
@@ -203,11 +203,11 @@ rules:
         desc: Log flush count
       50thPercentile:
         metric: duration.p50
-        desc: The 50th percentile of log flush duration
+        desc: Log flush duration 50th percentile
         sourceUnit: ms
         unit: s
       99thPercentile:
         metric: duration.p99
-        desc: The 99th percentile of log flush duration
+        desc: Log flush duration 99th percentile
         sourceUnit: ms
         unit: s
