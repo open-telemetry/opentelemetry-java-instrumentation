@@ -1,33 +1,33 @@
 # Kafka Broker Metrics
 
-Here is the list of metrics based on MBeans exposed by Kafka broker. <br /><br />
+Here is the list of metrics based on MBeans exposed by Kafka broker.
+
 Broker metrics:
 
-| Metric Name                        | Type          | Attributes | Description                                                          |
-| ---------------------------------- | ------------- | ---------- | -------------------------------------------------------------------- |
-| kafka.message.count                | Counter       |            | The number of messages received by the broker                        |
-| kafka.request.count                | Counter       | type       | The number of requests received by the broker                        |
-| kafka.request.failed               | Counter       | type       | The number of requests to the broker resulting in a failure          |
-| kafka.request.time.total           | Counter       | type       | The total time the broker has taken to service requests              |
-| kafka.request.time.50p             | Gauge         | type       | The 50th percentile time the broker has taken to service requests    |
-| kafka.request.time.99p             | Gauge         | type       | The 99th percentile time the broker has taken to service requests    |
-| kafka.request.queue                | UpDownCounter |            | Size of the request queue                                            |
-| kafka.network.io                   | Counter       | direction  | The bytes received or sent by the broker                             |
-| kafka.purgatory.size               | UpDownCounter | type       | The number of requests waiting in purgatory                          |
-| kafka.partition.count              | UpDownCounter |            | The number of partitions on the broker                               |
-| kafka.partition.offline            | UpDownCounter |            | The number of partitions offline                                     |
-| kafka.partition.underReplicated    | UpDownCounter |            | The number of under replicated partitions                            |
-| kafka.isr.operation.count          | UpDownCounter | operation  | The number of in-sync replica shrink and expand operations           |
-| kafka.lag.max                      | Gauge         |            | The max lag in messages between follower and leader replicas         |
-| kafka.controller.active.count      | UpDownCounter |            | The number of controllers active on the broker                       |
-| kafka.leaderElection.count         | Counter       |            | The leader election count                                            |
-| kafka.leaderElection.unclean.count | Counter       |            | Unclean leader election count - increasing indicates broker failures |
+| Metric Name                         | Type          | Unit         | Attributes                 | Description                                                            |
+| ----------------------------------- | ------------- | ------------ | -------------------------- | ---------------------------------------------------------------------- |
+| kafka.message.count                 | Counter       | {message}    |                            | The number of messages received by the broker                          |
+| kafka.request.count                 | Counter       | {request}    | kafka.request.type         | The number of requests received by the broker                          |
+| kafka.request.failed                | Counter       | {request}    | kafka.request.type         | The number of requests to the broker resulting in a failure            |
+| kafka.request.duration.count        | Counter       | {request}    | kafka.request.type         | The number of requests the broker has measured the service duration of |
+| kafka.request.duration.p50          | Gauge         | s            | kafka.request.type         | The 50th percentile duration the broker has taken to service requests  |
+| kafka.request.duration.p99          | Gauge         | s            | kafka.request.type         | The 99th percentile duration the broker has taken to service requests  |
+| kafka.request.queue                 | UpDownCounter | {request}    |                            | Size of the request queue                                              |
+| kafka.network.io                    | Counter       | By           | kafka.network.io.direction | The bytes received or sent by the broker                               |
+| kafka.purgatory.size                | UpDownCounter | {request}    | kafka.request.type         | The number of requests waiting in purgatory                            |
+| kafka.partition.count               | UpDownCounter | {partition}  |                            | The number of partitions on the broker                                 |
+| kafka.partition.offline             | UpDownCounter | {partition}  |                            | The number of partitions offline                                       |
+| kafka.partition.under_replicated    | UpDownCounter | {partition}  |                            | The number of under-replicated partitions                              |
+| kafka.isr.operation.count           | UpDownCounter | {operation}  | kafka.isr.operation        | The number of in-sync replica operations                               |
+| kafka.lag.max                       | Gauge         | {message}    |                            | The max lag in messages between follower and leader replicas           |
+| kafka.controller.active.count       | UpDownCounter | {controller} |                            | The number of controllers active on the broker                         |
+| kafka.leader_election.count         | Counter       | {election}   |                            | The leader election count                                              |
+| kafka.leader_election.unclean.count | Counter       | {election}   |                            | Unclean leader election count                                          |
 
-<br />
 Log metrics:
 
-| Metric Name               | Type    | Attributes | Description                      |
-| ------------------------- | ------- | ---------- | -------------------------------- |
-| kafka.logs.flush.count    | Counter |            | Log flush count                  |
-| kafka.logs.flush.time.50p | Gauge   |            | Log flush time - 50th percentile |
-| kafka.logs.flush.time.99p | Gauge   |            | Log flush time - 99th percentile |
+| Metric Name                   | Type    | Unit    | Attributes | Description                        |
+| ----------------------------- | ------- | ------- | ---------- | ---------------------------------- |
+| kafka.logs.flush.count        | Counter | {flush} |            | Log flush count                    |
+| kafka.logs.flush.duration.p50 | Gauge   | s       |            | Log flush duration 50th percentile |
+| kafka.logs.flush.duration.p99 | Gauge   | s       |            | Log flush duration 99th percentile |

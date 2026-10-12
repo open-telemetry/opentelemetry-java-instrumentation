@@ -58,9 +58,11 @@ rules:
       kafka.request.type: lowercase(param(request))
     mapping:
       Count:
+        # this is not redundant with kafka.request.count because it provides a different breakdown
+        # for example kafka.request.count only have produce/fetch breakdown
         metric: kafka.request.duration.count
         type: counter
-        desc: The number of requests the broker has measured the service duration of
+        desc: The number of requests received by the broker
         unit: "{request}"
       50thPercentile:
         metric: kafka.request.duration.p50
