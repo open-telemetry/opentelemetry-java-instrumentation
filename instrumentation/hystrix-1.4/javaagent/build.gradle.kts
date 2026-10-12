@@ -28,6 +28,10 @@ tasks {
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
 
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
+    }
+
     // Uncomment for debugging:
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
   }
@@ -46,7 +50,6 @@ tasks {
     filter {
       includeTestsMatching("*DefaultEnablementTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
   }
 
   check {

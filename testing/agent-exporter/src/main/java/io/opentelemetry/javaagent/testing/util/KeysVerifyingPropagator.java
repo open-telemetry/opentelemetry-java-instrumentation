@@ -47,7 +47,12 @@ public class KeysVerifyingPropagator implements TextMapPropagator {
   public <C> Context extract(Context context, @Nullable C carrier, TextMapGetter<C> getter) {
     // Exercise methods to verify no errors
     if (carrier != null) {
-      getter.keys(carrier).forEach(key -> getter.get(carrier, key));
+      getter.get(carrier, "traceparent");
+      getter.getAll(carrier, "traceparent").forEachRemaining(ignored -> {});
+      getter.get(carrier, "tracestate");
+      getter.getAll(carrier, "tracestate").forEachRemaining(ignored -> {});
+      getter.get(carrier, "baggage");
+      getter.getAll(carrier, "baggage").forEachRemaining(ignored -> {});
     }
 
     return context;

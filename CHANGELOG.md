@@ -4,6 +4,43 @@
 
 ### ⚠️ Breaking changes
 
+- Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
+  `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
+  `otel.instrumentation.twilio.enabled=true`, respectively.
+- JMX metric collection now always uses instrumentation selectors, including
+  `otel.instrumentation.jmx.enabled` and `otel.instrumentation.common.default-enabled`.
+  The deprecated `otel.jmx.enabled` and `otel.jmx.target.system` settings are removed.
+  For declarative configuration, use `distribution.javaagent.instrumentation.enabled` /
+  `distribution.javaagent.instrumentation.disabled` selectors instead of `java.jmx.enabled`.
+  Stable bundled metrics are collected automatically except JVM rules, which overlap with runtime
+  telemetry. Use `otel.jmx.metrics.experimental.included` to opt in to unstable metrics by name.
+- Runtime telemetry metrics and package-emitter events now always use the
+  `io.opentelemetry.runtime-telemetry` instrumentation scope. Update views, dashboards, and filters
+  that match `io.opentelemetry.runtime-telemetry-java8` or
+  `io.opentelemetry.runtime-telemetry-java17`.
+- JMX `jvm.gc.duration` metrics always include `jvm.gc.cause`. Remove
+  `otel.instrumentation.runtime-telemetry.capture-gc-cause`; GC cause is no longer configurable.
+- Remove the deprecated runtime telemetry configuration properties and their declarative forms:
+  - Replace `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry` with
+    `otel.instrumentation.runtime-telemetry.emit-experimental-metrics`.
+  - Replace `otel.instrumentation.runtime-telemetry.package-emitter.*` with
+    `otel.instrumentation.runtime-telemetry.experimental.package-emitter.*`.
+  - Replace `otel.instrumentation.runtime-telemetry-java17.enabled` with
+    `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics`.
+  - Replace `otel.instrumentation.runtime-telemetry-java17.enable-all` with
+    `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*`.
+  - Replace `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` with explicit metric
+    selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`.
+- Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
+- Remove the retired flat settings `otel.instrumentation.common.db-statement-sanitizer.enabled`
+  and `otel.instrumentation.<module>.statement-sanitizer.enabled`; use
+  `otel.instrumentation.common.db.query-sanitization.enabled` and
+  `otel.instrumentation.<module>.query-sanitization.enabled` instead.
+  Replace `java.common.database.sqlcommenter/development.enabled` with
+  `java.common.db.sqlcommenter/development.enabled`; the flat setting
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` remains supported.
+- Apache Wicket resource requests now always use the resource reference class name for `http.route`
+  and the HTTP server span name, instead of the servlet wildcard route.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
@@ -59,16 +96,11 @@
   transitively; add it separately if Log4j layouts need trace or span IDs.
   Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
   `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
-  respectively. For declarative configuration, replace
-  `java.common.logging.trace_id`, `span_id`, and `trace_flags` with
-  `java.common.logging.trace_id_key`, `span_id_key`, and `trace_flags_key`.
+  respectively.
 - Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
   `otel.instrumentation.grpc.capture-metadata.server.request`.
   Use `otel.instrumentation.grpc.client.request-metadata.included` and
   `otel.instrumentation.grpc.server.request-metadata.included`.
-  For declarative configuration, replace `java.grpc.capture_metadata.client.request` and
-  `java.grpc.capture_metadata.server.request` with `java.grpc.client.request_metadata.included` and
-  `java.grpc.server.request_metadata.included`.
 - Captured messaging header attribute keys now preserve dashes unconditionally; for example,
   `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
   `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
@@ -133,6 +165,9 @@
 - Remove the global-backed factories in `RpcClientAttributesExtractor`,
   `RpcServerAttributesExtractor`, `RpcSpanNameExtractor`, `RpcClientMetrics`, `RpcServerMetrics`,
   and `RpcMetricsContextCustomizers`; pass the instrumentation's `OpenTelemetry` instance instead.
+- Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
+  runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
+  specifying the metrics to source from JFR.
 - Remove the deprecated standalone appender boolean setters and XML settings:
   Log4j `setCaptureMapMessageAttributes` / `captureMapMessageAttributes`, and Logback
   `setCaptureKeyValuePairAttributes` / `captureKeyValuePairAttributes`,
@@ -158,7 +193,7 @@
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
   in `opentelemetry-instrumentation-api`.
   Rename `CodeAttributesGetter#getMethodName` to `getCodeMethodName`.
-- Remove `otel.javaagent.experimental.indy` and `distribution.javaagent.indy/development`.
+- Remove `otel.javaagent.experimental.indy`.
   The javaagent now always uses non-inline advice for compatible instrumentation.
   Instrumentation that intentionally uses inline advice remains supported.
   ([#20377](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20377))
@@ -179,9 +214,8 @@
   `setKnownMethods` to `knownMethods`, `addAttributesExtractor` to `attributesExtractor`,
   `setSpanNameExtractorCustomizer` to `spanNameExtractor`, `setStatusExtractor` to
   `spanStatusExtractor`, and `setSpanKindExtractor` to `spanKindExtractor`.
-  Parameter types and behavior are unchanged.
 - Rename `setOpenTelemetry` to `openTelemetry` in Ktor 1.0 configuration and Ktor 2.0/3.0
-  client and server builders. The parameter type and initialization behavior are unchanged.
+  client and server builders.
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.

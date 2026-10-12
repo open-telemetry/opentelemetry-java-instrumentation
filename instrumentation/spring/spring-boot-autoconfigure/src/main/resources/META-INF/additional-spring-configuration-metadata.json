@@ -566,12 +566,6 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry.capture-gc-cause",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.",
-      "defaultValue": false
-    },
-    {
       "name": "otel.instrumentation.runtime-telemetry.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable runtime telemetry metrics.",
@@ -590,17 +584,6 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr",
-      "type": "java.lang.Boolean",
-      "description": "Prefer JFR over JMX for metrics available from both sources, on Java 17+.",
-      "defaultValue": false,
-      "deprecation": {
-        "level": "warning",
-        "reason": "Use the JFR metric selectors instead.",
-        "replacement": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included"
-      }
-    },
-    {
       "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included",
       "type": "java.util.List<java.lang.String>",
       "description": "Include JVM runtime metrics to source from JFR on Java 17+ using case-sensitive * and ? glob patterns. Configuring either selector property activates JFR; omitted included patterns select all metrics not excluded."
@@ -613,7 +596,7 @@
     {
       "name": "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters",
       "type": "java.util.List<java.lang.String>",
-      "description": "List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.",
+      "description": "List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full.",
       "defaultValue": "AWSAccessKeyId,Signature,X-Amz-Signature,X-Amz-Credential,X-Amz-Security-Token,sig,X-Goog-Signature"
     },
     {

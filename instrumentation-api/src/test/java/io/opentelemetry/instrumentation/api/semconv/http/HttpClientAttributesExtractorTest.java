@@ -206,10 +206,22 @@ class HttpClientAttributesExtractorTest {
             entry(NETWORK_PEER_PORT, 456L));
   }
 
-  @Test
-  void shouldApplyUrlSanitizer() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        // Default sensitive query parameters from semantic conventions:
+        // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full
+        "AWSAccessKeyId",
+        "Signature",
+        "X-Amz-Signature",
+        "X-Amz-Credential",
+        "X-Amz-Security-Token",
+        "sig",
+        "X-Goog-Signature"
+      })
+  void shouldApplyUrlSanitizer(String queryParameter) {
     Map<String, String> request = new HashMap<>();
-    request.put("urlFull", "https://service.com?sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0");
+    request.put("urlFull", "https://service.com?" + queryParameter + "=value");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
@@ -218,7 +230,33 @@ class HttpClientAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), request);
 
     assertThat(attributes.build())
-        .containsOnly(entry(URL_FULL, "https://service.com?sig=REDACTED"));
+        .containsOnly(entry(URL_FULL, "https://service.com?" + queryParameter + "=REDACTED"));
+  }
+
+  @Test
+  void shouldRedactPresignedUrl() {
+    Map<String, String> request = new HashMap<>();
+    request.put(
+        "urlFull",
+        "https://example.s3.amazonaws.com/object?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+            + "&X-Amz-Credential=example%2F20261009%2Fus-east-1%2Fs3%2Faws4_request"
+            + "&X-Amz-Date=20261009T000000Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host"
+            + "&X-Amz-Signature=signature&X-Amz-Security-Token=token#fragment");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(
+                URL_FULL,
+                "https://example.s3.amazonaws.com/object?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+                    + "&X-Amz-Credential=REDACTED"
+                    + "&X-Amz-Date=20261009T000000Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host"
+                    + "&X-Amz-Signature=REDACTED&X-Amz-Security-Token=REDACTED#fragment"));
   }
 
   @ParameterizedTest
