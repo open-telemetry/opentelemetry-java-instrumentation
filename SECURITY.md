@@ -7,7 +7,7 @@ applies to this repository, including its security model and supported-version p
 
 This policy covers the source code and published artifacts produced by this repository, including:
 
-- The OpenTelemetry Java agent JAR and its bundled instrumentation.
+- The OpenTelemetry Java agent and its bundled instrumentation.
 - Maven artifacts, including standalone instrumentation libraries, Spring Boot starters,
   instrumentation and Java agent extension APIs, annotations, and BOMs.
 - The Gradle plugins published from this repository.
