@@ -20,8 +20,7 @@ class HandlerRegistryTest {
     Meter meter = mock(Meter.class);
 
     assertThat(
-            HandlerRegistry.getHandlers(
-                meter, "jvm.class.count"::equals, false, false, false, emptySet()))
+            HandlerRegistry.getHandlers(meter, "jvm.class.count"::equals, false, false, emptySet()))
         .isEmpty();
     verifyNoInteractions(meter);
   }

@@ -4,6 +4,24 @@
 
 ### ⚠️ Breaking changes
 
+- Runtime telemetry metrics and package-emitter events now always use the
+  `io.opentelemetry.runtime-telemetry` instrumentation scope. Update views, dashboards, and filters
+  that match `io.opentelemetry.runtime-telemetry-java8` or
+  `io.opentelemetry.runtime-telemetry-java17`.
+- JMX `jvm.gc.duration` metrics always include `jvm.gc.cause`. Remove
+  `otel.instrumentation.runtime-telemetry.capture-gc-cause`; GC cause is no longer configurable.
+- Remove the deprecated runtime telemetry configuration properties and their declarative forms:
+  - Replace `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry` with
+    `otel.instrumentation.runtime-telemetry.emit-experimental-metrics`.
+  - Replace `otel.instrumentation.runtime-telemetry.package-emitter.*` with
+    `otel.instrumentation.runtime-telemetry.experimental.package-emitter.*`.
+  - Replace `otel.instrumentation.runtime-telemetry-java17.enabled` with
+    `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics`.
+  - Replace `otel.instrumentation.runtime-telemetry-java17.enable-all` with
+    `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*`.
+  - Replace `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` with explicit metric
+    selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`.
+- Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
 - Remove the retired flat settings `otel.instrumentation.common.db-statement-sanitizer.enabled`
   and `otel.instrumentation.<module>.statement-sanitizer.enabled`; use
   `otel.instrumentation.common.db.query-sanitization.enabled` and
@@ -134,6 +152,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
+  runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
+  specifying the metrics to source from JFR.
 - Remove the deprecated standalone appender boolean setters and XML settings:
   Log4j `setCaptureMapMessageAttributes` / `captureMapMessageAttributes`, and Logback
   `setCaptureKeyValuePairAttributes` / `captureKeyValuePairAttributes`,
