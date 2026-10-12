@@ -52,31 +52,22 @@ or test failure that CI will report.
   on tasks that really use containers, not every task with a transitive dependency. Use
   `withType<Test>().configureEach` for configuration shared by multiple explicitly declared
   test tasks; not for a module with only `tasks.test` (implicit `latestDepTest` does not count).
-- Metadata collection documents default telemetry and supported telemetry modes, not every test
-  configuration. Check it when collection wiring or collected telemetry changes; do not request
-  a metadata migration as unrelated cleanup. Collected tasks need
+- Check metadata collection when its wiring or collected telemetry changes, not as unrelated
+  cleanup. Collect default telemetry and supported non-default telemetry modes. Collected tasks need
   `systemProperty("collectMetadata", otelProps.collectMetadata)` and registration in
-  `.github/scripts/instrumentations.sh` for automated collection. A lone `metadataConfig` label
-  does not enable collection.
-- For a collected task, set `metadataConfig` only when non-default user-facing settings change the
-  documented instrumentation's signals, span kinds, attributes, metrics, or events. Use the actual
-  flat `key=value` conditions without `-D`; include all settings needed to describe the mode,
-  including inherited settings, separated by commas. Use consistent ordering for the same mode.
-  Leave it unset for default telemetry, regardless of the task name; label `test` too if it enables
-  non-default telemetry. Do not copy every JVM flag: omit ports, timeouts, JVM access flags, unrelated
-  instrumentation settings used to isolate tests, and whole-module enablement used to exercise a
-  default-off instrumentation. Include span suppression settings only when they determine the
-  documented instrumentation's telemetry. `metadataConfig` is a label, not runtime configuration;
-  verify the task separately applies its settings. Missing labels merge optional telemetry into
-  `when: default`, while setup-only labels create misleading configuration requirements.
-- Do not collect unit-test suites or regression-only disablement, adapter-fallback, or classpath
-  compatibility variants. Keep regression coverage in `check`, but omit these tasks from
-  `.github/scripts/instrumentations.sh` and do not give them `metadataConfig`. If a shared block
-  passes through `collectMetadata`, override it with `systemProperty("collectMetadata", false)` on
-  excluded tasks. Omitting only `metadataConfig` records their telemetry under `default`; it does
-  not exclude collection. A Camel adapters-disabled regression task, for example, does not need a
-  profile listing the disabled adapters. Do not infer regression-only status from a task name when
-  its tests actually document a supported telemetry mode.
+  `.github/scripts/instrumentations.sh` for automated collection.
+- `metadataConfig` labels output; verify settings are applied separately. Leave it unset for default
+  telemetry, regardless of task name. Otherwise include only non-default user-facing settings
+  needed to describe this instrumentation's signals, span kinds, attributes, metrics, or events,
+  including inherited settings. Use comma-separated flat `key=value` conditions without `-D`,
+  with consistent spelling and ordering for the same mode. Omit test setup, unrelated instrumentation
+  settings, and whole-module enablement for default-off instrumentation. Include span suppression
+  settings only when they determine this instrumentation's telemetry. Missing labels merge optional
+  telemetry into `when: default`; labels neither enable collection nor configure instrumentation.
+- Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
+  variants based on their purpose, not their names. Keep regression tasks in `check`, but omit them
+  from `.github/scripts/instrumentations.sh` and do not give them `metadataConfig`. Override inherited
+  collection with `systemProperty("collectMetadata", false)`; omitting a label does not exclude it.
 - When tests exercise behavior behind an experimental feature or telemetry flag, including
   experimental metrics, cover default-off and flag-on modes in separate JVMs. Keep the flag off
   the default test task and run the flag-on assertions through a wired `testExperimental` task

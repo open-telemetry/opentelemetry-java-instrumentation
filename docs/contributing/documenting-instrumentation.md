@@ -360,11 +360,6 @@ it defaults to `false`, meaning the instrumentation is enabled by default.
 
 ### Collecting telemetry from tests
 
-Collect default telemetry and supported telemetry modes, not every test configuration. Use
-`collectMetadata` to enable collection and `metadataConfig` to label non-default telemetry.
-Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
-variants from collection.
-
 See the [telemetry collection convention](../../instrumentation-docs/readme.md#telemetry-collection)
 for task selection, configuration labels, and Gradle examples.
 

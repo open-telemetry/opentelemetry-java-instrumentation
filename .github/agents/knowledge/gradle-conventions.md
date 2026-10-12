@@ -467,32 +467,4 @@ tasks {
 ## `collectMetadata` and `metadataConfig`
 
 Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
-when choosing tasks and labels. Collection documents default telemetry and supported telemetry
-modes, not every test configuration. These properties are not required for test correctness; do not
-add them as unrelated cleanup.
-
-Do not collect `unitTests` suites, legacy `javaagent-unit-tests` projects, or regression-only
-disablement, adapter-fallback, and classpath compatibility variants. Keep regression tasks in
-`check`, but not in `.github/scripts/instrumentations.sh`. Override inherited collection with
-`systemProperty("collectMetadata", false)` on excluded tasks; do not give them `metadataConfig`.
-
-| Property          | Type            | Value                                                                                             |
-| ----------------- | --------------- | ------------------------------------------------------------------------------------------------- |
-| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false`                                  |
-| `metadataConfig`  | System property | Non-default telemetry conditions as `key=value`, separated by commas when multiple settings apply |
-
-For tasks documenting telemetry:
-
-- Pass through `collectMetadata` in `tasks.test` for single-test-task modules, or share it with
-  `withType<Test>().configureEach` when multiple tasks collect telemetry. Exclude unit tests and
-  regression-only variants from shared wiring. Implicit `latestDepTest` does not by itself justify
-  a shared block.
-- Register collected tasks in `.github/scripts/instrumentations.sh` for automated collection.
-- Leave `metadataConfig` unset for default telemetry. Label non-default telemetry even when the
-  task is named `test`.
-- Include all non-default settings required to describe the documented telemetry, including
-  inherited settings. Omit test setup and flags affecting only unrelated instrumentation.
-  Keep ordering consistent for the same mode.
-- Apply those settings separately through `jvmArgs` or `systemProperty`; `metadataConfig` only
-  labels the output. A lone label without collection wiring has no effect. Omitting the label
-  does not disable collection; it records the output under `when: default`.
+for task selection, labels, and collection wiring.

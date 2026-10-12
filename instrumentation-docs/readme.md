@@ -10,65 +10,34 @@ Run the analysis to update the instrumentation-list.yaml:
 
 ### Telemetry collection
 
-Metadata collection documents the telemetry an instrumentation emits by default and in supported
-configuration modes. It is not a record of every test task or JVM setting.
+Collect default telemetry and supported non-default telemetry modes, such as experimental
+attributes, optional metrics, and semantic convention selection.
 
-Two test JVM system properties control collection:
+| Test purpose                             | Collect telemetry? | `metadataConfig`                          |
+| ---------------------------------------- | ------------------ | ----------------------------------------- |
+| Document default telemetry               | Yes                | Unset                                     |
+| Document supported non-default telemetry | Yes                | Relevant non-default `key=value` settings |
+| Unit tests or regression-only variants   | No                 | Unset                                     |
 
-| Property          | Purpose                                                                                                                                    |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `collectMetadata` | Enables collection of spans, metrics, events and scopes. Pass through `otelProps.collectMetadata`, controlled by `-PcollectMetadata=true`. |
-| `metadataConfig`  | Labels the collected spans, metrics and events with a `when` condition. It does not enable collection or configure the instrumentation.    |
+`metadataConfig` labels output; it does not configure instrumentation or enable collection.
+An absent or empty label records telemetry under `when: default`, regardless of the task name.
+The generator merges telemetry with the same label, so label non-default telemetry even on `test`.
+Use the smallest set of non-default user-facing settings that describe this instrumentation's
+signals, span kinds, attributes, metrics, or events, including relevant inherited settings.
+Separate flat `key=value` settings with commas, omit `-D`, and use consistent spelling and ordering
+for the same mode. Apply the settings separately through `jvmArgs` or `systemProperty`.
 
-If `metadataConfig` is absent or empty, telemetry is recorded under `when: default`. The collector
-copies the label; it does not infer configuration from JVM arguments or the task name. The generator
-merges telemetry with the same label, so an incorrect label can attribute optional telemetry to
-default behavior.
+Omit test setup, such as ports, timeouts, JVM access flags, and unrelated instrumentation settings.
+Enabling a whole default-off instrumentation is also setup; `disabled_by_default` records that
+requirement. Include span suppression settings only when they determine this instrumentation's
+telemetry, not merely spans from other instrumentation in the test trace.
 
-#### Choosing tasks to collect
-
-Include the default telemetry profile and variants that document supported changes to emitted
-telemetry, such as experimental attributes, optional metrics, or semantic convention selection.
-Register those tasks in `.github/scripts/instrumentations.sh` for automated collection.
-
-Do not collect unit tests or variants whose only purpose is a regression check, such as verifying
-disablement, adapter fallback, or compatibility with a different classpath. Keep these tasks wired
-into `check`, but leave them out of `.github/scripts/instrumentations.sh`. If they inherit
-`collectMetadata` from a shared block, override it with `systemProperty("collectMetadata", false)`.
-Do not add `metadataConfig` to them. Leaving off the label alone would collect their telemetry as
-`default`, not exclude it.
-
-For example, a Camel task that checks fallback with `camel-kafka`, `camel-rabbitmq`, and
-`camel-aws-sqs` adapters disabled is a regression check. It should not produce a telemetry profile
-listing those disablement flags.
-
-#### Choosing the `metadataConfig` value
-
-Use the smallest set of non-default user-facing settings needed to describe the collected
-instrumentation's telemetry. Consider emitted signals, span kinds, attributes, metric definitions,
-and event definitions, not just differences in the full trace used by the test.
-
-| Test configuration                                                                     | Metadata treatment                                                                   |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Default telemetry, even in a custom task or with a different library version           | Leave `metadataConfig` unset.                                                        |
-| A supported setting changes the documented telemetry                                   | Set `metadataConfig` to that setting's actual `key=value`.                           |
-| Several settings together determine the documented telemetry                           | Include all required `key=value` conditions, separated by commas.                    |
-| Test setup, such as ports, timeouts, `--add-opens`, or unrelated instrumentation flags | Omit these settings from `metadataConfig`.                                           |
-| Unit tests or regression-only variants                                                 | Disable collection; do not set `metadataConfig` or register the task for collection. |
-
-The Gradle task named `test` is not automatically a default telemetry profile. If it enables a
-non-default telemetry option, label it too. Include relevant settings inherited from shared task
-configuration; do not merely copy the variant's last JVM argument. Do not include a setting that
-matches the instrumentation's default. Enabling a whole default-off instrumentation to test its
-normal telemetry is setup; its `disabled_by_default` metadata records that enablement requirement.
-
-Flags that disable unrelated instrumentation only to isolate the test are setup. A span suppression
-setting belongs in the label when it determines the documented instrumentation's emitted span kinds,
-but not merely because it changes spans from other instrumentation in the asserted trace.
-
-Apply the settings separately through `jvmArgs` or `systemProperty`. In `metadataConfig`, use flat
-property names without `-D`, and keep the spelling and ordering consistent across tasks documenting
-the same mode. The generator treats the condition as text, not an expression to evaluate.
+Pass through `otelProps.collectMetadata` on collected tasks and register them in
+`.github/scripts/instrumentations.sh` for automated collection. Exclude unit tests and regression-only
+disablement, adapter-fallback, or classpath compatibility variants based on their purpose, not their
+names. Keep regression tasks in `check`, but omit them from the collection script. If an excluded task
+inherits collection, override it with `systemProperty("collectMetadata", false)`; removing its label
+alone would collect its telemetry as `default`.
 
 For a module collecting its default profile and an RPC preview profile:
 
@@ -92,13 +61,11 @@ tasks {
 }
 ```
 
-This example shares collection wiring because both tasks document telemetry. In a module with only
-the default test task, put the pass-through in `tasks.test`. Exclude any unit-test or regression-only
-tasks when sharing the wiring. A `metadataConfig` label without collection wiring has no effect;
-do not add it as a partial metadata migration.
+Share collection wiring when multiple tasks collect telemetry, as above. For a module with only
+the default test task, put the pass-through in `tasks.test`.
 
-Before running the analyzer, run the selected tasks with collection enabled to generate `.telemetry`
-files. Running `test` alone does not execute a separately registered variant:
+Generate `.telemetry` files with the selected tasks, then run the analyzer. Running `test` alone
+does not execute a separately registered variant:
 
 ```bash
 ./gradlew :instrumentation:<module>:javaagent:test :instrumentation:<module>:javaagent:testPreviewSemconv -PcollectMetadata=true
