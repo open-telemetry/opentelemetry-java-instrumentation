@@ -143,8 +143,6 @@ readonly INSTRUMENTATIONS=(
   "jdbc:javaagent:test"
   "jdbc:javaagent:testPreviewSemconv"
   "jdbc:javaagent:testExceptionSignalLogs"
-  "jedis:jedis-1.4:javaagent:test"
-  "jedis:jedis-1.4:javaagent:testPreviewSemconv"
   "jedis:jedis-2.0:javaagent:test"
   "jedis:jedis-2.0:javaagent:testPreviewSemconv"
   "jedis:jedis-3.0:javaagent:test"
