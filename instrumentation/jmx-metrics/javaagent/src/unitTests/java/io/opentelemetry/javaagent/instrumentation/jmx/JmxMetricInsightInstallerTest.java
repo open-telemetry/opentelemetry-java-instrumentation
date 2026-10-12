@@ -21,19 +21,15 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import io.opentelemetry.sdk.internal.SdkConfigProvider;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class JmxMetricInsightInstallerTest {
 
@@ -42,11 +38,10 @@ class JmxMetricInsightInstallerTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void stableDefaults(boolean declarative) {
+  @Test
+  void stableDefaults() {
     JmxTelemetryBuilder builder = mock(JmxTelemetryBuilder.class);
-    JmxMetricInsightInstaller.configure(builder, config(declarative, emptyMap(), "{}"));
+    JmxMetricInsightInstaller.configure(builder, config(emptyMap()));
 
     verify(builder)
         .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
@@ -54,32 +49,23 @@ class JmxMetricInsightInstallerTest {
         .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().setExcluded("*").build());
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void emptyExperimentalInclusion(boolean declarative) {
+  @Test
+  void emptyExperimentalInclusion() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
     JmxMetricInsightInstaller.configure(
-        builder,
-        config(
-            declarative,
-            singletonMap("otel.jmx.metrics.experimental.included", ""),
-            "metrics:\n  experimental:\n    included: []"));
+        builder, config(singletonMap("otel.jmx.metrics.experimental.included", "")));
     cleanup.deferCleanup(builder.build().start());
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx", metric -> metric.hasName("tomcat.test.stable"));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void experimentalInclusion(boolean declarative) {
+  @Test
+  void experimentalInclusion() {
     JmxTelemetryBuilder builder = mock(JmxTelemetryBuilder.class);
     JmxMetricInsightInstaller.configure(
         builder,
-        config(
-            declarative,
-            singletonMap("otel.jmx.metrics.experimental.included", "tomcat.*,kafka.*"),
-            "metrics:\n  experimental:\n    included: [tomcat.*, kafka.*]"));
+        config(singletonMap("otel.jmx.metrics.experimental.included", "tomcat.*,kafka.*")));
 
     verify(builder)
         .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
@@ -88,19 +74,13 @@ class JmxMetricInsightInstallerTest {
             IncludeExclude.builder().setIncluded("tomcat.*", "kafka.*").build());
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void normalFilters(boolean declarative) {
+  @Test
+  void normalFilters() {
     Map<String, String> properties = new HashMap<>();
     properties.put("otel.jmx.metrics.included", "tomcat.*");
     properties.put("otel.jmx.metrics.excluded", "tomcat.test.unstable");
     JmxTelemetryBuilder builder = mock(JmxTelemetryBuilder.class);
-    JmxMetricInsightInstaller.configure(
-        builder,
-        config(
-            declarative,
-            properties,
-            "metrics:\n  included: [tomcat.*]\n  excluded: [tomcat.test.unstable]"));
+    JmxMetricInsightInstaller.configure(builder, config(properties));
 
     verify(builder)
         .setMetrics(
@@ -110,27 +90,21 @@ class JmxMetricInsightInstallerTest {
                 .build());
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void collectsStableMetricsByDefault(boolean declarative) {
+  @Test
+  void collectsStableMetricsByDefault() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
-    JmxMetricInsightInstaller.configure(builder, config(declarative, emptyMap(), "{}"));
+    JmxMetricInsightInstaller.configure(builder, config(emptyMap()));
     cleanup.deferCleanup(builder.build().start());
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx", metric -> metric.hasName("tomcat.test.stable"));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void collectsOptedInMetrics(boolean declarative) {
+  @Test
+  void collectsOptedInMetrics() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
     JmxMetricInsightInstaller.configure(
-        builder,
-        config(
-            declarative,
-            singletonMap("otel.jmx.metrics.experimental.included", "tomcat.*"),
-            "metrics:\n  experimental:\n    included: [tomcat.*]"));
+        builder, config(singletonMap("otel.jmx.metrics.experimental.included", "tomcat.*")));
     cleanup.deferCleanup(builder.build().start());
 
     testing.waitAndAssertMetrics(
@@ -139,31 +113,22 @@ class JmxMetricInsightInstallerTest {
         metric -> metric.hasName("tomcat.test.unstable"));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void excludesOptedInMetrics(boolean declarative) {
+  @Test
+  void excludesOptedInMetrics() {
     Map<String, String> properties = new HashMap<>();
     properties.put("otel.jmx.metrics.experimental.included", "tomcat.*");
     properties.put("otel.jmx.metrics.included", "tomcat.*");
     properties.put("otel.jmx.metrics.excluded", "tomcat.test.unstable");
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
-    JmxMetricInsightInstaller.configure(
-        builder,
-        config(
-            declarative,
-            properties,
-            "metrics:\n  experimental:\n    included: [tomcat.*]\n"
-                + "  included: [tomcat.*]\n  excluded: [tomcat.test.unstable]"));
+    JmxMetricInsightInstaller.configure(builder, config(properties));
     cleanup.deferCleanup(builder.build().start());
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx", metric -> metric.hasName("tomcat.test.stable"));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void customFileDoesNotRequireExperimentalInclusion(boolean declarative, @TempDir Path directory)
-      throws IOException {
+  @Test
+  void customFileDoesNotRequireExperimentalInclusion(@TempDir Path directory) throws IOException {
     Path rules = directory.resolve("custom-jmx.yaml");
     Files.write(
         rules,
@@ -180,11 +145,7 @@ class JmxMetricInsightInstallerTest {
             .getBytes(UTF_8));
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
     JmxMetricInsightInstaller.configure(
-        builder,
-        config(
-            declarative,
-            singletonMap("otel.jmx.config", rules.toString()),
-            "config: ['" + rules + "']"));
+        builder, config(singletonMap("otel.jmx.config", rules.toString())));
     cleanup.deferCleanup(builder.build().start());
 
     testing.waitAndAssertMetrics(
@@ -201,10 +162,8 @@ class JmxMetricInsightInstallerTest {
                                     Attributes.of(stringKey("test.source"), "custom")))));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void customFileUsesNormalExclusions(boolean declarative, @TempDir Path directory)
-      throws IOException {
+  @Test
+  void customFileUsesNormalExclusions(@TempDir Path directory) throws IOException {
     Path rules = directory.resolve("custom-jmx.yaml");
     Files.write(
         rules,
@@ -220,38 +179,16 @@ class JmxMetricInsightInstallerTest {
     properties.put("otel.jmx.config", rules.toString());
     properties.put("otel.jmx.metrics.excluded", "custom.*");
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
-    JmxMetricInsightInstaller.configure(
-        builder,
-        config(
-            declarative,
-            properties,
-            "config: ['" + rules + "']\nmetrics:\n  excluded: [custom.*]"));
+    JmxMetricInsightInstaller.configure(builder, config(properties));
     cleanup.deferCleanup(builder.build().start());
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx", metric -> metric.hasName("tomcat.test.stable"));
   }
 
-  private static DeclarativeConfigProperties config(
-      boolean declarative, Map<String, String> properties, String jmxYaml) {
-    if (!declarative) {
-      return DeclarativeConfigBridge.createInstrumentationConfig(
-              DefaultConfigProperties.createFromMap(properties))
-          .getInstrumentationConfig()
-          .get("java")
-          .get("jmx");
-    }
-    String yaml =
-        "file_format: 1.1\n"
-            + "instrumentation/development:\n"
-            + "  java:\n"
-            + "    jmx:\n"
-            + "      "
-            + jmxYaml.replace("\n", "\n      ")
-            + "\n";
-    return SdkConfigProvider.create(
-            DeclarativeConfiguration.toConfigProperties(
-                DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)))))
+  private static DeclarativeConfigProperties config(Map<String, String> properties) {
+    return DeclarativeConfigBridge.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(properties))
         .getInstrumentationConfig()
         .get("java")
         .get("jmx");
