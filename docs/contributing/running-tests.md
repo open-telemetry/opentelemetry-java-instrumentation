@@ -52,21 +52,6 @@ To ignore warnings, formatting issues, or other non-fatal issues in tests, use
 
 The `dev` flag will ignore warnings in tests.
 
-## Configuration tests
-
-For settings available in both forms, prefer default-behavior and module-specific flat-property tests.
-The bridge exposes flat properties through the declarative API; test conversion centrally rather
-than repeating behavior assertions for equivalent YAML.
-
-Shared helpers own defaults, fallback, and precedence tests. Keep caller-specific logic covered,
-and add missing central coverage before removing a module test.
-
-Retain declarative tests for structured/YAML-only settings, distinct binding, parsing, initialization,
-or migration paths, and native configuration integration. Single-source declarative unit tests are not duplicates.
-
-Remove unused fixtures, dependencies, task registrations, and metadata-collection inputs with redundant
-variants. Keep metadata describing supported settings.
-
 ## Smoke tests
 
 The smoke tests are not run as part of a global `test` task since they take a long time and are

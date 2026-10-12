@@ -226,4 +226,4 @@ Some configurations require structured data only expressible in YAML:
 These have no flat-property fallback, so tests must cover declarative config mode.
 
 For settings available in both flat and declarative forms, follow the
-[configuration test guidelines](../../../docs/contributing/running-tests.md#configuration-tests).
+[configuration test guidelines](testing-general-patterns.md#configuration-test-ownership).

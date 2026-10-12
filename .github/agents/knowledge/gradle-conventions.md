@@ -248,7 +248,7 @@ The `otel.javaagent-instrumentation` convention plugin already provides
 ## Custom Test Tasks
 
 For when to add or remove configuration variants and their fixtures, see
-[Configuration tests](../../../docs/contributing/running-tests.md#configuration-tests).
+[Configuration test ownership](testing-general-patterns.md#configuration-test-ownership).
 
 Register custom test tasks lazily with `register<Test>("testFoo")`.
 
