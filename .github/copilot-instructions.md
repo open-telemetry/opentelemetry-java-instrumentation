@@ -13,6 +13,13 @@ formatter. Path-specific `.github/instructions/*.instructions.md` files contain 
 applicable repository review rules; use their stated conditions and exceptions. The longer
 `.github/agents/knowledge/` articles are optional reference, not a required loading step.
 
+## Release-note fragments
+
+For user-visible changes, check that release-note fragments follow
+[CONTRIBUTING.md](../CONTRIBUTING.md#changelog) and accurately describe the changed behavior.
+Report missing fragments with `[General]` on a changed line responsible for that behavior.
+Changes with no user-visible effect need no fragment.
+
 ## Correctness and compatibility
 
 - Check changes for lifecycle leaks, reentrancy, concurrency under supported library usage,
@@ -25,8 +32,8 @@ applicable repository review rules; use their stated conditions and exceptions. 
   deprecated symbols in a later minor release. Do not mistake a 3.0 behavior migration for an
   alpha API that should be removed immediately. A replacement must be at least as stable as
   the old API; deprecated methods delegate to their replacements, not vice versa. Include
-  replacement and removal timing in `@deprecated` Javadoc and a deprecation CHANGELOG entry.
-  Document a breaking change to a published alpha API under the appropriate CHANGELOG heading.
+  replacement and removal timing in `@deprecated` Javadoc and a `deprecation` release-note fragment.
+  Document a breaking change to a published alpha API in an `alpha-breaking` fragment.
 - User-facing configuration names and outgoing telemetry identities also have compatibility
   contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
   alias and emitted `otel.scope.name`, including v3-preview behavior and scope-version lookup.
@@ -56,7 +63,7 @@ of where its implementation lives.
   On rename, retain the old name until the next major version: read the replacement first,
   fall back to the old name only outside v3-preview, and log a `WARN` once at startup *when
   the old value is applied*, naming the old and replacement flat properties (or declarative
-  paths if there is no flat form). Add the deprecation to the CHANGELOG. Experimental/preview
+  paths if there is no flat form). Add a `deprecation` fragment in `changelog.d`. Experimental/preview
   names may be removed after a subsequent minor release and do not need the v3-preview guard.
   Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
   replacement-first warning logic to them.
