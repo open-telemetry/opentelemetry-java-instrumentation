@@ -28,12 +28,12 @@ tasks {
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
 
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
+    }
+
     // Uncomment for debugging:
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
-  }
-
-  withType<Test>().matching { it.name != "testDisabled" }.configureEach {
-    jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
   }
 
   val testExperimental = register<Test>("testExperimental") {

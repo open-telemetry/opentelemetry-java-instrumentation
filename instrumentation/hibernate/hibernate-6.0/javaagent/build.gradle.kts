@@ -73,10 +73,10 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
 
-  withType<Test>().matching { it.name != "testDisabled" }.configureEach {
-    jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
   }
 
   named("compileHibernate7TestJava", JavaCompile::class).configure {
