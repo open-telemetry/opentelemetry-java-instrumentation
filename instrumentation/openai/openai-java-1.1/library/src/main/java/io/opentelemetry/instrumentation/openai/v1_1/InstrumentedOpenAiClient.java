@@ -9,6 +9,7 @@ import com.openai.client.OpenAIClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
+import com.openai.models.responses.Response;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
@@ -17,6 +18,7 @@ final class InstrumentedOpenAiClient extends DelegatingInvocationHandler<OpenAIC
 
   private final Instrumenter<ChatCompletionRequest, ChatCompletion> chatInstrumenter;
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter;
+  private final Instrumenter<ResponseCreateRequest, Response> responsesInstrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
@@ -24,11 +26,13 @@ final class InstrumentedOpenAiClient extends DelegatingInvocationHandler<OpenAIC
       OpenAIClient delegate,
       Instrumenter<ChatCompletionRequest, ChatCompletion> chatInstrumenter,
       Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter,
+      Instrumenter<ResponseCreateRequest, Response> responsesInstrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
     super(delegate);
     this.chatInstrumenter = chatInstrumenter;
     this.embeddingInstrumenter = embeddingInstrumenter;
+    this.responsesInstrumenter = responsesInstrumenter;
     this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
   }
@@ -47,6 +51,10 @@ final class InstrumentedOpenAiClient extends DelegatingInvocationHandler<OpenAIC
               delegate.chat(), chatInstrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }
+    if (methodName.equals("responses") && parameterTypes.length == 0) {
+      return new InstrumentedResponseService(delegate.responses(), responsesInstrumenter)
+          .createProxy();
+    }
     if (methodName.equals("embeddings") && parameterTypes.length == 0) {
       return new InstrumentedEmbeddingService(delegate.embeddings(), embeddingInstrumenter)
           .createProxy();
@@ -56,6 +64,7 @@ final class InstrumentedOpenAiClient extends DelegatingInvocationHandler<OpenAIC
               delegate.async(),
               chatInstrumenter,
               embeddingInstrumenter,
+              responsesInstrumenter,
               eventLogger,
               captureMessageContent)
           .createProxy();
