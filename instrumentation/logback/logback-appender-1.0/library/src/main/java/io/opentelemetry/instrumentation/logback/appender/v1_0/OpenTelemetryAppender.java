@@ -197,22 +197,24 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       return;
     }
 
+    LoggingEventToReplay logEventToReplay =
+        new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes);
+    boolean logReplayLimitWarning = false;
     Lock readLock = lock.readLock();
     readLock.lock();
     try {
       openTelemetry = this.openTelemetry;
       if (openTelemetry == null) {
-        LoggingEventToReplay logEventToReplay =
-            new LoggingEventToReplay(event, captureExperimentalAttributes, captureCodeAttributes);
-
-        if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
-          String message =
-              "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
-          System.err.println(message);
-        }
+        logReplayLimitWarning =
+            !eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true);
       }
     } finally {
       readLock.unlock();
+    }
+    if (logReplayLimitWarning) {
+      String message =
+          "numLogsCapturedBeforeOtelInstall value of the OpenTelemetry appender is too small.";
+      System.err.println(message);
     }
     if (openTelemetry != null) {
       emit(openTelemetry, event);
