@@ -49,20 +49,6 @@ public final class LettuceTelemetryBuilder {
   }
 
   /**
-   * Sets whether the {@code redis.encode.start} and {@code redis.encode.end} span events should be
-   * emitted by the constructed {@link LettuceTelemetry}. Disabled by default.
-   *
-   * @deprecated Use {@link Experimental#setEncodingSpanEventsEnabled(LettuceTelemetryBuilder,
-   *     boolean)} instead. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public LettuceTelemetryBuilder setEncodingSpanEventsEnabled(boolean encodingEventsEnabled) {
-    Experimental.setEncodingSpanEventsEnabled(this, encodingEventsEnabled);
-    return this;
-  }
-
-  /**
    * Returns a new {@link LettuceTelemetry} with the settings of this {@link
    * LettuceTelemetryBuilder}.
    */

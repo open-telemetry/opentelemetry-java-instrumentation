@@ -167,6 +167,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled`. Use
+  `io.opentelemetry.instrumentation.lettuce.v5_1.internal.Experimental.setEncodingSpanEventsEnabled`
+  instead.
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
   runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
   specifying the metrics to source from JFR.
@@ -246,11 +249,6 @@
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
-
-### 🚫 Deprecations
-
-- Deprecate `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` in favor of
-  `io.opentelemetry.instrumentation.lettuce.v5_1.internal.Experimental.setEncodingSpanEventsEnabled`.
 
 ## Version 2.32.0 (2026-10-03)
 

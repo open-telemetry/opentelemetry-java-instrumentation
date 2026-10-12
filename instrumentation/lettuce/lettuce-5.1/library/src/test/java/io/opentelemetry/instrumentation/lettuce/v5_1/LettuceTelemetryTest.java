@@ -58,24 +58,6 @@ class LettuceTelemetryTest {
                 span -> span.hasEventsSatisfyingExactly(event -> event.hasName("redis.dispatch"))));
   }
 
-  @Test
-  @SuppressWarnings("deprecation")
-  void deprecatedEncodingEventsSetter() {
-    recordSpan(
-        LettuceTelemetry.builder(testing.getOpenTelemetry())
-            .setEncodingSpanEventsEnabled(true)
-            .build());
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasEventsSatisfyingExactly(
-                        event -> event.hasName("redis.encode.start"),
-                        event -> event.hasName("redis.encode.end"),
-                        event -> event.hasName("redis.dispatch"))));
-  }
-
   private static void recordSpan(LettuceTelemetry telemetry) {
     Tracer.Span span = telemetry.createTracing().getTracerProvider().getTracer().nextSpan();
     span.annotate("redis.encode.start");
