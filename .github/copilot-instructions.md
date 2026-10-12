@@ -75,6 +75,14 @@ of where its implementation lives.
 
 ## Documentation
 
+- Document flat properties without repeating equivalent declarative configuration.
+  Include declarative configuration only when it has different behavior, requires a distinct
+  migration, or supports configuration unavailable through flat properties.
+- Add hand-written changelog entries only for deprecations or breaking changes, as specified in
+  CONTRIBUTING.md; normal changes rely on the generated changelog. Write these entries around the
+  user-visible change and any required migration. Describe the released behavior directly, without
+  referring to preview flags used to stage the change. Omit statements about behavior that is
+  unchanged unless they are necessary to clarify the change's scope.
 - Add or request README and usage documentation for a concrete reader need: setup,
   configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
   A code change alone does not require a README addition. Do not add prose merely to inventory
