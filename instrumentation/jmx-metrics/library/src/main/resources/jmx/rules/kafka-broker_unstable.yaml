@@ -50,6 +50,8 @@ rules:
         desc: The number of requests to the broker resulting in a failure
         unit: "{request}"
 
+## wip line
+
   - beans:
       - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce
       - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer
@@ -58,6 +60,7 @@ rules:
       kafka.request.type: lowercase(param(request))
     mapping:
       Count:
+        # seems bogus metric here as it's count not total
         metric: kafka.request.time.total
         type: counter
         desc: The total time the broker has taken to service requests
