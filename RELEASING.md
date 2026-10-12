@@ -36,7 +36,6 @@ the second Monday of the month (roughly a few days after the monthly minor relea
 
 Choose the development branch: `main` for the current major, or `maintenance/v<major>.x`
 for a supported maintenance major.
-Minor releases must preserve the stable compatibility contracts in [VERSIONING.md](VERSIONING.md).
 
 - Check that
   [renovate has run](https://developer.mend.io/github/open-telemetry/opentelemetry-java-instrumentation)
