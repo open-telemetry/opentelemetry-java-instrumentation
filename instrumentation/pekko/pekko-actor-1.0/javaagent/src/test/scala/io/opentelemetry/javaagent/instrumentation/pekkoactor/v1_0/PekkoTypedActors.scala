@@ -17,7 +17,7 @@ import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import org.apache.pekko.util.Timeout
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
+import io.opentelemetry.context.Context
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -59,7 +59,7 @@ class PekkoTypedActors {
   def basicTell(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       greeter ! Greet("Pekko")
     } finally {
@@ -72,7 +72,7 @@ class PekkoTypedActors {
     implicit val actorSystem: ActorSystem[SpawnProtocol.Command] = system
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       Await.result(
         greeter.ask[Greeted](replyTo => GreetAndReply("Pekko", replyTo)),
@@ -87,7 +87,7 @@ class PekkoTypedActors {
   def spawnChildAndTell(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       delegator ! TypedDelegator.Delegate("Pekko")
     } finally {
