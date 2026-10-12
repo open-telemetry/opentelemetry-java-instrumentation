@@ -65,32 +65,72 @@ class PekkoTypedActorTest {
     assertTraces(count, "Hi, Pekko")
   }
 
-  private def assertTraces(count: Int, childName: String): Unit = {
+  @ParameterizedTest
+  @ValueSource(ints = Array(1, 150))
+  def stashAndUnstash(count: Int): Unit = {
+    val tester = new PekkoTypedActors
+    (1 to count).foreach { _ =>
+      tester.stashAndUnstash()
+    }
+
+    // the stashed messages are handled while the unlock message is being processed, they should
+    // still run in the context that was current when they were sent, the message sent in the root
+    // context should not become part of the unlock trace
     val assertions = (1 to count)
-      .map(_ =>
-        new Consumer[TraceAssert] {
-          override def accept(trace: TraceAssert): Unit =
-            trace.hasSpansSatisfyingExactly(
-              new Consumer[SpanDataAssert] {
-                override def accept(span: SpanDataAssert): Unit = {
-                  span
-                    .hasName("parent")
-                    .hasTotalAttributeCount(0)
-                }
-              },
-              new Consumer[SpanDataAssert] {
-                override def accept(span: SpanDataAssert): Unit = {
-                  span
-                    .hasName(childName)
-                    .hasParent(trace.getSpan(0))
-                    .hasTotalAttributeCount(0)
-                }
-              }
-            )
-        }
+      .flatMap(_ =>
+        Seq(
+          traceAssertion("Hello, Pekko"),
+          singleSpanTraceAssertion("unlock"),
+          singleSpanTraceAssertion("Hello, Root")
+        )
       )
       .asJava
 
     testing.waitAndAssertTraces(assertions)
   }
+
+  private def assertTraces(count: Int, childName: String): Unit = {
+    val assertions = (1 to count)
+      .map(_ => traceAssertion(childName))
+      .asJava
+
+    testing.waitAndAssertTraces(assertions)
+  }
+
+  private def singleSpanTraceAssertion(name: String): Consumer[TraceAssert] =
+    new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName(name)
+                .hasNoParent()
+                .hasTotalAttributeCount(0)
+            }
+          }
+        )
+    }
+
+  private def traceAssertion(childName: String): Consumer[TraceAssert] =
+    new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName("parent")
+                .hasTotalAttributeCount(0)
+            }
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName(childName)
+                .hasParent(trace.getSpan(0))
+                .hasTotalAttributeCount(0)
+            }
+          }
+        )
+    }
 }

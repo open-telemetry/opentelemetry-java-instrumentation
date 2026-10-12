@@ -332,6 +332,7 @@
     "org.apache.myfaces.core:myfaces-impl#1.2.+": "1.2.12",
     "org.apache.myfaces.core:myfaces-impl#2.+": "2.3.12",
     "org.apache.myfaces.core:myfaces-impl#3.+": "3.0.4",
+    "org.apache.pekko:pekko-actor-typed_2.12#+": "1.7.1",
     "org.apache.pekko:pekko-actor-typed_2.13#+": "1.7.1",
     "org.apache.pekko:pekko-actor-typed_3#+": "1.7.1",
     "org.apache.pekko:pekko-actor_2.12#+": "1.7.1",
