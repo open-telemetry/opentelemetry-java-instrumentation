@@ -90,12 +90,10 @@ and deadlocks.
     - Publish the artifacts to Maven Central
     - Generate [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for the Java agent jar and SBOM bundle
     - Publish a GitHub release with release notes, Java agent jar, and SBOM bundle
-  - Review and merge the post-release pull request against the development branch.
-    It synchronizes the change log for every release. Only releases newer than the development branch's
-    apidiff baseline update that baseline and the generated API diffs, after becoming available in Maven Central.
-    On maintenance branches, those newer releases also update the README download link; older maintained patches do not move it backwards.
-    A release of major N updates `maintenance/vN.x` if that branch exists. Otherwise, it updates `main`
-    only if main's snapshot major matches N. A missing or mismatched development branch stops publication.
+  - Review and merge the post-release pull request into `maintenance/vN.x` if it exists,
+    otherwise into `main` with a matching snapshot major. Publication stops if the target is missing or mismatched.
+    The PR always updates the changelog. Releases newer than the branch's API baseline also update
+    the baseline and API diffs after reaching Maven Central, plus the README download link on maintenance branches.
 
 ## Credentials
 
