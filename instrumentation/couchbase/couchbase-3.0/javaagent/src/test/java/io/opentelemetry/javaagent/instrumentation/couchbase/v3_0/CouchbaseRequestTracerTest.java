@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.mock;
@@ -37,6 +36,10 @@ class CouchbaseRequestTracerTest {
 
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+  private static final boolean EXPERIMENTAL_TELEMETRY_CONFIGURED =
+      System.getProperty("otel.instrumentation.couchbase.emit-experimental-telemetry") != null;
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -134,11 +137,11 @@ class CouchbaseRequestTracerTest {
   }
 
   private static void assertParentSpan(SpanDataAssert span) {
-    span.hasName("parent").hasKind(v3Preview() ? CLIENT : INTERNAL).hasNoParent();
+    span.hasName("parent").hasKind(CLIENT).hasNoParent();
   }
 
   private static void assertRequestSpan(SpanDataAssert span, SpanData parent) {
-    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
+    span.hasKind(CLIENT)
         .hasName("get")
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
@@ -149,11 +152,11 @@ class CouchbaseRequestTracerTest {
   }
 
   private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY;
+    return EXPERIMENTAL_TELEMETRY_CONFIGURED ? EXPERIMENTAL_TELEMETRY : EXPERIMENTAL_ATTRIBUTES;
   }
 
   private static <T> T experimental(T value) {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY ? value : null;
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   private static RequestTracer createRequestTracer() {

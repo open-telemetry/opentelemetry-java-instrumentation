@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -68,6 +67,8 @@ class CouchbaseClient32Test {
       Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
+  private static final boolean EXPERIMENTAL_TELEMETRY_CONFIGURED =
+      System.getProperty("otel.instrumentation.couchbase.emit-experimental-telemetry") != null;
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -146,7 +147,7 @@ class CouchbaseClient32Test {
                 },
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(dispatchAttributes));
           } else {
@@ -177,11 +178,11 @@ class CouchbaseClient32Test {
                 },
                 span ->
                     span.hasName("request_encoding")
-                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0)));
           } else {
             trace.hasSpansSatisfyingExactly(
@@ -244,7 +245,7 @@ class CouchbaseClient32Test {
 
   private static void assertOperationSpan(
       SpanDataAssert span, String operation, String documentId, StatusData status) {
-    span.hasKind(v3Preview() || testLatestDeps() ? CLIENT : INTERNAL)
+    span.hasKind(CLIENT)
         .hasName(operation + " _default")
         .hasStatus(status)
         .hasAttributesSatisfyingExactly(
@@ -261,11 +262,13 @@ class CouchbaseClient32Test {
   }
 
   private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
+    return EXPERIMENTAL_TELEMETRY_CONFIGURED
+        ? EXPERIMENTAL_TELEMETRY
+        : LEGACY_EXPERIMENTAL_ATTRIBUTES;
   }
 
   private static boolean emitExperimentalAttributes() {
-    return EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
+    return LEGACY_EXPERIMENTAL_ATTRIBUTES;
   }
 
   private static <T> T experimental(T value) {

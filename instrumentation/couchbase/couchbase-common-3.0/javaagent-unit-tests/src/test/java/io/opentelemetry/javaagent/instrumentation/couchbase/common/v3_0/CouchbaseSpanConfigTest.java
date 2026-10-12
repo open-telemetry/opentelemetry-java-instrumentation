@@ -35,6 +35,7 @@ class CouchbaseSpanConfigTest {
       assertThat(CouchbaseSpan.captureExperimentalTelemetry(config)).isEqualTo(enabled);
       verify(config, never()).getBoolean("experimental_span_attributes/development");
       assertThat(handler.records).isEmpty();
+      assertThat(CouchbaseSpan.captureExperimentalAttributes(config)).isFalse();
     } finally {
       logger.removeHandler(handler);
     }
@@ -51,18 +52,29 @@ class CouchbaseSpanConfigTest {
     logger.addHandler(handler);
     try {
       assertThat(CouchbaseSpan.captureExperimentalTelemetry(config)).isEqualTo(enabled);
+      assertThat(CouchbaseSpan.captureExperimentalAttributes(config)).isEqualTo(enabled);
       assertThat(handler.records)
           .singleElement()
           .extracting(LogRecord::getMessage)
           .isEqualTo(
               "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
-                  + " equivalent declarative configuration property are deprecated and will be"
-                  + " removed in the next minor release. Use"
+                  + " equivalent declarative configuration property are deprecated for enabling"
+                  + " SDK detail spans. Use"
                   + " otel.instrumentation.couchbase.emit-experimental-telemetry or the equivalent"
                   + " declarative configuration instead.");
     } finally {
       logger.removeHandler(handler);
     }
+  }
+
+  @Test
+  void experimentalAttributesRemainIndependentOfDetailSpanConfig() {
+    DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
+    when(config.getBoolean("emit_experimental_telemetry/development")).thenReturn(false);
+    when(config.getBoolean("experimental_span_attributes/development")).thenReturn(true);
+
+    assertThat(CouchbaseSpan.captureExperimentalTelemetry(config)).isFalse();
+    assertThat(CouchbaseSpan.captureExperimentalAttributes(config)).isTrue();
   }
 
   @Test
@@ -75,6 +87,7 @@ class CouchbaseSpanConfigTest {
     logger.addHandler(handler);
     try {
       assertThat(CouchbaseSpan.captureExperimentalTelemetry(config)).isFalse();
+      assertThat(CouchbaseSpan.captureExperimentalAttributes(config)).isFalse();
       assertThat(handler.records).isEmpty();
     } finally {
       logger.removeHandler(handler);

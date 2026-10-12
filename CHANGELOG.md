@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking changes
 
+- Couchbase 3.x operation spans now have `CLIENT` kind, and known SDK detail spans are opt-in with
+  `otel.instrumentation.couchbase.emit-experimental-telemetry=true`. Experimental span attributes
+  are independently opt-in with `otel.instrumentation.couchbase.experimental-span-attributes=true`;
+  the detail-span setting no longer enables them. Couchbase 3.0 and legacy-bridge 3.1 spans now use
+  the `io.opentelemetry.couchbase-3.0` and `io.opentelemetry.couchbase-3.1` instrumentation scopes.
+  Configure both properties if you need detail spans and experimental attributes.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.

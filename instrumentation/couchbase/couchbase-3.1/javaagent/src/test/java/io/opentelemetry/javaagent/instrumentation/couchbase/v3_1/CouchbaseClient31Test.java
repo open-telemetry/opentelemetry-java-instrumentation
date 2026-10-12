@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -61,6 +60,8 @@ class CouchbaseClient31Test {
       Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
+  private static final boolean EXPERIMENTAL_TELEMETRY_CONFIGURED =
+      System.getProperty("otel.instrumentation.couchbase.emit-experimental-telemetry") != null;
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -228,7 +229,7 @@ class CouchbaseClient31Test {
   }
 
   private static void assertOperationSpan(SpanDataAssert span, String operation, Long retries) {
-    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
+    span.hasKind(CLIENT)
         .hasName(operation + " _default")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
@@ -249,11 +250,13 @@ class CouchbaseClient31Test {
   }
 
   private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
+    return EXPERIMENTAL_TELEMETRY_CONFIGURED
+        ? EXPERIMENTAL_TELEMETRY
+        : LEGACY_EXPERIMENTAL_ATTRIBUTES;
   }
 
   private static boolean emitExperimentalAttributes() {
-    return EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
+    return LEGACY_EXPERIMENTAL_ATTRIBUTES;
   }
 
   private static <T> T experimental(T value) {

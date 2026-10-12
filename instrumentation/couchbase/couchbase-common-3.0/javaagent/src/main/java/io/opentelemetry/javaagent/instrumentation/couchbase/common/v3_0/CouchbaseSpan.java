@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -36,12 +35,13 @@ public final class CouchbaseSpan {
   private static final String NET_PEER_NAME = "net.peer.name";
   private static final String NET_PEER_PORT = "net.peer.port";
 
-  private static final boolean v3Preview = v3Preview();
+  private static final boolean captureExperimentalAttributes;
   private static final boolean captureExperimentalTelemetry;
 
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
+    captureExperimentalAttributes = captureExperimentalAttributes(config);
     captureExperimentalTelemetry = captureExperimentalTelemetry(config);
   }
 
@@ -87,13 +87,13 @@ public final class CouchbaseSpan {
   }
 
   public void setExperimentalAttribute(String key, @Nullable String value) {
-    if (!v3Preview || captureExperimentalTelemetry) {
+    if (captureExperimentalAttributes) {
       span.setAttribute(key, value);
     }
   }
 
   public void setExperimentalAttribute(String key, long value) {
-    if (!v3Preview || captureExperimentalTelemetry) {
+    if (captureExperimentalAttributes) {
       span.setAttribute(key, value);
     }
   }
@@ -160,11 +160,16 @@ public final class CouchbaseSpan {
   }
 
   private static boolean captureExperimentalAttribute(String key) {
-    return captureExperimentalTelemetry && key.startsWith("db.couchbase.");
+    return captureExperimentalAttributes && key.startsWith("db.couchbase.");
   }
 
   static boolean emitExperimentalTelemetry() {
     return captureExperimentalTelemetry;
+  }
+
+  // visible for testing
+  static boolean captureExperimentalAttributes(DeclarativeConfigProperties config) {
+    return Boolean.TRUE.equals(config.getBoolean("experimental_span_attributes/development"));
   }
 
   // visible for testing
@@ -182,8 +187,8 @@ public final class CouchbaseSpan {
 
     logger.warning(
         "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
-            + " equivalent declarative configuration property are deprecated and will be removed"
-            + " in the next minor release. Use"
+            + " equivalent declarative configuration property are deprecated for enabling SDK"
+            + " detail spans. Use"
             + " otel.instrumentation.couchbase.emit-experimental-telemetry or the equivalent"
             + " declarative configuration instead.");
     return deprecated;

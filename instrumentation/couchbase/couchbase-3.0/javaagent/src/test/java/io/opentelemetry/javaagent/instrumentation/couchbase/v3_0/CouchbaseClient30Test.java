@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +25,7 @@ import com.couchbase.client.java.env.ClusterEnvironment;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,6 +43,10 @@ class CouchbaseClient30Test {
 
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+  private static final boolean EXPERIMENTAL_TELEMETRY_CONFIGURED =
+      System.getProperty("otel.instrumentation.couchbase.emit-experimental-telemetry") != null;
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -97,34 +102,16 @@ class CouchbaseClient30Test {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
           assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
-              .isEqualTo(
-                  v3Preview()
-                      ? "io.opentelemetry.couchbase-3.0"
-                      : "io.opentelemetry.javaagent.couchbase-3.0");
+              .isEqualTo("io.opentelemetry.couchbase-3.0");
           if (emitSdkDetailSpans()) {
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
-                        .hasName("get")
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, "kv"),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
-                            equalTo(stringKey("couchbase.document_id"), "id")),
+                span -> assertGetSpan(span, "id"),
                 span ->
                     span.hasKind(INTERNAL)
                         .hasName("dispatch_to_server")
                         .hasParent(trace.getSpan(0)));
           } else {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasName("get")
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0));
+            trace.hasSpansSatisfyingExactly(span -> assertGetSpan(span, "id"));
           }
         });
   }
@@ -138,33 +125,30 @@ class CouchbaseClient30Test {
         trace -> {
           if (emitSdkDetailSpans()) {
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
-                        .hasName("get")
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, "kv"),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
-                            equalTo(stringKey("couchbase.document_id"), "async-id")),
+                span -> assertGetSpan(span, "async-id"),
                 span ->
                     span.hasKind(INTERNAL)
                         .hasName("dispatch_to_server")
                         .hasParent(trace.getSpan(0)));
           } else {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasName("get")
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0));
+            trace.hasSpansSatisfyingExactly(span -> assertGetSpan(span, "async-id"));
           }
         });
   }
 
+  private static void assertGetSpan(SpanDataAssert span, String documentId) {
+    span.hasKind(CLIENT).hasName("get").hasStatus(StatusData.unset()).hasNoParent();
+    if (EXPERIMENTAL_ATTRIBUTES) {
+      span.hasAttributesSatisfyingExactly(
+          equalTo(PEER_SERVICE, "kv"),
+          satisfies(stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
+          equalTo(stringKey("couchbase.document_id"), documentId));
+    } else {
+      span.hasTotalAttributeCount(0);
+    }
+  }
+
   private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY;
+    return EXPERIMENTAL_TELEMETRY_CONFIGURED ? EXPERIMENTAL_TELEMETRY : EXPERIMENTAL_ATTRIBUTES;
   }
 }
