@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Annotation instrumentation no longer bypasses `otel.instrumentation.common.default-enabled` in
+  v3 preview. When `otel.instrumentation.common.default-enabled=false`, explicitly enable it with
+  `otel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true`.
 - The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
   starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
