@@ -36,14 +36,14 @@ class TomcatTest extends TargetSystemTest {
 
   @ParameterizedTest
   @MethodSource("tomcatArgs")
-  void testCollectedMetrics(String dockerImageName, boolean v3Preview) {
+  void testCollectedMetrics(String dockerImageName, boolean experimentalOptIn) {
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
 
     List<String> yamlFiles = new ArrayList<>();
     Map<String, String> config;
-    if (v3Preview) {
+    if (experimentalOptIn) {
       yamlFiles = emptyList();
       config = otelConfigPropertiesExperimentalOptIn("tomcat.*");
     } else {

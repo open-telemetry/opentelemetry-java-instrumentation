@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jmx;
 import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.STABLE;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
-import static java.util.stream.Collectors.toList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -19,8 +17,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
-import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -35,7 +31,6 @@ import java.util.logging.Logger;
 public class JmxMetricInsightInstaller implements AgentListener {
 
   private static final Logger logger = Logger.getLogger(JmxMetricInsightInstaller.class.getName());
-  private static final String EXPERIMENTAL_PREFIX = "experimental-";
   private static final String INSTRUMENTATION_NAME = "jmx";
 
   @Override
@@ -44,15 +39,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
         DeclarativeConfigUtil.getInstrumentationConfig(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME);
 
-    boolean v3Preview = AgentCommonConfig.get().isV3Preview();
-    if (v3Preview) {
-      if (!AgentDistributionConfig.get().isInstrumentationEnabled(INSTRUMENTATION_NAME)) {
-        return;
-      }
-    } else {
-      if (!config.getBoolean("enabled", true)) {
-        return;
-      }
+    if (!AgentDistributionConfig.get().isInstrumentationEnabled(INSTRUMENTATION_NAME)) {
+      return;
     }
 
     JmxTelemetryBuilder jmx =
@@ -61,13 +49,12 @@ public class JmxMetricInsightInstaller implements AgentListener {
                 Duration.ofMillis(
                     config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
 
-    configure(jmx, config, v3Preview);
+    configure(jmx, config);
     jmx.build().start();
   }
 
   // visible for testing
-  static void configure(
-      JmxTelemetryBuilder jmx, DeclarativeConfigProperties config, boolean v3Preview) {
+  static void configure(JmxTelemetryBuilder jmx, DeclarativeConfigProperties config) {
     config.getScalarList("config", String.class, emptyList()).stream()
         .map(Paths::get)
         .forEach(path -> addFileRules(path, jmx));
@@ -77,56 +64,12 @@ public class JmxMetricInsightInstaller implements AgentListener {
             .get("metrics")
             .get("experimental")
             .getScalarList("included", String.class, emptyList());
-    List<String> systemsConfig =
-        !v3Preview && unstableInclude.isEmpty()
-            ? config.get("target").getScalarList("system", String.class, emptyList())
-            : emptyList();
-
-    if (!systemsConfig.isEmpty()) {
-      InternalMetricsDefinitions metricsDefinitions =
-          new InternalMetricsDefinitions(JmxMetricInsightInstaller.class.getClassLoader());
-
-      logger.log(
-          WARNING,
-          "'otel.jmx.target.system' is deprecated and will be removed in 3.0."
-              + " Remove it to collect stable metrics automatically, except JVM metrics."
-              + " Use 'otel.jmx.metrics.experimental.included' to opt in to unstable metrics;"
-              + " a nonempty value takes precedence over 'otel.jmx.target.system'.");
-
-      systemsConfig =
-          systemsConfig.stream()
-              .map(
-                  s ->
-                      s.startsWith(EXPERIMENTAL_PREFIX)
-                          ? s.substring(EXPERIMENTAL_PREFIX.length())
-                          : s)
-              .collect(toList());
-
-      // warn about unsupported systems
-      systemsConfig.forEach(
-          system -> {
-            if (!metricsDefinitions.getSupportedSystems().contains(system)) {
-              logger.log(
-                  WARNING,
-                  "JMX target system "
-                      + system
-                      + " is not supported. Supported systems are: "
-                      + metricsDefinitions.getSupportedSystems());
-            }
-          });
-
-      jmx.setInternalMetricsSystemFilter(
-          IncludeExclude.builder().setIncluded(systemsConfig).build());
-      // Selecting a legacy target opts in to both its stable and unstable metrics.
-      jmx.setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
-    } else {
-      // JVM rules overlap with runtime-telemetry.
-      jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
-      jmx.setInternalMetricsUnstableMetricsFilter(
-          unstableInclude.isEmpty()
-              ? IncludeExclude.builder().setExcluded("*").build()
-              : IncludeExclude.builder().setIncluded(unstableInclude).build());
-    }
+    // JVM rules overlap with runtime-telemetry.
+    jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+    jmx.setInternalMetricsUnstableMetricsFilter(
+        unstableInclude.isEmpty()
+            ? IncludeExclude.builder().setExcluded("*").build()
+            : IncludeExclude.builder().setIncluded(unstableInclude).build());
 
     // include/exclude metrics by name
     IncludeExclude metrics =

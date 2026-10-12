@@ -4,6 +4,13 @@
 
 ### ⚠️ Breaking changes
 
+- JMX metric collection now always uses instrumentation selectors, including
+  `otel.instrumentation.jmx.enabled` and `otel.instrumentation.common.default-enabled`.
+  The deprecated `otel.jmx.enabled` and `otel.jmx.target.system` settings are removed.
+  For declarative configuration, use `distribution.javaagent.instrumentation.enabled` /
+  `distribution.javaagent.instrumentation.disabled` selectors instead of `java.jmx.enabled`.
+  Stable bundled metrics are collected automatically except JVM rules, which overlap with runtime
+  telemetry. Use `otel.jmx.metrics.experimental.included` to opt in to unstable metrics by name.
 - Runtime telemetry metrics and package-emitter events now always use the
   `io.opentelemetry.runtime-telemetry` instrumentation scope. Update views, dashboards, and filters
   that match `io.opentelemetry.runtime-telemetry-java8` or
