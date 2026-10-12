@@ -24,7 +24,6 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
         .springBoot()
         .setServiceName(false)
         .env("OTEL_METRICS_EXPORTER", "otlp")
-        .env("OTEL_JAVAAGENT_ADD_THREAD_DETAILS", "true")
         .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
   }
 
@@ -37,8 +36,10 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET /greeting")
-                        .hasAttribute(satisfies(THREAD_ID, val -> val.isNotNull()))
-                        .hasAttribute(satisfies(THREAD_NAME, val -> val.isNotBlank()))
+                        .hasAttributesSatisfying(
+                            attributes ->
+                                assertThat(attributes.asMap())
+                                    .doesNotContainKeys(THREAD_ID, THREAD_NAME))
                         .hasResourceSatisfying(
                             resource ->
                                 resource
@@ -48,7 +49,12 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
                                     .hasAttribute(stringKey("foo"), "bar")
                                     .hasAttribute(SERVICE_NAME, "otel-spring-test-app")
                                     .hasAttribute(SERVICE_VERSION, "1.2.3")),
-                span -> span.hasName("WebController.withSpan")));
+                span ->
+                    span.hasName("WebController.withSpan")
+                        .hasAttributesSatisfying(
+                            attributes ->
+                                assertThat(attributes.asMap())
+                                    .doesNotContainKeys(THREAD_ID, THREAD_NAME))));
 
     output.assertAgentVersionLogged();
     assertThat(output.getLoggedTraceIds()).isEqualTo(getSpanTraceIds());
