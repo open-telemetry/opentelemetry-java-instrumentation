@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
+  `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
+  `otel.instrumentation.twilio.enabled=true`, respectively.
 - JMX metric collection now always uses instrumentation selectors, including
   `otel.instrumentation.jmx.enabled` and `otel.instrumentation.common.default-enabled`.
   The deprecated `otel.jmx.enabled` and `otel.jmx.target.system` settings are removed.
