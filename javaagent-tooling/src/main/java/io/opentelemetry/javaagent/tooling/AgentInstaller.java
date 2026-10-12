@@ -554,13 +554,16 @@ public class AgentInstaller {
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {
+      List<Runnable> callbacks;
       synchronized (classLoadCallbacks) {
-        List<Runnable> callbacks = classLoadCallbacks.get(typeName);
-        if (callbacks != null) {
-          for (Runnable callback : callbacks) {
-            callback.run();
-          }
+        List<Runnable> registeredCallbacks = classLoadCallbacks.get(typeName);
+        if (registeredCallbacks == null) {
+          return;
         }
+        callbacks = new ArrayList<>(registeredCallbacks);
+      }
+      for (Runnable callback : callbacks) {
+        callback.run();
       }
     }
   }
