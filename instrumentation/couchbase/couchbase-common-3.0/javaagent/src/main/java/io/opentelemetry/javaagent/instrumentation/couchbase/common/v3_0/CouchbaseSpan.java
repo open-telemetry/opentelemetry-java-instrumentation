@@ -190,7 +190,8 @@ public final class CouchbaseSpan {
             + " equivalent declarative configuration property are deprecated for enabling SDK"
             + " detail spans. Use"
             + " otel.instrumentation.couchbase.emit-experimental-telemetry or the equivalent"
-            + " declarative configuration instead.");
+            + " declarative configuration to enable those spans; retain the deprecated setting to"
+            + " capture experimental span attributes.");
     return deprecated;
   }
 }

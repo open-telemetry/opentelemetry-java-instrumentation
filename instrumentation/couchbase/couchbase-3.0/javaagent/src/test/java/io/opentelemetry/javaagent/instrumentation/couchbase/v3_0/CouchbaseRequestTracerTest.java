@@ -87,7 +87,8 @@ class CouchbaseRequestTracerTest {
                     span.hasName("dispatch_to_server")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("peer.latency"), 42L)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(longKey("peer.latency"), experimental(42L))));
           } else {
             trace.hasSpansSatisfyingExactly(
                 CouchbaseRequestTracerTest::assertParentSpan,

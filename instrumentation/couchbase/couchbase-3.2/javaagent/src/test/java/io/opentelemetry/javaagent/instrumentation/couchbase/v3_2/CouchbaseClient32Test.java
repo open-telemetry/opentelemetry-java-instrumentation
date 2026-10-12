@@ -177,9 +177,7 @@ class CouchbaseClient32Test {
                   span.hasNoParent();
                 },
                 span ->
-                    span.hasName("request_encoding")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0)),
+                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("dispatch_to_server")
                         .hasKind(INTERNAL)

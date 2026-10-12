@@ -21,8 +21,7 @@ public final class CouchbaseTracer {
   private final boolean makeCurrentOnEnd;
   private final boolean mapLegacyNetworkPeerAttributes;
 
-  public CouchbaseTracer(
-      Tracer tracer, boolean inheritCurrentContext, boolean makeCurrentOnEnd) {
+  public CouchbaseTracer(Tracer tracer, boolean inheritCurrentContext, boolean makeCurrentOnEnd) {
     this(tracer, inheritCurrentContext, makeCurrentOnEnd, true);
   }
 
@@ -43,7 +42,8 @@ public final class CouchbaseTracer {
       return new CouchbaseSpan(Span.getInvalid(), makeCurrentOnEnd, mapLegacyNetworkPeerAttributes);
     }
 
-    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(sdkDetailSpan ? INTERNAL : CLIENT);
+    SpanBuilder spanBuilder =
+        tracer.spanBuilder(name).setSpanKind(sdkDetailSpan ? INTERNAL : CLIENT);
     if (parent != null) {
       spanBuilder.setParent(Context.current().with(parent.getSpan()));
     } else if (inheritCurrentContext) {

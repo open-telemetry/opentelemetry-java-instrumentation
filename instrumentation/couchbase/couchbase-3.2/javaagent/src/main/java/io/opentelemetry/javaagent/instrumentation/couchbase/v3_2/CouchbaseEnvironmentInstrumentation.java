@@ -33,8 +33,7 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This CoreEnvironment.Builder<?> builder) {
-      builder.requestTracer(
-          CouchbaseRequestTracer.create(GlobalOpenTelemetry.get()));
+      builder.requestTracer(CouchbaseRequestTracer.create(GlobalOpenTelemetry.get()));
     }
   }
 }

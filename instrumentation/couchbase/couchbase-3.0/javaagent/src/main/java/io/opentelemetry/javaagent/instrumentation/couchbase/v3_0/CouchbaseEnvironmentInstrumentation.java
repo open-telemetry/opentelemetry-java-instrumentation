@@ -36,8 +36,8 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This CoreEnvironment.Builder<?> builder) {
       builder.requestTracer(
           CouchbaseRequestTracer.create(
-          GlobalOpenTelemetry.get()
-              .tracerBuilder("io.opentelemetry.couchbase-3.0")
+              GlobalOpenTelemetry.get()
+                  .tracerBuilder("io.opentelemetry.couchbase-3.0")
                   .setSchemaUrl(SchemaUrls.V1_44_0)
                   .build()));
     }

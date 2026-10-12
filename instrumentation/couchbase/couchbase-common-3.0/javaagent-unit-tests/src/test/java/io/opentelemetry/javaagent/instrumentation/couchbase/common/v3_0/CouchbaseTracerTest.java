@@ -48,8 +48,7 @@ class CouchbaseTracerTest {
   void createsRootSpanWhenCurrentContextIsDisabled() {
     Span current = tracer.spanBuilder("current").startSpan();
     try (Scope ignored = current.makeCurrent()) {
-      CouchbaseSpan span =
-          new CouchbaseTracer(tracer, false, false).startSpan("request", null);
+      CouchbaseSpan span = new CouchbaseTracer(tracer, false, false).startSpan("request", null);
       span.end();
     }
     current.end();
@@ -62,8 +61,7 @@ class CouchbaseTracerTest {
   void inheritsCurrentContextWhenEnabled() {
     Span current = tracer.spanBuilder("current").startSpan();
     try (Scope ignored = current.makeCurrent()) {
-      CouchbaseSpan span =
-          new CouchbaseTracer(tracer, true, false).startSpan("request", null);
+      CouchbaseSpan span = new CouchbaseTracer(tracer, true, false).startSpan("request", null);
       span.end();
     }
     current.end();
