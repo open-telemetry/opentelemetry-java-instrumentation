@@ -312,6 +312,10 @@ for more details.
   `otel.instrumentation.couchbase.emit-experimental-telemetry`, a broader name for experimental
   attributes and internal spans from the underlying Couchbase client.
   ([#20117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20117))
+- Deprecate `otel.traces.sampler=linksbased_parentbased_always_on` with no replacement and
+  declarative `rule_based_routing` in favor of the SDK incubator composite/development `rule_based`
+  sampler, whose configuration and matching behavior differ.
+  ([#20249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20249))
 - Promote controller and view telemetry configuration to the stable properties
   `otel.instrumentation.common.controller-telemetry.enabled` and
   `otel.instrumentation.common.view-telemetry.enabled`, deprecating
