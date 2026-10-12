@@ -6130,7 +6130,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.commons:commons-pool2:[2.0,)
   telemetry:
-  - when: default
+  - when: otel.instrumentation.apache-commons-pool.enabled=true
     metric_refs:
     - apache_commons_pool.object.count-0fb5f06e
     - apache_commons_pool.object.idle.max-093d8b45
