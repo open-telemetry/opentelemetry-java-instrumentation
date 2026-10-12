@@ -28,7 +28,7 @@ public class HibernateInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean defaultEnabled() {
-    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
+    return false;
   }
 
   @Override
