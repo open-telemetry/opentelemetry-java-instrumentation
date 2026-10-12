@@ -47,9 +47,6 @@ public abstract class AbstractLog4j2Test {
 
   private static final Logger logger = LogManager.getLogger("abc");
 
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
-
   protected abstract InstrumentationExtension testing();
 
   private static Stream<Arguments> provideParameters() {
@@ -253,16 +250,10 @@ public abstract class AbstractLog4j2Test {
       ThreadContext.clearMap();
     }
 
-    // currently, context data uses "key1" while MapMessage uses "log4j.map_message.key1"
-    // once the "log4j.map_message" prefix is removed, both will share the same key "key1"
-    // and the MapMessage value should win (context data is captured first, MapMessage second)
     List<AttributeAssertion> assertions =
         addCodeLocationAttributes("testStringMapMessageWinsOverContextData");
     assertions.addAll(threadAttributesAssertions());
     assertions.add(equalTo(mapMessageKey("key1"), "message-value"));
-    if (!V3_PREVIEW) {
-      assertions.add(equalTo(stringKey("key1"), "context-value"));
-    }
 
     testing()
         .waitAndAssertLogRecords(
@@ -334,7 +325,7 @@ public abstract class AbstractLog4j2Test {
   }
 
   static AttributeKey<String> mapMessageKey(String key) {
-    return stringKey(V3_PREVIEW ? key : "log4j.map_message." + key);
+    return stringKey(key);
   }
 
   @FunctionalInterface

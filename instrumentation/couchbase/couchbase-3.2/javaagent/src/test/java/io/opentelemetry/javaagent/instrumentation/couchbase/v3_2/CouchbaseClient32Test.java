@@ -146,7 +146,7 @@ class CouchbaseClient32Test {
                 },
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasKind(v3Preview() ? INTERNAL : (testLatestDeps() ? CLIENT : INTERNAL))
+                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(dispatchAttributes));
           } else {
@@ -177,11 +177,11 @@ class CouchbaseClient32Test {
                 },
                 span ->
                     span.hasName("request_encoding")
-                        .hasKind(v3Preview() ? INTERNAL : (testLatestDeps() ? CLIENT : INTERNAL))
+                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasKind(v3Preview() ? INTERNAL : (testLatestDeps() ? CLIENT : INTERNAL))
+                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
                         .hasParent(trace.getSpan(0)));
           } else {
             trace.hasSpansSatisfyingExactly(

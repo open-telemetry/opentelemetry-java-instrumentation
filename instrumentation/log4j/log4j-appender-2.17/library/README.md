@@ -91,8 +91,8 @@ Setting can be configured as XML attributes, for example:
       captureMarkerAttribute="true"
       contextDataAttributesIncluded="request-*,user-?"
       contextDataAttributesExcluded="*-secret"
-      mapMessageAttributesIncluded="order-*"
-      mapMessageAttributesExcluded="*-secret"
+      structuredAttributesIncluded="order-*"
+      structuredAttributesExcluded="*-secret"
   />
 </Appenders>
 ```
@@ -106,9 +106,8 @@ The available settings are:
 | `captureMarkerAttribute`           | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                                                                                                                                                                                                                                                  |
 | `captureTemplate`                  | Boolean | `false` | Enable the capture of the log message template (if arguments are provided).                                                                                                                                                                                                                                                                         |
 | `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                                                                                                                                                                    |
-| `mapMessageAttributesIncluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for `MapMessage` keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all `MapMessage` attributes.                                                                                                                           |
-| `mapMessageAttributesExcluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for `MapMessage` keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                                                                                                                                                              |
-| `captureMapMessageAttributes`      | Boolean | `false` | Deprecated boolean compatibility setting, where `true` captures all `MapMessage` attributes and `false` captures none. Use `mapMessageAttributesIncluded` instead. May be removed in the next minor release.                                                                                                                                        |
+| `structuredAttributesIncluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for structured attribute keys from `MapMessage` entries. `*` matches any number of characters and `?` matches one character. An absent or empty selector captures all structured attributes.                                                                                                   |
+| `structuredAttributesExcluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for structured attribute keys not to capture. Excluded patterns take precedence over included patterns. `*` excludes all structured attributes.                                                                                                                                                |
 | `contextDataAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all context data attributes.                                                                                                                           |
 | `contextDataAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                                                                                                                                                              |
 | `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. It does not support glob patterns: a list containing only `*` captures all context data attributes, and otherwise every entry, including one containing `*` or `?`, is matched as a literal context data key. Use `contextDataAttributesIncluded` instead. May be removed in the next minor release. |
@@ -125,7 +124,7 @@ OpenTelemetryAppender appender =
                 .setIncluded("request-*", "user-?")
                 .setExcluded("*-secret")
                 .build())
-        .setMapMessageAttributes(
+        .setStructuredAttributes(
             IncludeExclude.builder().setIncluded("order-*").setExcluded("*-secret").build())
         .build();
 ```
@@ -140,12 +139,15 @@ and `contextDataAttributesExcluded` settings, which in turn take precedence over
 does not disable capture and the next configured source is used instead. No context data attributes
 are captured only when every one of these sources is absent or empty.
 
-`MapMessage` attributes are selected the same way, with the same pattern syntax, case sensitivity,
-and precedence. Only a non-empty selector set with `setMapMessageAttributes(IncludeExclude)` takes
-precedence over the `mapMessageAttributesIncluded` and `mapMessageAttributesExcluded` settings,
-which in turn take precedence over the deprecated `captureMapMessageAttributes` setting. No
-`MapMessage` attributes are captured when the selector and the pattern settings are absent or empty
-and `captureMapMessageAttributes` is `false`, which is also its default.
+Structured attributes from `MapMessage` entries are captured by default. The structured selector
+uses the same pattern syntax, case sensitivity, and exclusion precedence as the context data
+selector. Only a non-empty selector set with `setStructuredAttributes(IncludeExclude)` takes
+precedence over `structuredAttributesIncluded` and `structuredAttributesExcluded`.
+An absent or empty selector captures all structured attributes.
+Use `structuredAttributesExcluded="*"` to exclude all of them. Context data capture remains
+separate and opt-in.
+
+`MapMessage` keys are emitted as their original log attribute names.
 
 Captured context data and `MapMessage` attributes may contain sensitive information. Configure included and excluded patterns to limit the data exported as log attributes.
 
