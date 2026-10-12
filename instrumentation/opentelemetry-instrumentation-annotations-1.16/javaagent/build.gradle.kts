@@ -46,7 +46,28 @@ tasks {
     )
   }
 
+  val testCommonDefaultDisabled = register<Test>("testCommonDefaultDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.default-enabled=false")
+  }
+
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+    jvmArgs(
+      "-Dotel.instrumentation.common.default-enabled=false",
+      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=false"
+    )
+  }
+
   check {
-    dependsOn(testDeclarativeConfig)
+    dependsOn(testDeclarativeConfig, testCommonDefaultDisabled, testDisabled)
   }
 }
