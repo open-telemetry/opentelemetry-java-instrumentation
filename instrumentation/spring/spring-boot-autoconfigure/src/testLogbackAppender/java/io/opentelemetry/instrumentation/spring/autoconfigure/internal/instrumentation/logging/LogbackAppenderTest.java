@@ -136,7 +136,8 @@ class LogbackAppenderTest {
   @CsvSource({
     "logback-test-no-mdc.xml, false",
     "logback-no-otel-appenders.xml, false",
-    "logback-test-no-mdc.xml, true"
+    "logback-test-no-mdc.xml, true",
+    "logback-no-otel-appenders.xml, true"
   })
   void shouldApplyStructuredSelectorToEmittedLogs(
       String configurationFile, boolean declarativeConfig) {
@@ -214,7 +215,8 @@ class LogbackAppenderTest {
   @CsvSource({
     "logback-test.xml, false",
     "logback-test-no-mdc.xml, false",
-    "logback-test.xml, true"
+    "logback-test.xml, true",
+    "logback-test-no-mdc.xml, true"
   })
   void shouldInitializeAppender(String configurationFile, boolean declarativeConfig) {
     Map<String, Object> properties = new HashMap<>();
