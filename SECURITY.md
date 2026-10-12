@@ -26,10 +26,3 @@ If you cannot use GitHub's private reporting workflow, contact
 
 For non-sensitive security questions or concerns, anyone with a GitHub account can
 [open a public issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new/choose).
-
-## Security commitment level
-
-This repository's security commitment level is
-[Undeclared](https://github.com/open-telemetry/sig-security/blob/7b709b89616af7ac17964d427570d069f2e54b1e/docs/security-commitments-level.md#undeclared),
-as defined in the proposal in
-[open-telemetry/sig-security#324](https://github.com/open-telemetry/sig-security/pull/324).
