@@ -26,7 +26,7 @@ import org.apache.pulsar.client.impl.v5.V5Interop;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class PulsarClientV5Test extends AbstractPulsarClientTest {
+class PulsarClientV5Test extends PulsarClientTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})

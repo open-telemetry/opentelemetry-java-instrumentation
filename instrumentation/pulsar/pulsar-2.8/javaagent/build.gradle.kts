@@ -46,7 +46,7 @@ testing {
       targets.all {
         testTask.configure {
           filter {
-            excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+            includeTestsMatching("PulsarClientV5Test")
           }
           jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
           systemProperty(
