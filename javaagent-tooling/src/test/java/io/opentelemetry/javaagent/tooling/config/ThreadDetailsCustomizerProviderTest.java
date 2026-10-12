@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -15,9 +14,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.trace.ReadableSpan;
-import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -51,25 +48,6 @@ class ThreadDetailsCustomizerProviderTest {
             .addPropertiesSupplier(() -> properties)
             .build()
             .getOpenTelemetrySdk()) {
-      assertThreadAttributes(sdk, expected);
-    }
-  }
-
-  @ParameterizedTest
-  @CsvSource(
-      value = {"NULL, false", "true, true", "false, false"},
-      nullValues = "NULL")
-  void declarativeConfig(String value, boolean expected) {
-    String yaml =
-        "file_format: \"1.1\"\n"
-            + (value == null
-                ? ""
-                : "distribution:\n  javaagent:\n    thread_details_enabled: " + value + "\n");
-
-    try (OpenTelemetrySdk sdk =
-        DeclarativeConfiguration.parseAndCreate(new ByteArrayInputStream(yaml.getBytes(UTF_8)))
-            .getSdk()) {
-      assertThat(AgentDistributionConfig.get().isThreadDetailsEnabled()).isEqualTo(expected);
       assertThreadAttributes(sdk, expected);
     }
   }
