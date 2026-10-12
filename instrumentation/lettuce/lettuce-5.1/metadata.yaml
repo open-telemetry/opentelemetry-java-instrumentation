@@ -9,7 +9,7 @@ library_link: https://github.com/redis/lettuce
 configurations:
   - name: otel.instrumentation.lettuce.experimental.command-encoding-events.enabled
     declarative_name: java.lettuce.command_encoding_events/development.enabled
-    description: Enables capturing `redis.encode.start` and `redis.encode.end` span events.
+    description: Enables capturing `redis.encode.start` and `redis.encode.end` span events in the standalone library instrumentation.
     type: boolean
     default: false
   - name: otel.instrumentation.lettuce.query-sanitization.enabled

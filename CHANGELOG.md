@@ -6,6 +6,13 @@
 
 - The Java agent no longer instruments Jedis 1.x. Upgrade to Jedis 2.0 or later to continue receiving
   automatic Redis database client spans and metrics.
+- The Java agent now instruments Lettuce 5.1 and later with the Lettuce 5.0 integration, changing
+  the instrumentation scope from `io.opentelemetry.lettuce-5.1` to
+  `io.opentelemetry.lettuce-5.0`. The
+  `otel.instrumentation.lettuce.experimental.command-encoding-events.enabled` setting no longer
+  enables command-encoding events in the Java agent; use the standalone Lettuce library
+  instrumentation with the Java agent's `lettuce-5.0` instrumentation disabled to collect these
+  events without duplicate spans.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.

@@ -708,9 +708,6 @@ targets:
       target: ':instrumentation:lettuce:lettuce-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:lettuce:lettuce-5.1:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:lettuce:lettuce-5.1:library'
     - type: gradle
       path: ./

@@ -90,8 +90,7 @@ instrumentation. They use independent feature names, such as `kafka-clients-metr
 `jdbc-datasource`, or `kotlinx-coroutines-annotations`. A group whose
 members are all default-off can share an umbrella: `hibernate` selects default-off telemetry,
 including procedure calls, but not default-on Hibernate Reactive context propagation.
-The deprecated Jedis 1.x and superseded Lettuce 5.1 implementations slated for removal in 3.0
-do not define long-term group membership.
+Deprecated or superseded compatibility implementations do not define long-term group membership.
 
 Ordinary defaults assume global enablement on and optional feature settings absent. The native
 Javaagent review instructions contain the naming and default-isolation rules.
