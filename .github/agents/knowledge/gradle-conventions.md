@@ -468,4 +468,4 @@ tasks {
 Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
 for task selection and labels. Shared test conventions forward collection only to explicitly
 requested, fully qualified, unabbreviated `Test` task paths when `-PcollectMetadata=true`.
-Do not add per-module forwarding or regression-task opt-outs. Keep `metadataConfig` labels local.
+Keep `metadataConfig` labels local.

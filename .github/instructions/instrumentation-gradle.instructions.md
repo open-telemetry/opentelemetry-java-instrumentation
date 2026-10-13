@@ -61,7 +61,7 @@ or test failure that CI will report.
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
   instrumentation scope and telemetry shape; equivalent suites need not all collect. Shared test
   conventions enable collection only for explicitly requested, fully qualified, unabbreviated
-  `Test` task paths with `-PcollectMetadata=true`. Do not add per-module forwarding or opt-outs.
+  `Test` task paths with `-PcollectMetadata=true`.
 - `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
   instrumentation defaults, regardless of task name or settings on `test`.
   Otherwise include only non-default user-facing settings

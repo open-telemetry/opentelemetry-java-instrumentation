@@ -51,8 +51,7 @@ shape; equivalent suites need not all collect. Exclude unit tests and regression
 disablement, adapter-fallback, or classpath compatibility variants based on their purpose, not their
 names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a suppression-only
 regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
-No per-module `collectMetadata` forwarding or opt-out is needed. Keep `metadataConfig` labels
-on the tasks that document non-default telemetry.
+Keep `metadataConfig` labels on the tasks that document non-default telemetry.
 
 For a module collecting its default profile and an RPC preview profile:
 
