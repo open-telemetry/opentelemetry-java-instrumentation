@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Declarative Java agent instrumentation selectors no longer accept dotted-version compatibility
+  spellings. In `distribution.javaagent.instrumentation.enabled` and `.disabled`, replace
+  selectors such as `reactor_3.1` with `reactor_3_1`.
 - Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
   `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
   Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
