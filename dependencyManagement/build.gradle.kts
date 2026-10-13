@@ -6,7 +6,6 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.67.0"
-val otelZipkinVersion = "1.64.0" // last published version, remove with Zipkin support in 3.0
 val otelContribVersion = "1.61.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -40,7 +39,7 @@ val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.50.0"
 val byteBuddyVersion = "1.18.14"
-val asmVersion = "9.10.1"
+val asmVersion = "9.11"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.20"
@@ -63,6 +62,7 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
   "org.ow2.asm:asm:${asmVersion}",
+  "org.ow2.asm:asm-commons:${asmVersion}",
   "org.ow2.asm:asm-tree:${asmVersion}",
   "org.ow2.asm:asm-util:${asmVersion}",
   "org.openjdk.jmh:jmh-core:${jmhVersion}",
@@ -89,7 +89,7 @@ val DEPENDENCIES = listOf(
   "com.uber.nullaway:nullaway:0.14.2",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
-  "commons-codec:commons-codec:1.22.1",
+  "commons-codec:commons-codec:1.23.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.6.0",
@@ -104,9 +104,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
-  "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.11.1-alpha",
-  "io.opentelemetry:opentelemetry-exporter-zipkin:${otelZipkinVersion}",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",
   "org.awaitility:awaitility:4.3.0",

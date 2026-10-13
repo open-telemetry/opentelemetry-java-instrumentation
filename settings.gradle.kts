@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.5.4"
     id("com.gradle.plugin-publish") version "2.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.4.20"
+    id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
     id("org.graalvm.buildtools.native") version "1.1.14"
@@ -416,7 +416,6 @@ include(":instrumentation:jdbc:javaagent")
 include(":instrumentation:jdbc:javaagent-common")
 include(":instrumentation:jdbc:library")
 include(":instrumentation:jdbc:testing")
-include(":instrumentation:jedis:jedis-1.4:javaagent")
 include(":instrumentation:jedis:jedis-2.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent-unit-tests")
@@ -476,7 +475,6 @@ include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-5.0:javaagent")
-include(":instrumentation:lettuce:lettuce-5.1:javaagent")
 include(":instrumentation:lettuce:lettuce-5.1:library")
 include(":instrumentation:lettuce:lettuce-5.1:testing")
 include(":instrumentation:lettuce:lettuce-common:library")
@@ -730,7 +728,6 @@ include(":instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:testing"
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
 include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
-include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
 include(":instrumentation:spymemcached-2.12:javaagent-unit-tests")
 include(":instrumentation:struts:struts-2.3:javaagent")

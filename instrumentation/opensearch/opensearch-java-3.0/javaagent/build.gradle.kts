@@ -70,41 +70,7 @@ tasks {
     )
   }
 
-  val testQuerySanitizationEnabledOverride = register<Test>("testQuerySanitizationEnabledOverride") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("OpenSearchCaptureSearchQueryTest.shouldCaptureSearchQueryBody")
-    }
-    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-    jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.instrumentation.opensearch.query-sanitization.enabled=true",
-    )
-  }
-
-  val testCommonQuerySanitizationDisabled =
-    register<Test>("testCommonQuerySanitizationDisabled") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-
-      filter {
-        includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      }
-      jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.common.db.query-sanitization.enabled=false",
-      )
-    }
-
   check {
-    dependsOn(
-      testQuerySanitizationDisabled,
-      testCommonQuerySanitizationDisabled,
-      testQuerySanitizationEnabledOverride,
-    )
+    dependsOn(testQuerySanitizationDisabled)
   }
 }

@@ -60,3 +60,34 @@ configurations.configureEach {
     exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
   }
 }
+
+tasks {
+  val testCommonDefaultDisabled = register<Test>("testCommonDefaultDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+    jvmArgs(
+      "-Dotel.instrumentation.common.default-enabled=false",
+      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
+    )
+  }
+
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+    jvmArgs(
+      "-Dotel.instrumentation.common.default-enabled=false",
+      "-Dotel.instrumentation.opentelemetry-api.enabled=false",
+      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
+    )
+  }
+
+  check {
+    dependsOn(testCommonDefaultDisabled, testDisabled)
+  }
+}

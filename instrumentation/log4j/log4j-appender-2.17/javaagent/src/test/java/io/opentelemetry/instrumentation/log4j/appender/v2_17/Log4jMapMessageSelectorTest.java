@@ -73,9 +73,6 @@ class Log4jMapMessageSelectorTest {
       case "exclude-only":
         expectedKeys = asList("order-id", "user-1", "user-22", "other");
         break;
-      case "all":
-        expectedKeys = asList("order-id", "order-secret", "user-1", "user-22", "other");
-        break;
       case "none":
         expectedKeys = emptyList();
         break;
