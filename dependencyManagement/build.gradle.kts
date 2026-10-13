@@ -39,7 +39,7 @@ val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.50.0"
 val byteBuddyVersion = "1.18.14"
-val asmVersion = "9.10.1"
+val asmVersion = "9.11"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.20"
@@ -88,7 +88,7 @@ val DEPENDENCIES = listOf(
   "com.uber.nullaway:nullaway:0.14.2",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
-  "commons-codec:commons-codec:1.22.1",
+  "commons-codec:commons-codec:1.23.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.6.0",
