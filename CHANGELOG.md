@@ -4,20 +4,11 @@
 
 ### ⚠️ Breaking changes
 
-- Remove the following Java agent instrumentation enablement selectors:
-  - Replace `otel.instrumentation.liberty-dispatcher.enabled` with
-    `otel.instrumentation.liberty-dispatcher-20.0.enabled`.
-  - Replace `otel.instrumentation.scala-fork-join.enabled` with
-    `otel.instrumentation.scala-forkjoin.enabled`, and
-    `otel.instrumentation.scala-fork-join-2.8.enabled` with
-    `otel.instrumentation.scala-forkjoin-2.8.enabled`.
-  - `otel.instrumentation.azure-core-1.36-context.enabled` and
-    `otel.instrumentation.azure-core-1.53-context.enabled` have no equivalent context-only replacement.
-    The retained `otel.instrumentation.azure-core-1.36.enabled` and
-    `otel.instrumentation.azure-core-1.53.enabled` selectors each control both SDK and context
-    instrumentation in their respective integrations; `otel.instrumentation.azure-core.enabled`
-    controls the family. They cannot preserve independent context-only enablement or disablement.
-  These changes affect instrumentation selectors, not outgoing instrumentation scope names.
+- Remove deprecated Java agent enablement aliases. In `otel.instrumentation.<name>.enabled`,
+  replace `liberty-dispatcher` with `liberty-dispatcher-20.0`, `scala-fork-join` with
+  `scala-forkjoin`, and `scala-fork-join-2.8` with `scala-forkjoin-2.8`.
+  The removed `azure-core-1.36-context` and `azure-core-1.53-context` aliases have no context-only
+  replacement; `azure-core-1.36` and `azure-core-1.53` each control both SDK and context instrumentation.
 - The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
   starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
