@@ -562,7 +562,6 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
-  @SetSystemProperty(key = "otel.instrumentation.common.v3-preview", value = "false")
   void logWithOnlySpanContextStringsUsesRootContext() {
     OpenTelemetryAppender.resetForTest();
     OpenTelemetryAppender appender =
