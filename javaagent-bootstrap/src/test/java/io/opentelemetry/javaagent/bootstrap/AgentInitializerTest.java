@@ -125,7 +125,12 @@ class AgentInitializerTest {
         // glassfish/payara application server
         "com.sun.enterprise.glassfish.bootstrap.ASMain",
         // openmq broker (imqbrokerd), shipped with glassfish/payara
-        "com.sun.messaging.jmq.jmsserver.Broker"
+        "com.sun.messaging.jmq.jmsserver.Broker",
+        // source launcher, java HelloWorld.java (jdk 11-21 and jdk 22+)
+        "com.sun.tools.javac.launcher.Main HelloWorld.java arg1",
+        "jdk.compiler/com.sun.tools.javac.launcher.Main HelloWorld.java arg1",
+        "com.sun.tools.javac.launcher.SourceLauncher HelloWorld.java arg1",
+        "jdk.compiler/com.sun.tools.javac.launcher.SourceLauncher HelloWorld.java arg1"
       })
   void isJdkToolMainClass_false(String sunJavaCommand) {
     assertThat(AgentInitializer.isJdkToolMainClass(sunJavaCommand)).isFalse();
