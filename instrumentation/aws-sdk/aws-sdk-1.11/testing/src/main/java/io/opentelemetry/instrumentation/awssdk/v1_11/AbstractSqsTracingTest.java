@@ -105,6 +105,12 @@ public abstract class AbstractSqsTracingTest {
             "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
   }
 
+  protected boolean captureMessageHeaders() {
+    return !(testing() instanceof AgentInstrumentationExtension)
+        || !System.getProperty("otel.instrumentation.common.messaging.headers.included", "")
+            .isEmpty();
+  }
+
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
 
@@ -245,7 +251,7 @@ public abstract class AbstractSqsTracingTest {
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
 
-    if (captureHeaders) {
+    if (captureHeaders && captureMessageHeaders()) {
       attributes.add(
           satisfies(headerAttributeKey("Test-Message-Header"), val -> val.containsExactly("test")));
     }
@@ -286,7 +292,7 @@ public abstract class AbstractSqsTracingTest {
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "receive"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "receive"));
 
-    if (captureHeaders) {
+    if (captureHeaders && captureMessageHeaders()) {
       attributes.add(
           satisfies(headerAttributeKey("Test-Message-Header"), val -> val.containsExactly("test")));
     }
@@ -336,7 +342,7 @@ public abstract class AbstractSqsTracingTest {
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "process"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "process"));
 
-    if (captureHeaders) {
+    if (captureHeaders && captureMessageHeaders()) {
       attributes.add(
           satisfies(headerAttributeKey("Test-Message-Header"), val -> val.containsExactly("test")));
     }

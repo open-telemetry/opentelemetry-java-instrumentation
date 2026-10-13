@@ -123,6 +123,8 @@ tasks {
 
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    // Override the agent test exporter's header-capture setup to exercise instrumentation defaults.
+    systemProperty("otel.instrumentation.common.messaging.headers.included", "")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
@@ -148,6 +150,18 @@ tasks {
     )
   }
 
+  val testCaptureHeaders = register<Test>("testCaptureHeaders") {
+    testClassesDirs = sourceSets["testSqs"].output.classesDirs
+    classpath = sourceSets["testSqs"].runtimeClasspath
+
+    filter.includeTestsMatching("SqsTracingTest.testSimpleSqsProducerConsumerServicesCaptureHeaders")
+    systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.headers.included=Test-Message-Header",
+    )
+  }
+
   if (!otelProps.testLatestDeps) {
     val testBefore106ExperimentalAttributes = register<Test>("testBefore106ExperimentalAttributes") {
       testClassesDirs = sourceSets["test_before_1_11_106"].output.classesDirs
@@ -166,7 +180,7 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimentalAttributes, testSqsReceiveTelemetry)
+    dependsOn(testExperimentalAttributes, testSqsReceiveTelemetry, testCaptureHeaders)
   }
 
   if (otelProps.denyUnsafe) {
