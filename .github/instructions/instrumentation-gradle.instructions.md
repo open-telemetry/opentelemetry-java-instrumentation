@@ -72,6 +72,9 @@ or test failure that CI will report.
   Omit test setup, unrelated instrumentation settings, and whole-module enablement for default-off
   instrumentation. Include span suppression settings only when they determine this instrumentation's
   telemetry. Missing labels merge optional telemetry into `when: default`.
+- For javaagent tests, keep baseline suites on instrumentation defaults. Test opt-in telemetry
+  in named variants wired into `check`. Preserve normal suite coverage; filtered metadata-collection
+  tests are not a substitute.
 - Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
   variants based on their purpose, not their names. A full-suite `testReceiveSpansDisabled` may
   document default telemetry; a suppression-only regression task does not. Keep regression tasks in
