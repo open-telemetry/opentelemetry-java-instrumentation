@@ -10,6 +10,8 @@
   `rule_based` sampler; its rules use case-sensitive exact/wildcard matching and per-rule samplers,
   and unmatched spans are dropped. This differs from the contrib sampler's regex, action, and
   fallback behavior.
+- Removed `otel.instrumentation.couchbase.experimental-span-attributes`. Use `otel.instrumentation.couchbase.emit-experimental-telemetry=true` to enable experimental span attributes for Couchbase 2.x and 3.x. For Couchbase 3.x, this also enables the Couchbase Java SDK's internal `request_encoding` and `dispatch_to_server` spans.
+- Couchbase 3.x operation spans now use the `CLIENT` span kind. Couchbase 3.0 and legacy-bridge 3.1 spans now use the `io.opentelemetry.couchbase-3.0` and `io.opentelemetry.couchbase-3.1` instrumentation scopes, respectively.
 - The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
   starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
@@ -273,6 +275,10 @@ for more details.
 
 ### 🚫 Deprecations
 
+- Add `RocketMqTelemetry.wrap(DefaultMQProducer)` for single-message and batch producer
+  instrumentation, fixing batch context propagation by injecting context before message encoding.
+  Deprecate `RocketMqTelemetry.createSendMessageHook()` in favor of the wrapper.
+  ([#20479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20479))
 - Deprecate `otel.jmx.target.system` in favor of `otel.jmx.metrics.experimental.included`.
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query`. It will be removed in 3.0,
