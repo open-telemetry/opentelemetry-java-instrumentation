@@ -5,8 +5,9 @@ rules:
 
   # Broker metrics
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec
-    # TODO: add topic breakdown
+  - bean: kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*
+    metricAttribute:
+      kafka.topic: param(topic)
     mapping:
       Count:
         metric: kafka.server.message.count
@@ -14,10 +15,10 @@ rules:
         desc: The number of messages received by the broker
         unit: "{message}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec,topic=*
     metricAttribute:
-      # TODO: add topic breakdown
       kafka.request.type: const(fetch)
+      kafka.topic: param(topic)
     mapping:
       Count:
         metric: kafka.server.request.count
@@ -25,10 +26,10 @@ rules:
         desc: &desc The number of requests received by the broker
         unit: "{request}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec,topic=*
     metricAttribute:
-      # TODO: add topic breakdown
       kafka.request.type: const(produce)
+      kafka.topic: param(topic)
     mapping:
       Count:
         metric: kafka.server.request.count
@@ -36,10 +37,10 @@ rules:
         desc: *desc
         unit: "{request}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec,topic=*
     metricAttribute:
-      # TODO: add topic breakdown
       kafka.request.type: const(fetch)
+      kafka.topic: param(topic)
     mapping:
       Count:
         metric: kafka.server.request.failed
@@ -47,9 +48,10 @@ rules:
         desc: &desc The number of requests to the broker resulting in a failure
         unit: "{request}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec,topic=*
     metricAttribute:
       kafka.request.type: const(produce)
+      kafka.topic: param(topic)
     mapping:
       Count:
         metric: kafka.server.request.failed
@@ -57,10 +59,10 @@ rules:
         desc: *desc
         unit: "{request}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=*
     metricAttribute:
-      # TODO: add topic breakdown
       network.io.direction: const(receive)
+      kafka.topic: param(topic)
     mapping:
       Count:
         metric: kafka.server.network.io
@@ -68,10 +70,10 @@ rules:
         desc: &desc The bytes received or sent by the broker
         unit: By
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=*
     metricAttribute:
-      # TODO: add topic breakdown
       network.io.direction: const(transmit)
+      kafka.topic: param(topic)
     mapping:
       Count:
         metric: kafka.server.network.io

@@ -7,11 +7,13 @@ package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+import static io.opentelemetry.semconv.incubating.NetworkIncubatingAttributes.NETWORK_IO_DIRECTION;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
 import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -67,8 +69,12 @@ class KafkaBrokerTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier(boolean useZookeeper) {
 
-    AttributeMatcherGroup fetchType = attributeGroup(attribute("kafka.request.type", "fetch"));
-    AttributeMatcherGroup produceType = attributeGroup(attribute("kafka.request.type", "produce"));
+    // topic used to send and consume the sample message
+    AttributeMatcher sampleTopic = attribute("kafka.topic", "my-topic");
+    // internal topic written by the broker when the sample consumer joins a consumer group
+    AttributeMatcher offsetsTopic = attribute("kafka.topic", "__consumer_offsets");
+    // compacted topic used to trigger a failed produce request
+    AttributeMatcher compactedTopic = attribute("kafka.topic", "my-compacted-topic");
 
     AttributeMatcherGroup requestTypeProduce =
         attributeGroup(attribute("kafka.request.type", "produce"));
@@ -86,7 +92,8 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .isCounter()
                         .hasUnit("{message}")
                         .hasDescription("The number of messages received by the broker")
-                        .hasDataPointsWithoutAttributes())
+                        .hasDataPointsWithAttributes(
+                            attributeGroup(sampleTopic), attributeGroup(offsetsTopic)))
             .add(
                 "kafka.server.request.count",
                 metric ->
@@ -94,7 +101,13 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .isCounter()
                         .hasUnit("{request}")
                         .hasDescription("The number of requests received by the broker")
-                        .hasDataPointsWithAttributes(fetchType, produceType))
+                        .hasDataPointsWithAttributes(
+                            attributeGroup(attribute("kafka.request.type", "fetch"), sampleTopic),
+                            attributeGroup(attribute("kafka.request.type", "produce"), sampleTopic),
+                            attributeGroup(
+                                attribute("kafka.request.type", "produce"), offsetsTopic),
+                            attributeGroup(
+                                attribute("kafka.request.type", "produce"), compactedTopic)))
             .add(
                 "kafka.server.request.failed",
                 metric ->
@@ -103,7 +116,11 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasUnit("{request}")
                         .hasDescription(
                             "The number of requests to the broker resulting in a failure")
-                        .hasDataPointsWithAttributes(fetchType, produceType))
+                        // only failed produce requests can be triggered, failed fetch requests are
+                        // only reported for unexpected errors
+                        .hasDataPointsWithAttributes(
+                            attributeGroup(
+                                attribute("kafka.request.type", "produce"), compactedTopic)))
             .add(
                 "kafka.server.network.io",
                 metric ->
@@ -112,8 +129,12 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasUnit("By")
                         .hasDescription("The bytes received or sent by the broker")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("network.io.direction", "receive")),
-                            attributeGroup(attribute("network.io.direction", "transmit"))))
+                            attributeGroup(
+                                attribute(NETWORK_IO_DIRECTION.getKey(), "receive"), sampleTopic),
+                            attributeGroup(
+                                attribute(NETWORK_IO_DIRECTION.getKey(), "receive"), offsetsTopic),
+                            attributeGroup(
+                                attribute(NETWORK_IO_DIRECTION.getKey(), "transmit"), sampleTopic)))
             .add(
                 "kafka.server.purgatory.size",
                 metric ->

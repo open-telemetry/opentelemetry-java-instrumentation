@@ -76,6 +76,8 @@ class KafkaContainer extends GenericContainer<KafkaContainer> {
       // created on first message.
       sendSampleMessage();
       consumeSampleMessage();
+      // trigger a failed produce request to ensure we get the failed requests metrics
+      triggerFailedProduceRequest();
     }
   }
 
@@ -101,6 +103,28 @@ class KafkaContainer extends GenericContainer<KafkaContainer> {
             + KAFKA_PORT
             + " --topic my-topic --from-beginning --max-messages 1 --timeout-ms 10000",
         "consume sample message from Kafka");
+  }
+
+  private void triggerFailedProduceRequest() {
+    // a message without a key is rejected by the broker on a compacted topic, and counted as a
+    // failed produce request. Note that the producer reports the error in its log and exits
+    // successfully.
+    execCommand(
+        "JAVA_TOOL_OPTIONS='' "
+            + basePath
+            + "/bin/kafka-topics.sh"
+            + " --bootstrap-server localhost:"
+            + KAFKA_PORT
+            + " --create --topic my-compacted-topic --config cleanup.policy=compact",
+        "create compacted topic");
+    execCommand(
+        "echo 'message without key' | JAVA_TOOL_OPTIONS='' "
+            + basePath
+            + "/bin/kafka-console-producer.sh"
+            + " --bootstrap-server localhost:"
+            + KAFKA_PORT
+            + " --topic my-compacted-topic",
+        "send message without key to compacted topic");
   }
 
   private void execCommand(String command, String description) {
