@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
@@ -21,7 +20,9 @@ import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.Couchbas
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConfiguredTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Peer;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSpanName;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.time.Duration;
 import java.time.Instant;
 import javax.annotation.Nullable;
@@ -31,14 +32,23 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   private final CouchbaseTracer tracer;
 
-  public static RequestTracer create(OpenTelemetry openTelemetry, boolean clientSpans) {
+  public static RequestTracer create(OpenTelemetry openTelemetry) {
     return new CouchbaseRequestTracer(
         new CouchbaseTracer(
-            openTelemetry.getTracer("com.couchbase.client.jvm"),
+            openTelemetry
+                .tracerBuilder("com.couchbase.client.jvm")
+                .setSchemaUrl(SchemaUrls.V1_44_0)
+                .build(),
             true,
-            clientSpans ? CLIENT : INTERNAL,
             false,
             false));
+  }
+
+  public static void captureServerTarget(
+      RequestSpan requestSpan, @Nullable CouchbaseServerTarget target) {
+    if (target != null && requestSpan instanceof AgentRequestSpan) {
+      ((AgentRequestSpan) requestSpan).captureServerTarget(target);
+    }
   }
 
   private CouchbaseRequestTracer(CouchbaseTracer tracer) {
@@ -82,7 +92,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       this.delegate = delegate;
       this.spanName = new CouchbaseSpanName(name);
       this.hasCapturedPeer = peer != null;
-      if (emitStableDatabaseSemconv() && peer != null) {
+      if (peer != null) {
         delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), peer.getAddress());
         delegate.setRawAttribute(NETWORK_PEER_PORT.getKey(), (long) peer.getPort());
       }
@@ -90,11 +100,9 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void attribute(String key, String value) {
-      if (emitStableDatabaseSemconv()) {
-        spanName.captureAttribute(key, value);
-        if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_HOSTNAME.equals(key)) {
-          delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), value);
-        }
+      spanName.captureAttribute(key, value);
+      if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_HOSTNAME.equals(key)) {
+        delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), value);
       }
       delegate.setAttribute(key, value);
     }
@@ -106,9 +114,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void attribute(String key, long value) {
-      if (emitStableDatabaseSemconv()
-          && !hasCapturedPeer
-          && TracingIdentifiers.ATTR_REMOTE_PORT.equals(key)) {
+      if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_PORT.equals(key)) {
         delegate.setRawAttribute(NETWORK_PEER_PORT.getKey(), value);
       }
       delegate.setAttribute(key, value);
@@ -136,7 +142,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       delegate.setStatus(openTelemetryStatus);
     }
 
-    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod"})
+    @Override
     public void recordException(Throwable throwable) {
       delegate.recordException(throwable);
     }
@@ -152,6 +158,15 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     @Override
     public void requestContext(RequestContext requestContext) {
       CouchbaseConfiguredTarget.capture(delegate, spanName, requestContext);
+    }
+
+    private void captureServerTarget(CouchbaseServerTarget target) {
+      spanName.captureServerTarget(target);
+      delegate.setRawAttribute(SERVER_ADDRESS.getKey(), target.getAddress());
+      Integer port = target.getPort();
+      if (port != null) {
+        delegate.setRawAttribute(SERVER_PORT.getKey(), port.longValue());
+      }
     }
   }
 }

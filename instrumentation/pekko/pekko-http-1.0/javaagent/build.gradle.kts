@@ -10,7 +10,7 @@ muzzle {
     versions.set("[1.0,)")
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_2.12:1.0.1")
-    excludeInstrumentationName("tapir-pekko-http-server")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir.TapirPekkoHttpServerRouteInstrumentationModule")
   }
   pass {
     group.set("org.apache.pekko")
@@ -18,7 +18,7 @@ muzzle {
     versions.set("[1.0,)")
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_2.13:1.0.1")
-    excludeInstrumentationName("tapir-pekko-http-server")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir.TapirPekkoHttpServerRouteInstrumentationModule")
   }
   pass {
     group.set("org.apache.pekko")
@@ -26,28 +26,34 @@ muzzle {
     versions.set("[1.0,)")
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_3:1.0.1")
-    excludeInstrumentationName("tapir-pekko-http-server")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir.TapirPekkoHttpServerRouteInstrumentationModule")
   }
   pass {
     group.set("com.softwaremill.sttp.tapir")
     module.set("tapir-pekko-http-server_2.12")
     versions.set("[1.7,)")
     assertInverse.set(true)
-    excludeInstrumentationName("pekko-http-server")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client.PekkoHttpClientInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoHttpServerRouteInstrumentationModule")
   }
   pass {
     group.set("com.softwaremill.sttp.tapir")
     module.set("tapir-pekko-http-server_2.13")
     versions.set("[1.7,)")
     assertInverse.set(true)
-    excludeInstrumentationName("pekko-http-server")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client.PekkoHttpClientInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoHttpServerRouteInstrumentationModule")
   }
   pass {
     group.set("com.softwaremill.sttp.tapir")
     module.set("tapir-pekko-http-server_3")
     versions.set("[1.7,)")
     assertInverse.set(true)
-    excludeInstrumentationName("pekko-http-server")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client.PekkoHttpClientInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoHttpServerRouteInstrumentationModule")
   }
 }
 

@@ -9,12 +9,16 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   build:
-    uses: ./.github/workflows/reusable-pr-smoke-test-images.yml
+    uses: $/.github/workflows/reusable-pr-smoke-test-images.yml
     with:
       project: ":smoke-tests:images:quarkus"
       cache-read-only: true

@@ -21,12 +21,10 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class InformixDirectUrlParser implements JdbcUrlParser {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String IBM_INFORMIX = "ibm.informix";
-  private static final String OLD_SYSTEM = "informix-direct";
 
   public static final InformixDirectUrlParser INSTANCE = new InformixDirectUrlParser();
 
@@ -35,7 +33,6 @@ public final class InformixDirectUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(IBM_INFORMIX);
-    ctx.oldSemconvSystem(OLD_SYSTEM);
 
     ctx.applyUserProperty();
 

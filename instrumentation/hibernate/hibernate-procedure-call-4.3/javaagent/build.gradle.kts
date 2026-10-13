@@ -34,7 +34,11 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata && name != "testDisabled")
+
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -45,15 +49,17 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testDisabled, testExperimental)
   }
 }

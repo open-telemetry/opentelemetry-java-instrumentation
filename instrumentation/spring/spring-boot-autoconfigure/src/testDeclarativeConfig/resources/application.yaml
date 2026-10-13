@@ -3,6 +3,8 @@ otel:
   file_format: "1.1"
 
   tracer_provider:
+    sampler:
+      always_off:
     processors:
       - batch:
           exporter:
@@ -26,4 +28,3 @@ otel:
         double_key: 3.14
         double_key_with_env: ${DOUBLE_ENV:2.71}
         double_key_with_env_quoted: "${DOUBLE_ENV:1.61}"
-

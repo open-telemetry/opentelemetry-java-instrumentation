@@ -44,7 +44,9 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
 
       - name: Collect telemetry
         env:
@@ -77,7 +79,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       # we need to create the bot token after the workflow is completed to avoid 1 hour expiration
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         if: steps.diffcheck.outputs.has_diff == 'true' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
         id: otelbot-token
         with:
@@ -101,7 +103,7 @@ jobs:
           STEPS_FINDBRANCH_OUTPUTS_BRANCH: ${{ steps.findbranch.outputs.branch }}
         run: |
           BRANCH_NAME="${STEPS_FINDBRANCH_OUTPUTS_BRANCH}"
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          gh auth setup-git
           git commit -m "chore: update instrumentation list [automated]"
           # Metadata collection can run for hours, allowing workflow files on main to change after
           # checkout. GitHub then rejects pushing the stale branch without workflows: write, even
@@ -115,7 +117,6 @@ jobs:
             exit 1
           fi
           git push --force origin "$BRANCH_NAME"
-          git remote set-url origin "https://github.com/${{ github.repository }}.git"
 
       - name: Create PR if needed
         if: steps.diffcheck.outputs.has_diff == 'true'
@@ -161,6 +162,6 @@ jobs:
     needs:
       - update
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@03559ef555db0eae5d85c3c6347d1530243e7aa7 # v0.13.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@c717adbcb56efc45c5dea293accfc6c3462bcdd1 # v0.19.0
     with:
       success: ${{ needs.update.result == 'success' }}

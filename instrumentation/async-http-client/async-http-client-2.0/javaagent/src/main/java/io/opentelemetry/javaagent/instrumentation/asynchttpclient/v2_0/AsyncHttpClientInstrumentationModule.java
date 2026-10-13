@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AsyncHttpClientInstrumentationModule extends InstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
-    super("async-http-client", "async-http-client-2.0");
+    super("async-http-client-2.0", "async-http-client");
   }
 
   @Override

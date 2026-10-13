@@ -49,7 +49,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      LettuceSingletons.attachAddress(command, commands.getConnection());
+      LettuceConnectionState.copy(commands.getConnection(), command);
       Context parentContext = currentContext();
       return parentContext.with(COMMAND_CONTEXT_KEY, parentContext).makeCurrent();
     }

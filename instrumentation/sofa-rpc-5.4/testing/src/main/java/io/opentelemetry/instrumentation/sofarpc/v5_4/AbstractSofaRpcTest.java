@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -23,7 +25,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.alipay.sofa.rpc.api.GenericService;
 import com.alipay.sofa.rpc.api.future.SofaResponseFuture;
@@ -40,6 +42,7 @@ import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.filter.Filter;
 import com.alipay.sofa.rpc.filter.FilterInvoker;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService;
@@ -48,9 +51,11 @@ import io.opentelemetry.instrumentation.sofarpc.v5_4.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -179,13 +184,14 @@ public abstract class AbstractSofaRpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
                                 equalTo(
@@ -206,7 +212,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -214,7 +221,7 @@ public abstract class AbstractSofaRpcTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"
                                         : "hello"),
                                 satisfies(
@@ -272,7 +279,7 @@ public abstract class AbstractSofaRpcTest {
                                                       AbstractSofaRpcTest::assertNetworkType))))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.sofa-rpc-5.4",
@@ -353,13 +360,14 @@ public abstract class AbstractSofaRpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
                                 equalTo(
@@ -380,7 +388,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -388,7 +397,7 @@ public abstract class AbstractSofaRpcTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"
                                         : "hello"),
                                 satisfies(
@@ -446,7 +455,7 @@ public abstract class AbstractSofaRpcTest {
                                                       AbstractSofaRpcTest::assertNetworkType))))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.sofa-rpc-5.4",
@@ -537,8 +546,10 @@ public abstract class AbstractSofaRpcTest {
     cleanup.deferCleanup(consumerConfig::unRefer);
     ErrorService errorService = consumerConfig.refer();
 
-    assertThatThrownBy(() -> runWithSpan("parent", errorService::throwException))
-        .isInstanceOf(SofaRpcRuntimeException.class);
+    Throwable clientException =
+        catchThrowable(() -> runWithSpan("parent", errorService::throwException));
+    assertThat(clientException).isInstanceOf(SofaRpcRuntimeException.class);
+    Throwable serverException = new SofaRpcRuntimeException("RPC error");
 
     testing()
         .waitAndAssertTraces(
@@ -553,7 +564,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -561,7 +573,7 @@ public abstract class AbstractSofaRpcTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"
                                         : "throwException"),
                                 equalTo(
@@ -577,9 +589,10 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? SofaRpcRuntimeException.class.getName()
-                                        : null)),
+                                        : null))
+                            .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException")
@@ -588,7 +601,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -596,7 +610,7 @@ public abstract class AbstractSofaRpcTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"
                                         : "throwException"),
                                 satisfies(
@@ -606,9 +620,12 @@ public abstract class AbstractSofaRpcTest {
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? SofaRpcRuntimeException.class.getName()
-                                        : null))));
+                                        : null))
+                            .hasException(emitExceptionAsSpanEvents() ? serverException : null)));
+
+    assertExceptionLogs(clientException, serverException);
 
     if (emitOldRpcSemconv()) {
       testing()
@@ -659,7 +676,7 @@ public abstract class AbstractSofaRpcTest {
                                                       AbstractSofaRpcTest::assertNetworkType))))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.sofa-rpc-5.4",
@@ -718,8 +735,10 @@ public abstract class AbstractSofaRpcTest {
     cleanup.deferCleanup(consumerConfig::unRefer);
     ErrorService errorService = consumerConfig.refer();
 
-    assertThatThrownBy(() -> runWithSpan("parent", errorService::throwBusinessException))
-        .isInstanceOf(IllegalStateException.class);
+    Throwable clientException =
+        catchThrowable(() -> runWithSpan("parent", errorService::throwBusinessException));
+    assertThat(clientException).isInstanceOf(IllegalStateException.class);
+    Throwable serverException = new IllegalStateException("Business error");
 
     testing()
         .waitAndAssertTraces(
@@ -734,7 +753,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -742,7 +762,7 @@ public abstract class AbstractSofaRpcTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"
                                         : "throwBusinessException"),
                                 equalTo(
@@ -758,9 +778,10 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? IllegalStateException.class.getName()
-                                        : null)),
+                                        : null))
+                            .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException")
@@ -769,7 +790,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -777,7 +799,7 @@ public abstract class AbstractSofaRpcTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"
                                         : "throwBusinessException"),
                                 satisfies(
@@ -787,9 +809,12 @@ public abstract class AbstractSofaRpcTest {
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? IllegalStateException.class.getName()
-                                        : null))));
+                                        : null))
+                            .hasException(emitExceptionAsSpanEvents() ? serverException : null)));
+
+    assertExceptionLogs(clientException, serverException);
   }
 
   @Test
@@ -805,8 +830,8 @@ public abstract class AbstractSofaRpcTest {
     cleanup.deferCleanup(consumerConfig::unRefer);
     ErrorService errorService = consumerConfig.refer();
 
-    assertThatThrownBy(() -> runWithSpan("parent", errorService::timeout))
-        .isInstanceOf(SofaTimeOutException.class);
+    Throwable clientException = catchThrowable(() -> runWithSpan("parent", errorService::timeout));
+    assertThat(clientException).isInstanceOf(SofaTimeOutException.class);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -820,7 +845,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -828,7 +854,7 @@ public abstract class AbstractSofaRpcTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"
                                         : "timeout"),
                                 equalTo(
@@ -844,9 +870,10 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? SofaTimeOutException.class.getName()
-                                        : null)),
+                                        : null))
+                            .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     // Server span: server completes normally (after 2s), so no error status
                     span ->
                         span.hasName(
@@ -855,7 +882,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -863,14 +891,40 @@ public abstract class AbstractSofaRpcTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"
                                         : "timeout"),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
-                                    NETWORK_PEER_PORT,
-                                    AbstractSofaRpcTest::assertNetworkPeerPort))));
+                                    NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort))
+                            .hasException(null)));
+
+    assertExceptionLogs(clientException, null);
+  }
+
+  private void assertExceptionLogs(Throwable clientException, Throwable serverException) {
+    if (!emitExceptionAsLogs()) {
+      return;
+    }
+    List<Consumer<LogRecordDataAssert>> assertions = new ArrayList<>();
+    if (serverException != null) {
+      assertions.add(
+          logRecord ->
+              logRecord
+                  .hasSeverity(Severity.ERROR)
+                  .hasEventName("rpc.server.call.exception")
+                  .hasException(serverException));
+    }
+    assertions.add(
+        logRecord ->
+            logRecord
+                .hasSeverity(Severity.WARN)
+                .hasEventName("rpc.client.call.exception")
+                .hasException(clientException));
+    // the "parent" span created by runWithSpan also records the exception
+    assertions.add(logRecord -> logRecord.hasEventName("exception").hasException(clientException));
+    testing().waitAndAssertLogRecords(assertions);
   }
 }

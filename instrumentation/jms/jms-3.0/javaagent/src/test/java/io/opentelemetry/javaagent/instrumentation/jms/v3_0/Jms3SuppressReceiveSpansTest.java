@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,7 +30,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void testMessageConsumer(DestinationFactory destinationFactory, boolean isTemporary)
@@ -57,82 +58,43 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
     String producerDestinationName = isTemporary ? "(temporary)" : actualDestinationName;
     String messageId = receivedMessage.getJMSMessageID();
 
-    if (emitStableMessagingSemconv()) {
-      AtomicReference<SpanData> publishSpan = new AtomicReference<>();
-      testing.waitAndAssertTraces(
-          trace -> {
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer parent").hasNoParent(),
+              span ->
+                  span.hasName(
+                          producerDestinationName.equals("(temporary)")
+                              ? "send"
+                              : "send " + producerDestinationName)
+                      .hasKind(PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
+                          messagingTempDestination(isTemporary)));
+          publishSpan.set(trace.getSpan(1));
+        },
+        trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer parent").hasNoParent(),
+                span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
                     span.hasName(
-                            producerDestinationName.equals("(temporary)")
-                                ? "send"
-                                : "send " + producerDestinationName)
-                        .hasKind(PRODUCER)
+                            actualDestinationName.equals("(temporary)")
+                                ? "receive"
+                                : "receive " + actualDestinationName)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(asRemote(publishSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                producerDestinationName, actualDestinationName),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            messagingTempDestination(isTemporary)));
-            publishSpan.set(trace.getSpan(1));
-          },
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("consumer parent").hasNoParent(),
-                  span ->
-                      span.hasName(
-                              actualDestinationName.equals("(temporary)")
-                                  ? "receive"
-                                  : "receive " + actualDestinationName)
-                          .hasKind(CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasLinks(LinkData.create(publishSpan.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, "jms"),
-                              messagingDestinationName(
-                                  actualDestinationName, actualDestinationName),
-                              oldOperation("receive"),
-                              operationName("receive"),
-                              operationType("receive"),
-                              equalTo(MESSAGING_MESSAGE_ID, messageId))));
-      return;
-    }
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer parent").hasNoParent(),
-                span ->
-                    span.hasName(producerDestinationName + " publish")
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                producerDestinationName, actualDestinationName),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            messagingTempDestination(isTemporary)),
-                span ->
-                    span.hasName(actualDestinationName + " receive")
-                        .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalRecordedLinks(0)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(actualDestinationName, actualDestinationName),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer parent").hasNoParent()));
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId))));
   }
 }

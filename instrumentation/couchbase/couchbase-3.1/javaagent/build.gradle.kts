@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -20,7 +21,6 @@ dependencies {
   library("com.couchbase.client:java-client:3.1.4")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
   testImplementation("org.testcontainers:testcontainers-couchbase")
@@ -35,28 +35,18 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testStableSemconvExperimental = register<Test>("testStableSemconvExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.semconv-stability.opt-in=database",
-      "-Dotel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
+    jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
     systemProperty(
       "metadataConfig",
-      "otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true",
+      "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
   }
 
   check {
-    dependsOn(testStableSemconv, testStableSemconvExperimental)
+    dependsOn(testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

@@ -44,8 +44,8 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onStart(@Advice.This Object consumer) {
-      // SimpleConsumer receives are recorded at the application-facing SimpleConsumerImpl level
-      // under stable/v3 semconv, so the per-queue calls underneath are not recorded again.
+      // SimpleConsumer receives are recorded at the application-facing SimpleConsumerImpl level,
+      // so the per-queue calls underneath do not create duplicate receive spans.
       if (SimpleConsumerReceiveOperation.handlesReceive(consumer)) {
         return null;
       }

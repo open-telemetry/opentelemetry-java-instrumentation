@@ -146,13 +146,13 @@ class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class LambdaAdvice {
 
-    @Advice.OnMethodEnter(inline = false)
+    @Advice.OnMethodEnter
     public static DefineClassContext onEnter(
         @Advice.FieldValue("samBase") Class<?> lambdaInterface) {
       return DefineClassHelper.beforeDefineLambdaClass(lambdaInterface);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
     }
@@ -161,13 +161,13 @@ class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class LambdaJdk17Advice {
 
-    @Advice.OnMethodEnter(inline = false)
+    @Advice.OnMethodEnter
     public static DefineClassContext onEnter(
         @Advice.FieldValue("interfaceClass") Class<?> lambdaInterface) {
       return DefineClassHelper.beforeDefineLambdaClass(lambdaInterface);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
     }

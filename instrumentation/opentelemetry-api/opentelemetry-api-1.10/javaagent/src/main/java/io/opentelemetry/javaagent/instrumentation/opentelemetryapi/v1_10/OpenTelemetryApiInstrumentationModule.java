@@ -9,19 +9,26 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.V3PreviewFallbackEnabledInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-@SuppressWarnings("deprecation") // using v3 preview fallback helper until 3.0
-public class OpenTelemetryApiInstrumentationModule
-    extends V3PreviewFallbackEnabledInstrumentationModule {
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule {
 
   public OpenTelemetryApiInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.10");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "opentelemetry-api-1.10" : "opentelemetry-api",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"opentelemetry-api"}
+            : new String[] {"opentelemetry-api-1.10"});
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return true;
   }
 
   @Override

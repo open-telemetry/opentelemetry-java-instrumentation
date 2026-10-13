@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -27,21 +28,21 @@ public class CouchbaseSingletons {
   static {
     CouchbaseAttributesGetter couchbaseAttributesGetter = new CouchbaseAttributesGetter();
     SpanNameExtractor<CouchbaseRequestInfo> spanNameExtractor =
-        new CouchbaseSpanNameExtractor(DbClientSpanNameExtractor.create(couchbaseAttributesGetter));
+        DbClientSpanNameExtractor.create(couchbaseAttributesGetter);
 
     InstrumenterBuilder<CouchbaseRequestInfo, Void> builder =
         Instrumenter.<CouchbaseRequestInfo, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(DbClientAttributesExtractor.create(couchbaseAttributesGetter))
-            .addAttributesExtractor(couchbaseAttributesGetter)
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
                     CouchbaseRequestInfo.init(context, couchbaseRequest))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 
-    if (DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase")
-        .getBoolean("experimental_span_attributes/development", false)) {
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
+    if (config.getBoolean("emit_experimental_telemetry/development", false)) {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 

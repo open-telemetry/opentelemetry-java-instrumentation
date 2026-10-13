@@ -8,39 +8,80 @@ muzzle {
     module.set("jedis")
     versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterInstrumentationModule")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
+    name.set("Jedis cluster instrumentation")
+    group.set("redis.clients")
+    module.set("jedis")
+    versions.set("[2.3.0,3.0.0)")
+    assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisInstrumentationModule")
   }
 }
 
 dependencies {
   library("redis.clients:jedis:2.0.0")
 
+  compileOnly("redis.clients:jedis:2.3.0") // For optional cluster types added in 2.3
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
   latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("redis.clients:jedis:2.0.0")
+      }
+    }
+
+    register<JvmTestSuite>("version23Test") {
+      dependencies {
+        implementation("redis.clients:jedis:2.3.0")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty(
+      "collectMetadata",
+      otelProps.collectMetadata && name !in setOf("unitTests", "version23Test", "version23TestPreviewSemconv"),
+    )
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name != "unitTests" }
+    .map { suite ->
+      register<Test>("${suite.name}PreviewSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-  }
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        if (suite.name != "version23Test") {
+          systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+        }
+      }
+    }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, previewSemconvSuites)
   }
 }

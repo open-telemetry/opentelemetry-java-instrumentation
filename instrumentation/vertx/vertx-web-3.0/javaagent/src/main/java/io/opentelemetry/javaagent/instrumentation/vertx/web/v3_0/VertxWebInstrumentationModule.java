@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class VertxWebInstrumentationModule extends InstrumentationModule {
 
   public VertxWebInstrumentationModule() {
-    super("vertx-web", "vertx-web-3.0", "vertx");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "vertx-web-3.0" : "vertx-web",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"vertx-web", "vertx"}
+            : new String[] {"vertx-web-3.0", "vertx"});
   }
 
   @Override

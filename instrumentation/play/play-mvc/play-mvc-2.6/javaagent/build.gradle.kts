@@ -74,9 +74,9 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true"
+      "otel.instrumentation.common.controller-telemetry.enabled=true"
     )
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()

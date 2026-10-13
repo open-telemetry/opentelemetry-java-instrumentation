@@ -10,10 +10,10 @@ import java.net.InetSocketAddress;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
-class LettuceDbAttributesGetter
+final class LettuceDbAttributesGetter
     implements DbClientAttributesGetter<LettuceRequest, LettuceResponse> {
 
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String REDIS = "redis";
 
   @Override

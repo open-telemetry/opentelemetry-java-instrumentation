@@ -14,9 +14,12 @@ public class SpringRabbitIgnoredTypesConfigurer implements IgnoredTypesConfigure
   @Override
   public void configure(IgnoredTypesBuilder builder) {
     builder
+        .allowClass("org.springframework.amqp.core.Message")
         .allowClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer")
         .allowClass("org.springframework.amqp.rabbit.listener.BlockingQueueConsumer")
         .allowClass("org.springframework.amqp.rabbit.listener.DirectMessageListenerContainer")
+        .allowClass(
+            "org.springframework.amqp.rabbit.listener.DirectMessageListenerContainer$SimpleConsumer")
         // contains a Runnable that serves as a worker that continuously reads messages from queue
         .ignoreClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$")
         .ignoreTaskClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$")

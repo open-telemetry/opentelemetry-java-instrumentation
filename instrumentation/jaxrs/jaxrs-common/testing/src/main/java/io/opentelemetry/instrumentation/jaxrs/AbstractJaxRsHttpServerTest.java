@@ -6,10 +6,11 @@
 package io.opentelemetry.instrumentation.jaxrs;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,7 +20,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -194,13 +194,6 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     assertThat(response.status().code()).isEqualTo(testKind.statusCode);
     testKind.assertBody(response.contentUtf8());
 
-    List<AttributeAssertion> attributeAssertions =
-        codeFunctionSuffixAssertions("test.JaxRsTestResource", "asyncOp");
-
-    if (testKind == AsyncResponseTestKind.CANCELED && testExperimental()) {
-      attributeAssertions.add(equalTo(booleanKey("jaxrs.canceled"), true));
-    }
-
     testing()
         .waitAndAssertTraces(
             trace -> {
@@ -222,7 +215,16 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                             span.hasName("JaxRsTestResource.asyncOp")
                                 .hasKind(SpanKind.INTERNAL)
                                 .hasParent(trace.getSpan(0))
-                                .hasAttributesSatisfyingExactly(attributeAssertions);
+                                .hasAttributesSatisfyingExactly(
+                                    satisfies(
+                                        CODE_FUNCTION_NAME,
+                                        val -> val.endsWith("test.JaxRsTestResource.asyncOp")),
+                                    equalTo(
+                                        booleanKey("jaxrs.canceled"),
+                                        (testKind == AsyncResponseTestKind.CANCELED
+                                                && testExperimental())
+                                            ? true
+                                            : null));
                             if (testKind == AsyncResponseTestKind.FAILING) {
                               span.hasStatus(StatusData.error())
                                   .hasException(new IllegalStateException("failure"));
@@ -305,7 +307,9 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              codeFunctionSuffixAssertions(".JaxRsTestResource", "jaxRs21Async"));
+                              satisfies(
+                                  CODE_FUNCTION_NAME,
+                                  val -> val.endsWith(".JaxRsTestResource.jaxRs21Async")));
                       if (testKind == CompletionStageTestKind.FAILING) {
                         span.hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("failure"));
@@ -320,6 +324,6 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     return span.hasName("JaxRsTestResource." + methodName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            codeFunctionSuffixAssertions(".JaxRsTestResource", methodName));
+            satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".JaxRsTestResource." + methodName)));
   }
 }

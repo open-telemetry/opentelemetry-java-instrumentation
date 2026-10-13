@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.struts.v7_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 import org.apache.struts2.ActionInvocation;
 
 class StrutsCodeAttributesGetter implements CodeAttributesGetter<ActionInvocation> {
@@ -16,7 +16,7 @@ class StrutsCodeAttributesGetter implements CodeAttributesGetter<ActionInvocatio
   }
 
   @Override
-  public String getMethodName(ActionInvocation actionInvocation) {
+  public String getCodeMethodName(ActionInvocation actionInvocation) {
     return actionInvocation.getProxy().getMethod();
   }
 }

@@ -21,6 +21,10 @@ public interface SqsMessage {
 
   Context getCreationContext();
 
+  default boolean claimDelivery() {
+    return true;
+  }
+
   Map<String, MessageAttributeValue> messageAttributes();
 
   Map<String, String> attributesAsStrings();

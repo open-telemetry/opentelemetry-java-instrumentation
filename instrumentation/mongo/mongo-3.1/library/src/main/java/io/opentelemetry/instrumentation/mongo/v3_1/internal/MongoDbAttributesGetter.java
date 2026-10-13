@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
 import static java.util.Arrays.asList;
 
 import com.mongodb.MongoException;
-import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
@@ -114,25 +113,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getConnectionString(CommandStartedEvent event) {
-    ConnectionDescription connectionDescription = event.getConnectionDescription();
-    if (connectionDescription != null) {
-      ServerAddress sa = connectionDescription.getServerAddress();
-      if (sa != null) {
-        // https://docs.mongodb.com/manual/reference/connection-string/
-        String host = sa.getHost();
-        int port = sa.getPort();
-        if (host != null && port != 0) {
-          return "mongodb://" + host + ":" + port;
-        }
-      }
-    }
-    return null;
-  }
-
   @Override
   public String getDbQueryText(CommandStartedEvent event) {
     return sanitizeQuery(event.getCommand());
@@ -147,23 +127,15 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getServerAddress(CommandStartedEvent event) {
-    if (emitStableDatabaseSemconv()) {
-      MongoServerTarget target = MongoClusterTargets.get(event);
-      return target == null ? null : target.getAddress();
-    }
-    ServerAddress serverAddress = selectedServerAddress(event);
-    return serverAddress == null ? null : serverAddress.getHost();
+    MongoServerTarget target = MongoClusterTargets.get(event);
+    return target == null ? null : target.getAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(CommandStartedEvent event) {
-    if (emitStableDatabaseSemconv()) {
-      MongoServerTarget target = MongoClusterTargets.get(event);
-      return target == null ? null : target.getPort();
-    }
-    ServerAddress serverAddress = selectedServerAddress(event);
-    return serverAddress == null ? null : serverAddress.getPort();
+    MongoServerTarget target = MongoClusterTargets.get(event);
+    return target == null ? null : target.getPort();
   }
 
   @Nullable
@@ -181,12 +153,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Nullable
-  private static ServerAddress selectedServerAddress(CommandStartedEvent event) {
-    ConnectionDescription connectionDescription = event.getConnectionDescription();
-    return connectionDescription == null ? null : connectionDescription.getServerAddress();
-  }
-
-  @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CommandStartedEvent event, @Nullable Void unused) {
@@ -196,9 +162,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   private MongoNetworkPeer getNetworkPeer(CommandStartedEvent event) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription == null || connectionPeerResolver == null) {
       return null;
@@ -238,13 +201,11 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
       new BsonDocumentCodec().encode(jsonWriter, command, EncoderContext.builder().build());
     }
 
-    // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
+    // If using MongoDB driver >= 3.7, truncation will generally be a no-op due to use of
     // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
-    StringBuilder buf = stringWriter.getBuilder();
-    if (buf.length() <= maxNormalizedQueryLength) {
-      return buf.toString();
-    }
-    return buf.substring(0, maxNormalizedQueryLength);
+    StringBuilder buffer = stringWriter.getBuilder();
+    truncate(buffer, maxNormalizedQueryLength);
+    return buffer.toString();
   }
 
   @Nullable
@@ -276,7 +237,12 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
                 .filter(method -> method.getName().equals("maxLength"))
                 .findFirst();
         if (maxLengthMethod.isPresent()) {
-          maxLengthMethod.get().invoke(builder, maxNormalizedQueryLength);
+          // Keep one extra code unit so truncation can detect a surrogate pair across the boundary.
+          int writerMaxLength =
+              maxNormalizedQueryLength == Integer.MAX_VALUE
+                  ? maxNormalizedQueryLength
+                  : maxNormalizedQueryLength + 1;
+          maxLengthMethod.get().invoke(builder, writerMaxLength);
         }
         settings =
             (JsonWriterSettings)

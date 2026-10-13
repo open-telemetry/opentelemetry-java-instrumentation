@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  groovy
 }
 
 muzzle {
@@ -13,6 +14,11 @@ muzzle {
 
 val grailsVersion = "3.0.6" // first version that the tests pass on
 val springBootVersion = "1.2.5.RELEASE"
+
+otelJava {
+  // Grails 3 uses a Groovy compiler that cannot run on JDK 25.
+  javaToolchainVersion.set(JavaVersion.VERSION_21)
+}
 
 dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
@@ -70,10 +76,10 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
   if (otelProps.denyUnsafe) {

@@ -41,9 +41,9 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
@@ -54,7 +54,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+      "otel.instrumentation.common.controller-telemetry.enabled=true," +
         "otel.instrumentation.jaxrs.experimental-span-attributes=true"
     )
   }

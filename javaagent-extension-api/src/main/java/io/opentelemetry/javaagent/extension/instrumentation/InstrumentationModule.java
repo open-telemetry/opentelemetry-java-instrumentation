@@ -43,20 +43,43 @@ public abstract class InstrumentationModule implements Ordered {
    * corresponds to the main instrumentation name is considered first, after that additional
    * instrumentation names are considered in the order they are listed here.
    *
-   * <p>The instrumentation names should follow several rules:
+   * <p>Names registered under {@code otel.instrumentation.common.v3-preview=true} follow this
+   * ordered hierarchy:
    *
    * <ul>
-   *   <li>Instrumentation names should consist of hyphen-separated words, e.g. {@code
-   *       instrumented-library};
-   *   <li>In general, instrumentation names should be the as close as possible to the gradle module
-   *       name - which in turn should be as close as possible to the instrumented library name;
-   *   <li>The main instrumentation name should be the same as the gradle module name, minus the
-   *       version if it's a part of the module name. When several versions of a library are
-   *       instrumented they should all share the same main instrumentation name so that it's easy
-   *       to enable/disable the instrumentation regardless of the runtime library version;
-   *   <li>If the gradle module has a version as a part of its name, an additional instrumentation
-   *       name containing the version should be passed, e.g. {@code instrumented-library-1.0}.
+   *   <li>The full module directory name, including versions, e.g. {@code
+   *       instrumented-library-1.0}. An isolated default-off feature within a shared module uses an
+   *       independent primary instead.
+   *   <li>When client and server instrumentation are independently selectable, optional versionless
+   *       role selectors: {@code instrumented-library-client} or {@code
+   *       instrumented-library-server}. Role-specific modules, including route enrichment, share
+   *       its selectors. Support needed by both roles is selected separately.
+   *   <li>Optional versionless feature names for independently useful behavior, e.g. {@code
+   *       aws-sdk-sqs}. Compatibility helpers share their parent's selectors rather than exposing
+   *       implementation-specific controls.
+   *   <li>Normally, the module name with all numeric versions removed, e.g. {@code
+   *       instrumented-library} or {@code jaxrs-cxf}. Omit unversioned names that merely
+   *       distinguish implementation splits, e.g. {@code mongo-async}.
+   *   <li>Optional product or ecosystem umbrellas, e.g. {@code vertx} for Vert.x HTTP and SQL
+   *       clients. These follow all component selectors so narrower settings take precedence.
    * </ul>
+   *
+   * <p>Default-off features, e.g. {@code kafka-clients-metrics} or {@code jdbc-datasource}, use
+   * independent feature selectors when their library's other instrumentation is default-on. They
+   * must not share family, baseline, or umbrella selectors with default-on instrumentation. An
+   * umbrella whose members are all default-off can enable them together. Standalone default-off
+   * feature modules use their full directory name first, followed by their versionless feature
+   * name, e.g. {@code jaxrs-1.0-annotations}, {@code jaxrs-annotations}.
+   *
+   * <p>Names use kebab-case. Umbrella membership follows product ownership, not directory nesting
+   * or a shared prefix. Module classes may share all their public names; separate compatibility
+   * ranges do not require separate public controls. Muzzle can select individual modules by fully
+   * qualified class name. Outside preview, compatibility aliases retain their configuration
+   * precedence.
+   *
+   * <p>These names apply to flat {@code otel.instrumentation.<name>.enabled} properties and
+   * declarative enabled/disabled lists. They are troubleshooting escape hatches, not telemetry
+   * tuning controls, and are independent of emitted instrumentation scope names.
    */
   protected InstrumentationModule(
       String mainInstrumentationName, String... additionalInstrumentationNames) {

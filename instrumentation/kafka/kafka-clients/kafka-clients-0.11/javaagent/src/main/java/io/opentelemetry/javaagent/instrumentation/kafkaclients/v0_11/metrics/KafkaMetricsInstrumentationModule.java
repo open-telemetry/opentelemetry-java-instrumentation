@@ -19,10 +19,12 @@ public class KafkaMetricsInstrumentationModule extends InstrumentationModule {
   public KafkaMetricsInstrumentationModule() {
     super(
         "kafka-clients-metrics",
-        "kafka-clients",
-        "kafka-clients-metrics-0.11",
-        "kafka-clients-0.11",
-        "kafka");
+        // In v3 preview, default-off metrics must not share default-on Kafka selectors.
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[0]
+            : new String[] {
+              "kafka-clients", "kafka-clients-metrics-0.11", "kafka-clients-0.11", "kafka"
+            });
   }
 
   @Override

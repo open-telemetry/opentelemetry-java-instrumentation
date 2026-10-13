@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.c3p0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -65,17 +63,11 @@ public abstract class AbstractC3p0InstrumentationTest {
 
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv()
-                ? "db.client.connection.count"
-                : "db.client.connections.usage",
-            AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "db.client.connection.count", AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv()
-                ? "db.client.connection.pending_requests"
-                : "db.client.connections.pending_requests",
+            "db.client.connection.pending_requests",
             AbstractIterableAssert::isEmpty);
   }
 

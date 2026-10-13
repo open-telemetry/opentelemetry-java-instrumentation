@@ -1,0 +1,49 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
+
+import static java.util.Arrays.asList;
+
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import java.util.List;
+
+@AutoService(InstrumentationModule.class)
+public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
+
+  public VertxRedisClientInstrumentationModule() {
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "vertx-redis-client-4.0" : "vertx-redis-client",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"vertx-redis-client", "vertx"}
+            : new String[] {"vertx-redis-client-4.0", "vertx-redis-client-4.0-core", "vertx"});
+  }
+
+  @Override
+  public boolean isHelperClass(String className) {
+    return className.equals("io.vertx.redis.client.impl.RequestUtil")
+        || className.startsWith("io.vertx.redis.client.impl.RedisConnectionManagerUtil");
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    return asList(
+        "io.vertx.redis.client.impl.RequestUtil",
+        "io.vertx.redis.client.impl.RedisConnectionManagerUtil",
+        "io.vertx.redis.client.impl.RedisConnectionManagerUtil$CapturedTarget");
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(
+        new RedisStandaloneConnectionInstrumentation(),
+        new RedisConnectionManagerInstrumentation(),
+        new RedisConnectionProviderInstrumentation(),
+        new CommandImplInstrumentation());
+  }
+}

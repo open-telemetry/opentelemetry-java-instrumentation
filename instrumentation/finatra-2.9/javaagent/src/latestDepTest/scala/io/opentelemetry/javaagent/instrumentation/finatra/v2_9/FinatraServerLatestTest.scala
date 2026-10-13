@@ -8,15 +8,20 @@ package io.opentelemetry.javaagent.instrumentation.finatra.v2_9
 import com.twitter.finatra.http.HttpServer
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
   HttpServerInstrumentationExtension,
   HttpServerTestOptions,
   ServerEndpoint
 }
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
+  StringAssertConsumer,
+  satisfies
+}
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
+import io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME
+import org.assertj.core.api.AbstractStringAssert
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util.concurrent.Executors
@@ -68,9 +73,16 @@ class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
       )
       .hasKind(SpanKind.INTERNAL)
       .hasAttributesSatisfyingExactly(
-        codeFunctionPrefixAssertions(
-          "io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraController",
-          "apply"
+        satisfies(
+          CODE_FUNCTION_NAME,
+          new StringAssertConsumer {
+            override def accept(value: AbstractStringAssert[_]): Unit = {
+              value.startsWith(
+                "io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraController"
+              )
+              value.endsWith("apply")
+            }
+          }
         )
       )
 

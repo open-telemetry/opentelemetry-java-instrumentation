@@ -14,9 +14,11 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
+import io.opentelemetry.instrumentation.logging.internal.AbstractSpanLoggingCustomizerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
@@ -50,6 +52,7 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -200,6 +203,8 @@ public class OpenTelemetryAutoConfiguration {
             new OpenTelemetrySdkComponentLoader(applicationContext);
 
         OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, componentLoader).getSdk();
+        // Runtime consumers need the final, customized configuration, not the earlier snapshot
+        // used by the span logging model customizer during SDK construction.
         SpringConfigProvider configProvider =
             SpringConfigProvider.create(configProviderFrom(sdk).getInstrumentationConfig());
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
@@ -245,6 +250,38 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       ComponentProvider distroComponentProvider() {
         return new DistroComponentProvider();
+      }
+
+      // The SDK calls this DeclarativeConfigurationCustomizerProvider before Spring's
+      // ConfigProvider bean is available. It therefore reads the model directly through
+      // SpringConfigProvider, using the same type conversion as runtime consumers.
+      // Keeping it here lets the configuration helpers remain package-private.
+      // Spring discovers this nested configuration through OpenTelemetryAutoConfiguration, so no
+      // separate entry in AutoConfiguration.imports or spring.factories is needed. Keeping the
+      // classpath condition here allows SDK configuration without the logging exporter present.
+      @Configuration
+      @ConditionalOnClass(LoggingSpanExporter.class)
+      static class SpanLoggingConfig {
+        @Bean
+        DeclarativeConfigurationCustomizerProvider spanLoggingCustomizerProvider() {
+          return new SpanLoggingCustomizerProvider();
+        }
+      }
+
+      static class SpanLoggingCustomizerProvider extends AbstractSpanLoggingCustomizerProvider {
+        private static final ComponentLoader componentLoader =
+            ComponentLoader.forClassLoader(SpanLoggingCustomizerProvider.class.getClassLoader());
+
+        @Override
+        protected boolean isEnabled(OpenTelemetryConfigurationModel model) {
+          // The ConfigProvider bean depends on the completed SDK, so it cannot be injected into
+          // a model customizer that runs while that SDK is being built. Read the callback's current
+          // model to include preceding customizations, using the same typed-getter conversion as
+          // runtime consumers: Spring-resolved values (including overrides) can be Strings.
+          return SpringConfigProvider.create(model, componentLoader)
+              .getInstrumentationConfig("spring_starter")
+              .getBoolean("debug", false);
+        }
       }
     }
   }
