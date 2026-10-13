@@ -18,6 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule {
   public JaxrsAnnotationsInstrumentationModule() {
+    // Default-off annotations must not share the jaxrs selector with default-on providers.
     super("jaxrs-2.0-annotations", "jaxrs-annotations");
   }
 

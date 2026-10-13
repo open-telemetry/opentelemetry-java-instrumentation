@@ -16,6 +16,8 @@ import java.util.List;
 public class HibernateReactiveMutinyInstrumentationModule extends InstrumentationModule {
 
   public HibernateReactiveMutinyInstrumentationModule() {
+    // The hibernate selector groups default-off telemetry, not default-on Reactive propagation.
+    // Keep propagation enabled so asynchronous database spans retain their parent context.
     super("hibernate-reactive-1.0", "hibernate-reactive");
   }
 

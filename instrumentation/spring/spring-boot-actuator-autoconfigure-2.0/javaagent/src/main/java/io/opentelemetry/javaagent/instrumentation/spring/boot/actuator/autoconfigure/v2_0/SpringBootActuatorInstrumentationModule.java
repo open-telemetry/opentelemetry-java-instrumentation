@@ -23,6 +23,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     super(
         "spring-boot-actuator-autoconfigure-2.0",
         "spring-boot-actuator-autoconfigure",
+        // Share the micrometer selector so both registry integration paths use one setting.
         "micrometer");
   }
 
