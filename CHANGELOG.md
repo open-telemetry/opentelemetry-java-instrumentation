@@ -4,6 +4,13 @@
 
 ### ⚠️ Breaking changes
 
+- Kotlin suspend function `@WithSpan` instrumentation is disabled by default. Enable it with
+  `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true`. Ordinary coroutine context
+  propagation and `@WithSpan` on `Flow`-returning methods remain enabled.
+  The `kotlinx-coroutines`, `kotlinx-coroutines-1.0`,
+  `kotlinx-coroutines-opentelemetry-instrumentation-annotations`, and
+  `opentelemetry-instrumentation-annotations` selectors no longer enable suspend function
+  annotations.
 - Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
   `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
   Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
