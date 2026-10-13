@@ -28,18 +28,29 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-rocketmq-client-4
 
 ### Usage
 
-The instrumentation library provides the implementation of `SendMessageHook` and `ConsumeMessageHook` to provide OpenTelemetry-based spans and context propagation.
+Wrap a configured `DefaultMQProducer` to emit telemetry and propagate context for single-message
+and batch sends. Send messages through the returned `MQProducer`; the wrapper registers its send
+hook automatically and injects batch context before RocketMQ encodes the messages.
+For batches, pass a collection of `Message` objects to `send`.
 
 ```java
-RocketMqTelemetry rocketMqTelemetry;
+RocketMqTelemetry telemetry = RocketMqTelemetry.create(openTelemetry);
 
-void configure(OpenTelemetry openTelemetry, DefaultMQProducerImpl producer, DefaultMQPushConsumerImpl pushConsumer) {
-  rocketMqTelemetry = RocketMqTelemetry.create(openTelemetry);
-  // For producer.
-  producer.registerSendMessageHook(rocketMqTelemetry.createSendMessageHook());
-  // For push consumer.
-  pushConsumer.registerConsumeMessageHook(rocketMqTelemetry.createConsumeMessageHook());
-}
+DefaultMQProducer configuredProducer = new DefaultMQProducer("producer-group");
+configuredProducer.setNamesrvAddr("localhost:9876");
+MQProducer producer = telemetry.wrap(configuredProducer);
+
+producer.start();
+producer.send(message);
+producer.send(messages);
+producer.shutdown();
+```
+
+Register a consume hook on the consumer implementation:
+
+```java
+pushConsumer.getDefaultMQPushConsumerImpl()
+    .registerConsumeMessageHook(telemetry.createConsumeMessageHook());
 ```
 
 ## Reported errors

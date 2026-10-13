@@ -16,7 +16,7 @@ import java.util.List;
 public class HikariCpInstrumentationModule extends InstrumentationModule {
 
   public HikariCpInstrumentationModule() {
-    super("hikaricp", "hikaricp-3.0");
+    super("hikaricp-3.0", "hikaricp");
   }
 
   @Override

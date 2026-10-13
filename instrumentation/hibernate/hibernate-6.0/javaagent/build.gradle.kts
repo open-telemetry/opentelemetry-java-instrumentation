@@ -72,7 +72,11 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata && name != "testDisabled")
+
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
   }
 
   named("compileHibernate7TestJava", JavaCompile::class).configure {
@@ -100,28 +104,10 @@ tasks {
       includeTestsMatching("*DefaultEnablementTest")
     }
 
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
-    }
-
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-    named("hibernate7TestStableSemconv", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
-    dependsOn(testing.suites, testDisabled, testExperimental, stableSemconvSuites)
+    dependsOn(testing.suites, testDisabled, testExperimental)
   }
 }

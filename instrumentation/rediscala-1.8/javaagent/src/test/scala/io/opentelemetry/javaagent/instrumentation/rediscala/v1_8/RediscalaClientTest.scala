@@ -6,16 +6,12 @@
 package rediscala
 
 import io.opentelemetry.api.trace.SpanKind.CLIENT
-import io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS
 import io.opentelemetry.semconv.DbAttributes.{
   DB_NAMESPACE,
@@ -147,23 +143,14 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName(
-                  if (emitStableDatabaseSemconv()) s"SET $host:$port"
-                  else "SET"
-                )
+                .hasName(s"SET $host:$port")
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), "SET"),
-                  equalTo(
-                    DB_NAMESPACE,
-                    if (emitStableDatabaseSemconv())
-                      defaultDbIndex.toString
-                    else null
-                  ),
-                  equalTo(NETWORK_PEER_ADDRESS, null),
-                  equalTo(NETWORK_PEER_PORT, null),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, "SET"),
+                  equalTo(DB_NAMESPACE, defaultDbIndex.toString),
+
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -205,7 +192,7 @@ class RediscalaClientTest {
   }
 
   @Test def testFailedReconnectRetainsServerTarget(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     val client = createClient(None)
     try {
       val reconnectHost = alternateHost(host)
@@ -255,28 +242,15 @@ class RediscalaClientTest {
             new Consumer[SpanDataAssert] {
               override def accept(span: SpanDataAssert): Unit = {
                 span
-                  .hasName(
-                    if (emitStableDatabaseSemconv())
-                      s"MULTI SET $reconnectHost:$port"
-                    else "MULTI SET"
-                  )
+                  .hasName(s"MULTI SET $reconnectHost:$port")
                   .hasKind(CLIENT)
                   .hasParent(trace.getSpan(0))
                   .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), REDIS),
-                    equalTo(maybeStable(DB_OPERATION), "MULTI SET"),
-                    equalTo(
-                      DB_NAMESPACE,
-                      if (emitStableDatabaseSemconv())
-                        defaultDbIndex.toString
-                      else null
-                    ),
-                    equalTo(NETWORK_PEER_ADDRESS, null),
-                    equalTo(NETWORK_PEER_PORT, null),
-                    equalTo(
-                      SERVER_ADDRESS,
-                      if (emitStableDatabaseSemconv()) reconnectHost else host
-                    ),
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_OPERATION_NAME, "MULTI SET"),
+                    equalTo(DB_NAMESPACE, defaultDbIndex.toString),
+
+                    equalTo(SERVER_ADDRESS, reconnectHost),
                     equalTo(SERVER_PORT, port)
                   )
               }
@@ -321,23 +295,14 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName(
-                  if (emitStableDatabaseSemconv()) s"SET $host:$port"
-                  else "SET"
-                )
+                .hasName(s"SET $host:$port")
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), "SET"),
-                  equalTo(
-                    DB_NAMESPACE,
-                    if (emitStableDatabaseSemconv())
-                      defaultDbIndex.toString
-                    else null
-                  ),
-                  equalTo(NETWORK_PEER_ADDRESS, null),
-                  equalTo(NETWORK_PEER_PORT, null),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, "SET"),
+                  equalTo(DB_NAMESPACE, defaultDbIndex.toString),
+
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -346,23 +311,14 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName(
-                  if (emitStableDatabaseSemconv()) s"GET $host:$port"
-                  else "GET"
-                )
+                .hasName(s"GET $host:$port")
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), "GET"),
-                  equalTo(
-                    DB_NAMESPACE,
-                    if (emitStableDatabaseSemconv())
-                      defaultDbIndex.toString
-                    else null
-                  ),
-                  equalTo(NETWORK_PEER_ADDRESS, null),
-                  equalTo(NETWORK_PEER_PORT, null),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, "GET"),
+                  equalTo(DB_NAMESPACE, defaultDbIndex.toString),
+
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -383,9 +339,7 @@ class RediscalaClientTest {
     Await.result(value, Duration.apply("3 second"))
 
     // CONFIG GET is a container command, so the stable operation name is only the container token
-    assertCommandSpan(
-      if (emitStableDatabaseSemconv()) "CONFIG" else "CONFIGGET"
-    )
+    assertCommandSpan("CONFIG")
   }
 
   @Test def testSingleTokenCommand(): Unit = {
@@ -415,9 +369,7 @@ class RediscalaClientTest {
     Await.result(value, Duration.apply("3 second"))
 
     // ZrangeWithscores sends ZRANGE with the WITHSCORES option
-    assertCommandSpan(
-      if (emitStableDatabaseSemconv()) "ZRANGE" else "ZRANGEWITHSCORES"
-    )
+    assertCommandSpan("ZRANGE")
   }
 
   @Test def testCommandWithoutArguments(): Unit = {
@@ -431,7 +383,7 @@ class RediscalaClientTest {
     Await.result(value, Duration.apply("3 second"))
 
     // commands without arguments are scala objects, whose class name ends with $
-    assertCommandSpan(if (emitStableDatabaseSemconv()) "PING" else "PING$")
+    assertCommandSpan("PING")
   }
 
   private def assertCommandSpan(operationName: String): Unit =
@@ -453,24 +405,14 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName(
-                  if (emitStableDatabaseSemconv())
-                    s"$operationName $serverAddress:$serverPort"
-                  else operationName
-                )
+                .hasName(s"$operationName $serverAddress:$serverPort")
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), operationName),
-                  equalTo(
-                    DB_NAMESPACE,
-                    if (emitStableDatabaseSemconv())
-                      defaultDbIndex.toString
-                    else null
-                  ),
-                  equalTo(NETWORK_PEER_ADDRESS, null),
-                  equalTo(NETWORK_PEER_PORT, null),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, operationName),
+                  equalTo(DB_NAMESPACE, defaultDbIndex.toString),
+
                   equalTo(SERVER_ADDRESS, serverAddress),
                   equalTo(SERVER_PORT, serverPort)
                 )
@@ -506,31 +448,17 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName(
-                  if (emitStableDatabaseSemconv())
-                    s"${scenario.operationName} $host:$port"
-                  else scenario.operationName
-                )
+                .hasName(s"${scenario.operationName} $host:$port")
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), scenario.operationName),
-                  equalTo(
-                    DB_NAMESPACE,
-                    if (emitStableDatabaseSemconv())
-                      defaultDbIndex.toString
-                    else null
-                  ),
-                  equalTo(NETWORK_PEER_ADDRESS, null),
-                  equalTo(NETWORK_PEER_PORT, null),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, scenario.operationName),
+                  equalTo(DB_NAMESPACE, defaultDbIndex.toString),
+
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port),
-                  equalTo(
-                    DB_OPERATION_BATCH_SIZE,
-                    if (emitStableDatabaseSemconv()) scenario.batchSize
-                    else null
-                  )
+                  equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize)
                 )
             }
           }
@@ -560,23 +488,14 @@ class RediscalaClientTest {
             override def accept(span: SpanDataAssert): Unit = {
               span
                 // the database index is deliberately not part of the span name
-                .hasName(
-                  if (emitStableDatabaseSemconv()) s"SET $host:$port"
-                  else "SET"
-                )
+                .hasName(s"SET $host:$port")
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), "SET"),
-                  equalTo(
-                    DB_NAMESPACE,
-                    if (emitStableDatabaseSemconv())
-                      nonDefaultDbIndex.toString
-                    else null
-                  ),
-                  equalTo(NETWORK_PEER_ADDRESS, null),
-                  equalTo(NETWORK_PEER_PORT, null),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, "SET"),
+                  equalTo(DB_NAMESPACE, nonDefaultDbIndex.toString),
+
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -622,29 +541,17 @@ class RediscalaClientTest {
             override def accept(span: SpanDataAssert): Unit = {
               span
                 // the database index is deliberately not part of the span name
-                .hasName(
-                  if (emitStableDatabaseSemconv()) s"MULTI SET $host:$port"
-                  else "MULTI SET"
-                )
+                .hasName(s"MULTI SET $host:$port")
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), "MULTI SET"),
-                  equalTo(
-                    DB_NAMESPACE,
-                    if (emitStableDatabaseSemconv())
-                      nonDefaultDbIndex.toString
-                    else null
-                  ),
-                  equalTo(NETWORK_PEER_ADDRESS, null),
-                  equalTo(NETWORK_PEER_PORT, null),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, "MULTI SET"),
+                  equalTo(DB_NAMESPACE, nonDefaultDbIndex.toString),
+
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port),
-                  equalTo(
-                    DB_OPERATION_BATCH_SIZE,
-                    if (emitStableDatabaseSemconv()) JLong.valueOf(2) else null
-                  )
+                  equalTo(DB_OPERATION_BATCH_SIZE, JLong.valueOf(2))
                 )
             }
           }
@@ -692,16 +599,14 @@ class RediscalaClientTest {
         )
       ),
       Arguments.argumentSet(
-        "twoSameStableOperation",
+        "twoCommandsWithSameOperation",
         BatchScenario(
           commands = Seq(
             _.zrange[String]("transaction-same-stable", 0, -1),
             _.zrangeWithscores[String]("transaction-same-stable", 0, -1)
           ),
-          // Zrange and ZrangeWithscores both send ZRANGE, so they group together only when the
-          // stable operation name is used
-          operationName =
-            if (emitStableDatabaseSemconv()) "MULTI ZRANGE" else "MULTI",
+          // Zrange and ZrangeWithscores both send ZRANGE, so they group together.
+          operationName = "MULTI ZRANGE",
           batchSize = 2L
         )
       ),

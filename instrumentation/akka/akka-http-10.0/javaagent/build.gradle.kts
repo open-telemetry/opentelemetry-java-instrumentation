@@ -35,7 +35,6 @@ dependencies {
   library("com.typesafe.akka:akka-stream_2.11:2.4.14")
 
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
-  testInstrumentation(project(":instrumentation:akka:akka-actor-forkjoin-2.5:javaagent"))
   testInstrumentation(project(":instrumentation:scala-forkjoin-2.8:javaagent"))
 
   latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:latest.release")
@@ -64,15 +63,15 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, testPreviewSemconv)
   }
 
   if (otelProps.denyUnsafe) {

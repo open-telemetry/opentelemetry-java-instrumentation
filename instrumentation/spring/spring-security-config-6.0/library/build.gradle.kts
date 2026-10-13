@@ -30,15 +30,3 @@ otelJava {
 tasks.withType<Test>().configureEach {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }
-
-tasks {
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-  }
-
-  check {
-    dependsOn(testV3Preview)
-  }
-}

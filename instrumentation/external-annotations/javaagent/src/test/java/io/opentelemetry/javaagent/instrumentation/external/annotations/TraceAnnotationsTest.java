@@ -6,16 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.external.annotations;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentracing.contrib.dropwizard.Trace;
-import java.util.List;
 import java.util.concurrent.Callable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -30,48 +28,47 @@ class TraceAnnotationsTest {
     // Test single span in new trace
     SayTracedHello.sayHello();
 
-    List<AttributeAssertion> assertions = assertCodeFunction("sayHello");
-    assertions.add(equalTo(stringKey("myattr"), "test"));
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("SayTracedHello.sayHello")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertions)));
-  }
-
-  private static List<AttributeAssertion> assertCodeFunction(String methodName) {
-    return codeFunctionAssertions(SayTracedHello.class, methodName);
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, SayTracedHello.class.getName() + ".sayHello"),
+                            equalTo(stringKey("myattr"), "test"))));
   }
 
   @Test
   void testComplexCaseAnnotations() {
     // Test new trace with 2 children spans
     SayTracedHello.sayHelloSayHa();
-    List<AttributeAssertion> assertions1 = assertCodeFunction("sayHelloSayHa");
-    assertions1.add(equalTo(stringKey("myattr"), "test2"));
-    List<AttributeAssertion> assertions2 = assertCodeFunction("sayHello");
-    assertions2.add(equalTo(stringKey("myattr"), "test"));
-    List<AttributeAssertion> assertions3 = assertCodeFunction("sayHello");
-    assertions3.add(equalTo(stringKey("myattr"), "test"));
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("SayTracedHello.sayHelloSayHa")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertions1),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                SayTracedHello.class.getName() + ".sayHelloSayHa"),
+                            equalTo(stringKey("myattr"), "test2")),
                 span ->
                     span.hasName("SayTracedHello.sayHello")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertions2),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, SayTracedHello.class.getName() + ".sayHello"),
+                            equalTo(stringKey("myattr"), "test")),
                 span ->
                     span.hasName("SayTracedHello.sayHello")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertions3)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, SayTracedHello.class.getName() + ".sayHello"),
+                            equalTo(stringKey("myattr"), "test"))));
   }
 
   @Test
@@ -85,7 +82,10 @@ class TraceAnnotationsTest {
                     span.hasName("SayTracedHello.sayError")
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(assertCodeFunction("sayError"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                SayTracedHello.class.getName() + ".sayError"))));
   }
 
   @Test
@@ -99,8 +99,8 @@ class TraceAnnotationsTest {
                 span ->
                     span.hasName("SayTracedHello$1.call")
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(
-                                SayTracedHello.class.getName() + "$1", "call"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME, SayTracedHello.class.getName() + "$1.call"))));
 
     // Test anonymous classes with no package
     new Callable<String>() {
@@ -117,13 +117,15 @@ class TraceAnnotationsTest {
                 span ->
                     span.hasName("SayTracedHello$1.call")
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(SayTracedHello.class.getName() + "$1", "call"))),
+                            equalTo(
+                                CODE_FUNCTION_NAME, SayTracedHello.class.getName() + "$1.call"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("TraceAnnotationsTest$1.call")
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(
-                                TraceAnnotationsTest.class.getName() + "$1", "call"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TraceAnnotationsTest.class.getName() + "$1.call"))));
   }
 }

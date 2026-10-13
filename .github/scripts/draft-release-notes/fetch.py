@@ -4,6 +4,7 @@
 This script is the source of truth for release-note draft generation. It emits
 the raw markdown scaffold on stdout and prepares a local bundle of per-PR
 patches and metadata under build/changelog-bundle/.
+Missing discussion references are recorded as unavailable in the bundle.
 """
 
 from __future__ import annotations
@@ -101,6 +102,7 @@ def run_command(args: list[str], check: bool = True) -> subprocess.CompletedProc
         encoding="utf-8",
         errors="replace",
         check=check,
+        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
     )
 
 
@@ -109,13 +111,24 @@ def load_json(args: list[str]) -> Any:
     return json.loads(result.stdout)
 
 
-def load_json_with_retry(args: list[str]) -> Any:
-    """Run a `gh` command with retries to absorb transient API failures."""
+def load_json_with_retry(args: list[str], *, optional_ref: int | None = None) -> Any:
+    """Retry transient API failures and retain missing optional references."""
     last_error: subprocess.CalledProcessError | None = None
     for attempt in range(1, GH_FETCH_RETRIES + 1):
         try:
             return load_json(args)
         except subprocess.CalledProcessError as e:
+            if optional_ref is not None and (
+                f"Could not resolve to an issue or pull request with the number of {optional_ref}."
+                in (e.stderr or "")
+            ):
+                warn(f"Reference #{optional_ref} is unavailable; retaining a placeholder in the bundle.")
+                return {
+                    "number": optional_ref,
+                    "title": f"Unavailable reference #{optional_ref}",
+                    "url": f"https://github.com/{REPO}/issues/{optional_ref}",
+                    "unavailable": True,
+                }
             last_error = e
             if attempt == GH_FETCH_RETRIES:
                 break
@@ -407,6 +420,7 @@ def render_discussion_markdown(title: str, items: Any, item_type: str) -> str:
 def extract_reference_numbers(texts: list[str], excluded_numbers: set[int]) -> list[int]:
     references: set[int] = set()
     for text in texts:
+        text = re.sub(r"\[[^\]]*\]\((https?://[^\s)]+)\)", r"\1", text)
         for match in ISSUE_REF_RE.finditer(text):
             number = match.group(1) or match.group(2)
             if number is None:
@@ -461,7 +475,8 @@ def fetch_ref_data(ref_number: int) -> dict[str, Any]:
             REPO,
             "--json",
             "number,title,author,body,comments,labels,state,url",
-        ]
+        ],
+        optional_ref=ref_number,
     )
 
 

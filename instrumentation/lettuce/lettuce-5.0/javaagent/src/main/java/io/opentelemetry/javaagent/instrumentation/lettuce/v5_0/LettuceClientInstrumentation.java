@@ -23,7 +23,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -45,10 +44,8 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
             .and(nameEndsWith("Async"))
             .and(takesArgument(1, named("io.lettuce.core.RedisURI"))),
         getClass().getName() + "$ConnectAdvice");
-    // Every Lettuce 5.0.x release in this module's Muzzle range has exactly one private
-    // connectStatefulAsync method returning ConnectionFuture. Under v3-preview this module also
-    // handles Lettuce 5.1+, where that method remains unique through the latest tested version, but
-    // its parameter layout changes: Lettuce 5.1-5.3 adds a codec before the Endpoint, Lettuce 6
+    // connectStatefulAsync remains unique through the latest tested version, but its parameter
+    // layout changes: Lettuce 5.1-5.3 adds a codec before the Endpoint, Lettuce 6
     // removes that codec, and Lettuce 7 adds a trailing argument.
     //
     // Match the stable method name, visibility, and return type instead of argument positions.
@@ -87,11 +84,8 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
       }
 
       RedisServerTarget target = LettuceServerTargets.of(redisUri);
-      String host = redisUri.getHost();
-      InetSocketAddress address =
-          host == null ? null : InetSocketAddress.createUnresolved(host, redisUri.getPort());
       LettuceConnectionState.captureEndpointAndConnection(
-          endpoint, connection, address, redisUri.getDatabase(), target);
+          endpoint, connection, redisUri.getDatabase(), target);
     }
   }
 

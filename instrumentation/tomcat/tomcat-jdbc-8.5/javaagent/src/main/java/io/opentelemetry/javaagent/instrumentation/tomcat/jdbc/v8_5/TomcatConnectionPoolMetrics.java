@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc.v8_5;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -20,6 +18,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsU
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.tomcat.jdbc.pool.DataSourceProxy;
@@ -109,7 +108,7 @@ public class TomcatConnectionPoolMetrics {
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meterBuilder.setSchemaUrl(databaseSchemaUrl());
+    meterBuilder.setSchemaUrl(SchemaUrls.V1_44_0);
     return meterBuilder.build();
   }
 

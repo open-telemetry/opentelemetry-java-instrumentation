@@ -16,12 +16,16 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class TwilioInstrumentationModule extends InstrumentationModule {
   public TwilioInstrumentationModule() {
-    super("twilio", "twilio-6.6");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "twilio-6.6" : "twilio",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"twilio"}
+            : new String[] {"twilio-6.6"});
   }
 
   @Override
   public boolean defaultEnabled() {
-    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
+    return false;
   }
 
   @Override

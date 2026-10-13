@@ -29,9 +29,8 @@ import java.util.function.Consumer;
 class SuppressionTest {
 
   private static final boolean NESTED_HTTP_CLIENT_SPAN =
-      "semconv"
-          .equals(
-              System.getProperty("otel.instrumentation.experimental.span-suppression-strategy"));
+      !"span-kind"
+          .equals(System.getProperty("otel.instrumentation.common.span-suppression-strategy"));
 
   /** Returns the number of spans that the nested http client instrumentation adds to a trace. */
   static int nestedHttpClientSpans() {

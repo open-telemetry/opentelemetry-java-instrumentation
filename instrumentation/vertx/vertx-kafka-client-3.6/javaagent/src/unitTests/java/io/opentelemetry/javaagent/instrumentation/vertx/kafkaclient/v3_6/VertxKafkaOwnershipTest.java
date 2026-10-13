@@ -249,7 +249,8 @@ class VertxKafkaOwnershipTest {
 
   private static void prepareContexts(
       ConsumerRecords<?, ?> records, SpanContext... producerContexts) {
-    KafkaConsumerContext batchContext = KafkaConsumerContextUtil.create(null, "group", "client");
+    KafkaConsumerContext batchContext =
+        KafkaConsumerContextUtil.create(null, "group", "client", null);
     KafkaConsumerContextUtil.set(records, batchContext);
     List<ConsumerRecord<?, ?>> recordList = recordsIn(records);
     for (int i = 0; i < recordList.size(); i++) {
@@ -266,7 +267,7 @@ class VertxKafkaOwnershipTest {
                     .getBytes(UTF_8));
       }
       KafkaConsumerContextUtil.set(
-          record, KafkaConsumerContextUtil.create(context, "group", "client"));
+          record, KafkaConsumerContextUtil.create(context, "group", "client", null));
     }
   }
 

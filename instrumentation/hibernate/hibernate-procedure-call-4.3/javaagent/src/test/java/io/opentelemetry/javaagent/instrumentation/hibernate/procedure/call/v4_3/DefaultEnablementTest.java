@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.procedure.call.v4_3;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.sql.Connection;
@@ -25,8 +23,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class DefaultEnablementTest {
 
   private static final String DATABASE_URL = "jdbc:hsqldb:mem:defaultEnablement";
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
+  private static final boolean INSTRUMENTATION_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.hibernate.enabled");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -73,21 +71,17 @@ class DefaultEnablementTest {
           }
         });
 
-    if (V3_PREVIEW) {
-      testing.waitAndAssertTraces(
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
-    } else {
+    if (INSTRUMENTATION_ENABLED) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"),
                   span -> span.hasName("ProcedureCall.getOutputs DEFAULT_ENABLEMENT_PROC"),
-                  span ->
-                      span.hasName(
-                          emitStableDatabaseSemconv()
-                              ? "call DEFAULT_ENABLEMENT_PROC"
-                              : "CALL defaultenablement.DEFAULT_ENABLEMENT_PROC"),
+                  span -> span.hasName("call DEFAULT_ENABLEMENT_PROC"),
                   span -> span.hasName("Transaction.commit")));
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
     }
   }
 }

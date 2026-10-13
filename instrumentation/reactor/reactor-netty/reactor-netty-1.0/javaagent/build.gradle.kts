@@ -34,7 +34,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
-  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
 
   // using 3.4.3 to avoid the "Spec. Rule 1.3" issue in reactor-core during tests
   // https://github.com/reactor/reactor-core/issues/2579
@@ -71,11 +70,11 @@ tasks {
     }
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
       excludeTestsMatching("ReactorNettyClientSslTest")
@@ -83,6 +82,6 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionSpan, testStableSemconv)
+    dependsOn(testConnectionSpan, testPreviewSemconv)
   }
 }

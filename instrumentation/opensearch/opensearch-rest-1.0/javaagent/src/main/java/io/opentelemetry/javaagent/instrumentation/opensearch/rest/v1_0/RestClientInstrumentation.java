@@ -68,7 +68,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
       Context parentContext = Context.current();
       OpenSearchRestRequest otelRequest =
           OpenSearchRestRequest.create(
-              request.getMethod(), request.getEndpoint(), OpenSearchServerTargets.get(restClient));
+              request.getMethod(), OpenSearchServerTargets.get(restClient));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;
       }

@@ -25,12 +25,10 @@ public class ServerEndpoint {
   private static final Method SENTINEL_MASTER_SLAVES_MASTER_CLIENT =
       findMethod(SENTINEL_MASTER_SLAVES_CLASS, "masterClient");
 
-  private final String host;
-  private final int port;
   private final int databaseIndex;
 
   public static ServerEndpoint create(RedisClientActorLike client) {
-    return new ServerEndpoint(client.host(), client.port(), databaseIndex(client));
+    return new ServerEndpoint(databaseIndex(client));
   }
 
   @Nullable
@@ -63,9 +61,7 @@ public class ServerEndpoint {
     return null;
   }
 
-  private ServerEndpoint(String host, int port, int databaseIndex) {
-    this.host = host;
-    this.port = port;
+  private ServerEndpoint(int databaseIndex) {
     this.databaseIndex = databaseIndex;
   }
 
@@ -84,14 +80,6 @@ public class ServerEndpoint {
     return masterClient instanceof RedisClientActorLike
         ? create((RedisClientActorLike) masterClient)
         : null;
-  }
-
-  String getHost() {
-    return host;
-  }
-
-  int getPort() {
-    return port;
   }
 
   int getDatabaseIndex() {

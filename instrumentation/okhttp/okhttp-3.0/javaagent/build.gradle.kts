@@ -42,14 +42,14 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
+      register<Test>("${suite.name}PreviewSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
       }
     }
 
@@ -65,6 +65,6 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, exceptionSignalLogsSuites)
+    dependsOn(testing.suites, previewSemconvSuites, exceptionSignalLogsSuites)
   }
 }

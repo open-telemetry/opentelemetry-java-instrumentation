@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ActivejHttpServerInstrumentationModule extends InstrumentationModule {
 
   public ActivejHttpServerInstrumentationModule() {
-    super("activej-http", "activej-http-6.0");
+    super("activej-http-6.0", "activej-http");
   }
 
   @Override

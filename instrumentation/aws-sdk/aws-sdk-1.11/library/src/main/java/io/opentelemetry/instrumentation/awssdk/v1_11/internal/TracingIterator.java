@@ -22,24 +22,16 @@ class TracingIterator implements Iterator<Message> {
 
   private final Iterator<Message> delegateIterator;
   private final TracingList tracingList;
-  private final TracingList.ProcessingOwnership processingOwnership;
 
   @Nullable private ProcessingInvocation currentInvocation;
 
-  private TracingIterator(
-      Iterator<Message> delegateIterator,
-      TracingList tracingList,
-      TracingList.ProcessingOwnership processingOwnership) {
+  private TracingIterator(Iterator<Message> delegateIterator, TracingList tracingList) {
     this.delegateIterator = delegateIterator;
     this.tracingList = tracingList;
-    this.processingOwnership = processingOwnership;
   }
 
-  static Iterator<Message> wrap(
-      Iterator<Message> delegateIterator,
-      TracingList tracingList,
-      TracingList.ProcessingOwnership processingOwnership) {
-    return new TracingIterator(delegateIterator, tracingList, processingOwnership);
+  static Iterator<Message> wrap(Iterator<Message> delegateIterator, TracingList tracingList) {
+    return new TracingIterator(delegateIterator, tracingList);
   }
 
   @Override
@@ -61,8 +53,7 @@ class TracingIterator implements Iterator<Message> {
     currentInvocation =
         message == null
             ? null
-            : ProcessingInvocation.start(
-                tracingList, processingOwnership, SqsMessageImpl.wrap(message));
+            : ProcessingInvocation.start(tracingList, SqsMessageImpl.wrap(message));
   }
 
   private void endCurrentInvocation() {
@@ -104,11 +95,8 @@ class TracingIterator implements Iterator<Message> {
     private final Scope scope;
 
     @Nullable
-    private static ProcessingInvocation start(
-        TracingList tracingList,
-        TracingList.ProcessingOwnership processingOwnership,
-        SqsMessage message) {
-      if (processingOwnership.isOwnedOutsideSqsSdk()) {
+    private static ProcessingInvocation start(TracingList tracingList, SqsMessage message) {
+      if (tracingList.isProcessingOwnedOutsideSqsSdk()) {
         return null;
       }
       Context parentContext = tracingList.getProcessParentContext();

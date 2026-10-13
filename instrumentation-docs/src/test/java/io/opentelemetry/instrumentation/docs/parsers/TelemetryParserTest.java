@@ -8,14 +8,40 @@ package io.opentelemetry.instrumentation.docs.parsers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class TelemetryParserTest {
+
+  @ParameterizedTest
+  @CsvSource({
+    "io.opentelemetry.ratpack-1.4, true",
+    "io.opentelemetry.ratpack-1.7, true",
+    "io.opentelemetry.netty-4.1, false"
+  })
+  void ratpackScopes(String telemetryScope, boolean expected) {
+    assertThat(TelemetryParser.scopeIsValid(telemetryScope, "io.opentelemetry.ratpack-1.4"))
+        .isEqualTo(expected);
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "io.opentelemetry.mongo-3.1, true",
+    "io.opentelemetry.mongo-3.7, true",
+    "io.opentelemetry.mongo-4.0, false",
+    "io.opentelemetry.mongo-async-3.3, false",
+    "io.opentelemetry.jdbc, false"
+  })
+  void mongoScopes(String telemetryScope, boolean expected) {
+    assertThat(TelemetryParser.scopeIsValid(telemetryScope, "io.opentelemetry.mongo-3.1"))
+        .isEqualTo(expected);
+  }
 
   @Test
   void normalizeWhenConditionStripsQuotes() {
     String content =
         """
-        when: "otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true"
+        when: "otel.instrumentation.common.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true"
         metrics_by_scope:
           - scope: io.opentelemetry.jsp-2.3
         """;
@@ -24,7 +50,7 @@ class TelemetryParserTest {
 
     assertThat(result)
         .isEqualTo(
-            "otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true");
+            "otel.instrumentation.common.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true");
   }
 
   @Test

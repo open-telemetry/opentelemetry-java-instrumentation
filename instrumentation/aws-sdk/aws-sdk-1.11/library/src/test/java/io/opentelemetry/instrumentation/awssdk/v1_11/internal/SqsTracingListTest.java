@@ -405,6 +405,23 @@ class SqsTracingListTest {
   }
 
   @Test
+  void processingOwnershipAppliesToExistingIteratorOnlyForMatchingResponse() {
+    List<Message> selected = tracingMessages();
+    Iterator<Message> existingIterator = selected.iterator();
+    List<Message> unrelated = tracingMessages(Context.root(), true, new ArrayList<>(selected));
+
+    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(selected);
+    existingIterator.forEachRemaining(
+        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    selected.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    testing.runWithSpan("framework", () -> unrelated.forEach(SqsTracingListTest::processing));
+
+    assertThat(testing.spans())
+        .extracting(SpanData::getName)
+        .containsExactlyInAnyOrder("framework", "process", "process");
+  }
+
+  @Test
   void unsupportedCopiedListDoesNotMarkResponseOwned() {
     List<Message> messages = tracingMessages();
     SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(new ArrayList<>(messages));

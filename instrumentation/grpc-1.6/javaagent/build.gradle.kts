@@ -37,20 +37,20 @@ tasks {
     jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
@@ -84,7 +84,7 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testStableSemconv, testBothSemconv, testExceptionSignalLogs)
+    dependsOn(testExperimental, testPreviewSemconv, testBothSemconv, testExceptionSignalLogs)
   }
 }
 

@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -35,7 +36,11 @@ import org.springframework.data.repository.core.support.RepositoryProxyPostProce
 public class SpringDataInstrumentationModule extends InstrumentationModule {
 
   public SpringDataInstrumentationModule() {
-    super("spring-data", "spring-data-1.8");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "spring-data-1.8" : "spring-data",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-data"}
+            : new String[] {"spring-data-1.8"});
   }
 
   @Override

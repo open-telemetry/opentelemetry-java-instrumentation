@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -77,10 +76,7 @@ class KafkaConnectConsumedMessagesTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process mixed-retry-topic"
-                                : "mixed-retry-topic process")
+                    span.hasName("process mixed-retry-topic")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
@@ -94,10 +90,7 @@ class KafkaConnectConsumedMessagesTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process mixed-retry-topic"
-                                : "mixed-retry-topic process")
+                    span.hasName("process mixed-retry-topic")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasStatus(StatusData.unset())
@@ -147,10 +140,7 @@ class KafkaConnectConsumedMessagesTest {
     assertThat(link.getSpanContext().getTraceId()).isEqualTo(traceId);
     assertThat(link.getSpanContext().getSpanId()).isEqualTo(spanId);
     assertThat(link.getAttributes())
-        .isEqualTo(
-            emitStableMessagingSemconv()
-                ? Attributes.builder().put(MESSAGING_KAFKA_OFFSET, offset).build()
-                : Attributes.empty());
+        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_OFFSET, offset).build());
   }
 
   private static class RetryingSinkTask extends SinkTask {

@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk.StepBuilderInstrumentation;
@@ -26,7 +27,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SpringBatchInstrumentationModule extends InstrumentationModule {
   public SpringBatchInstrumentationModule() {
-    super("spring-batch", "spring-batch-3.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "spring-batch-3.0" : "spring-batch",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-batch"}
+            : new String[] {"spring-batch-3.0"});
   }
 
   @Override

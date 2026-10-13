@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricPointCounts;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -16,9 +14,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -105,7 +101,7 @@ class SpringKafkaInterceptorTest {
                 .setMessagingReceiveTelemetryEnabled(true)
                 .createConsumerProcessInstrumenter(),
             () -> true,
-            KafkaConsumerContextUtil.create(null, null, null));
+            KafkaConsumerContextUtil.create(null, null, null, null));
     iterator.next();
     assertThat(iterator.hasNext()).isFalse();
     interceptor.success(records, null);
@@ -186,7 +182,8 @@ class SpringKafkaInterceptorTest {
     ConsumerRecord<String, String> outer = new ConsumerRecord<>("orders", 0, 1, "outer", "value");
     ConsumerRecord<String, String> inner = new ConsumerRecord<>("orders", 0, 2, "inner", "value");
     Context parentContext = Context.current();
-    KafkaConsumerContextUtil.set(inner, KafkaConsumerContextUtil.create(parentContext, null, null));
+    KafkaConsumerContextUtil.set(
+        inner, KafkaConsumerContextUtil.create(parentContext, null, null, null));
     RecordInterceptor<String, String> decorated = mock();
     when(decorated.intercept(any(), isNull())).thenAnswer(invocation -> invocation.getArgument(0));
     RecordInterceptor<String, String> interceptor = telemetry.createRecordInterceptor(decorated);
@@ -295,7 +292,8 @@ class SpringKafkaInterceptorTest {
     ConsumerRecords<String, String> inner =
         records(new ConsumerRecord<>("orders", 0, 2, "inner", "value"));
     Context parentContext = Context.current();
-    KafkaConsumerContextUtil.set(inner, KafkaConsumerContextUtil.create(parentContext, null, null));
+    KafkaConsumerContextUtil.set(
+        inner, KafkaConsumerContextUtil.create(parentContext, null, null, null));
     BatchInterceptor<String, String> decorated = mock();
     when(decorated.intercept(any(), isNull())).thenAnswer(invocation -> invocation.getArgument(0));
     BatchInterceptor<String, String> interceptor = telemetry.createBatchInterceptor(decorated);
@@ -467,7 +465,7 @@ class SpringKafkaInterceptorTest {
 
   private static SpanDataAssert assertRecordSpan(
       SpanDataAssert span, ConsumerRecord<String, String> record, Throwable error) {
-    return span.hasName(emitStableMessagingSemconv() ? "process orders" : "orders process")
+    return span.hasName("process orders")
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
         .hasAttributesSatisfyingExactly(
@@ -475,55 +473,41 @@ class SpringKafkaInterceptorTest {
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
             equalTo(MESSAGING_DESTINATION_PARTITION_ID, Integer.toString(record.partition())),
             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, record.key()),
-            equalTo(
-                MESSAGING_KAFKA_MESSAGE_OFFSET, emitOldMessagingSemconv() ? record.offset() : null),
-            equalTo(MESSAGING_KAFKA_OFFSET, emitStableMessagingSemconv() ? record.offset() : null),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() && error != null ? error.getClass().getName() : null));
+            equalTo(MESSAGING_KAFKA_OFFSET, record.offset()),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+            equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
   }
 
   private static SpanDataAssert assertBatchSpan(
       SpanDataAssert span, int count, String partition, Throwable error) {
-    return span.hasName(emitStableMessagingSemconv() ? "process orders" : "orders process")
+    return span.hasName("process orders")
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
-            equalTo(
-                MESSAGING_DESTINATION_PARTITION_ID,
-                emitStableMessagingSemconv() ? partition : null),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_DESTINATION_PARTITION_ID, partition),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
-            equalTo(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() && error != null ? error.getClass().getName() : null));
+            equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
   }
 
   private static LinkData[] batchLinks() {
     return new LinkData[] {
       LinkData.create(
           FIRST_CREATION,
-          emitStableMessagingSemconv()
-              ? Attributes.of(
-                  MESSAGING_DESTINATION_PARTITION_ID, "0",
-                  MESSAGING_KAFKA_OFFSET, 1L,
-                  MESSAGING_KAFKA_MESSAGE_KEY, "first")
-              : Attributes.empty()),
+          Attributes.of(
+              MESSAGING_DESTINATION_PARTITION_ID, "0",
+              MESSAGING_KAFKA_OFFSET, 1L,
+              MESSAGING_KAFKA_MESSAGE_KEY, "first")),
       LinkData.create(
           SECOND_CREATION,
-          emitStableMessagingSemconv()
-              ? Attributes.of(
-                  MESSAGING_DESTINATION_PARTITION_ID, "1",
-                  MESSAGING_KAFKA_OFFSET, 2L,
-                  MESSAGING_KAFKA_MESSAGE_KEY, "second")
-              : Attributes.empty())
+          Attributes.of(
+              MESSAGING_DESTINATION_PARTITION_ID, "1",
+              MESSAGING_KAFKA_OFFSET, 2L,
+              MESSAGING_KAFKA_MESSAGE_KEY, "second"))
     };
   }
 

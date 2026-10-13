@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -43,11 +42,7 @@ class Jedis23ClusterCommandTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                        emitStableDatabaseSemconv()
-                            ? "PING " + redis.getHost() + ":" + redis.getMappedPort(6379)
-                            : "PING")));
+                span -> span.hasName("PING " + redis.getHost() + ":" + redis.getMappedPort(6379))));
   }
 
   static class TestClusterCommand extends JedisClusterCommand<String> {

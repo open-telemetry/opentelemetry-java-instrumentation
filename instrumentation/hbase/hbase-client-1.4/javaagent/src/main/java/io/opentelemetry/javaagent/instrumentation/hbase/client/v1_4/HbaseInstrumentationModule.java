@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -25,7 +26,11 @@ public class HbaseInstrumentationModule extends InstrumentationModule
   private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
 
   public HbaseInstrumentationModule() {
-    super("hbase-client", "hbase-client-1.4");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "hbase-client-1.4" : "hbase-client",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"hbase-client"}
+            : new String[] {"hbase-client-1.4"});
   }
 
   @Override
