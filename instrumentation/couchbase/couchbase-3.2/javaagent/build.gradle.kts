@@ -119,13 +119,10 @@ tasks {
   val testV3PreviewLegacyConfig = register<Test>("testV3PreviewLegacyConfig") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("collectMetadata", false)
     jvmArgs(
       "-Dotel.instrumentation.common.v3-preview=true",
       "-Dotel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.couchbase.experimental-span-attributes=true",
     )
   }
 
