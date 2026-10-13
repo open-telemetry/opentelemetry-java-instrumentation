@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- The Java agent no longer captures thread details by default. Set
+  `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
 - Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
   `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
   Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
