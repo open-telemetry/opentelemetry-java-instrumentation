@@ -32,7 +32,8 @@ public class CouchbaseSingletons {
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
-    boolean captureExperimentalTelemetry = config.getBoolean("emit_experimental_telemetry/development", false);
+    boolean captureExperimentalTelemetry =
+        config.getBoolean("emit_experimental_telemetry/development", false);
 
     CouchbaseAttributesGetter couchbaseAttributesGetter = new CouchbaseAttributesGetter();
     SpanNameExtractor<CouchbaseRequestInfo> spanNameExtractor =
