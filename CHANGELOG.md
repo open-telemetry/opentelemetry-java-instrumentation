@@ -142,6 +142,11 @@
   use `otel.instrumentation.common.messaging.headers.included` / `.excluded` instead.
   `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is also no longer
   supported; use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
+- Disable native Kafka client metrics by default. Enable them with
+  `otel.instrumentation.kafka-clients-metrics.enabled=true`. Kafka tracing and messaging operation
+  metrics retain their existing defaults.
+  The `kafka`, `kafka-clients`, `kafka-clients-0.11`, and `kafka-clients-metrics-0.11`
+  selectors no longer enable native metrics.
 - OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
   `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
