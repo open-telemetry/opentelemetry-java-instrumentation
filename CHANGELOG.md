@@ -4,6 +4,7 @@
 
 ### ⚠️ Breaking changes
 
+- The Java agent no longer instruments Jedis 1.x.
 - Remove deprecated Java agent enablement aliases. In `otel.instrumentation.<name>.enabled`,
   replace `liberty-dispatcher` with `liberty-dispatcher-20.0`, `scala-fork-join` with
   `scala-forkjoin`, and `scala-fork-join-2.8` with `scala-forkjoin-2.8`.
