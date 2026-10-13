@@ -120,7 +120,7 @@ tasks {
       includeTestsMatching("CouchbaseQuerySanitizationTest")
     }
     jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.query-sanitization.enabled=false")
+    systemProperty("collectMetadata", "false")
     systemProperty("testQuerySanitizationEnabled", "false")
   }
 
