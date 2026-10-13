@@ -103,8 +103,8 @@ rules:
       kafka.request.type: lowercase(param(request))
     mapping:
       # This is not redundant with kafka.server.request.count because a single network request can trigger
-      # multiple increments to 'kafka.server.request.count', also it provide an additional breakdown of
-      # fetch requests with 'fetchrequest' and 'fetchfollower' request types.
+      # multiple increments to 'kafka.server.request.count'. It also provides an additional breakdown of
+      # fetch requests with 'fetchconsumer' and 'fetchfollower' request types.
       Count:
         metric: kafka.network.request.count
         type: counter
