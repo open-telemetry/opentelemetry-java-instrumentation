@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -49,8 +48,7 @@ class CouchbaseTracerTest {
   void createsRootSpanWhenCurrentContextIsDisabled() {
     Span current = tracer.spanBuilder("current").startSpan();
     try (Scope ignored = current.makeCurrent()) {
-      CouchbaseSpan span =
-          new CouchbaseTracer(tracer, false, INTERNAL, false).startSpan("request", null);
+      CouchbaseSpan span = new CouchbaseTracer(tracer, false, false).startSpan("request", null);
       span.end();
     }
     current.end();
@@ -63,8 +61,7 @@ class CouchbaseTracerTest {
   void inheritsCurrentContextWhenEnabled() {
     Span current = tracer.spanBuilder("current").startSpan();
     try (Scope ignored = current.makeCurrent()) {
-      CouchbaseSpan span =
-          new CouchbaseTracer(tracer, true, INTERNAL, false).startSpan("request", null);
+      CouchbaseSpan span = new CouchbaseTracer(tracer, true, false).startSpan("request", null);
       span.end();
     }
     current.end();
@@ -75,7 +72,7 @@ class CouchbaseTracerTest {
 
   @Test
   void explicitCouchbaseParentTakesPrecedence() {
-    CouchbaseTracer couchbaseTracer = new CouchbaseTracer(tracer, true, INTERNAL, false);
+    CouchbaseTracer couchbaseTracer = new CouchbaseTracer(tracer, true, false);
     CouchbaseSpan parent = couchbaseTracer.startSpan("parent", null);
     Span current = tracer.spanBuilder("current").startSpan();
     try (Scope ignored = current.makeCurrent()) {
@@ -91,7 +88,7 @@ class CouchbaseTracerTest {
 
   @Test
   void recordsSpanData() {
-    CouchbaseSpan span = new CouchbaseTracer(tracer, false, CLIENT, false).startSpan("get", null);
+    CouchbaseSpan span = new CouchbaseTracer(tracer, false, false).startSpan("get", null);
     span.setAttribute("db.system", "couchbase");
     span.setAttribute("db.couchbase.retries", 2L);
     span.addEvent("dispatched", Instant.EPOCH);
@@ -109,11 +106,18 @@ class CouchbaseTracerTest {
 
   @Test
   void updatesSpanName() {
-    CouchbaseSpan span = new CouchbaseTracer(tracer, false, INTERNAL, false).startSpan("get", null);
+    CouchbaseSpan span = new CouchbaseTracer(tracer, false, false).startSpan("get", null);
     span.updateName("get _default");
     span.end();
 
     assertThat(findSpan("get _default").getName()).isEqualTo("get _default");
+  }
+
+  @Test
+  void suppressesKnownSdkDetailSpansByDefault() {
+    new CouchbaseTracer(tracer, false, false).startSpan("dispatch_to_server", null).end();
+
+    assertThat(exporter.getFinishedSpanItems()).isEmpty();
   }
 
   private SpanData findSpan(String name) {

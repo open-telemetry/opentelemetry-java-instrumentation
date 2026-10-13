@@ -98,18 +98,8 @@ tasks {
     }
   }
 
-  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
-    val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
-    isEnabled = named<Test>(suite.name).get().enabled
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
-  }
-
   check {
-    dependsOn(testing.suites, experimentalSuites, version26TestLegacyConfig)
+    dependsOn(testing.suites, experimentalSuites)
   }
 
   if (otelProps.denyUnsafe) {
