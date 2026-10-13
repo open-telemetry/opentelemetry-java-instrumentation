@@ -365,9 +365,6 @@ instrumentation/development:
       discovery:
         # Time in milliseconds between JMX MBean detection attempts.
         delay: 60000
-
-      # Enables collection of JMX metrics.
-      enabled: true
       metrics:
         # Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*"
         # matches any number of characters and "?" matches one character. Excluded patterns take
@@ -582,8 +579,8 @@ instrumentation/development:
       jfr_metrics/development:
         # Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with
         # * and ?. Excluded patterns take precedence over included patterns, including over
-        # shorthand and legacy selections. Configuring this property without included selects all
-        # metrics except those excluded.
+        # experimental JFR shorthand selections. Configuring this property without included selects
+        # all metrics except those excluded.
         excluded: []
 
         # Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
