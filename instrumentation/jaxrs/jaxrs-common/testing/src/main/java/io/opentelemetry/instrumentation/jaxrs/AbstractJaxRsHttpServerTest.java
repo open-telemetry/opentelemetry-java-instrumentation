@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -35,6 +34,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpServerTest<SERVER> {
 
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
+
   protected abstract void awaitBarrier(int amount, TimeUnit timeUnit) throws Exception;
 
   protected boolean testInterfaceMethodWithPath() {
@@ -57,7 +59,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
 
-    options.setHasHandlerSpan(endpoint -> true);
+    options.setHasHandlerSpan(endpoint -> CONTROLLER_TELEMETRY_ENABLED);
     options.setTestNotFound(false);
     options.setHasResponseCustomizer(endpoint -> true);
   }
@@ -121,7 +123,8 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
 
     testing()
         .waitAndAssertTraces(
-            trace ->
+            trace -> {
+              if (CONTROLLER_TELEMETRY_ENABLED) {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName(
@@ -143,7 +146,24 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                     span ->
                         span.hasName("controller")
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(3))));
+                            .hasParent(trace.getSpan(3)));
+              } else {
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(
+                                "GET " + getContextPath() + "/test-sub-resource-locator/call/sub")
+                            .hasKind(SpanKind.SERVER)
+                            .hasNoParent(),
+                    span ->
+                        span.hasName("controller")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName("controller")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0)));
+              }
+            });
   }
 
   private enum AsyncResponseTestKind {
@@ -197,46 +217,47 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     testing()
         .waitAndAssertTraces(
             trace -> {
-              List<Consumer<SpanDataAssert>> assertions =
-                  new ArrayList<>(
-                      asList(
-                          span ->
-                              assertServerSpan(
-                                  span,
-                                  "GET",
-                                  new ServerEndpoint(
-                                      "async",
-                                      "async?action=" + testKind.action,
-                                      testKind.statusCode,
-                                      null,
-                                      false),
-                                  testKind.statusCode),
-                          span -> {
-                            span.hasName("JaxRsTestResource.asyncOp")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParent(trace.getSpan(0))
-                                .hasAttributesSatisfyingExactly(
-                                    satisfies(
-                                        CODE_FUNCTION_NAME,
-                                        val -> val.endsWith("test.JaxRsTestResource.asyncOp")),
-                                    equalTo(
-                                        booleanKey("jaxrs.canceled"),
-                                        (testKind == AsyncResponseTestKind.CANCELED
-                                                && testExperimental())
-                                            ? true
-                                            : null));
-                            if (testKind == AsyncResponseTestKind.FAILING) {
-                              span.hasStatus(StatusData.error())
-                                  .hasException(new IllegalStateException("failure"));
-                            }
-                          }));
+              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+              assertions.add(
+                  span ->
+                      assertServerSpan(
+                          span,
+                          "GET",
+                          new ServerEndpoint(
+                              "async",
+                              "async?action=" + testKind.action,
+                              testKind.statusCode,
+                              null,
+                              false),
+                          testKind.statusCode));
+              if (CONTROLLER_TELEMETRY_ENABLED) {
+                assertions.add(
+                    span -> {
+                      span.hasName("JaxRsTestResource.asyncOp")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              satisfies(
+                                  CODE_FUNCTION_NAME,
+                                  val -> val.endsWith("test.JaxRsTestResource.asyncOp")),
+                              equalTo(
+                                  booleanKey("jaxrs.canceled"),
+                                  (testKind == AsyncResponseTestKind.CANCELED && testExperimental())
+                                      ? true
+                                      : null));
+                      if (testKind == AsyncResponseTestKind.FAILING) {
+                        span.hasStatus(StatusData.error())
+                            .hasException(new IllegalStateException("failure"));
+                      }
+                    });
+              }
               if (asyncCancelHasSendError() && testKind == AsyncResponseTestKind.CANCELED) {
                 assertions.add(
                     span ->
                         span.satisfies(
                                 spanData -> assertThat(spanData.getName()).endsWith("sendError"))
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(1)));
+                            .hasParent(trace.getSpan(CONTROLLER_TELEMETRY_ENABLED ? 1 : 0)));
               }
               trace.hasSpansSatisfyingExactly(assertions);
             });
@@ -289,19 +310,22 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
 
     testing()
         .waitAndAssertTraces(
-            trace ->
+            trace -> {
+              Consumer<SpanDataAssert> serverSpan =
+                  span ->
+                      assertServerSpan(
+                          span,
+                          "GET",
+                          new ServerEndpoint(
+                              "async",
+                              "async-completion-stage?action=" + testKind.action,
+                              testKind.statusCode,
+                              null,
+                              false),
+                          testKind.statusCode);
+              if (CONTROLLER_TELEMETRY_ENABLED) {
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        assertServerSpan(
-                            span,
-                            "GET",
-                            new ServerEndpoint(
-                                "async",
-                                "async-completion-stage?action=" + testKind.action,
-                                testKind.statusCode,
-                                null,
-                                false),
-                            testKind.statusCode),
+                    serverSpan,
                     span -> {
                       span.hasName("JaxRsTestResource.jaxRs21Async")
                           .hasKind(SpanKind.INTERNAL)
@@ -314,7 +338,11 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                         span.hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("failure"));
                       }
-                    }));
+                    });
+              } else {
+                trace.hasSpansSatisfyingExactly(serverSpan);
+              }
+            });
   }
 
   @Override

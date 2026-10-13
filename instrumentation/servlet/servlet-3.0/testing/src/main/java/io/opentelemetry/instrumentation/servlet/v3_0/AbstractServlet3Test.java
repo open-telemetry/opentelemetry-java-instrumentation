@@ -78,6 +78,17 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
     }
   }
 
+  @Override
+  protected boolean shouldCaptureRequestParameters() {
+    return !isAgentTest()
+        || System.getProperty(
+                "otel.instrumentation.servlet.experimental.request-parameters.included")
+            != null
+        || System.getProperty(
+                "otel.instrumentation.servlet.experimental.request-parameters.excluded")
+            != null;
+  }
+
   protected boolean isAgentTest() {
     return true;
   }

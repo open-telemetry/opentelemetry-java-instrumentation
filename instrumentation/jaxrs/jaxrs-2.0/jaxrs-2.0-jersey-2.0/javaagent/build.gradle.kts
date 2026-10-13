@@ -64,11 +64,9 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
@@ -77,6 +75,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.common.controller-telemetry.enabled=true," +
@@ -84,7 +83,15 @@ tasks {
     )
   }
 
+  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testControllerTelemetry)
   }
 }
