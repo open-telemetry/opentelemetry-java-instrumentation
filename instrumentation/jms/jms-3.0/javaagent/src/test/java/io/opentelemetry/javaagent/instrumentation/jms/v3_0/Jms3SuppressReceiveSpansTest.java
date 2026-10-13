@@ -153,7 +153,7 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                     span.hasName("receive " + actualDestinationName)
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(publishSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(publishSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
