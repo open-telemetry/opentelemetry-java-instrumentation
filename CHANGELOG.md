@@ -255,8 +255,6 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Remove the internal `DeprecatedInstrumentationNames` Java agent extension helper.
-  Register supported instrumentation names directly in the module constructor.
 - Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` and command-encoding event support
   from the standalone Lettuce library. There is no replacement API.
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
