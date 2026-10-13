@@ -208,6 +208,7 @@ public class ApplicationSpanBuilder140Incubator extends ApplicationSpanBuilder
               c,
               new application.io.opentelemetry.context.propagation.TextMapGetter<C>() {
 
+                @SuppressWarnings("deprecation") // TextMapGetter.keys is deprecated
                 @Override
                 public Iterable<String> keys(C c) {
                   return textMapGetter.keys(c);

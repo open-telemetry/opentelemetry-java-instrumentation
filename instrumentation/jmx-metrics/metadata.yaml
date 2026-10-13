@@ -7,11 +7,6 @@ description: >
   OpenTelemetry metrics. Collected metrics can be filtered by name using include and exclude
   patterns.
 configurations:
-  - name: otel.jmx.enabled
-    declarative_name: java.jmx.enabled
-    description: Enables collection of JMX metrics.
-    type: boolean
-    default: true
   - name: otel.jmx.config
     declarative_name: java.jmx.config
     description: List of paths to JMX metric definition YAML files.
@@ -22,16 +17,6 @@ configurations:
     description: Time in milliseconds between JMX MBean detection attempts.
     type: int
     default: 60000
-  - name: otel.jmx.target.system
-    declarative_name: java.jmx.target.system
-    deprecated: true
-    description: >
-      Deprecated list of predefined JMX target systems to collect metrics for, including their
-      unstable metrics. Used when `otel.jmx.metrics.experimental.included` is empty. A nonempty
-      experimental inclusion takes precedence. Remove this setting to use automatic stable metric
-      collection and select unstable metrics by name. This setting will be removed in 3.0.
-    type: list
-    default: ""
   - name: otel.jmx.metrics.included
     declarative_name: java.jmx.metrics.included
     description: >

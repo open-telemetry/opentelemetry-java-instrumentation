@@ -13,7 +13,7 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id("com.gradleup.shadow") version "9.6.1"
-  id("com.diffplug.spotless") version "8.10.3"
+  id("com.diffplug.spotless") version "8.10.4"
 
   id("io.opentelemetry.instrumentation.muzzle-generation") version "3.0.0-alpha-SNAPSHOT"
   id("io.opentelemetry.instrumentation.muzzle-check") version "3.0.0-alpha-SNAPSHOT"
@@ -24,7 +24,7 @@ version = "1.0"
 
 val versions = mapOf(
   // this line is managed by .github/scripts/update-sdk-version.sh
-  "opentelemetrySdk" to "1.66.0",
+  "opentelemetrySdk" to "1.67.0",
 
   // these lines are managed by .github/scripts/update-version.sh
   "opentelemetryJavaagent" to "3.0.0-SNAPSHOT",

@@ -167,9 +167,7 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.experimental.span-suppression-strategy`                   | `java.common.span_suppression_strategy/development`               |
 | `otel.instrumentation.opentelemetry-annotations.exclude-methods`                | `java.opentelemetry_extension_annotations.exclude_methods`        |
 | `otel.experimental.javascript-snippet`                                          | `java.servlet.javascript_snippet/development`                     |
-| `otel.jmx.enabled`                                                              | `java.jmx.enabled`                                                |
 | `otel.jmx.config`                                                               | `java.jmx.config`                                                 |
-| `otel.jmx.target.system`                                                        | `java.jmx.target.system`                                          |
 
 ## Standard Conversion
 
