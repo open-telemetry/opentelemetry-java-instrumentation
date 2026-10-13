@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +16,7 @@ import java.util.List;
 public class GuavaInstrumentationModule extends InstrumentationModule {
 
   public GuavaInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "guava-10.0" : "guava",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"guava"}
-            : new String[] {"guava-10.0"});
+    super("guava-10.0", "guava");
   }
 
   @Override
