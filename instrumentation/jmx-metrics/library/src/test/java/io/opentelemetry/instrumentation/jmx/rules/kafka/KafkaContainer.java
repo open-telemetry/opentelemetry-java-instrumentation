@@ -72,34 +72,49 @@ class KafkaContainer extends GenericContainer<KafkaContainer> {
 
     super.doStart();
     if (mode != Mode.CONNECT) {
-      // send sample message to ensure we get log flush metrics
+      // send sample message to ensure we get log flush metrics and per-topic metrics as they are
+      // created on first message.
       sendSampleMessage();
+      consumeSampleMessage();
     }
   }
 
   private void sendSampleMessage() {
+    // we have to force empty JAVA_TOOL_OPTIONS to prevent agent being loaded on producer
+    execCommand(
+        "echo 'my message' | JAVA_TOOL_OPTIONS='' "
+            + basePath
+            + "/bin/kafka-console-producer.sh"
+            + " --bootstrap-server localhost:"
+            + KAFKA_PORT
+            + " --topic my-topic",
+        "send sample message to Kafka");
+  }
+
+  private void consumeSampleMessage() {
+    // we have to force empty JAVA_TOOL_OPTIONS to prevent agent being loaded on consumer
+    execCommand(
+        "JAVA_TOOL_OPTIONS='' "
+            + basePath
+            + "/bin/kafka-console-consumer.sh"
+            + " --bootstrap-server localhost:"
+            + KAFKA_PORT
+            + " --topic my-topic --from-beginning --max-messages 1 --timeout-ms 10000",
+        "consume sample message from Kafka");
+  }
+
+  private void execCommand(String command, String description) {
     ExecResult execResult;
     try {
-      execResult =
-          execInContainer(
-              "/bin/sh",
-              "-c",
-              // we have to force empty JAVA_TOOL_OPTIONS to prevent agent being loaded on producer
-              "echo 'my message' | JAVA_TOOL_OPTIONS='' "
-                  + basePath
-                  + "/bin/kafka-console-producer.sh"
-                  + " --bootstrap-server localhost:"
-                  + KAFKA_PORT
-                  + " --topic my-topic");
+      execResult = execInContainer("/bin/sh", "-c", command);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new IllegalStateException("Failed to send sample message to Kafka", e);
+      throw new IllegalStateException("Failed to " + description, e);
     } catch (Exception e) {
-      throw new IllegalStateException("Failed to send sample message to Kafka", e);
+      throw new IllegalStateException("Failed to " + description, e);
     }
     if (execResult.getExitCode() != 0) {
-      throw new IllegalStateException(
-          "unable to send sample message to kafka: " + execResult.getStderr());
+      throw new IllegalStateException("unable to " + description + ": " + execResult.getStderr());
     }
   }
 
