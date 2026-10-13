@@ -362,8 +362,10 @@ readonly COLIMA_INSTRUMENTATIONS=(
 # metrics telemetry or test against latest library versions.
 readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:test"
+  "kafka:kafka-clients:kafka-clients-0.11:javaagent:testReceiveTelemetry"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
   "kafka:kafka-streams-0.11:javaagent:test"
+  "kafka:kafka-streams-0.11:javaagent:testReceiveTelemetry"
   "kafka:kafka-streams-0.11:javaagent:testExperimental"
   "lettuce:lettuce-5.1:javaagent:test"
   "mongo:mongo-3.1:javaagent:version37Test"

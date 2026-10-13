@@ -30,7 +30,9 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    if (name !in setOf("testPropagationDisabled", "testReceiveSpansDisabled")) {
+      systemProperty("collectMetadata", otelProps.collectMetadata)
+    }
   }
 
   val testPropagationDisabled = register<Test>("testPropagationDisabled") {
@@ -41,7 +43,7 @@ tasks {
     }
     include("**/KafkaClientPropagationDisabledTest.*")
     jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.producer-propagation.enabled=false")
+    systemProperty("collectMetadata", false)
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
@@ -51,6 +53,21 @@ tasks {
       includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     include("**/KafkaClientSuppressReceiveSpansTest.*")
+    systemProperty("collectMetadata", false)
+  }
+
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   val testV3Preview = register<Test>("testV3Preview") {
@@ -60,7 +77,6 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     // kafka metrics are disabled by default with v3-preview enabled
     jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
@@ -78,7 +94,10 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
 
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
+    )
   }
 
   test {
@@ -86,13 +105,13 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   check {
     dependsOn(
       testPropagationDisabled,
       testReceiveSpansDisabled,
+      testReceiveTelemetry,
       testV3Preview,
       testExperimental,
     )

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
@@ -57,6 +58,10 @@ import org.junit.jupiter.api.Test;
 
 class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
+  private static final boolean RECEIVE_TELEMETRY_ENABLED =
+      Boolean.getBoolean(
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
   void testKafkaProduceAndConsumeWithStreamsInBetween() throws Exception {
@@ -104,157 +109,260 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     assertThat(receivedHeaders).isNotEmpty();
     SpanContext receivedContext = Span.fromContext(getContext(receivedHeaders)).getSpanContext();
 
-    AtomicReference<SpanData> producerPendingRef = new AtomicReference<>();
-    AtomicReference<SpanData> producerProcessedRef = new AtomicReference<>();
+    if (RECEIVE_TELEMETRY_ENABLED) {
+      AtomicReference<SpanData> producerPendingRef = new AtomicReference<>();
+      AtomicReference<SpanData> producerProcessedRef = new AtomicReference<>();
 
-    testing.waitAndAssertSortedTraces(
-        TelemetryDataUtil.orderByRootSpanName(
-            "send " + STREAM_PENDING, "poll " + STREAM_PENDING, "poll " + STREAM_PROCESSED),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              // kafka-clients PRODUCER
-              span -> {
-                List<AttributeAssertion> producerPendingAssertions =
-                    new ArrayList<>(producerAttributes(STREAM_PENDING, true));
-                producerPendingAssertions.add(
-                    satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
-                span.hasName("send " + STREAM_PENDING)
-                    .hasKind(SpanKind.PRODUCER)
-                    .hasNoParent()
-                    .hasAttributesSatisfyingExactly(producerPendingAssertions);
-              },
-              // kafka-stream CONSUMER
-              span -> {
-                List<AttributeAssertion> assertions =
-                    new ArrayList<>(
-                        messagingAttributes(
-                            STREAM_PENDING, "process", "process", "consumer", false));
+      testing.waitAndAssertSortedTraces(
+          TelemetryDataUtil.orderByRootSpanName(
+              "send " + STREAM_PENDING, "poll " + STREAM_PENDING, "poll " + STREAM_PROCESSED),
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                // kafka-clients PRODUCER
+                span -> {
+                  List<AttributeAssertion> producerPendingAssertions =
+                      new ArrayList<>(producerAttributes(STREAM_PENDING, true));
+                  producerPendingAssertions.add(
+                      satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                  span.hasName("send " + STREAM_PENDING)
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(producerPendingAssertions);
+                },
+                // kafka-stream CONSUMER
+                span -> {
+                  List<AttributeAssertion> assertions =
+                      new ArrayList<>(
+                          messagingAttributes(
+                              STREAM_PENDING, "process", "process", "consumer", false));
 
-                assertions.add(
-                    satisfies(
-                        MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-                assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
-                assertions.add(equalTo(stringKey("asdf"), "testing"));
-                assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
-                assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
-                if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
                       satisfies(
-                          longKey("kafka.record.queue_time_ms"),
-                          val -> val.isGreaterThanOrEqualTo(0)));
-                }
-                if (testLatestDeps()) {
-                  assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test-application"));
-                }
-                span.hasName("process " + STREAM_PENDING)
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(0))
-                    .hasLinks(LinkData.create(asRemote(trace.getSpan(0).getSpanContext())))
-                    .hasAttributesSatisfyingExactly(assertions);
-              },
-              // kafka-clients PRODUCER
-              span -> {
-                List<AttributeAssertion> producerProcessedAssertions =
-                    new ArrayList<>(producerAttributes(STREAM_PROCESSED, false));
-                producerProcessedAssertions.add(
-                    satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
-                span.hasName("send " + STREAM_PROCESSED)
-                    .hasKind(SpanKind.PRODUCER)
-                    .hasParent(trace.getSpan(1))
-                    .hasTraceId(receivedContext.getTraceId())
-                    .hasSpanId(receivedContext.getSpanId())
-                    .hasAttributesSatisfyingExactly(producerProcessedAssertions);
-              },
-              // kafka-clients CONSUMER process
-              span -> {
-                List<AttributeAssertion> assertions =
-                    new ArrayList<>(
-                        messagingAttributes(
-                            STREAM_PROCESSED, "process", "process", "consumer", true));
+                          MESSAGING_DESTINATION_PARTITION_ID,
+                          val -> val.isInstanceOf(String.class)));
+                  assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                  assertions.add(equalTo(stringKey("asdf"), "testing"));
+                  assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
+                  assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                  if (EXPERIMENTAL_ATTRIBUTES) {
+                    assertions.add(
+                        satisfies(
+                            longKey("kafka.record.queue_time_ms"),
+                            val -> val.isGreaterThanOrEqualTo(0)));
+                  }
+                  if (testLatestDeps()) {
+                    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test-application"));
+                  }
+                  span.hasName("process " + STREAM_PENDING)
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(0))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(0).getSpanContext())))
+                      .hasAttributesSatisfyingExactly(assertions);
+                },
+                // kafka-clients PRODUCER
+                span -> {
+                  List<AttributeAssertion> producerProcessedAssertions =
+                      new ArrayList<>(producerAttributes(STREAM_PROCESSED, false));
+                  producerProcessedAssertions.add(
+                      satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                  span.hasName("send " + STREAM_PROCESSED)
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(1))
+                      .hasTraceId(receivedContext.getTraceId())
+                      .hasSpanId(receivedContext.getSpanId())
+                      .hasAttributesSatisfyingExactly(producerProcessedAssertions);
+                },
+                // kafka-clients CONSUMER process
+                span -> {
+                  List<AttributeAssertion> assertions =
+                      new ArrayList<>(
+                          messagingAttributes(
+                              STREAM_PROCESSED, "process", "process", "consumer", true));
 
-                assertions.add(
-                    satisfies(
-                        MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-                assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
-                assertions.add(equalTo(longKey("testing"), 123));
-                assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
-                assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
-                if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
                       satisfies(
-                          longKey("kafka.record.queue_time_ms"),
-                          val -> val.isGreaterThanOrEqualTo(0)));
-                }
-                if (testLatestDeps()) {
-                  assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
-                }
-                span.hasName("process " + STREAM_PROCESSED)
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(2))
-                    .hasLinks(LinkData.create(asRemote(trace.getSpan(2).getSpanContext())))
-                    .hasAttributesSatisfyingExactly(assertions);
-              });
-          producerPendingRef.set(trace.getSpan(0));
-          producerProcessedRef.set(trace.getSpan(2));
-        },
-        trace -> {
-          List<AttributeAssertion> assertions =
-              new ArrayList<>(
-                  messagingAttributes(STREAM_PENDING, "poll", "receive", "consumer", false));
-          assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-          assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
-          assertions.add(
-              satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-          if (testLatestDeps()) {
-            assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test-application"));
-          }
-          trace.hasSpansSatisfyingExactly(
-              // kafka-clients CONSUMER receive
-              span ->
-                  span.hasName("poll " + STREAM_PENDING)
-                      .hasKind(SpanKind.CLIENT)
-                      .hasNoParent()
-                      .hasLinks(receiveRecordLink(producerPendingRef.get(), null))
-                      .hasAttributesSatisfyingExactly(assertions));
-        },
-        trace -> {
-          List<AttributeAssertion> assertions =
-              new ArrayList<>(
-                  messagingAttributes(STREAM_PROCESSED, "poll", "receive", "consumer", true));
-          assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-          assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
-          assertions.add(
-              satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-          if (testLatestDeps()) {
-            assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
-          }
-          trace.hasSpansSatisfyingExactly(
-              // kafka-clients CONSUMER receive
-              span ->
-                  span.hasName("poll " + STREAM_PROCESSED)
-                      .hasKind(SpanKind.CLIENT)
-                      .hasNoParent()
-                      .hasLinks(receiveRecordLink(producerProcessedRef.get(), "10"))
-                      .hasAttributesSatisfyingExactly(assertions));
-        });
-    assertProcessMetrics(
-        testing,
-        "io.opentelemetry.kafka-streams-0.11",
-        STREAM_PENDING,
-        testLatestDeps() ? "test-application" : null,
-        "0",
-        1,
-        null);
-    assertReceiveMetrics(
-        testing,
-        "io.opentelemetry.kafka-clients-0.11",
-        STREAM_PENDING,
-        testLatestDeps() ? "test-application" : null,
-        "0",
-        1,
-        1,
-        null);
-    assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-clients-0.11", 2);
+                          MESSAGING_DESTINATION_PARTITION_ID,
+                          val -> val.isInstanceOf(String.class)));
+                  assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                  assertions.add(equalTo(longKey("testing"), 123));
+                  assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
+                  assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                  if (EXPERIMENTAL_ATTRIBUTES) {
+                    assertions.add(
+                        satisfies(
+                            longKey("kafka.record.queue_time_ms"),
+                            val -> val.isGreaterThanOrEqualTo(0)));
+                  }
+                  if (testLatestDeps()) {
+                    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
+                  }
+                  span.hasName("process " + STREAM_PROCESSED)
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(2))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(2).getSpanContext())))
+                      .hasAttributesSatisfyingExactly(assertions);
+                });
+            producerPendingRef.set(trace.getSpan(0));
+            producerProcessedRef.set(trace.getSpan(2));
+          },
+          trace -> {
+            List<AttributeAssertion> assertions =
+                new ArrayList<>(
+                    messagingAttributes(STREAM_PENDING, "poll", "receive", "consumer", false));
+            assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+            assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+            assertions.add(
+                satisfies(
+                    MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
+            if (testLatestDeps()) {
+              assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test-application"));
+            }
+            trace.hasSpansSatisfyingExactly(
+                // kafka-clients CONSUMER receive
+                span ->
+                    span.hasName("poll " + STREAM_PENDING)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasLinks(receiveRecordLink(producerPendingRef.get(), null))
+                        .hasAttributesSatisfyingExactly(assertions));
+          },
+          trace -> {
+            List<AttributeAssertion> assertions =
+                new ArrayList<>(
+                    messagingAttributes(STREAM_PROCESSED, "poll", "receive", "consumer", true));
+            assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+            assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+            assertions.add(
+                satisfies(
+                    MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
+            if (testLatestDeps()) {
+              assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
+            }
+            trace.hasSpansSatisfyingExactly(
+                // kafka-clients CONSUMER receive
+                span ->
+                    span.hasName("poll " + STREAM_PROCESSED)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasLinks(receiveRecordLink(producerProcessedRef.get(), "10"))
+                        .hasAttributesSatisfyingExactly(assertions));
+          });
+      assertProcessMetrics(
+          testing,
+          "io.opentelemetry.kafka-streams-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          null);
+      assertReceiveMetrics(
+          testing,
+          "io.opentelemetry.kafka-clients-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          1,
+          null);
+      assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-clients-0.11", 2);
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  // kafka-clients PRODUCER
+                  span -> {
+                    List<AttributeAssertion> producerPendingAssertions =
+                        new ArrayList<>(producerAttributes(STREAM_PENDING, true));
+                    producerPendingAssertions.add(
+                        satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                    span.hasName("send " + STREAM_PENDING)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(producerPendingAssertions);
+                  },
+                  // kafka-stream CONSUMER
+                  span -> {
+                    List<AttributeAssertion> assertions =
+                        new ArrayList<>(
+                            messagingAttributes(
+                                STREAM_PENDING, "process", "process", "consumer", false));
+
+                    assertions.add(
+                        satisfies(
+                            MESSAGING_DESTINATION_PARTITION_ID,
+                            val -> val.isInstanceOf(String.class)));
+                    assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                    assertions.add(equalTo(stringKey("asdf"), "testing"));
+                    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
+                    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                    if (EXPERIMENTAL_ATTRIBUTES) {
+                      assertions.add(
+                          satisfies(
+                              longKey("kafka.record.queue_time_ms"),
+                              val -> val.isGreaterThanOrEqualTo(0)));
+                    }
+                    if (testLatestDeps()) {
+                      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test-application"));
+                    }
+                    span.hasName("process " + STREAM_PENDING)
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(0).getSpanContext())))
+                        .hasAttributesSatisfyingExactly(assertions);
+                  },
+                  // kafka-clients PRODUCER
+                  span -> {
+                    List<AttributeAssertion> producerProcessedAssertions =
+                        new ArrayList<>(producerAttributes(STREAM_PROCESSED, false));
+                    producerProcessedAssertions.add(
+                        satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                    span.hasName("send " + STREAM_PROCESSED)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(1))
+                        .hasTraceId(receivedContext.getTraceId())
+                        .hasSpanId(receivedContext.getSpanId())
+                        .hasAttributesSatisfyingExactly(producerProcessedAssertions);
+                  },
+                  // kafka-clients CONSUMER process
+                  span -> {
+                    List<AttributeAssertion> assertions =
+                        new ArrayList<>(
+                            messagingAttributes(
+                                STREAM_PROCESSED, "process", "process", "consumer", true));
+
+                    assertions.add(
+                        satisfies(
+                            MESSAGING_DESTINATION_PARTITION_ID,
+                            val -> val.isInstanceOf(String.class)));
+                    assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                    assertions.add(equalTo(longKey("testing"), 123));
+                    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
+                    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                    if (EXPERIMENTAL_ATTRIBUTES) {
+                      assertions.add(
+                          satisfies(
+                              longKey("kafka.record.queue_time_ms"),
+                              val -> val.isGreaterThanOrEqualTo(0)));
+                    }
+                    if (testLatestDeps()) {
+                      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
+                    }
+                    span.hasName("process " + STREAM_PROCESSED)
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(2))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(2).getSpanContext())))
+                        .hasAttributesSatisfyingExactly(assertions);
+                  }));
+      assertProcessMetricsWithConsumedMessages(
+          testing,
+          "io.opentelemetry.kafka-streams-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          1,
+          null);
+    }
   }
 
   private static List<AttributeAssertion> producerAttributes(String topic, boolean includeKey) {
