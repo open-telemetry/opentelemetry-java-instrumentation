@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
-
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -22,10 +20,15 @@ class DynamoDbClientTest extends AbstractDynamoDbClientTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return true;
+  }
+
+  @Override
   public AmazonDynamoDBClientBuilder configureClient(AmazonDynamoDBClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .build()
             .createRequestHandler());
   }

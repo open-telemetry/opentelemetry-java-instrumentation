@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -44,7 +43,7 @@ import org.junit.jupiter.api.TestInstance;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractBaseAwsClientTest {
+public abstract class AbstractBaseAwsClientTest extends AbstractAwsSdkTest {
   protected static final AWSStaticCredentialsProvider credentialsProvider =
       new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
   protected final MockWebServerExtension server = new MockWebServerExtension();

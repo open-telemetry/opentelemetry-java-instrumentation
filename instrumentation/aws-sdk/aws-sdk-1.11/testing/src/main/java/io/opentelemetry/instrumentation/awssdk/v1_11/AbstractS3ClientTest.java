@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
-
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -22,12 +20,17 @@ class SecretsManagerClientTest extends AbstractSecretsManagerClientTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return true;
+  }
+
+  @Override
   public AWSSecretsManagerClientBuilder configureClient(
       AWSSecretsManagerClientBuilder clientBuilder) {
 
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .build()
             .createRequestHandler());
   }

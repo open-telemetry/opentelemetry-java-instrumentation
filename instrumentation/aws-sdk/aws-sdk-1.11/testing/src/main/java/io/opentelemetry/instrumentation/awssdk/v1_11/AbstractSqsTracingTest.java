@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -83,7 +82,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractSqsTracingTest {
+public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
 
   protected static int sqsPort;
   private static SQSRestServer sqsRestServer;
@@ -213,7 +212,7 @@ public abstract class AbstractSqsTracingTest {
     testing().waitAndAssertTraces(traceAssertions);
   }
 
-  private static void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
+  private void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             asList(
@@ -248,12 +247,12 @@ public abstract class AbstractSqsTracingTest {
         .hasAttributesSatisfyingExactly(attributes);
   }
 
-  private static void assertReceiveSpan(
+  private void assertReceiveSpan(
       SpanDataAssert span, SpanData creationContext, boolean captureHeaders) {
     assertReceiveSpan(span, null, creationContext, captureHeaders);
   }
 
-  private static void assertReceiveSpan(
+  private void assertReceiveSpan(
       SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
@@ -303,7 +302,7 @@ public abstract class AbstractSqsTracingTest {
                             .isEqualTo(creationContext.getSpanId())));
   }
 
-  private static void assertProcessSpan(
+  private void assertProcessSpan(
       SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(

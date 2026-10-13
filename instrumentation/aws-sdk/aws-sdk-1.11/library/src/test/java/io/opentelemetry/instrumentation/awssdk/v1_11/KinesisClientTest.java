@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
-
 import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -22,10 +20,15 @@ class KinesisClientTest extends AbstractKinesisClientTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return true;
+  }
+
+  @Override
   public AmazonKinesisClientBuilder configureClient(AmazonKinesisClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .build()
             .createRequestHandler());
   }

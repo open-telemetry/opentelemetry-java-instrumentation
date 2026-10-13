@@ -50,7 +50,6 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
