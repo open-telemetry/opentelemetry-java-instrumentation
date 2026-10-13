@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking changes
 
+- Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
+  `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
+  Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
+  query-derived span names are still produced, matching other SQL instrumentations. This applies
+  to `otel.instrumentation.couchbase.query-sanitization.enabled=false`, including when inherited
+  from the common database setting.
 - Remove bundled support for the contrib `otel.traces.sampler=linksbased_parentbased_always_on` and
   declarative `rule_based_routing` samplers. The links-based sampler has no replacement. For
   compatible rule-based policies, consider the SDK incubator declarative `composite/development`
