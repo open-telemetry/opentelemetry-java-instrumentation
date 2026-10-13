@@ -20,11 +20,6 @@ class S3ClientTest extends AbstractS3ClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AmazonS3ClientBuilder configureClient(AmazonS3ClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())

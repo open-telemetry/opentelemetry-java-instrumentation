@@ -20,11 +20,6 @@ class LambdaClientTest extends AbstractLambdaClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AWSLambdaClientBuilder configureClient(AWSLambdaClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())

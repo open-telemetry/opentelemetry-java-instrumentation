@@ -79,7 +79,6 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 

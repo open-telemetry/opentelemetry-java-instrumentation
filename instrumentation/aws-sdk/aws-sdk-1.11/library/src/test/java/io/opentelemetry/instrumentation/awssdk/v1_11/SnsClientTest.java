@@ -20,11 +20,6 @@ class SnsClientTest extends AbstractSnsClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AmazonSNSClientBuilder configureClient(AmazonSNSClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())

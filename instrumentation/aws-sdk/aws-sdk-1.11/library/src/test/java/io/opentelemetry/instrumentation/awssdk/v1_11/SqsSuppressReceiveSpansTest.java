@@ -21,11 +21,6 @@ class SqsSuppressReceiveSpansTest extends AbstractSqsSuppressReceiveSpansTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())

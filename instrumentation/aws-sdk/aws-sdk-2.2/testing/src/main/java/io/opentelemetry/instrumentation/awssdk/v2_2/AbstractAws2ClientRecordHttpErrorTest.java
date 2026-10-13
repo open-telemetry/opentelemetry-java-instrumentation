@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -27,7 +26,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -58,7 +56,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractAws2ClientRecordHttpErrorTest {
+public abstract class AbstractAws2ClientRecordHttpErrorTest extends AbstractAwsSdkTest {
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
@@ -77,8 +75,6 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
   }
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
-
-  protected abstract InstrumentationExtension getTesting();
 
   // Introducing a new ExecutionInterceptor that's registered with the AWS SDK.
   // It's positioned to execute after the TracingExecutionInterceptor used for SDK instrumentation.

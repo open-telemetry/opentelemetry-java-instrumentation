@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
-
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,7 +24,7 @@ class Aws2RdsDataTest extends AbstractAws2RdsDataTest {
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(
             AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-                .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
+                .setCaptureExperimentalSpanAttributes(true)
                 .build()
                 .createExecutionInterceptor());
   }

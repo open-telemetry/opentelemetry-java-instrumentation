@@ -20,11 +20,6 @@ class RdsClientTest extends AbstractRdsClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AmazonRDSClientBuilder configureClient(AmazonRDSClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())

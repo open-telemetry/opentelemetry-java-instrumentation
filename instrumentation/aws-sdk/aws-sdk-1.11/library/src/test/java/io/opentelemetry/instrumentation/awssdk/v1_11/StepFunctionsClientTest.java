@@ -20,11 +20,6 @@ class StepFunctionsClientTest extends AbstractStepFunctionsClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AWSStepFunctionsClientBuilder configureClient(
       AWSStepFunctionsClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(

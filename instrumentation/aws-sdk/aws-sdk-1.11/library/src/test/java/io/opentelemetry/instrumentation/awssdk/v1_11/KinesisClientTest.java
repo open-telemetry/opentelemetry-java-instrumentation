@@ -20,11 +20,6 @@ class KinesisClientTest extends AbstractKinesisClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AmazonKinesisClientBuilder configureClient(AmazonKinesisClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())

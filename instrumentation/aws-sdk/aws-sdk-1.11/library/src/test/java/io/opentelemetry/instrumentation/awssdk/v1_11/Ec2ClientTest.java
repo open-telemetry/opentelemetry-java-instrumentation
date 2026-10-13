@@ -20,11 +20,6 @@ class Ec2ClientTest extends AbstractEc2ClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AmazonEC2ClientBuilder configureClient(AmazonEC2ClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())

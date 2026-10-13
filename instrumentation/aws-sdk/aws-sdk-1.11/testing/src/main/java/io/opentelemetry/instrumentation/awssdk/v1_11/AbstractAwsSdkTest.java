@@ -5,9 +5,16 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
+
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+
 public abstract class AbstractAwsSdkTest {
+  protected abstract InstrumentationExtension testing();
+
   protected boolean captureExperimentalSpanAttributes() {
-    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
+    return !(testing() instanceof AgentInstrumentationExtension) || EXPERIMENTAL_ATTRIBUTES;
   }
 
   protected final String experimental(String value) {

@@ -59,7 +59,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -87,8 +86,6 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
   protected static int sqsPort;
   private static SQSRestServer sqsRestServer;
   private static AmazonSQSAsync sqsClient;
-
-  protected abstract InstrumentationExtension testing();
 
   protected boolean receiveTelemetryEnabled() {
     return !(testing() instanceof AgentInstrumentationExtension)

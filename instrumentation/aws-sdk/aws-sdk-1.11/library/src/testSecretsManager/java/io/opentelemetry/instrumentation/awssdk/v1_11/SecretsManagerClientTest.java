@@ -20,11 +20,6 @@ class SecretsManagerClientTest extends AbstractSecretsManagerClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return true;
-  }
-
-  @Override
   public AWSSecretsManagerClientBuilder configureClient(
       AWSSecretsManagerClientBuilder clientBuilder) {
 

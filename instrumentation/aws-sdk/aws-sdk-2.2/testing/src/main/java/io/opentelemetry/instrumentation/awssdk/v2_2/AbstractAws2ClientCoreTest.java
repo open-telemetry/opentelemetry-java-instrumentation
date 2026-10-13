@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -40,7 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
@@ -88,14 +86,12 @@ import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractAws2ClientCoreTest {
+public abstract class AbstractAws2ClientCoreTest extends AbstractAwsSdkTest {
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
 
   protected static final MockWebServerExtension server = new MockWebServerExtension();
-
-  protected abstract InstrumentationExtension getTesting();
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
@@ -252,7 +248,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private static void assertListTablesRequest(SpanDataAssert span) {
+  private void assertListTablesRequest(SpanDataAssert span) {
     span.hasName("DynamoDb.ListTables")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
@@ -273,7 +269,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private static void assertDynamoDbRequest(
+  private void assertDynamoDbRequest(
       SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(

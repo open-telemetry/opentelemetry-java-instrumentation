@@ -30,7 +30,6 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
 import java.lang.reflect.Field;
@@ -48,8 +47,6 @@ public abstract class AbstractBaseAwsClientTest extends AbstractAwsSdkTest {
       new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
   protected final MockWebServerExtension server = new MockWebServerExtension();
   protected AwsClientBuilder.EndpointConfiguration endpoint;
-
-  protected abstract InstrumentationExtension testing();
 
   protected abstract boolean hasRequestId();
 

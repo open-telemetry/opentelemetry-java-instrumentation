@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -17,6 +19,11 @@ class Aws2ClientTest extends AbstractAws2ClientTest {
   @Override
   protected InstrumentationExtension getTesting() {
     return testing;
+  }
+
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 
   @Override

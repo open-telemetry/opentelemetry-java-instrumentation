@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -54,7 +53,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
   void testDisableSqsMessageCreateSpans() {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES);
+            .setCaptureExperimentalSpanAttributes(true);
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AwsSdkTelemetry disabledTelemetry = telemetryBuilder.build();
     SqsClientBuilder builder = SqsClient.builder();

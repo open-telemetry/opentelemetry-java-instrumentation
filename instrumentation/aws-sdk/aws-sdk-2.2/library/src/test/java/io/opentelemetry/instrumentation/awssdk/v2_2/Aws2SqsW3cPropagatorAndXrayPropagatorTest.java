@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -103,7 +102,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
   void testDisabledCreateSpansPreserveCustomBatchCreationContexts() {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
+            .setCaptureExperimentalSpanAttributes(true)
             .setUseConfiguredPropagatorForMessaging(true)
             .setUseXrayPropagator(false);
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
