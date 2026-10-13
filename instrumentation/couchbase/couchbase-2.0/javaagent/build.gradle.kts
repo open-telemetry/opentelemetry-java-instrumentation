@@ -78,13 +78,18 @@ testing {
 }
 
 tasks {
+  val metadataExcludedTasks = setOf("version26TestLegacyConfig")
+
   withType<Test>().configureEach {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty(
+      "collectMetadata",
+      if (name in metadataExcludedTasks) false else otelProps.collectMetadata,
+    )
   }
 
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
@@ -103,9 +108,7 @@ tasks {
     isEnabled = named<Test>(suite.name).get().enabled
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
-
     jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
   }
 
   check {
