@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # all development branches are needed to resolve the release's destination
+          # fetch development branch refs so the release destination can be resolved
           fetch-depth: 0
           persist-credentials: false
 
