@@ -80,7 +80,7 @@ class KafkaBrokerTest extends TargetSystemTest {
     MetricsVerifier verifier =
         MetricsVerifier.create()
             .add(
-                "kafka.message.count",
+                "kafka.server.message.count",
                 metric ->
                     metric
                         .isCounter()
@@ -88,7 +88,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The number of messages received by the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.request.count",
+                "kafka.server.request.count",
                 metric ->
                     metric
                         .isCounter()
@@ -96,7 +96,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The number of requests received by the broker")
                         .hasDataPointsWithAttributes(fetchType, produceType))
             .add(
-                "kafka.request.failed",
+                "kafka.server.request.failed",
                 metric ->
                     metric
                         .isCounter()
@@ -105,55 +105,17 @@ class KafkaBrokerTest extends TargetSystemTest {
                             "The number of requests to the broker resulting in a failure")
                         .hasDataPointsWithAttributes(fetchType, produceType))
             .add(
-                "kafka.request.duration.count", // TODO: not sure if this is a relevant metric
-                metric ->
-                    metric
-                        .isCounter()
-                        .hasUnit("{request}")
-                        .hasDescription(
-                            "The number of requests the broker has measured the service duration of")
-                        .hasDataPointsWithAttributes(
-                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
-            .add(
-                "kafka.request.duration.p50",
-                metric ->
-                    metric
-                        .isGauge()
-                        .hasUnit("s")
-                        .hasDescription(
-                            "The 50th percentile duration the broker has taken to service requests")
-                        .hasDataPointsWithAttributes(
-                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
-            .add(
-                "kafka.request.duration.p99",
-                metric ->
-                    metric
-                        .isGauge()
-                        .hasUnit("s")
-                        .hasDescription(
-                            "The 99th percentile duration the broker has taken to service requests")
-                        .hasDataPointsWithAttributes(
-                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
-            .add(
-                "kafka.request.queue",
-                metric ->
-                    metric
-                        .isUpDownCounter()
-                        .hasUnit("{request}")
-                        .hasDescription("Size of the request queue")
-                        .hasDataPointsWithoutAttributes())
-            .add(
-                "kafka.network.io",
+                "kafka.server.network.io",
                 metric ->
                     metric
                         .isCounter()
                         .hasUnit("By")
                         .hasDescription("The bytes received or sent by the broker")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("kafka.network.io.direction", "receive")),
-                            attributeGroup(attribute("kafka.network.io.direction", "transmit"))))
+                            attributeGroup(attribute("network.io.direction", "receive")),
+                            attributeGroup(attribute("network.io.direction", "transmit"))))
             .add(
-                "kafka.purgatory.size",
+                "kafka.server.purgatory.size",
                 metric ->
                     metric
                         .isUpDownCounter()
@@ -163,7 +125,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                             attributeGroup(attribute("kafka.request.type", "produce")),
                             attributeGroup(attribute("kafka.request.type", "fetch"))))
             .add(
-                "kafka.partition.count",
+                "kafka.server.partition.count",
                 metric ->
                     metric
                         .isUpDownCounter()
@@ -171,15 +133,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The number of partitions on the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.partition.offline",
-                metric ->
-                    metric
-                        .isUpDownCounter()
-                        .hasUnit("{partition}")
-                        .hasDescription("The number of partitions offline")
-                        .hasDataPointsWithoutAttributes())
-            .add(
-                "kafka.partition.under_replicated",
+                "kafka.server.partition.under_replicated",
                 metric ->
                     metric
                         .isUpDownCounter()
@@ -187,7 +141,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The number of under-replicated partitions")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.isr.operation.count",
+                "kafka.server.isr.operation.count",
                 metric ->
                     metric
                         .isUpDownCounter()
@@ -197,13 +151,58 @@ class KafkaBrokerTest extends TargetSystemTest {
                             attributeGroup(attribute("kafka.isr.operation", "shrink")),
                             attributeGroup(attribute("kafka.isr.operation", "expand"))))
             .add(
-                "kafka.lag.max",
+                "kafka.server.lag.max",
                 metric ->
                     metric
                         .isGauge()
                         .hasUnit("{message}")
                         .hasDescription(
                             "The max lag in messages between follower and leader replicas")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.network.request.count",
+                metric ->
+                    metric
+                        .isCounter()
+                        .hasUnit("{request}")
+                        .hasDescription("The number of network requests received by the broker")
+                        .hasDataPointsWithAttributes(
+                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
+            .add(
+                "kafka.network.request.duration.p50",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription(
+                            "The 50th percentile duration the broker has taken to service network requests")
+                        .hasDataPointsWithAttributes(
+                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
+            .add(
+                "kafka.network.request.duration.p99",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription(
+                            "The 99th percentile duration the broker has taken to service network requests")
+                        .hasDataPointsWithAttributes(
+                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
+            .add(
+                "kafka.network.request.queue",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasUnit("{request}")
+                        .hasDescription("Size of the network request queue")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.controller.partition.offline",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasUnit("{partition}")
+                        .hasDescription("The number of partitions offline")
                         .hasDataPointsWithoutAttributes())
             .add(
                 "kafka.controller.active.count",
@@ -214,7 +213,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The number of controllers active on the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.count",
+                "kafka.log.flush.count",
                 metric ->
                     metric
                         .isCounter()
@@ -222,7 +221,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("Log flush count")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.duration.p50",
+                "kafka.log.flush.duration.p50",
                 metric ->
                     metric
                         .isGauge()
@@ -230,7 +229,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("Log flush duration 50th percentile")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.duration.p99",
+                "kafka.log.flush.duration.p99",
                 metric ->
                     metric
                         .isGauge()
@@ -242,7 +241,7 @@ class KafkaBrokerTest extends TargetSystemTest {
       // those metrics are only reported when using zookeeper
       verifier
           .add(
-              "kafka.leader_election.count",
+              "kafka.controller.leader_election.count",
               metric ->
                   metric
                       .isCounter()
@@ -250,7 +249,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                       .hasDescription("The leader election count")
                       .hasDataPointsWithoutAttributes())
           .add(
-              "kafka.leader_election.unclean.count",
+              "kafka.controller.leader_election.unclean.count",
               metric ->
                   metric
                       .isCounter()
