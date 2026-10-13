@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking changes
 
+- The Java agent now instruments Lettuce 5.1 and later with the Lettuce 5.0 integration, changing
+  the instrumentation scope from `io.opentelemetry.lettuce-5.1` to
+  `io.opentelemetry.lettuce-5.0`. The Java agent no longer emits command-encoding events, and
+  `otel.instrumentation.lettuce.experimental.command-encoding-events.enabled` is no longer
+  supported. Replace the removed `otel.instrumentation.lettuce-5.1.enabled` selector with
+  `otel.instrumentation.lettuce.enabled` to enable or disable Lettuce instrumentation.
 - OpenTelemetry API bridges remain enabled when
   `otel.instrumentation.common.default-enabled=false`. Disable them explicitly with
   `otel.instrumentation.opentelemetry-api.enabled=false`.
@@ -175,6 +181,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` and command-encoding event support
+  from the standalone Lettuce library. There is no replacement API.
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
   runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
   specifying the metrics to source from JFR.
