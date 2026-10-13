@@ -48,6 +48,7 @@ jobs:
           persist-credentials: false
 
       - name: Set environment variables
+        # Sets VERSION, DEVELOPMENT_BRANCH, and PRIOR_VERSION.
         run: python .github/scripts/release-config.py release --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
         # check out the development branch to verify there won't be problems merging the change log
@@ -77,6 +78,7 @@ jobs:
       - name: Determine whether to mark the release as latest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Sets MAKE_LATEST.
         run: |
           gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
             --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name' \
@@ -229,6 +231,7 @@ jobs:
       - name: Determine whether to update the API baseline
         env:
           VERSION: ${{ needs.release.outputs.version }}
+        # Sets UPDATE_API_BASELINE.
         run: |
           python .github/scripts/release-config.py post-release --version "$VERSION" >> "$GITHUB_ENV"
 

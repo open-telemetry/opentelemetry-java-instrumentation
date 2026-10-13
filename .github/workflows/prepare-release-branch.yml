@@ -35,6 +35,7 @@ jobs:
           persist-credentials: false
 
       - name: Set release branch variables
+        # Sets VERSION, DEVELOPMENT_BRANCH, RELEASE_BRANCH_NAME, and NEXT_VERSION.
         run: python .github/scripts/release-config.py prepare --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       - name: Update version
@@ -88,6 +89,7 @@ jobs:
           persist-credentials: false
 
       - name: Set environment variables
+        # Sets VERSION, DEVELOPMENT_BRANCH, RELEASE_BRANCH_NAME, and NEXT_VERSION.
         run: python .github/scripts/release-config.py prepare --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       - name: Update version
