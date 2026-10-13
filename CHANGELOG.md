@@ -10,6 +10,8 @@
   query-derived span names are still produced, matching other SQL instrumentations. This applies
   to `otel.instrumentation.couchbase.query-sanitization.enabled=false`, including when inherited
   from the common database setting.
+- The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
+  starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.
@@ -271,6 +273,10 @@ for more details.
 
 ### 🚫 Deprecations
 
+- Add `RocketMqTelemetry.wrap(DefaultMQProducer)` for single-message and batch producer
+  instrumentation, fixing batch context propagation by injecting context before message encoding.
+  Deprecate `RocketMqTelemetry.createSendMessageHook()` in favor of the wrapper.
+  ([#20479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20479))
 - Deprecate `otel.jmx.target.system` in favor of `otel.jmx.metrics.experimental.included`.
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query`. It will be removed in 3.0,

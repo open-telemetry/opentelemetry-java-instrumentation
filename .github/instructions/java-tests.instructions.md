@@ -16,12 +16,15 @@ convention not caught by CI.
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted
   telemetry, not just helpers.
-- Do not add or request duplicate behavior tests for equivalent flat properties
-  and declarative YAML that use shared configuration logic. Add declarative-mode
+- For ordinary settings available in both forms, prefer default-behavior and
+  module-specific flat-property tests. Do not add or request duplicate behavior tests for
+  equivalent flat properties and declarative YAML that use shared configuration logic. Add declarative-mode
   coverage only for different behavior, new or changed mode-specific wiring or
-  migration paths, or settings unavailable through flat properties. Keep
-  mode-specific wiring tests focused rather than repeating the full behavior
-  matrix. Test shared flat-to-declarative conversion centrally.
+  migration paths, structured configuration, or settings unavailable through flat properties.
+  Keep mode-specific wiring tests focused rather than repeating the full behavior matrix.
+  Test shared flat-to-declarative conversion centrally. Single-source declarative unit tests are not duplicates.
+- Test shared-helper defaults, fallback, and precedence centrally, not in every caller.
+  Keep caller-specific logic covered and add missing central coverage before removing a module test.
 - Do not add or request historical-absence assertions merely because telemetry
   or functionality was removed or made opt-in. An absence assertion must verify
   a supported contract that would merit testing even if the previous behavior
