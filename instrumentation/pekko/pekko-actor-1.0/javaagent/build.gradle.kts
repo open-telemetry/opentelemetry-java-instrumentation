@@ -56,6 +56,7 @@ testing {
     register<JvmTestSuite>("pekko2Test") {
       dependencies {
         implementation("org.apache.pekko:pekko-actor_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+        implementation("org.apache.pekko:pekko-actor-typed_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
         implementation(project(":instrumentation:executors:testing"))
       }
     }
@@ -64,6 +65,7 @@ testing {
       dependencies {
         implementation("org.scala-lang:scala3-library_3:3.3.8")
         implementation("org.apache.pekko:pekko-actor_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+        implementation("org.apache.pekko:pekko-actor-typed_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
         implementation(project(":instrumentation:executors:testing"))
       }
     }
