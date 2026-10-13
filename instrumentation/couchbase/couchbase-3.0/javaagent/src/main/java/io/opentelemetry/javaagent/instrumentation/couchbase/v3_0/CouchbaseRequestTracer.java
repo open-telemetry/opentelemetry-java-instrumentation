@@ -12,7 +12,6 @@ import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_KV;
 import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_QUERY;
 import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_SEARCH;
 import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_VIEW;
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
@@ -34,7 +33,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   private final CouchbaseTracer tracer;
 
   public static RequestTracer create(Tracer tracer) {
-    return new CouchbaseRequestTracer(new CouchbaseTracer(tracer, false, INTERNAL, true));
+    return new CouchbaseRequestTracer(new CouchbaseTracer(tracer, false, true));
   }
 
   private CouchbaseRequestTracer(CouchbaseTracer tracer) {
