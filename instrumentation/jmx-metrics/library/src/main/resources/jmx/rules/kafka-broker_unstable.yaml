@@ -1,8 +1,10 @@
 ---
 rules:
+
   # Broker metrics
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec
+    # TODO: add topic breakdown
     mapping:
       Count:
         metric: kafka.message.count
@@ -12,6 +14,7 @@ rules:
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec
     metricAttribute:
+      # TODO: add topic breakdown
       kafka.request.type: const(fetch)
     mapping:
       Count:
@@ -22,6 +25,7 @@ rules:
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec
     metricAttribute:
+      # TODO: add topic breakdown
       kafka.request.type: const(produce)
     mapping:
       Count:
@@ -32,6 +36,7 @@ rules:
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
     metricAttribute:
+      # TODO: add topic breakdown
       kafka.request.type: const(fetch)
     mapping:
       Count:
@@ -50,44 +55,10 @@ rules:
         desc: *desc
         unit: "{request}"
 
-  - beans:
-      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce
-      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer
-      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchFollower
-    metricAttribute:
-      kafka.request.type: lowercase(param(request))
-    mapping:
-      Count:
-        # this is not redundant with kafka.request.count because it provides a different breakdown
-        # for example kafka.request.count only have produce/fetch breakdown
-        metric: kafka.request.duration.count
-        type: counter
-        desc: The number of requests received by the broker
-        unit: "{request}"
-      50thPercentile:
-        metric: kafka.request.duration.p50
-        type: gauge
-        desc: The 50th percentile duration the broker has taken to service requests
-        sourceUnit: ms
-        unit: s
-      99thPercentile:
-        metric: kafka.request.duration.p99
-        type: gauge
-        desc: The 99th percentile duration the broker has taken to service requests
-        sourceUnit: ms
-        unit: s
-
-  - bean: kafka.network:type=RequestChannel,name=RequestQueueSize
-    mapping:
-      Value:
-        metric: kafka.request.queue
-        type: updowncounter
-        desc: Size of the request queue
-        unit: "{request}"
-
   - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec
     metricAttribute:
-      kafka.network.io.direction: const(receive)
+      # TODO: add topic breakdown
+      network.io.direction: const(receive)
     mapping:
       Count:
         metric: kafka.network.io
@@ -97,7 +68,8 @@ rules:
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec
     metricAttribute:
-      kafka.network.io.direction: const(transmit)
+      # TODO: add topic breakdown
+      network.io.direction: const(transmit)
     mapping:
       Count:
         metric: kafka.network.io
@@ -116,6 +88,46 @@ rules:
         type: updowncounter
         desc: The number of requests waiting in purgatory
         unit: "{request}"
+
+  # Network metrics
+
+  - beans:
+      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce
+      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer
+      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchFollower
+    metricAttribute:
+      kafka.request.type: lowercase(param(request))
+    mapping:
+      # This is not redundant with kafka.request.count because a single network request can trigger
+      # multiple increments to 'kafka.request.count', also it provide an additional breakdown of
+      # fetch requests with 'fetchrequest' and 'fetchfollower' request types.
+      Count:
+        metric: kafka.network.request.count
+        type: counter
+        desc: The number of requests received by the broker
+        unit: "{request}"
+      50thPercentile:
+        metric: kafka.network.request.duration.p50
+        type: gauge
+        desc: The 50th percentile duration the broker has taken to service requests
+        sourceUnit: ms
+        unit: s
+      99thPercentile:
+        metric: kafka.network.request.duration.p99
+        type: gauge
+        desc: The 99th percentile duration the broker has taken to service requests
+        sourceUnit: ms
+        unit: s
+
+  - bean: kafka.network:type=RequestChannel,name=RequestQueueSize
+    mapping:
+      Value:
+        metric: kafka.network.request.queue
+        type: updowncounter
+        desc: Size of the request queue
+        unit: "{request}"
+
+  # Controller and replica metrics
 
   - bean: kafka.server:type=ReplicaManager,name=PartitionCount
     mapping:
@@ -196,20 +208,19 @@ rules:
 
   - bean: kafka.log:type=LogFlushStats,name=LogFlushRateAndTimeMs
     type: gauge
-    prefix: kafka.logs.flush.
     mapping:
       Count:
-        metric: count
+        metric: kafka.log.flush.count
         type: counter
         unit: "{flush}"
         desc: Log flush count
       50thPercentile:
-        metric: duration.p50
+        metric: kafka.log.flush.duration.p50
         desc: Log flush duration 50th percentile
         sourceUnit: ms
         unit: s
       99thPercentile:
-        metric: duration.p99
+        metric: kafka.log.flush.duration.p99
         desc: Log flush duration 99th percentile
         sourceUnit: ms
         unit: s
