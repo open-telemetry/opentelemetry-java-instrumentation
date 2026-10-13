@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -87,6 +88,15 @@ public abstract class AbstractAws2RdsDataTest {
   private RdsDataAsyncClient asyncClient;
 
   protected abstract InstrumentationExtension getTesting();
+
+  protected String experimental(String value) {
+    return captureExperimentalSpanAttributes() ? value : null;
+  }
+
+  protected boolean captureExperimentalSpanAttributes() {
+    return !(getTesting() instanceof AgentInstrumentationExtension)
+        || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
+  }
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
@@ -276,7 +286,7 @@ public abstract class AbstractAws2RdsDataTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static List<AttributeAssertion> commonAttributes(
+  private List<AttributeAssertion> commonAttributes(
       String operation, String path, Integer statusCode, String requestId) {
     return new ArrayList<>(
         asList(
@@ -287,7 +297,7 @@ public abstract class AbstractAws2RdsDataTest {
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, AWS_SERVICE),
             equalTo(RPC_METHOD, operation),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode != null ? statusCode.longValue() : null),
             equalTo(AWS_REQUEST_ID, requestId)));
   }

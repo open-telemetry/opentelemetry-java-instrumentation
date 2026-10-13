@@ -21,6 +21,11 @@ class DynamoDbClientTest extends AbstractDynamoDbClientTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
+  }
+
+  @Override
   public AmazonDynamoDBClientBuilder configureClient(AmazonDynamoDBClientBuilder client) {
     return client;
   }

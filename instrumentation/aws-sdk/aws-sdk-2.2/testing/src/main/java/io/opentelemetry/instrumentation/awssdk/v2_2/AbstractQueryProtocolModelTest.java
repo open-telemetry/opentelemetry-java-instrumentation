@@ -111,7 +111,7 @@ public abstract class AbstractQueryProtocolModelTest {
                         equalTo(RPC_SERVICE, "Ses"),
                         equalTo(RPC_METHOD, "SendEmail"),
                         equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-                        equalTo(stringKey("aws.agent"), isJavaagentTest() ? "java-aws-sdk" : null),
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                         satisfies(
                             URL_FULL,
                             val ->
@@ -126,5 +126,12 @@ public abstract class AbstractQueryProtocolModelTest {
 
   private boolean isJavaagentTest() {
     return getClass().getName().startsWith("io.opentelemetry.javaagent.");
+  }
+
+  private String experimental(String value) {
+    return isJavaagentTest()
+            && Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
+        ? value
+        : null;
   }
 }

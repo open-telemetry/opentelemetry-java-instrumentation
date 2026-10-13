@@ -22,6 +22,11 @@ class SqsSuppressReceiveSpansTest extends AbstractSqsSuppressReceiveSpansTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
+  }
+
+  @Override
   protected AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client;
   }

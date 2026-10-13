@@ -21,6 +21,11 @@ class RdsClientTest extends AbstractRdsClientTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
+  }
+
+  @Override
   public AmazonRDSClientBuilder configureClient(AmazonRDSClientBuilder client) {
     return client;
   }

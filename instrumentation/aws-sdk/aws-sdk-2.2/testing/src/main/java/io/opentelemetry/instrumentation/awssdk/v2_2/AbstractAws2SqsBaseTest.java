@@ -28,6 +28,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -82,6 +83,19 @@ public abstract class AbstractAws2SqsBaseTest {
   protected SendMessageBatchRequest sendMessageBatchRequest;
 
   protected abstract InstrumentationExtension getTesting();
+
+  protected String experimental(String value) {
+    return !(getTesting() instanceof AgentInstrumentationExtension)
+            || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
+        ? value
+        : null;
+  }
+
+  protected boolean receiveTelemetryEnabled() {
+    return !(getTesting() instanceof AgentInstrumentationExtension)
+        || Boolean.getBoolean(
+            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+  }
 
   protected abstract SqsClient configureSqsClient(SqsClient sqsClient);
 
@@ -250,8 +264,8 @@ public abstract class AbstractAws2SqsBaseTest {
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+            equalTo(stringKey("aws.queue.name"), experimental("testSdkSqs")),
             satisfies(
                 AWS_REQUEST_ID,
                 val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
@@ -276,7 +290,7 @@ public abstract class AbstractAws2SqsBaseTest {
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "Sqs"),
             equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -318,7 +332,7 @@ public abstract class AbstractAws2SqsBaseTest {
                 : SpanKind.PRODUCER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
             satisfies(
                 AWS_REQUEST_ID,

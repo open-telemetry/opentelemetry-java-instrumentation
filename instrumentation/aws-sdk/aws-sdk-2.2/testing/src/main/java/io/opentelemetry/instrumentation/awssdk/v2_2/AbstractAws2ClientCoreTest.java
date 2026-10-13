@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -98,10 +99,13 @@ public abstract class AbstractAws2ClientCoreTest {
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
-  public static String experimental(String value) {
-    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
-        ? value
-        : null;
+  protected String experimental(String value) {
+    return captureExperimentalSpanAttributes() ? value : null;
+  }
+
+  protected boolean captureExperimentalSpanAttributes() {
+    return !(getTesting() instanceof AgentInstrumentationExtension)
+        || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
   }
 
   protected static boolean isSqsAttributeInjectionEnabled() {
@@ -257,7 +261,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private static void assertListTablesRequest(SpanDataAssert span) {
+  private void assertListTablesRequest(SpanDataAssert span) {
     span.hasName("DynamoDb.ListTables")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
@@ -278,7 +282,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private static void assertDynamoDbRequest(
+  private void assertDynamoDbRequest(
       SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(

@@ -99,22 +99,6 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
         implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            systemProperty(
-              "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
-              "true",
-            )
-            systemProperty(
-              "metadataConfig",
-              "otel.instrumentation.aws-sdk.experimental-span-attributes=true," +
-                "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-            )
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("testSqsNoReceiveTelemetry") {
@@ -139,21 +123,42 @@ tasks {
 
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testDefault = register<Test>("testDefault") {
+  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    filter.includeTestsMatching("DynamoDbClientTest")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "false")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("metadataConfig", "otel.instrumentation.aws-sdk.experimental-span-attributes=true")
   }
 
-  named<Test>("test") {
-    systemProperty("metadataConfig", "otel.instrumentation.aws-sdk.experimental-span-attributes=true")
+  val testSqsReceiveTelemetry = register<Test>("testSqsReceiveTelemetry") {
+    testClassesDirs = sourceSets["testSqs"].output.classesDirs
+    classpath = sourceSets["testSqs"].runtimeClasspath
+
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-span-attributes=true," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
+  }
+
+  if (!otelProps.testLatestDeps) {
+    val testBefore106ExperimentalAttributes = register<Test>("testBefore106ExperimentalAttributes") {
+      testClassesDirs = sourceSets["test_before_1_11_106"].output.classesDirs
+      classpath = sourceSets["test_before_1_11_106"].runtimeClasspath
+
+      systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+      systemProperty("collectMetadata", false)
+    }
+    check {
+      dependsOn(testBefore106ExperimentalAttributes)
+    }
   }
 
   named<Test>("testSqsNoReceiveTelemetry") {
@@ -161,7 +166,7 @@ tasks {
   }
 
   check {
-    dependsOn(testDefault)
+    dependsOn(testExperimentalAttributes, testSqsReceiveTelemetry)
   }
 
   if (otelProps.denyUnsafe) {

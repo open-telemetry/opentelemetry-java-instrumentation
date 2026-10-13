@@ -108,6 +108,34 @@ public abstract class AbstractAws2BedrockRuntimeTest {
     return true;
   }
 
+  private Value<?> expectedMessageBody(KeyValue... fields) {
+    if (isCaptureMessageContentEnabled()) {
+      return Value.of(fields);
+    }
+    List<KeyValue> body = new ArrayList<>();
+    for (KeyValue field : fields) {
+      if (field.getKey().equals("content")) {
+        continue;
+      }
+      if (field.getKey().equals("toolCalls")) {
+        List<Value<?>> toolCalls = new ArrayList<>();
+        for (Object toolCall : (List<?>) field.getValue().getValue()) {
+          KeyValue[] toolFields =
+              ((List<?>) ((Value<?>) toolCall).getValue())
+                  .stream()
+                      .map(KeyValue.class::cast)
+                      .filter(toolField -> !toolField.getKey().equals("arguments"))
+                      .toArray(KeyValue[]::new);
+          toolCalls.add(Value.of(toolFields));
+        }
+        body.add(KeyValue.of("toolCalls", Value.of(toolCalls)));
+      } else {
+        body.add(field);
+      }
+    }
+    return Value.of(body.toArray(new KeyValue[0]));
+  }
+
   protected static void configureClient(AwsClientBuilder<?, ?> builder) {
     builder
         .region(Region.US_EAST_1)
@@ -337,14 +365,16 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        expectedMessageBody(
+                            KeyValue.of("content", Value.of("Say this is a test")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of("content", Value.of("This is an LLM (")))));
@@ -464,7 +494,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -475,7 +505,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -614,7 +644,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -625,7 +655,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
@@ -652,7 +682,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
                             KeyValue.of(
                                 "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
@@ -662,7 +692,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                             KeyValue.of(
                                 "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
@@ -672,7 +702,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -722,13 +752,14 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("What time is it?")))),
+                    .hasBody(
+                        expectedMessageBody(KeyValue.of("content", Value.of("What time is it?")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -904,7 +935,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -915,7 +946,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -1074,7 +1105,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -1085,7 +1116,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
@@ -1112,7 +1143,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
                             KeyValue.of(
                                 "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
@@ -1122,7 +1153,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                             KeyValue.of(
                                 "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
@@ -1132,7 +1163,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -1305,14 +1336,16 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        expectedMessageBody(
+                            KeyValue.of("content", Value.of("Say this is a test")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of("content", Value.of("\"Test, test\"")))));
@@ -1393,14 +1426,16 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        expectedMessageBody(
+                            KeyValue.of("content", Value.of("Say this is a test")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of("content", Value.of("This model")))));
@@ -1524,14 +1559,16 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        expectedMessageBody(
+                            KeyValue.of("content", Value.of("Say this is a test")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("LENGTH")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -1669,7 +1706,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content", Value.of("List out every country in the world")))),
             log ->
@@ -1678,7 +1715,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("LENGTH")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of("content", Value.of(text.toString())))));
@@ -1821,14 +1858,16 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        expectedMessageBody(
+                            KeyValue.of("content", Value.of("Say this is a test")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -1986,7 +2025,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content", Value.of("List out every country in the world")))),
             log ->
@@ -1995,7 +2034,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of("content", Value.of(text.toString())))));
@@ -2124,14 +2163,16 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        expectedMessageBody(
+                            KeyValue.of("content", Value.of("Say this is a test")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -2521,7 +2562,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content", Value.of("List out every country in the world")))),
             log ->
@@ -2530,7 +2571,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of("content", Value.of(text.toString())))));
@@ -2712,7 +2753,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -2723,7 +2764,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -2891,7 +2932,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -2902,7 +2943,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
@@ -2929,7 +2970,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
                             KeyValue.of(
                                 "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
@@ -2939,7 +2980,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                             KeyValue.of(
                                 "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
@@ -2949,7 +2990,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -3189,7 +3230,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -3200,7 +3241,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -3412,7 +3453,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -3423,7 +3464,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
@@ -3450,7 +3491,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
                             KeyValue.of(
                                 "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
@@ -3460,7 +3501,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                             KeyValue.of(
                                 "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
@@ -3470,7 +3511,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -3642,7 +3683,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -3653,7 +3694,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -3799,7 +3840,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -3810,7 +3851,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
@@ -3837,7 +3878,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
                             KeyValue.of("content", Value.of("\"50 degrees and raining\"")))),
             log ->
@@ -3846,7 +3887,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                             KeyValue.of("content", Value.of("\"70 degrees and sunny\"")))),
             log ->
@@ -3855,7 +3896,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -4103,7 +4144,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -4114,7 +4155,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
@@ -4301,7 +4342,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "content",
                                 Value.of(
@@ -4312,7 +4353,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
@@ -4339,7 +4380,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
                             KeyValue.of("content", Value.of("\"50 degrees and raining\"")))),
             log ->
@@ -4348,7 +4389,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                             KeyValue.of("content", Value.of("\"70 degrees and sunny\"")))),
             log ->
@@ -4357,7 +4398,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        expectedMessageBody(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(

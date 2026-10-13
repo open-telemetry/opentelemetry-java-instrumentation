@@ -21,6 +21,11 @@ class S3ClientTest extends AbstractS3ClientTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
+  }
+
+  @Override
   public AmazonS3ClientBuilder configureClient(AmazonS3ClientBuilder client) {
     return client;
   }

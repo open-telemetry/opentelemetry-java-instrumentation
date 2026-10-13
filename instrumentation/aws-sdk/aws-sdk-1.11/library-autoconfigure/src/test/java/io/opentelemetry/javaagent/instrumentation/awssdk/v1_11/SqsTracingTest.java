@@ -22,6 +22,17 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
+  }
+
+  @Override
+  protected boolean receiveTelemetryEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+  }
+
+  @Override
   protected AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client;
   }
