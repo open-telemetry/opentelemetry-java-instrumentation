@@ -83,6 +83,8 @@ class KotlinCoroutinesInstrumentationTest {
 
   val tracer = testing.openTelemetry.getTracer("test")
 
+  private fun v3Preview(): Boolean = java.lang.Boolean.getBoolean("otel.instrumentation.common.v3-preview")
+
   @ParameterizedTest
   @MethodSource("dispatchersSourceArguments")
   fun `cancellation prevents trace`(dispatcher: DispatcherWrapper) {
@@ -380,6 +382,11 @@ class KotlinCoroutinesInstrumentationTest {
       annotated1()
     }
 
+    if (v3Preview()) {
+      assertThat(testing.spans()).isEmpty()
+      return
+    }
+
     testing.waitAndAssertTraces(
       { trace ->
         trace.hasSpansSatisfyingExactly(
@@ -437,6 +444,8 @@ class KotlinCoroutinesInstrumentationTest {
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12837
   @Test
   fun `WithSpan restores effective context after unannotated suspension`() {
+    Assumptions.assumeFalse(v3Preview())
+
     val rootSpan = tracer.spanBuilder("root").startSpan()
     runBlocking(Context.root().asContextElement()) {
       withContext(TestContextElement(rootSpan.storeInContext(Context.root()))) {
@@ -491,6 +500,8 @@ class KotlinCoroutinesInstrumentationTest {
 
   @Test
   fun `WithSpan preserves coroutine stack frames`() {
+    Assumptions.assumeFalse(v3Preview())
+
     runBlocking {
       stackFrameCaller()
     }
@@ -518,6 +529,8 @@ class KotlinCoroutinesInstrumentationTest {
 
   @Test
   fun `WithSpan ends span on failed completion`() {
+    Assumptions.assumeFalse(v3Preview())
+
     val exception = IllegalStateException("expected")
     val result = runCatching {
       runBlocking {
@@ -556,6 +569,11 @@ class KotlinCoroutinesInstrumentationTest {
     runBlocking {
       val classDefaultConstructorArguments = ClazzWithDefaultConstructorArguments()
       classDefaultConstructorArguments.sayHello()
+    }
+
+    if (v3Preview()) {
+      assertThat(testing.spans()).isEmpty()
+      return
     }
 
     testing.waitAndAssertTraces(
