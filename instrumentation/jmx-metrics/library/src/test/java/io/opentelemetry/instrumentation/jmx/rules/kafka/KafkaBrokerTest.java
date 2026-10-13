@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.rules.kafka;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.semconv.incubating.NetworkIncubatingAttributes.NETWORK_IO_DIRECTION;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -49,7 +50,19 @@ class KafkaBrokerTest extends TargetSystemTest {
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
 
-    // TODO: add weaver validation
+    startWeaverValidation(
+        "kafka-broker.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("kafka.")
+                .checkRegisteredMetrics(
+                    "kafka.",
+                    reportedMetrics(zookeeperImage != null),
+                    optionalMetrics(zookeeperImage != null))
+                .checkRegisteredAttributes(
+                    "kafka.",
+                    asList("kafka.request.type", "kafka.topic", "kafka.isr.operation"),
+                    emptyList()));
 
     List<GenericContainer<?>> dependencies = emptyList();
     if (zookeeperImage != null) {
@@ -65,6 +78,44 @@ class KafkaBrokerTest extends TargetSystemTest {
     startTarget(target, dependencies);
 
     verifyMetrics(createMetricsVerifier(zookeeperImage != null));
+  }
+
+  private static List<String> reportedMetrics(boolean useZookeeper) {
+    List<String> metrics =
+        new ArrayList<>(
+            asList(
+                "kafka.server.message.count",
+                "kafka.server.request.count",
+                "kafka.server.request.failed",
+                "kafka.server.network.io",
+                "kafka.server.purgatory.size",
+                "kafka.network.request.count",
+                "kafka.network.request.duration.p50",
+                "kafka.network.request.duration.p99",
+                "kafka.network.request.queue",
+                "kafka.server.partition.count",
+                "kafka.controller.partition.offline",
+                "kafka.server.partition.under_replicated",
+                "kafka.server.isr.operation.count",
+                "kafka.server.lag.max",
+                "kafka.controller.active.count",
+                "kafka.log.flush.count",
+                "kafka.log.flush.duration.p50",
+                "kafka.log.flush.duration.p99"));
+    if (useZookeeper) {
+      metrics.addAll(zookeeperOnlyMetrics());
+    }
+    return metrics;
+  }
+
+  private static List<String> optionalMetrics(boolean useZookeeper) {
+    return useZookeeper ? emptyList() : zookeeperOnlyMetrics();
+  }
+
+  // those metrics are only reported when using zookeeper
+  private static List<String> zookeeperOnlyMetrics() {
+    return asList(
+        "kafka.controller.leader_election.count", "kafka.controller.leader_election.unclean.count");
   }
 
   private static MetricsVerifier createMetricsVerifier(boolean useZookeeper) {
