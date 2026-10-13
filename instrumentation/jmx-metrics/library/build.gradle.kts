@@ -46,18 +46,18 @@ dependencies {
 }
 
 tasks {
-  val containerTestClasses = listOf(
-    "ActiveMqTest",
-    "CamelTest",
-    "CassandraTest",
-    "HadoopTest",
-    "JettyTest",
-    "JvmTest",
-    "KafkaBrokerTest",
-    "KafkaConnectTest",
-    "TomcatTest",
-    "WildflyTest",
-  ).map { "io.opentelemetry.instrumentation.jmx.rules.$it" }
+  val containerTestPackage =
+    "io.opentelemetry.instrumentation.jmx.rules.containers"
+
+  val containerTestClasses = fileTree("src/test/java") {
+    include("${containerTestPackage.replace('.', '/')}/*Test.java")
+  }.files
+    .map { "$containerTestPackage.${it.nameWithoutExtension}" }
+    .sorted()
+
+  require(containerTestClasses.isNotEmpty()) {
+    "No JMX container test classes found"
+  }
 
   test {
     filter {
