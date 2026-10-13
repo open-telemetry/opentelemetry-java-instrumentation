@@ -466,6 +466,5 @@ tasks {
 ## `collectMetadata` and `metadataConfig`
 
 Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
-for task selection and labels. Shared test conventions forward collection only to explicitly
-requested, fully qualified, unabbreviated `Test` task paths when `-PcollectMetadata=true`.
+for task selection and labels. Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
 Keep `metadataConfig` labels local.

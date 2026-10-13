@@ -38,13 +38,7 @@ Enabling a whole default-off instrumentation is also setup; `disabled_by_default
 requirement. Include span suppression settings only when they determine this instrumentation's
 telemetry, not merely spans from other instrumentation in the test trace.
 
-Shared test conventions forward `-PcollectMetadata=true` only to `Test` tasks explicitly requested
-by their full, unabbreviated Gradle task paths, including the leading `:`.
-Relative paths, unqualified names, and abbreviated selectors do not enable collection.
-Tasks reached only through dependencies, including `check`, `:instrumentation:test`, or another
-test task, do not collect. With `-PtestLatestDeps=true`, explicitly request `latestDepTest` as well
-if its separate source suite should collect.
-
+Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
 Register representative tasks in
 `.github/scripts/instrumentations.sh` covering each profile's instrumentation scope and telemetry
 shape; equivalent suites need not all collect. Exclude unit tests and regression-only

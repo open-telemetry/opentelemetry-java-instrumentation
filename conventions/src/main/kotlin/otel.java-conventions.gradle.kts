@@ -1,4 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.MetadataCollectionArgumentsProvider
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
@@ -333,9 +332,7 @@ val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 
-  jvmArgumentProviders.add(
-    MetadataCollectionArgumentsProvider(otelProps.collectMetadata, this.path, gradle.startParameter.taskNames)
-  )
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // work around jvm crash on openJ9 8 after updating armeria to 1.33.1
   val testJavaVersion = otelProps.testJavaVersion

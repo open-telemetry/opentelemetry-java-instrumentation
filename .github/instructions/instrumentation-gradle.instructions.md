@@ -60,8 +60,7 @@ or test failure that CI will report.
   cleanup. Collect default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
   instrumentation scope and telemetry shape; equivalent suites need not all collect. Shared test
-  conventions enable collection only for explicitly requested, fully qualified, unabbreviated
-  `Test` task paths with `-PcollectMetadata=true`.
+  conventions forward `-PcollectMetadata=true` to test JVMs.
 - `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
   instrumentation defaults, regardless of task name or settings on `test`.
   Otherwise include only non-default user-facing settings
@@ -80,8 +79,6 @@ or test failure that CI will report.
   variants based on their purpose, not their names. A full-suite `testReceiveSpansDisabled` may
   document default telemetry; a suppression-only regression task does not. Keep regression tasks in
   `check`, but omit them from `.github/scripts/instrumentations.sh` and do not give them `metadataConfig`.
-  Dependency tasks do not inherit collection; explicitly requesting a task collects its telemetry
-  even without a label.
 - When tests exercise behavior behind an experimental feature or telemetry flag, including
   experimental metrics, cover default-off and flag-on modes in separate JVMs. Keep the flag off
   the default test task and run the flag-on assertions through a wired `testExperimental` task
