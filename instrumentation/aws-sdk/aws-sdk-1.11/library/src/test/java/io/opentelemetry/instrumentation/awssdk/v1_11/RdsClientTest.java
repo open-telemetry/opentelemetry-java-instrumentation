@@ -28,7 +28,7 @@ class RdsClientTest extends AbstractRdsClientTest {
   public AmazonRDSClientBuilder configureClient(AmazonRDSClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
+            .setCaptureExperimentalSpanAttributes(true)
             .build()
             .createRequestHandler());
   }

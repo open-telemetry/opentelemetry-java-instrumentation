@@ -28,7 +28,7 @@ class S3ClientTest extends AbstractS3ClientTest {
   public AmazonS3ClientBuilder configureClient(AmazonS3ClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
+            .setCaptureExperimentalSpanAttributes(true)
             .build()
             .createRequestHandler());
   }

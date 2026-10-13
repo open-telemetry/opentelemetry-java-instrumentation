@@ -29,7 +29,7 @@ class SqsSuppressReceiveSpansTest extends AbstractSqsSuppressReceiveSpansTest {
   public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
+            .setCaptureExperimentalSpanAttributes(true)
             .build()
             .createRequestHandler());
   }

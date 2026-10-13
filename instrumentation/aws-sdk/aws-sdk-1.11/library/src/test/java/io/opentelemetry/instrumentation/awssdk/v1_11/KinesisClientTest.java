@@ -28,7 +28,7 @@ class KinesisClientTest extends AbstractKinesisClientTest {
   public AmazonKinesisClientBuilder configureClient(AmazonKinesisClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
+            .setCaptureExperimentalSpanAttributes(true)
             .build()
             .createRequestHandler());
   }
