@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -19,11 +18,7 @@ import java.util.List;
 public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "opentelemetry-api-1.0" : "opentelemetry-api",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opentelemetry-api"}
-            : new String[] {"opentelemetry-api-1.0"});
+    super("opentelemetry-api-1.0", "opentelemetry-api");
   }
 
   @Override
