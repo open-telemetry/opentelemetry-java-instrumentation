@@ -199,7 +199,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     throw new AssertionError("Span not found: " + name);
   }
 
-  private static void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
+  private void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             asList(
@@ -237,7 +237,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
         .hasAttributesSatisfyingExactly(attributes);
   }
 
-  private static void assertReceiveSpan(
+  private void assertReceiveSpan(
       SpanDataAssert span, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
@@ -279,7 +279,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                             .isEqualTo(creationContext.getSpanId())));
   }
 
-  private static void assertProcessSpan(
+  private void assertProcessSpan(
       SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
