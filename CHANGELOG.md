@@ -4,6 +4,18 @@
 
 ### ⚠️ Breaking changes
 
+- Java agent telemetry now uses the following instrumentation scopes. Update views, dashboards
+  and filters matching the previous names:
+
+  | Previous scope | Current scope |
+  | --- | --- |
+  | `io.opentelemetry.jaxrs-1.0` | `io.opentelemetry.jaxrs-1.0-annotations` |
+  | `io.opentelemetry.jaxws-cxf-3.0` | `io.opentelemetry.jaxws-2.0-cxf-3.0` |
+  | `io.opentelemetry.jaxws-metro-2.2` | `io.opentelemetry.jaxws-2.0-metro-2.2` |
+  | `io.opentelemetry.mongo-3.7` | `io.opentelemetry.mongo-3.1` |
+  | `io.opentelemetry.ratpack-1.7` | `io.opentelemetry.ratpack-1.4` |
+  | `io.opentelemetry.tomcat-jdbc` | `io.opentelemetry.tomcat-jdbc-8.5` |
+
 - Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
   `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
   Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
@@ -198,6 +210,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
+  `create(Meter, String, Attributes)` overloads. Use the overloads accepting
+  `OpenTelemetry`, the instrumentation name and the pool name instead.
 - Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` and command-encoding event support
   from the standalone Lettuce library. There is no replacement API.
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
