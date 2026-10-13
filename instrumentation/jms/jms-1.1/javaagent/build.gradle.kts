@@ -68,7 +68,10 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty(
+      "collectMetadata",
+      otelProps.collectMetadata && name !in setOf("unitTests", "testReceiveSpansDisabled"),
+    )
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {

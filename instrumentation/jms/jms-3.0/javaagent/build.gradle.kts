@@ -54,7 +54,10 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty(
+      "collectMetadata",
+      otelProps.collectMetadata && name !in setOf("unitTests", "testReceiveSpansDisabled"),
+    )
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
