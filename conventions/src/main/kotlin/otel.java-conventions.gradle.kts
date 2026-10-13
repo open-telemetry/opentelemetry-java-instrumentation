@@ -19,7 +19,7 @@ val otelProps = the<OtelPropsExtension>()
 
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
-  if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
+  if (extra.properties["mavenGroupId"] == "io.opentelemetry.javaagent.instrumentation") {
     base.archivesName.set("opentelemetry-javaagent-$previousBaseArchiveName")
   } else if (!previousBaseArchiveName.startsWith("opentelemetry-")) {
     base.archivesName.set("opentelemetry-$previousBaseArchiveName")
@@ -160,7 +160,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.138.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.139.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }

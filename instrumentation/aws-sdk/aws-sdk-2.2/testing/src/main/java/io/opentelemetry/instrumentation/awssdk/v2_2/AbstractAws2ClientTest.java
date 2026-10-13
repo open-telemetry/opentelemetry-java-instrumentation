@@ -8,8 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -29,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_ST
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -399,13 +396,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                   equalTo(MESSAGING_DESTINATION_NAME, "somequeue"),
                   satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                   equalTo(MESSAGING_SYSTEM, AWS_SQS))));
-      if (emitStableMessagingSemconv()) {
-        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
-        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
-      }
-      if (emitOldMessagingSemconv()) {
-        attributes.add(equalTo(MESSAGING_OPERATION, "publish"));
-      }
+      attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
+      attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
     }
 
     if (service.equals("Sfn")) {
@@ -451,7 +443,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     String evaluatedOperation;
     SpanKind operationKind;
     if (operation.equals("SendMessage")) {
-      evaluatedOperation = emitStableMessagingSemconv() ? "send somequeue" : "somequeue publish";
+      evaluatedOperation = "send somequeue";
       operationKind = SpanKind.PRODUCER;
     } else {
       operationKind = SpanKind.CLIENT;

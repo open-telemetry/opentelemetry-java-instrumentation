@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -129,8 +130,11 @@ public abstract class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Ser
                             .hasParent(trace.getSpan(1))
                             .hasKind(SpanKind.INTERNAL)
                             .hasAttributesSatisfyingExactly(
-                                codeFunctionAssertions(
-                                    HelloServiceImpl.class, testMethod.methodName())));
+                                equalTo(
+                                    CODE_FUNCTION_NAME,
+                                    HelloServiceImpl.class.getName()
+                                        + "."
+                                        + testMethod.methodName())));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);
@@ -171,8 +175,11 @@ public abstract class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Ser
                             .hasStatus(StatusData.error())
                             .hasException(expectedException)
                             .hasAttributesSatisfyingExactly(
-                                codeFunctionAssertions(
-                                    HelloServiceImpl.class, testMethod.methodName())));
+                                equalTo(
+                                    CODE_FUNCTION_NAME,
+                                    HelloServiceImpl.class.getName()
+                                        + "."
+                                        + testMethod.methodName())));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);

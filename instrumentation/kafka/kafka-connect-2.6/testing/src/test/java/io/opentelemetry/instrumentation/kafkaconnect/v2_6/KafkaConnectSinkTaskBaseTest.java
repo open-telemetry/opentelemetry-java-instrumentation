@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.groupTraces;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -17,7 +16,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -176,16 +174,14 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = groupTraces(testing.spans());
-              // Stable receive spans are separate traces, and Kafka Connect writes status records
+              // Receive spans are separate traces, and Kafka Connect writes status records
               // on its own schedule. Neither is relevant to the sink-task assertions.
-              if (emitStableMessagingSemconv()) {
-                traces.removeIf(
-                    trace ->
-                        trace.size() == 1
-                            && trace.get(0).getKind() == SpanKind.CLIENT
-                            && (trace.get(0).getName().equals("poll")
-                                || trace.get(0).getName().startsWith("poll ")));
-              }
+              traces.removeIf(
+                  trace ->
+                      trace.size() == 1
+                          && trace.get(0).getKind() == SpanKind.CLIENT
+                          && (trace.get(0).getName().equals("poll")
+                              || trace.get(0).getName().startsWith("poll ")));
               traces.removeIf(
                   trace ->
                       trace.stream()
@@ -264,26 +260,20 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                   String linkedSpanId = spanId(link.getSpanContext());
                   assertThat(expectedRecordAttributesBySpan).containsKey(linkedSpanId);
                   linkedSpanIds.add(linkedSpanId);
-                  if (emitStableMessagingSemconv()) {
-                    assertThat(link.getAttributes().asMap().keySet())
-                        .isSubsetOf(
-                            MESSAGING_DESTINATION_NAME,
-                            MESSAGING_DESTINATION_PARTITION_ID,
-                            MESSAGING_KAFKA_OFFSET,
-                            MESSAGING_KAFKA_MESSAGE_KEY);
-                    actualRecordAttributes.add(effectiveRecordAttributes(process, link));
-                  } else {
-                    assertThat(link.getAttributes()).isEqualTo(Attributes.empty());
-                  }
+                  assertThat(link.getAttributes().asMap().keySet())
+                      .isSubsetOf(
+                          MESSAGING_DESTINATION_NAME,
+                          MESSAGING_DESTINATION_PARTITION_ID,
+                          MESSAGING_KAFKA_OFFSET,
+                          MESSAGING_KAFKA_MESSAGE_KEY);
+                  actualRecordAttributes.add(effectiveRecordAttributes(process, link));
                 }
               }
 
               assertThat(linkedSpanIds)
                   .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.keySet());
-              if (emitStableMessagingSemconv()) {
-                assertThat(actualRecordAttributes)
-                    .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.values());
-              }
+              assertThat(actualRecordAttributes)
+                  .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.values());
               processTraceAssertions.accept(processTraces);
             });
   }
@@ -324,11 +314,9 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   // the offset and the message key stay on the link even when the batch carries a single record,
   // because they are only recommended on spans that describe an operation on a single message
   protected static LinkData recordLink(SpanContext producerSpanContext, String messageKey) {
-    if (!emitStableMessagingSemconv()) {
-      return LinkData.create(producerSpanContext);
-    }
+
     return LinkData.create(
-        producerSpanContext,
+        asRemote(producerSpanContext),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, 0)
             .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
@@ -491,9 +479,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "1000")
             .withEnv(
                 "OTEL_SEMCONV_STABILITY_OPT_IN",
-                emitStableMessagingSemconv()
-                    ? "messaging"
-                    : System.getProperty("otel.semconv-stability.opt-in"))
+                System.getProperty("otel.semconv-stability.opt-in"))
             .withEnv("CONNECT_BOOTSTRAP_SERVERS", getInternalKafkaBootstrapServers())
             .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", KAFKA_CONNECT_NETWORK_ALIAS)
             .withEnv("CONNECT_PLUGIN_PATH", PLUGIN_PATH_CONTAINER)
@@ -561,15 +547,13 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static AttributeAssertion[] processAttributes(String destination, long batchSize) {
     return new AttributeAssertion[] {
       equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize),
       equalTo(MESSAGING_DESTINATION_NAME, destination),
-      equalTo(MESSAGING_DESTINATION_PARTITION_ID, emitStableMessagingSemconv() ? "0" : null),
-      equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? PROCESS : null),
-      equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? PROCESS : null),
-      equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? PROCESS : null),
+      equalTo(MESSAGING_DESTINATION_PARTITION_ID, "0"),
+      equalTo(MESSAGING_OPERATION_NAME, PROCESS),
+      equalTo(MESSAGING_OPERATION_TYPE, PROCESS),
       equalTo(MESSAGING_SYSTEM, KAFKA),
       satisfies(THREAD_ID, AbstractLongAssert::isNotZero),
       satisfies(THREAD_NAME, AbstractStringAssert::isNotBlank)

@@ -73,19 +73,6 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      val sourceTask = named<Test>(suite.name).get()
-      setJvmArgs(sourceTask.jvmArgs)
-      setSystemProperties(sourceTask.systemProperties)
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      isEnabled = sourceTask.enabled
-    }
-  }
-
   val version37TestV3Preview = register<Test>("version37TestV3Preview") {
     val sourceTask = named<Test>("version37Test").get()
     setJvmArgs(sourceTask.jvmArgs)
@@ -111,6 +98,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, testV3Preview, version37TestV3Preview)
+    dependsOn(testing.suites, testV3Preview, version37TestV3Preview)
   }
 }

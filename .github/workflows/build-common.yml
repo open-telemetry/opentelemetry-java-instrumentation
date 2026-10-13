@@ -247,7 +247,7 @@ jobs:
           fi
 
       - name: Upload agent jar
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: opentelemetry-javaagent.jar
           path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
@@ -258,14 +258,14 @@ jobs:
           mkdir sboms
           cp javaagent/build/spdx/*.spdx.json sboms
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM.zip
           path: "sboms/*.json"
 
   test:
-    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
+    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
     runs-on: ubuntu-latest
     timeout-minutes: 135
     strategy:
@@ -286,9 +286,6 @@ jobs:
           - 1
           - 2
           - 3
-        test-indy:
-          - false
-          - true
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 25-deny-unsafe
@@ -319,7 +316,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
@@ -362,7 +359,6 @@ jobs:
           ${test_tasks}
           -PtestJavaVersion=${{ matrix.test-java-version != '25-deny-unsafe' && matrix.test-java-version || '25' }}
           -PtestJavaVM=${{ matrix.vm }}
-          -PtestIndy=${{ matrix.test-indy }}
           -PdenyUnsafe=${{ matrix.test-java-version == '25-deny-unsafe' && 'true' || 'false' }}
           -Porg.gradle.java.installations.paths=${STEPS_SETUP_TEST_JAVA_OUTPUTS_PATH}
           -Porg.gradle.java.installations.auto-download=false
@@ -374,15 +370,15 @@ jobs:
 
       - name: Upload deadlock detector artifacts if any
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}-indy-${{ matrix.test-indy }}
+          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: javacore-test-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |
@@ -476,7 +472,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
           # we expect crash dumps either in root director or in smoke-tests

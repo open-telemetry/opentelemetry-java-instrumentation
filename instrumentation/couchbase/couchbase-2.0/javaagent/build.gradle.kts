@@ -87,17 +87,6 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      isEnabled = named<Test>(suite.name).get().enabled
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-    }
-  }
-
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
     register<Test>("${suite.name}Experimental") {
       isEnabled = named<Test>(suite.name).get().enabled
@@ -109,18 +98,8 @@ tasks {
     }
   }
 
-  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
-    val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
-    isEnabled = named<Test>(suite.name).get().enabled
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
-  }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig)
+    dependsOn(testing.suites, experimentalSuites)
   }
 
   if (otelProps.denyUnsafe) {

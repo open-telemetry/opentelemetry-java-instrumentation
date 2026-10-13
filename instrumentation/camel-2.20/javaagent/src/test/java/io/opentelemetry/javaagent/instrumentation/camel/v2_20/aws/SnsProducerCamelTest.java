@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendMetrics;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -93,9 +92,7 @@ class SnsProducerCamelTest {
                 span -> {
                   camelSend.set(trace.getSpan(1));
                   CamelSpanAssertions.snsPublish(span, topicName).hasParent(trace.getSpan(0));
-                  if (emitStableMessagingSemconv()) {
-                    span.hasAttribute(MESSAGING_MESSAGE_ID, "message-id");
-                  }
+                  span.hasAttribute(MESSAGING_MESSAGE_ID, "message-id");
                 },
                 span -> {
                   AwsSpanAssertions.sns(span, "SNS.Publish", topicArn, topicArn)

@@ -5,22 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -117,10 +112,7 @@ class JedisCluster40ClientTest {
       if (connectionSendsHello) {
         testing.waitAndAssertTraces(
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(
-                            emitStableDatabaseSemconv() ? "HELLO " + configuredTarget : "HELLO")),
+                trace.hasSpansSatisfyingExactly(span -> span.hasName("HELLO " + configuredTarget)),
             JedisCluster40ClientTest::assertPingTrace);
       } else {
         testing.waitAndAssertTraces(JedisCluster40ClientTest::assertPingTrace);
@@ -136,18 +128,14 @@ class JedisCluster40ClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "PING " + configuredTarget : "PING")
+                    span.hasName("PING " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "PING"),
-                            equalTo(maybeStable(DB_OPERATION), "PING"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "PING"),
+                            equalTo(DB_OPERATION_NAME, "PING"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
@@ -177,14 +165,9 @@ class JedisCluster40ClientTest {
                     .isNotEmpty()
                     .allSatisfy(
                         span -> {
-                          if (emitStableDatabaseSemconv()) {
-                            assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                                .isEqualTo(configuredTarget);
-                            assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                          } else {
-                            assertThat(span.getAttributes().get(SERVER_ADDRESS)).isIn(host, ip);
-                            assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(port);
-                          }
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(configuredTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
                         }));
   }
 
@@ -199,24 +182,18 @@ class JedisCluster40ClientTest {
   private static void assertPingTrace(TraceAssert trace) {
     trace.hasSpansSatisfyingExactly(
         span ->
-            span.hasName(emitStableDatabaseSemconv() ? "PING " + configuredTarget : "PING")
+            span.hasName("PING " + configuredTarget)
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), REDIS),
-                    equalTo(maybeStable(DB_STATEMENT), "PING"),
-                    equalTo(maybeStable(DB_OPERATION), "PING"),
-                    equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "PING"),
+                    equalTo(DB_OPERATION_NAME, "PING"),
+                    equalTo(DB_NAMESPACE, "0"),
                     satisfies(
                         SERVER_ADDRESS,
                         val -> {
-                          if (emitStableDatabaseSemconv()) {
-                            val.isEqualTo(configuredTarget);
-                          } else {
-                            val.isIn(host, ip);
-                          }
+                          val.isEqualTo(configuredTarget);
                         }),
-                    equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
-                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                     equalTo(NETWORK_PEER_PORT, port),
                     equalTo(NETWORK_PEER_ADDRESS, ip)));
   }

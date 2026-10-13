@@ -8,6 +8,9 @@ available within the instrumented application. The required MBeans and correspon
 The selected JMX metrics are reported using the Java Agent internal SDK. This means that they share the configuration and metric exporter with other metrics collected by the agent and are controlled by the same properties, for example `otel.metric.export.interval` or `otel.metrics.exporter`.
 The OpenTelemetry resource description for the metrics reported by JMX Metric Insight will be the same as for other metrics exported by the SDK, while the instrumentation scope will be `io.opentelemetry.jmx`.
 
+JMX metric collection is controlled by the `otel.instrumentation.jmx.enabled` instrumentation selector
+and the common instrumentation enablement settings.
+
 To control the time interval between MBean detection attempts, one can use the `otel.jmx.discovery.delay` property, which defines the number of milliseconds to elapse between the first and the next detection cycle. JMX Metric Insight may dynamically adjust the time interval between further attempts, but it guarantees that the MBean discovery will run perpetually.
 
 ## Predefined metrics
@@ -26,16 +29,7 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
 
 This example will enable all stable metrics except the JMX-based `jvm` definitions (which are provided by `runtime-telemetry`) and all the non-stable metrics matching the `jetty.*` and `kafka.*` patterns.
 
-The deprecated `otel.jmx.target.system` setting remains a fallback when `otel.jmx.metrics.experimental.included` is empty. It collects both stable and unstable metrics for the selected targets. For example, `otel.jmx.target.system=jetty,kafka-broker` retains its existing behavior. This setting will be removed in 3.0.
-
-To migrate, replace the target selection with metric-name patterns:
-
-```diff
--otel.jmx.target.system=tomcat
-+otel.jmx.metrics.experimental.included=tomcat.*
-```
-
-A nonempty experimental inclusion takes precedence over the deprecated target setting without a deprecation warning. Normal metric include/exclude filters apply in both modes.
+Normal metric include/exclude filters also apply to experimental metrics.
 
 Metrics from custom YAML files do not require experimental opt-in, even if their names match unstable bundled metrics. They are controlled by the normal metric include/exclude filters.
 

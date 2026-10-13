@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
@@ -92,20 +90,6 @@ class VertxRedisClientRequest {
   }
 
   @Nullable
-  String getUser() {
-    return redisUri == null ? null : redisUri.user();
-  }
-
-  @Nullable
-  Long getDatabaseIndex() {
-    if (redisUri == null) {
-      return null;
-    }
-    Integer select = redisUri.select();
-    return select != null ? select.longValue() : null;
-  }
-
-  @Nullable
   String getDatabaseNamespace() {
     if (redisUri == null) {
       return null;
@@ -115,11 +99,6 @@ class VertxRedisClientRequest {
     // report 0 for the stable db.namespace rather than dropping the attribute.
     Integer select = redisUri.select();
     return select != null ? String.valueOf(select) : "0";
-  }
-
-  @Nullable
-  String getConnectionString() {
-    return null;
   }
 
   @Nullable
@@ -184,7 +163,7 @@ class VertxRedisClientRequest {
       }
       String queryText =
           sanitize(commandName.toUpperCase(Locale.ROOT), RequestUtil.getArgs(request));
-      String separator = batchQuerySeparator();
+      String separator = "; ";
       int newLength = builder.length();
       if (builder.length() > 0) {
         newLength += separator.length();
@@ -199,10 +178,6 @@ class VertxRedisClientRequest {
       builder.append(queryText);
     }
     return builder.toString();
-  }
-
-  private static String batchQuerySeparator() {
-    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 
   @Nullable

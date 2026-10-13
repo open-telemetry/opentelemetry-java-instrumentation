@@ -36,11 +36,11 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
   public boolean defaultEnabled() {
     return super.defaultEnabled()
         /*
-         * Since the only thing this module currently does is capture enduser attributes,
-         * the module can be completely disabled if enduser attributes are disabled.
+         * Since the only thing this module currently does is capture user identity attributes,
+         * the module can be completely disabled if user identity capture is disabled.
          *
-         * If any functionality not related to enduser attributes is added to this module,
-         * then this check will need to move elsewhere to only guard the enduser attributes logic.
+         * If any functionality not related to user identity attributes is added to this module,
+         * then this check will need to move elsewhere to only guard the identity capture logic.
          */
         && AgentCommonConfig.get().getUserConfig().isAnyEnabled();
   }

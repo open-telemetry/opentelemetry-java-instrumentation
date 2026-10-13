@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.oshi.v5_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,9 +16,7 @@ import java.util.List;
 public class OshiInstrumentationModule extends InstrumentationModule {
 
   public OshiInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "oshi-5.0" : "oshi",
-        AgentCommonConfig.get().isV3Preview() ? new String[] {"oshi"} : new String[] {"oshi-5.0"});
+    super("oshi-5.0", "oshi");
   }
 
   @Override

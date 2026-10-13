@@ -58,23 +58,6 @@ final class RocketMqConsumerAttributeGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(RocketMqConsumerRequest request) {
-    if (request.isBatch()) {
-      // per-message attributes that vary across a batch belong on the span links
-      return null;
-    }
-    byte[] body = request.getMessage().getBody();
-    return body == null ? null : (long) body.length;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(RocketMqConsumerRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(
       RocketMqConsumerRequest request, @Nullable ConsumeMessageContext unused) {
     return request.getMessageId();

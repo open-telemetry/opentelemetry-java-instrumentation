@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -132,18 +131,16 @@ class KafkaConsumerBatchSelectionTest {
             span ->
                 assertThat(span.getParentSpanId())
                     .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
-    if (emitStableMessagingSemconv()) {
-      assertThat(testing.metrics())
-          .filteredOn(metric -> metric.getName().equals("messaging.process.duration"))
-          .singleElement()
-          .satisfies(
-              metric ->
-                  assertThat(
-                          metric.getHistogramData().getPoints().stream()
-                              .mapToLong(point -> point.getCount())
-                              .sum())
-                      .isEqualTo(2));
-    }
+    assertThat(testing.metrics())
+        .filteredOn(metric -> metric.getName().equals("messaging.process.duration"))
+        .singleElement()
+        .satisfies(
+            metric ->
+                assertThat(
+                        metric.getHistogramData().getPoints().stream()
+                            .mapToLong(point -> point.getCount())
+                            .sum())
+                    .isEqualTo(2));
   }
 
   @Test

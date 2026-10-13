@@ -48,21 +48,9 @@ final class CamelMessagingAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(CamelRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(CamelRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(CamelRequest request, @Nullable Void unused) {
     MessagingSpanDecorator spanDecorator = (MessagingSpanDecorator) request.getSpanDecorator();
-    return spanDecorator.getStableMessageId(request.getExchange());
+    return spanDecorator.getMessageId(request.getExchange());
   }
 
   @Nullable

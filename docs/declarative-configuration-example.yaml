@@ -10,16 +10,6 @@ file_format: '1.0'
 
 instrumentation/development:
   general:
-    code:
-      semconv:
-        # With `version: 1`, emits both the old and the stable code semantic conventions. Not
-        # supported under v3 preview.
-        dual_emit: false
-    db:
-      semconv:
-        # With `version: 1`, emits both the old and the stable database semantic conventions. Not
-        # supported under v3 preview.
-        dual_emit: false
     http:
       client:
         # List of HTTP request headers to capture in HTTP client telemetry.
@@ -33,15 +23,6 @@ instrumentation/development:
 
         # List of HTTP response headers to capture in HTTP server telemetry.
         response_captured_headers: []
-    messaging:
-      semconv:
-        # With `version: 1` and `experimental: true`, emits both the current and the preview
-        # messaging semantic conventions. Not supported under v3 preview.
-        dual_emit: false
-
-        # With `version: 1`, selects the preview messaging semantic conventions. Required, because
-        # version 1 of the messaging semantic conventions is not yet stable.
-        experimental: false
     rpc:
       semconv:
         # With `version: 1` and `experimental: true`, emits both the current and the preview RPC
@@ -54,7 +35,7 @@ instrumentation/development:
     sanitization:
       url:
         # List of URL query parameter names whose values are redacted in URL attributes. See
-        # https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+        # https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full.
         sensitive_query_parameters:
           - AWSAccessKeyId
           - Signature
@@ -64,10 +45,7 @@ instrumentation/development:
           - sig
           - X-Goog-Signature
 
-    # Opt-in to emit stable semantic conventions instead of the old experimental semantic
-    # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
-    # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
-    # Stable semantic conventions will become the default in version 3.0 of the agent.
+    # A comma-separated list of stable semantic convention groups to opt into.
     stability_opt_in_list: ''
   java:
     apache_elasticjob:
@@ -115,19 +93,6 @@ instrumentation/development:
           # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING:
           # augmenting queries with tracing context will make query texts unique, which may have
           # adverse impact on database performance.
-          enabled: false
-      enduser:
-        id:
-          # Enables capturing the enduser.id attribute. This property and the associated attribute
-          # are not supported when v3 preview is enabled.
-          enabled: false
-        role:
-          # Enables capturing the enduser.role attribute. This property and the associated attribute
-          # are not supported when v3 preview is enabled.
-          enabled: false
-        scope:
-          # Enables capturing the enduser.scope attribute when v3 preview is not enabled. This
-          # property is not honored when v3 preview is enabled.
           enabled: false
       gen_ai:
         # Determines whether Generative AI events include full content of user and assistant
@@ -187,8 +152,8 @@ instrumentation/development:
           # attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs,
           # Logback Logstash markers, and Logstash structured arguments. "*" matches any number of
           # characters and "?" matches one character. Excluded patterns take precedence. An
-          # exclude-only selector captures every key not excluded. Under v3-preview, an absent or
-          # empty selector captures all structured attributes by default. MDC and logger-context
+          # exclude-only selector captures every key not excluded. When the selector is absent or
+          # empty, all structured attributes are captured by default. MDC and logger-context
           # attributes remain separate and opt-in.
           included: []
 
@@ -204,21 +169,22 @@ instrumentation/development:
       messaging:
         headers:
           # A comma-separated list of case-sensitive message header name glob patterns to exclude
-          # from span attributes. `?` matches one character and `*` matches zero or more characters.
-          # Excluded patterns take precedence over included patterns. An absent or empty selector
-          # captures no headers; an exclude-only selector captures every header not excluded, which
-          # may expose sensitive information.
+          # from span attributes. Captured attribute keys preserve the header name's original
+          # spelling, including dashes. `?` matches one character and `*` matches zero or more
+          # characters. Excluded patterns take precedence over included patterns. An absent or empty
+          # selector captures no headers; an exclude-only selector captures every header not
+          # excluded, which may expose sensitive information.
           excluded: []
 
           # A comma-separated list of case-sensitive message header name glob patterns to capture as
-          # span attributes. `?` matches one character and `*` matches zero or more characters.
+          # span attributes. Captured attribute keys preserve the header name's original spelling,
+          # including dashes. `?` matches one character and `*` matches zero or more characters.
           # Excluded patterns take precedence over included patterns. An absent or empty selector
           # captures no headers; an exclude-only selector captures every header not excluded.
           included: []
         message_create_spans:
           # Provides the default for whether to create a producer span for each eligible message in
-          # a batch send when stable messaging semantic conventions are enabled. An
-          # instrumentation-specific setting takes precedence.
+          # a batch send. An instrumentation-specific setting takes precedence.
           enabled: true
         receive_telemetry/development:
           # Enables experimental receive telemetry, which will cause consumers to start a new trace,
@@ -243,25 +209,23 @@ instrumentation/development:
       span_suppression_strategy: semconv
       user:
         name:
-          # Enables capturing the user.name attribute when v3 preview is enabled. This property and
-          # the associated attribute are not supported when v3 preview is disabled.
+          # Enables capturing the `user.name` identity attribute. Identity attributes are not
+          # captured by default.
           enabled: false
         roles:
-          # Enables capturing the user.roles attribute when v3 preview is enabled. This property and
-          # the associated attribute are not supported when v3 preview is disabled.
+          # Enables capturing the `user.roles` identity attribute. Identity attributes are not
+          # captured by default.
           enabled: false
 
-      # Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the
-      # stable database and code semantic conventions and the new messaging semantic conventions by
-      # default, and ignoring deprecated settings. The set of changes it enables can grow in any
-      # release.
+      # Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring
+      # deprecated settings. The set of changes it enables can grow in any release.
       v3_preview: false
       view_telemetry:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
-      # Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
-      # Different operation types receive different experimental attributes.
+      # Enables experimental span attributes for Couchbase 2.x. For Couchbase 3.x, also enables the
+      # request_encoding and dispatch_to_server internal spans emitted by the SDK.
       emit_experimental_telemetry/development: false
     elasticsearch:
       # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
@@ -401,9 +365,6 @@ instrumentation/development:
       discovery:
         # Time in milliseconds between JMX MBean detection attempts.
         delay: 60000
-
-      # Enables collection of JMX metrics.
-      enabled: true
       metrics:
         # Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*"
         # matches any number of characters and "?" matches one character. Excluded patterns take
@@ -605,9 +566,9 @@ instrumentation/development:
       # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
       experimental_span_attributes/development: false
       message_create_spans:
-        # Enables per-message Create spans for batch sends when stable messaging semantic
-        # conventions are enabled. Overrides the common messaging setting. Disabling this retains
-        # Send spans and context propagation and does not affect single-message sends.
+        # Enables per-message Create spans for batch sends. Overrides the common messaging setting.
+        # Disabling this retains Send spans and context propagation and does not affect
+        # single-message sends.
         enabled: true
     runtime_telemetry:
       # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
@@ -618,8 +579,8 @@ instrumentation/development:
       jfr_metrics/development:
         # Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with
         # * and ?. Excluded patterns take precedence over included patterns, including over
-        # shorthand and legacy selections. Configuring this property without included selects all
-        # metrics except those excluded.
+        # experimental JFR shorthand selections. Configuring this property without included selects
+        # all metrics except those excluded.
         excluded: []
 
         # Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
@@ -644,7 +605,8 @@ instrumentation/development:
       javascript_snippet/development: ''
       request_parameters/development:
         # A comma-separated list of case-sensitive request parameter name patterns to exclude from
-        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # span attributes under `servlet.request.parameter.<name>`, preserving the original
+        # parameter-name casing. `?` matches one character and `*` matches zero or more characters.
         # Excluded patterns take precedence over included patterns. No request parameters are
         # captured unless an included or excluded pattern is configured; configuring only excluded
         # patterns captures all request parameters that do not match them, which may expose
@@ -652,7 +614,8 @@ instrumentation/development:
         excluded: []
 
         # A comma-separated list of case-sensitive request parameter name patterns to capture as
-        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # span attributes under `servlet.request.parameter.<name>`, preserving the original
+        # parameter-name casing. `?` matches one character and `*` matches zero or more characters.
         # Excluded patterns take precedence over included patterns. No request parameters are
         # captured unless an included or excluded pattern is configured; configuring only excluded
         # patterns captures all request parameters that do not match them, which may expose
@@ -661,7 +624,7 @@ instrumentation/development:
       trace_id_request_attribute/development:
         # Enables adding the trace ID and span ID as request attributes for downstream servlet
         # access.
-        enabled: true
+        enabled: false
     spring_batch:
       chunk/development:
         # When enabled, a new root span will be created for each chunk processing. Please note that
@@ -692,22 +655,10 @@ instrumentation/development:
       # Adds the experimental span attribute `job.system` with the value `spring_scheduling`.
       experimental_span_attributes/development: false
     spring_security:
-      enduser:
-        role:
-          # Prefix of granted authorities identifying roles to capture in the `enduser.role`
-          # semantic attribute. This property is not honored when v3 preview is enabled; use the
-          # `user.roles` variant instead.
-          granted_authority_prefix: ROLE_
-        scope:
-          # Prefix of granted authorities identifying scopes to capture in the `enduser.scope`
-          # semantic attribute. This property and the associated attribute are not supported when v3
-          # preview is enabled.
-          granted_authority_prefix: SCOPE_
       user:
         roles:
           # Prefix of granted authorities identifying roles to capture in the `user.roles` semantic
-          # attribute when v3 preview is enabled. This property is not honored when v3 preview is
-          # disabled; use the `enduser.role` variant instead.
+          # attribute.
           granted_authority_prefix: ROLE_
     spring_webmvc:
       # Enables the capture of experimental span attributes `spring-webmvc.view.name` and

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendMetrics;
@@ -75,7 +73,6 @@ class SqsCamelTest {
 
   @Test
   void awsSdkSqsProducerToCamelSqsConsumer() {
-    assertMessagingSemconvMode();
     String queueName = "sqsCamelTest";
     String queueUrl = awsConnector.createQueue(queueName);
     waitAndClearSetupTraces(queueUrl, queueName);
@@ -117,11 +114,7 @@ class SqsCamelTest {
     camelApp.producerTemplate().sendBody("direct:inputSdkConsumer", "{\"type\": \"hello\"}");
     Message receivedMessage = awsConnector.receiveMessage(queueUrl);
     assertThat(receivedMessage.getAttributes()).containsKey("AWSTraceHeader");
-    if (emitStableMessagingSemconv()) {
-      assertThat(receivedMessage.getMessageAttributes()).doesNotContainKey("traceparent");
-    } else {
-      assertThat(receivedMessage.getMessageAttributes()).containsKey("traceparent");
-    }
+    assertThat(receivedMessage.getMessageAttributes()).doesNotContainKey("traceparent");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -152,20 +145,6 @@ class SqsCamelTest {
 
   private static void assertCamelProducedConsumerTrace(
       TraceAssert trace, String queueUrl, String queueName) {
-    if (emitStableMessagingSemconv()) {
-      trace.hasSpansSatisfyingExactly(
-          span -> CamelSpanAssertions.direct(span, "input"),
-          span -> CamelSpanAssertions.sqsProduce(span, queueName).hasParent(trace.getSpan(0)),
-          span ->
-              AwsSpanAssertions.sqs(
-                      span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
-                  .hasParent(trace.getSpan(1)),
-          span ->
-              CamelSpanAssertions.sqsConsume(span, queueName)
-                  .hasParent(trace.getSpan(2))
-                  .hasLinks(propagatedLink(trace.getSpan(2))));
-      return;
-    }
     trace.hasSpansSatisfyingExactly(
         span -> CamelSpanAssertions.direct(span, "input"),
         span -> CamelSpanAssertions.sqsProduce(span, queueName).hasParent(trace.getSpan(0)),
@@ -174,10 +153,9 @@ class SqsCamelTest {
                     span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
                 .hasParent(trace.getSpan(1)),
         span ->
-            AwsSpanAssertions.sqs(
-                    span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
-                .hasParent(trace.getSpan(2)),
-        span -> CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2)));
+            CamelSpanAssertions.sqsConsume(span, queueName)
+                .hasParent(trace.getSpan(2))
+                .hasLinks(propagatedLink(trace.getSpan(2))));
   }
 
   private static void assertSdkProducedConsumerTrace(
@@ -194,52 +172,24 @@ class SqsCamelTest {
                   .hasParent(trace.getSpan(0)));
       return;
     }
-    if (emitStableMessagingSemconv()) {
-      trace.hasSpansSatisfyingExactly(
-          span ->
-              AwsSpanAssertions.sqs(
-                      span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
-                  .hasNoParent(),
-          span ->
-              CamelSpanAssertions.sqsConsume(span, queueName)
-                  .hasParent(trace.getSpan(0))
-                  .hasLinks(propagatedLink(trace.getSpan(0))));
-      return;
-    }
     trace.hasSpansSatisfyingExactly(
         span ->
             AwsSpanAssertions.sqs(
                     span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
                 .hasNoParent(),
         span ->
-            AwsSpanAssertions.sqs(
-                    span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
-                .hasParent(trace.getSpan(0)),
-        span -> CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0)));
+            CamelSpanAssertions.sqsConsume(span, queueName)
+                .hasParent(trace.getSpan(0))
+                .hasLinks(propagatedLink(trace.getSpan(0))));
   }
 
   private static LinkData propagatedLink(SpanData producerSpan) {
     SpanContext producerContext = producerSpan.getSpanContext();
     return LinkData.create(
-        SpanContext.create(
+        SpanContext.createFromRemoteParent(
             producerContext.getTraceId(),
             producerContext.getSpanId(),
             TraceFlags.getSampled(),
             producerContext.getTraceState()));
-  }
-
-  private static void assertMessagingSemconvMode() {
-    if (Boolean.getBoolean("otel.instrumentation.common.v3-preview")) {
-      return;
-    }
-    String optIn = System.getProperty("otel.semconv-stability.opt-in");
-    if (optIn == null) {
-      assertThat(emitOldMessagingSemconv()).isTrue();
-      assertThat(emitStableMessagingSemconv()).isFalse();
-    } else {
-      assertThat(optIn).isEqualTo("database,messaging");
-      assertThat(emitOldMessagingSemconv()).isFalse();
-      assertThat(emitStableMessagingSemconv()).isTrue();
-    }
   }
 }

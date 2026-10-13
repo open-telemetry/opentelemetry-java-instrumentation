@@ -30,7 +30,6 @@ public abstract class NatsRequest {
         subject,
         NatsSubject.getJetStreamSettlementOperationName(subject, body),
         headers,
-        getDataSize(body),
         connection.getOptions().getInboxPrefix());
   }
 
@@ -41,7 +40,6 @@ public abstract class NatsRequest {
         message.getSubject(),
         NatsSubject.getJetStreamSettlementOperationName(message.getSubject(), message.getData()),
         message.getHeaders(),
-        getDataSize(message.getData()),
         connection.getOptions().getInboxPrefix());
   }
 
@@ -62,12 +60,6 @@ public abstract class NatsRequest {
 
   @Nullable
   public abstract Headers getHeaders();
-
-  public abstract long getDataSize();
-
-  private static long getDataSize(@Nullable byte[] data) {
-    return data == null ? 0 : data.length;
-  }
 
   public abstract String getInboxPrefix();
 }

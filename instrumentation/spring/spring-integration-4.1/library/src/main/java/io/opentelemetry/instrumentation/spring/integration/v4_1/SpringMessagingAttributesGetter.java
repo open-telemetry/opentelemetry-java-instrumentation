@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -17,24 +16,16 @@ import javax.annotation.Nullable;
 final class SpringMessagingAttributesGetter
     implements MessagingAttributesGetter<MessageWithChannel, Void> {
 
-  private final boolean spanNameGetter;
-
-  SpringMessagingAttributesGetter(boolean spanNameGetter) {
-    this.spanNameGetter = spanNameGetter;
-  }
-
   @Nullable
   @Override
   public String getSystem(MessageWithChannel messageWithChannel) {
-    return emitStableMessagingSemconv() ? "spring_integration" : null;
+    return "spring_integration";
   }
 
   @Nullable
   @Override
   public String getDestination(MessageWithChannel messageWithChannel) {
-    return spanNameGetter || emitStableMessagingSemconv()
-        ? messageWithChannel.getChannelName()
-        : null;
+    return messageWithChannel.getChannelName();
   }
 
   @Nullable
@@ -56,18 +47,6 @@ final class SpringMessagingAttributesGetter
   @Override
   @Nullable
   public String getConversationId(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageBodySize(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(MessageWithChannel messageWithChannel) {
     return null;
   }
 

@@ -52,13 +52,13 @@ tasks.withType<Test>().configureEach {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
-val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-  tasks.register<Test>("${suite.name}StableSemconv") {
+val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}PreviewSemconv") {
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc,service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc,service.peer")
   }
 }
 
@@ -67,13 +67,13 @@ val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup,service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup,service.peer")
   }
 }
 
 tasks {
   check {
-    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
+    dependsOn(testing.suites, previewSemconvSuites, bothSemconvSuites)
   }
 }

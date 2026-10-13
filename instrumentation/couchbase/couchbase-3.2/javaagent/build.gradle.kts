@@ -62,13 +62,6 @@ testing {
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.3")
       }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("version344Test") {
@@ -80,13 +73,6 @@ testing {
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.4")
       }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
     }
   }
 }
@@ -95,71 +81,26 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty(
+      "collectMetadata",
+      otelProps.collectMetadata && name !in setOf("unitTests", "version343Test", "version344Test"),
+    )
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testStableSemconvExperimental = register<Test>("testStableSemconvExperimental") {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
-      "-Dotel.semconv-stability.opt-in=database",
       "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
     systemProperty(
       "metadataConfig",
-      "otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-  }
-
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
-  val testV3PreviewExperimental = register<Test>("testV3PreviewExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.common.v3-preview=true",
-      "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-  }
-
-  val testV3PreviewLegacyConfig = register<Test>("testV3PreviewLegacyConfig") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.common.v3-preview=true",
-      "-Dotel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.couchbase.experimental-span-attributes=true",
+      "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
   }
 
   check {
-    dependsOn(
-      testing.suites,
-      testStableSemconv,
-      testStableSemconvExperimental,
-      testV3Preview,
-      testV3PreviewExperimental,
-      testV3PreviewLegacyConfig,
-    )
+    dependsOn(testing.suites, testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

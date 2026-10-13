@@ -14,7 +14,6 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Internal;
 import java.util.concurrent.TimeUnit;
@@ -94,7 +93,6 @@ public final class OpenTelemetryMeterRegistryBuilder {
         baseTimeUnit,
         namingConvention,
         modifier,
-        SemconvStability.v3Preview(openTelemetry),
         metersHiddenFromSearch,
         meterBuilder.build());
   }

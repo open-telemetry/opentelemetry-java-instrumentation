@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3P
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ErrorAttributes.ErrorTypeValues.OTHER;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -17,7 +18,6 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JavaInterfaces.Jax;
 import java.util.stream.Stream;
 import javax.ws.rs.DELETE;
@@ -132,8 +132,7 @@ class JaxRsAnnotations1InstrumentationTest {
                                     : "io.opentelemetry.jaxrs-1.0"))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            SemconvCodeStabilityUtil.codeFunctionAssertions(
-                                action.getClass(), "call"))));
+                            equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call"))));
   }
 
   @Test

@@ -91,19 +91,19 @@ tasks {
     systemProperty("ratpack14Test", true)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
     systemProperty("ratpack14Test", true)
   }
 
-  val version17TestStableSemconv = register<Test>("version17TestStableSemconv") {
+  val version17TestPreviewSemconv = register<Test>("version17TestPreviewSemconv") {
     testClassesDirs = version17Test.get().sources.output.classesDirs
     classpath = version17Test.get().sources.runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
   val version17TestV3Preview = register<Test>("version17TestV3Preview") {
@@ -117,7 +117,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, version17TestStableSemconv, version17TestV3Preview)
+    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv, version17TestV3Preview)
   }
 
   if (otelProps.denyUnsafe) {

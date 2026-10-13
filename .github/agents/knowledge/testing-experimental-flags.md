@@ -44,7 +44,7 @@ settings with checks against `suite.name`.
 The domain-specific parts are the `jvmArgs` and `metadataConfig` values:
 
 ```kotlin
-val testExperimental by registering(Test::class) {
+val testExperimental = register<Test>("testExperimental") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.instrumentation.<module>.experimental-span-attributes=true")
