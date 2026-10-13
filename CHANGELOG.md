@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- OpenTelemetry API bridges remain enabled when
+  `otel.instrumentation.common.default-enabled=false`. Disable them explicitly with
+  `otel.instrumentation.opentelemetry-api.enabled=false`.
 - The Java agent no longer instruments Jedis 1.x.
 - Remove deprecated Java agent enablement aliases. In `otel.instrumentation.<name>.enabled`,
   replace `liberty-dispatcher` with `liberty-dispatcher-20.0`, `scala-fork-join` with
