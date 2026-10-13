@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.experimental;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.s3;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.sns;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.sqs;

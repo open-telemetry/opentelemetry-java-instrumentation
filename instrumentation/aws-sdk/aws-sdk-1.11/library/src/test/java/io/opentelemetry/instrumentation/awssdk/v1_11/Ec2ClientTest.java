@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
+
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -23,7 +25,7 @@ class Ec2ClientTest extends AbstractEc2ClientTest {
   public AmazonEC2ClientBuilder configureClient(AmazonEC2ClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
             .build()
             .createRequestHandler());
   }

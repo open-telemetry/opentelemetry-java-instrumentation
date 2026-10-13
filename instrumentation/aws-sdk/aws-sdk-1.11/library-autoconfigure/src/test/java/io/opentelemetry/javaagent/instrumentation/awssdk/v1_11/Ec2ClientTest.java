@@ -21,11 +21,6 @@ class Ec2ClientTest extends AbstractEc2ClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
-  }
-
-  @Override
   public AmazonEC2ClientBuilder configureClient(AmazonEC2ClientBuilder clientBuilder) {
     return clientBuilder;
   }

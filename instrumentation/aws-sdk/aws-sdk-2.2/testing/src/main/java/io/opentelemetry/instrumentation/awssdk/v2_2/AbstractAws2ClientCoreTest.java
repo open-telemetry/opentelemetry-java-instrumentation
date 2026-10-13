@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -39,7 +40,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -98,15 +98,6 @@ public abstract class AbstractAws2ClientCoreTest {
   protected abstract InstrumentationExtension getTesting();
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
-
-  protected String experimental(String value) {
-    return captureExperimentalSpanAttributes() ? value : null;
-  }
-
-  protected boolean captureExperimentalSpanAttributes() {
-    return !(getTesting() instanceof AgentInstrumentationExtension)
-        || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
-  }
 
   protected static boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
@@ -261,7 +252,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private void assertListTablesRequest(SpanDataAssert span) {
+  private static void assertListTablesRequest(SpanDataAssert span) {
     span.hasName("DynamoDb.ListTables")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
@@ -282,7 +273,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private void assertDynamoDbRequest(
+  private static void assertDynamoDbRequest(
       SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(

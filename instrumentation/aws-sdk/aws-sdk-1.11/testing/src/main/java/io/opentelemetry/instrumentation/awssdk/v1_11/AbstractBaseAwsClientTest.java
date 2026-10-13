@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -30,7 +31,6 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
@@ -49,15 +49,6 @@ public abstract class AbstractBaseAwsClientTest {
       new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
   protected final MockWebServerExtension server = new MockWebServerExtension();
   protected AwsClientBuilder.EndpointConfiguration endpoint;
-
-  protected String experimental(String value) {
-    return captureExperimentalSpanAttributes() ? value : null;
-  }
-
-  protected boolean captureExperimentalSpanAttributes() {
-    return !(testing() instanceof AgentInstrumentationExtension)
-        || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
-  }
 
   protected abstract InstrumentationExtension testing();
 

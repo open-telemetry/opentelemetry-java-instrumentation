@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
+
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +32,7 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
   void setup() {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
             .setMessagingReceiveTelemetryEnabled(true)
             .setHeaders(
                 IncludeExclude.builder()

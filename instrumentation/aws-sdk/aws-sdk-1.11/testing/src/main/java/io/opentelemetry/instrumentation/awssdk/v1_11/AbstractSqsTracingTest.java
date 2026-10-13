@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -89,15 +90,6 @@ public abstract class AbstractSqsTracingTest {
   private static AmazonSQSAsync sqsClient;
 
   protected abstract InstrumentationExtension testing();
-
-  protected String experimental(String value) {
-    return captureExperimentalSpanAttributes() ? value : null;
-  }
-
-  protected boolean captureExperimentalSpanAttributes() {
-    return !(testing() instanceof AgentInstrumentationExtension)
-        || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
-  }
 
   protected boolean receiveTelemetryEnabled() {
     return !(testing() instanceof AgentInstrumentationExtension)

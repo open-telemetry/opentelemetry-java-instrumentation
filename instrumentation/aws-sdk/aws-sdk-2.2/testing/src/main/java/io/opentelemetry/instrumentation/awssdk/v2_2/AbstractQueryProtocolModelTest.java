@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -122,16 +123,5 @@ public abstract class AbstractQueryProtocolModelTest {
                                     })));
                   });
             });
-  }
-
-  private boolean isJavaagentTest() {
-    return getClass().getName().startsWith("io.opentelemetry.javaagent.");
-  }
-
-  private String experimental(String value) {
-    return isJavaagentTest()
-            && Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
-        ? value
-        : null;
   }
 }

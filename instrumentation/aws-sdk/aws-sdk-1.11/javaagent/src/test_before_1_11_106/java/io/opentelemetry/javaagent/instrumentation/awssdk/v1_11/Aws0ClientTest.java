@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -88,12 +89,6 @@ class Aws0ClientTest {
           new InstanceProfileCredentialsProvider());
 
   private static final MockWebServerExtension server = new MockWebServerExtension();
-
-  private static String experimental(String value) {
-    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
-        ? value
-        : null;
-  }
 
   @BeforeAll
   static void setUp() {

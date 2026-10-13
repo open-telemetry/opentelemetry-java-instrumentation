@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -42,7 +43,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -67,15 +67,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
   private static AmazonSQSAsync sqsClient;
 
   protected abstract InstrumentationExtension testing();
-
-  protected String experimental(String value) {
-    return captureExperimentalSpanAttributes() ? value : null;
-  }
-
-  protected boolean captureExperimentalSpanAttributes() {
-    return !(testing() instanceof AgentInstrumentationExtension)
-        || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
-  }
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
@@ -120,10 +111,12 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
     testing()
         .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(this::createQueueSpan),
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    this::publishSpan,
+                    AbstractSqsSuppressReceiveSpansTest::createQueueSpan),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    AbstractSqsSuppressReceiveSpansTest::publishSpan,
                     span -> processSpan(span, trace.getSpan(0), trace.getSpan(0)),
                     span ->
                         span.hasName("process child")
@@ -303,7 +296,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
     testing()
         .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(this::createQueueSpan),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    AbstractSqsSuppressReceiveSpansTest::createQueueSpan),
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
               spanAsserts.add(
@@ -336,7 +331,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             });
   }
 
-  private void createQueueSpan(SpanDataAssert span) {
+  private static void createQueueSpan(SpanDataAssert span) {
     span.hasName("SQS.CreateQueue")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
@@ -355,7 +350,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 
-  private void publishSpan(SpanDataAssert span) {
+  private static void publishSpan(SpanDataAssert span) {
     span.hasName("send testSdkSqs")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
@@ -379,7 +374,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 
-  private void processSpan(SpanDataAssert span, SpanData parent, SpanData creationContext) {
+  private static void processSpan(SpanDataAssert span, SpanData parent, SpanData creationContext) {
     span.hasName("process testSdkSqs")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parent)
@@ -413,7 +408,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .isEqualTo(creationContext.getSpanId())));
   }
 
-  private void receiveMessageSdkSpan(SpanDataAssert span, SpanData parent) {
+  private static void receiveMessageSdkSpan(SpanDataAssert span, SpanData parent) {
     span.hasName("SQS.ReceiveMessage")
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)

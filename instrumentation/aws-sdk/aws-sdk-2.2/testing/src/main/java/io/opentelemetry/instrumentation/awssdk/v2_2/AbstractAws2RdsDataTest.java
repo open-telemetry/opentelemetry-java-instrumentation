@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -32,7 +33,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -88,15 +88,6 @@ public abstract class AbstractAws2RdsDataTest {
   private RdsDataAsyncClient asyncClient;
 
   protected abstract InstrumentationExtension getTesting();
-
-  protected String experimental(String value) {
-    return captureExperimentalSpanAttributes() ? value : null;
-  }
-
-  protected boolean captureExperimentalSpanAttributes() {
-    return !(getTesting() instanceof AgentInstrumentationExtension)
-        || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
-  }
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
@@ -286,7 +277,7 @@ public abstract class AbstractAws2RdsDataTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private List<AttributeAssertion> commonAttributes(
+  private static List<AttributeAssertion> commonAttributes(
       String operation, String path, Integer statusCode, String requestId) {
     return new ArrayList<>(
         asList(

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
+
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -24,7 +26,7 @@ class SqsSuppressReceiveSpansTest extends AbstractSqsSuppressReceiveSpansTest {
   public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
             .build()
             .createRequestHandler());
   }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -83,13 +84,6 @@ public abstract class AbstractAws2SqsBaseTest {
   protected SendMessageBatchRequest sendMessageBatchRequest;
 
   protected abstract InstrumentationExtension getTesting();
-
-  protected String experimental(String value) {
-    return !(getTesting() instanceof AgentInstrumentationExtension)
-            || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
-        ? value
-        : null;
-  }
 
   protected boolean receiveTelemetryEnabled() {
     return !(getTesting() instanceof AgentInstrumentationExtension)

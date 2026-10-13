@@ -20,11 +20,6 @@ class Aws2ClientTest extends AbstractAws2ClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
-  }
-
-  @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder();
   }

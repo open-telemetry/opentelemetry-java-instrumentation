@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_LAMBDA_RESOURCE_MAPPING_ID;
 import static java.util.Arrays.asList;
@@ -142,7 +143,7 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
         response, client, "AWSLambda", operation, method, additionalAttributes);
   }
 
-  private Stream<Arguments> provideArguments() {
+  private static Stream<Arguments> provideArguments() {
     return Stream.of(
         Arguments.of(
             "CreateEventSourceMapping",

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -30,12 +31,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class AwsSpanAssertions {
   private AwsSpanAssertions() {}
-
-  static String experimental(String value) {
-    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
-        ? value
-        : null;
-  }
 
   static SpanDataAssert sqs(
       SpanDataAssert span, String queueName, String queueUrl, String rpcMethod) {

@@ -21,11 +21,6 @@ class SnsClientTest extends AbstractSnsClientTest {
   }
 
   @Override
-  protected boolean captureExperimentalSpanAttributes() {
-    return Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes");
-  }
-
-  @Override
   public AmazonSNSClientBuilder configureClient(AmazonSNSClientBuilder clientBuilder) {
     return clientBuilder;
   }

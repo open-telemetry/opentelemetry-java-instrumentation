@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -26,7 +27,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
@@ -79,13 +79,6 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
   protected abstract InstrumentationExtension getTesting();
-
-  private String experimental(String value) {
-    return !(getTesting() instanceof AgentInstrumentationExtension)
-            || Boolean.getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes")
-        ? value
-        : null;
-  }
 
   // Introducing a new ExecutionInterceptor that's registered with the AWS SDK.
   // It's positioned to execute after the TracingExecutionInterceptor used for SDK instrumentation.
