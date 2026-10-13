@@ -13,10 +13,9 @@ jobs:
   backport:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify backport branch
-        run: |
-          if [[ ! $GITHUB_REF_NAME =~ ^maintenance/v[0-9]+\.x$ && ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x$ ]]; then
-            echo this workflow should only be run against maintenance/v\<major\>.x or release branches
+      - run: |
+          if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x$ ]]; then
+            echo this workflow should only be run against release branches
             exit 1
           fi
 
