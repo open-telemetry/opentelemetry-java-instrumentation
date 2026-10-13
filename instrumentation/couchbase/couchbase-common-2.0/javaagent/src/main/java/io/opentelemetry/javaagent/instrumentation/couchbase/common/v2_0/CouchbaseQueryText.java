@@ -5,22 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
-class CouchbaseQuerySanitizer {
-
-  private static final SqlQueryAnalyzer analyzer =
-      SqlQueryAnalyzer.create(
-          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "couchbase"));
+class CouchbaseQueryText {
 
   @Nullable private static final Class<?> QUERY_CLASS;
   @Nullable private static final Class<?> STATEMENT_CLASS;
@@ -79,37 +69,36 @@ class CouchbaseQuerySanitizer {
     ANALYTICS_GET_STATEMENT = analyticsGetStatement;
   }
 
-  static SqlQuery analyze(Object query) {
+  @Nullable
+  static String getSqlQueryText(Object query) {
     if (query instanceof String) {
-      return analyzeString((String) query);
+      return (String) query;
     }
     // Query is present in Couchbase [2.0.0, 2.2.0)
     // Statement is present starting from Couchbase 2.1.0
     if ((QUERY_CLASS != null && QUERY_CLASS.isAssignableFrom(query.getClass()))
         || (STATEMENT_CLASS != null && STATEMENT_CLASS.isAssignableFrom(query.getClass()))) {
-      return analyzeString(query.toString());
+      return query.toString();
     }
+    // N1qlQuery is present starting from Couchbase 2.2.0
+    if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
+      return getQueryText(N1QL_GET_STATEMENT, query);
+    }
+    // AnalyticsQuery is present starting from Couchbase 2.4.3
+    if (ANALYTICS_QUERY_CLASS != null && ANALYTICS_QUERY_CLASS.isAssignableFrom(query.getClass())) {
+      return getQueryText(ANALYTICS_GET_STATEMENT, query);
+    }
+    return null;
+  }
+
+  static String getNonSqlQueryText(Object query) {
     // SpatialViewQuery is present starting from Couchbase 2.1.0
     String queryClassName = query.getClass().getName();
     if (queryClassName.equals("com.couchbase.client.java.view.ViewQuery")
         || queryClassName.equals("com.couchbase.client.java.view.SpatialViewQuery")) {
-      return SqlQuery.create(query.toString(), null, null);
+      return query.toString();
     }
-    // N1qlQuery is present starting from Couchbase 2.2.0
-    if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
-      String queryText = getQueryText(N1QL_GET_STATEMENT, query);
-      if (queryText != null) {
-        return analyzeString(queryText);
-      }
-    }
-    // AnalyticsQuery is present starting from Couchbase 2.4.3
-    if (ANALYTICS_QUERY_CLASS != null && ANALYTICS_QUERY_CLASS.isAssignableFrom(query.getClass())) {
-      String queryText = getQueryText(ANALYTICS_GET_STATEMENT, query);
-      if (queryText != null) {
-        return analyzeString(queryText);
-      }
-    }
-    return SqlQuery.create(query.getClass().getSimpleName(), null, null);
+    return query.getClass().getSimpleName();
   }
 
   @Nullable
@@ -124,11 +113,5 @@ class CouchbaseQuerySanitizer {
     }
   }
 
-  private static SqlQuery analyzeString(String query) {
-    // "In SQL++ single and double quotation marks can be used for strings."
-    // https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/literals.html
-    return analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-  }
-
-  private CouchbaseQuerySanitizer() {}
+  private CouchbaseQueryText() {}
 }

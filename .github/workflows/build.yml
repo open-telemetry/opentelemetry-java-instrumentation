@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - maintenance/v*.x
       - release/*
   workflow_dispatch:
 

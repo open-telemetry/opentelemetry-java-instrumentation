@@ -98,8 +98,24 @@ tasks {
     }
   }
 
+  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
+    val sourceTask = named<Test>("test").get()
+    isEnabled = sourceTask.enabled
+    setJvmArgs(sourceTask.jvmArgs)
+    setSystemProperties(sourceTask.systemProperties)
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("CouchbaseQuerySanitizationTest")
+    }
+    jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+    systemProperty("collectMetadata", "false")
+    systemProperty("testQuerySanitizationEnabled", "false")
+  }
+
   check {
-    dependsOn(testing.suites, experimentalSuites)
+    dependsOn(testing.suites, experimentalSuites, testQuerySanitizationDisabled)
   }
 
   if (otelProps.denyUnsafe) {

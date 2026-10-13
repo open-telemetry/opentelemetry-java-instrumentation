@@ -7,6 +7,13 @@
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
   ],
+  baseBranchPatterns: [
+    'main',
+    'maintenance/v2.x',
+  ],
+  // Merge each base branch's config over main's so maintenance branches can retain
+  // dependency compatibility restrictions independently of main.
+  useBaseBranchConfig: 'merge',
   ignorePaths: [
     // instrumentation modules intentionally pin old library versions in order to test the oldest
     // supported version, so renovate must not update their build files
