@@ -43,6 +43,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
 
+  private static final boolean REQUEST_PARAMETER_CAPTURE_ENABLED =
+      System.getProperty("otel.instrumentation.servlet.experimental.request-parameters.included")
+              != null
+          || System.getProperty(
+                  "otel.instrumentation.servlet.experimental.request-parameters.excluded")
+              != null;
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -118,12 +125,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
 
   @Override
   protected boolean shouldCaptureRequestParameters() {
-    return System.getProperty(
-                "otel.instrumentation.servlet.experimental.request-parameters.included")
-            != null
-        || System.getProperty(
-                "otel.instrumentation.servlet.experimental.request-parameters.excluded")
-            != null;
+    return REQUEST_PARAMETER_CAPTURE_ENABLED;
   }
 
   @Override
