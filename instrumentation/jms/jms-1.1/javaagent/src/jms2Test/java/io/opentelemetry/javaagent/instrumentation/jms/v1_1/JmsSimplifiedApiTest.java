@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jms.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -16,7 +14,6 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.util.HashSet;
 import java.util.stream.Stream;
@@ -60,8 +57,6 @@ import org.junit.jupiter.params.provider.MethodSource;
  * receive would produce two spans.
  */
 class JmsSimplifiedApiTest {
-
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-2.0";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -140,24 +135,16 @@ class JmsSimplifiedApiTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer parent").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send " + queueName
-                                : queueName + " publish")
+                    span.hasName("send " + queueName)
                         .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .satisfies(JmsSimplifiedApiTest::assertScope)),
+                        .hasParent(trace.getSpan(0))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive " + queueName
-                                : queueName + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .satisfies(JmsSimplifiedApiTest::assertScope)));
+                    span.hasName("receive " + queueName)
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -173,12 +160,6 @@ class JmsSimplifiedApiTest {
     assertThat(consumer.receiveNoWait()).isNull();
 
     testing.waitForTraces(0);
-  }
-
-  // the classic jms-1.1 advice emits an identical span, so the scope is what shows that the
-  // simplified-API instrumentation is the one that ran
-  private static void assertScope(SpanData span) {
-    assertThat(span.getInstrumentationScopeInfo().getName()).isEqualTo(INSTRUMENTATION_NAME);
   }
 
   // each case gets its own queue so the runs can't see each other's messages

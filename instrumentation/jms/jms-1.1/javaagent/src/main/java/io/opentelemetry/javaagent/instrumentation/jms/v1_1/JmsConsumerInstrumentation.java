@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jms.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.JmsReceiveSpanUtil.createReceiveSpan;
-import static io.opentelemetry.javaagent.instrumentation.jms.v2_0.JmsSingletons.consumerReceiveInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -19,7 +19,6 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
-import io.opentelemetry.javaagent.instrumentation.jms.v1_1.JavaxMessageAdapter;
 import javax.annotation.Nullable;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
