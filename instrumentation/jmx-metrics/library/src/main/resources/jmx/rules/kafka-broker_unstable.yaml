@@ -163,7 +163,7 @@ rules:
     mapping:
       Count:
         metric: kafka.server.isr.operation.count
-        type: updowncounter
+        type: counter
         desc: &desc The number of in-sync replica operations
         unit: "{operation}"
 
@@ -173,7 +173,7 @@ rules:
     mapping:
       Count:
         metric: kafka.server.isr.operation.count
-        type: updowncounter
+        type: counter
         desc: *desc
         unit: "{operation}"
 

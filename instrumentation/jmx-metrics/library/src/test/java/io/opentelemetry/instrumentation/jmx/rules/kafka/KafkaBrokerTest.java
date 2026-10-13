@@ -165,7 +165,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                 "kafka.server.isr.operation.count",
                 metric ->
                     metric
-                        .isUpDownCounter()
+                        .isCounter()
                         .hasUnit("{operation}")
                         .hasDescription("The number of in-sync replica operations")
                         .hasDataPointsWithAttributes(
