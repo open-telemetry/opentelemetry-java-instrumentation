@@ -97,12 +97,6 @@ public abstract class AbstractSqsTracingTest {
             "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
   }
 
-  protected boolean captureMessageHeaders() {
-    return !(testing() instanceof AgentInstrumentationExtension)
-        || !System.getProperty("otel.instrumentation.common.messaging.headers.included", "")
-            .isEmpty();
-  }
-
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
 
@@ -219,7 +213,7 @@ public abstract class AbstractSqsTracingTest {
     testing().waitAndAssertTraces(traceAssertions);
   }
 
-  private void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
+  private static void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             asList(
@@ -243,7 +237,7 @@ public abstract class AbstractSqsTracingTest {
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
 
-    if (captureHeaders && captureMessageHeaders()) {
+    if (captureHeaders) {
       attributes.add(
           satisfies(headerAttributeKey("Test-Message-Header"), val -> val.containsExactly("test")));
     }
@@ -254,12 +248,12 @@ public abstract class AbstractSqsTracingTest {
         .hasAttributesSatisfyingExactly(attributes);
   }
 
-  private void assertReceiveSpan(
+  private static void assertReceiveSpan(
       SpanDataAssert span, SpanData creationContext, boolean captureHeaders) {
     assertReceiveSpan(span, null, creationContext, captureHeaders);
   }
 
-  private void assertReceiveSpan(
+  private static void assertReceiveSpan(
       SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
@@ -284,7 +278,7 @@ public abstract class AbstractSqsTracingTest {
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "receive"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "receive"));
 
-    if (captureHeaders && captureMessageHeaders()) {
+    if (captureHeaders) {
       attributes.add(
           satisfies(headerAttributeKey("Test-Message-Header"), val -> val.containsExactly("test")));
     }
@@ -309,7 +303,7 @@ public abstract class AbstractSqsTracingTest {
                             .isEqualTo(creationContext.getSpanId())));
   }
 
-  private void assertProcessSpan(
+  private static void assertProcessSpan(
       SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
@@ -334,7 +328,7 @@ public abstract class AbstractSqsTracingTest {
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "process"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "process"));
 
-    if (captureHeaders && captureMessageHeaders()) {
+    if (captureHeaders) {
       attributes.add(
           satisfies(headerAttributeKey("Test-Message-Header"), val -> val.containsExactly("test")));
     }

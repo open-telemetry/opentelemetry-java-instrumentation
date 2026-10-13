@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -73,12 +72,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest {
 
   private static final int WITH_PARENT_SPAN_COUNT = 5;
-
-  protected boolean captureMessageHeaders() {
-    return !(getTesting() instanceof AgentInstrumentationExtension)
-        || !System.getProperty("otel.instrumentation.common.messaging.headers.included", "")
-            .isEmpty();
-  }
 
   @Override
   protected void assertSqsTraces(boolean withParent, boolean captureHeaders) {
@@ -206,7 +199,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     throw new AssertionError("Span not found: " + name);
   }
 
-  private void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
+  private static void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             asList(
@@ -231,7 +224,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
 
-    if (captureHeaders && captureMessageHeaders()) {
+    if (captureHeaders) {
       attributes.add(
           satisfies(
               headerAttributeKey("Test-Message-Header"),
@@ -244,7 +237,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
         .hasAttributesSatisfyingExactly(attributes);
   }
 
-  private void assertReceiveSpan(
+  private static void assertReceiveSpan(
       SpanDataAssert span, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
@@ -265,7 +258,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "receive"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "receive"));
 
-    if (captureHeaders && captureMessageHeaders()) {
+    if (captureHeaders) {
       attributes.add(
           satisfies(
               headerAttributeKey("Test-Message-Header"),
@@ -286,7 +279,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                             .isEqualTo(creationContext.getSpanId())));
   }
 
-  private void assertProcessSpan(
+  private static void assertProcessSpan(
       SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
@@ -307,7 +300,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     attributes.add(equalTo(MESSAGING_OPERATION_NAME, "process"));
     attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "process"));
 
-    if (captureHeaders && captureMessageHeaders()) {
+    if (captureHeaders) {
       attributes.add(
           satisfies(
               headerAttributeKey("Test-Message-Header"),

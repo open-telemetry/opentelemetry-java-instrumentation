@@ -193,8 +193,6 @@ tasks {
   }
 
   withType<Test>().configureEach {
-    // Override the agent test exporter's header-capture setup to exercise instrumentation defaults.
-    systemProperty("otel.instrumentation.common.messaging.headers.included", "")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
@@ -236,18 +234,6 @@ tasks {
     )
   }
 
-  val testCaptureHeaders = register<Test>("testCaptureHeaders") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter.includeTestsMatching("Aws2SqsTracingTest.testCaptureMessageHeaderAsAttributeSpan")
-    systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.headers.included=Test-Message-Header",
-    )
-  }
-
   val testBedrockRuntimeCaptureMessageContent = register<Test>("testBedrockRuntimeCaptureMessageContent") {
     testClassesDirs = sourceSets["testBedrockRuntime"].output.classesDirs
     classpath = sourceSets["testBedrockRuntime"].runtimeClasspath
@@ -280,7 +266,6 @@ tasks {
       testExperimentalAttributes,
       testIndividualHttpErrors,
       testReceiveTelemetry,
-      testCaptureHeaders,
       testBedrockRuntimeCaptureMessageContent,
       testRdsDataExperimentalAttributes,
     )
