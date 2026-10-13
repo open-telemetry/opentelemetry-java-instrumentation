@@ -24,11 +24,25 @@ dependencies {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.servlet.experimental.request-parameters.included=test-*," +
+        "otel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret",
+    )
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
@@ -46,7 +60,7 @@ tasks {
   }
 
   check {
-    dependsOn(testUserNameCapture)
+    dependsOn(testRequestParameterCapture, testUserNameCapture)
   }
 }
 

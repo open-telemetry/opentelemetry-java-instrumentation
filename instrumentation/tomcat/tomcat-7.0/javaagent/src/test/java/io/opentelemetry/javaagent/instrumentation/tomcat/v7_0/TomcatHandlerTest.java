@@ -117,6 +117,16 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
   }
 
   @Override
+  protected boolean shouldCaptureRequestParameters() {
+    return System.getProperty(
+                "otel.instrumentation.servlet.experimental.request-parameters.included")
+            != null
+        || System.getProperty(
+                "otel.instrumentation.servlet.experimental.request-parameters.excluded")
+            != null;
+  }
+
+  @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     String methodName;
