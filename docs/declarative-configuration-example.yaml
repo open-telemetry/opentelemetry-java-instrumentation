@@ -224,8 +224,8 @@ instrumentation/development:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
-      # Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
-      # Different operation types receive different experimental attributes.
+      # Enables experimental span attributes for Couchbase 2.x. For Couchbase 3.x, also enables the
+      # request_encoding and dispatch_to_server internal spans emitted by the SDK.
       emit_experimental_telemetry/development: false
     elasticsearch:
       # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
