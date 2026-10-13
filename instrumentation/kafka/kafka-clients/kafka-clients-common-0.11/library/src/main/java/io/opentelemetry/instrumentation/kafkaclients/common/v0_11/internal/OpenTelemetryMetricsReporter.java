@@ -14,7 +14,6 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -186,12 +185,7 @@ public final class OpenTelemetryMetricsReporter
   private void closeInstrumentAndRemove(RegisteredObservable registeredObservable) {
     closeInstrument(registeredObservable.getObservable());
     synchronized (lock) {
-      for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
-        if (it.next() == registeredObservable) {
-          it.remove();
-          break;
-        }
-      }
+      registeredObservables.remove(registeredObservable);
     }
   }
 
