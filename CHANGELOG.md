@@ -10,6 +10,17 @@
   `otel.instrumentation.lettuce.experimental.command-encoding-events.enabled` is no longer
   supported. Replace the removed `otel.instrumentation.lettuce-5.1.enabled` selector with
   `otel.instrumentation.lettuce.enabled` to enable or disable Lettuce instrumentation.
+- OpenTelemetry API bridges remain enabled when
+  `otel.instrumentation.common.default-enabled=false`. Disable them explicitly with
+  `otel.instrumentation.opentelemetry-api.enabled=false`.
+- The Java agent no longer instruments Jedis 1.x.
+- Remove deprecated Java agent enablement aliases. In `otel.instrumentation.<name>.enabled`,
+  replace `liberty-dispatcher` with `liberty-dispatcher-20.0`, `scala-fork-join` with
+  `scala-forkjoin`, and `scala-fork-join-2.8` with `scala-forkjoin-2.8`.
+  The removed `azure-core-1.36-context` and `azure-core-1.53-context` aliases have no context-only
+  replacement; `azure-core-1.36` and `azure-core-1.53` each control both SDK and context instrumentation.
+- Removed `otel.instrumentation.couchbase.experimental-span-attributes`. Use `otel.instrumentation.couchbase.emit-experimental-telemetry=true` to enable experimental span attributes for Couchbase 2.x and 3.x. For Couchbase 3.x, this also enables the Couchbase Java SDK's internal `request_encoding` and `dispatch_to_server` spans.
+- Couchbase 3.x operation spans now use the `CLIENT` span kind. Couchbase 3.0 and legacy-bridge 3.1 spans now use the `io.opentelemetry.couchbase-3.0` and `io.opentelemetry.couchbase-3.1` instrumentation scopes, respectively.
 - The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
   starter has been removed.
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
@@ -275,6 +286,10 @@ for more details.
 
 ### 🚫 Deprecations
 
+- Add `RocketMqTelemetry.wrap(DefaultMQProducer)` for single-message and batch producer
+  instrumentation, fixing batch context propagation by injecting context before message encoding.
+  Deprecate `RocketMqTelemetry.createSendMessageHook()` in favor of the wrapper.
+  ([#20479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20479))
 - Deprecate `otel.jmx.target.system` in favor of `otel.jmx.metrics.experimental.included`.
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query`. It will be removed in 3.0,

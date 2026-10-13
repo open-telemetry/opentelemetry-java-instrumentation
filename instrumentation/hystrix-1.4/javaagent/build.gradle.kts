@@ -26,7 +26,7 @@ tasks {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata && name != "testDisabled")
 
     if (name != "testDisabled") {
       jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
