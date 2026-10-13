@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking changes
 
+- Remove bundled support for the contrib `otel.traces.sampler=linksbased_parentbased_always_on` and
+  declarative `rule_based_routing` samplers. The links-based sampler has no replacement. For
+  compatible rule-based policies, consider the SDK incubator declarative `composite/development`
+  `rule_based` sampler; its rules use case-sensitive exact/wildcard matching and per-rule samplers,
+  and unmatched spans are dropped. This differs from the contrib sampler's regex, action, and
+  fallback behavior.
 - The Java agent now instruments Lettuce 5.1 and later with the Lettuce 5.0 integration, changing
   the instrumentation scope from `io.opentelemetry.lettuce-5.1` to
   `io.opentelemetry.lettuce-5.0`. The Java agent no longer emits command-encoding events, and

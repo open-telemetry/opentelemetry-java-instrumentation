@@ -1,2 +1,1 @@
 io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizer
-io.opentelemetry.instrumentation.sampler.internal.LinksBasedSamplerDeprecationCustomizerProvider
