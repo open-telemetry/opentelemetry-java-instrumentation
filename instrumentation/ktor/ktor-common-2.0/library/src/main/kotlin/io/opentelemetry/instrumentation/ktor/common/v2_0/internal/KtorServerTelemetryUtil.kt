@@ -28,7 +28,19 @@ import kotlin.coroutines.EmptyCoroutineContext
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
+internal fun isKtorContextLeakFixAvailable(version: String?): Boolean {
+  // Only treat final releases as fixed. Prerelease versions may not contain the fix yet.
+  val match = Regex("^(\\d+)\\.(\\d+)\\.(\\d+)(?:\\+.*)?$").matchEntire(version ?: return false) ?: return false
+  val (major, minor, patch) = match.destructured
+  val majorVersion = major.toIntOrNull() ?: return false
+  val minorVersion = minor.toIntOrNull() ?: return false
+  val patchVersion = patch.toIntOrNull() ?: return false
+  return majorVersion > 3 || (majorVersion == 3 && (minorVersion > 4 || (minorVersion == 4 && patchVersion >= 3)))
+}
+
 object KtorServerTelemetryUtil {
+  // Read once because this decision is on the per-request instrumentation path.
+  private val ktorHasContextLeakFix = isKtorContextLeakFixAvailable(Application::class.java.`package`.implementationVersion)
 
   fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
     val contextKey = AttributeKey<Context>("OpenTelemetry")
@@ -46,7 +58,7 @@ object KtorServerTelemetryUtil {
       if (context != null) {
         call.attributes.put(contextKey, context)
         val dispatcher = coroutineContext[ContinuationInterceptor] as? CoroutineDispatcher
-        val extra = if (dispatcher != null) EmptyInterceptor(dispatcher) else EmptyCoroutineContext
+        val extra = if (dispatcher != null && !ktorHasContextLeakFix) EmptyInterceptor(dispatcher) else EmptyCoroutineContext
         withContext(context.asContextElement() + extra) {
           proceed()
         }
@@ -94,14 +106,11 @@ object KtorServerTelemetryUtil {
     builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
   )
 
-  // A no-op ContinuationInterceptor. There seems to be a bug in Ktor where when propagate otel
-  // context by using withContext(context.asContextElement()) updateThreadContext, that activates
-  // the otel scope, gets called in
-  // https://github.com/open-telemetry/opentelemetry-java/blob/main/extensions/kotlin/src/main/java/io/opentelemetry/extension/kotlin/KotlinContextElement.java
-  // but the restoreThreadContext is not always called, which causes the otel context to leak across
-  // requests. This issue can be worked around by adding -Dio.ktor.internal.disable.sfg=true to jvm
-  // arguments. Adding this no-op interceptor seems to also work around the issue.
-  // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
+  // Ktor has a coroutine context leak where propagating OTel context with
+  // withContext(context.asContextElement()) can activate an OTel scope without reliably restoring
+  // it. Adding this interceptor works around the issue on Ktor versions before 3.4.3 (see
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430). Ktor 3.4.3+
+  // fixes the leak itself, but only when its original ContinuationInterceptor remains a dispatcher.
   private class EmptyInterceptor(val dispatcher: CoroutineDispatcher) : ContinuationInterceptor {
     override val key: CoroutineContext.Key<*> = ContinuationInterceptor
 
