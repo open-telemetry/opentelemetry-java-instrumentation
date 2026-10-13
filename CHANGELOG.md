@@ -7,8 +7,6 @@
 - Process command resource attributes are now disabled by default. Set
   `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
-  The Java agent also disables thread details by default; set `otel.javaagent.add-thread-details=true`
-  to capture `thread.id` and `thread.name` on spans.
 - Remove bundled support for the contrib `otel.traces.sampler=linksbased_parentbased_always_on` and
   declarative `rule_based_routing` samplers. The links-based sampler has no replacement. For
   compatible rule-based policies, consider the SDK incubator declarative `composite/development`

@@ -222,12 +222,19 @@ public class AgentDistributionConfig {
     private final ConfigProperties configProperties;
 
     ConfigPropertiesAgentDistributionConfig(ConfigProperties configProperties) {
+      this(
+          configProperties,
+          configProperties.getBoolean("otel.instrumentation.common.v3-preview", false));
+    }
+
+    private ConfigPropertiesAgentDistributionConfig(
+        ConfigProperties configProperties, boolean v3Preview) {
       super(
           configProperties.getBoolean(
               "otel.javaagent.experimental.force-synchronous-agent-listeners", false),
           configProperties.getList("otel.javaagent.exclude-classes"),
           configProperties.getList("otel.javaagent.exclude-class-loaders"),
-          configProperties.getBoolean("otel.javaagent.add-thread-details", false),
+          configProperties.getBoolean("otel.javaagent.add-thread-details", !v3Preview),
           null);
       this.configProperties = configProperties;
     }
