@@ -29,7 +29,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testUserNameCapture = register<Test>("testUserNameCapture") {
@@ -43,7 +42,6 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
     systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true,otel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental = register<Test>("testExperimental") {

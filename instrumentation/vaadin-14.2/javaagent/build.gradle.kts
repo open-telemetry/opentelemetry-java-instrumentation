@@ -95,7 +95,6 @@ tasks {
     usesService(vaadinBuildService)
 
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     // Enable legacy OpenSSL provider for Node.js 17+ compatibility with webpack 4
     environment("NODE_OPTIONS", "--openssl-legacy-provider")
   }

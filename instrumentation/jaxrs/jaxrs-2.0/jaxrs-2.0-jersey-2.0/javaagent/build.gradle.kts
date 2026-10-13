@@ -67,8 +67,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental = register<Test>("testExperimental") {

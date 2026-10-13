@@ -452,8 +452,7 @@ that should apply to all tasks. If so, move them to `withType<Test>().configureE
 ```kotlin
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    // ... other properties common to all test tasks
+    // ... properties common to all test tasks
   }
 
   val testPreviewSemconv by registering(Test::class) {
@@ -467,4 +466,6 @@ tasks {
 ## `collectMetadata` and `metadataConfig`
 
 Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
-for task selection, labels, and collection wiring.
+for task selection and labels. Shared test conventions forward collection only to explicitly
+requested, fully qualified, unabbreviated `Test` task paths when `-PcollectMetadata=true`.
+Do not add per-module forwarding or regression-task opt-outs. Keep `metadataConfig` labels local.

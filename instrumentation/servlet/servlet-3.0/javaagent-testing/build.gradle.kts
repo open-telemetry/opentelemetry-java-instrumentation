@@ -29,7 +29,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testUserNameCapture = register<Test>("testUserNameCapture") {
@@ -42,7 +41,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {

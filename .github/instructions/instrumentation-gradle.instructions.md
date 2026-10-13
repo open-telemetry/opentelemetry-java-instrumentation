@@ -59,8 +59,9 @@ or test failure that CI will report.
 - Check metadata collection when its wiring or collected telemetry changes, not as unrelated
   cleanup. Collect default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
-  instrumentation scope and telemetry shape; equivalent suites need not all collect. Collected tasks
-  need `systemProperty("collectMetadata", otelProps.collectMetadata)`.
+  instrumentation scope and telemetry shape; equivalent suites need not all collect. Shared test
+  conventions enable collection only for explicitly requested, fully qualified, unabbreviated
+  `Test` task paths with `-PcollectMetadata=true`. Do not add per-module forwarding or opt-outs.
 - `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
   instrumentation defaults, regardless of task name or settings on `test`.
   Otherwise include only non-default user-facing settings
@@ -79,8 +80,8 @@ or test failure that CI will report.
   variants based on their purpose, not their names. A full-suite `testReceiveSpansDisabled` may
   document default telemetry; a suppression-only regression task does not. Keep regression tasks in
   `check`, but omit them from `.github/scripts/instrumentations.sh` and do not give them `metadataConfig`.
-  Override inherited collection with `systemProperty("collectMetadata", false)`; omitting a label
-  does not exclude it.
+  Dependency tasks do not inherit collection; explicitly requesting a task collects its telemetry
+  even without a label.
 - When tests exercise behavior behind an experimental feature or telemetry flag, including
   experimental metrics, cover default-off and flag-on modes in separate JVMs. Keep the flag off
   the default test task and run the flag-on assertions through a wired `testExperimental` task
@@ -96,5 +97,4 @@ or test failure that CI will report.
   that exercise selectable domains. For default enablement under
   v3-preview, use a separate `testDisabled` JVM rather than setting a property after agent
   startup. Because `testDisabled` intentionally emits no target instrumentation telemetry, do
-  not add it to `.github/scripts/instrumentations.sh` or give it `collectMetadata` /
-  `metadataConfig`.
+  not add it to `.github/scripts/instrumentations.sh` or give it `metadataConfig`.

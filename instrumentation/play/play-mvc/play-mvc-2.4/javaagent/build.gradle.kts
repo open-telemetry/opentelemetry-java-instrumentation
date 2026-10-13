@@ -62,7 +62,6 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.common.controller-telemetry.enabled=true"

@@ -79,8 +79,6 @@ tasks {
     classpath = classpath.filter {
       !it.absolutePath.contains("opentelemetry-grpc-1.6")
     }
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {
