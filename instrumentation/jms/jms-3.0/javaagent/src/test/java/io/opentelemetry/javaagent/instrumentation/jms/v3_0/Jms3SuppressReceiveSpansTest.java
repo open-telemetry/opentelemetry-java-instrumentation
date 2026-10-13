@@ -128,96 +128,37 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
     String messageId = receivedMessage.getJMSMessageID();
 
-    if (emitStableMessagingSemconv()) {
-      AtomicReference<SpanData> publishSpan = new AtomicReference<>();
-      testing.waitAndAssertTraces(
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer parent").hasNoParent(),
-                span ->
-                    span.hasName("send " + actualDestinationName)
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            messagingTempDestination(false)));
-            publishSpan.set(trace.getSpan(1));
-          },
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("consumer parent").hasNoParent(),
-                  span ->
-                      span.hasName("receive " + actualDestinationName)
-                          .hasKind(CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasLinks(LinkData.create(publishSpan.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, "jms"),
-                              equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                              equalTo(
-                                  MESSAGING_OPERATION,
-                                  emitOldMessagingSemconv() ? "receive" : null),
-                              equalTo(
-                                  MESSAGING_OPERATION_NAME,
-                                  emitStableMessagingSemconv() ? "receive" : null),
-                              equalTo(
-                                  MESSAGING_OPERATION_TYPE,
-                                  emitStableMessagingSemconv() ? "receive" : null),
-                              equalTo(MESSAGING_MESSAGE_ID, messageId))));
-      return;
-    }
-
-    // with receive spans suppressed the receive stays in the producer's trace, parented to the
-    // publish span, and carries no link
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer parent").hasNoParent(),
+              span ->
+                  span.hasName("send " + actualDestinationName)
+                      .hasKind(PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
+                          messagingTempDestination(false)));
+          publishSpan.set(trace.getSpan(1));
+        },
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer parent").hasNoParent(),
+                span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasName(actualDestinationName + " publish")
-                        .hasKind(PRODUCER)
+                    span.hasName("receive " + actualDestinationName)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(publishSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            messagingTempDestination(false)),
-                span ->
-                    span.hasName(actualDestinationName + " receive")
-                        .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalRecordedLinks(0)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer parent").hasNoParent()));
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId))));
   }
 }

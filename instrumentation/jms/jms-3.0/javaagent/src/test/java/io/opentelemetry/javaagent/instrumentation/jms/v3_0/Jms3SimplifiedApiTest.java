@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyEnumeration;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -68,15 +68,14 @@ class Jms3SimplifiedApiTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send " + QUEUE_NAME
-                                : QUEUE_NAME + " publish")
+                    span.hasName("send " + QUEUE_NAME)
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, QUEUE_NAME),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, MESSAGE_ID))));
   }
 
@@ -95,15 +94,14 @@ class Jms3SimplifiedApiTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive " + QUEUE_NAME
-                                : QUEUE_NAME + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasName("receive " + QUEUE_NAME)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, QUEUE_NAME),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, MESSAGE_ID))));
   }
 

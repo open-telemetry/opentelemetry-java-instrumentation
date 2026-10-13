@@ -197,23 +197,14 @@ abstract class AbstractJms3Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send " + actualDestinationName
-                                : actualDestinationName + " publish")
+                    span.hasName("send " + actualDestinationName)
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false))));
   }
