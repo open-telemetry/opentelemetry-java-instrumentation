@@ -62,7 +62,10 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata && name != "unitTests")
+    systemProperty(
+      "collectMetadata",
+      otelProps.collectMetadata && name !in setOf("unitTests", "version23Test", "version23TestPreviewSemconv"),
+    )
   }
 
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
@@ -73,7 +76,9 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+        if (suite.name != "version23Test") {
+          systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+        }
       }
     }
 
