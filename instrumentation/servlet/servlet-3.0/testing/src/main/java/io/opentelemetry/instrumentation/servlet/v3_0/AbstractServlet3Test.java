@@ -79,15 +79,11 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestCaptureRequestParameters(true);
+    options.setExpectCapturedRequestParameters(!isAgentTest() || REQUEST_PARAMETER_CAPTURE_ENABLED);
     if (isAgentTest()) {
       options.setHasResponseCustomizer(e -> true);
       options.setHasResponseSpan(this::hasResponseSpan);
     }
-  }
-
-  @Override
-  protected boolean shouldCaptureRequestParameters() {
-    return !isAgentTest() || REQUEST_PARAMETER_CAPTURE_ENABLED;
   }
 
   protected boolean isAgentTest() {

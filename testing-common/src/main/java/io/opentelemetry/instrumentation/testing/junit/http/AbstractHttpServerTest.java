@@ -163,10 +163,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   protected void configure(HttpServerTestOptions options) {}
 
-  protected boolean shouldCaptureRequestParameters() {
-    return options.testCaptureRequestParameters;
-  }
-
   public static <T, E extends Throwable> T controller(
       ServerEndpoint endpoint, ThrowingSupplier<T, E> closure) throws E {
     assert Span.current().getSpanContext().isValid() : "Controller should have a parent span.";
@@ -1263,7 +1259,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     stringArrayKey("http.response.header.x-test-response"), singletonList("test"));
           }
           if (endpoint == CAPTURE_PARAMETERS) {
-            if (shouldCaptureRequestParameters()) {
+            if (options.expectCapturedRequestParameters) {
               assertThat(attrs)
                   .containsEntry(
                       stringArrayKey("servlet.request.parameter.test-parameter"),

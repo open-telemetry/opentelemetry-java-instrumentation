@@ -108,6 +108,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setContextPath("/app");
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
+    options.setExpectCapturedRequestParameters(REQUEST_PARAMETER_CAPTURE_ENABLED);
     options.setTestHttpBodyPipelining(true);
     options.setTestErrorBody(false);
 
@@ -121,11 +122,6 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
           }
           return super.expectedHttpRoute(endpoint, method);
         });
-  }
-
-  @Override
-  protected boolean shouldCaptureRequestParameters() {
-    return REQUEST_PARAMETER_CAPTURE_ENABLED;
   }
 
   @Override
