@@ -41,18 +41,4 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
-
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = test.get().testClassesDirs
-    classpath = test.get().classpath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.common.v3-preview=true"
-    )
-  }
-
-  check {
-    dependsOn(testV3Preview)
-  }
 }

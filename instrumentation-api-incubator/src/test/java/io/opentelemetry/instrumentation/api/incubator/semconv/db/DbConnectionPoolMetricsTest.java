@@ -26,14 +26,15 @@ class DbConnectionPoolMetricsTest {
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
-  @SuppressWarnings("deprecation")
   void poolNameOverridesAdditionalAttributes() {
     SdkMeterProvider meterProvider = SdkMeterProvider.builder().build();
     cleanup.deferCleanup(meterProvider);
+    OpenTelemetrySdk openTelemetry =
+        OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build();
 
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
-            meterProvider.get("test"), "argument-pool", Attributes.of(POOL_NAME, "attribute-pool"));
+            openTelemetry, "test", "argument-pool", Attributes.of(POOL_NAME, "attribute-pool"));
 
     assertThat(metrics.getAttributes().get(POOL_NAME)).isEqualTo("argument-pool");
   }

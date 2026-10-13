@@ -4,6 +4,78 @@
 
 ### ⚠️ Breaking changes
 
+- Java agent instrumentation selectors now always use the versioned component name first,
+  followed by supported role, versionless and umbrella selectors. When several selectors are
+  configured, the first matching selector determines enablement. For example,
+  `otel.instrumentation.lettuce-5.0.enabled` takes precedence over
+  `otel.instrumentation.lettuce.enabled`.
+- Remove legacy Java agent selectors and implementation-only aliases from
+  `otel.instrumentation.<name>.enabled`. Use the component selectors below. Where several
+  implementations now share a component selector, there is no implementation-only replacement;
+  the replacement controls the component as a whole.
+
+  | Removed selectors | Replacement selectors |
+  | --- | --- |
+  | `akka-actor-2.3-core`, `akka-actor-fork-join`, `akka-actor-fork-join-2.5`, `akka-actor-forkjoin`, `akka-actor-forkjoin-2.5` | `akka-actor-2.3` |
+  | `akka-http-server-route` | `akka-http-10.0` |
+  | `annotations` | `opentelemetry-instrumentation-annotations` |
+  | `armeria-1.14` | `armeria-grpc-1.14` for gRPC; `armeria` for the component |
+  | `aws-lambda-core`, `aws-lambda-events` | `aws-lambda-core-1.0`, `aws-lambda-events-2.2`, respectively |
+  | `aws-sdk-1.11-core`, `aws-sdk-1.11-sqs` | `aws-sdk-1.11` |
+  | `aws-sdk-2.2-core`, `aws-sdk-2.2-bedrock-runtime`, `aws-sdk-2.2-lambda`, `aws-sdk-2.2-sns`, `aws-sdk-2.2-sqs` | `aws-sdk-2.2` |
+  | `axis2`, `axis2-1.6` | `jaxws-2.0-axis2-1.6` |
+  | `camel-sjms` | `camel-2.20` |
+  | `clickhouse` | `clickhouse-client-v1-0.5` and/or `clickhouse-client-v2-0.8` |
+  | `couchbase-2.0-core`, `couchbase-2.0-network`, `couchbase-network-2.0`, `couchbase-2.6` | `couchbase-2.0` |
+  | `couchbase-3.1.6` | `couchbase-3.1` |
+  | `couchbase-3.2-core`, `couchbase-3.4`, `couchbase-3.4.3-protostellar` | `couchbase-3.2` |
+  | `cxf` | `jaxrs-cxf` and/or `jaxws-cxf` |
+  | `cxf-3.2` | `jaxrs-2.0-cxf-3.2` |
+  | `hibernate-procedure-call` | `hibernate-procedure-call-4.3` |
+  | `hibernate-reactive-mutiny`, `hibernate-reactive-stage` | `hibernate-reactive-1.0` |
+  | `jaxrs-1.0` | `jaxrs-1.0-annotations` |
+  | `jaxrs-2.0` | `jaxrs-2.0-annotations`, `jaxrs-2.0-cxf-3.2`, `jaxrs-2.0-jersey-2.0`, `jaxrs-2.0-resteasy-3.0`, `jaxrs-2.0-resteasy-3.1`, as needed |
+  | `jaxrs-3.0` | `jaxrs-3.0-annotations`, `jaxrs-3.0-jersey-3.0`, `jaxrs-3.0-resteasy-6.0`, as needed |
+  | `jaxws-cxf-3.0`, `jaxws-metro-2.2` | `jaxws-2.0-cxf-3.0`, `jaxws-2.0-metro-2.2`, respectively |
+  | `jedis-2.0-core`, `jedis-2.3-cluster` | `jedis-2.0` |
+  | `jersey`, `jersey-2.0`, `jersey-3.0` | `jaxrs-jersey`, `jaxrs-2.0-jersey-2.0`, `jaxrs-3.0-jersey-3.0`, respectively |
+  | `kotlinx-coroutines-1.0-core`, `kotlinx-coroutines-flow`, `kotlinx-coroutines-flow-1.3` | `kotlinx-coroutines-1.0` |
+  | `ktor-client-2.0`, `ktor-server-2.0` | `ktor-2.0` |
+  | `ktor-client-3.0`, `ktor-server-3.0` | `ktor-3.0` |
+  | `metro` | `jaxws-metro` |
+  | `mongo-3.1-client-options`, `mongo-3.7` | `mongo-3.1` |
+  | `mongo-async` | `mongo-async-3.3` or `mongo` |
+  | `openai` | `openai-java` |
+  | `opentelemetry-api-incubator-<version>` | `opentelemetry-api-<version>` or `opentelemetry-api-incubator` |
+  | `pekko-http-server-route`, `tapir-pekko-http-server`, `tapir-pekko-http-server-route` | `pekko-http-1.0` |
+  | `quarkus`, `quarkus-resteasy-reactive-3.0` | `quarkus-resteasy-reactive-1.11` |
+  | `ratpack-1.4-core`, `ratpack-1.7` | `ratpack-1.4` |
+  | `reactor-3.1-core`, `reactor-3.4`, `reactor-context-propagation-operator` | `reactor-3.1` |
+  | `resteasy`, `resteasy-3.0`, `resteasy-3.1`, `resteasy-6.0` | `jaxrs-resteasy`, `jaxrs-2.0-resteasy-3.0`, `jaxrs-2.0-resteasy-3.1`, `jaxrs-3.0-resteasy-6.0`, respectively |
+  | `spring-integration-core-4.1`, `spring-integration-amqp-4.1` | `spring-integration-4.1` |
+  | `spring-security-config-servlet`, `spring-security-config-servlet-6.0`, `spring-security-config-webflux`, `spring-security-config-webflux-6.0` | `spring-security-config-6.0` |
+  | `twitter-util-core` | `finagle-http-23.11` |
+  | `vertx-redis-client-4.0-core`, `vertx-redis-client-4.4.5` | `vertx-redis-client-4.0` |
+
+  The `jaxrs` umbrella no longer enables JAX-RS annotation instrumentation; use
+  `jaxrs-annotations` for that default-off feature. The `jaxws` umbrella no longer enables the
+  JWS annotation module; use `jaxws-jws-api`. The `reactor-netty` selector no longer controls
+  the server integration in Spring WebFlux; use `reactor-netty-server` or `spring-webflux-server`.
+- Declarative Java agent instrumentation selectors no longer accept dotted-version compatibility
+  spellings. In `distribution.javaagent.instrumentation.enabled` and `.disabled`, replace
+  selectors such as `reactor_3.1` with `reactor_3_1`.
+- Java agent telemetry now uses the following instrumentation scopes. Update views, dashboards
+  and filters matching the previous names:
+
+  | Previous scope | Current scope |
+  | --- | --- |
+  | `io.opentelemetry.jaxrs-1.0` | `io.opentelemetry.jaxrs-1.0-annotations` |
+  | `io.opentelemetry.jaxws-cxf-3.0` | `io.opentelemetry.jaxws-2.0-cxf-3.0` |
+  | `io.opentelemetry.jaxws-metro-2.2` | `io.opentelemetry.jaxws-2.0-metro-2.2` |
+  | `io.opentelemetry.mongo-3.7` | `io.opentelemetry.mongo-3.1` |
+  | `io.opentelemetry.ratpack-1.7` | `io.opentelemetry.ratpack-1.4` |
+  | `io.opentelemetry.tomcat-jdbc` | `io.opentelemetry.tomcat-jdbc-8.5` |
+
 - Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
   `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
   Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
@@ -193,6 +265,11 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
+  `create(Meter, String, Attributes)` overloads. Use the overloads accepting
+  `OpenTelemetry`, the instrumentation name and the pool name instead.
+- Remove the internal `DeprecatedInstrumentationNames` Java agent extension helper.
+  Register supported instrumentation names directly in the module constructor.
 - Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` and command-encoding event support
   from the standalone Lettuce library. There is no replacement API.
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
