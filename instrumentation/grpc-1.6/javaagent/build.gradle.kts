@@ -29,11 +29,37 @@ dependencies {
 }
 
 tasks {
-  val grpcMetadataConfig =
-    "otel.instrumentation.grpc.client.request-metadata.included=some-*-key," +
-      "otel.instrumentation.grpc.client.request-metadata.excluded=*-excluded-key," +
-      "otel.instrumentation.grpc.server.request-metadata.included=some-*-key," +
-      "otel.instrumentation.grpc.server.request-metadata.excluded=*-excluded-key"
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("metadataConfig", "otel.instrumentation.grpc.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
+  }
+
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
+  }
+
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -54,52 +80,7 @@ tasks {
       !it.absolutePath.contains("opentelemetry-grpc-1.6")
     }
 
-    systemProperty("metadataConfig", grpcMetadataConfig)
     systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
-    systemProperty(
-      "metadataConfig",
-      "$grpcMetadataConfig,otel.instrumentation.grpc.experimental-span-attributes=true",
-    )
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty(
-      "metadataConfig",
-      "$grpcMetadataConfig,otel.semconv-stability.preview=rpc",
-    )
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-    systemProperty(
-      "metadataConfig",
-      "$grpcMetadataConfig,otel.semconv-stability.preview=rpc/dup",
-    )
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty(
-      "metadataConfig",
-      "$grpcMetadataConfig,otel.semconv.exception.signal.preview=logs",
-    )
   }
 
   check {
