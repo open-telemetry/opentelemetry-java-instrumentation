@@ -100,9 +100,6 @@ dependencies {
 }
 
 tasks {
-  val metadataExcludedTasks =
-    setOf("testJmsDisabled", "testSjmsWithoutCamelJms", "testCamelDisabled", "testAdaptersDisabled")
-
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
 
@@ -110,10 +107,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty(
-      "collectMetadata",
-      if (name in metadataExcludedTasks) false else otelProps.collectMetadata,
-    )
+    systemProperty("collectMetadata", otelProps.collectMetadata)
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
@@ -163,6 +157,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jms.enabled=false")
+    systemProperty("collectMetadata", false)
     systemProperty("testNoLowerMessaging", "true")
     filter {
       includeTestsMatching("*JmsCamelStandaloneTest")
@@ -178,6 +173,7 @@ tasks {
         !it.name.startsWith("camel-jms-")
       }
 
+    systemProperty("collectMetadata", false)
     filter {
       includeTestsMatching("*SjmsCamelTest")
       includeTestsMatching("*SjmsRegisteredListenerTest")
@@ -189,6 +185,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.camel.enabled=false")
+    systemProperty("collectMetadata", false)
     systemProperty("testCamelDisabled", "true")
     filter {
       includeTestsMatching("*SqsCamelTest.awsSdkSqsProducerToCamelSqsConsumer")
@@ -205,6 +202,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.camel-kafka.enabled=false")
     jvmArgs("-Dotel.instrumentation.camel-rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.camel-aws-sqs.enabled=false")
+    systemProperty("collectMetadata", false)
     systemProperty("testAdapterDisabled", "true")
     filter {
       includeTestsMatching("*KafkaCamelTest")
