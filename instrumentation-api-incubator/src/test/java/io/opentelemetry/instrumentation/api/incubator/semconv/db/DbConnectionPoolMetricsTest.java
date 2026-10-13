@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CLIENT_CONNECTION_POOL_NAME;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -27,14 +28,12 @@ class DbConnectionPoolMetricsTest {
 
   @Test
   void poolNameOverridesAdditionalAttributes() {
-    SdkMeterProvider meterProvider = SdkMeterProvider.builder().build();
-    cleanup.deferCleanup(meterProvider);
-    OpenTelemetrySdk openTelemetry =
-        OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build();
-
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
-            openTelemetry, "test", "argument-pool", Attributes.of(POOL_NAME, "attribute-pool"));
+            OpenTelemetry.noop(),
+            "test",
+            "argument-pool",
+            Attributes.of(POOL_NAME, "attribute-pool"));
 
     assertThat(metrics.getAttributes().get(POOL_NAME)).isEqualTo("argument-pool");
   }
