@@ -30,6 +30,7 @@ public final class RocketMqBatchSendHelper {
   private static final VirtualField<Message, BatchSendState> BATCH_SEND_STATE =
       VirtualField.find(Message.class, BatchSendState.class);
 
+  private final Instrumenter<SendMessageContext, Void> singleSendInstrumenter;
   private final Instrumenter<SendMessageContext, Void> sendInstrumenter;
   private final Instrumenter<SendMessageContext, Void> createInstrumenter;
   private final TextMapPropagator propagator;
@@ -40,6 +41,9 @@ public final class RocketMqBatchSendHelper {
       IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
       boolean messageCreationSpansEnabled) {
+    singleSendInstrumenter =
+        RocketMqInstrumenterFactory.createProducerInstrumenter(
+            openTelemetry, headers, captureExperimentalSpanAttributes);
     sendInstrumenter =
         RocketMqInstrumenterFactory.createBatchProducerInstrumenter(
             openTelemetry, headers, captureExperimentalSpanAttributes);
@@ -90,7 +94,8 @@ public final class RocketMqBatchSendHelper {
     };
   }
 
-  public SendMessageHook wrap(SendMessageHook delegate) {
+  public SendMessageHook createSendMessageHook() {
+    SendMessageHook delegate = new TracingSendMessageHookImpl(singleSendInstrumenter);
     return new SendMessageHook() {
       @Override
       public String hookName() {

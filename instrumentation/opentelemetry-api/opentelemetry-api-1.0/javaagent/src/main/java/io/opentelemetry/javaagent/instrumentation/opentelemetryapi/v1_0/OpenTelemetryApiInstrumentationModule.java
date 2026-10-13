@@ -13,13 +13,10 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.V3PreviewFallbackEnabledInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-@SuppressWarnings("deprecation") // using v3 preview fallback helper until 3.0
-public class OpenTelemetryApiInstrumentationModule
-    extends V3PreviewFallbackEnabledInstrumentationModule
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
     super(
@@ -27,6 +24,11 @@ public class OpenTelemetryApiInstrumentationModule
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {"opentelemetry-api"}
             : new String[] {"opentelemetry-api-1.0"});
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return true;
   }
 
   @Override
