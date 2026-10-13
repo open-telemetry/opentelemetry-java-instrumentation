@@ -19,10 +19,9 @@ attributes, optional metrics, and semantic convention selection.
 | Document supported non-default telemetry | Yes                | Relevant non-default `key=value` settings |
 | Unit tests or regression-only variants   | No                 | Unset                                     |
 
-For javaagent suites, baseline test/source-suite tasks use instrumentation defaults; put optional
-telemetry, capture, and controller settings and their behavioral assertions in explicitly named,
-wired variants. Collect a representative suite for each profile, but do not substitute a filtered
-method for ordinary suite coverage.
+For javaagent tests, keep baseline suites on instrumentation defaults. Test opt-in telemetry
+in named variants wired into `check`. Preserve normal suite coverage; filtered metadata-collection
+tests are not a substitute.
 
 `metadataConfig` labels output; it does not configure instrumentation or enable collection.
 An absent or empty label records telemetry under `when: default`. Default means instrumentation
