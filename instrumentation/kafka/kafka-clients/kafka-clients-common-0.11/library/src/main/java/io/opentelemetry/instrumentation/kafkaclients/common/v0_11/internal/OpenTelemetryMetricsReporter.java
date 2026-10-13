@@ -14,6 +14,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +54,7 @@ public final class OpenTelemetryMetricsReporter
   private final Object lock = new Object();
 
   @GuardedBy("lock")
-  private final List<RegisteredObservable> registeredObservables = new ArrayList<>();
+  private final Set<RegisteredObservable> registeredObservables = new LinkedHashSet<>();
 
   /**
    * Reset for test by resetting the {@link #meter} to {@code null} and closing all registered
