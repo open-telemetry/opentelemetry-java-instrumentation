@@ -908,7 +908,7 @@ public final class BedrockRuntimeImpl {
       }
       // Requests don't have index or stop reason.
       Value<?> body = convertMessage(message, -1, null, captureMessageContent);
-      if (!body.equals(Value.empty())) {
+      if (body != null) {
         event.setBody(body);
       }
       event.emit();
@@ -930,16 +930,15 @@ public final class BedrockRuntimeImpl {
     }
     if (response instanceof ConverseResponse) {
       ConverseResponse converseResponse = (ConverseResponse) response;
-      newEvent(otelContext, eventLogger)
-          .setAttribute(EVENT_NAME, "gen_ai.choice")
+      emitChoiceEvent(
+          otelContext,
+          eventLogger,
           // Bedrock Runtime does not support multiple choices so index is always 0.
-          .setBody(
-              convertMessage(
-                  converseResponse.output().message(),
-                  0,
-                  converseResponse.stopReasonAsString(),
-                  captureMessageContent))
-          .emit();
+          convertMessage(
+              converseResponse.output().message(),
+              0,
+              converseResponse.stopReasonAsString(),
+              captureMessageContent));
     }
   }
 
@@ -976,15 +975,11 @@ public final class BedrockRuntimeImpl {
         if (outputText != null && outputText.isString()) {
           parsedMessage.content(ContentBlock.fromText(outputText.asString()));
         }
-        newEvent(otelContext, eventLogger)
-            .setAttribute(EVENT_NAME, "gen_ai.choice")
-            .setBody(
-                convertMessage(
-                    parsedMessage.build(),
-                    index,
-                    completionReason.asString(),
-                    captureMessageContent))
-            .emit();
+        emitChoiceEvent(
+            otelContext,
+            eventLogger,
+            convertMessage(
+                parsedMessage.build(), index, completionReason.asString(), captureMessageContent));
         index++;
       }
       return;
@@ -1024,10 +1019,10 @@ public final class BedrockRuntimeImpl {
     }
     Message parsedMessage =
         Message.builder().role(ConversationRole.ASSISTANT).content(parsedContentBlocks).build();
-    newEvent(otelContext, eventLogger)
-        .setAttribute(EVENT_NAME, "gen_ai.choice")
-        .setBody(convertMessage(parsedMessage, 0, stopReasonString, captureMessageContent))
-        .emit();
+    emitChoiceEvent(
+        otelContext,
+        eventLogger,
+        convertMessage(parsedMessage, 0, stopReasonString, captureMessageContent));
   }
 
   @Nullable
@@ -1329,10 +1324,10 @@ public final class BedrockRuntimeImpl {
         }
         String stopReason = ((MessageStopEvent) event).stopReasonAsString();
         stopReasons.add(stopReason);
-        newEvent(otelContext, eventLogger)
-            .setAttribute(EVENT_NAME, "gen_ai.choice")
-            .setBody(convertMessageData(currentText, tools, 0, stopReason, captureMessageContent))
-            .emit();
+        emitChoiceEvent(
+            otelContext,
+            eventLogger,
+            convertMessageData(currentText, tools, 0, stopReason, captureMessageContent));
       }
       if (event instanceof ConverseStreamMetadataEvent) {
         usage = ((ConverseStreamMetadataEvent) event).usage();
@@ -1416,10 +1411,10 @@ public final class BedrockRuntimeImpl {
         stopReasons.add(stopReason);
         // There's no indication of the final event other than completion reason. Emit the event
         // and finish up.
-        newEvent(otelContext, eventLogger)
-            .setAttribute(EVENT_NAME, "gen_ai.choice")
-            .setBody(convertMessageData(currentText, null, 0, stopReason, captureMessageContent))
-            .emit();
+        emitChoiceEvent(
+            otelContext,
+            eventLogger,
+            convertMessageData(currentText, null, 0, stopReason, captureMessageContent));
         this.usage =
             TokenUsage.builder()
                 .inputTokens(this.inputTokens)
@@ -1487,10 +1482,10 @@ public final class BedrockRuntimeImpl {
         }
         String stopReason = stopReasonDoc.asString();
         stopReasons.add(stopReason);
-        newEvent(otelContext, eventLogger)
-            .setAttribute(EVENT_NAME, "gen_ai.choice")
-            .setBody(convertMessageData(currentText, tools, 0, stopReason, captureMessageContent))
-            .emit();
+        emitChoiceEvent(
+            otelContext,
+            eventLogger,
+            convertMessageData(currentText, tools, 0, stopReason, captureMessageContent));
         return;
       }
       Document metadata = result.asMap().get("metadata");
@@ -1624,12 +1619,10 @@ public final class BedrockRuntimeImpl {
                   stopReasons = new ArrayList<>();
                 }
                 stopReasons.add(stopReason);
-                newEvent(otelContext, eventLogger)
-                    .setAttribute(EVENT_NAME, "gen_ai.choice")
-                    .setBody(
-                        convertMessageData(
-                            currentText, tools, 0, stopReason, captureMessageContent))
-                    .emit();
+                emitChoiceEvent(
+                    otelContext,
+                    eventLogger,
+                    convertMessageData(currentText, tools, 0, stopReason, captureMessageContent));
               }
             }
             Document usage = result.asMap().get("usage");
@@ -1650,6 +1643,16 @@ public final class BedrockRuntimeImpl {
           return;
       }
     }
+  }
+
+  private static void emitChoiceEvent(
+      Context otelContext, Logger eventLogger, @Nullable Value<?> body) {
+    LogRecordBuilder event =
+        newEvent(otelContext, eventLogger).setAttribute(EVENT_NAME, "gen_ai.choice");
+    if (body != null) {
+      event.setBody(body);
+    }
+    event.emit();
   }
 
   private static LogRecordBuilder newEvent(Context otelContext, Logger eventLogger) {
@@ -1688,6 +1691,7 @@ public final class BedrockRuntimeImpl {
     }
   }
 
+  @Nullable
   private static Value<?> convertMessage(
       Message message, int index, @Nullable String stopReason, boolean captureMessageContent) {
     StringBuilder text = null;
@@ -1747,6 +1751,7 @@ public final class BedrockRuntimeImpl {
     }
   }
 
+  @Nullable
   private static Value<?> convertMessageData(
       @Nullable StringBuilder text,
       List<ToolUseBlock> toolCalls,
@@ -1770,7 +1775,7 @@ public final class BedrockRuntimeImpl {
     if (index >= 0) {
       body.put("index", Value.of(index));
     }
-    return body.isEmpty() ? Value.empty() : Value.of(body);
+    return body.isEmpty() ? null : Value.of(body);
   }
 
   private static Value<?> convertToolCall(ToolUseBlock toolCall, boolean captureMessageContent) {
