@@ -907,7 +907,11 @@ public final class BedrockRuntimeImpl {
           continue;
       }
       // Requests don't have index or stop reason.
-      event.setBody(convertMessage(message, -1, null, captureMessageContent)).emit();
+      Value<?> body = convertMessage(message, -1, null, captureMessageContent);
+      if (!body.equals(Value.empty())) {
+        event.setBody(body);
+      }
+      event.emit();
     }
   }
 
@@ -1766,7 +1770,7 @@ public final class BedrockRuntimeImpl {
     if (index >= 0) {
       body.put("index", Value.of(index));
     }
-    return Value.of(body);
+    return body.isEmpty() ? Value.empty() : Value.of(body);
   }
 
   private static Value<?> convertToolCall(ToolUseBlock toolCall, boolean captureMessageContent) {

@@ -181,7 +181,7 @@ class ChatTest extends AbstractChatTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log -> {
               log.hasAttributesSatisfyingExactly(
                       equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
@@ -284,7 +284,7 @@ class ChatTest extends AbstractChatTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
@@ -416,13 +416,13 @@ class ChatTest extends AbstractChatTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.system.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
@@ -541,13 +541,13 @@ class ChatTest extends AbstractChatTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.system.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
@@ -668,7 +668,7 @@ class ChatTest extends AbstractChatTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log -> {
               log.hasAttributesSatisfyingExactly(
                       equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
@@ -765,7 +765,7 @@ class ChatTest extends AbstractChatTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
@@ -868,13 +868,13 @@ class ChatTest extends AbstractChatTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.system.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
@@ -971,13 +971,13 @@ class ChatTest extends AbstractChatTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.system.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
