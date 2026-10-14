@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,9 +16,7 @@ import java.util.List;
 public class ZioInstrumentationModule extends InstrumentationModule {
 
   public ZioInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "zio-2.0" : "zio",
-        AgentCommonConfig.get().isV3Preview() ? new String[] {"zio"} : new String[] {"zio-2.0"});
+    super("zio-2.0", "zio");
   }
 
   @Override

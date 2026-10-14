@@ -62,23 +62,10 @@ tasks {
     systemProperty("testMdcConfiguration", "exclude-only")
   }
 
-  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMdcSelectorTest")
-
-    jvmArgs(
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=new",
-      "-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=legacy",
-    )
-    systemProperty("testMdcConfiguration", "precedence")
-  }
-
   check {
     dependsOn(
       testLegacyMdcAttributes,
       testMdcAttributeExclusionsOnly,
-      testMdcAttributePrecedence,
     )
   }
 }

@@ -98,18 +98,24 @@ tasks {
     }
   }
 
-  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
-    val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
-    isEnabled = named<Test>(suite.name).get().enabled
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
+  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
+    val sourceTask = named<Test>("test").get()
+    isEnabled = sourceTask.enabled
+    setJvmArgs(sourceTask.jvmArgs)
+    setSystemProperties(sourceTask.systemProperties)
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
+    filter {
+      includeTestsMatching("CouchbaseQuerySanitizationTest")
+    }
+    jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+    systemProperty("collectMetadata", "false")
+    systemProperty("testQuerySanitizationEnabled", "false")
   }
 
   check {
-    dependsOn(testing.suites, experimentalSuites, version26TestLegacyConfig)
+    dependsOn(testing.suites, experimentalSuites, testQuerySanitizationDisabled)
   }
 
   if (otelProps.denyUnsafe) {

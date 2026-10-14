@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ApacheDbcpInstrumentationModule extends InstrumentationModule {
   public ApacheDbcpInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "apache-dbcp-2.0" : "apache-dbcp",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"apache-dbcp"}
-            : new String[] {"apache-dbcp-2.0"});
+    super("apache-dbcp-2.0", "apache-dbcp");
   }
 
   @Override
