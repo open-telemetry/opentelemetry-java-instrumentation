@@ -266,6 +266,7 @@ readonly INSTRUMENTATIONS=(
   "servlet:servlet-3.0:javaagent-testing:testRequestParameterCapture"
   "servlet:servlet-3.0:javaagent-testing:testUserNameCapture"
   "servlet:servlet-5.0:jetty12-testing:test"
+  "servlet:servlet-5.0:jetty12-testing:testRequestParameterCapture"
   "sofa-rpc-5.4:javaagent:testSofaRpc"
   "sofa-rpc-5.4:javaagent:testSofaRpcExceptionSignalLogs"
   "spring:spring-batch-3.0:javaagent:test"
