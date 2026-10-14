@@ -149,6 +149,10 @@ class SpringDeclarativeConfigPropertiesTest {
     properties.put("int", "42");
     properties.put("double", "3.14");
     properties.put("text", "abc");
+    properties.put("int_max", "2147483647");
+    properties.put("int_min", "-2147483648");
+    properties.put("int_overflow", "2147483648");
+    properties.put("int_underflow", "-2147483649");
     DeclarativeConfigProperties config =
         SpringDeclarativeConfigProperties.create(properties, componentLoader);
 
@@ -170,6 +174,15 @@ class SpringDeclarativeConfigPropertiesTest {
     assertThat(config.isDouble("int")).isTrue();
     assertThat(config.isBoolean("text")).isTrue();
     assertThat(config.isInt("text")).isFalse();
+
+    // Strings are parsed as int, not narrowed from long
+    assertThat(config.getInt("int_max")).isEqualTo(Integer.MAX_VALUE);
+    assertThat(config.getInt("int_min")).isEqualTo(Integer.MIN_VALUE);
+    assertThat(config.getInt("int_overflow")).isNull();
+    assertThat(config.isInt("int_overflow")).isFalse();
+    assertThat(config.getInt("int_underflow")).isNull();
+    assertThat(config.isInt("int_underflow")).isFalse();
+    assertThat(config.getLong("int_overflow")).isEqualTo(2147483648L);
   }
 
   @Test
@@ -213,6 +226,8 @@ class SpringDeclarativeConfigPropertiesTest {
     properties.put("mixed", asList("1", "x"));
     properties.put("words", singletonList("x"));
     properties.put("flags", asList("true", false, "x"));
+    properties.put("bools_and_numbers", asList(true, 42, false));
+    properties.put("numbers_only", asList(1, 2));
     properties.put("empty", emptyList());
     DeclarativeConfigProperties config =
         SpringDeclarativeConfigProperties.create(properties, componentLoader);
@@ -222,6 +237,10 @@ class SpringDeclarativeConfigPropertiesTest {
     assertThat(config.getScalarList("typed", Double.class)).containsExactly(1.0, 2.0, 3.5);
     assertThat(config.getScalarList("typed", Long.class)).containsExactly(1L, 2L);
     assertThat(config.getScalarList("flags", Boolean.class)).containsExactly(true, false, false);
+    // only String elements are parsed as booleans; numbers are dropped, as in getBoolean
+    assertThat(config.getScalarList("bools_and_numbers", Boolean.class))
+        .containsExactly(true, false);
+    assertThat(config.getScalarList("numbers_only", Boolean.class)).isNull();
     // elements which cannot be converted are dropped, and an all-dropped list is null
     assertThat(config.getScalarList("mixed", Long.class)).containsExactly(1L);
     assertThat(config.getScalarList("words", Long.class)).isNull();
