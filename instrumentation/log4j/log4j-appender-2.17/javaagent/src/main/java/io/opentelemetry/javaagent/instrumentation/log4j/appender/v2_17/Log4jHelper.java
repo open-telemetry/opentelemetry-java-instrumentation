@@ -37,22 +37,18 @@ public class Log4jHelper {
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender");
-    DeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
 
     captureExperimentalAttributes =
         config.getBoolean("experimental_log_attributes/development", false);
     boolean captureCodeAttributes = config.getBoolean("capture_code_attributes/development", false);
     Predicate<String> mapMessageAttributes =
-        LoggingConfig.resolveStructuredAttributes(
-            GlobalOpenTelemetry.get(), config, "log4j-appender", "map-message-attributes");
+        LoggingConfig.resolveStructuredAttributes(GlobalOpenTelemetry.get());
     boolean captureMarkerAttribute =
         config.getBoolean("capture_marker_attribute/development", false);
     boolean captureTemplate = config.getBoolean("capture_template/development", false);
     boolean captureArguments = config.getBoolean("capture_arguments/development", false);
     Predicate<String> contextDataAttributes =
         SelectorConfig.resolveLegacyLiteral(config, "log4j-appender", "mdc-attributes");
-    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     mapper =
         new LogEventMapper<>(
@@ -63,8 +59,7 @@ public class Log4jHelper {
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,
-            contextDataAttributes,
-            v3Preview);
+            contextDataAttributes);
   }
 
   public static void capture(

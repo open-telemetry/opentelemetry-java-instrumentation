@@ -81,10 +81,9 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconvExperimental = register<Test>("testStableSemconvExperimental") {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
@@ -96,47 +95,8 @@ tasks {
     )
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
-  val testV3PreviewExperimental = register<Test>("testV3PreviewExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.common.v3-preview=true",
-      "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-  }
-
-  val testV3PreviewLegacyConfig = register<Test>("testV3PreviewLegacyConfig") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.common.v3-preview=true",
-      "-Dotel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      testStableSemconvExperimental,
-      testV3Preview,
-      testV3PreviewExperimental,
-      testV3PreviewLegacyConfig,
-    )
+    dependsOn(testing.suites, testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

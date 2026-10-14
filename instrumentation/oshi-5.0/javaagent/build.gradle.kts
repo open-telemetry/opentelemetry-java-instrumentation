@@ -22,9 +22,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:oshi-5.0:testing"))
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-}

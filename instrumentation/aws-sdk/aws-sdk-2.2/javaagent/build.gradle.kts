@@ -222,7 +222,6 @@ tasks {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   withType<ShadowJar>().configureEach {

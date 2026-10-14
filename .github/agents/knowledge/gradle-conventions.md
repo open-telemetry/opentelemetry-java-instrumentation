@@ -341,8 +341,8 @@ Preserve mixed variants for selectable domains, along with experimental and libr
 
 When source suite tasks have different JVM arguments or system properties, copy those values into
 the variant before adding its own configuration. This avoids rebuilding source settings with
-suite-name checks. When metadata collection is already active, append the variant setting to the
-inherited `metadataConfig`:
+suite-name checks. For a collected telemetry mode, preserve the inherited telemetry conditions and
+append the variant's telemetry setting to `metadataConfig`, not every copied JVM setting:
 
 ```kotlin
 val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
@@ -452,8 +452,7 @@ that should apply to all tasks. If so, move them to `withType<Test>().configureE
 ```kotlin
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    // ... other properties common to all test tasks
+    // ... properties common to all test tasks
   }
 
   val testPreviewSemconv by registering(Test::class) {
@@ -466,31 +465,6 @@ tasks {
 
 ## `collectMetadata` and `metadataConfig`
 
-These system properties support the metadata collection pipeline. They are not required for
-test correctness and are being added as a separate migration. Do not add them
-as unrelated cleanup; check their wiring when already present.
-
-Do not add `collectMetadata` or `metadataConfig` to `unitTests` suites or legacy
-`javaagent-unit-tests` projects. These are unit tests, and metadata collection should not run there.
-
-| Property          | Type            | Value                                                                                            |
-| ----------------- | --------------- | ------------------------------------------------------------------------------------------------ |
-| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false`                                 |
-| `metadataConfig`  | System property | A single `key=value` string describing the non-default configuration active during this test run |
-
-When already present, verify:
-
-- `metadataConfig` is only used in files that also configure `collectMetadata`. A lone
-  `metadataConfig` does not enable collection and should be removed, not added as a partial
-  metadata migration.
-- `collectMetadata` is in `tasks.test` for single-test-task modules, or in
-  `withType<Test>().configureEach` for modules that explicitly register additional `Test`
-  tasks via `by registering(Test::class)` (`latestDepTest` does not count) — never on
-  individual tasks. Do not use
-  `withType<Test>().configureEach { ... }` in single-test-task modules.
-- `metadataConfig` is on each non-default task that participates in metadata collection. It may
-  also appear on the default `test` task when that task participates in metadata collection and
-  itself runs with non-default `jvmArgs` (e.g., an experimental flag enabled module-wide via
-  `withType<Test>().configureEach { jvmArgs(...) }`); in that case the `metadataConfig` value
-  should describe those non-default jvmArgs.
-- The `metadataConfig` value matches at least one of the jvmArgs configured in the task
+Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
+for task selection and labels. Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
+Keep `metadataConfig` labels local.

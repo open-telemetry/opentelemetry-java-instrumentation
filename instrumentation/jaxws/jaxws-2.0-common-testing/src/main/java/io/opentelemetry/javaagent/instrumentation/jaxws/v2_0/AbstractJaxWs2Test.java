@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Arrays.asList;
@@ -92,6 +93,8 @@ public abstract class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Ser
     return "/jetty-context";
   }
 
+  protected abstract String expectedScopeName();
+
   private String getServiceAddress(String serviceName) {
     return address.resolve("ws/" + serviceName).toString();
   }
@@ -121,6 +124,7 @@ public abstract class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Ser
                                   .hasStatus(StatusData.unset()),
                           span ->
                               span.hasName("HelloService/" + testMethod.methodName())
+                                  .satisfies(hasScopeName(expectedScopeName()))
                                   .hasParent(trace.getSpan(0))
                                   .hasKind(SpanKind.INTERNAL)));
               if (hasAnnotationHandlerSpan(testMethod)) {
@@ -162,6 +166,7 @@ public abstract class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Ser
                                   .hasStatus(StatusData.error()),
                           span ->
                               span.hasName("HelloService/" + testMethod.methodName())
+                                  .satisfies(hasScopeName(expectedScopeName()))
                                   .hasParent(trace.getSpan(0))
                                   .hasKind(SpanKind.INTERNAL)
                                   .hasStatus(StatusData.error())

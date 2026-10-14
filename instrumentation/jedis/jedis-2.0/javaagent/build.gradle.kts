@@ -32,7 +32,6 @@ dependencies {
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
@@ -62,7 +61,6 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
@@ -73,7 +71,9 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+        if (suite.name != "version23Test") {
+          systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+        }
       }
     }
 

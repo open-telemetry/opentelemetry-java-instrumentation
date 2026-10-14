@@ -48,6 +48,10 @@ import org.testcontainers.selenium.BrowserWebDriverContainer;
 public abstract class AbstractVaadinTest
     extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
+  private static final String INSTRUMENTATION_SCOPE = "io.opentelemetry.vaadin-14.2";
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
+
   private static final Logger logger = LoggerFactory.getLogger(AbstractVaadinTest.class);
 
   @RegisterExtension
@@ -153,33 +157,49 @@ public abstract class AbstractVaadinTest
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = testing.waitForTraces(1);
-              assertThat(traces.get(0))
-                  .satisfies(
-                      spans -> {
-                        assertThat(spans.get(0))
-                            .hasName("POST " + getContextPath() + "/main")
-                            .hasNoParent()
-                            .hasKind(SpanKind.SERVER);
-                        assertThat(spans.get(1))
-                            .hasName("SpringVaadinServletService.handleRequest")
-                            .hasParent(spans.get(0))
-                            .hasKind(SpanKind.INTERNAL);
-                        // we don't assert all the handler spans as these vary between
-                        // vaadin versions
-                        assertThat(spans.get(spans.size() - 2))
-                            .hasName("UidlRequestHandler.handleRequest")
-                            .hasParent(spans.get(1))
-                            .hasKind(SpanKind.INTERNAL);
-                        assertThat(spans.get(spans.size() - 1))
-                            .hasName("EventRpcHandler.handle/click")
-                            .hasParent(spans.get(spans.size() - 2))
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CODE_FUNCTION_NAME,
-                                    "com.vaadin.flow.server.communication.rpc.EventRpcHandler.handle"));
-                      });
+              List<SpanData> spans = traces.get(0);
+              assertThat(spans).anySatisfy(span -> assertThat(span).hasKind(SpanKind.SERVER));
+              if (CONTROLLER_TELEMETRY_ENABLED) {
+                assertThat(spans)
+                    .satisfies(
+                        actualSpans -> {
+                          assertThat(actualSpans.get(0))
+                              .hasName("POST " + getContextPath() + "/main")
+                              .hasNoParent()
+                              .hasKind(SpanKind.SERVER);
+                          assertThat(actualSpans.get(1))
+                              .hasName("SpringVaadinServletService.handleRequest")
+                              .hasParent(actualSpans.get(0))
+                              .hasKind(SpanKind.INTERNAL);
+                          // we don't assert all the handler spans as these vary between
+                          // vaadin versions
+                          assertThat(actualSpans.get(actualSpans.size() - 2))
+                              .hasName("UidlRequestHandler.handleRequest")
+                              .hasParent(actualSpans.get(1))
+                              .hasKind(SpanKind.INTERNAL);
+                          assertThat(actualSpans.get(actualSpans.size() - 1))
+                              .hasName("EventRpcHandler.handle/click")
+                              .hasParent(actualSpans.get(actualSpans.size() - 2))
+                              .hasKind(SpanKind.INTERNAL)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(
+                                      CODE_FUNCTION_NAME,
+                                      "com.vaadin.flow.server.communication.rpc.EventRpcHandler.handle"));
+                        });
+              } else {
+                assertNoControllerSpans(spans);
+              }
             });
+  }
+
+  protected static boolean controllerTelemetryEnabled() {
+    return CONTROLLER_TELEMETRY_ENABLED;
+  }
+
+  protected static void assertNoControllerSpans(List<? extends SpanData> spans) {
+    assertThat(spans)
+        .noneMatch(
+            span -> INSTRUMENTATION_SCOPE.equals(span.getInstrumentationScopeInfo().getName()));
   }
 
   @Test

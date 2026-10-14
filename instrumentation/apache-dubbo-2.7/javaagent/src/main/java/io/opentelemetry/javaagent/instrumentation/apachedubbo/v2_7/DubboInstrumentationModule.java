@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -21,11 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class DubboInstrumentationModule extends InstrumentationModule {
   public DubboInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "apache-dubbo-2.7" : "apache-dubbo",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"apache-dubbo"}
-            : new String[] {"apache-dubbo-2.7"});
+    super("apache-dubbo-2.7", "apache-dubbo");
   }
 
   @Override
