@@ -126,7 +126,6 @@ public abstract class AbstractAws2BedrockRuntimeTest {
 
   @Test
   void testConverseBasic() {
-    boolean captureMessageContent = isCaptureMessageContentEnabled();
     BedrockRuntimeClientBuilder builder = BedrockRuntimeClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -217,7 +216,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        captureMessageContent
+                        isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
                             : Value.of(emptyMap())),
             log ->
@@ -226,7 +225,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        captureMessageContent
+                        isCaptureMessageContentEnabled()
                             ? Value.of(
                                 KeyValue.of("finish_reason", Value.of("end_turn")),
                                 KeyValue.of("index", Value.of(0)),
