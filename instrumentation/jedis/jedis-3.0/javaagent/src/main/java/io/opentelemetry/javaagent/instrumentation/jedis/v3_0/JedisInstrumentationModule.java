@@ -11,7 +11,6 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -21,11 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "jedis-3.0" : "jedis",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jedis"}
-            : new String[] {"jedis-3.0"});
+    super("jedis-3.0", "jedis");
   }
 
   @Override

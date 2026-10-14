@@ -45,7 +45,6 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)

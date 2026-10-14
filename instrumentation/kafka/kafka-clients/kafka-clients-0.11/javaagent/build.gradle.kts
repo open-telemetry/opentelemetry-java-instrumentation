@@ -30,7 +30,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testPropagationDisabled = register<Test>("testPropagationDisabled") {
@@ -59,7 +58,6 @@ tasks {
     filter {
       includeTestsMatching("*DefaultEnablementTest")
     }
-    systemProperty("collectMetadata", false)
   }
 
   val testV3Preview = register<Test>("testV3Preview") {

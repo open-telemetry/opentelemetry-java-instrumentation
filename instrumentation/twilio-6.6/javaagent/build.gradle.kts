@@ -23,7 +23,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata && name != "testDisabled")
 
     if (name != "testDisabled") {
       jvmArgs("-Dotel.instrumentation.twilio.enabled=true")
