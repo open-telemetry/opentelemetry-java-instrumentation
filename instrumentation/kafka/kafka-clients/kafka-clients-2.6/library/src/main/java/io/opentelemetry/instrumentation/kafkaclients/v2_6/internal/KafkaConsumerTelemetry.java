@@ -40,9 +40,6 @@ public class KafkaConsumerTelemetry {
   private static final MethodHandle NEXT_OFFSETS;
   private static final MethodHandle NEW_CONSUMER_RECORDS;
 
-  private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
-  private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
-
   static {
     MethodHandle nextOffsets;
     MethodHandle newConsumerRecords;
@@ -63,6 +60,9 @@ public class KafkaConsumerTelemetry {
     NEXT_OFFSETS = nextOffsets;
     NEW_CONSUMER_RECORDS = newConsumerRecords;
   }
+
+  private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
+  private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
 
   public KafkaConsumerTelemetry(
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
@@ -97,8 +97,8 @@ public class KafkaConsumerTelemetry {
         Map<TopicPartition, OffsetAndMetadata> nextOffsets =
             (Map<TopicPartition, OffsetAndMetadata>) NEXT_OFFSETS.invoke(consumerRecords);
         return (ConsumerRecords<K, V>) NEW_CONSUMER_RECORDS.invoke(records, nextOffsets);
-      } catch (Throwable throwable) {
-        sneakyThrow(throwable);
+      } catch (Throwable t) {
+        sneakyThrow(t);
       }
     }
     return new ConsumerRecords<>(records);
