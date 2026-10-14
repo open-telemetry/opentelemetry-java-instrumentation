@@ -888,25 +888,26 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
               Consumer<SpanDataAssert> processSpanAssertion =
                   span -> assertProcessSpan(span, trace.getSpan(0), producerSpan.get(), false);
 
-              List<Consumer<SpanDataAssert>> assertions =
-                  new ArrayList<>(
-                      asList(
-                          span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                          receiveSpanAssertion,
-                          sdkSpanAssertion,
-                          processSpanAssertion,
-                          span ->
-                              span.hasName("process child")
-                                  .hasParent(trace.getSpan(receiveTelemetryEnabled() ? 3 : 2))
-                                  .hasTotalAttributeCount(0)));
+              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+              assertions.add(
+                  span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0));
               // on jdk8 the order of the "SQS.ReceiveMessage" and "receive testSdkSqs"
               // spans can vary
               if (!receiveTelemetryEnabled()) {
-                assertions.remove(1);
+                assertions.add(sdkSpanAssertion);
               } else if ("SQS.ReceiveMessage".equals(trace.getSpan(1).getName())) {
-                assertions.set(1, sdkSpanAssertion);
-                assertions.set(2, receiveSpanAssertion);
+                assertions.add(sdkSpanAssertion);
+                assertions.add(receiveSpanAssertion);
+              } else {
+                assertions.add(receiveSpanAssertion);
+                assertions.add(sdkSpanAssertion);
               }
+              assertions.add(processSpanAssertion);
+              assertions.add(
+                  span ->
+                      span.hasName("process child")
+                          .hasParent(trace.getSpan(receiveTelemetryEnabled() ? 3 : 2))
+                          .hasTotalAttributeCount(0));
               trace.hasSpansSatisfyingExactly(assertions);
             });
   }
