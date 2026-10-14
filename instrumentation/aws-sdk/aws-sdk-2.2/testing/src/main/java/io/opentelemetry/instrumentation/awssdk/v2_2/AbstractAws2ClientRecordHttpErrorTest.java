@@ -6,12 +6,11 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -19,9 +18,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -193,12 +189,9 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(AWS_REQUEST_ID, requestId),
                                   equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                                  equalTo(
-                                      maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
-                                  equalTo(maybeStable(DB_OPERATION), operation)));
-                      if (emitStableDatabaseSemconv()) {
-                        attrs.add(equalTo(DB_COLLECTION_NAME, "sometable"));
-                      }
+                                  equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
+                                  equalTo(DB_OPERATION_NAME, operation)));
+                      attrs.add(equalTo(DB_COLLECTION_NAME, "sometable"));
                       span.hasAttributesSatisfyingExactly(attrs);
                       if (isRecordIndividualHttpErrorEnabled()) {
                         span.hasEventsSatisfyingExactly(

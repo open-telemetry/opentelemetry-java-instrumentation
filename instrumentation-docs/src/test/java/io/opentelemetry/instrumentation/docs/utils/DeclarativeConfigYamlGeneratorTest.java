@@ -177,6 +177,80 @@ class DeclarativeConfigYamlGeneratorTest {
   }
 
   @Test
+  void includesGlobalConfigurationsWithoutAnyModule() throws Exception {
+    ConfigurationOption global =
+        new ConfigurationOption(
+            "otel.instrumentation.common.v3-preview",
+            "java.common.v3_preview",
+            "Enables v3 preview.",
+            "false",
+            ConfigurationType.BOOLEAN,
+            null,
+            null,
+            null,
+            null,
+            null);
+
+    String output = generate(List.of(), List.of(global));
+    Map<String, Object> parsed = parse(output);
+
+    assertThat(navigate(parsed, "instrumentation/development", "java", "common", "v3_preview"))
+        .isEqualTo(false);
+    assertThat(output).contains("# Enables v3 preview.");
+  }
+
+  @Test
+  void globalConfigurationTakesPrecedenceOverModuleDeclaringSameName() throws Exception {
+    ConfigurationOption global =
+        new ConfigurationOption(
+            null,
+            "general.db.semconv.version",
+            "Global description.",
+            "0",
+            ConfigurationType.INT,
+            null,
+            null,
+            null,
+            null,
+            null);
+    ConfigurationOption moduleOption =
+        new ConfigurationOption(
+            null,
+            "general.db.semconv.version",
+            "Module description.",
+            "1",
+            ConfigurationType.INT,
+            null,
+            null,
+            null,
+            null,
+            null);
+
+    String output = generate(List.of(module("test", moduleOption)), List.of(global));
+
+    assertThat(output).contains("# Global description.").doesNotContain("Module description.");
+    assertThat(navigate(parse(output), "instrumentation/development", "general", "db", "semconv"))
+        .isEqualTo(Map.of("version", 0));
+  }
+
+  @Test
+  void includesRegistryGlobalConfigurationsByDefault() throws Exception {
+    StringWriter stringWriter = new StringWriter();
+    try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
+      DeclarativeConfigYamlGenerator.generateConfigurationYaml(List.of(), writer);
+    }
+
+    assertThat(
+            navigate(
+                parse(stringWriter.toString()),
+                "instrumentation/development",
+                "java",
+                "common",
+                "v3_preview"))
+        .isEqualTo(false);
+  }
+
+  @Test
   void omitsDeprecatedConfigurations() throws Exception {
     ConfigurationOption current =
         new ConfigurationOption(
@@ -205,7 +279,7 @@ class DeclarativeConfigYamlGeneratorTest {
             "otel.instrumentation.test.new-name",
             null);
 
-    String output = generate(List.of(module("test", current, deprecated)));
+    String output = generate(List.of(module("test", current, deprecated)), List.of(deprecated));
 
     assertThat(navigate(parse(output), "instrumentation/development", "java", "test"))
         .isEqualTo(Map.of("new_name", true));
@@ -227,8 +301,20 @@ class DeclarativeConfigYamlGeneratorTest {
             null,
             null,
             null);
+    ConfigurationOption global =
+        new ConfigurationOption(
+            null,
+            "general.db.semconv.version",
+            "When unset, the opt-in list selects the conventions.",
+            null,
+            ConfigurationType.INT,
+            null,
+            null,
+            null,
+            null,
+            null);
 
-    String output = generate(List.of(module("test", override)));
+    String output = generate(List.of(module("test", override)), List.of(global));
 
     assertThat(output).isEmpty();
   }
@@ -240,9 +326,17 @@ class DeclarativeConfigYamlGeneratorTest {
   }
 
   private static String generate(List<InstrumentationModule> modules) throws Exception {
+    // no global configurations, so the output reflects only the given modules
+    return generate(modules, List.of());
+  }
+
+  private static String generate(
+      List<InstrumentationModule> modules, List<ConfigurationOption> globalConfigurations)
+      throws Exception {
     StringWriter stringWriter = new StringWriter();
     try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
-      DeclarativeConfigYamlGenerator.generateConfigurationYaml(modules, writer);
+      DeclarativeConfigYamlGenerator.generateConfigurationYaml(
+          modules, globalConfigurations, writer);
     }
     return stringWriter.toString();
   }

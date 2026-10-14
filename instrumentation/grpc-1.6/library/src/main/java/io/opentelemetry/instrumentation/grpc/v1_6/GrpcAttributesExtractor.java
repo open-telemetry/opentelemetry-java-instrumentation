@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralStableRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.lowercase;
@@ -75,7 +75,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       if (emitOldRpcSemconv()) {
         attributes.put(RPC_GRPC_STATUS_CODE, status.getCode().value());
       }
-      if (emitStableRpcSemconv()) {
+      if (emitPreviewRpcSemconv()) {
         attributes.put(RPC_RESPONSE_STATUS_CODE, status.getCode().name());
       }
     }
@@ -100,7 +100,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
         if (emitOldRpcSemconv()) {
           attributes.put(requestAttributeKey(metadataKey, literalRequestAttributeKeys), value);
         }
-        if (emitStableRpcSemconv()) {
+        if (emitPreviewRpcSemconv()) {
           attributes.put(
               stableRequestAttributeKey(metadataKey, literalStableRequestAttributeKeys), value);
         }

@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class PekkoHttpServerInstrumentationModule extends InstrumentationModule {
   public PekkoHttpServerInstrumentationModule() {
-    super("pekko-http", "pekko-http-1.0", "pekko-http-server");
+    super("pekko-http-1.0", "pekko-http-server", "pekko-http", "pekko");
   }
 
   @Override

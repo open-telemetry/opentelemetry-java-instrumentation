@@ -5,18 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -83,7 +79,7 @@ class VertxSqlClientServerListTest {
   }
 
   @Test
-  void serverListWithUnixSocketOmitsStableTarget() throws Exception {
+  void serverListWithUnixSocketOmitsConfiguredTarget() throws Exception {
     PgConnectOptions first = connectOptions().setPort(port);
     PgConnectOptions second = connectOptions().setHost("/var/run/postgres:primary").setPort(5432);
     Pool pool = PgPool.pool(vertx, asList(first, second), poolOptions());
@@ -162,25 +158,11 @@ class VertxSqlClientServerListTest {
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), statement),
-                            equalTo(
-                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                            equalTo(
-                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? serverAddress : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, statement),
+                            equalTo(DB_QUERY_SUMMARY, "select"),
+                            equalTo(SERVER_ADDRESS, serverAddress))));
   }
 
   @Test
@@ -196,17 +178,10 @@ class VertxSqlClientServerListTest {
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), "select ?"),
-                            equalTo(
-                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "select ?"),
+                            equalTo(DB_QUERY_SUMMARY, "select"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -246,17 +221,10 @@ class VertxSqlClientServerListTest {
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), "select ?"),
-                            equalTo(
-                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "select ?"),
+                            equalTo(DB_QUERY_SUMMARY, "select"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
@@ -265,28 +233,13 @@ class VertxSqlClientServerListTest {
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), "select ?"),
-                            equalTo(
-                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "select" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "select ?"),
+                            equalTo(DB_QUERY_SUMMARY, "select"),
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? host + ":" + port + "," + host + ":" + (port + 1)
-                                    : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
+                                host + ":" + port + "," + host + ":" + (port + 1)))));
   }
 
   private static void select(SqlClient client)

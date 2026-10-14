@@ -14,6 +14,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
@@ -84,6 +85,16 @@ class DeclarativeConfigTest {
                     assertThat(config.getLong("int_key")).isEqualTo(42);
                   });
           assertThat(context).getBean("configProvider", ConfigProvider.class).isNotNull();
+        });
+  }
+
+  @Test
+  void configuresDeclarativeSampler() {
+    this.contextRunner.run(
+        context -> {
+          OpenTelemetrySdk sdk = context.getBean("openTelemetry", OpenTelemetrySdk.class);
+          assertThat(sdk.getSdkTracerProvider().getSampler().getDescription())
+              .isEqualTo(Sampler.alwaysOff().getDescription());
         });
   }
 
@@ -190,12 +201,19 @@ class DeclarativeConfigTest {
                       assertThat(config.getDouble("double_key_with_env_quoted"))
                           .isEqualTo(3.14); // quoted "3.14" works because of coercion
                       assertThat(config.getString("double_key_with_env_quoted")).isEqualTo("3.14");
+                      assertThat(config.isDouble("double_key_with_env_quoted")).isTrue();
 
                       assertThat(config.getLong("int_key")).isEqualTo(42);
                       assertThat(config.getLong("int_key_with_env")).isEqualTo(42);
                       assertThat(config.getLong("int_key_with_env_quoted"))
                           .isEqualTo(42); // quoted "42" works because of coercion
                       assertThat(config.getString("int_key_with_env_quoted")).isEqualTo("42");
+                      assertThat(config.isLong("int_key_with_env_quoted")).isTrue();
+                      assertThat(config.isInt("int_key_with_env_quoted")).isTrue();
+
+                      assertThat(config.isString("int_key_with_env_quoted")).isTrue();
+                      assertThat(config.isBoolean("bool_key_with_env_quoted")).isTrue();
+                      assertThat(config.isBoolean("string_key_with_env_quoted")).isFalse();
                     }));
   }
 

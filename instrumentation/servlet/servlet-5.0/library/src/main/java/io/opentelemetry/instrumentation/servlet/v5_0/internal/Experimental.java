@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
-import java.util.Collection;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -26,8 +24,7 @@ public final class Experimental {
   private static volatile BiConsumer<ServletTelemetryBuilder, Boolean>
       setAddTraceIdRequestAttribute;
 
-  @Nullable
-  private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId;
+  @Nullable private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureUserName;
 
   @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
@@ -61,15 +58,14 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to capture the {@code enduser.id} span attribute.
+   * Sets whether to capture the {@code user.name} span attribute.
    *
    * @param builder the telemetry builder
-   * @param captureEnduserId {@code true} to capture {@code enduser.id}
+   * @param captureUserName {@code true} to capture {@code user.name}
    */
-  public static void setCaptureEnduserId(
-      ServletTelemetryBuilder builder, boolean captureEnduserId) {
-    if (setCaptureEnduserId != null) {
-      setCaptureEnduserId.accept(builder, captureEnduserId);
+  public static void setCaptureUserName(ServletTelemetryBuilder builder, boolean captureUserName) {
+    if (setCaptureUserName != null) {
+      setCaptureUserName.accept(builder, captureUserName);
     }
   }
 
@@ -97,29 +93,6 @@ public final class Experimental {
     }
   }
 
-  /**
-   * Sets the request parameters to be captured as span attributes.
-   *
-   * <p>The parameter names are matched literally. Names containing {@code *} or {@code ?} are
-   * ignored and logged, since this setting never supported wildcards.
-   *
-   * @param builder the telemetry builder
-   * @param captureRequestParameters request parameter names to capture
-   * @deprecated Use {@link #setRequestParameters(ServletTelemetryBuilder, IncludeExclude)} instead.
-   *     May be removed in the next minor release.
-   * @see jakarta.servlet.ServletRequest#getParameterValues(String)
-   */
-  @Deprecated // may be removed in the next minor release
-  public static void setCaptureRequestParameters(
-      ServletTelemetryBuilder builder, Collection<String> captureRequestParameters) {
-    setRequestParameters(
-        builder,
-        DeprecatedCaptureNames.toSelectorOrEmpty(
-            captureRequestParameters,
-            "Experimental.setCaptureRequestParameters()",
-            "setRequestParameters(ServletTelemetryBuilder, IncludeExclude)"));
-  }
-
   public static void internalSetEmitExperimentalTelemetry(
       BiConsumer<ServletTelemetryBuilder, Boolean> setEmitExperimentalTelemetry) {
     Experimental.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry;
@@ -130,9 +103,9 @@ public final class Experimental {
     Experimental.setAddTraceIdRequestAttribute = setAddTraceIdRequestAttribute;
   }
 
-  public static void internalSetCaptureEnduserId(
-      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId) {
-    Experimental.setCaptureEnduserId = setCaptureEnduserId;
+  public static void internalSetCaptureUserName(
+      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureUserName) {
+    Experimental.setCaptureUserName = setCaptureUserName;
   }
 
   public static void internalSetRequestParameters(

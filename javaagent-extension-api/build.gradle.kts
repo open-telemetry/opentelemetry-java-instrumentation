@@ -19,6 +19,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  testImplementation(project(":declarative-config-bridge"))
 
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")

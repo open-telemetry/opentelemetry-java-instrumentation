@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class ArmeriaInstrumentationModule extends InstrumentationModule {
   public ArmeriaInstrumentationModule() {
-    super("armeria", "armeria-1.3");
+    super("armeria-1.3", "armeria");
   }
 
   @Override

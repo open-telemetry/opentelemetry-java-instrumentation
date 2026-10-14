@@ -40,9 +40,6 @@ public final class LindormUrlParser implements JdbcUrlParser {
       return;
     }
 
-    // Extract subtype (table, tsdb, search) before :url=
-    ctx.subtype(lindormUrl.substring(0, urlIndex));
-
     String realUrl = lindormUrl.substring(urlIndex + 5);
     GenericUrlParser.INSTANCE.parse(realUrl, ctx);
   }

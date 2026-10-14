@@ -1,0 +1,39 @@
+---
+# subset of jvm rules for testing without dependency on real jvm metrics evolution
+rules:
+
+  - bean: java.lang:type=MemoryPool,name=*
+    prefix: jvm.memory.
+    type: updowncounter
+    unit: By
+    metricAttribute:
+      jvm.memory.pool.name: param(name)
+      jvm.memory.type: lowercase(beanattr(Type))
+    mapping:
+      # jvm.memory.used
+      Usage.used:
+        metric: used
+        desc: Measure of memory used.
+      # jvm.memory.committed
+      Usage.committed:
+        metric: committed
+        desc: Measure of memory committed.
+      Usage.max:
+        metric: limit
+        desc: Measure of max obtainable memory.
+      # jvm.memory.used_after_last_gc
+      # note: metric attribute "jvm.memory.type" will always be "heap" as GC only manages heap
+      CollectionUsage.used:
+        metric: used_after_last_gc
+        desc: Measure of memory used, as measured after the most recent garbage collection event on this pool.
+
+  - bean: java.lang:type=Threading
+    prefix: jvm.thread.
+    mapping:
+      # jvm.thread.count
+      # limitation: 'jvm.thread.daemon' and 'jvm.thread.state' metric attributes are not provided
+      ThreadCount:
+        metric: count
+        type: updowncounter
+        unit: "{thread}"
+        desc: Number of executing platform threads.

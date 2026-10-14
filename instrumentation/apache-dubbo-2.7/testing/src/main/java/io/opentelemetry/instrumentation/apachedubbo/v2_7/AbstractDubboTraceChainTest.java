@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -184,7 +184,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -192,7 +192,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(maybeStablePeerService(), testing().expectedPeerService()),
@@ -213,7 +213,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -221,7 +221,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"
                                         : "hello"),
                                 equalTo(
@@ -236,7 +236,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(2))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -244,7 +244,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(maybeStablePeerService(), testing().expectedPeerService()),
@@ -265,7 +265,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -273,7 +273,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
                                 equalTo(
@@ -347,7 +347,7 @@ public abstract class AbstractDubboTraceChainTest {
                                               AbstractDubboTest::assertNetworkType)))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.apache-dubbo-2.7",
@@ -457,7 +457,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -465,7 +465,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(maybeStablePeerService(), testing().expectedPeerService()),
@@ -486,7 +486,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -494,7 +494,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"
                                         : "hello"),
                                 equalTo(
@@ -549,7 +549,7 @@ public abstract class AbstractDubboTraceChainTest {
                                               AbstractDubboTest::assertNetworkType)))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.apache-dubbo-2.7",

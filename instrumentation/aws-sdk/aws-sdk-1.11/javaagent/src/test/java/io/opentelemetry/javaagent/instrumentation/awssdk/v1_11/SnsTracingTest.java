@@ -20,7 +20,8 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -48,7 +49,7 @@ class SnsTracingTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // MESSAGING_OPERATION is deprecated
+  @SuppressWarnings("deprecation") // using deprecated RPC semconv
   void testSnsNotificationTriggersSqsMessageConsumedWithAwsSdk() {
     String queueName = "snsToSqsTestQueue";
     String topicName = "snsToSqsTestTopic";
@@ -78,7 +79,7 @@ class SnsTracingTest {
             trace.hasSpansSatisfyingExactly(
                 span -> sns(span, topicArn, "Publish"),
                 span ->
-                    span.hasName("snsToSqsTestQueue process")
+                    span.hasName("process snsToSqsTestQueue")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -101,7 +102,8 @@ class SnsTracingTest {
                                         v -> assertThat(v).isInstanceOf(Number.class))),
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_DESTINATION_NAME, "snsToSqsTestQueue"),
-                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("process child")

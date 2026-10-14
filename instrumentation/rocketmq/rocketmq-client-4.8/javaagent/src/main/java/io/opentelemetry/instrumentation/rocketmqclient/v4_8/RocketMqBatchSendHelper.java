@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.currentBatchSendState;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -31,6 +30,7 @@ public final class RocketMqBatchSendHelper {
   private static final VirtualField<Message, BatchSendState> BATCH_SEND_STATE =
       VirtualField.find(Message.class, BatchSendState.class);
 
+  private final Instrumenter<SendMessageContext, Void> singleSendInstrumenter;
   private final Instrumenter<SendMessageContext, Void> sendInstrumenter;
   private final Instrumenter<SendMessageContext, Void> createInstrumenter;
   private final TextMapPropagator propagator;
@@ -41,6 +41,9 @@ public final class RocketMqBatchSendHelper {
       IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
       boolean messageCreationSpansEnabled) {
+    singleSendInstrumenter =
+        RocketMqInstrumenterFactory.createProducerInstrumenter(
+            openTelemetry, headers, captureExperimentalSpanAttributes);
     sendInstrumenter =
         RocketMqInstrumenterFactory.createBatchProducerInstrumenter(
             openTelemetry, headers, captureExperimentalSpanAttributes);
@@ -50,11 +53,7 @@ public final class RocketMqBatchSendHelper {
     propagator = openTelemetry.getPropagators().getTextMapPropagator();
   }
 
-  @Nullable
   public BatchSendState createBatchSendState(Object producer, boolean callbackCompletionExpected) {
-    if (!emitStableMessagingSemconv()) {
-      return null;
-    }
     return new BatchSendState(
         Context.current(),
         RocketMqNamespaceUtil.getNamespace(producer),
@@ -69,18 +68,15 @@ public final class RocketMqBatchSendHelper {
     state.prepare(batch);
   }
 
-  public void completeBatchSend(@Nullable BatchSendState state, @Nullable Throwable error) {
-    if (state == null) {
-      return;
-    }
+  public void completeBatchSend(BatchSendState state, @Nullable Throwable error) {
     if (error != null || (!state.callbackCompletionExpected && !state.wasClaimedAsynchronously())) {
       state.end(error);
     }
   }
 
   @Nullable
-  public SendCallback wrap(@Nullable SendCallback delegate, @Nullable BatchSendState state) {
-    if (delegate == null || state == null) {
+  public SendCallback wrap(@Nullable SendCallback delegate, BatchSendState state) {
+    if (delegate == null) {
       return delegate;
     }
     return new SendCallback() {
@@ -98,7 +94,8 @@ public final class RocketMqBatchSendHelper {
     };
   }
 
-  public SendMessageHook wrap(SendMessageHook delegate) {
+  public SendMessageHook createSendMessageHook() {
+    SendMessageHook delegate = new TracingSendMessageHookImpl(singleSendInstrumenter);
     return new SendMessageHook() {
       @Override
       public String hookName() {

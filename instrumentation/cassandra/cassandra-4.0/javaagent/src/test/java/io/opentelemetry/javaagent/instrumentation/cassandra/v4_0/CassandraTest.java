@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -87,17 +85,12 @@ class CassandraTest extends AbstractCassandraTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP")
+                    span.hasName("DROP KEYSPACE")
                         .satisfies(
                             spanData -> {
                               assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
-                                  .isEqualTo(
-                                      emitStableDatabaseSemconv()
-                                          ? configuredTarget
-                                          : cassandraHost);
-                              assertThat(spanData.getAttributes().get(SERVER_PORT))
-                                  .isEqualTo(
-                                      emitStableDatabaseSemconv() ? null : (long) cassandraPort);
+                                  .isEqualTo(configuredTarget);
+                              assertThat(spanData.getAttributes().get(SERVER_PORT)).isEqualTo(null);
                               assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
                                   .isEqualTo(cassandraIp);
                               assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
@@ -149,35 +142,26 @@ class CassandraTest extends AbstractCassandraTest {
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS))
-                  .isEqualTo(
-                      emitStableDatabaseSemconv()
-                          ? cassandraIp
-                          : coordinatorAddress.getAddress().getHostAddress());
-              assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
-                  .isEqualTo(
-                      emitStableDatabaseSemconv() ? cassandraPort : coordinatorAddress.getPort());
-              assertThat(span.getAttributes().get(NETWORK_TYPE))
-                  .isEqualTo(emitOldDatabaseSemconv() ? "ipv4" : null);
+              assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(cassandraIp);
+              assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo(cassandraPort);
+              assertThat(span.getAttributes().get(NETWORK_TYPE)).isEqualTo(null);
             });
-    if (emitStableDatabaseSemconv()) {
-      testing.waitAndAssertMetrics(
-          getInstrumentationName(),
-          metric ->
-              metric
-                  .hasName("db.client.operation.duration")
-                  .hasHistogramSatisfying(
-                      histogram ->
-                          histogram.hasPointsSatisfying(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(DB_COLLECTION_NAME, "system.local"),
-                                      equalTo(DB_OPERATION_NAME, "SELECT"),
-                                      equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
-                                      equalTo(DB_SYSTEM_NAME, "cassandra"),
-                                      equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                      equalTo(NETWORK_PEER_PORT, cassandraPort)))));
-    }
+    testing.waitAndAssertMetrics(
+        getInstrumentationName(),
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(DB_COLLECTION_NAME, "system.local"),
+                                    equalTo(DB_OPERATION_NAME, "SELECT"),
+                                    equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
+                                    equalTo(DB_SYSTEM_NAME, "cassandra"),
+                                    equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                                    equalTo(NETWORK_PEER_PORT, cassandraPort)))));
   }
 
   private static CqlSession getDelegate(CqlSession session) throws IllegalAccessException {

@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -20,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQ
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -275,7 +272,7 @@ public abstract class AbstractAws2SqsBaseTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   SpanDataAssert processSpan(SpanDataAssert span, SpanData parent, SpanData creationContext) {
-    span.hasName(emitStableMessagingSemconv() ? "process testSdkSqs" : "testSdkSqs process")
+    span.hasName("process testSdkSqs")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
@@ -290,24 +287,19 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
 
-    if (emitStableMessagingSemconv()) {
-      // the creation context is linked even when it is also this span's parent
-      span.hasLinksSatisfying(
-          links ->
-              assertThat(links)
-                  .singleElement()
-                  .satisfies(
-                      link ->
-                          assertThat(link.getSpanContext().getSpanId())
-                              .isEqualTo(creationContext.getSpanId())));
-    } else {
-      span.hasTotalRecordedLinks(0);
-    }
+    // the creation context is linked even when it is also this span's parent
+    span.hasLinksSatisfying(
+        links ->
+            assertThat(links)
+                .singleElement()
+                .satisfies(
+                    link ->
+                        assertThat(link.getSpanContext().getSpanId())
+                            .isEqualTo(creationContext.getSpanId())));
     return span;
   }
 
@@ -319,11 +311,9 @@ public abstract class AbstractAws2SqsBaseTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   SpanDataAssert publishSpan(
       SpanDataAssert span, String queueUrl, String rpcMethod, Long batchMessageCount) {
-    return span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
+    return span.hasName("send testSdkSqs")
         .hasKind(
-            emitStableMessagingSemconv()
-                    && batchMessageCount != null
-                    && canInjectBatchCreationContext()
+            batchMessageCount != null && canInjectBatchCreationContext()
                 ? SpanKind.CLIENT
                 : SpanKind.PRODUCER)
         .hasNoParent()
@@ -343,12 +333,9 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
-            equalTo(
-                MESSAGING_BATCH_MESSAGE_COUNT,
-                emitStableMessagingSemconv() ? batchMessageCount : null),
+            equalTo(MESSAGING_OPERATION_NAME, "send"),
+            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchMessageCount),
             satisfies(
                 MESSAGING_MESSAGE_ID,
                 val ->

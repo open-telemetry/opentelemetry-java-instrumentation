@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RestletInstrumentationModule extends InstrumentationModule {
 
   public RestletInstrumentationModule() {
-    super("restlet", "restlet-2.0");
+    super("restlet-2.0", "restlet");
   }
 
   @Override

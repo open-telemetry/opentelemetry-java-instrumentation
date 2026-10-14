@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.docs.internal.SharedConfigurationRegistr
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,12 +48,20 @@ class DeclarativeConfigValidationTest {
   private static final Path INSTRUMENTATION_DIR = Paths.get("../instrumentation");
 
   // Declarative names that were published under an earlier spelling. The bridge keeps them in
-  // SPECIAL_MAPPINGS so existing configuration files keep working, but metadata.yaml must declare
-  // the name from the declarative configuration schema.
+  // SPECIAL_MAPPINGS so existing configuration files keep working, but they may only be documented
+  // by an entry marked `deprecated: true`.
   private static final Map<String, String> DEPRECATED_DECLARATIVE_NAMES =
       Map.of("general.semconv_stability.opt_in", "general.stability_opt_in_list");
 
+  // Flat properties that are read directly from system properties and environment variables
+  // rather than through the bridge, so the flat -> declarative round-trip does not apply.
+  private static final Set<String> SYSTEM_PROPERTY_ONLY_NAMES =
+      Set.of("otel.semconv-stability.preview");
+
   private static final String SHARED_DEFINITIONS = "shared-config-definitions.yaml";
+
+  private static final String GLOBAL_CONFIGURATIONS_SOURCE =
+      SHARED_DEFINITIONS + " (global_configurations)";
 
   @Test
   void validateDeclarativeNames() throws IOException {
@@ -67,13 +76,17 @@ class DeclarativeConfigValidationTest {
                 // configs (those without a flat property name, such as url_template_rules).
                 validateStructuredListSchema(source, config, errors);
 
-                // Deprecated spellings stay resolvable at runtime, but must not be declared here.
+                // Deprecated spellings stay resolvable at runtime, so they may be documented, but
+                // only as deprecated.
                 validateNotDeprecated(source, config, errors);
 
                 // The flat -> declarative round-trip needs a flat system property to drive the
-                // bridge. Declarative-only configs (no name) are skipped here.
+                // bridge. Declarative-only configs (no name) are skipped here, as are flat
+                // properties that are read directly from system properties rather than through
+                // the bridge.
                 if (config.name() != null
                     && !config.name().isBlank()
+                    && !SYSTEM_PROPERTY_ONLY_NAMES.contains(config.name())
                     && config.declarativeName() != null
                     && !config.declarativeName().isBlank()) {
                   ValidationResult result = validateConfig(source, config);
@@ -102,6 +115,37 @@ class DeclarativeConfigValidationTest {
               errors.size(),
               String.join("\n", errors)));
     }
+  }
+
+  /**
+   * Every declarative name with a special mapping in the bridge is a setting the agent reads, so it
+   * must be documented, either by a module's metadata.yaml or as a shared or global configuration.
+   * Without this, a setting read by the agent or the instrumentation API itself (rather than by a
+   * module) silently goes missing from docs/declarative-configuration-example.yaml.
+   */
+  @Test
+  void specialMappingsAreDocumented() throws Exception {
+    Set<String> documented = new HashSet<>();
+    metadataConfigurations().values().stream()
+        .flatMap(List::stream)
+        .map(ConfigurationOption::declarativeName)
+        .filter(Objects::nonNull)
+        .forEach(documented::add);
+    SharedConfigurationRegistry registry = SharedConfigurationRegistry.getInstance();
+    Stream.concat(
+            registry.definitions().values().stream(),
+            registry.globalConfigurations().values().stream())
+        .map(ConfigurationOption::declarativeName)
+        .filter(Objects::nonNull)
+        .forEach(documented::add);
+
+    List<String> undocumented =
+        specialMappings().keySet().stream()
+            .filter(name -> !documented.contains(name))
+            .sorted()
+            .toList();
+
+    assertThat(undocumented).isEmpty();
   }
 
   /**
@@ -208,7 +252,8 @@ class DeclarativeConfigValidationTest {
 
   /**
    * Returns the configurations of every metadata.yaml, plus the shared definitions (a module only
-   * carries a ref to them), keyed by where they are declared.
+   * carries a ref to them) and the global configurations (which no module declares), keyed by where
+   * they are declared.
    */
   private static Map<String, List<ConfigurationOption>> allConfigurations() throws IOException {
     Map<String, List<ConfigurationOption>> configsBySource =
@@ -216,6 +261,8 @@ class DeclarativeConfigValidationTest {
     SharedConfigurationRegistry registry = SharedConfigurationRegistry.getInstance();
     configsBySource.put(
         SHARED_DEFINITIONS + " (configurations)", List.copyOf(registry.definitions().values()));
+    configsBySource.put(
+        GLOBAL_CONFIGURATIONS_SOURCE, List.copyOf(registry.globalConfigurations().values()));
     return configsBySource;
   }
 
@@ -240,9 +287,22 @@ class DeclarativeConfigValidationTest {
     return configsBySource;
   }
 
+  @SuppressWarnings("unchecked")
+  private static Map<String, String> specialMappings() throws ReflectiveOperationException {
+    // the mappings are private to the bridge, which has no reason to expose them outside of this
+    // check
+    Field field =
+        Class.forName(
+                "io.opentelemetry.instrumentation.config.bridge"
+                    + ".ConfigPropertiesBackedDeclarativeConfigProperties")
+            .getDeclaredField("SPECIAL_MAPPINGS");
+    field.setAccessible(true);
+    return (Map<String, String>) field.get(null);
+  }
+
   private static void validateNotDeprecated(
       String source, ConfigurationOption config, List<String> errors) {
-    if (config.declarativeName() == null) {
+    if (config.declarativeName() == null || config.isDeprecated()) {
       return;
     }
     String replacement = DEPRECATED_DECLARATIVE_NAMES.get(config.declarativeName());

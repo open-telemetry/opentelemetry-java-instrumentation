@@ -16,7 +16,7 @@ import java.util.List;
 public class ZioInstrumentationModule extends InstrumentationModule {
 
   public ZioInstrumentationModule() {
-    super("zio", "zio-2.0");
+    super("zio-2.0", "zio");
   }
 
   @Override

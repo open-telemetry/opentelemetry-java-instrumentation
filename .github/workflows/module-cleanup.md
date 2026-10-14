@@ -36,6 +36,7 @@ on:
 
 permissions:
   contents: read
+  copilot-requests: write
 
 concurrency:
   group: module-cleanup

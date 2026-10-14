@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0.SpringJmsSingletons.listenerInstrumenter;
@@ -17,9 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import io.opentelemetry.javaagent.instrumentation.jms.v3_0.JakartaMessageAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSubscriptionNames;
@@ -58,46 +57,67 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Instrumenter<MessageWithDestination, Void> instrumenter;
       private final MessageWithDestination request;
-      private final Context context;
-      private final Scope scope;
+      private final MessageAdapter messageAdapter;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       private AdviceScope(
           Instrumenter<MessageWithDestination, Void> instrumenter,
           MessageWithDestination request,
-          Context context,
-          Scope scope) {
+          MessageAdapter messageAdapter,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.instrumenter = instrumenter;
         this.request = request;
+        this.messageAdapter = messageAdapter;
         this.context = context;
         this.scope = scope;
       }
 
       @Nullable
       public static AdviceScope start(Message message) {
-        Context parentContext = Context.current();
-        if (!emitStableMessagingSemconv()) {
-          Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
-          if (receiveContext != null) {
-            parentContext = receiveContext;
-          }
-        }
+        MessageAdapter messageAdapter = JakartaMessageAdapter.create(message);
         MessageWithDestination request =
-            MessageWithDestination.create(
-                JakartaMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
+            MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
+        boolean firstProcessingObserver = messageAdapter.beginProcessing();
 
-        Instrumenter<MessageWithDestination, Void> instrumenter =
-            listenerInstrumenter(request.message().wereConsumedMessagesRecorded());
-        if (!instrumenter.shouldStart(parentContext, request)) {
-          return null;
+        try {
+          if (!firstProcessingObserver) {
+            return new AdviceScope(
+                listenerInstrumenter(messageAdapter.wereConsumedMessagesRecorded()),
+                request,
+                messageAdapter,
+                null,
+                null);
+          }
+
+          Context parentContext = Context.current();
+          Instrumenter<MessageWithDestination, Void> instrumenter =
+              listenerInstrumenter(messageAdapter.wereConsumedMessagesRecorded());
+          if (!instrumenter.shouldStart(parentContext, request)) {
+            return new AdviceScope(instrumenter, request, messageAdapter, null, null);
+          }
+          Context context;
+          try (Scope ignored = Context.root().makeCurrent()) {
+            context = instrumenter.start(parentContext, request);
+          }
+          return new AdviceScope(
+              instrumenter, request, messageAdapter, context, context.makeCurrent());
+        } catch (Throwable t) {
+          messageAdapter.endProcessingAfterStartFailure(t);
+          throw t;
         }
-
-        Context context = instrumenter.start(parentContext, request);
-        return new AdviceScope(instrumenter, request, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
-        scope.close();
-        instrumenter.end(context, request, null, throwable);
+        try {
+          if (context != null && scope != null) {
+            scope.close();
+            instrumenter.end(context, request, null, throwable);
+          }
+        } finally {
+          messageAdapter.endProcessing();
+        }
       }
     }
 

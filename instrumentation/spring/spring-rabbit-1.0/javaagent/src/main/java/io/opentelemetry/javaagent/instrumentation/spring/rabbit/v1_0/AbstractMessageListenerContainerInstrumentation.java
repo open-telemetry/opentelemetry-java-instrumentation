@@ -16,6 +16,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -58,14 +59,54 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
       private final Scope scope;
       private final SpringRabbitRequest request;
 
-      public AdviceScope(Context context, SpringRabbitRequest request) {
+      @Nullable
+      public static AdviceScope start(
+          AbstractMessageListenerContainer container, Channel channel, Object data) {
+        if (!SpringRabbitListenerUtil.canTraceListenerProcessing(container)) {
+          return null;
+        }
+
+        SpringRabbitRequest request;
+        if (data instanceof Message) {
+          request = new SpringRabbitRequest(channel, (Message) data);
+        } else if (data instanceof List
+            && !((List<?>) data).isEmpty()
+            && ((List<?>) data).get(0) instanceof Message) {
+          List<Message> messages = new ArrayList<>();
+          for (Object message : (List<?>) data) {
+            if (!(message instanceof Message)) {
+              return null;
+            }
+            messages.add((Message) message);
+          }
+          request = new SpringRabbitRequest(channel, messages);
+        } else {
+          return null;
+        }
+
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context;
+        // Span-start callbacks should not observe an ambient RabbitMQ process context.
+        // The Spring process span still uses the captured parentContext.
+        try (Scope ignored = Context.root().makeCurrent()) {
+          context = instrumenter().start(parentContext, request);
+        }
+        request.installProcessingContext(context);
+        return new AdviceScope(context, request);
+      }
+
+      private AdviceScope(Context context, SpringRabbitRequest request) {
         this.context = context;
-        this.scope = context.makeCurrent();
         this.request = request;
+        this.scope = context.makeCurrent();
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
+        request.restoreProcessingContext(context);
         instrumenter()
             .end(context, request, null, SpringRabbitErrorHolder.getOrDefault(context, throwable));
       }
@@ -77,28 +118,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Argument(0) Channel channel,
         @Advice.Argument(1) Object data) {
-      if (!SpringRabbitListenerUtil.shouldTraceListenerProcess(container)) {
-        return null;
-      }
-
-      SpringRabbitRequest request;
-      if (data instanceof Message) {
-        request = new SpringRabbitRequest(channel, (Message) data);
-      } else if (data instanceof List
-          && !((List<?>) data).isEmpty()
-          && ((List<?>) data).get(0) instanceof Message) {
-        List<?> messages = (List<?>) data;
-        request = new SpringRabbitRequest(channel, (Message) messages.get(0), messages.size());
-      } else {
-        return null;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
-      }
-      Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(context, request);
+      return AdviceScope.start(container, channel, data);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)

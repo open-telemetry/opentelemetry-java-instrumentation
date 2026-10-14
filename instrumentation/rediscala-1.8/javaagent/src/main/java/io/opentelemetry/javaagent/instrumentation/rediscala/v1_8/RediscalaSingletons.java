@@ -25,9 +25,8 @@ public class RediscalaSingletons {
 
   private static final Instrumenter<RediscalaRequest, Void> instrumenter;
 
-  public static final VirtualField<TransactionBuilder, RediscalaTransactionState>
-      TRANSACTION_STATE =
-          VirtualField.find(TransactionBuilder.class, RediscalaTransactionState.class);
+  public static final VirtualField<TransactionBuilder, Object> TRANSACTION_CLIENT =
+      VirtualField.find(TransactionBuilder.class, Object.class, "transactionClient");
 
   public static final VirtualField<Request, RedisServerTarget> REQUEST_TARGET =
       VirtualField.find(Request.class, RedisServerTarget.class);

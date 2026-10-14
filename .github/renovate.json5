@@ -1,12 +1,19 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "github>grafana/flint#v0.22.12",
+    "github>grafana/flint#v0.22.14",
     'config:best-practices',
     'workarounds:javaLTSVersions',
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
   ],
+  baseBranchPatterns: [
+    'main',
+    'maintenance/v2.x',
+  ],
+  // Merge each base branch's config over main's so maintenance branches can retain
+  // dependency compatibility restrictions independently of main.
+  useBaseBranchConfig: 'merge',
   ignorePaths: [
     // instrumentation modules intentionally pin old library versions in order to test the oldest
     // supported version, so renovate must not update their build files
@@ -528,8 +535,9 @@
         '**/*.java',
       ],
       matchStrings: [
-        '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
+        '"(?<depName>otel/weaver):(?<currentValue>[^"@]+)(?:@(?<currentDigest>sha256:[0-9a-f]+))?"',
       ],
+      autoReplaceStringTemplate: '"{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}"',
     },
     {
       customType: 'regex',

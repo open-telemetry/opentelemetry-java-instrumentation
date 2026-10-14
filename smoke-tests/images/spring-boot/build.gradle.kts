@@ -46,6 +46,9 @@ java {
   } else if (targetJDK == "17") {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+  } else if (targetJDK == "21") {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
   }
 }
 

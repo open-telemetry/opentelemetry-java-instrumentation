@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
-import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 
 import io.opentelemetry.api.trace.Span;
@@ -28,8 +26,6 @@ import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
-import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.UserIncubatingAttributes;
 import java.security.Principal;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -137,7 +133,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     }
 
     captureRequestParameters(serverSpan, request);
-    captureEnduserId(serverSpan, request);
+    captureUserName(serverSpan, request);
   }
 
   /**
@@ -157,22 +153,21 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID}, or {@link
-   * UserIncubatingAttributes#USER_NAME} when v3 preview is enabled, as a span attribute when SERVER
-   * span is not created by servlet instrumentation.
+   * Capture {@code user.name} as a span attribute when SERVER span is not created by servlet
+   * instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
-  private void captureEnduserId(Span serverSpan, REQUEST request) {
+  private void captureUserName(Span serverSpan, REQUEST request) {
     if (!AgentCommonConfig.get().getUserConfig().isNameEnabled()) {
       return;
     }
 
     Principal principal = accessor.getRequestUserPrincipal(request);
     if (principal != null) {
-      serverSpan.setAttribute(v3Preview() ? USER_NAME : ENDUSER_ID, principal.getName());
+      serverSpan.setAttribute(USER_NAME, principal.getName());
     }
   }
 

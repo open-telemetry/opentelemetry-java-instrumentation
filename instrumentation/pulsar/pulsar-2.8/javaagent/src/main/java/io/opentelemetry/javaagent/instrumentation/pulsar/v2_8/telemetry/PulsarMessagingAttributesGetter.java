@@ -50,17 +50,6 @@ final class PulsarMessagingAttributesGetter
     return null;
   }
 
-  @Override
-  public Long getMessageBodySize(PulsarRequest request) {
-    return (long) request.getMessage().size();
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(PulsarRequest request) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getMessageId(PulsarRequest request, @Nullable Void response) {

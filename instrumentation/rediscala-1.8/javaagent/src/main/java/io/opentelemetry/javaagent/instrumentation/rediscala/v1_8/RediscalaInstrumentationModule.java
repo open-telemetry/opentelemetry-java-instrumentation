@@ -16,7 +16,7 @@ import java.util.List;
 public class RediscalaInstrumentationModule extends InstrumentationModule {
 
   public RediscalaInstrumentationModule() {
-    super("rediscala", "rediscala-1.8");
+    super("rediscala-1.8", "rediscala");
   }
 
   @Override
