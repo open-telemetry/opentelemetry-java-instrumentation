@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDataSourceName;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.apachecommonspool.CommonsPoolMetricsSuppression;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import javax.management.ObjectName;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -29,6 +33,10 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
+        named("createConnectionPool").and(takesArguments(1)),
+        getClass().getName() + "$CreateConnectionPoolAdvice");
+
+    typeTransformer.applyAdviceToMethod(
         named("startPoolMaintenance").and(takesArguments(0)),
         getClass().getName() + "$StartPoolMaintenanceAdvice");
 
@@ -42,13 +50,28 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class CreateConnectionPoolAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter() {
+      return CommonsPoolMetricsSuppression.suppress(currentContext()).makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class StartPoolMaintenanceAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
-      String dataSourceName =
-          objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      String poolName = objectName == null ? null : getDataSourceName(objectName);
+      ApacheDbcpSingletons.registerMetrics(dataSource, poolName);
     }
   }
 
@@ -69,10 +92,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String dataSourceName = getDataSourceName(objectName);
-
-      telemetry().unregisterMetrics(dataSource);
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      ApacheDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }
 }

@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Jetty8InstrumentationModule extends InstrumentationModule {
 
   public Jetty8InstrumentationModule() {
-    super("jetty", "jetty-8.0");
+    super("jetty-8.0", "jetty");
   }
 
   @Override

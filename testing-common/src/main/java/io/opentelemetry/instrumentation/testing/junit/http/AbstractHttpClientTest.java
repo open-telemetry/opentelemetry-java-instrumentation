@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -619,7 +620,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
-                  assertClientSpan(span, uri, method, null, null)
+                  assertClientSpanWithoutResponse(span, uri, method)
                       .hasParent(trace.getSpan(0))
                       .hasException(emitExceptionAsSpanEvents() ? clientError : null));
         });
@@ -660,7 +661,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           trace.hasSpansSatisfyingExactlyInAnyOrder(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  assertClientSpan(span, uri, method, null, null)
+                  assertClientSpanWithoutResponse(span, uri, method)
                       .hasParent(trace.getSpan(0))
                       .hasException(emitExceptionAsSpanEvents() ? clientError : null),
               span ->
@@ -700,7 +701,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
-                  assertClientSpan(span, uri, method, null, null)
+                  assertClientSpanWithoutResponse(span, uri, method)
                       .hasParent(trace.getSpan(0))
                       .hasException(emitExceptionAsSpanEvents() ? clientError : null));
         });
@@ -739,7 +740,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasStatus(StatusData.error())
                       .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
-                  assertClientSpan(span, uri, method, null, null)
+                  assertClientSpanWithoutResponse(span, uri, method)
                       .hasParent(trace.getSpan(0))
                       .hasException(emitExceptionAsSpanEvents() ? clientError : null),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
@@ -1097,13 +1098,28 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         });
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
+  private SpanDataAssert assertClientSpanWithoutResponse(
+      SpanDataAssert span, URI uri, String method) {
+    return assertClientSpan(span, uri, method, null, null, false);
+  }
+
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,
       String method,
       @Nullable Integer responseCode,
       @Nullable Integer resendCount) {
+    return assertClientSpan(span, uri, method, responseCode, resendCount, true);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private SpanDataAssert assertClientSpan(
+      SpanDataAssert span,
+      URI uri,
+      String method,
+      Integer responseCode,
+      Integer resendCount,
+      boolean responseReceived) {
     Set<AttributeKey<?>> httpClientAttributes = options.getHttpAttributes().apply(uri);
     return span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
         .hasKind(SpanKind.CLIENT)
@@ -1121,7 +1137,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   .doesNotContainKey(NETWORK_TRANSPORT)
                   .doesNotContainKey(NETWORK_TYPE)
                   .doesNotContainKey(NETWORK_PROTOCOL_NAME);
-              if (httpClientAttributes.contains(NETWORK_PROTOCOL_VERSION)) {
+              if (responseReceived
+                  ? httpClientAttributes.contains(NETWORK_PROTOCOL_VERSION)
+                  : attrs.get(NETWORK_PROTOCOL_VERSION) != null) {
                 assertThat(attrs)
                     .containsEntry(
                         NETWORK_PROTOCOL_VERSION, options.getHttpProtocolVersion().apply(uri));
@@ -1189,10 +1207,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertThat(attrs).doesNotContainKey(HTTP_REQUEST_RESEND_COUNT);
               }
             })
-        .satisfies(
-            spanData ->
-                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_41_0));
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
   }
 
   protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {

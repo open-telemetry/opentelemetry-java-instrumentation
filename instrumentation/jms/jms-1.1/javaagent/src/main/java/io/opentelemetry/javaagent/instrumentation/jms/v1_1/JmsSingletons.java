@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -25,17 +23,13 @@ public class JmsSingletons {
   static {
     JmsInstrumenterFactory factory =
         new JmsInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
-            .setMessagingReceiveTelemetryEnabled(
-                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+            .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
 
     producerInstrumenter = factory.createProducerInstrumenter();
     consumerReceiveInstrumenter = factory.createConsumerReceiveInstrumenter();
-    consumerProcessInstrumenter = factory.createConsumerProcessInstrumenter(false, false);
+    consumerProcessInstrumenter = factory.createConsumerProcessInstrumenter(false);
     consumerProcessInstrumenterWithConsumedMessages =
-        emitStableMessagingSemconv()
-            ? factory.createConsumerProcessInstrumenter(false, true)
-            : consumerProcessInstrumenter;
+        factory.createConsumerProcessInstrumenter(true);
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {
@@ -47,8 +41,8 @@ public class JmsSingletons {
   }
 
   public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter(
-      boolean receiveTelemetryRecorded) {
-    return receiveTelemetryRecorded
+      boolean consumedMessagesRecorded) {
+    return consumedMessagesRecorded
         ? consumerProcessInstrumenter
         : consumerProcessInstrumenterWithConsumedMessages;
   }

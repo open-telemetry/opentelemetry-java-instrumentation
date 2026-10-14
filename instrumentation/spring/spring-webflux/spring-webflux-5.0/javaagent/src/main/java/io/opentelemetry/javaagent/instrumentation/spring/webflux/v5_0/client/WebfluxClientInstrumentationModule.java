@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -16,11 +16,14 @@ import java.util.List;
 public class WebfluxClientInstrumentationModule extends InstrumentationModule {
 
   public WebfluxClientInstrumentationModule() {
-    super("spring-webflux", "spring-webflux-5.0", "spring-webflux-client");
+    super("spring-webflux-5.0", "spring-webflux-client", "spring-webflux");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new WebClientBuilderInstrumentation());
+    return asList(
+        new WebClientBuilderInstrumentation(),
+        new ReactorClientHttpResponseInstrumentation(),
+        new DefaultClientResponseInstrumentation());
   }
 }

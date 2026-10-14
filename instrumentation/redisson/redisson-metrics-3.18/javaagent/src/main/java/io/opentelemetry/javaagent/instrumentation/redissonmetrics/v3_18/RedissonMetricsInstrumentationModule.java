@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v3_18.RedisClientInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v2_3.RedisClientInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RedissonMetricsInstrumentationModule extends InstrumentationModule {
 
   public RedissonMetricsInstrumentationModule() {
-    super("redisson-metrics", "redisson-metrics-3.18");
+    super("redisson-metrics-3.18", "redisson-metrics", "redisson");
   }
 
   @Override

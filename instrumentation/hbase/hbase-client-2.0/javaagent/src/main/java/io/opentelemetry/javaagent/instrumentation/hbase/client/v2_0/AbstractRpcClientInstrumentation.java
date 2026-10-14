@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.getTableName;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -19,14 +19,14 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.hadoop.hbase.net.Address;
-import org.apache.hadoop.hbase.security.User;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.ipc.AbstractRpcClient;
 import org.apache.hadoop.hbase.shaded.protobuf.generated.ClientProtos;
 import org.apache.hbase.thirdparty.com.google.protobuf.Descriptors;
 import org.apache.hbase.thirdparty.com.google.protobuf.Message;
@@ -41,6 +41,10 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, named("org.apache.hadoop.conf.Configuration"))),
+        getClass().getName() + "$ConstructorAdvice");
+
+    transformer.applyAdviceToMethod(
         named("callMethod")
             .and(
                 takesArgument(
@@ -52,35 +56,31 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This AbstractRpcClient<?> client, @Advice.Argument(0) Configuration configuration) {
+      HbaseServerTarget.store(client, configuration);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class CallMethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static RequestAndContext onEnter(
+        @Advice.This AbstractRpcClient<?> client,
         @Advice.Argument(0) Descriptors.MethodDescriptor md,
-        @Advice.Argument(2) Message param,
-        @Advice.Argument(4) User ticket,
-        @Advice.Argument(5) Object addr) {
-      String hostname = null;
-      Integer port = null;
-      if (addr instanceof Address) {
-        Address address = (Address) addr;
-        port = address.getPort();
-        hostname = address.getHostname();
-      } else if (addr instanceof InetSocketAddress) {
-        InetSocketAddress address = (InetSocketAddress) addr;
-        port = address.getPort();
-        hostname = address.getHostString();
-      }
+        @Advice.Argument(2) Message param) {
       String operation = md.getName();
       Long batchSize = null;
-      if (emitStableDatabaseSemconv() && param instanceof ClientProtos.MultiRequest) {
+      if (param instanceof ClientProtos.MultiRequest) {
         HbaseBatchMetadata batchMetadata =
             HbaseBatchMetadata.create((ClientProtos.MultiRequest) param);
         operation = batchMetadata.getOperation();
         batchSize = batchMetadata.getOperationBatchSize();
       }
       HbaseRequest request =
-          HbaseRequest.create(
-              operation, getTableName(), ticket.getName(), hostname, port, batchSize);
+          HbaseRequest.create(operation, getTableName(), HbaseServerTarget.get(client), batchSize);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;

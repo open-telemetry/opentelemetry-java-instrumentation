@@ -8,13 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -28,6 +31,7 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import jakarta.jms.Topic;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.CompletableFuture;
@@ -39,9 +43,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation")
 class Jms3InstrumentationTest extends AbstractJms3Test {
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void capturesDurableConsumerName() throws Exception {
     Topic topic = session.createTopic("durable-topic");
@@ -67,10 +71,9 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName("durable-topic", "durable-topic"),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false)),
                 span ->
@@ -78,13 +81,59 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName("durable-topic", "durable-topic"),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false),
-                            subscriptionName("durable-subscription"))));
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"))));
+  }
+
+  @Test
+  void capturesDurableConsumerNameBeforeListenerRegistrationReturns() throws JMSException {
+    String topicName = "early-listener-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("hello there");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    MessageConsumer consumer =
+        (MessageConsumer)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {TestMessageConsumer.class},
+                (proxy, method, args) -> {
+                  if (method.getName().equals("setMessageListener")) {
+                    ((MessageListener) args[0]).onMessage(message);
+                  }
+                  return null;
+                });
+    Session registrationSession =
+        (Session)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[] {TestSession.class},
+                (proxy, method, args) -> consumer);
+
+    registrationSession.createDurableConsumer(topic, "early-listener-subscription");
+    consumer.setMessageListener(listener);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            messagingTempDestination(false),
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                "early-listener-subscription"))));
   }
 
   @Test
@@ -114,14 +163,12 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void doesNotReuseListenerSubscriptionNameAcrossCallbacks() throws JMSException {
     String topicName = "redelivered-message-topic";
@@ -151,12 +198,13 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
-                            subscriptionName("redelivered-message-subscription"))),
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                "redelivered-message-subscription"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -164,50 +212,12 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false))));
   }
 
-  @Test
-  void keepsSubscriptionNameWhenListenerRegistrationFails() throws JMSException {
-    String topicName = "failed-listener-registration-topic";
-    Topic topic = session.createTopic(topicName);
-    TextMessage message = session.createTextMessage("hello there");
-    message.setJMSDestination(topic);
-    MessageListener listener = ignored -> {};
-
-    MessageConsumer registeredConsumer =
-        session.createDurableConsumer(topic, "registered-subscription");
-    cleanup.deferCleanup(registeredConsumer);
-    registeredConsumer.setMessageListener(listener);
-
-    MessageConsumer closedConsumer = session.createDurableConsumer(topic, "closed-subscription");
-    closedConsumer.close();
-    assertThatThrownBy(() -> closedConsumer.setMessageListener(listener))
-        .isInstanceOf(JMSException.class);
-
-    listener.onMessage(message);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
-                            messagingTempDestination(false),
-                            subscriptionName("registered-subscription"))));
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void capturesSubscriptionNameForChildClassLoaderListener() throws Exception {
     String topicName = "child-classloader-listener-topic";
@@ -237,12 +247,13 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
-                            subscriptionName("child-classloader-subscription"))));
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                "child-classloader-subscription"))));
   }
 
   private static URLClassLoader childFirstClassLoader(String childClassName) {
@@ -295,10 +306,9 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
-                          messagingDestinationName("shared-receive-topic", "shared-receive-topic"),
-                          oldOperation("publish"),
-                          operationName("send"),
-                          operationType("send"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "shared-receive-topic"),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(false)));
           producerSpan.set(trace.getSpan(1));
@@ -307,18 +317,16 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                "shared-receive-topic", "shared-receive-topic"),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "shared-receive-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            subscriptionName(subscriptionName))));
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @ParameterizedTest
@@ -341,21 +349,16 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process shared-listener-topic"
-                                : "shared-listener-topic process")
+                    span.hasName("process shared-listener-topic")
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                "shared-listener-topic", "shared-listener-topic"),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "shared-listener-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
-                            subscriptionName(subscriptionName))));
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @Test
@@ -384,16 +387,15 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                "reused-listener-topic", "reused-listener-topic"),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "reused-listener-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
-                            subscriptionName("reused-listener-subscription"))));
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                "reused-listener-subscription"))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void testMessageConsumer(DestinationFactory destinationFactory, boolean isTemporary)
@@ -429,19 +431,16 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
               span -> span.hasName("producer parent").hasNoParent(),
               span ->
                   span.hasName(
-                          emitStableMessagingSemconv()
-                              ? producerDestinationName.equals("(temporary)")
-                                  ? "send"
-                                  : "send " + producerDestinationName
-                              : producerDestinationName + " publish")
+                          producerDestinationName.equals("(temporary)")
+                              ? "send"
+                              : "send " + producerDestinationName)
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
-                          messagingDestinationName(producerDestinationName, actualDestinationName),
-                          oldOperation("publish"),
-                          operationName("send"),
-                          operationType("send"),
+                          equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -452,20 +451,17 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
                     span.hasName(
-                            emitStableMessagingSemconv()
-                                ? actualDestinationName.equals("(temporary)")
-                                    ? "receive"
-                                    : "receive " + actualDestinationName
-                                : actualDestinationName + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                            actualDestinationName.equals("(temporary)")
+                                ? "receive"
+                                : "receive " + actualDestinationName)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(actualDestinationName, actualDestinationName),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId))));
   }
 
@@ -497,4 +493,9 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     MessageConsumer create(Session session, Topic topic, String subscriptionName)
         throws JMSException;
   }
+
+  // These interfaces are package-private so that the agent instruments the generated proxy classes.
+  interface TestSession extends Session {}
+
+  interface TestMessageConsumer extends MessageConsumer {}
 }

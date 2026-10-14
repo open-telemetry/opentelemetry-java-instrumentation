@@ -22,10 +22,6 @@ rules:
       Usage.max:
         metric: limit
         desc: Measure of max obtainable memory.
-      # jvm.memory.init (experimental)
-      Usage.init:
-        metric: init
-        desc: Measure of initial memory requested.
       # jvm.memory.used_after_last_gc
       # note: metric attribute "jvm.memory.type" will always be "heap" as GC only manages heap
       CollectionUsage.used:
@@ -86,49 +82,3 @@ rules:
         type: gauge
         unit: '1'
         desc: Recent CPU utilization for the process as reported by the JVM.
-      # jvm.system.cpu.load_1m (experimental)
-      SystemLoadAverage:
-        metric: system.cpu.load_1m
-        type: gauge
-        unit: "{run_queue_item}"
-        desc: Average CPU load of the whole system for the last minute as reported by the JVM.
-      # jvm.system.cpu.utilization (experimental)
-      SystemCpuLoad:
-        metric: system.cpu.utilization
-        type: gauge
-        unit: '1'
-        desc: Recent CPU utilization for the whole system as reported by the JVM.
-      # jvm.file_descriptor.count (experimental)
-      OpenFileDescriptorCount:
-        metric: file_descriptor.count
-        type: updowncounter
-        unit: "{file_descriptor}"
-        desc: Number of open file descriptors as reported by the JVM.
-      # jvm.file_descriptor.limit (experimental)
-      MaxFileDescriptorCount:
-        metric: file_descriptor.limit
-        type: updowncounter
-        unit: "{file_descriptor}"
-        desc: Measure of max open file descriptors as reported by the JVM.
-
-  - bean: java.nio:name=*,type=BufferPool
-    prefix: jvm.buffer.
-    type: updowncounter
-    metricAttribute:
-      jvm.buffer.pool.name: param(name)
-    mapping:
-      # jvm.buffer.memory.used (experimental)
-      MemoryUsed:
-        metric: memory.used
-        unit: By
-        desc: Measure of memory used by buffers.
-      # jvm.buffer.memory.limit (experimental)
-      TotalCapacity:
-        metric: memory.limit
-        unit: By
-        desc: Measure of total memory capacity of buffers.
-      # jvm.buffer.count (experimental)
-      Count:
-        metric: count
-        unit: "{buffer}"
-        desc: Number of buffers in the pool.

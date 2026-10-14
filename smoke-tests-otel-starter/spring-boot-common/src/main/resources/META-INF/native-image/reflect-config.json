@@ -686,6 +686,18 @@
     ]
   },
   {
+    "name": "org.apache.kafka.common.security.oauthbearer.DefaultJwtRetriever",
+    "condition": {
+      "typeReachable": "org.apache.kafka.common.config.SaslConfigs"
+    }
+  },
+  {
+    "name": "org.apache.kafka.common.security.oauthbearer.DefaultJwtValidator",
+    "condition": {
+      "typeReachable": "org.apache.kafka.common.config.SaslConfigs"
+    }
+  },
+  {
     "name": "org.apache.kafka.common.serialization.BooleanDeserializer",
     "condition": {
       "typeReachable": "org.apache.kafka.clients.consumer.KafkaConsumer"

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.nats.v2_17.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -45,34 +46,50 @@ public final class NatsInstrumenterFactory {
 
   private static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers, String operationName) {
+    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    new NatsRequestMessagingAttributesGetter(),
-                    MessagingOperationType.SEND,
-                    operationName))
+                    getter, MessagingOperationType.SEND, operationName))
             .addAttributesExtractor(
-                messagingAttributesExtractor(MessagingOperationType.SEND, operationName, headers))
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+                messagingAttributesExtractor(
+                    getter, MessagingOperationType.SEND, operationName, headers))
+            .addOperationMetrics(MessagingProducerMetrics.get());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new NatsRequestTextMapSetter());
   }
 
+  public static Instrumenter<NatsRequest, NatsRequest> createSettleInstrumenter(
+      OpenTelemetry openTelemetry, IncludeExclude headers) {
+    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
+    InstrumenterBuilder<NatsRequest, NatsRequest> builder =
+        Instrumenter.<NatsRequest, NatsRequest>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                NatsSpanNameExtractor.create(getter, MessagingOperationType.SETTLE, "settle"))
+            .addAttributesExtractor(
+                messagingAttributesExtractor(
+                    getter, MessagingOperationType.SETTLE, "settle", headers))
+            .addAttributesExtractor(new NatsSettlementOperationNameExtractor())
+            .addOperationMetrics(MessagingConsumerMetrics.get());
+    setMessagingSettleExceptionEventExtractor(builder);
+    return builder.buildClientInstrumenter(new NatsRequestTextMapSetter());
+  }
+
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers) {
+    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(false);
     InstrumenterBuilder<NatsRequest, Void> builder =
         Instrumenter.<NatsRequest, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    new NatsRequestMessagingAttributesGetter(),
-                    MessagingOperationType.PROCESS,
-                    PROCESS_OPERATION_NAME))
+                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
                 messagingAttributesExtractor(
-                    MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME, headers))
+                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME, headers))
             .addOperationMetrics(MessagingProcessMetrics.get())
             .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
@@ -80,14 +97,15 @@ public final class NatsInstrumenterFactory {
     return MessagingProcessInstrumenterFactory.create(
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
-        new NatsRequestTextMapGetter(),
-        false);
+        new NatsRequestTextMapGetter());
   }
 
   private static AttributesExtractor<NatsRequest, Object> messagingAttributesExtractor(
-      MessagingOperationType operationType, String operationName, IncludeExclude headers) {
-    return MessagingAttributesExtractor.builder(
-            new NatsRequestMessagingAttributesGetter(), operationType, operationName)
+      NatsRequestMessagingAttributesGetter getter,
+      MessagingOperationType operationType,
+      String operationName,
+      IncludeExclude headers) {
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setHeaders(headers)
         .build();
   }

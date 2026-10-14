@@ -1,13 +1,24 @@
 file_format: 1.1
 
 tracer_provider:
+  sampler:
+    composite/development:
+      rule_based:
+        rules:
+          - attribute_patterns:
+              key: url.path
+              included: ["/actuator*"]
+            sampler:
+              always_off:
+          - sampler:
+              always_on:
   processors:
     - batch:
         schedule_delay: 10
         max_export_batch_size: 1
         exporter:
-          otlp_grpc:
-            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces
 
 # add extra resource attributes to verify that declarative config is picked up
 resource:

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.CHANNEL_AND_METHOD_CONTEXT_KEY;
 import static java.util.Arrays.asList;
 
@@ -58,10 +57,6 @@ public class RabbitInstrumenterHelper {
         channelAndMethod.setHeaders(props.getHeaders());
       }
     }
-  }
-
-  static String normalizeExchangeName(@Nullable String exchange) {
-    return isDefaultExchange(exchange) ? "<default>" : exchange;
   }
 
   static boolean isDefaultExchange(@Nullable String exchange) {
@@ -137,8 +132,7 @@ public class RabbitInstrumenterHelper {
 
     // the publish and settle spans are named by their span name extractor, from the messaging
     // semantic conventions
-    if (!name.equals("basic.publish")
-        && !(emitStableMessagingSemconv() && SETTLE_COMMANDS.contains(name))) {
+    if (!name.equals("basic.publish") && !SETTLE_COMMANDS.contains(name)) {
       span.updateName(name);
     }
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

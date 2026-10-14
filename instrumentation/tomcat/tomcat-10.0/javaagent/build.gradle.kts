@@ -27,9 +27,38 @@ dependencies {
 }
 
 tasks {
-  test {
+  val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.servlet.experimental.request-parameters.included=test-*",
+    )
+  }
+
+  val testUserNameCapture = register<Test>("testUserNameCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*TomcatHandlerTest.capturesUserNameFromPrincipal")
+    }
+    jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
+  }
+
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
+  }
+
+  check {
+    dependsOn(testExperimental, testRequestParameterCapture, testUserNameCapture)
   }
 }
 

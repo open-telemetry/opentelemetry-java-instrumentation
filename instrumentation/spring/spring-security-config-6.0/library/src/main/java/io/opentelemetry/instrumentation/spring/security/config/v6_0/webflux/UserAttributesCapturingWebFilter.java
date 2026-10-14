@@ -43,8 +43,9 @@ public class UserAttributesCapturingWebFilter implements WebFilter {
         .doOnNext(
             t2 ->
                 capturer.captureUserAttributes(
-                    ContextPropagationOperator.getOpenTelemetryContext(
-                        reactor.util.context.Context.of(t2.getT2()), threadLocalOtelContext),
+                    requireNonNull(
+                        ContextPropagationOperator.getOpenTelemetryContext(
+                            reactor.util.context.Context.of(t2.getT2()), threadLocalOtelContext)),
                     t2.getT1().getAuthentication()))
         .then(chain.filter(exchange));
   }

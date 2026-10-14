@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -24,29 +23,16 @@ import org.apache.pulsar.client.api.Message;
 public class SpringPulsarSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-pulsar-1.0";
   private static final String PROCESS_OPERATION_NAME = "process";
-  private static final Instrumenter<Message<?>, Void> instrumenter;
-  private static final Instrumenter<Message<?>, Void> instrumenterWithConsumedMessages;
+  private static final Instrumenter<Message<?>, Void> consumerProcessInstrumenter;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     SpringPulsarMessageAttributesGetter getter = new SpringPulsarMessageAttributesGetter();
-    boolean messagingReceiveInstrumentationEnabled =
-        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
-
-    instrumenter =
-        createInstrumenter(openTelemetry, getter, messagingReceiveInstrumentationEnabled, false);
-    instrumenterWithConsumedMessages =
-        emitStableMessagingSemconv()
-            ? createInstrumenter(
-                openTelemetry, getter, messagingReceiveInstrumentationEnabled, true)
-            : instrumenter;
+    consumerProcessInstrumenter = createInstrumenter(openTelemetry, getter);
   }
 
   private static Instrumenter<Message<?>, Void> createInstrumenter(
-      OpenTelemetry openTelemetry,
-      SpringPulsarMessageAttributesGetter getter,
-      boolean messagingReceiveInstrumentationEnabled,
-      boolean recordConsumedMessages) {
+      OpenTelemetry openTelemetry, SpringPulsarMessageAttributesGetter getter) {
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
     InstrumenterBuilder<Message<?>, Void> builder =
         Instrumenter.<Message<?>, Void>builder(
@@ -58,19 +44,14 @@ public class SpringPulsarSingletons {
                     .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addOperationMetrics(MessagingProcessMetrics.get());
-    if (recordConsumedMessages) {
-      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
-    }
+    builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
-        builder,
-        openTelemetry.getPropagators().getTextMapPropagator(),
-        new MessageHeaderGetter(),
-        messagingReceiveInstrumentationEnabled);
+        builder, openTelemetry.getPropagators().getTextMapPropagator(), new MessageHeaderGetter());
   }
 
-  public static Instrumenter<Message<?>, Void> instrumenter(boolean receiveTelemetryRecorded) {
-    return receiveTelemetryRecorded ? instrumenter : instrumenterWithConsumedMessages;
+  public static Instrumenter<Message<?>, Void> consumerProcessInstrumenter() {
+    return consumerProcessInstrumenter;
   }
 
   private SpringPulsarSingletons() {}

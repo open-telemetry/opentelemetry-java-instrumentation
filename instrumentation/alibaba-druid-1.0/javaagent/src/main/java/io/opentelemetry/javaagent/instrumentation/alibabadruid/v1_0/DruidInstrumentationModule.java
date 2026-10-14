@@ -16,7 +16,7 @@ import java.util.List;
 public class DruidInstrumentationModule extends InstrumentationModule {
 
   public DruidInstrumentationModule() {
-    super("alibaba-druid", "alibaba-druid-1.0");
+    super("alibaba-druid-1.0", "alibaba-druid");
   }
 
   @Override

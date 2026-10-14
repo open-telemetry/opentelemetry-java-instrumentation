@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.net.URI;
+import java.util.List;
 import java.util.function.Consumer;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.messaging.Message;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -19,7 +21,8 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 @SpringBootApplication
 class AwsSqsTestApplication {
   static int sqsPort;
-  static volatile Consumer<String> messageHandler;
+  static volatile Consumer<Message<String>> messageHandler;
+  static volatile Consumer<List<String>> batchMessageHandler;
 
   @Bean
   SqsTemplate sqsTemplate(SqsAsyncClient sqsAsyncClient) {
@@ -37,9 +40,16 @@ class AwsSqsTestApplication {
   }
 
   @SqsListener("test-queue")
-  void receiveStringMessage(String message) {
+  void receiveStringMessage(Message<String> message) {
     if (messageHandler != null) {
       messageHandler.accept(message);
+    }
+  }
+
+  @SqsListener("batch-queue")
+  void receiveBatch(List<String> messages) {
+    if (batchMessageHandler != null) {
+      batchMessageHandler.accept(messages);
     }
   }
 }

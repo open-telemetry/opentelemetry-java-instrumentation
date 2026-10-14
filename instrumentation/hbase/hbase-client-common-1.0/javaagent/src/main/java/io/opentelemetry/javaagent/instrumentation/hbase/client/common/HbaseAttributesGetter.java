@@ -34,21 +34,6 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  public String getDbName(HbaseRequest hbaseRequest) {
-    TableName tableName = hbaseRequest.getTableName();
-    return tableName == null ? null : tableName.getNameAsString();
-  }
-
-  @Nullable
-  @Override
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  public String getUser(HbaseRequest hbaseRequest) {
-    return hbaseRequest.getUser();
-  }
-
-  @Nullable
-  @Override
   public String getDbQueryText(HbaseRequest hbaseRequest) {
     return null;
   }
@@ -69,21 +54,12 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       HbaseRequest request, @Nullable Void unused) {
-    if (request.getHost() == null || request.getPort() == null) {
-      return null;
-    }
-    return InetSocketAddress.createUnresolved(request.getHost(), request.getPort());
+    return request.getNetworkPeerInetSocketAddress();
   }
 
   @Nullable
   @Override
   public String getServerAddress(HbaseRequest request) {
-    return request.getHost();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(HbaseRequest request) {
-    return request.getPort();
+    return request.getServerTarget();
   }
 }

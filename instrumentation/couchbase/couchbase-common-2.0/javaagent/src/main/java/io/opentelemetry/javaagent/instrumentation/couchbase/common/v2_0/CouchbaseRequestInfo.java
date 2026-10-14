@@ -6,13 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0;
 
 import static io.opentelemetry.context.ContextKey.named;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,28 +33,29 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable private String localAddress;
   @Nullable private String operationId;
-  @Nullable private volatile Endpoint endpoint;
+  @Nullable private volatile Node node;
 
   public static CouchbaseRequestInfo create(
-      @Nullable String bucket, Class<?> declaringClass, String methodName) {
+      @Nullable String bucket,
+      @Nullable DbServerTarget serverTarget,
+      Class<?> declaringClass,
+      String methodName) {
     String operation =
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, false, operation, serverTarget);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated old semconv operation
-  public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
-    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
-    SqlQuery sqlQueryWithSummary =
-        emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
-    String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
-    if (operation == null && sqlQueryWithSummary != null) {
-      operation = sqlQueryWithSummary.getOperationName();
-    }
+  public static CouchbaseRequestInfo create(
+      @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
+    String sqlQueryText = CouchbaseQueryText.getSqlQueryText(query);
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, sqlQuery, sqlQueryWithSummary, operation, false);
+        bucket,
+        sqlQueryText != null ? sqlQueryText : CouchbaseQueryText.getNonSqlQueryText(query),
+        sqlQueryText != null,
+        null,
+        serverTarget);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -78,16 +77,17 @@ public abstract class CouchbaseRequestInfo {
   public abstract String getBucket();
 
   @Nullable
-  public abstract SqlQuery getSqlQuery();
+  public abstract String getQueryText();
 
-  @Nullable
-  public abstract SqlQuery getSqlQueryWithSummary();
+  public abstract boolean isSqlQuery();
 
   @Nullable
   public abstract String getOperation();
 
-  public abstract boolean isMethodCall();
+  @Nullable
+  public abstract DbServerTarget getServerTarget();
 
+  // Each subscription needs independent mutable node state.
   public Supplier<CouchbaseRequestInfo> copySupplier() {
     return new Supplier<CouchbaseRequestInfo>() {
       @Override
@@ -99,7 +99,7 @@ public abstract class CouchbaseRequestInfo {
 
   private CouchbaseRequestInfo copy() {
     return new AutoValue_CouchbaseRequestInfo(
-        getBucket(), getSqlQuery(), getSqlQueryWithSummary(), getOperation(), isMethodCall());
+        getBucket(), getQueryText(), isSqlQuery(), getOperation(), getServerTarget());
   }
 
   @Nullable
@@ -121,45 +121,27 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public Endpoint getEndpoint() {
-    return endpoint;
+  public Node getNode() {
+    return node;
   }
 
-  public void setEndpoint(@Nullable SocketAddress peerAddress, String remoteAddress) {
+  public void setNode(@Nullable SocketAddress peerAddress) {
     if (peerAddress == null) {
       return;
     }
-
-    int portSeparator = remoteAddress.lastIndexOf(':');
-    String serverAddress = remoteAddress.substring(0, portSeparator);
-    if (serverAddress.startsWith("[") && serverAddress.endsWith("]")) {
-      serverAddress = serverAddress.substring(1, serverAddress.length() - 1);
-    }
-    int serverPort = Integer.parseInt(remoteAddress.substring(portSeparator + 1));
-    endpoint = new Endpoint(peerAddress, serverAddress, serverPort);
+    node = new Node(peerAddress);
   }
 
-  public static final class Endpoint {
-    private final SocketAddress peerAddress;
-    private final String serverAddress;
-    private final int serverPort;
+  public static final class Node {
 
-    private Endpoint(SocketAddress peerAddress, String serverAddress, int serverPort) {
+    private final SocketAddress peerAddress;
+
+    private Node(SocketAddress peerAddress) {
       this.peerAddress = peerAddress;
-      this.serverAddress = serverAddress;
-      this.serverPort = serverPort;
     }
 
     public SocketAddress getPeerAddress() {
       return peerAddress;
-    }
-
-    public String getServerAddress() {
-      return serverAddress;
-    }
-
-    public int getServerPort() {
-      return serverPort;
     }
   }
 }

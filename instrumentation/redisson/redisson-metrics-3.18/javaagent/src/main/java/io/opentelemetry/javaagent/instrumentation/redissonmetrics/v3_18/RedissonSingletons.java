@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v3_18;
 
-import io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v3_18.RedissonConnectionPoolMetrics;
-import io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v3_18.RedissonConnectionPoolMetrics.ConnectionPoolMetricsSource;
+import io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v2_3.RedissonConnectionPoolMetrics;
+import io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v2_3.RedissonConnectionPoolMetrics.ConnectionPoolMetricsSource;
 import java.util.Collection;
 import org.redisson.client.RedisClient;
 import org.redisson.misc.AsyncSemaphore;

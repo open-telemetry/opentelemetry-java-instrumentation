@@ -13,7 +13,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -135,14 +134,7 @@ abstract class AbstractReactorNettyHttpClientTest
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
-    // unopened port or non routable address
-    if ("http://localhost:61/".equals(uri.toString())
-        || "https://192.0.2.1/".equals(uri.toString())) {
-      attributes.remove(NETWORK_PROTOCOL_VERSION);
-    }
-
     if (uri.getPath().endsWith("/read-timeout")) {
-      attributes.remove(NETWORK_PROTOCOL_VERSION);
       attributes.remove(SERVER_ADDRESS);
       attributes.remove(SERVER_PORT);
     }

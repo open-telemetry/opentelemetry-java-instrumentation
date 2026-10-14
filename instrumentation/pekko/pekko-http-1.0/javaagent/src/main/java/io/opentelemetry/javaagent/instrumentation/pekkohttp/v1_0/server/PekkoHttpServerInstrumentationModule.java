@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class PekkoHttpServerInstrumentationModule extends InstrumentationModule {
   public PekkoHttpServerInstrumentationModule() {
-    super("pekko-http", "pekko-http-1.0", "pekko-http-server");
+    super("pekko-http-1.0", "pekko-http-server", "pekko-http", "pekko");
   }
 
   @Override
@@ -32,9 +32,13 @@ public class PekkoHttpServerInstrumentationModule extends InstrumentationModule 
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new HttpExtServerInstrumentation(),
+        new HttpPrepareAttributesInstrumentation(),
         new HttpServerBluePrintInstrumentation(),
         new GraphInterpreterInstrumentation(),
+        new MessageStartErrorInstrumentation(),
+        new ParsingErrorHandlerInstrumentation(),
         new PekkoHttpServerSourceInstrumentation(),
-        new Http2ExtServerInstrumentation());
+        new Http2ExtServerInstrumentation(),
+        new Http2RequestParsingInstrumentation());
   }
 }

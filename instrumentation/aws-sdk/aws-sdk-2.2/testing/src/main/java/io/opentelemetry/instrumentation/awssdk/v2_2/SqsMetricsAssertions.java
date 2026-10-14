@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -29,15 +28,10 @@ final class SqsMetricsAssertions {
 
   static void assertProducerMetrics(
       InstrumentationExtension testing, int serverPort, long operationCount, long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, operationCount, "send", "send");
     assertMessageCounter(
         testing, "messaging.client.sent.messages", "send", messageCount, serverPort);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertReceiveAndProcessMetrics(
@@ -45,37 +39,23 @@ final class SqsMetricsAssertions {
       int serverPort,
       long receiveOperationCount,
       long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, receiveOperationCount, "receive", "receive");
     assertMessageCounter(
         testing, "messaging.client.consumed.messages", "receive", messageCount, serverPort);
     assertProcessDuration(testing, serverPort, messageCount);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertProcessMetrics(
       InstrumentationExtension testing, int serverPort, long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertMessageCounter(
         testing, "messaging.client.consumed.messages", "process", messageCount, serverPort);
     assertProcessDuration(testing, serverPort, messageCount);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertSettleMetrics(
       InstrumentationExtension testing, int serverPort, long operationCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, operationCount, "delete", "settle");
     // settling messages does not deliver anything to the application
@@ -84,7 +64,6 @@ final class SqsMetricsAssertions {
             metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
         .extracting(MetricData::getName)
         .doesNotContain("messaging.client.consumed.messages");
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   private static void assertClientOperationDuration(
@@ -186,27 +165,6 @@ final class SqsMetricsAssertions {
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, serverPort))
                                             .hasValue(messageCount)))));
-  }
-
-  private static void assertNoMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metric.getName().startsWith("messaging."))
-        .isEmpty();
-  }
-
-  private static void assertNoDeprecatedMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.publish.messages",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   private SqsMetricsAssertions() {}

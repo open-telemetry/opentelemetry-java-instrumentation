@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
@@ -99,16 +98,11 @@ public class AgentStarterImpl implements AgentStarter {
     try {
       loggingCustomizer.init();
       EarlyInitAgentConfig.get().logEarlyConfigErrorsIfAny();
+      ExtensionClassLoader.logExtensionLoadingMessages();
 
       // start cleaner first so weak refs created during bytebuddy install get cleaned up
       WeakConcurrentMapCleaner.start();
       AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader);
-
-      // LazyStorage reads system properties. Initialize it here where we have permissions to avoid
-      // failing permission checks when it is initialized from user code.
-      if (System.getSecurityManager() != null) {
-        Context.current();
-      }
     } catch (Throwable t) {
       // this is logged below and not rethrown to avoid logging it twice
       startupError = t;

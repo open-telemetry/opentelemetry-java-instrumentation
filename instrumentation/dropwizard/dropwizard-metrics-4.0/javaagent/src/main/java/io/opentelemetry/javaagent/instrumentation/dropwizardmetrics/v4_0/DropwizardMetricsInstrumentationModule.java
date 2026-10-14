@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class DropwizardMetricsInstrumentationModule extends InstrumentationModule {
 
   public DropwizardMetricsInstrumentationModule() {
-    super("dropwizard-metrics", "dropwizard-metrics-4.0");
+    super("dropwizard-metrics-4.0", "dropwizard-metrics");
   }
 
   @Override
