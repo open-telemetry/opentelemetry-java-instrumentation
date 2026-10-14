@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -64,8 +63,6 @@ import org.testcontainers.couchbase.CouchbaseService;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient32Test {
-  private static final boolean LEGACY_EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
 
@@ -119,7 +116,7 @@ class CouchbaseClient32Test {
     dispatchAttributes.add(equalTo(DB_SYSTEM_NAME, "couchbase"));
     dispatchAttributes.add(equalTo(DB_NAMESPACE, "test"));
     dispatchAttributes.add(equalTo(DB_COLLECTION_NAME, "_default"));
-    if (emitExperimentalAttributes()) {
+    if (EXPERIMENTAL_TELEMETRY) {
       dispatchAttributes.add(equalTo(stringKey("db.couchbase.document_id"), "id"));
       dispatchAttributes.add(
           satisfies(stringKey("db.couchbase.local_id"), val -> val.isNotBlank()));
@@ -134,7 +131,7 @@ class CouchbaseClient32Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, seedPort));
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   assertOperationSpan(
@@ -146,7 +143,7 @@ class CouchbaseClient32Test {
                 },
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(dispatchAttributes));
           } else {
@@ -169,19 +166,17 @@ class CouchbaseClient32Test {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   assertOperationSpan(span, "upsert", "async-id", StatusData.unset());
                   span.hasNoParent();
                 },
                 span ->
-                    span.hasName("request_encoding")
-                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
-                        .hasParent(trace.getSpan(0)),
+                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasKind(v3Preview() ? INTERNAL : testLatestDeps() ? CLIENT : INTERNAL)
+                        .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0)));
           } else {
             trace.hasSpansSatisfyingExactly(
@@ -244,7 +239,7 @@ class CouchbaseClient32Test {
 
   private static void assertOperationSpan(
       SpanDataAssert span, String operation, String documentId, StatusData status) {
-    span.hasKind(v3Preview() || testLatestDeps() ? CLIENT : INTERNAL)
+    span.hasKind(CLIENT)
         .hasName(operation + " _default")
         .hasStatus(status)
         .hasAttributesSatisfyingExactly(
@@ -260,15 +255,7 @@ class CouchbaseClient32Test {
             equalTo(SERVER_PORT, (long) seedPort));
   }
 
-  private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
-  }
-
-  private static boolean emitExperimentalAttributes() {
-    return EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
-  }
-
   private static <T> T experimental(T value) {
-    return emitExperimentalAttributes() ? value : null;
+    return EXPERIMENTAL_TELEMETRY ? value : null;
   }
 }

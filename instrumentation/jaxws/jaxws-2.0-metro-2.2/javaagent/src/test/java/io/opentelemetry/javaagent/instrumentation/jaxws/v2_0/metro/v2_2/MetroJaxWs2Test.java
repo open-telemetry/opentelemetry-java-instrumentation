@@ -7,4 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.metro.v2_2;
 
 import io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.AbstractJaxWs2Test;
 
-class MetroJaxWs2Test extends AbstractJaxWs2Test {}
+class MetroJaxWs2Test extends AbstractJaxWs2Test {
+
+  @Override
+  protected String expectedScopeName() {
+    return "io.opentelemetry.jaxws-2.0-metro-2.2";
+  }
+}

@@ -35,6 +35,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
 
+  private static final boolean REQUEST_PARAMETER_CAPTURE_ENABLED =
+      System.getProperty("otel.instrumentation.servlet.experimental.request-parameters.included")
+              != null
+          || System.getProperty(
+                  "otel.instrumentation.servlet.experimental.request-parameters.excluded")
+              != null;
+
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   public static final ServerEndpoint HTML_PRINT_WRITER =
@@ -72,6 +79,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestCaptureRequestParameters(true);
+    options.setExpectCapturedRequestParameters(!isAgentTest() || REQUEST_PARAMETER_CAPTURE_ENABLED);
     if (isAgentTest()) {
       options.setHasResponseCustomizer(e -> true);
       options.setHasResponseSpan(this::hasResponseSpan);

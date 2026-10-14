@@ -72,7 +72,6 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
 
     if (name != "testDisabled") {
       jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")

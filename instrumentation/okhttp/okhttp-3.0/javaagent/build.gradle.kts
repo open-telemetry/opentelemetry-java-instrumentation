@@ -38,10 +38,6 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
       register<Test>("${suite.name}PreviewSemconv") {

@@ -30,7 +30,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testPropagationDisabled = register<Test>("testPropagationDisabled") {
@@ -53,6 +52,14 @@ tasks {
     include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+  }
+
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -62,7 +69,6 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    // kafka metrics are disabled by default with v3-preview enabled
     jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
@@ -77,6 +83,7 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
 
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
@@ -87,10 +94,12 @@ tasks {
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
   }
 
   check {
     dependsOn(
+      testDisabled,
       testPropagationDisabled,
       testReceiveSpansDisabled,
       testV3Preview,

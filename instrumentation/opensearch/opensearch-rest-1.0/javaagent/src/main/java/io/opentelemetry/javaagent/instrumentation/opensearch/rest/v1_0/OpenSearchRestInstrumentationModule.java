@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class OpenSearchRestInstrumentationModule extends InstrumentationModule {
   public OpenSearchRestInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "opensearch-rest-1.0" : "opensearch-rest",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opensearch-rest", "opensearch"}
-            : new String[] {"opensearch-rest-1.0", "opensearch"});
+    super("opensearch-rest-1.0", "opensearch-rest", "opensearch");
   }
 
   @Override

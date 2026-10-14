@@ -6,11 +6,13 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -19,12 +21,15 @@ import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
@@ -100,12 +105,41 @@ class OpenTelemetryConsumerInterceptorTest {
     TopicPartition partition = new TopicPartition(topic, 0);
     ConsumerRecord<String, String> record = new ConsumerRecord<>(topic, 0, 0, "key", "value");
     ConsumerRecords<String, String> records =
-        new ConsumerRecords<>(singletonMap(partition, singletonList(record)));
+        records(singletonMap(partition, singletonList(record)));
 
     ConsumerRecords<String, String> tracedRecords = firstInterceptor.onConsume(records);
     secondInterceptor.onConsume(tracedRecords);
 
     assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-clients-2.6", 1);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void preservesNextOffsets() throws ReflectiveOperationException {
+    assumeTrue(testLatestDeps());
+
+    OpenTelemetryConsumerInterceptor<String, String> interceptor =
+        new OpenTelemetryConsumerInterceptor<>();
+    interceptor.configure(consumerConfig());
+
+    TopicPartition partition = new TopicPartition("test", 0);
+    ConsumerRecord<String, String> record = new ConsumerRecord<>("test", 0, 7, "key", "value");
+    Map<TopicPartition, OffsetAndMetadata> nextOffsets = new HashMap<>();
+    nextOffsets.put(partition, new OffsetAndMetadata(42, Optional.of(3), "metadata"));
+    nextOffsets.put(
+        new TopicPartition("test", 1), new OffsetAndMetadata(27, Optional.of(4), "other-metadata"));
+    ConsumerRecords<String, String> records =
+        (ConsumerRecords<String, String>)
+            ConsumerRecords.class
+                .getConstructor(Map.class, Map.class)
+                .newInstance(singletonMap(partition, singletonList(record)), nextOffsets);
+
+    ConsumerRecords<String, String> tracedRecords = interceptor.onConsume(records);
+
+    assertThat(tracedRecords).isNotSameAs(records);
+    assertThat(tracedRecords.records(partition)).containsExactly(record);
+    assertThat(ConsumerRecords.class.getMethod("nextOffsets").invoke(tracedRecords))
+        .isEqualTo(nextOffsets);
   }
 
   @Test
@@ -127,7 +161,7 @@ class OpenTelemetryConsumerInterceptorTest {
     TopicPartition partition = new TopicPartition(topic, 0);
     ConsumerRecord<String, String> record = new ConsumerRecord<>(topic, 0, 0, "key", "value");
     ConsumerRecords<String, String> records =
-        new ConsumerRecords<>(singletonMap(partition, singletonList(record)));
+        records(singletonMap(partition, singletonList(record)));
 
     Context receiveContext;
     Context inheritedContext =
@@ -138,5 +172,11 @@ class OpenTelemetryConsumerInterceptorTest {
     }
 
     assertThat(KafkaConsumerContextUtil.hasReceiveOperation(receiveContext)).isFalse();
+  }
+
+  @SuppressWarnings("removal")
+  private static <K, V> ConsumerRecords<K, V> records(
+      Map<TopicPartition, List<ConsumerRecord<K, V>>> recordsByPartition) {
+    return new ConsumerRecords<>(recordsByPartition);
   }
 }

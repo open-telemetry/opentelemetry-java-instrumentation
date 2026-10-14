@@ -139,7 +139,7 @@ class TomcatJdbcInstrumentationTest {
   private static void assertConnectionPoolMetrics(String poolName) {
     assertThat(poolName).isNotEmpty();
 
-    DbConnectionPoolMetricsAssertions.create(testing, "io.opentelemetry.tomcat-jdbc", poolName)
+    DbConnectionPoolMetricsAssertions.create(testing, "io.opentelemetry.tomcat-jdbc-8.5", poolName)
         // no timeouts happen during this test
         .disableConnectionTimeouts()
         .disableCreateTime()
@@ -150,23 +150,23 @@ class TomcatJdbcInstrumentationTest {
 
   private static void assertNoConnectionPoolMetrics() {
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
+        "io.opentelemetry.tomcat-jdbc-8.5",
         "db.client.connection.count",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
+        "io.opentelemetry.tomcat-jdbc-8.5",
         "db.client.connection.idle.min",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
+        "io.opentelemetry.tomcat-jdbc-8.5",
         "db.client.connection.idle.max",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
+        "io.opentelemetry.tomcat-jdbc-8.5",
         "db.client.connection.limit",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
+        "io.opentelemetry.tomcat-jdbc-8.5",
         "db.client.connection.pending_requests",
         AbstractIterableAssert::isEmpty);
   }

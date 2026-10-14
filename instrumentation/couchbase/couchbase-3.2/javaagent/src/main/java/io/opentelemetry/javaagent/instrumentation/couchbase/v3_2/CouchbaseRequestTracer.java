@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -34,7 +32,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   private final CouchbaseTracer tracer;
 
-  public static RequestTracer create(OpenTelemetry openTelemetry, boolean clientSpans) {
+  public static RequestTracer create(OpenTelemetry openTelemetry) {
     return new CouchbaseRequestTracer(
         new CouchbaseTracer(
             openTelemetry
@@ -42,7 +40,6 @@ public final class CouchbaseRequestTracer implements RequestTracer {
                 .setSchemaUrl(SchemaUrls.V1_44_0)
                 .build(),
             true,
-            clientSpans ? CLIENT : INTERNAL,
             false,
             false));
   }
