@@ -50,9 +50,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
-// is resolved.
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 class ChatTest extends AbstractChatTest {
 
   @RegisterExtension
