@@ -21,11 +21,16 @@
   | `annotations` | `opentelemetry-instrumentation-annotations` |
   | `armeria-1.14` | `armeria-grpc-1.14` for gRPC; `armeria` for the component |
   | `aws-lambda-core`, `aws-lambda-events` | `aws-lambda-core-1.0`, `aws-lambda-events-2.2`, respectively |
-  | `aws-sdk-1.11-core`, `aws-sdk-1.11-sqs` | `aws-sdk-1.11` |
-  | `aws-sdk-2.2-core`, `aws-sdk-2.2-bedrock-runtime`, `aws-sdk-2.2-lambda`, `aws-sdk-2.2-sns`, `aws-sdk-2.2-sqs` | `aws-sdk-2.2` |
+  | `aws-sdk-1.11-core` | `aws-sdk-1.11` |
+  | `aws-sdk-1.11-sqs` | `aws-sdk-sqs` |
+  | `aws-sdk-2.2-core` | `aws-sdk-2.2` |
+  | `aws-sdk-2.2-bedrock-runtime` | `aws-sdk-bedrock-runtime` |
+  | `aws-sdk-2.2-lambda` | `aws-sdk-lambda` |
+  | `aws-sdk-2.2-sns` | `aws-sdk-sns` |
+  | `aws-sdk-2.2-sqs` | `aws-sdk-sqs` |
   | `axis2`, `axis2-1.6` | `jaxws-2.0-axis2-1.6` |
-  | `camel-sjms` | `camel-2.20` |
-  | `clickhouse` | `clickhouse-client-v1-0.5` and/or `clickhouse-client-v2-0.8` |
+  | `camel-sjms` | `camel-jms` |
+  | `clickhouse` | `clickhouse-client` |
   | `couchbase-2.0-core`, `couchbase-2.0-network`, `couchbase-network-2.0`, `couchbase-2.6` | `couchbase-2.0` |
   | `couchbase-3.1.6` | `couchbase-3.1` |
   | `couchbase-3.2-core`, `couchbase-3.4`, `couchbase-3.4.3-protostellar` | `couchbase-3.2` |
