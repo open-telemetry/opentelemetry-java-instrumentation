@@ -4,9 +4,9 @@
 
 ### ⚠️ Breaking changes
 
-- GenAI message events from AWS Bedrock Runtime and OpenAI omit the body when no fields remain,
-  instead of emitting an empty object. Consumers should handle an absent body, for example when
-  message content capture is disabled.
+- GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
+  remain, instead of emitting an empty object. Consumers should handle an absent body, for example
+  when message content capture is disabled.
 - Process command resource attributes are now disabled by default. Set
   `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
