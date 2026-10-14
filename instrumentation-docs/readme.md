@@ -54,23 +54,19 @@ Enabling a whole default-off instrumentation is also setup; `disabled_by_default
 requirement. Include span suppression settings only when they determine this instrumentation's
 telemetry, not merely spans from other instrumentation in the test trace.
 
-Pass through `otelProps.collectMetadata` on collected tasks. Register representative tasks in
+Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
+Register representative tasks in
 `.github/scripts/instrumentations.sh` covering each profile's instrumentation scope and telemetry
 shape; equivalent suites need not all collect. Exclude unit tests and regression-only
 disablement, adapter-fallback, or classpath compatibility variants based on their purpose, not their
 names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a suppression-only
 regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
-If an excluded task inherits collection, override it with `systemProperty("collectMetadata", false)`;
-removing its label alone would collect its telemetry as `default`.
+Keep `metadataConfig` labels on the tasks that document non-default telemetry.
 
 For a module collecting its default profile and an RPC preview profile:
 
 ```kotlin
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -84,9 +80,6 @@ tasks {
   }
 }
 ```
-
-Share collection wiring when multiple tasks collect telemetry, as above. For a module with only
-the default test task, put the pass-through in `tasks.test`.
 
 Generate `.telemetry` files with the selected tasks, then run the analyzer. Running `test` alone
 does not execute a separately registered variant:

@@ -38,7 +38,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
@@ -57,7 +56,6 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
-    systemProperty("collectMetadata", false)
   }
 
   check {

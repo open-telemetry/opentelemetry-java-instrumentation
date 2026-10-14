@@ -17,9 +17,3 @@ dependencies {
   implementation(project(":instrumentation:jdbc:javaagent-common"))
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-}

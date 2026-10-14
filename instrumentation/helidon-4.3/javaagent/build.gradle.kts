@@ -23,7 +23,3 @@ dependencies {
   implementation(project(":instrumentation:helidon-4.3:library"))
   testImplementation(project(":instrumentation:helidon-4.3:testing"))
 }
-
-tasks.test {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}

@@ -21,9 +21,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-}
