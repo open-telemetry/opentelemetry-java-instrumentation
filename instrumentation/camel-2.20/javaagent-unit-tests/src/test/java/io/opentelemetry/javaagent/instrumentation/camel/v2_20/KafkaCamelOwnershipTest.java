@@ -13,6 +13,8 @@ import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil;
+import java.util.List;
+import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -28,7 +30,7 @@ class KafkaCamelOwnershipTest {
     KafkaConsumer<?, ?> consumer = mock(KafkaConsumer.class);
     ConsumerRecord<String, String> record = new ConsumerRecord<>("test", 0, 0, "key", "value");
     ConsumerRecords<?, ?> records =
-        new ConsumerRecords<>(singletonMap(new TopicPartition("test", 0), singletonList(record)));
+        records(singletonMap(new TopicPartition("test", 0), singletonList(record)));
     KafkaProcessingOwnershipUtil.recordPoll(records, true);
     if (camelConsumer) {
       KafkaFetchRecordsInstrumentation.MarkConsumerAdvice.onEnter(consumer);
@@ -42,5 +44,11 @@ class KafkaCamelOwnershipTest {
         .isEqualTo(!camelConsumer || !emitStableMessagingSemconv());
     assertThat(KafkaConsumerContextUtil.getRawProcessingEligibility(record).getAsBoolean())
         .isEqualTo(!camelConsumer || !emitStableMessagingSemconv());
+  }
+
+  @SuppressWarnings("removal")
+  private static <K, V> ConsumerRecords<K, V> records(
+      Map<TopicPartition, List<ConsumerRecord<K, V>>> recordsByPartition) {
+    return new ConsumerRecords<>(recordsByPartition);
   }
 }
