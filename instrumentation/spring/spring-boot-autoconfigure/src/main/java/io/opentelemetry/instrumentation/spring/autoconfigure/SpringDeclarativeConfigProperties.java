@@ -79,10 +79,7 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
   @Override
   public Integer getInt(String name) {
     Long value = getLong(name);
-    if (value == null || value < Integer.MIN_VALUE || value > Integer.MAX_VALUE) {
-      return null;
-    }
-    return value.intValue();
+    return value == null ? null : value.intValue();
   }
 
   @Nullable
@@ -207,13 +204,7 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Nullable
   private static Boolean parseBoolean(@Nullable String value) {
-    if ("true".equalsIgnoreCase(value)) {
-      return true;
-    }
-    if ("false".equalsIgnoreCase(value)) {
-      return false;
-    }
-    return null;
+    return value == null ? null : Boolean.parseBoolean(value);
   }
 
   @Nullable

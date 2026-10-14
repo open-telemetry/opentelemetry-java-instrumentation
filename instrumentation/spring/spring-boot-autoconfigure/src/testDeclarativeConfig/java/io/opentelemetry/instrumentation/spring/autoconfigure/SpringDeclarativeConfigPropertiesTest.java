@@ -158,7 +158,8 @@ class SpringDeclarativeConfigPropertiesTest {
     assertThat(config.getDouble("int")).isEqualTo(42.0);
     assertThat(config.getDouble("double")).isEqualTo(3.14);
 
-    assertThat(config.getBoolean("text")).isNull();
+    // Boolean.parseBoolean rules: anything other than "true" is false
+    assertThat(config.getBoolean("text")).isFalse();
     assertThat(config.getInt("text")).isNull();
     assertThat(config.getLong("double")).isNull();
     assertThat(config.getDouble("text")).isNull();
@@ -167,7 +168,7 @@ class SpringDeclarativeConfigPropertiesTest {
     assertThat(config.isInt("int")).isTrue();
     assertThat(config.isLong("int")).isTrue();
     assertThat(config.isDouble("int")).isTrue();
-    assertThat(config.isBoolean("text")).isFalse();
+    assertThat(config.isBoolean("text")).isTrue();
     assertThat(config.isInt("text")).isFalse();
   }
 
@@ -183,9 +184,9 @@ class SpringDeclarativeConfigPropertiesTest {
     assertThat(config.getDouble("int")).isEqualTo(42.0);
     assertThat(config.getDouble("long")).isEqualTo(5_000_000_000.0);
     assertThat(config.getLong("long")).isEqualTo(5_000_000_000L);
-    // out of int range is not narrowed
-    assertThat(config.getInt("long")).isNull();
-    assertThat(config.isInt("long")).isFalse();
+    // narrowed with Long.intValue()
+    assertThat(config.getInt("long")).isEqualTo((int) 5_000_000_000L);
+    assertThat(config.isInt("long")).isTrue();
     assertThat(config.getBoolean("int")).isNull();
     assertThat(config.getLong("double")).isNull();
   }
@@ -211,7 +212,7 @@ class SpringDeclarativeConfigPropertiesTest {
     properties.put("typed", asList(1, 2L, 3.5));
     properties.put("mixed", asList("1", "x"));
     properties.put("words", singletonList("x"));
-    properties.put("flags", asList("true", false));
+    properties.put("flags", asList("true", false, "x"));
     properties.put("empty", emptyList());
     DeclarativeConfigProperties config =
         SpringDeclarativeConfigProperties.create(properties, componentLoader);
@@ -220,7 +221,7 @@ class SpringDeclarativeConfigPropertiesTest {
     assertThat(config.getScalarList("numbers", Double.class)).containsExactly(1.0, 2.0);
     assertThat(config.getScalarList("typed", Double.class)).containsExactly(1.0, 2.0, 3.5);
     assertThat(config.getScalarList("typed", Long.class)).containsExactly(1L, 2L);
-    assertThat(config.getScalarList("flags", Boolean.class)).containsExactly(true, false);
+    assertThat(config.getScalarList("flags", Boolean.class)).containsExactly(true, false, false);
     // elements which cannot be converted are dropped, and an all-dropped list is null
     assertThat(config.getScalarList("mixed", Long.class)).containsExactly(1L);
     assertThat(config.getScalarList("words", Long.class)).isNull();
