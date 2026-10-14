@@ -37,8 +37,6 @@ otelJava {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
