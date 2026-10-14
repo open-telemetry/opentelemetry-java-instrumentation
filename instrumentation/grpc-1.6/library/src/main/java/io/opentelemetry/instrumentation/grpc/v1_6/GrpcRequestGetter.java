@@ -15,6 +15,8 @@ import javax.annotation.Nullable;
 
 final class GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
 
+  static final GrpcRequestGetter INSTANCE = new GrpcRequestGetter();
+
   @Override
   public Iterable<String> keys(GrpcRequest request) {
     // Filter out HTTP/2 pseudo-headers (starting with ':') as they cannot be

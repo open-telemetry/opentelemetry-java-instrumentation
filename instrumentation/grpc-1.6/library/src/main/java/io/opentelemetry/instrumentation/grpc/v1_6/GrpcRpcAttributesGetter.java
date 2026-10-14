@@ -25,7 +25,7 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   @Override
   @Nullable
   public String getService(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
+    String fullMethodName = request.getFullMethodName();
     int slashIndex = fullMethodName.lastIndexOf('/');
     if (slashIndex == -1) {
       return null;
@@ -37,7 +37,7 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   @Override
   @Nullable
   public String getMethod(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
+    String fullMethodName = request.getFullMethodName();
     int slashIndex = fullMethodName.lastIndexOf('/');
     if (slashIndex == -1) {
       return null;
@@ -47,7 +47,7 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
 
   @Override
   public String getRpcMethod(GrpcRequest request) {
-    return request.getMethod().getFullMethodName();
+    return request.getFullMethodName();
   }
 
   @Override
@@ -60,6 +60,12 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   @Nullable
   public Long getResponseSize(GrpcRequest request) {
     return request.getResponseSize();
+  }
+
+  @Override
+  @Nullable
+  public String getRpcMethodOriginal(GrpcRequest request) {
+    return request.getOriginalFullMethodName();
   }
 
   List<String> metadataValue(GrpcRequest request, String key) {
