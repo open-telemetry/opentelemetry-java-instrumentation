@@ -219,7 +219,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         captureMessageContent
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(new KeyValue[] {})),
+                            : Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
