@@ -65,7 +65,6 @@ tasks {
     .matching { it.name != "unitTests" }
     .configureEach {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-      systemProperty("collectMetadata", otelProps.collectMetadata)
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
 
