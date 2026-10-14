@@ -57,7 +57,6 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
-    systemProperty("collectMetadata", false)
   }
 
   check {
