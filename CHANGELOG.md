@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Process command resource attributes are now disabled by default. Set
+  `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
+  `process.command_args` and `process.command_line`.
 - Declarative Java agent instrumentation selectors no longer accept dotted-version compatibility
   spellings. In `distribution.javaagent.instrumentation.enabled` and `.disabled`, replace
   selectors such as `reactor_3.1` with `reactor_3_1`.
