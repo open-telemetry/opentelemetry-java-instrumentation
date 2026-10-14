@@ -312,7 +312,7 @@ readonly INSTRUMENTATIONS=(
   "tomcat:tomcat-7.0:javaagent:test"
   "tomcat:tomcat-7.0:javaagent:testRequestParameterCapture"
   "tomcat:tomcat-10.0:javaagent:test"
-  "tomcat:tomcat-10.0:javaagent:testExperimental"
+  "tomcat:tomcat-10.0:javaagent:testRequestParameterCapture"
   "tomcat:tomcat-10.0:javaagent:testUserNameCapture"
   "tomcat:tomcat-dbcp-8.0:javaagent:test"
   "tomcat:tomcat-jdbc-8.5:javaagent:test"
