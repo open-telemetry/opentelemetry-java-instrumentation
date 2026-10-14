@@ -36,7 +36,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")

@@ -19,16 +19,32 @@ attributes, optional metrics, and semantic convention selection.
 | Document supported non-default telemetry | Yes                | Relevant non-default `key=value` settings |
 | Unit tests or regression-only variants   | No                 | Unset                                     |
 
-For javaagent tests, keep baseline suites on instrumentation defaults. Test opt-in telemetry
-in named variants wired into `check`. Preserve normal suite coverage; filtered metadata-collection
-tests are not a substitute.
+For javaagent tests, keep baseline suites on instrumentation defaults, apart from the HTTP and
+messaging header-capture settings injected by the shared test exporter suppliers below. Do not
+require empty overrides, separate capture variants, or `metadataConfig` conditions solely for this
+inherited setup. Module-specific capture overrides and other non-default telemetry settings remain
+subject to the normal profile rules. Test opt-in telemetry in named variants wired into `check`.
+Preserve normal suite coverage; filtered metadata-collection tests are not a substitute.
+
+| Property | Synthetic selector |
+| -------- | ------------------ |
+| `otel.instrumentation.http.client.capture-request-headers` | `X-Test-Request` |
+| `otel.instrumentation.http.client.capture-response-headers` | `X-Test-Response` |
+| `otel.instrumentation.http.server.capture-request-headers` | `X-Test-Request` |
+| `otel.instrumentation.http.server.capture-response-headers` | `X-Test-Response` |
+| `otel.instrumentation.common.messaging.headers.included` | `Test-Message-Header`, `Test-Message-Int-Header`, `Test_Message_Header`, `Test_Message_Int_Header` |
+
+These synthetic selectors are test-only, not production defaults. Their attributes may appear in raw
+`.telemetry` files under `when: default`, but the analyzer excludes them from generated telemetry
+inventories.
 
 `metadataConfig` labels output; it does not configure instrumentation or enable collection.
 An absent or empty label records telemetry under `when: default`. Default means instrumentation
-defaults, not the task name or settings on `test`. The generator merges telemetry with the same label.
+defaults, not the task name or settings on `test`; the shared synthetic header capture above is the
+exception for baseline javaagent suites. The generator merges telemetry with the same label.
 Include only non-default user-facing settings needed to describe this instrumentation's signals,
-span kinds, attributes, metrics, or events, including inherited, fixture, and library-builder settings.
-Split or filter collected tasks that would mix profiles under one label.
+span kinds, attributes, metrics, or events, including inherited, fixture, and library-builder settings,
+except for that shared capture. Split or filter collected tasks that would mix profiles under one label.
 Use comma-separated flat `key=value` conditions without `-D`, with consistent spelling and ordering
 for the same mode. Apply settings separately through JVM properties or library APIs.
 Label non-default metric selectors, not Java source-set names; document runtime prerequisites separately.
@@ -38,23 +54,19 @@ Enabling a whole default-off instrumentation is also setup; `disabled_by_default
 requirement. Include span suppression settings only when they determine this instrumentation's
 telemetry, not merely spans from other instrumentation in the test trace.
 
-Pass through `otelProps.collectMetadata` on collected tasks. Register representative tasks in
+Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
+Register representative tasks in
 `.github/scripts/instrumentations.sh` covering each profile's instrumentation scope and telemetry
 shape; equivalent suites need not all collect. Exclude unit tests and regression-only
 disablement, adapter-fallback, or classpath compatibility variants based on their purpose, not their
 names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a suppression-only
 regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
-If an excluded task inherits collection, override it with `systemProperty("collectMetadata", false)`;
-removing its label alone would collect its telemetry as `default`.
+Keep `metadataConfig` labels on the tasks that document non-default telemetry.
 
 For a module collecting its default profile and an RPC preview profile:
 
 ```kotlin
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -68,9 +80,6 @@ tasks {
   }
 }
 ```
-
-Share collection wiring when multiple tasks collect telemetry, as above. For a module with only
-the default test task, put the pass-through in `tasks.test`.
 
 Generate `.telemetry` files with the selected tasks, then run the analyzer. Running `test` alone
 does not execute a separately registered variant:
@@ -442,7 +451,8 @@ Telemetry only reaches the generated list for test tasks listed in
 `.github/scripts/instrumentations.sh` during automated collection. The analyzer also reads
 `.telemetry` files generated by local runs. Choose tasks and labels according to the
 [telemetry collection convention](#telemetry-collection); a missing label records telemetry
-under `when: default`, even if the task uses a non-default telemetry option.
+under `when: default`, including for the shared synthetic header capture above. Label other
+non-default telemetry options accordingly.
 The exception events, for example, are collected by the
 `testExceptionSignalLogs` tasks, which set
 `metadataConfig` to `otel.semconv.exception.signal.preview=logs`.

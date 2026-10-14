@@ -32,8 +32,6 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {

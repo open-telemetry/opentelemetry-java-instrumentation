@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.rules;
+package io.opentelemetry.instrumentation.jmx.rules.containers;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
@@ -12,6 +12,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
+import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.time.Duration;
 import java.util.ArrayList;

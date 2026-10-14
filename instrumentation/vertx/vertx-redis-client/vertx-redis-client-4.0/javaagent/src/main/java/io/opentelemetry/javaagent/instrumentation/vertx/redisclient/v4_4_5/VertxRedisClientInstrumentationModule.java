@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
 
   public VertxRedisClientInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "vertx-redis-client-4.0" : "vertx-redis-client",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"vertx-redis-client", "vertx"}
-            : new String[] {"vertx-redis-client-4.0", "vertx-redis-client-4.4.5", "vertx"});
+    super("vertx-redis-client-4.0", "vertx-redis-client", "vertx");
   }
 
   @Override

@@ -319,6 +319,13 @@ public final class AgentInitializer {
     int slashIndex = first.indexOf('/');
     String name = slashIndex == -1 ? first : first.substring(0, slashIndex);
 
+    // java HelloWorld.java runs the application through the source launcher
+    String mainClass = slashIndex == -1 ? first : first.substring(slashIndex + 1);
+    if (mainClass.equals("com.sun.tools.javac.launcher.Main")
+        || mainClass.equals("com.sun.tools.javac.launcher.SourceLauncher")) {
+      return false;
+    }
+
     return name.startsWith("java.")
         || name.startsWith("jdk.")
         || name.startsWith("sun.")

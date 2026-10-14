@@ -21,9 +21,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-}

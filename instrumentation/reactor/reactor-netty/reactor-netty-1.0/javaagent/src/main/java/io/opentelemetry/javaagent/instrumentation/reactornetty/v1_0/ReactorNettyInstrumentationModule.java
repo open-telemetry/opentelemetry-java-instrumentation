@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -29,11 +28,7 @@ import reactor.netty.http.client.HttpClient;
 public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "reactor-netty-1.0" : "reactor-netty",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"reactor-netty"}
-            : new String[] {"reactor-netty-1.0"});
+    super("reactor-netty-1.0", "reactor-netty");
   }
 
   @Override
