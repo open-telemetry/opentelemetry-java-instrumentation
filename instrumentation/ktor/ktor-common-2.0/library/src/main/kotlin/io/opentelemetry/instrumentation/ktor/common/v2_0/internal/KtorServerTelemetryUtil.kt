@@ -18,8 +18,8 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorServerTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.common.v2_0.ApplicationRequestGetter
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -46,7 +46,7 @@ object KtorServerTelemetryUtil {
       if (context != null) {
         call.attributes.put(contextKey, context)
         val dispatcher = coroutineContext[ContinuationInterceptor] as? CoroutineDispatcher
-        val extra = if (dispatcher != null) EmptyInterceptor(dispatcher) else EmptyCoroutineContext
+        val extra = if (dispatcher != null) ContextRestoringDispatcher(dispatcher) else EmptyCoroutineContext
         withContext(context.asContextElement() + extra) {
           proceed()
         }
@@ -94,21 +94,16 @@ object KtorServerTelemetryUtil {
     builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
   )
 
-  // A no-op ContinuationInterceptor. There seems to be a bug in Ktor where when propagate otel
-  // context by using withContext(context.asContextElement()) updateThreadContext, that activates
-  // the otel scope, gets called in
-  // https://github.com/open-telemetry/opentelemetry-java/blob/main/extensions/kotlin/src/main/java/io/opentelemetry/extension/kotlin/KotlinContextElement.java
-  // but the restoreThreadContext is not always called, which causes the otel context to leak across
-  // requests. This issue can be worked around by adding -Dio.ktor.internal.disable.sfg=true to jvm
-  // arguments. Adding this no-op interceptor seems to also work around the issue.
+  // A different interceptor forces withContext to restore thread context on older Ktor versions.
+  // Keep it a dispatcher so Ktor 3.4.3+ can apply its own SuspendFunctionGun context leak fix.
   // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
-  private class EmptyInterceptor(val dispatcher: CoroutineDispatcher) : ContinuationInterceptor {
-    override val key: CoroutineContext.Key<*> = ContinuationInterceptor
+  // and https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20496
+  private class ContextRestoringDispatcher(private val dispatcher: CoroutineDispatcher) : CoroutineDispatcher() {
+    override fun isDispatchNeeded(context: CoroutineContext): Boolean = dispatcher.isDispatchNeeded(context)
 
-    override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = dispatcher.interceptContinuation(continuation)
+    override fun dispatch(context: CoroutineContext, block: Runnable) = dispatcher.dispatch(context, block)
 
-    override fun releaseInterceptedContinuation(continuation: Continuation<*>) {
-      dispatcher.releaseInterceptedContinuation(continuation)
-    }
+    @OptIn(InternalCoroutinesApi::class)
+    override fun dispatchYield(context: CoroutineContext, block: Runnable) = dispatcher.dispatchYield(context, block)
   }
 }

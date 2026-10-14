@@ -32,9 +32,28 @@ kotlin {
   }
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("version343Test") {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+        val version = baseVersion("3.4.3").orLatest("+")
+        implementation("io.ktor:ktor-server-netty:$version")
+        implementation("io.ktor:ktor-client-cio:$version")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  named<Test>("version343Test") {
+    systemProperty("collectMetadata", false)
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -54,6 +73,6 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testPreviewSemconv)
+    dependsOn(testing.suites, testExperimental, testPreviewSemconv)
   }
 }
