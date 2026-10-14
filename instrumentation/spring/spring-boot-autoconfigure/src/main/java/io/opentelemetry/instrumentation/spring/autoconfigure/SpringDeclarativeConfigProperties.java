@@ -38,7 +38,10 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   private final DeclarativeConfigProperties delegate;
 
-  /** The values {@link #delegate} was created from, read only for scalar list elements. */
+  /**
+   * The values {@link #delegate} was created from, read for scalar list elements and nested values.
+   * Callers pass a freshly built map and do not modify it afterwards.
+   */
   private final Map<String, Object> properties;
 
   static SpringDeclarativeConfigProperties create(
