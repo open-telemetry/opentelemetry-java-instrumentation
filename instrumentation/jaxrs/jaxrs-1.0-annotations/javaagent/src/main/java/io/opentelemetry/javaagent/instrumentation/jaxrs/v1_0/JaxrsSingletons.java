@@ -15,17 +15,19 @@ class JaxrsSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxrs-1.0-annotations";
 
-  private static final JaxrsCodeAttributesGetter codeAttributesGetter =
-      new JaxrsCodeAttributesGetter();
+  private static final Instrumenter<HandlerData, Void> instrumenter;
 
-  private static final Instrumenter<HandlerData, Void> instrumenter =
-      Instrumenter.<HandlerData, Void>builder(
-              GlobalOpenTelemetry.get(),
-              INSTRUMENTATION_NAME,
-              CodeSpanNameExtractor.create(codeAttributesGetter))
-          .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-          .buildInstrumenter();
+  static {
+    JaxrsCodeAttributesGetter codeAttributesGetter = new JaxrsCodeAttributesGetter();
+    instrumenter =
+        Instrumenter.<HandlerData, Void>builder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .buildInstrumenter();
+  }
 
   static Instrumenter<HandlerData, Void> instrumenter() {
     return instrumenter;
