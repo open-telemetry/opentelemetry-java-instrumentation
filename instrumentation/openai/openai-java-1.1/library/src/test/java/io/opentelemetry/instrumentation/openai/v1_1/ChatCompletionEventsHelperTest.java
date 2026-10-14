@@ -27,8 +27,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
-// is resolved.
+// TODO: Remove this deprecation suppression after
+// https://github.com/open-telemetry/semantic-conventions-genai/issues/247 is resolved.
 @SuppressWarnings("deprecation")
 class ChatCompletionEventsHelperTest {
 

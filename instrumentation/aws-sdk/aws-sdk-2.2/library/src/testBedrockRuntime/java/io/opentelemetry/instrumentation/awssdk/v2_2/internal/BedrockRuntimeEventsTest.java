@@ -26,8 +26,8 @@ import software.amazon.awssdk.services.bedrockruntime.model.ContentBlock;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
 
-// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
-// is resolved.
+// TODO: Remove this deprecation suppression after
+// https://github.com/open-telemetry/semantic-conventions-genai/issues/247 is resolved.
 @SuppressWarnings("deprecation")
 class BedrockRuntimeEventsTest {
 
