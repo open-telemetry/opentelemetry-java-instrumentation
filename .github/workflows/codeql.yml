@@ -4,12 +4,14 @@ on:
   pull_request:
     branches:
       - main
+      - maintenance/v*.x
       - release/*
       - cloudfoundry
       - gh-pages
   push:
     branches:
       - main
+      - maintenance/v*.x
       - release/*
       - cloudfoundry
       - gh-pages

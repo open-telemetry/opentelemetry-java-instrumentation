@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class GeodeInstrumentationModule extends InstrumentationModule {
   public GeodeInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "geode-1.4" : "geode",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"geode"}
-            : new String[] {"geode-1.4"});
+    super("geode-1.4", "geode");
   }
 
   @Override

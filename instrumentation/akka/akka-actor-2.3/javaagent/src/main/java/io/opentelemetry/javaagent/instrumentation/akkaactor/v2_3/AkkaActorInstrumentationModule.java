@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.akkaactor.v2_3;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AkkaActorInstrumentationModule extends InstrumentationModule {
   public AkkaActorInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "akka-actor-2.3" : "akka-actor",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"akka-actor", "akka"}
-            : new String[] {"akka-actor-2.3", "akka-actor-2.3-core"});
+    super("akka-actor-2.3", "akka-actor", "akka");
   }
 
   @Override

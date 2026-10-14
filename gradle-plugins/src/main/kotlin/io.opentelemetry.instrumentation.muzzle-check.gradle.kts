@@ -380,13 +380,20 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     // add more mismatches. For assertPass a missing transitive can cause a
     // false muzzle failure but never a false pass; such versions should be
     // skipped in the module's build.gradle.kts when found.
-    val configFiles = config.incoming.artifactView { lenient(true) }.files
+    val artifactView = config.incoming.artifactView { lenient(true) }
+    val configFiles = artifactView.files
     val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
     val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
     val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
     val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
     val excludedModules = muzzleDirective.excludedInstrumentationModules.get()
     val shouldAssertPass = muzzleDirective.assertPass.get()
+    // Snapshot diagnostics as text: resolution objects cannot be captured by configuration cache.
+    val resolutionFailures = if (shouldAssertPass) {
+      artifactView.artifacts.failures.map { it.stackTraceToString() }
+    } else {
+      emptyList()
+    }
 
     dependsOn(configurations.named("runtimeClasspath"))
     dependsOn(shadowModule)
@@ -405,13 +412,21 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
       val userUrls = (configFiles + muzzleBootstrapShadowJarFile.get().asFile).map { it.toURI().toURL() }.toTypedArray()
       val userCL = URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader())
 
-      MuzzleGradlePluginUtil.assertInstrumentationMuzzled(
-        instrumentationCL,
-        userCL,
-        excludedNames,
-        excludedModules,
-        shouldAssertPass
-      )
+      try {
+        MuzzleGradlePluginUtil.assertInstrumentationMuzzled(
+          instrumentationCL,
+          userCL,
+          excludedNames,
+          excludedModules,
+          shouldAssertPass
+        )
+      } catch (e: Exception) {
+        if (shouldAssertPass && resolutionFailures.isNotEmpty()) {
+          logger.error("Dependency resolution failures collected for $path (lenient resolution):")
+          resolutionFailures.forEach { logger.error(it) }
+        }
+        throw e
+      }
     }
   }
 

@@ -10,7 +10,6 @@ import static io.opentelemetry.context.ContextKey.named;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
@@ -45,14 +44,18 @@ public abstract class CouchbaseRequestInfo {
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, serverTarget);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, false, operation, serverTarget);
   }
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
-    SqlQuery sqlQuery = CouchbaseQuerySanitizer.analyze(query);
-    String operation = sqlQuery.getOperationName();
-    return new AutoValue_CouchbaseRequestInfo(bucket, sqlQuery, operation, serverTarget);
+    String sqlQueryText = CouchbaseQueryText.getSqlQueryText(query);
+    return new AutoValue_CouchbaseRequestInfo(
+        bucket,
+        sqlQueryText != null ? sqlQueryText : CouchbaseQueryText.getNonSqlQueryText(query),
+        sqlQueryText != null,
+        null,
+        serverTarget);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -74,7 +77,9 @@ public abstract class CouchbaseRequestInfo {
   public abstract String getBucket();
 
   @Nullable
-  public abstract SqlQuery getSqlQuery();
+  public abstract String getQueryText();
+
+  public abstract boolean isSqlQuery();
 
   @Nullable
   public abstract String getOperation();
@@ -94,7 +99,7 @@ public abstract class CouchbaseRequestInfo {
 
   private CouchbaseRequestInfo copy() {
     return new AutoValue_CouchbaseRequestInfo(
-        getBucket(), getSqlQuery(), getOperation(), getServerTarget());
+        getBucket(), getQueryText(), isSqlQuery(), getOperation(), getServerTarget());
   }
 
   @Nullable
