@@ -5,17 +5,15 @@
 
 package rediscala
 
+import io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME
+import io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME
 import io.opentelemetry.api.trace.SpanKind.CLIENT
-import io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS
 import io.opentelemetry.semconv.NetworkAttributes.{
   NETWORK_PEER_ADDRESS,
@@ -105,7 +103,7 @@ class RediscalaConfiguredTargetTest {
   }
 
   @Test def testImmutablePoolCommandUsesConfiguredTarget(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     val hosts = Seq(alternateHost(host), host, alternateHost(host))
     val pool = classOf[RedisClientPool].getConstructors
       .find(_.getParameterCount == 4)
@@ -129,7 +127,7 @@ class RediscalaConfiguredTargetTest {
   }
 
   @Test def testClusterCommandUsesConfiguredTarget(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     assumeTrue(testLatestDeps())
     val clusterServer: GenericContainer[_] =
       new GenericContainer("redis:7.2-alpine")
@@ -181,7 +179,7 @@ class RediscalaConfiguredTargetTest {
   }
 
   @Test def testMasterSlavesCommandUsesConfiguredTarget(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     val master = RedisServer(host, port.intValue())
     val slaves = Seq(
       RedisServer(host, port.intValue()),
@@ -215,14 +213,11 @@ class RediscalaConfiguredTargetTest {
       transaction.set("master-slaves-transaction-target", "value")
       Await.result(transaction.exec(), Duration("3 second"))
       assertConfiguredTargetSpan(
-        if (emitStableDatabaseSemconv())
-          (s"${master.host}:${master.port}" +:
-            slaves.map(server => s"${server.host}:${server.port}").sorted)
-            .mkString(",")
-        else null,
+        (s"${master.host}:${master.port}" +:
+          slaves.map(server => s"${server.host}:${server.port}").sorted)
+          .mkString(","),
         operationName = "MULTI SET",
-        databaseIndex =
-          if (emitStableDatabaseSemconv()) defaultDbIndex.toString else null
+        databaseIndex = defaultDbIndex.toString
       )
     } finally {
       client.masterClient.stop()
@@ -231,7 +226,7 @@ class RediscalaConfiguredTargetTest {
   }
 
   @Test def testMasterSlavesReplicaCommandOmitsNetworkPeer(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     val master = RedisServer(host, port.intValue())
     val slaves = Seq(
       RedisServer(host, port.intValue()),
@@ -264,11 +259,9 @@ class RediscalaConfiguredTargetTest {
       transaction.set("sentinel-master-slaves-transaction-peer", "value")
       Await.result(transaction.exec(), Duration("10 second"))
       assertConfiguredTargetSpan(
-        if (emitStableDatabaseSemconv()) sentinelTarget(sentinelHosts)
-        else null,
+        sentinelTarget(sentinelHosts),
         operationName = "MULTI SET",
-        databaseIndex =
-          if (emitStableDatabaseSemconv()) defaultDbIndex.toString else null
+        databaseIndex = defaultDbIndex.toString
       )
     } finally {
       client.stop()
@@ -276,7 +269,7 @@ class RediscalaConfiguredTargetTest {
   }
 
   @Test def testSentinelMasterSlavesReplicaCommandOmitsNetworkPeer(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
     val client = createSentinelMasterSlavesClient(sentinelHosts)
     try {
@@ -294,7 +287,7 @@ class RediscalaConfiguredTargetTest {
   }
 
   @Test def testSentinelMasterSlavesCommandUsesConfiguredTarget(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
     val client = createSentinelMasterSlavesClient(sentinelHosts)
     try {
@@ -317,10 +310,8 @@ class RediscalaConfiguredTargetTest {
       val result = client.set("sentinel-peer", "value")
       Await.result(result, Duration("10 second"))
       assertConfiguredTargetSpan(
-        if (emitStableDatabaseSemconv()) sentinelTarget(sentinelHosts)
-        else null,
-        databaseIndex =
-          if (emitStableDatabaseSemconv()) defaultDbIndex.toString else null
+        sentinelTarget(sentinelHosts),
+        databaseIndex = defaultDbIndex.toString
       )
     } finally {
       client.stop()
@@ -329,7 +320,7 @@ class RediscalaConfiguredTargetTest {
 
   @Test def testSentinelTransactionSeparatesConfiguredTargetFromNetworkPeer()
       : Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     val sentinelHosts = Seq(alternateHost(sentinelHost), sentinelHost)
     val client = createSentinelClient(sentinelHosts)
     try {
@@ -347,7 +338,7 @@ class RediscalaConfiguredTargetTest {
   }
 
   @Test def testMutablePoolRefreshesServerTarget(): Unit = {
-    assumeTrue(emitStableDatabaseSemconv())
+
     val first = RedisServer(host, port.intValue())
     val second = RedisServer(alternateHost(host), port.intValue())
     val poolClass = Class.forName("redis.RedisClientMutablePool")
@@ -492,11 +483,10 @@ class RediscalaConfiguredTargetTest {
                 .hasName(expectedSpanName)
                 .hasKind(CLIENT)
                 .hasAttributesSatisfyingExactly(
-                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), operationName),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, operationName),
                   equalTo(DB_NAMESPACE, databaseIndex),
-                  equalTo(NETWORK_PEER_ADDRESS, null),
-                  equalTo(NETWORK_PEER_PORT, null),
+
                   equalTo(SERVER_ADDRESS, serverAddress),
                   equalTo(SERVER_PORT, serverPort)
                 )

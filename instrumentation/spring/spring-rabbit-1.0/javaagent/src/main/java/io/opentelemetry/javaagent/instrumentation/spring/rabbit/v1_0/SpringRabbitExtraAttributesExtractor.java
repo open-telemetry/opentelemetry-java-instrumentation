@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 
@@ -21,15 +20,13 @@ class SpringRabbitExtraAttributesExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, SpringRabbitRequest request) {
-    if (emitStableMessagingSemconv()) {
-      Message message = request.getMessage();
-      String routingKey = message.getMessageProperties().getReceivedRoutingKey();
-      if (routingKey != null && !routingKey.isEmpty()) {
-        attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
-      }
-      attributes.put(
-          MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, message.getMessageProperties().getDeliveryTag());
+    Message message = request.getMessage();
+    String routingKey = message.getMessageProperties().getReceivedRoutingKey();
+    if (routingKey != null && !routingKey.isEmpty()) {
+      attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }
+    attributes.put(
+        MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, message.getMessageProperties().getDeliveryTag());
   }
 
   @Override

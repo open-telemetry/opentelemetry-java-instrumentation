@@ -78,26 +78,14 @@ tasks {
     options.release.set(11)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    }
-  }
-
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
     named("version5Test", Test::class).configure {
       enabled = false
     }
-    named("version5TestStableSemconv", Test::class).configure {
-      enabled = false
-    }
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

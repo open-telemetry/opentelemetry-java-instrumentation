@@ -5,16 +5,17 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.trace.SpanKind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringBootVersion;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -39,8 +40,11 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void webClientAndWebFluxAndR2dbc() {
+    // Spring Data R2DBC 1.x uses PostgreSQL's lowercase identifier rules for H2;
+    // 3.x uses H2's uppercase rules.
+    boolean springBoot2 = requireNonNull(SpringBootVersion.getVersion()).startsWith("2.");
+
     webClient
         .get()
         .uri(OtelReactiveSpringStarterSmokeTestController.WEBFLUX)
@@ -49,26 +53,22 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
         .blockLast();
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE testdb.player")),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE player")),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/webflux"),
                 span -> HttpSpanDataAssert.create(span).assertServerGetRequest("/webflux"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .satisfies(
-                            s ->
-                                assertThat(s.getName())
-                                    .isEqualToIgnoringCase("SELECT testdb.PLAYER"))
-                        .hasAttribute(DB_NAME, "testdb")
+                        .hasName(springBoot2 ? "SELECT player" : "SELECT PLAYER")
+                        .hasAttribute(DB_NAMESPACE, "testdb")
                         // 2 is not replaced by ?,
                         // otel.instrumentation.common.db.query-sanitization.enabled=false
-                        .hasAttributesSatisfying(
-                            a ->
-                                assertThat(a.get(DB_STATEMENT))
-                                    .isEqualToIgnoringCase(
-                                        "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $1 LIMIT 2"))
-                        .hasAttribute(DB_SYSTEM, "h2")));
+                        .hasAttribute(
+                            DB_QUERY_TEXT,
+                            springBoot2
+                                ? "SELECT player.* FROM player WHERE player.id = $1 LIMIT 2"
+                                : "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $1 LIMIT 2")
+                        .hasAttribute(DB_SYSTEM_NAME, "h2database")));
   }
 }

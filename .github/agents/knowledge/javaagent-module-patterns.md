@@ -90,8 +90,6 @@ instrumentation. They use independent feature names, such as `kafka-clients-metr
 `jdbc-datasource`, or `kotlinx-coroutines-annotations`. A group whose
 members are all default-off can share an umbrella: `hibernate` selects default-off telemetry,
 including procedure calls, but not default-on Hibernate Reactive context propagation.
-The deprecated Jedis 1.x and superseded Lettuce 5.1 implementations slated for removal in 3.0
-do not define long-term group membership.
 
 Ordinary defaults assume global enablement on and optional feature settings absent. The native
 Javaagent review instructions contain the naming and default-isolation rules.
@@ -538,20 +536,9 @@ sufficient for optimization.
 
 ### Method matchers and advice bindings
 
-The method matcher must prove compatibility for every non-optional, statically typed value that the
-advice reads. For each `@Advice.Argument(n)`, normally include a compatible
-`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature. Apply the
-same rule to a concretely typed `@Advice.Return` with `returns(...)`.
-
-When supported signatures use different concrete subtypes accepted by the advice's common
-supertype, match the hierarchy:
-
-```java
-named("pool")
-    .and(takesArguments(3))
-    .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
-    .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool"))))
-```
+The method matcher must prove compatibility for every non-optional, statically typed argument that
+the advice reads. For each `@Advice.Argument(n)`, normally include a compatible
+`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature.
 
 Match argument positions that the advice does not bind only when they distinguish an intended
 overload or supported-version signature. Do not restate unrelated arguments, and do not bind unused

@@ -13,9 +13,6 @@ configurations:
   - ref: common.logging.trace-id-key
   - ref: common.logging.span-id-key
   - ref: common.logging.trace-flags-key
-  - ref: common.logging.trace-id
-  - ref: common.logging.span-id
-  - ref: common.logging.trace-flags
   - name: otel.instrumentation.common.mdc.resource-attributes
     declarative_name: java.common.mdc.resource_attributes
     description: >

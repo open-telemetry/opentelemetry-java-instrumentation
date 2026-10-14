@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -24,7 +23,6 @@ class RabbitCamelOwnershipTest {
 
     RabbitConsumerInstrumentation.StartAdvice.onEnter(consumer);
 
-    assertThat(PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT.get(consumer))
-        .isEqualTo(emitStableMessagingSemconv() ? true : null);
+    assertThat(PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT.get(consumer)).isTrue();
   }
 }

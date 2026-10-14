@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AsyncHttpClientInstrumentationModule extends InstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "async-http-client-2.0" : "async-http-client",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"async-http-client"}
-            : new String[] {"async-http-client-2.0"});
+    super("async-http-client-2.0", "async-http-client");
   }
 
   @Override

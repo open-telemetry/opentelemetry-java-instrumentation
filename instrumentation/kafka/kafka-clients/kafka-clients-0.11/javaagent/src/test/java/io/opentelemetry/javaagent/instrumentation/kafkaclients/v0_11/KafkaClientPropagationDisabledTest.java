@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,40 +44,25 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
       testing.runWithSpan("processing", () -> {});
     }
 
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertTraces(
-          trace -> trace.hasSpansSatisfyingExactly(span -> assertSendSpan(span, message)),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("process " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasNoParent()
-                          .hasLinks(emptyList())
-                          .hasAttributesSatisfyingExactly(
-                              processAttributes(null, message, false, false)),
-                  span -> span.hasName("processing").hasParent(trace.getSpan(0))));
-      return;
-    }
-
     testing.waitAndAssertTraces(
         trace -> trace.hasSpansSatisfyingExactly(span -> assertSendSpan(span, message)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
                         .hasLinks(emptyList())
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, message, false, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(0))));
   }
 
-  // when propagation is disabled the span context is not sent as the message creation context, so
-  // under the stable semantic conventions the send span is CLIENT instead of PRODUCER
+  // when propagation is disabled the span context is not sent as the message creation context,
+  // so the send span is CLIENT
   private static void assertSendSpan(SpanDataAssert span, String message) {
-    span.hasName(emitStableMessagingSemconv() ? "send " + SHARED_TOPIC : SHARED_TOPIC + " publish")
-        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.PRODUCER)
+    span.hasName("send " + SHARED_TOPIC)
+        .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(sendAttributes(null, message, false));
   }

@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,13 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GatewayWebMvcInstrumentationModule extends InstrumentationModule {
 
   public GatewayWebMvcInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview()
-            ? "spring-cloud-gateway-webmvc-4.3"
-            : "spring-cloud-gateway",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-cloud-gateway"}
-            : new String[] {"spring-cloud-gateway-webmvc-4.3"});
+    super("spring-cloud-gateway-webmvc-4.3", "spring-cloud-gateway");
   }
 
   @Override

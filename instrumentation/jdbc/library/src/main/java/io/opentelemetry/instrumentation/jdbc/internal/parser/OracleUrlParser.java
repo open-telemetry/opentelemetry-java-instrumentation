@@ -33,13 +33,10 @@ import javax.annotation.Nullable;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class OracleUrlParser implements JdbcUrlParser {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String ORACLE_DB = "oracle.db";
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String ORACLE = "oracle";
 
   private static final int DEFAULT_PORT = 1521;
 
@@ -65,7 +62,6 @@ public final class OracleUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(ORACLE_DB);
-    ctx.oldSemconvSystem(ORACLE);
     ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyDataSourceProperties();
@@ -75,8 +71,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
     int subtypeStart = "oracle:".length();
     int typeEndIndex = jdbcUrl.indexOf(":", subtypeStart);
     String subtype = jdbcUrl.substring(subtypeStart, typeEndIndex);
-    String remainder = jdbcUrl.substring(typeEndIndex + 1);
-    ctx.subtype(subtype);
+    String remainder = jdbcUrl.substring(subtypeStart + subtype.length() + 1);
 
     if (remainder.contains("@")) {
       parseAtFormat(remainder, ctx);
@@ -92,12 +87,6 @@ public final class OracleUrlParser implements JdbcUrlParser {
     }
 
     String[] atSplit = jdbcUrl.split("@", 2);
-
-    // Check for user info before @
-    int userInfoLoc = atSplit[0].indexOf("/");
-    if (userInfoLoc > 0) {
-      ctx.user(atSplit[0].substring(0, userInfoLoc));
-    }
 
     String connectInfo = atSplit[1];
     if (connectInfo.startsWith("ldap://")) {
@@ -238,11 +227,6 @@ public final class OracleUrlParser implements JdbcUrlParser {
    */
   private static void parseDescriptionFormat(String jdbcUrl, ParseContext ctx) {
     String[] atSplit = jdbcUrl.split("@", 2);
-
-    int userInfoLoc = atSplit[0].indexOf("/");
-    if (userInfoLoc > 0) {
-      ctx.user(atSplit[0].substring(0, userInfoLoc));
-    }
 
     Matcher hostMatcher = HOST_PATTERN.matcher(atSplit[1]);
     if (hostMatcher.find()) {

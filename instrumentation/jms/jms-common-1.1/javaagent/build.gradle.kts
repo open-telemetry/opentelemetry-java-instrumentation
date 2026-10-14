@@ -18,13 +18,6 @@ testing {
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
       }
-      targets {
-        configureEach {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
-          }
-        }
-      }
     }
   }
 }

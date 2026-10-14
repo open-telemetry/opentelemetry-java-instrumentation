@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 import static java.util.Collections.emptyList;
@@ -93,23 +92,19 @@ public final class SqsImpl {
         TracingExecutionInterceptor.getParentContext(executionAttributes);
     Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =
         config.getConsumerReceiveInstrumenter();
-    io.opentelemetry.context.Context receiveContext = null;
     List<SqsMessage> tracingMessages = SqsMessageImpl.wrap(response.messages(), config);
     SqsReceiveRequest receiveRequest =
         SqsReceiveRequest.create(executionAttributes, tracingMessages);
     if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
-      receiveContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter,
-              parentContext,
-              receiveRequest,
-              new Response(context.httpResponse(), response),
-              null,
-              timer.startTime(),
-              timer.now());
+      InstrumenterUtil.startAndEnd(
+          consumerReceiveInstrumenter,
+          parentContext,
+          receiveRequest,
+          new Response(context.httpResponse(), response),
+          null,
+          timer.startTime(),
+          timer.now());
     }
-    io.opentelemetry.context.Context processParentContext =
-        emitStableMessagingSemconv() ? parentContext : receiveContext;
     // copy ExecutionAttributes as these will get cleared before the process spans are created
     ExecutionAttributes copy = new ExecutionAttributes();
     copy.putAttribute(
@@ -131,7 +126,7 @@ public final class SqsImpl {
             copy,
             new Response(context.httpResponse(), response),
             config,
-            processParentContext);
+            parentContext);
 
     // store tracing list in context so that our proxied SqsClient/SqsAsyncClient could pick it up
     SqsTracingContext.set(parentContext, tracingList);
@@ -174,20 +169,8 @@ public final class SqsImpl {
         return injectIntoSendMessageRequest(
             (SendMessageRequest) request, otelContext, messagingPropagator);
       } else if (request instanceof SendMessageBatchRequest) {
-        if (emitStableMessagingSemconv()) {
-          return injectIntoSendMessageBatchRequest(
-              (SendMessageBatchRequest) request,
-              otelContext,
-              messagingPropagator,
-              true,
-              useXrayPropagator);
-        }
         return injectIntoSendMessageBatchRequest(
-            (SendMessageBatchRequest) request,
-            otelContext,
-            messagingPropagator,
-            false,
-            useXrayPropagator);
+            (SendMessageBatchRequest) request, otelContext, messagingPropagator, useXrayPropagator);
       }
     }
     return null;
@@ -354,15 +337,13 @@ public final class SqsImpl {
       SendMessageBatchRequest request,
       io.opentelemetry.context.Context otelContext,
       TextMapPropagator messagingPropagator,
-      boolean preserveExistingCreationContexts,
       boolean useXrayPropagator) {
     ArrayList<SendMessageBatchRequestEntry> entries = new ArrayList<>(request.entries());
     for (int i = 0; i < entries.size(); ++i) {
       SendMessageBatchRequestEntry entry = entries.get(i);
-      if (preserveExistingCreationContexts
-          && Span.fromContext(creationContext(entry, messagingPropagator, useXrayPropagator))
-              .getSpanContext()
-              .isValid()) {
+      if (Span.fromContext(creationContext(entry, messagingPropagator, useXrayPropagator))
+          .getSpanContext()
+          .isValid()) {
         continue;
       }
       Map<String, MessageAttributeValue> messageAttributes =

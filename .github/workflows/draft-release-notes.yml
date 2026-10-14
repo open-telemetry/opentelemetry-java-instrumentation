@@ -8,7 +8,7 @@ permissions:
   copilot-requests: write
 
 concurrency:
-  group: draft-release-notes
+  group: draft-release-notes-${{ github.ref }}
 
 jobs:
   draft:
@@ -22,6 +22,9 @@ jobs:
           # the previous release tag (e.g. v2.27.0) when computing the commit range
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Verify development branch
+        run: python .github/scripts/release-config.py prepare --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       - name: Install Copilot CLI
         run: |
@@ -41,12 +44,12 @@ jobs:
       - name: Upload draft diagnostics artifact
         if: always()
         id: upload-diagnostics
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: draft-release-notes-diagnostics-${{ github.run_id }}
           path: build/changelog-bundle/**
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: otelbot-token
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
@@ -54,7 +57,7 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      - name: Create pull request against main
+      - name: Create pull request against the development branch
         env:
           ARTIFACT_URL: ${{ steps.upload-diagnostics.outputs.artifact-url }}
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
@@ -79,4 +82,4 @@ jobs:
           gh pr create \
             --title "$message" \
             --body "$body" \
-            --base main
+            --base "$DEVELOPMENT_BRANCH"

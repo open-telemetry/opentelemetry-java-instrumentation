@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -47,7 +47,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * Integration test that verifies the registry-mode end-to-end flow: provider registers to
- * ZooKeeper, consumer discovers via ZooKeeper, and, under the stable rpc semconv, the {@code
+ * ZooKeeper, consumer discovers via ZooKeeper, and, under the preview rpc semconv, the {@code
  * SERVER_ADDRESS} span attribute contains the registry address (with service interface, version,
  * and group) instead of the provider host. Under the old rpc semconv the resolved provider host is
  * kept.
@@ -148,7 +148,7 @@ public abstract class AbstractDubboRegistryTest {
 
     assertThat(response).isEqualTo("hello");
 
-    // Under the stable rpc semconv, SERVER_ADDRESS =
+    // Under the preview rpc semconv, SERVER_ADDRESS =
     // "registryProtocol://host:port/interface:version:group" and SERVER_PORT is absent (null).
     // Under the old rpc semconv the resolved provider host/port are kept.
     // See https://github.com/open-telemetry/semantic-conventions/pull/3317
@@ -167,7 +167,7 @@ public abstract class AbstractDubboRegistryTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -175,21 +175,22 @@ public abstract class AbstractDubboRegistryTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    testLatestDeps() && !emitStableRpcSemconv()
+                                    testLatestDeps() && !emitPreviewRpcSemconv()
                                         ? testing().expectedPeerService()
                                         : null),
                                 satisfies(
                                     SERVER_ADDRESS,
                                     val -> {
-                                      if (emitStableRpcSemconv()) {
+                                      if (emitPreviewRpcSemconv()) {
                                         val.isEqualTo(expectedServerAddress);
                                       } else {
-                                        // registry override is gated behind the stable rpc semconv;
+                                        // registry override is gated behind the preview rpc
+                                        // semconv;
                                         // under the old semconv the bare provider host is used, not
                                         // the registry target (the exact host is environment
                                         // dependent, so assert it is a plain host, not a registry
@@ -199,7 +200,7 @@ public abstract class AbstractDubboRegistryTest {
                                             .doesNotContain("/");
                                       }
                                     }),
-                                equalTo(SERVER_PORT, emitStableRpcSemconv() ? null : (long) port),
+                                equalTo(SERVER_PORT, emitPreviewRpcSemconv() ? null : (long) port),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     val ->
@@ -215,7 +216,7 @@ public abstract class AbstractDubboRegistryTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -223,7 +224,7 @@ public abstract class AbstractDubboRegistryTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
                                 equalTo(

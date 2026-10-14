@@ -30,7 +30,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.ipc.AbstractRpcClient;
-import org.apache.hadoop.hbase.security.User;
 
 class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
@@ -79,10 +78,8 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     public static RequestAndContext onEnter(
         @Advice.This AbstractRpcClient<?> client,
         @Advice.Argument(0) Object md,
-        @Advice.Argument(2) Object param,
-        @Advice.Argument(4) User ticket,
-        @Advice.Argument(5) InetSocketAddress addr) {
-      HbaseRequest request = createRequest(md, param, ticket, addr, HbaseServerTarget.get(client));
+        @Advice.Argument(2) Object param) {
+      HbaseRequest request = createRequest(md, param, HbaseServerTarget.get(client));
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;

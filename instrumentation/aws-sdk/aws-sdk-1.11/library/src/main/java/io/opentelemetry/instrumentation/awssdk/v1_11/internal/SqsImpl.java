@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -74,24 +73,20 @@ public final class SqsImpl {
     Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter =
         requestHandler.getConsumerProcessInstrumenter();
 
-    Context receiveContext = null;
     SqsReceiveRequest receiveRequest =
         SqsReceiveRequest.create(request, SqsMessageImpl.wrap(receiveMessageResult.getMessages()));
     if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
-      receiveContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter,
-              parentContext,
-              receiveRequest,
-              response,
-              null,
-              timer.startTime(),
-              timer.now());
+      InstrumenterUtil.startAndEnd(
+          consumerReceiveInstrumenter,
+          parentContext,
+          receiveRequest,
+          response,
+          null,
+          timer.startTime(),
+          timer.now());
     }
 
-    Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;
-    addTracing(
-        receiveMessageResult, request, response, consumerProcessInstrumenter, processParentContext);
+    addTracing(receiveMessageResult, request, response, consumerProcessInstrumenter, parentContext);
   }
 
   @Nullable private static final Field messagesField = getMessagesField();
@@ -143,7 +138,7 @@ public final class SqsImpl {
       }
       return request;
     }
-    if (rawRequest instanceof SendMessageBatchRequest && emitStableMessagingSemconv()) {
+    if (rawRequest instanceof SendMessageBatchRequest) {
       return injectBatchCreationContexts(
           (SendMessageBatchRequest) rawRequest,
           producerCreateInstrumenter,

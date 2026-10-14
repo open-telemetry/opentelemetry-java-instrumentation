@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertClientOperationDurationMetricAbsent;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertConsumedMessagesMetrics;
@@ -24,11 +22,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -58,7 +53,6 @@ import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   @RegisterExtension
@@ -146,82 +140,40 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   void assertTraces() {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
 
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanName("parent", "poll " + SHARED_TOPIC, "producer callback"),
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("send " + SHARED_TOPIC)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            publishAttributes(captureExperimentalSpanAttributes())),
-                span ->
-                    span.hasName("process " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(captureExperimentalSpanAttributes())),
-                span ->
-                    span.hasName("process child")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(2)));
-            producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
-          },
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("poll " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
-                          .hasAttributesSatisfyingExactly(receiveAttributes())),
-          // ideally we'd want producer callback to be part of the main trace,
-          // we just aren't able to instrument that
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
-      return;
-    }
-
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", SHARED_TOPIC + " receive", "producer callback"),
+        orderByRootSpanName("parent", "poll " + SHARED_TOPIC, "producer callback"),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(SHARED_TOPIC + " publish")
+                  span.hasName("send " + SHARED_TOPIC)
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          publishAttributes(captureExperimentalSpanAttributes())));
+                          publishAttributes(captureExperimentalSpanAttributes())),
+              span ->
+                  span.hasName("process " + SHARED_TOPIC)
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
+                      .hasAttributesSatisfyingExactly(
+                          processAttributes(captureExperimentalSpanAttributes())),
+              span ->
+                  span.hasName("process child")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(2)));
           producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName("poll " + SHARED_TOPIC)
+                        .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinksSatisfying(links -> assertThat(links).isEmpty())
-                        .hasAttributesSatisfyingExactly(receiveAttributes()),
-                span ->
-                    span.hasName(SHARED_TOPIC + " process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpanContext.get()))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(captureExperimentalSpanAttributes())),
-                span ->
-                    span.hasName("process child")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))),
-        // ideally we'd want producer callback to be part of the main trace, we just aren't able to
-        // instrument that
+                        .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
+                        .hasAttributesSatisfyingExactly(receiveAttributes())),
+        // ideally we'd want producer callback to be part of the main trace,
+        // we just aren't able to instrument that
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -247,9 +199,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                 equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 satisfies(
                     stringKey("messaging.kafka.bootstrap.servers"),
                     val -> {
@@ -257,7 +208,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                         val.matches("^localhost:\\d+(,localhost:\\d+)*$");
                       }
                     })));
-    addClientIdAssertions(assertions, "producer");
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
@@ -269,19 +220,13 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                 equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "poll" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
-                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, emitOldMessagingSemconv() ? "test" : null),
-                equalTo(
-                    MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
+                equalTo(MESSAGING_OPERATION_NAME, "poll"),
+                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
-    addClientIdAssertions(assertions, "consumer");
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
-    if (emitStableMessagingSemconv()) {
-      assertions.add(
-          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    }
+    assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -292,16 +237,11 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                 equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
-                equalTo(
-                    MESSAGING_MESSAGE_BODY_SIZE,
-                    emitOldMessagingSemconv() ? (long) greeting.getBytes(UTF_8).length : null),
+                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, emitOldMessagingSemconv() ? "test" : null),
-                equalTo(
-                    MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
+                equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 satisfies(
                     longKey("kafka.record.queue_time_ms"),
                     val -> {
@@ -309,26 +249,12 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                         val.isNotNegative();
                       }
                     })));
-    if (emitOldMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-      assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
-      assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
-    }
-    addClientIdAssertions(assertions, "consumer");
+
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+    assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
+    assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
-  }
-
-  private static void addClientIdAssertions(
-      List<AttributeAssertion> assertions, String clientIdPrefix) {
-    if (emitOldMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_CLIENT_ID_OLD, val -> val.startsWith(clientIdPrefix)));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
-    }
   }
 }

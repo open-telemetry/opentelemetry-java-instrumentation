@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ErrorAttributes.ErrorTypeValues.OTHER;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -17,8 +17,9 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JavaInterfaces.Jax;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -34,6 +35,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JaxRsAnnotations1InstrumentationTest {
+
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -112,28 +116,29 @@ class JaxRsAnnotations1InstrumentationTest {
     String className = getClassName(action.getClass());
     testing.runWithHttpServerSpan(action::call);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + path)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_ROUTE, path),
-                            equalTo(ERROR_TYPE, OTHER)),
-                span ->
-                    span.hasName(className + ".call")
-                        .satisfies(
-                            hasScopeName(
-                                v3Preview()
-                                    ? "io.opentelemetry.jaxrs-1.0-annotations"
-                                    : "io.opentelemetry.jaxrs-1.0"))
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            SemconvCodeStabilityUtil.codeFunctionAssertions(
-                                action.getClass(), "call"))));
+    Consumer<SpanDataAssert> serverSpan =
+        span ->
+            span.hasName(CONTROLLER_TELEMETRY_ENABLED ? "GET " + path : "GET")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(HTTP_ROUTE, CONTROLLER_TELEMETRY_ENABLED ? path : null),
+                    equalTo(ERROR_TYPE, OTHER));
+    if (CONTROLLER_TELEMETRY_ENABLED) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  serverSpan,
+                  span ->
+                      span.hasName(className + ".call")
+                          .satisfies(hasScopeName("io.opentelemetry.jaxrs-1.0-annotations"))
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call"))));
+    } else {
+      testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(serverSpan));
+    }
   }
 
   @Test

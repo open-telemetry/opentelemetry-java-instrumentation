@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations;
 
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ErrorAttributes.ErrorTypeValues.OTHER;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -15,7 +16,6 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations.JavaInterfaces.Jax;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -32,6 +32,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JaxRs3AnnotationsInstrumentationTest {
+
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -111,7 +114,8 @@ class JaxRs3AnnotationsInstrumentationTest {
     testing.runWithHttpServerSpan(action::call);
 
     testing.waitAndAssertTraces(
-        trace ->
+        trace -> {
+          if (CONTROLLER_TELEMETRY_ENABLED) {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET " + path)
@@ -125,8 +129,17 @@ class JaxRs3AnnotationsInstrumentationTest {
                     span.hasName(className + ".call")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            SemconvCodeStabilityUtil.codeFunctionAssertions(
-                                action.getClass(), "call"))));
+                            equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call")));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER)));
+          }
+        });
   }
 
   @Test

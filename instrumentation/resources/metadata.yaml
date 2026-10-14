@@ -10,8 +10,8 @@ configurations:
   # see https://github.com/open-telemetry/opentelemetry-configuration/issues/671
   - name: otel.instrumentation.resources.experimental.process-command-attributes.enabled
     description: >
-      Enables capture of process command-line resource attributes when v3 preview suppresses them
-      by default.
+      Enables collection of process command-line resource attributes. These attributes are not
+      collected by default because they may contain sensitive information.
     type: boolean
     default: false
   # No declarative_name: the declarative resource detector schema has no host ID toggle.

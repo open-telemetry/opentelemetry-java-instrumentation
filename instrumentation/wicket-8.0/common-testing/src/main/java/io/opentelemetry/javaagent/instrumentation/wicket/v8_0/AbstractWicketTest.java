@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket.v8_0;
 
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,9 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
-
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
 
   @RegisterExtension
   private static final InstrumentationExtension testing =
@@ -92,15 +90,10 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(expectedResourceSpanName())
+                    span.hasName("GET " + getContextPath() + "/wicket-test/hello.HelloResource")
+                        .hasAttribute(
+                            HTTP_ROUTE, getContextPath() + "/wicket-test/hello.HelloResource")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()));
-  }
-
-  private String expectedResourceSpanName() {
-    if (V3_PREVIEW) {
-      return "GET " + getContextPath() + "/wicket-test/hello.HelloResource";
-    }
-    return "GET " + getContextPath() + "/wicket-test/*";
   }
 }

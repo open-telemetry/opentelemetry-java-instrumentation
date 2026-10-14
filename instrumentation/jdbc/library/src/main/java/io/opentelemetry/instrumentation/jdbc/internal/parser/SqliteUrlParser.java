@@ -49,17 +49,16 @@ public final class SqliteUrlParser implements JdbcUrlParser {
 
     if ("memory:".equals(sqliteUrl) || "".equals(sqliteUrl)) {
       // typical in-memory URL is "sqlite:memory:", but "sqlite:" is also supported
-      ctx.subtype("memory");
-    } else if (sqliteUrl.startsWith("file:") && jdbcUrl.contains("mode=memory")) {
+      return;
+    }
+    if (sqliteUrl.startsWith("file:") && jdbcUrl.contains("mode=memory")) {
       // in-memory database specified using "file:" syntax with ?mode=memory"
-      ctx.subtype("memory");
       String filePath = sqliteUrl.substring("file:".length());
       if (!filePath.isEmpty()) {
         ctx.databaseName(filePath);
       }
     } else if (sqliteUrl.startsWith("resource:")) {
       // database loaded from classpath resource, e.g. "sqlite:resource:db/mydb.db"
-      ctx.subtype("resource");
       String resourcePath = sqliteUrl.substring("resource:".length());
       // Use the last segment of the resource path as the database name, if available
       if (!resourcePath.isEmpty()) {
@@ -71,7 +70,6 @@ public final class SqliteUrlParser implements JdbcUrlParser {
         }
       }
     } else {
-      ctx.subtype("file");
       if (sqliteUrl.startsWith("file:")) {
         // Remove leading "file:" prefix for file-based URLs, e.g. "sqlite:file:/path/to/db"
         sqliteUrl = sqliteUrl.substring("file:".length());

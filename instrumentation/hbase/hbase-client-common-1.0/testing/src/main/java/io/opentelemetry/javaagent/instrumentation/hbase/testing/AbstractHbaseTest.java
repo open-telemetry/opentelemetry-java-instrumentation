@@ -7,14 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.hbase.testing;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -23,11 +22,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -147,10 +141,6 @@ public abstract class AbstractHbaseTest {
   // twice; the other tested clients scan it once.
   protected int getMetaScanTraceCount() {
     return 1;
-  }
-
-  protected String oldPutOperation() {
-    return MUTATE;
   }
 
   protected void checkAndMutate(Table table, byte[] checkedRowKey, RowMutations rowMutations)
@@ -287,12 +277,7 @@ public abstract class AbstractHbaseTest {
       table.put(put);
     }
     testing()
-        .waitAndAssertTraces(
-            traceAssertConsumer(
-                TABLE_NAME,
-                emitStableDatabaseSemconv() ? MUTATE : oldPutOperation(),
-                REGION_SERVER_PORT,
-                true));
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
   }
 
   @Test
@@ -351,50 +336,22 @@ public abstract class AbstractHbaseTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
-                      span.hasName(
-                              GET
-                                  + " "
-                                  + (emitStableDatabaseSemconv()
-                                      ? TABLE_NAME.getQualifierAsString()
-                                      : TABLE_NAME.getNameAsString()))
+                      span.hasName(GET + " " + TABLE_NAME.getQualifierAsString())
                           .hasKind(SpanKind.CLIENT)
                           .hasStatus(StatusData.error())
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)),
-                              equalTo(maybeStable(DB_OPERATION), GET),
-                              equalTo(
-                                  maybeStable(DB_NAME),
-                                  emitStableDatabaseSemconv()
-                                      ? TABLE_NAME.getNamespaceAsString()
-                                      : TABLE_NAME.getNameAsString()),
-                              equalTo(
-                                  DB_COLLECTION_NAME,
-                                  emitStableDatabaseSemconv()
-                                      ? TABLE_NAME.getQualifierAsString()
-                                      : null),
-                              equalTo(
-                                  SERVER_ADDRESS,
-                                  emitStableDatabaseSemconv() ? serverTarget : hostname),
-                              equalTo(
-                                  SERVER_PORT,
-                                  emitStableDatabaseSemconv()
-                                      ? null
-                                      : Long.valueOf(REGION_SERVER_PORT)),
+                              equalTo(DB_SYSTEM_NAME, DB_SYSTEM_VALUE),
+                              equalTo(DB_OPERATION_NAME, GET),
+                              equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()),
+                              equalTo(DB_COLLECTION_NAME, TABLE_NAME.getQualifierAsString()),
+                              equalTo(SERVER_ADDRESS, serverTarget),
                               equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
                               equalTo(
                                   NETWORK_PEER_PORT,
                                   networkPeerAddress == null
                                       ? null
                                       : Long.valueOf(REGION_SERVER_PORT)),
-                              equalTo(
-                                  ERROR_TYPE,
-                                  emitStableDatabaseSemconv() ? timeoutSpanExceptionType : null),
-                              satisfies(
-                                  DB_USER,
-                                  emitStableDatabaseSemconv()
-                                      ? AbstractAssert::isNull
-                                      : AbstractAssert::isNotNull));
+                              equalTo(ERROR_TYPE, timeoutSpanExceptionType));
                       if (emitExceptionAsSpanEvents()) {
                         span.hasEventsSatisfyingExactly(
                             event ->
@@ -487,16 +444,6 @@ public abstract class AbstractHbaseTest {
       return;
     }
 
-    if (!emitStableDatabaseSemconv()) {
-      // old semconv reports every batch RPC as the raw "Multi" operation
-      testing()
-          .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
-      return;
-    }
-
-    // stable semconv derives the batch operation name and db.operation.batch.size; the batch size
-    // is present only for multi-action batches (a single-action batch is a non-batch operation, so
-    // scenario.batchSize is null and the attribute is asserted absent)
     testing()
         .waitAndAssertTraces(
             traceAssertConsumer(
@@ -634,12 +581,7 @@ public abstract class AbstractHbaseTest {
     }
     testing()
         .waitAndAssertTraces(
-            traceAssertConsumer(
-                TABLE_NAME,
-                emitStableDatabaseSemconv() ? "BATCH " + MUTATE : MULTI,
-                REGION_SERVER_PORT,
-                true,
-                2L),
+            traceAssertConsumer(TABLE_NAME, "BATCH " + MUTATE, REGION_SERVER_PORT, true, 2L),
             traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
   }
 
@@ -684,31 +626,21 @@ public abstract class AbstractHbaseTest {
           testing(),
           instrumentationName(),
           DB_SYSTEM_NAME,
-          maybeStable(DB_OPERATION),
-          maybeStable(DB_NAME),
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
           DB_COLLECTION_NAME,
           SERVER_ADDRESS,
           NETWORK_PEER_ADDRESS,
           NETWORK_PEER_PORT);
-    } else if (emitStableDatabaseSemconv()) {
-      assertDurationMetric(
-          testing(),
-          instrumentationName(),
-          DB_SYSTEM_NAME,
-          maybeStable(DB_OPERATION),
-          maybeStable(DB_NAME),
-          DB_COLLECTION_NAME,
-          SERVER_ADDRESS);
     } else {
       assertDurationMetric(
           testing(),
           instrumentationName(),
           DB_SYSTEM_NAME,
-          maybeStable(DB_OPERATION),
-          maybeStable(DB_NAME),
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
           DB_COLLECTION_NAME,
-          SERVER_ADDRESS,
-          SERVER_PORT);
+          SERVER_ADDRESS);
     }
   }
 
@@ -736,16 +668,9 @@ public abstract class AbstractHbaseTest {
       String expectedServerTarget) {
     String spanName;
     if (hasTable) {
-      spanName =
-          operation
-              + " "
-              + (emitStableDatabaseSemconv()
-                  ? table.getQualifierAsString()
-                  : table.getNameAsString());
-    } else if (emitStableDatabaseSemconv()) {
-      spanName = operation + " " + expectedServerTarget;
+      spanName = operation + " " + table.getQualifierAsString();
     } else {
-      spanName = operation;
+      spanName = operation + " " + expectedServerTarget;
     }
     return trace ->
         trace.hasSpansSatisfyingExactly(
@@ -753,27 +678,16 @@ public abstract class AbstractHbaseTest {
                 span.hasName(spanName)
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)),
-                        equalTo(maybeStable(DB_OPERATION), operation),
-                        equalTo(maybeStable(DB_NAME), dbNamespace(table, hasTable)),
+                        equalTo(DB_SYSTEM_NAME, DB_SYSTEM_VALUE),
+                        equalTo(DB_OPERATION_NAME, operation),
+                        equalTo(DB_NAMESPACE, dbNamespace(table, hasTable)),
                         equalTo(DB_COLLECTION_NAME, dbCollectionName(table, hasTable)),
-                        equalTo(
-                            DB_OPERATION_BATCH_SIZE,
-                            emitStableDatabaseSemconv() ? batchSize : null),
-                        equalTo(
-                            SERVER_ADDRESS,
-                            emitStableDatabaseSemconv() ? expectedServerTarget : hostname),
-                        equalTo(
-                            SERVER_PORT, emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                        equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
+                        equalTo(SERVER_ADDRESS, expectedServerTarget),
                         equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
                         equalTo(
                             NETWORK_PEER_PORT,
-                            networkPeerAddress == null ? null : Long.valueOf(port)),
-                        satisfies(
-                            DB_USER,
-                            emitStableDatabaseSemconv()
-                                ? AbstractAssert::isNull
-                                : AbstractAssert::isNotNull)));
+                            networkPeerAddress == null ? null : Long.valueOf(port))));
   }
 
   protected boolean reportsNetworkPeerAddress() {
@@ -784,14 +698,11 @@ public abstract class AbstractHbaseTest {
     if (!hasTable) {
       return null;
     }
-    if (emitStableDatabaseSemconv()) {
-      return table.getNamespaceAsString();
-    }
-    return table.getNameAsString();
+    return table.getNamespaceAsString();
   }
 
   private static String dbCollectionName(TableName table, boolean hasTable) {
-    if (hasTable && emitStableDatabaseSemconv()) {
+    if (hasTable) {
       return table.getQualifierAsString();
     }
     return null;

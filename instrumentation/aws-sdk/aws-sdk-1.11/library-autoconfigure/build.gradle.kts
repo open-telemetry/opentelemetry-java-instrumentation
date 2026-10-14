@@ -23,7 +23,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
+    systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
@@ -37,19 +37,6 @@ tasks {
     include("**/SqsSuppressReceiveSpansTest.*")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("SqsSuppressReceiveSpansTest")
-    }
-    jvmArgs(
-      "-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-      "-Dotel.semconv-stability.opt-in=database",
-    )
-  }
-
   test {
     filter {
       excludeTestsMatching("SqsSuppressReceiveSpansTest")
@@ -58,7 +45,7 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled, testStableSemconv)
+    dependsOn(testReceiveSpansDisabled)
   }
 }
 

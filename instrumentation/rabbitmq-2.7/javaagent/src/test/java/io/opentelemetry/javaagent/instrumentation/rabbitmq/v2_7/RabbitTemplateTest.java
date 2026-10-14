@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -52,11 +51,7 @@ class RabbitTemplateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "receive template" : "template receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
-                        .hasNoParent()));
+                span -> span.hasName("receive template").hasKind(SpanKind.CLIENT).hasNoParent()));
     assertReceiveMetrics(testing, "template", null, 1);
   }
 

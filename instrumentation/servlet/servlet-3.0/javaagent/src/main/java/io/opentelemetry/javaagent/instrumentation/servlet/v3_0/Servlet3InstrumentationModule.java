@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextInstrumentation;
@@ -26,11 +25,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
   private static final String BASE_PACKAGE = "javax.servlet";
 
   public Servlet3InstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "servlet-3.0" : "servlet",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"servlet"}
-            : new String[] {"servlet-3.0"});
+    super("servlet-3.0", "servlet");
   }
 
   @Override

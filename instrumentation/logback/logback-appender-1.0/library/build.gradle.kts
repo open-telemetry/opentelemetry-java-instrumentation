@@ -175,29 +175,7 @@ testing {
 }
 
 tasks {
-
-  val testSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "test" || it.name == "slf4j2ApiTest" }
-
-  val stableSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=code")
-    }
-  }
-
-  val bothSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}BothSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
-    }
-  }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

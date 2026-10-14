@@ -56,7 +56,6 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
@@ -66,17 +65,6 @@ tasks {
       includeTestsMatching("SpringListenerSuppressReceiveSpansTest")
     }
     include("**/SpringListenerSuppressReceiveSpansTest.*")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   val testJmsDisabled = register<Test>("testJmsDisabled") {
@@ -90,32 +78,14 @@ tasks {
     // receive telemetry is enabled here because the jms instrumentation that would create the
     // receive operation is disabled, so the process operation owns the messaging telemetry
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+
     systemProperty("testJmsDisabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.jms.enabled=false," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testV3PreviewReceiveSpansDisabled =
-    register<Test>("testV3PreviewReceiveSpansDisabled") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching("SpringListenerSuppressReceiveSpansTest")
-      }
-      include("**/SpringListenerSuppressReceiveSpansTest.*")
-      jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-      systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-    }
 
   test {
     filter {
@@ -132,10 +102,7 @@ tasks {
     dependsOn(
       testing.suites,
       testReceiveSpansDisabled,
-      testMessagingPreview,
       testJmsDisabled,
-      testBothSemconv,
-      testV3PreviewReceiveSpansDisabled,
     )
   }
 }
