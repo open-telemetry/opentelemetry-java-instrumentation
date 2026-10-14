@@ -66,18 +66,6 @@ tasks {
     )
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.common.v3-preview=true",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
-      "-Dotel.instrumentation.common.logging.structured-attributes.included=key1,key2,order-*,user-?",
-      "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
-    )
-  }
-
   val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -120,7 +108,6 @@ tasks {
     dependsOn(
       testStructuredAttributesExcludedAll,
       testAsync,
-      testV3Preview,
       testLegacyMdcAttributes,
       testMdcAttributeExclusionsOnly,
       testStructuredAttributesExcludeOnly,

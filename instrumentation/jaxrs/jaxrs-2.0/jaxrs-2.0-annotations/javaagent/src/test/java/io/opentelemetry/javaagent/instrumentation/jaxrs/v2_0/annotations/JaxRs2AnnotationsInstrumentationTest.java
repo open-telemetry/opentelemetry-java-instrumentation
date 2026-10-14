@@ -33,6 +33,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class JaxRs2AnnotationsInstrumentationTest {
 
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -110,7 +113,8 @@ class JaxRs2AnnotationsInstrumentationTest {
     testing.runWithHttpServerSpan(action::call);
 
     testing.waitAndAssertTraces(
-        trace ->
+        trace -> {
+          if (CONTROLLER_TELEMETRY_ENABLED) {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET " + path)
@@ -124,7 +128,17 @@ class JaxRs2AnnotationsInstrumentationTest {
                     span.hasName(className + ".call")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call"))));
+                            equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call")));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER)));
+          }
+        });
   }
 
   @Test

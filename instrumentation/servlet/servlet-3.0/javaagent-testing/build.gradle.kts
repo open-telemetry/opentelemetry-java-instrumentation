@@ -23,13 +23,24 @@ dependencies {
 }
 
 tasks {
-  test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret")
+  withType<Test>().configureEach {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.servlet.experimental.request-parameters.included=test-*," +
+        "otel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret",
+    )
   }
 
   val testUserNameCapture = register<Test>("testUserNameCapture") {
@@ -39,14 +50,11 @@ tasks {
       includeTestsMatching("*Servlet3UserNameTest.capturesUserNameFromPrincipal")
     }
     jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
-    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {
-    dependsOn(testUserNameCapture)
+    dependsOn(testRequestParameterCapture, testUserNameCapture)
   }
 }
 

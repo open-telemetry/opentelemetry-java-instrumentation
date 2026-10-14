@@ -331,29 +331,20 @@ definitions:
       description: Enables the creation of experimental view spans.
       type: boolean
       default: false
-    otel.instrumentation.couchbase.emit-experimental-telemetry-0f4c9e50:
+    otel.instrumentation.couchbase.emit-experimental-telemetry-152209f7:
       name: otel.instrumentation.couchbase.emit-experimental-telemetry
       declarative_name: java.couchbase.emit_experimental_telemetry/development
       description: |
-        Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
+        Enables experimental span attributes for Couchbase 2.x. For Couchbase 3.x, also enables the request_encoding and dispatch_to_server internal spans emitted by the SDK.
       type: boolean
       default: false
-    otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f:
+    otel.instrumentation.couchbase.emit-experimental-telemetry-3347bf2f:
       name: otel.instrumentation.couchbase.emit-experimental-telemetry
       declarative_name: java.couchbase.emit_experimental_telemetry/development
       description: |
-        Enables experimental span attributes emitted from the underlying Couchbase library. When v3 preview is enabled, also enables the request_encoding and dispatch_to_server internal spans.
+        Enables experimental span attributes and the request_encoding and dispatch_to_server internal spans emitted by the Couchbase SDK.
       type: boolean
       default: false
-    otel.instrumentation.couchbase.experimental-span-attributes:
-      name: otel.instrumentation.couchbase.experimental-span-attributes
-      declarative_name: java.couchbase.experimental_span_attributes/development
-      description: |
-        Deprecated and will be removed in the next minor release. Use otel.instrumentation.couchbase.emit-experimental-telemetry instead.
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.couchbase.emit-experimental-telemetry
     otel.instrumentation.couchbase.query-sanitization.enabled:
       name: otel.instrumentation.couchbase.query-sanitization.enabled
       declarative_name: java.couchbase.query_sanitization.enabled
@@ -735,13 +726,6 @@ definitions:
       declarative_name: java.lettuce.experimental_span_attributes/development
       description: |
         Enables experimental span attributes `lettuce.command.cancelled` and `lettuce.command.results.count`.
-      type: boolean
-      default: false
-    otel.instrumentation.lettuce.experimental.command-encoding-events.enabled:
-      name: otel.instrumentation.lettuce.experimental.command-encoding-events.enabled
-      declarative_name: java.lettuce.command_encoding_events/development.enabled
-      description: Enables capturing `redis.encode.start` and `redis.encode.end` span
-        events.
       type: boolean
       default: false
     otel.instrumentation.lettuce.query-sanitization.enabled:
@@ -1870,27 +1854,6 @@ definitions:
         type: STRING
       - name: server.address
         type: STRING
-    db.client.operation.duration-6dc4ed81:
-      name: db.client.operation.duration
-      description: Duration of database client operations.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     db.client.operation.duration-83708a92:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -5859,7 +5822,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.commons:commons-pool2:[2.0,)
   telemetry:
-  - when: otel.instrumentation.apache-commons-pool.enabled=true
+  - when: default
     metric_refs:
     - apache_commons_pool.object.count-0fb5f06e
     - apache_commons_pool.object.idle.max-093d8b45
@@ -5973,6 +5936,51 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.method_original
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc/dup,service.peer
+    metric_refs:
+    - rpc.client.call.duration-c22f308d
+    - rpc.client.duration-8ed5ac0d
+    - rpc.server.call.duration-b95d8012
+    - rpc.server.duration-3caa4b9d
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.method_original
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6598,6 +6606,44 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.response.status_code
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.preview=rpc/dup
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: rpc.grpc.status_code
+        type: LONG
+      - name: rpc.method
+        type: STRING
+      - name: rpc.response.status_code
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: SERVER
+      attributes:
+      - name: rpc.grpc.status_code
+        type: LONG
+      - name: rpc.method
+        type: STRING
+      - name: rpc.response.status_code
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -8006,8 +8052,7 @@ libraries:
   - com.couchbase.client:java-client:[2,3)
   configuration_refs:
   - common.db.query-sanitization.enabled
-  - otel.instrumentation.couchbase.emit-experimental-telemetry-0f4c9e50
-  - otel.instrumentation.couchbase.experimental-span-attributes
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-152209f7
   - otel.instrumentation.couchbase.query-sanitization.enabled
   telemetry:
   - when: default
@@ -8058,32 +8103,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-  - when: otel.instrumentation.couchbase.experimental-span-attributes=true
-    metric_refs:
-    - db.client.operation.duration-64e6fadd
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: couchbase.local.address
-        type: STRING
-      - name: couchbase.operation_id
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.summary
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
 - name: couchbase-3.0
   display_name: Couchbase Client
   description: |
@@ -8094,16 +8113,20 @@ libraries:
   source_path: instrumentation/couchbase/couchbase-3.0
   scope:
     name: io.opentelemetry.couchbase-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.0,3.1)
   configuration_refs:
-  - otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f
-  - otel.instrumentation.couchbase.experimental-span-attributes
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-3347bf2f
   telemetry:
   - when: default
     spans:
-    - span_kind: INTERNAL
+    - span_kind: CLIENT
+      attributes: []
+  - when: otel.instrumentation.couchbase.emit-experimental-telemetry=true
+    spans:
+    - span_kind: CLIENT
       attributes:
       - name: couchbase.client_context.request_id
         type: STRING
@@ -8111,10 +8134,12 @@ libraries:
         type: STRING
       - name: couchbase.operation_id
         type: STRING
-      - name: peer.latency
-        type: LONG
       - name: peer.service
         type: STRING
+    - span_kind: INTERNAL
+      attributes:
+      - name: peer.latency
+        type: LONG
 - name: couchbase-3.1
   display_name: Couchbase Client
   description: |
@@ -8125,16 +8150,16 @@ libraries:
   source_path: instrumentation/couchbase/couchbase-3.1
   scope:
     name: io.opentelemetry.couchbase-3.1
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.1,3.2)
   configuration_refs:
-  - otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f
-  - otel.instrumentation.couchbase.experimental-span-attributes
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-3347bf2f
   telemetry:
   - when: default
     spans:
-    - span_kind: INTERNAL
+    - span_kind: CLIENT
       attributes:
       - name: db.collection.name
         type: STRING
@@ -8146,28 +8171,16 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
       - name: server.address
         type: STRING
   - when: otel.instrumentation.couchbase.emit-experimental-telemetry=true
     spans:
-    - span_kind: INTERNAL
+    - span_kind: CLIENT
       attributes:
       - name: db.collection.name
         type: STRING
-      - name: db.couchbase.local_id
-        type: STRING
-      - name: db.couchbase.operation_id
-        type: STRING
-      - name: db.couchbase.operation_id
-        type: LONG
       - name: db.couchbase.scope
         type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
       - name: db.couchbase.service
         type: STRING
       - name: db.namespace
@@ -8178,12 +8191,24 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+    - span_kind: INTERNAL
+      attributes:
+      - name: db.couchbase.local_id
+        type: STRING
+      - name: db.couchbase.operation_id
+        type: STRING
+      - name: db.couchbase.operation_id
+        type: LONG
+      - name: db.couchbase.server_duration
+        type: LONG
+      - name: db.system.name
+        type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: server.address
-        type: STRING
 - name: couchbase-3.2
   display_name: Couchbase Client
   description: |
@@ -8198,12 +8223,11 @@ libraries:
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.2.0,)
   configuration_refs:
-  - otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f
-  - otel.instrumentation.couchbase.experimental-span-attributes
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-3347bf2f
   telemetry:
   - when: default
     spans:
-    - span_kind: INTERNAL
+    - span_kind: CLIENT
       attributes:
       - name: db.collection.name
         type: STRING
@@ -8213,16 +8237,34 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
   - when: otel.instrumentation.couchbase.emit-experimental-telemetry=true
     spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.couchbase.document_id
+        type: STRING
+      - name: db.couchbase.retries
+        type: LONG
+      - name: db.couchbase.scope
+        type: STRING
+      - name: db.couchbase.service
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     - span_kind: INTERNAL
       attributes:
       - name: db.collection.name
@@ -8235,27 +8277,17 @@ libraries:
         type: STRING
       - name: db.couchbase.operation_id
         type: LONG
-      - name: db.couchbase.retries
-        type: LONG
       - name: db.couchbase.scope
         type: STRING
       - name: db.couchbase.server_duration
         type: LONG
-      - name: db.couchbase.service
-        type: STRING
       - name: db.namespace
-        type: STRING
-      - name: db.operation.name
         type: STRING
       - name: db.system.name
         type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
         type: LONG
 - name: dropwizard-metrics-4.0
   display_name: Dropwizard Metrics
@@ -8645,8 +8677,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -10381,8 +10411,6 @@ libraries:
         type: STRING
       - name: db.operation.batch.size
         type: LONG
-      - name: db.operation.name
-        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -10405,6 +10433,36 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+  - when: otel.instrumentation.jdbc.experimental.capture-query-parameters=true
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.query.parameter.0
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+  - when: otel.instrumentation.jdbc.experimental.transaction.enabled=true
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-18bcff8b
@@ -10415,8 +10473,6 @@ libraries:
         type: STRING
       - name: db.operation.batch.size
         type: LONG
-      - name: db.operation.name
-        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -10449,8 +10505,6 @@ libraries:
         type: STRING
       - name: db.operation.batch.size
         type: LONG
-      - name: db.operation.name
-        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -10475,62 +10529,6 @@ libraries:
         type: STRING
     event_refs:
     - db.client.operation.exception-83d4cffb
-- name: jedis-1.4
-  display_name: Jedis
-  description: This instrumentation enables database client spans and database client
-    metrics for Jedis Redis operations.
-  semantic_conventions:
-  - DATABASE_CLIENT_SPANS
-  - DATABASE_CLIENT_METRICS
-  library_link: https://github.com/redis/jedis
-  source_path: instrumentation/jedis/jedis-1.4
-  scope:
-    name: io.opentelemetry.jedis-1.4
-    schema_url: https://opentelemetry.io/schemas/1.44.0
-  has_javaagent: true
-  javaagent_target_versions:
-  - redis.clients:jedis:[1.4.0,2.0.0)
-  configuration_refs:
-  - common.db.query-sanitization.enabled
-  - common.peer-service-mapping
-  - otel.instrumentation.jedis.query-sanitization.enabled
-  telemetry:
-  - when: default
-    metric_refs:
-    - db.client.operation.duration-32559b79
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: peer.service
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-32559b79
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
-        type: STRING
 - name: jedis-2.0
   display_name: Jedis
   description: This instrumentation enables database client spans and database client
@@ -11394,8 +11392,8 @@ libraries:
         type: STRING
 - name: kafka-clients-0.11
   display_name: Apache Kafka Client
-  description: This instrumentation enables messaging spans for Kafka producers and
-    consumers, and collects internal Kafka client metrics.
+  description: |
+    This instrumentation enables messaging spans for Kafka producers and consumers. Native Kafka client metrics are collected only when the separate `kafka-clients-metrics` instrumentation is enabled.
   semantic_conventions:
   - MESSAGING_SPANS
   library_link: https://kafka.apache.org/
@@ -12883,7 +12881,7 @@ libraries:
     schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
-  - io.lettuce:lettuce-core:[5.0.0.RELEASE,5.1.0.RELEASE)
+  - io.lettuce:lettuce-core:[5.0.0.RELEASE,)
   configuration_refs:
   - common.db.query-sanitization.enabled
   - common.peer-service-mapping
@@ -13066,38 +13064,10 @@ libraries:
   source_path: instrumentation/lettuce/lettuce-5.1
   scope:
     name: io.opentelemetry.lettuce-5.1
-    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
-  has_javaagent: true
-  javaagent_target_versions:
-  - io.lettuce:lettuce-core:[5.1.0.RELEASE,)
   configuration_refs:
   - common.db.query-sanitization.enabled
-  - otel.instrumentation.lettuce.experimental.command-encoding-events.enabled
   - otel.instrumentation.lettuce.query-sanitization.enabled
-  telemetry:
-  - when: default
-    metric_refs:
-    - db.client.operation.duration-6dc4ed81
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
 - name: liberty-20.0
   display_name: Liberty
   description: |
@@ -16666,7 +16636,7 @@ libraries:
   source_path: instrumentation/sofa-rpc-5.4
   scope:
     name: io.opentelemetry.sofa-rpc-5.4
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -16700,6 +16670,70 @@ libraries:
       - name: rpc.service
         type: STRING
       - name: rpc.system
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc,service.peer
+    metric_refs:
+    - rpc.client.call.duration-c22f308d
+    - rpc.server.call.duration-b95d8012
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc/dup,service.peer
+    metric_refs:
+    - rpc.client.call.duration-c22f308d
+    - rpc.client.duration-8ed5ac0d
+    - rpc.server.call.duration-b95d8012
+    - rpc.server.duration-3caa4b9d
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
         type: STRING
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
@@ -17924,6 +17958,61 @@ libraries:
       - name: network.type
         type: STRING
       - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.preview=rpc/dup
+    metric_refs:
+    - rpc.client.call.duration-c22f308d
+    - rpc.client.duration-29bce004
+    - rpc.server.call.duration-4a437c0b
+    - rpc.server.duration-026d346c
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: network.local.address
+        type: STRING
+      - name: network.local.port
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
