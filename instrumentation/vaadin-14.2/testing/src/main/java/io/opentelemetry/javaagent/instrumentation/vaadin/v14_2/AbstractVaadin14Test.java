@@ -26,16 +26,20 @@ public class AbstractVaadin14Test extends AbstractVaadinTest {
                             .hasName("GET " + getContextPath() + "/main")
                             .hasNoParent()
                             .hasKind(SpanKind.SERVER);
-                        assertThat(spans.get(1))
-                            .hasName("SpringVaadinServletService.handleRequest")
-                            .hasParent(spans.get(0))
-                            .hasKind(SpanKind.INTERNAL);
-                        // we don't assert all the handler spans as these vary between
-                        // vaadin versions
-                        assertThat(spans.get(spans.size() - 1))
-                            .hasName("BootstrapHandler.handleRequest")
-                            .hasParent(spans.get(1))
-                            .hasKind(SpanKind.INTERNAL);
+                        if (controllerTelemetryEnabled()) {
+                          assertThat(spans.get(1))
+                              .hasName("SpringVaadinServletService.handleRequest")
+                              .hasParent(spans.get(0))
+                              .hasKind(SpanKind.INTERNAL);
+                          // we don't assert all the handler spans as these vary between
+                          // vaadin versions
+                          assertThat(spans.get(spans.size() - 1))
+                              .hasName("BootstrapHandler.handleRequest")
+                              .hasParent(spans.get(1))
+                              .hasKind(SpanKind.INTERNAL);
+                        } else {
+                          assertNoControllerSpans(spans);
+                        }
                       });
             });
   }

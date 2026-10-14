@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class TomcatDbcpInstrumentationModule extends InstrumentationModule {
   public TomcatDbcpInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "tomcat-dbcp-8.0" : "tomcat-dbcp",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"tomcat-dbcp"}
-            : new String[] {"tomcat-dbcp-8.0"});
+    super("tomcat-dbcp-8.0", "tomcat-dbcp");
   }
 
   @Override

@@ -142,14 +142,6 @@ tasks {
     }
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
   val testJmsDisabled = register<Test>("testJmsDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -218,7 +210,6 @@ tasks {
       testSpanKindBasedSuppression,
       testReceiveTelemetry,
       testExperimental,
-      testV3Preview,
       testJmsDisabled,
       testSjmsWithoutCamelJms,
       testCamelDisabled,

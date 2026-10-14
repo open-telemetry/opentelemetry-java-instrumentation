@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.BedrockRuntimeImpl;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -23,11 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public BedrockRuntimeInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-2.2" : "aws-sdk",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"aws-sdk-bedrock-runtime", "aws-sdk"}
-            : new String[] {"aws-sdk-2.2", "aws-sdk-2.2-bedrock-runtime"});
+    super("aws-sdk-2.2", "aws-sdk-bedrock-runtime", "aws-sdk");
   }
 
   @Override

@@ -65,16 +65,21 @@ or test failure that CI will report.
   instrumentation defaults, regardless of task name or settings on `test`.
   Otherwise include only non-default user-facing settings
   needed to describe this instrumentation's signals, span kinds, attributes, metrics, or events,
-  including inherited settings. Inspect JVM properties, fixtures, and library builders; split or
+  including inherited settings, except for the shared synthetic header capture described below.
+  Inspect JVM properties, fixtures, and library builders; split or
   filter collected tasks that mix profiles under one label. Label non-default metric selectors,
   not Java source-set names; document runtime prerequisites separately. Use comma-separated flat
   `key=value` conditions without `-D`, with consistent spelling and ordering for the same mode.
   Omit test setup, unrelated instrumentation settings, and whole-module enablement for default-off
   instrumentation. Include span suppression settings only when they determine this instrumentation's
   telemetry. Missing labels merge optional telemetry into `when: default`.
-- For javaagent tests, keep baseline suites on instrumentation defaults. Test opt-in telemetry
-  in named variants wired into `check`. Preserve normal suite coverage; filtered metadata-collection
-  tests are not a substitute.
+- For javaagent tests, keep baseline suites on instrumentation defaults, apart from HTTP and
+  messaging header capture injected by `CapturedHttpHeadersTestConfigSupplier` and
+  `CapturedMessagingHeadersTestConfigSupplier`. Do not require empty overrides, separate capture
+  variants, or `metadataConfig` conditions solely for this inherited setup. Module-specific
+  capture overrides and other non-default telemetry settings remain subject to the normal profile
+  rules. Test opt-in telemetry in named variants wired into `check`. Preserve normal suite
+  coverage; filtered metadata-collection tests are not a substitute.
 - Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
   variants based on their purpose, not their names. A full-suite `testReceiveSpansDisabled` may
   document default telemetry; a suppression-only regression task does not. Keep regression tasks in
