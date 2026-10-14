@@ -69,6 +69,7 @@ tasks {
 
   val testKtor343 = register<Test>("testKtor343") {
     description = "Runs the Ktor context propagation regression test against Ktor $ktor343TestVersion."
+    systemProperty("collectMetadata", false)
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.main.get().output + sourceSets.test.get().output + ktor343TestRuntimeClasspath
     filter {

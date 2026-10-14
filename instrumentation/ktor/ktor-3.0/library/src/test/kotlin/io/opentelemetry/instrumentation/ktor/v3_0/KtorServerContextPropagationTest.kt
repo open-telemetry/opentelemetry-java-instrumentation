@@ -27,8 +27,7 @@ import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.data.SpanData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertAll
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.net.HttpURLConnection
 import java.net.URI
@@ -79,7 +78,7 @@ class KtorServerContextPropagationTest {
         if (traceId != null) {
           connection.setRequestProperty("traceparent", "00-$traceId-00f067aa0ba902b7-01")
         }
-        assertEquals(200, connection.responseCode)
+        assertThat(connection.responseCode).isEqualTo(200)
         val (observedTraceId, spanId, recording) = connection.inputStream.bufferedReader().use { it.readText() }.split(' ')
         return ObservedSpan(observedTraceId, spanId, recording.toBooleanStrict())
       } finally {
@@ -100,16 +99,30 @@ class KtorServerContextPropagationTest {
       }
     }
 
-    assertAll(
-      "Each request must have its own active SERVER span",
-      { assertEquals(sent, seen.map { it.traceId }, "Handler trace IDs") },
-      { assertEquals(sent.size, seen.map { it.spanId }.distinct().size, "Distinct handler span IDs") },
-      { assertEquals(List(sent.size) { true }, seen.map { it.recording }, "Handler spans are still recording") },
-      { assertEquals(sent, completedSpans.take(sent.size).map { it.traceId }, "Completed span trace IDs for requests with parents") },
-      { assertEquals(List(seen.size + 1) { SpanKind.SERVER }, completedSpans.map { it.kind }, "Completed SERVER spans") },
-      { assertEquals(seen.map { it.spanId } + noParentSeen.spanId, completedSpans.map { it.spanId }, "Completed spans match handler spans") },
-      { assertEquals(false, noParentSeen.traceId in sent, "Request without traceparent starts a new trace") },
-      { assertEquals(noParentSeen.traceId, completedSpans.last().traceId, "Unparented request's completed trace ID") },
-    )
+    assertThat(seen.map { it.traceId })
+      .describedAs("handler trace IDs")
+      .isEqualTo(sent)
+    assertThat(seen.map { it.spanId }.distinct())
+      .describedAs("distinct handler span IDs")
+      .hasSize(sent.size)
+    assertThat(seen.map { it.recording })
+      .describedAs("handler spans are still recording")
+      .containsOnly(true)
+    assertThat(completedSpans.take(sent.size).map { it.traceId })
+      .describedAs("completed span trace IDs for requests with parents")
+      .isEqualTo(sent)
+    assertThat(completedSpans.map { it.kind })
+      .describedAs("completed SERVER spans")
+      .containsOnly(SpanKind.SERVER)
+      .hasSize(seen.size + 1)
+    assertThat(completedSpans.map { it.spanId })
+      .describedAs("completed spans match handler spans")
+      .isEqualTo(seen.map { it.spanId } + noParentSeen.spanId)
+    assertThat(noParentSeen.traceId)
+      .describedAs("request without traceparent starts a new trace")
+      .isNotIn(sent)
+    assertThat(completedSpans.last().traceId)
+      .describedAs("unparented request's completed trace ID")
+      .isEqualTo(noParentSeen.traceId)
   }
 }
