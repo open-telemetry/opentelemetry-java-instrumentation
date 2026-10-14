@@ -19,6 +19,7 @@ class ServletConfig {
   @Nullable private final IncludeExclude requestParameters;
   private final boolean captureExperimentalAttributes;
   private final boolean traceIdRequestAttributeEnabled;
+  private final boolean captureRequestBody;
 
   static ServletConfig get() {
     return SingletonHolder.INSTANCE;
@@ -31,6 +32,7 @@ class ServletConfig {
         config.getBoolean("experimental_span_attributes/development", false);
     traceIdRequestAttributeEnabled =
         config.get("trace_id_request_attribute/development").getBoolean("enabled", false);
+    captureRequestBody = config.getBoolean("capture_request_body/development", false);
   }
 
   @Nullable
@@ -44,6 +46,10 @@ class ServletConfig {
 
   boolean getTraceIdRequestAttributeEnabled() {
     return traceIdRequestAttributeEnabled;
+  }
+
+  boolean getCaptureRequestBody() {
+    return captureRequestBody;
   }
 
   private static final class SingletonHolder {
