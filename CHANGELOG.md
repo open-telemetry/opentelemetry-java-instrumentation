@@ -4,6 +4,18 @@
 
 ### ⚠️ Breaking changes
 
+- Java agent telemetry now uses the following instrumentation scopes. Update views, dashboards
+  and filters matching the previous names:
+
+  | Previous scope | Current scope |
+  | --- | --- |
+  | `io.opentelemetry.jaxrs-1.0` | `io.opentelemetry.jaxrs-1.0-annotations` |
+  | `io.opentelemetry.jaxws-cxf-3.0` | `io.opentelemetry.jaxws-2.0-cxf-3.0` |
+  | `io.opentelemetry.jaxws-metro-2.2` | `io.opentelemetry.jaxws-2.0-metro-2.2` |
+  | `io.opentelemetry.mongo-3.7` | `io.opentelemetry.mongo-3.1` |
+  | `io.opentelemetry.ratpack-1.7` | `io.opentelemetry.ratpack-1.4` |
+  | `io.opentelemetry.tomcat-jdbc` | `io.opentelemetry.tomcat-jdbc-8.5` |
+
 - Java agent instrumentation selectors now always use the versioned component name first,
   followed by supported role, versionless and umbrella selectors. When several selectors are
   configured, the first matching selector determines enablement. For example,
@@ -260,6 +272,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
+  `create(Meter, String, Attributes)` overloads. Use the overloads accepting
+  `OpenTelemetry`, the instrumentation name and the pool name instead.
 - Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` and command-encoding event support
   from the standalone Lettuce library. There is no replacement API.
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
