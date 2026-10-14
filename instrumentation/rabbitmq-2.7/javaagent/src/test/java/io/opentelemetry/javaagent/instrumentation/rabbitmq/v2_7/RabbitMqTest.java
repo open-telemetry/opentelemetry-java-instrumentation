@@ -192,7 +192,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 span ->
                     span.hasAttributesSatisfyingExactly(
                         equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                        satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(recoveredPeerAddress, null)),
+                        satisfies(
+                            NETWORK_PEER_ADDRESS, val -> val.isIn(recoveredPeerAddress, null)),
                         satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                         satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
                         equalTo(stringKey("rabbitmq.command"), experimental("queue.declare")),
