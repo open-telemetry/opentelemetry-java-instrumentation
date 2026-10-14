@@ -140,7 +140,23 @@ jobs:
             exit 1
           fi
 
-  # shell-only checks; every check runs even if an earlier one fails so all failures are visible
+  release-tooling-tests:
+    runs-on: ubuntu-slim
+    steps:
+      - id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test release configuration and workflows
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: python3 -m unittest discover -s .github/scripts -p test_release_config.py
+
+      - name: Test release notes
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: python3 -m unittest discover -s .github/scripts/draft-release-notes -p 'test_*.py'
+
+  # every check runs even if an earlier one fails so all failures are visible
   repo-checks:
     runs-on: ubuntu-slim
     steps:
@@ -152,6 +168,7 @@ jobs:
       # this is needed because we don't auto-update dependencies in instrumentation/**
       # and so we want to enforce that all "real" dependencies are dependency managed
       - name: Extra dependency management enforcement
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
         run: |
           set +e
           grep '^  implementation(".*:.*:[0-9].*")\|^  api(".*:.*:[0-9].*")' \
