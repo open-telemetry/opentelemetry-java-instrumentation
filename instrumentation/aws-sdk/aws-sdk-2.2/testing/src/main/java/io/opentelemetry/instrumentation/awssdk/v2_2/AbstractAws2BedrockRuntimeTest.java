@@ -208,7 +208,6 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
-    KeyValue[] emptyBody = {};
 
     getTesting()
         .waitAndAssertLogRecords(
@@ -220,7 +219,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         captureMessageContent
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(emptyBody)),
+                            : Value.of(new KeyValue[] {})),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
