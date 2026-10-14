@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -168,7 +169,8 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     if (value == null) {
       return null;
     }
-    return value.stream().map(SpringDeclarativeConfigProperties::new).collect(toList());
+    return unmodifiableList(
+        value.stream().map(SpringDeclarativeConfigProperties::new).collect(toList()));
   }
 
   @Override

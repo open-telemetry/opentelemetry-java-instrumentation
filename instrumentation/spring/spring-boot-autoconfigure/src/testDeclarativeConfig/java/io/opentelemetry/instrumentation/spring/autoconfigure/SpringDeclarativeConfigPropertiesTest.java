@@ -12,6 +12,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -246,6 +247,8 @@ class SpringDeclarativeConfigPropertiesTest {
 
     List<DeclarativeConfigProperties> items = config.getStructuredList("items");
     assertThat(items).hasSize(1);
+    assertThatThrownBy(() -> items.add(childConfig))
+        .isInstanceOf(UnsupportedOperationException.class);
     assertThat(items.get(0).getInt("port")).isEqualTo(8080);
 
     assertThat(config.get("child").getBoolean("enabled")).isTrue();
