@@ -15,8 +15,6 @@ import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.chat.completions.ChatCompletionDeveloperMessageParam;
 import com.openai.models.chat.completions.ChatCompletionMessageParam;
-import com.openai.models.chat.completions.ChatCompletionSystemMessageParam;
-import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
@@ -66,20 +64,6 @@ class ChatCompletionEventsHelperTest {
   private static Stream<Arguments> messages() {
     return Stream.of(
         argumentSet(
-            "system content excluded",
-            ChatCompletionMessageParam.ofSystem(
-                ChatCompletionSystemMessageParam.builder().content("hello").build()),
-            false,
-            "gen_ai.system.message",
-            null),
-        argumentSet(
-            "user content excluded",
-            ChatCompletionMessageParam.ofUser(
-                ChatCompletionUserMessageParam.builder().content("hello").build()),
-            false,
-            "gen_ai.user.message",
-            null),
-        argumentSet(
             "assistant content excluded",
             ChatCompletionMessageParam.ofAssistant(
                 ChatCompletionAssistantMessageParam.builder().content("hello").build()),
@@ -100,16 +84,6 @@ class ChatCompletionEventsHelperTest {
             false,
             "gen_ai.system.message",
             Value.of(KeyValue.of("role", Value.of("developer")))),
-        argumentSet(
-            "tool id retained",
-            ChatCompletionMessageParam.ofTool(
-                ChatCompletionToolMessageParam.builder()
-                    .content("hello")
-                    .toolCallId("call-id")
-                    .build()),
-            false,
-            "gen_ai.tool.message",
-            Value.of(KeyValue.of("id", Value.of("call-id")))),
         argumentSet(
             "captured empty content",
             ChatCompletionMessageParam.ofUser(

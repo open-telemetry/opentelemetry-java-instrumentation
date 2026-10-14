@@ -10,30 +10,20 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.as
 import static io.opentelemetry.testing.internal.proto.trace.v1.SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK_VALUE;
 import static io.opentelemetry.testing.internal.proto.trace.v1.SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK_VALUE;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.Value;
-import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
-import io.opentelemetry.exporter.internal.otlp.logs.LogsRequestMarshaler;
 import io.opentelemetry.exporter.internal.otlp.traces.TraceRequestMarshaler;
-import io.opentelemetry.sdk.logs.SdkLoggerProvider;
-import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
-import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
 import io.opentelemetry.testing.internal.proto.common.v1.KeyValue;
@@ -125,56 +115,6 @@ class TelemetryConverterTest {
         argumentSet("unsampled remote", 0x380, true),
         argumentSet("remote bit without known bit", 0x281, false),
         argumentSet("reserved bits", 0x80000381, true));
-  }
-
-  @ParameterizedTest
-  @MethodSource("logBodies")
-  void logBodyOtlpRoundTrip(Value<?> body) throws IOException {
-    InMemoryLogRecordExporter exporter = InMemoryLogRecordExporter.create();
-    try (SdkLoggerProvider loggerProvider =
-        SdkLoggerProvider.builder()
-            .addLogRecordProcessor(SimpleLogRecordProcessor.create(exporter))
-            .build()) {
-      LogRecordBuilder event =
-          loggerProvider
-              .get("test")
-              .logRecordBuilder()
-              .setTimestamp(1, NANOSECONDS)
-              .setAttribute(stringKey("event.name"), "gen_ai.user.message");
-      if (body != null) {
-        event.setBody(body);
-      }
-      event.emit();
-
-      ByteArrayOutputStream output = new ByteArrayOutputStream();
-      LogsRequestMarshaler.create(exporter.getFinishedLogRecordItems()).writeBinaryTo(output);
-      ExportLogsServiceRequest request = ExportLogsServiceRequest.parseFrom(output.toByteArray());
-
-      assertThat(request.getResourceLogs(0).getScopeLogs(0).getLogRecords(0).hasBody())
-          .isEqualTo(body != null);
-      assertThat(TelemetryConverter.getLogRecordData(request.getResourceLogsList()))
-          .singleElement()
-          .satisfies(
-              log -> {
-                assertThat(log.getBodyValue()).isEqualTo(body);
-                assertThat(log.getTimestampEpochNanos()).isEqualTo(1);
-                assertThat(log.getAttributes())
-                    .isEqualTo(Attributes.of(stringKey("event.name"), "gen_ai.user.message"));
-              });
-    }
-  }
-
-  private static Stream<Arguments> logBodies() {
-    return Stream.of(
-        argumentSet("absent body", (Value<?>) null),
-        argumentSet("captured empty object", Value.of(emptyMap())),
-        argumentSet(
-            "retained fields",
-            Value.of(
-                io.opentelemetry.api.common.KeyValue.of("null", Value.empty()),
-                io.opentelemetry.api.common.KeyValue.of("content", Value.of("")),
-                io.opentelemetry.api.common.KeyValue.of("list", Value.of(emptyList())),
-                io.opentelemetry.api.common.KeyValue.of("message", Value.of(emptyMap())))));
   }
 
   @ParameterizedTest

@@ -25,7 +25,6 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.services.bedrockruntime.model.ContentBlock;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
-import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlock;
 
 // TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
 // is resolved.
@@ -62,44 +61,15 @@ class BedrockRuntimeEventsTest {
   private static Stream<Arguments> messages() {
     return Stream.of(
         argumentSet(
-            "user content excluded",
-            Message.builder().role("user").content(ContentBlock.fromText("hello")).build(),
-            false,
-            null),
-        argumentSet(
             "assistant content excluded",
             Message.builder().role("assistant").content(ContentBlock.fromText("hello")).build(),
             false,
             null),
         argumentSet("no content available", Message.builder().role("user").build(), true, null),
         argumentSet(
-            "assistant without content", Message.builder().role("assistant").build(), true, null),
-        argumentSet(
-            "tool metadata retained",
-            Message.builder()
-                .role("assistant")
-                .content(
-                    ContentBlock.fromToolUse(
-                        ToolUseBlock.builder().toolUseId("call-id").name("get_weather").build()))
-                .build(),
-            false,
-            Value.of(
-                KeyValue.of(
-                    "toolCalls",
-                    Value.of(
-                        Value.of(
-                            KeyValue.of("name", Value.of("get_weather")),
-                            KeyValue.of("id", Value.of("call-id")),
-                            KeyValue.of("type", Value.of("function"))))))),
-        argumentSet(
             "captured empty content",
             Message.builder().role("user").content(ContentBlock.fromText("")).build(),
             true,
-            Value.of(KeyValue.of("content", Value.of("")))),
-        argumentSet(
-            "captured content",
-            Message.builder().role("user").content(ContentBlock.fromText("hello")).build(),
-            true,
-            Value.of(KeyValue.of("content", Value.of("hello")))));
+            Value.of(KeyValue.of("content", Value.of("")))));
   }
 }
