@@ -142,7 +142,7 @@ class KafkaBatchProcessSpanLinksExtractorTest {
         new TopicPartition("topic-a", 0), singletonList(record("topic-a", 0, 5, "key")));
     recordsByPartition.put(new TopicPartition("topic-b", 0), emptyList());
     KafkaReceiveRequest request =
-        KafkaReceiveRequest.create(new ConsumerRecords<>(recordsByPartition), null, null, null);
+        KafkaReceiveRequest.create(records(recordsByPartition), null, null, null);
 
     AttributesBuilder spanAttributes = Attributes.builder();
     new KafkaReceiveAttributesExtractor().onStart(spanAttributes, Context.root(), request);
@@ -178,12 +178,18 @@ class KafkaBatchProcessSpanLinksExtractorTest {
               new TopicPartition(record.topic(), record.partition()), unused -> new ArrayList<>())
           .add(record);
     }
-    return KafkaReceiveRequest.create(new ConsumerRecords<>(recordsByPartition), null, null, null);
+    return KafkaReceiveRequest.create(records(recordsByPartition), null, null, null);
   }
 
   private static ConsumerRecord<String, String> record(
       String topic, int partition, long offset, String key) {
     return new ConsumerRecord<>(topic, partition, offset, key, "value");
+  }
+
+  @SuppressWarnings("removal")
+  private static <K, V> ConsumerRecords<K, V> records(
+      Map<TopicPartition, List<ConsumerRecord<K, V>>> recordsByPartition) {
+    return new ConsumerRecords<>(recordsByPartition);
   }
 
   private static Attributes linkAttributes(

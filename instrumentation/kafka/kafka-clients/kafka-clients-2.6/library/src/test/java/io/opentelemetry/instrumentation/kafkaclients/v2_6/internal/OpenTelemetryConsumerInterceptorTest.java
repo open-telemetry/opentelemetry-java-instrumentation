@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -100,7 +101,7 @@ class OpenTelemetryConsumerInterceptorTest {
     TopicPartition partition = new TopicPartition(topic, 0);
     ConsumerRecord<String, String> record = new ConsumerRecord<>(topic, 0, 0, "key", "value");
     ConsumerRecords<String, String> records =
-        new ConsumerRecords<>(singletonMap(partition, singletonList(record)));
+        records(singletonMap(partition, singletonList(record)));
 
     ConsumerRecords<String, String> tracedRecords = firstInterceptor.onConsume(records);
     secondInterceptor.onConsume(tracedRecords);
@@ -127,7 +128,7 @@ class OpenTelemetryConsumerInterceptorTest {
     TopicPartition partition = new TopicPartition(topic, 0);
     ConsumerRecord<String, String> record = new ConsumerRecord<>(topic, 0, 0, "key", "value");
     ConsumerRecords<String, String> records =
-        new ConsumerRecords<>(singletonMap(partition, singletonList(record)));
+        records(singletonMap(partition, singletonList(record)));
 
     Context receiveContext;
     Context inheritedContext =
@@ -138,5 +139,11 @@ class OpenTelemetryConsumerInterceptorTest {
     }
 
     assertThat(KafkaConsumerContextUtil.hasReceiveOperation(receiveContext)).isFalse();
+  }
+
+  @SuppressWarnings("removal")
+  private static <K, V> ConsumerRecords<K, V> records(
+      Map<TopicPartition, List<ConsumerRecord<K, V>>> recordsByPartition) {
+    return new ConsumerRecords<>(recordsByPartition);
   }
 }
