@@ -33,12 +33,22 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testControllerTelemetry)
   }
 }

@@ -173,13 +173,6 @@ tasks {
       )
     }
 
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
   check {
     dependsOn(
       testing.suites,
@@ -187,7 +180,6 @@ tasks {
       testConnectionTelemetryEnabledPreviewSemconv,
       previewSemconvSuites,
       testExperimental,
-      testV3Preview
     )
   }
 }
