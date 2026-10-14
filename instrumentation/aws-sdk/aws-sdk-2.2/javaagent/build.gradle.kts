@@ -242,20 +242,11 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.genai.capture-message-content=true")
   }
 
-  named<Test>("testExperimentalSqs") {
-    systemProperty("collectMetadata", false)
-  }
-
-  named<Test>("testReceiveSpansDisabled") {
-    systemProperty("collectMetadata", false)
-  }
-
   val testRdsDataExperimentalAttributes = register<Test>("testRdsDataExperimentalAttributes") {
     testClassesDirs = sourceSets["testRdsData"].output.classesDirs
     classpath = sourceSets["testRdsData"].runtimeClasspath
 
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("collectMetadata", false)
   }
 
   check {

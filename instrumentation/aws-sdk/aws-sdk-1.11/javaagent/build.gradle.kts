@@ -154,15 +154,10 @@ tasks {
       classpath = sourceSets["test_before_1_11_106"].runtimeClasspath
 
       systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-      systemProperty("collectMetadata", false)
     }
     check {
       dependsOn(testBefore106ExperimentalAttributes)
     }
-  }
-
-  named<Test>("testSqsNoReceiveTelemetry") {
-    systemProperty("collectMetadata", false)
   }
 
   check {
