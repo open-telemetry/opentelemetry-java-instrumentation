@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,11 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "opentelemetry-api-1.27" : "opentelemetry-api",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opentelemetry-api"}
-            : new String[] {"opentelemetry-api-1.27"});
+    super("opentelemetry-api-1.27", "opentelemetry-api");
   }
 
   @Override

@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.metro.v2_2;
 
-import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class MetroInstrumentationModule extends InstrumentationModule {
 
   public MetroInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "jaxws-2.0-metro-2.2" : "metro",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxws-metro", "jaxws"}
-            : expandDeprecatedNames("jaxws-2.0-metro-2.2|deprecated:jaxws-metro-2.2", "jaxws"));
+    super("jaxws-2.0-metro-2.2", "jaxws-metro", "jaxws");
   }
 
   @Override
