@@ -50,7 +50,6 @@ tasks {
       otelProps.testLatestDeps || name.startsWith("jedis51"),
     )
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {

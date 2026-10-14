@@ -401,9 +401,6 @@ instrumentation/development:
       # `kubernetes-client.name` for Kubernetes API requests.
       experimental_span_attributes/development: false
     lettuce:
-      command_encoding_events/development:
-        # Enables capturing `redis.encode.start` and `redis.encode.end` span events.
-        enabled: false
       connection_telemetry:
         # Enables connection telemetry spans for Redis connections.
         enabled: false

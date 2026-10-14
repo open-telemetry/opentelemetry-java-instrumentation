@@ -1,4 +1,7 @@
-description: This instrumentation enables messaging spans for Kafka producers and consumers, and collects internal Kafka client metrics.
+description: >
+  This instrumentation enables messaging spans for Kafka producers and consumers. Native Kafka
+  client metrics are collected only when the separate `kafka-clients-metrics` instrumentation is
+  enabled.
 display_name: Apache Kafka Client
 library_link: https://kafka.apache.org/
 semantic_conventions:
