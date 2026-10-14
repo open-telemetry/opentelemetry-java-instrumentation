@@ -7,200 +7,103 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
-import java.util.Collections;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.StringJoiner;
 import javax.annotation.Nullable;
 
 /**
- * Spring flavor of {@link
- * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}. Typed
- * getters convert Spring-resolved values to the requested type rather than requiring the stored
- * scalar to already have that type. This also handles String-valued placeholders and
- * system-property overrides.
+ * Wraps {@link YamlDeclarativeConfigProperties} so typed getters convert Spring-resolved values to
+ * the requested type rather than requiring the stored scalar to already have that type. Values
+ * resolved from properties, placeholders, and system-property overrides arrive as Strings.
  *
- * <p>The entire class is a copy of <a
- * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/YamlDeclarativeConfigProperties.java">YamlDeclarativeConfigProperties</a>
- * with only minor modifications to type coercion logic.
- *
- * <p>TODO: Revisit after https://github.com/open-telemetry/opentelemetry-java/issues/8101 — if
- * upstream {@code DeclarativeConfigProperties} exposes type introspection (e.g. {@code getType()}
- * or {@code isString()}), this full copy can be replaced with a thin type-coercing decorator around
- * {@code DeclarativeConfigProperties}.
+ * <p>Getters check what the delegate holds with its {@code is<Type>} predicates before reading, so
+ * the delegate does not log a type mismatch for a value this class converts. List elements have no
+ * such predicate, so {@link #create} stores every scalar list element as a String and {@link
+ * #getScalarList} converts from there.
  */
 final class SpringDeclarativeConfigProperties implements DeclarativeConfigProperties {
 
-  private static final Set<Class<?>> SUPPORTED_SCALAR_TYPES =
-      new LinkedHashSet<>(asList(String.class, Boolean.class, Long.class, Double.class));
+  private static final Set<Class<?>> CONVERTIBLE_LIST_TYPES =
+      new HashSet<>(asList(Boolean.class, Long.class, Double.class));
 
-  /** Values are {@link #isPrimitive(Object)}, {@link List} of scalars. */
-  private final Map<String, Object> simpleEntries;
+  private final DeclarativeConfigProperties delegate;
 
-  private final Map<String, List<SpringDeclarativeConfigProperties>> listEntries;
-  private final Map<String, SpringDeclarativeConfigProperties> mapEntries;
-  private final ComponentLoader componentLoader;
-
-  /**
-   * Create a {@link SpringDeclarativeConfigProperties} from the {@code properties} map.
-   *
-   * <p>{@code properties} is expected to be the output of YAML parsing (i.e. with Jackson {@code
-   * com.fasterxml.jackson.databind.ObjectMapper}), and have values which are scalars, lists of
-   * scalars, lists of maps, and maps.
-   *
-   * @see DeclarativeConfiguration#toConfigProperties(Object)
-   */
-  @SuppressWarnings("unchecked")
-  public static SpringDeclarativeConfigProperties create(
+  static SpringDeclarativeConfigProperties create(
       Map<String, Object> properties, ComponentLoader componentLoader) {
-    Map<String, Object> simpleEntries = new LinkedHashMap<>();
-    Map<String, List<SpringDeclarativeConfigProperties>> listEntries = new LinkedHashMap<>();
-    Map<String, SpringDeclarativeConfigProperties> mapEntries = new LinkedHashMap<>();
-    for (Map.Entry<String, Object> entry : properties.entrySet()) {
-      String key = entry.getKey();
-      Object value = entry.getValue();
-      if (isPrimitive(value) || value == null) {
-        simpleEntries.put(key, value);
-        continue;
-      }
-      if (isPrimitiveList(value)) {
-        simpleEntries.put(key, value);
-        continue;
-      }
-      if (isListOfMaps(value)) {
-        List<SpringDeclarativeConfigProperties> list =
-            ((List<Map<String, Object>>) value)
-                .stream()
-                    .map(map -> SpringDeclarativeConfigProperties.create(map, componentLoader))
-                    .collect(toList());
-        listEntries.put(key, list);
-        continue;
-      }
-      if (isMap(value)) {
-        SpringDeclarativeConfigProperties configProperties =
-            SpringDeclarativeConfigProperties.create((Map<String, Object>) value, componentLoader);
-        mapEntries.put(key, configProperties);
-        continue;
-      }
-      throw new DeclarativeConfigException(
-          "Unable to initialize SpringDeclarativeConfigProperties. Key \""
-              + key
-              + "\" has unrecognized value type "
-              + value.getClass().getName()
-              + ". Supported value types include primitives (String, Boolean, Integer, Long,"
-              + " Double), lists of primitives, lists of maps, and maps");
-    }
     return new SpringDeclarativeConfigProperties(
-        simpleEntries, listEntries, mapEntries, componentLoader);
+        YamlDeclarativeConfigProperties.create(stringifyScalarLists(properties), componentLoader));
   }
 
-  private SpringDeclarativeConfigProperties(
-      Map<String, Object> simpleEntries,
-      Map<String, List<SpringDeclarativeConfigProperties>> listEntries,
-      Map<String, SpringDeclarativeConfigProperties> mapEntries,
-      ComponentLoader componentLoader) {
-    this.simpleEntries = simpleEntries;
-    this.listEntries = listEntries;
-    this.mapEntries = mapEntries;
-    this.componentLoader = componentLoader;
-  }
-
-  private static boolean isPrimitiveList(Object object) {
-    if (object instanceof List) {
-      List<?> list = (List<?>) object;
-      return list.stream().allMatch(SpringDeclarativeConfigProperties::isPrimitive);
-    }
-    return false;
-  }
-
-  private static boolean isPrimitive(Object object) {
-    return object instanceof String
-        || object instanceof Integer
-        || object instanceof Long
-        || object instanceof Double
-        || object instanceof Boolean;
-  }
-
-  private static boolean isListOfMaps(Object object) {
-    if (object instanceof List) {
-      List<?> list = (List<?>) object;
-      return list.stream()
-          .allMatch(
-              entry ->
-                  entry instanceof Map
-                      && ((Map<?, ?>) entry)
-                          .keySet().stream().allMatch(key -> key instanceof String));
-    }
-    return false;
-  }
-
-  private static boolean isMap(Object object) {
-    if (object instanceof Map) {
-      Map<?, ?> map = (Map<?, ?>) object;
-      return map.keySet().stream().allMatch(entry -> entry instanceof String);
-    }
-    return false;
+  private SpringDeclarativeConfigProperties(DeclarativeConfigProperties delegate) {
+    this.delegate = delegate;
   }
 
   @Nullable
   @Override
   public String getString(String name) {
-    return stringOrNull(simpleEntries.get(name));
-  }
-
-  @Nullable
-  @Override
-  public Boolean getBoolean(String name) {
-    return booleanOrNull(simpleEntries.get(name));
-  }
-
-  @Nullable
-  @Override
-  public Integer getInt(String name) {
-    Object value = simpleEntries.get(name);
-    if (value instanceof Integer) {
-      return (Integer) value;
+    if (delegate.isString(name)) {
+      return delegate.getString(name);
     }
-    if (value instanceof Long) {
-      long longValue = (Long) value;
-      if (longValue >= Integer.MIN_VALUE && longValue <= Integer.MAX_VALUE) {
-        // Unlikely to reach here since Jackson already deserializes values
-        // fitting in int range as Integer, but handle it for safety.
-        return (int) longValue;
-      }
-      return null;
+    if (delegate.isBoolean(name)) {
+      return String.valueOf(delegate.getBoolean(name));
     }
-    if (value instanceof String) {
-      try {
-        return Integer.parseInt((String) value);
-      } catch (NumberFormatException e) {
-        return null;
-      }
+    if (delegate.isLong(name)) {
+      return String.valueOf(delegate.getLong(name));
+    }
+    if (delegate.isDouble(name)) {
+      return String.valueOf(delegate.getDouble(name));
     }
     return null;
   }
 
   @Nullable
   @Override
+  public Boolean getBoolean(String name) {
+    if (delegate.isBoolean(name)) {
+      return delegate.getBoolean(name);
+    }
+    return parseBoolean(stringOrNull(name));
+  }
+
+  @Nullable
+  @Override
+  public Integer getInt(String name) {
+    Long value = getLong(name);
+    if (value == null || value < Integer.MIN_VALUE || value > Integer.MAX_VALUE) {
+      return null;
+    }
+    return value.intValue();
+  }
+
+  @Nullable
+  @Override
   public Long getLong(String name) {
-    return longOrNull(simpleEntries.get(name));
+    if (delegate.isLong(name)) {
+      return delegate.getLong(name);
+    }
+    return parseLong(stringOrNull(name));
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    return doubleOrNull(simpleEntries.get(name));
+    if (delegate.isDouble(name)) {
+      return delegate.getDouble(name);
+    }
+    Long longValue = delegate.isLong(name) ? delegate.getLong(name) : null;
+    if (longValue != null) {
+      return longValue.doubleValue();
+    }
+    return parseDouble(stringOrNull(name));
   }
 
   @Override
@@ -231,147 +134,135 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
   @Nullable
   @Override
   public <T> List<T> getScalarList(String name, Class<T> scalarType) {
-    if (!SUPPORTED_SCALAR_TYPES.contains(scalarType)) {
-      throw new DeclarativeConfigException(
-          "Unsupported scalar type "
-              + scalarType.getName()
-              + ". Supported types include "
-              + SUPPORTED_SCALAR_TYPES.stream()
-                  .map(Class::getName)
-                  .collect(joining(",", "[", "]")));
+    if (!CONVERTIBLE_LIST_TYPES.contains(scalarType)) {
+      // String, or an unsupported type the delegate rejects
+      return delegate.getScalarList(name, scalarType);
     }
-    Object value = simpleEntries.get(name);
-    if (value instanceof List) {
-      List<?> objectList = ((List<?>) value);
-      if (objectList.isEmpty()) {
-        return emptyList();
-      }
-      List<T> result =
-          objectList.stream()
-              .map(
-                  entry -> {
-                    if (scalarType == String.class) {
-                      return stringOrNull(entry);
-                    } else if (scalarType == Boolean.class) {
-                      return booleanOrNull(entry);
-                    } else if (scalarType == Long.class) {
-                      return longOrNull(entry);
-                    } else if (scalarType == Double.class) {
-                      return doubleOrNull(entry);
-                    }
-                    return null;
-                  })
-              .filter(Objects::nonNull)
-              .map(scalarType::cast)
-              .collect(toList());
-      if (result.isEmpty()) {
-        return null;
-      }
-      return result;
-    }
-    return null;
-  }
-
-  @Nullable
-  private static String stringOrNull(@Nullable Object value) {
-    if (value == null || !isPrimitive(value)) {
+    List<String> strings = delegate.getScalarList(name, String.class);
+    if (strings == null) {
       return null;
     }
-    return value.toString();
-  }
-
-  @Nullable
-  private static Boolean booleanOrNull(@Nullable Object value) {
-    if (value instanceof Boolean) {
-      return (Boolean) value;
+    if (strings.isEmpty()) {
+      return emptyList();
     }
-    if (value instanceof String) {
-      if ("true".equalsIgnoreCase((String) value)) {
-        return true;
-      }
-      if ("false".equalsIgnoreCase((String) value)) {
-        return false;
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private static Long longOrNull(@Nullable Object value) {
-    if (value instanceof Long) {
-      return (Long) value;
-    }
-    if (value instanceof Integer) {
-      return ((Integer) value).longValue();
-    }
-    if (value instanceof String) {
-      try {
-        return Long.parseLong((String) value);
-      } catch (NumberFormatException e) {
-        return null;
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private static Double doubleOrNull(@Nullable Object value) {
-    if (value instanceof Double) {
-      return (Double) value;
-    }
-    if (value instanceof Integer) {
-      return ((Integer) value).doubleValue();
-    }
-    if (value instanceof Long) {
-      return ((Long) value).doubleValue();
-    }
-    if (value instanceof String) {
-      try {
-        return Double.parseDouble((String) value);
-      } catch (NumberFormatException e) {
-        return null;
-      }
-    }
-    return null;
+    List<T> result =
+        strings.stream()
+            .map(value -> parse(value, scalarType))
+            .filter(Objects::nonNull)
+            .map(scalarType::cast)
+            .collect(toList());
+    return result.isEmpty() ? null : result;
   }
 
   @Nullable
   @Override
   public DeclarativeConfigProperties getStructured(String name) {
-    return mapEntries.get(name);
+    DeclarativeConfigProperties value = delegate.getStructured(name);
+    return value == null ? null : new SpringDeclarativeConfigProperties(value);
   }
 
   @Nullable
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
-    List<SpringDeclarativeConfigProperties> value = listEntries.get(name);
-    if (value != null) {
-      return Collections.unmodifiableList(value);
+    List<DeclarativeConfigProperties> value = delegate.getStructuredList(name);
+    if (value == null) {
+      return null;
     }
-    return null;
+    return value.stream().map(SpringDeclarativeConfigProperties::new).collect(toList());
   }
 
   @Override
   public Set<String> getPropertyKeys() {
-    Set<String> keys = new LinkedHashSet<>();
-    keys.addAll(simpleEntries.keySet());
-    keys.addAll(listEntries.keySet());
-    keys.addAll(mapEntries.keySet());
-    return Collections.unmodifiableSet(keys);
+    return delegate.getPropertyKeys();
+  }
+
+  @Override
+  public ComponentLoader getComponentLoader() {
+    return delegate.getComponentLoader();
   }
 
   @Override
   public String toString() {
-    StringJoiner joiner = new StringJoiner(", ", "SpringDeclarativeConfigProperties{", "}");
-    simpleEntries.forEach((key, value) -> joiner.add(key + "=" + value));
-    listEntries.forEach((key, value) -> joiner.add(key + "=" + value));
-    mapEntries.forEach((key, value) -> joiner.add(key + "=" + value));
-    return joiner.toString();
+    return "SpringDeclarativeConfigProperties{" + delegate + '}';
   }
 
-  /** Return the {@link ComponentLoader}. */
-  @Override
-  public ComponentLoader getComponentLoader() {
-    return componentLoader;
+  /** Returns the stored String without asking the delegate to read any other type. */
+  @Nullable
+  private String stringOrNull(String name) {
+    return delegate.isString(name) ? delegate.getString(name) : null;
+  }
+
+  @Nullable
+  private static Object parse(String value, Class<?> scalarType) {
+    if (scalarType == Boolean.class) {
+      return parseBoolean(value);
+    }
+    if (scalarType == Long.class) {
+      return parseLong(value);
+    }
+    return parseDouble(value);
+  }
+
+  @Nullable
+  private static Boolean parseBoolean(@Nullable String value) {
+    if ("true".equalsIgnoreCase(value)) {
+      return true;
+    }
+    if ("false".equalsIgnoreCase(value)) {
+      return false;
+    }
+    return null;
+  }
+
+  @Nullable
+  private static Long parseLong(@Nullable String value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Double parseDouble(@Nullable String value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      return Double.parseDouble(value);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  private static Map<String, Object> stringifyScalarLists(Map<String, Object> properties) {
+    Map<String, Object> result = new LinkedHashMap<>();
+    properties.forEach((key, value) -> result.put(key, stringifyScalarLists(value)));
+    return result;
+  }
+
+  @SuppressWarnings("unchecked") // nested maps come from the same parsed config, keyed by String
+  @Nullable
+  private static Object stringifyScalarLists(@Nullable Object value) {
+    if (value instanceof Map) {
+      return stringifyScalarLists((Map<String, Object>) value);
+    }
+    if (!(value instanceof List)) {
+      return value;
+    }
+    List<?> list = (List<?>) value;
+    if (list.stream().allMatch(SpringDeclarativeConfigProperties::isScalar)) {
+      return list.stream().map(String::valueOf).collect(toList());
+    }
+    return list.stream()
+        .map(SpringDeclarativeConfigProperties::stringifyScalarLists)
+        .collect(toList());
+  }
+
+  private static boolean isScalar(Object value) {
+    return value instanceof String || value instanceof Number || value instanceof Boolean;
   }
 }
