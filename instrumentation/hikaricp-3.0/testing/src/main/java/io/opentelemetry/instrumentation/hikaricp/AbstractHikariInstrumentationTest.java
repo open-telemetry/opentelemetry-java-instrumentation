@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.CountDownLatch;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
@@ -115,17 +116,24 @@ public abstract class AbstractHikariInstrumentationTest {
   @Test
   void shouldReportTimeouts() throws SQLException {
     // given
+    CountDownLatch connectionAttemptStarted = new CountDownLatch(1);
+    CountDownLatch releaseConnectionAttempt = new CountDownLatch(1);
     when(dataSourceMock.getConnection())
         .then(
             invocation -> {
-              MILLISECONDS.sleep(2_000);
+              connectionAttemptStarted.countDown();
+              releaseConnectionAttempt.await();
               throw new SQLException("timed out!");
             });
+    // HikariCP waits for connection creation to stop up to the data source login timeout.
+    when(dataSourceMock.getLoginTimeout()).thenReturn(1);
 
     HikariDataSource hikariDataSource = new HikariDataSource();
     hikariDataSource.setPoolName("timingOutPool");
     hikariDataSource.setDataSource(dataSourceMock);
     hikariDataSource.setConnectionTimeout(250 /* millis */);
+    hikariDataSource.setMinimumIdle(0);
+    hikariDataSource.setMaximumPoolSize(1);
     // start the pool without initializing connections
     hikariDataSource.setInitializationFailTimeout(-1);
     configure(hikariDataSource, null);
@@ -133,10 +141,15 @@ public abstract class AbstractHikariInstrumentationTest {
     cleanup.deferCleanup(hikariDataSource);
 
     // when
-    Exception thrown = catchException(hikariDataSource::getConnection);
+    try {
+      Exception thrown = catchException(hikariDataSource::getConnection);
 
-    // then
-    assertThat(thrown).isInstanceOf(SQLException.class);
+      // then
+      assertThat(thrown).isInstanceOf(SQLException.class);
+      await().untilAsserted(() -> assertThat(connectionAttemptStarted.getCount()).isZero());
+    } finally {
+      releaseConnectionAttempt.countDown();
+    }
 
     DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "timingOutPool")
         .disableMaxIdleConnections()
