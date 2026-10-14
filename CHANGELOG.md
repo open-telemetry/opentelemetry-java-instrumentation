@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Declarative Java agent instrumentation selectors no longer accept dotted-version compatibility
+  spellings. In `distribution.javaagent.instrumentation.enabled` and `.disabled`, replace
+  selectors such as `reactor_3.1` with `reactor_3_1`.
 - Java agent telemetry now uses the following instrumentation scopes. Update views, dashboards
   and filters matching the previous names:
 
