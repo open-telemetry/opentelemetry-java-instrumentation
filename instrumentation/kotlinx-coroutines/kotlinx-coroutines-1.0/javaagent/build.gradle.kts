@@ -116,7 +116,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter { includeTestsMatching("*DefaultEnablementTest") }
-    systemProperty("collectMetadata", false)
   }
 
   test {
