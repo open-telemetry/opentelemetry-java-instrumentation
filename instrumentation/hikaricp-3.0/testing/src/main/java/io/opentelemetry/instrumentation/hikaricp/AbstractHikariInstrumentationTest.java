@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.hikaricp;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
@@ -114,7 +115,7 @@ public abstract class AbstractHikariInstrumentationTest {
   }
 
   @Test
-  void shouldReportTimeouts() throws SQLException {
+  void shouldReportTimeouts() throws SQLException, InterruptedException {
     // given
     CountDownLatch connectionAttemptStarted = new CountDownLatch(1);
     CountDownLatch releaseConnectionAttempt = new CountDownLatch(1);
@@ -146,7 +147,7 @@ public abstract class AbstractHikariInstrumentationTest {
 
       // then
       assertThat(thrown).isInstanceOf(SQLException.class);
-      await().untilAsserted(() -> assertThat(connectionAttemptStarted.getCount()).isZero());
+      assertThat(connectionAttemptStarted.await(10, SECONDS)).isTrue();
     } finally {
       releaseConnectionAttempt.countDown();
     }
