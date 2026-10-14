@@ -225,15 +225,13 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        isCaptureMessageContentEnabled()
-                            ? Value.of(
-                                KeyValue.of("finish_reason", Value.of("end_turn")),
-                                KeyValue.of("index", Value.of(0)),
-                                KeyValue.of(
-                                    "content", Value.of("Hi there! How can I help you today?")))
-                            : Value.of(
-                                KeyValue.of("finish_reason", Value.of("end_turn")),
-                                KeyValue.of("index", Value.of(0)))));
+                        mapValue(
+                            KeyValue.of("finish_reason", Value.of("end_turn")),
+                            KeyValue.of("index", Value.of(0)),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("Hi there! How can I help you today?"))
+                                : SKIP)));
   }
 
   @Test
