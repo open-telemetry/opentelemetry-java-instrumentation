@@ -42,7 +42,8 @@ class InternalJfrConfigTest {
     ensureJfrAvailable();
 
     TestConfig config = new TestConfig();
-    when(config.jfrMetrics.getScalarList("included", String.class)).thenReturn(singletonList("*"));
+    when(config.jfrMetrics.getScalarList("included", String.class, emptyList()))
+        .thenReturn(singletonList("*"));
 
     JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics = config.configureJfr();
 
@@ -54,8 +55,10 @@ class InternalJfrConfigTest {
   @Test
   void emptySelectorKeepsJfrDisabled() {
     TestConfig config = new TestConfig();
-    when(config.jfrMetrics.getScalarList("included", String.class)).thenReturn(emptyList());
-    when(config.jfrMetrics.getScalarList("excluded", String.class)).thenReturn(emptyList());
+    when(config.jfrMetrics.getScalarList("included", String.class, emptyList()))
+        .thenReturn(emptyList());
+    when(config.jfrMetrics.getScalarList("excluded", String.class, emptyList()))
+        .thenReturn(emptyList());
 
     RuntimeTelemetry runtimeTelemetry = config.configure();
     cleanup.deferCleanup(runtimeTelemetry);
@@ -64,18 +67,16 @@ class InternalJfrConfigTest {
   }
 
   @Test
-  void exclusionsWinOverShorthandAndLegacySelections() {
+  void exclusionsWinOverShorthand() {
     ensureJfrAvailable();
 
     TestConfig config = new TestConfig();
-    when(config.jfrMetrics.getScalarList("included", String.class))
+    when(config.jfrMetrics.getScalarList("included", String.class, emptyList()))
         .thenReturn(singletonList("jvm.cpu.context_switch"));
-    when(config.jfrMetrics.getScalarList("excluded", String.class))
+    when(config.jfrMetrics.getScalarList("excluded", String.class, emptyList()))
         .thenReturn(asList("jvm.cpu.longlock", "jvm.class.count"));
     when(config.runtimeTelemetry.getBoolean("emit_experimental_jfr_metrics/development", false))
         .thenReturn(true);
-    when(config.runtimeTelemetry.getBoolean("prefer_jfr/development", false)).thenReturn(true);
-    when(config.runtimeTelemetryJava17.getBoolean("enabled", false)).thenReturn(true);
 
     JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics = config.configureJfr();
 
@@ -98,19 +99,15 @@ class InternalJfrConfigTest {
         mock(ExtendedOpenTelemetry.class, RETURNS_DEEP_STUBS);
     private final DeclarativeConfigProperties runtimeTelemetry =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    private final DeclarativeConfigProperties runtimeTelemetryJava17 =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     private final DeclarativeConfigProperties jfrMetrics =
         runtimeTelemetry.get("jfr_metrics/development");
 
     private TestConfig() {
       when(openTelemetry.getInstrumentationConfig("runtime_telemetry"))
           .thenReturn(runtimeTelemetry);
-      when(openTelemetry.getInstrumentationConfig("runtime_telemetry_java17"))
-          .thenReturn(runtimeTelemetryJava17);
       when(runtimeTelemetry.getBoolean("enabled", true)).thenReturn(true);
-      when(jfrMetrics.getScalarList("included", String.class)).thenReturn(null);
-      when(jfrMetrics.getScalarList("excluded", String.class)).thenReturn(null);
+      when(jfrMetrics.getScalarList("included", String.class, emptyList())).thenReturn(emptyList());
+      when(jfrMetrics.getScalarList("excluded", String.class, emptyList())).thenReturn(emptyList());
     }
 
     private RuntimeTelemetry configure() {

@@ -74,7 +74,7 @@ configurations {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata && name != "unitTests")
   }
 
   // this does not apply to testReceiveSpansDisabled
