@@ -24,7 +24,20 @@ dependencies {
 }
 
 tasks.test {
-  jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-
   systemProperty("collectMetadata", otelProps.collectMetadata)
+}
+
+tasks {
+  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  check {
+    dependsOn(testControllerTelemetry)
+  }
 }
