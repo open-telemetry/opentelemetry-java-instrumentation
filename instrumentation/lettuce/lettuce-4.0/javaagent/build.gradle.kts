@@ -15,7 +15,6 @@ dependencies {
   library("biz.paluch.redis:lettuce:4.0.Final")
 
   testInstrumentation(project(":instrumentation:lettuce:lettuce-5.0:javaagent"))
-  testInstrumentation(project(":instrumentation:lettuce:lettuce-5.1:javaagent"))
 
   latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-5.0 module
 }
@@ -24,7 +23,6 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental = register<Test>("testExperimental") {

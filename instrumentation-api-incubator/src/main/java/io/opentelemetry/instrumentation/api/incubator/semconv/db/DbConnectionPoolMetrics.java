@@ -51,35 +51,10 @@ public final class DbConnectionPoolMetrics {
       meterBuilder.setInstrumentationVersion(version);
     }
     meterBuilder.setSchemaUrl(SchemaUrls.V1_44_0);
-    return create(meterBuilder.build(), poolName, databaseAttributes);
-  }
-
-  /**
-   * Like {@link #create(OpenTelemetry, String, String)}, but accepts a pre-built {@link Meter}.
-   *
-   * @deprecated Exists only so the {@code tomcat-jdbc-8.5} javaagent can emit the pre-rename {@code
-   *     io.opentelemetry.tomcat-jdbc} scope by default; to be removed in 3.0 once v3-preview
-   *     becomes the default.
-   */
-  @Deprecated
-  public static DbConnectionPoolMetrics create(Meter meter, String poolName) {
-    return create(meter, poolName, Attributes.empty());
-  }
-
-  /**
-   * Like {@link #create(Meter, String)}, but accepts additional database attributes.
-   *
-   * @deprecated Exists only so the {@code tomcat-jdbc-8.5} javaagent can emit the pre-rename {@code
-   *     io.opentelemetry.tomcat-jdbc} scope by default; to be removed in 3.0 once v3-preview
-   *     becomes the default.
-   */
-  @Deprecated
-  public static DbConnectionPoolMetrics create(
-      Meter meter, String poolName, Attributes databaseAttributes) {
     AttributesBuilder attributes = Attributes.builder();
     attributes.putAll(databaseAttributes);
     attributes.put(POOL_NAME, poolName);
-    return new DbConnectionPoolMetrics(meter, attributes.build());
+    return new DbConnectionPoolMetrics(meterBuilder.build(), attributes.build());
   }
 
   private final Meter meter;

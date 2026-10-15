@@ -30,6 +30,4 @@ tasks.test {
   jvmArgs(
     "-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true",
   )
-
-  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

@@ -228,7 +228,6 @@ tasks {
         filter.includeTestsMatching(testName)
 
         jvmArgs(
-          "-Dotel.instrumentation.common.v3-preview=false",
           "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*",
         )
         systemProperty(configurationProperty, "none")

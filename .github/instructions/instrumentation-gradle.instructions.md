@@ -1,5 +1,5 @@
 ---
-applyTo: "**/build.gradle.kts,settings.gradle.kts,**/settings.gradle.kts"
+applyTo: "**/build.gradle.kts,settings.gradle.kts,**/settings.gradle.kts,.github/scripts/instrumentations.sh"
 ---
 
 # Instrumentation build and test wiring
@@ -18,7 +18,7 @@ or test failure that CI will report.
   modules, check that Muzzle covers their supported ranges and that the main enablement name
   in v3 preview matches the full module directory, including versions, except where a default-off
   feature needs a separate identity within that module. Default-off registrations must not share
-  names with default-on instrumentation. Include new test variants in
+  names with default-on instrumentation. Include new telemetry-collection test variants in
   `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
   add the supported-library entry, and regenerate `.fossa.yml` with
   `generateFossaConfiguration` when adding a module. For a new javaagent module with user-facing
@@ -56,9 +56,34 @@ or test failure that CI will report.
   on tasks that really use containers, not every task with a transitive dependency. Use
   `withType<Test>().configureEach` for configuration shared by multiple explicitly declared
   test tasks; not for a module with only `tasks.test` (implicit `latestDepTest` does not count).
-- If metadata-collection properties are already present, ensure non-default tasks describe
-  the actual JVM setting in `metadataConfig` and also enable `collectMetadata`. Do not ask
-  for these properties merely as cleanup or on unit-test suites.
+- Check metadata collection when its wiring or collected telemetry changes, not as unrelated
+  cleanup. Collect default telemetry and supported non-default telemetry modes. Register
+  representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
+  instrumentation scope and telemetry shape; equivalent suites need not all collect. Shared test
+  conventions forward `-PcollectMetadata=true` to test JVMs.
+- `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
+  instrumentation defaults, regardless of task name or settings on `test`.
+  Otherwise include only non-default user-facing settings
+  needed to describe this instrumentation's signals, span kinds, attributes, metrics, or events,
+  including inherited settings, except for the shared synthetic header capture described below.
+  Inspect JVM properties, fixtures, and library builders; split or
+  filter collected tasks that mix profiles under one label. Label non-default metric selectors,
+  not Java source-set names; document runtime prerequisites separately. Use comma-separated flat
+  `key=value` conditions without `-D`, with consistent spelling and ordering for the same mode.
+  Omit test setup, unrelated instrumentation settings, and whole-module enablement for default-off
+  instrumentation. Include span suppression settings only when they determine this instrumentation's
+  telemetry. Missing labels merge optional telemetry into `when: default`.
+- For javaagent tests, keep baseline suites on instrumentation defaults, apart from HTTP and
+  messaging header capture injected by `CapturedHttpHeadersTestConfigSupplier` and
+  `CapturedMessagingHeadersTestConfigSupplier`. Do not require empty overrides, separate capture
+  variants, or `metadataConfig` conditions solely for this inherited setup. Module-specific
+  capture overrides and other non-default telemetry settings remain subject to the normal profile
+  rules. Test opt-in telemetry in named variants wired into `check`. Preserve normal suite
+  coverage; filtered metadata-collection tests are not a substitute.
+- Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
+  variants based on their purpose, not their names. A full-suite `testReceiveSpansDisabled` may
+  document default telemetry; a suppression-only regression task does not. Keep regression tasks in
+  `check`, but omit them from `.github/scripts/instrumentations.sh` and do not give them `metadataConfig`.
 - When tests exercise behavior behind an experimental feature or telemetry flag, including
   experimental metrics, cover default-off and flag-on modes in separate JVMs. Keep the flag off
   the default test task and run the flag-on assertions through a wired `testExperimental` task
@@ -74,5 +99,4 @@ or test failure that CI will report.
   that exercise selectable domains. For default enablement under
   v3-preview, use a separate `testDisabled` JVM rather than setting a property after agent
   startup. Because `testDisabled` intentionally emits no target instrumentation telemetry, do
-  not add it to `.github/scripts/instrumentations.sh` or give it `collectMetadata` /
-  `metadataConfig`.
+  not add it to `.github/scripts/instrumentations.sh` or give it `metadataConfig`.

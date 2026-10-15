@@ -56,8 +56,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-
     if (name != "testDisabled") {
       jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
     }

@@ -19,7 +19,6 @@ dependencies {
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
 }
@@ -51,7 +50,6 @@ tasks {
       otelProps.testLatestDeps || name.startsWith("jedis51"),
     )
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {

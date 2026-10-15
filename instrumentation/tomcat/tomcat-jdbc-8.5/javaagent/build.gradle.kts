@@ -19,9 +19,3 @@ dependencies {
 
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-}

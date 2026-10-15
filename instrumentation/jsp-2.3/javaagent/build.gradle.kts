@@ -55,8 +55,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.view-telemetry.enabled=true")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   test {

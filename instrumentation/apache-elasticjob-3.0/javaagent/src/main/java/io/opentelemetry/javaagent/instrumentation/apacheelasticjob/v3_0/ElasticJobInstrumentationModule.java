@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +16,7 @@ import java.util.List;
 public class ElasticJobInstrumentationModule extends InstrumentationModule {
 
   public ElasticJobInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "apache-elasticjob-3.0" : "apache-elasticjob",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"apache-elasticjob"}
-            : new String[] {"apache-elasticjob-3.0"});
+    super("apache-elasticjob-3.0", "apache-elasticjob");
   }
 
   @Override

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 
@@ -31,7 +30,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   public static RequestTracer create(Tracer tracer, boolean legacyBridge) {
     return new CouchbaseRequestTracer(
-        new CouchbaseTracer(tracer, !legacyBridge, INTERNAL, legacyBridge, false));
+        new CouchbaseTracer(tracer, !legacyBridge, legacyBridge, false));
   }
 
   private CouchbaseRequestTracer(CouchbaseTracer tracer) {

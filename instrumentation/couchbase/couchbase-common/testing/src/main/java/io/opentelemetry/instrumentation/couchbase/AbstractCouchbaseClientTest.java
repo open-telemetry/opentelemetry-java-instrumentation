@@ -221,7 +221,6 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketCouchbase.name()),
-                            equalTo(DB_OPERATION_NAME, "SELECT"),
                             satisfies(DB_QUERY_TEXT, val -> val.startsWith("SELECT mockrow")),
                             equalTo(DB_QUERY_SUMMARY, "SELECT"),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),

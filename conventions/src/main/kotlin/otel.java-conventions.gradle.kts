@@ -160,7 +160,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.138.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.139.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -331,6 +331,8 @@ val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk
 
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
+
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // work around jvm crash on openJ9 8 after updating armeria to 1.33.1
   val testJavaVersion = otelProps.testJavaVersion
