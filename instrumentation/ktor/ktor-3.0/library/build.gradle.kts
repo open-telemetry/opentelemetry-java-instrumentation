@@ -48,10 +48,6 @@ testing {
 }
 
 tasks {
-  named<Test>("version343Test") {
-    systemProperty("collectMetadata", false)
-  }
-
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
