@@ -21,26 +21,33 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 class SdkInternalTelemetryCustomizerTest {
 
-  @ParameterizedTest
-  @ValueSource(strings = {"", "legacy"})
-  void properties(String version) {
+  @Test
+  void propertiesDefaultVersion() {
+    assertPropertiesVersion("latest");
+  }
+
+  @Test
+  @SetSystemProperty(key = "otel.experimental.sdk.telemetry.version", value = "legacy")
+  void propertiesExplicitVersion() {
+    assertPropertiesVersion("legacy");
+  }
+
+  private static void assertPropertiesVersion(String expectedVersion) {
     Map<String, String> properties = new HashMap<>();
     properties.put("otel.traces.exporter", "none");
     properties.put("otel.metrics.exporter", "none");
     properties.put("otel.logs.exporter", "none");
-    if (!version.isEmpty()) {
-      properties.put("otel.experimental.sdk.telemetry.version", version);
-    }
     AutoConfiguredOpenTelemetrySdk configured =
         AutoConfiguredOpenTelemetrySdk.builder().addPropertiesSupplier(() -> properties).build();
     try (OpenTelemetrySdk sdk = configured.getOpenTelemetrySdk()) {
       assertThat(
               AutoConfigureUtil.getConfig(configured)
                   .getString("otel.experimental.sdk.telemetry.version"))
-          .isEqualTo(version.isEmpty() ? "latest" : version);
+          .isEqualTo(expectedVersion);
     }
   }
 

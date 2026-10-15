@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.config.internal;
 
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
@@ -26,11 +25,8 @@ public final class SdkInternalTelemetryCustomizer
 
   @Override
   public void customize(AutoConfigurationCustomizer customizer) {
-    customizer.addPropertiesCustomizer(
-        config ->
-            config.getString("otel.experimental.sdk.telemetry.version") == null
-                ? singletonMap("otel.experimental.sdk.telemetry.version", "latest")
-                : emptyMap());
+    customizer.addPropertiesSupplier(
+        () -> singletonMap("otel.experimental.sdk.telemetry.version", "latest"));
   }
 
   @Override
@@ -57,5 +53,11 @@ public final class SdkInternalTelemetryCustomizer
           OpenTelemetryConfigurationModelAccessor.setInstrumentation(model, instrumentation);
           return model;
         });
+  }
+
+  @Override
+  public int order() {
+    // make sure it runs BEFORE all the user-provided customizers
+    return Integer.MIN_VALUE;
   }
 }
