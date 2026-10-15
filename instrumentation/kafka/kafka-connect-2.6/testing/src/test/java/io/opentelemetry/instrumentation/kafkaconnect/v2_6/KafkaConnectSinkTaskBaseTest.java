@@ -512,7 +512,9 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   private static String javaToolOptions() {
     StringBuilder options =
-        new StringBuilder("-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true");
+        new StringBuilder(
+            "-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true"
+                + " -Dotel.javaagent.add-thread-details=true");
     appendSystemProperty(options, "otel.semconv-stability.preview");
     appendSystemProperty(
         options, "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
