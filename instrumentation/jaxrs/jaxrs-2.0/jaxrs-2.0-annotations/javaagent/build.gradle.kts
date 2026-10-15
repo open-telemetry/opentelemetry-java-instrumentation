@@ -27,10 +27,6 @@ dependencies {
   testImplementation("javax.ws.rs:javax.ws.rs-api:2.0")
 }
 
-tasks.test {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}
-
 tasks {
   val testControllerTelemetry = register<Test>("testControllerTelemetry") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -38,7 +34,6 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {

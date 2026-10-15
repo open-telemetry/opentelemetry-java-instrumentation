@@ -41,6 +41,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -88,13 +89,13 @@ import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlockDelta;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlockStart;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
-// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
-// is resolved.
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2BedrockRuntimeTest {
   protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
   private static final String API_URL = "https://bedrock-runtime.us-east-1.amazonaws.com";
+  private static final KeyValue SKIP = KeyValue.of("", Value.empty());
+
   @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
 
   protected abstract InstrumentationExtension getTesting();
@@ -103,6 +104,10 @@ public abstract class AbstractAws2BedrockRuntimeTest {
 
   protected abstract BedrockRuntimeAsyncClient configureBedrockRuntimeClient(
       BedrockRuntimeAsyncClient client);
+
+  protected boolean isCaptureMessageContentEnabled() {
+    return true;
+  }
 
   protected static void configureClient(AwsClientBuilder<?, ?> builder) {
     builder
@@ -207,18 +212,23 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content", Value.of("Hi there! How can I help you today?")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("Hi there! How can I help you today?"))
+                                : SKIP)));
   }
 
   @Test
@@ -324,17 +334,22 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("content", Value.of("This is an LLM (")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of("This is an LLM ("))
+                                : SKIP)));
   }
 
   @Test
@@ -451,40 +466,48 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n"))
+                                : SKIP)));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -601,73 +624,87 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
-                            KeyValue.of(
-                                "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("{\"weather\":\"50 degrees and raining\"}"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
-                            KeyValue.of(
-                                "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("{\"weather\":\"70 degrees and sunny\"}"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> The tool has provided the current weather for both locations. Now I will compile this information and present it to the User. </thinking>\n"
-                                        + "\n"
-                                        + "The current weather in Seattle is 50 degrees and raining. In San Francisco, the weather is 70 degrees and sunny.")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> The tool has provided the current weather for both locations. Now I will compile this information and present it to the User. </thinking>\n"
+                                            + "\n"
+                                            + "The current weather in Seattle is 50 degrees and raining. In San Francisco, the weather is 70 degrees and sunny."))
+                                : SKIP)));
   }
 
   @Test
@@ -709,24 +746,31 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("What time is it?")))),
+                    .hasBody(
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(KeyValue.of("content", Value.of("What time is it?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_server_time")),
-                                        KeyValue.of("arguments", Value.of("{}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of("arguments", Value.of("{}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of("tooluse_empty_params_test")),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of("content", Value.of("")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of(""))
+                                : SKIP)));
   }
 
   @Test
@@ -891,40 +935,48 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n"))
+                                : SKIP)));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -1061,73 +1113,87 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
-                            KeyValue.of(
-                                "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("{\"weather\":\"50 degrees and raining\"}"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
-                            KeyValue.of(
-                                "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("{\"weather\":\"70 degrees and sunny\"}"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> The tool has provided the current weather for both locations. Now I will compile the information and present it to the User. </thinking>\n"
-                                        + "\n"
-                                        + "The current weather in Seattle is 50 degrees and it is raining. In San Francisco, the weather is 70 degrees and sunny.")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> The tool has provided the current weather for both locations. Now I will compile the information and present it to the User. </thinking>\n"
+                                            + "\n"
+                                            + "The current weather in Seattle is 50 degrees and it is raining. In San Francisco, the weather is 70 degrees and sunny."))
+                                : SKIP)));
   }
 
   private static ToolConfiguration serverTimeToolConfig() {
@@ -1292,17 +1358,22 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("content", Value.of("\"Test, test\"")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of("\"Test, test\""))
+                                : SKIP)));
   }
 
   @Test
@@ -1380,17 +1451,22 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("content", Value.of("This model")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of("This model"))
+                                : SKIP)));
   }
 
   @Test
@@ -1511,19 +1587,24 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("LENGTH")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content",
-                                Value.of("\nHello! I am a computer program designed to")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of("\nHello! I am a computer program designed to"))
+                                : SKIP)));
   }
 
   @Test
@@ -1656,19 +1737,23 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content", Value.of("List out every country in the world")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content", Value.of("List out every country in the world")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("LENGTH")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("content", Value.of(text.toString())))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of(text.toString()))
+                                : SKIP)));
   }
 
   @Test
@@ -1808,19 +1893,24 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content",
-                                Value.of("It sounds like you're initiating a test or")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of("It sounds like you're initiating a test or"))
+                                : SKIP)));
   }
 
   @Test
@@ -1973,19 +2063,23 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content", Value.of("List out every country in the world")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content", Value.of("List out every country in the world")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("content", Value.of(text.toString())))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of(text.toString()))
+                                : SKIP)));
   }
 
   @ParameterizedTest
@@ -2111,18 +2205,23 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+                    .hasBody(
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content", Value.of("Okay, I just said \"This is a test")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("Okay, I just said \"This is a test"))
+                                : SKIP)));
   }
 
   private static Stream<Arguments> modelArgs() {
@@ -2508,19 +2607,23 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content", Value.of("List out every country in the world")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content", Value.of("List out every country in the world")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("max_tokens")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("content", Value.of(text.toString())))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of(text.toString()))
+                                : SKIP)));
   }
 
   @Test
@@ -2699,40 +2802,48 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> To provide the current weather in both Seattle and San Francisco, I will use the \"get_current_weather\" tool twice, once for each city. I will need to specify the \"location\" argument for each call.</thinking>\n")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> To provide the current weather in both Seattle and San Francisco, I will use the \"get_current_weather\" tool twice, once for each city. I will need to specify the \"location\" argument for each call.</thinking>\n"))
+                                : SKIP)));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -2878,73 +2989,87 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> To provide the current weather in both Seattle and San Francisco, I will use the \"get_current_weather\" tool twice, once for each city. I will need to specify the \"location\" argument for each call.</thinking>\n")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> To provide the current weather in both Seattle and San Francisco, I will use the \"get_current_weather\" tool twice, once for each city. I will need to specify the \"location\" argument for each call.</thinking>\n"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
-                            KeyValue.of(
-                                "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("{\"weather\":\"50 degrees and raining\"}"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
-                            KeyValue.of(
-                                "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("{\"weather\":\"70 degrees and sunny\"}"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> I have received the weather information for both cities. Now I will compile this information and present it to the user.</thinking>\n"
-                                        + "\n"
-                                        + "The current weather in Seattle is 50 degrees and it is raining. The current weather in San Francisco is 70 degrees and it is sunny.")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> I have received the weather information for both cities. Now I will compile this information and present it to the user.</thinking>\n"
+                                            + "\n"
+                                            + "The current weather in Seattle is 50 degrees and it is raining. The current weather in San Francisco is 70 degrees and it is sunny."))
+                                : SKIP)));
   }
 
   @Test
@@ -3176,40 +3301,48 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> To provide the current weather in Seattle and San Francisco today, I will need to use the \"get_current_weather\" tool twice, once for each city. I will need to specify the location for each call.</thinking>\n")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> To provide the current weather in Seattle and San Francisco today, I will need to use the \"get_current_weather\" tool twice, once for each city. I will need to specify the location for each call.</thinking>\n"))
+                                : SKIP)));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -3399,73 +3532,87 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> To provide the current weather in Seattle and San Francisco today, I will need to use the \"get_current_weather\" tool twice, once for each city. I will need to specify the location for each call.</thinking>\n")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> To provide the current weather in Seattle and San Francisco today, I will need to use the \"get_current_weather\" tool twice, once for each city. I will need to specify the location for each call.</thinking>\n"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
-                            KeyValue.of(
-                                "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("{\"weather\":\"50 degrees and raining\"}"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
-                            KeyValue.of(
-                                "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content", Value.of("{\"weather\":\"70 degrees and sunny\"}"))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "<thinking> I have received the weather information for both cities. Now I will compile this information into a clear response for the User.</thinking>\n"
-                                        + "\n"
-                                        + "The current weather in Seattle is 50 degrees and it is raining. In San Francisco, the weather is 70 degrees and sunny.")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "<thinking> I have received the weather information for both cities. Now I will compile this information into a clear response for the User.</thinking>\n"
+                                            + "\n"
+                                            + "The current weather in Seattle is 50 degrees and it is raining. In San Francisco, the weather is 70 degrees and sunny."))
+                                : SKIP)));
   }
 
   @Test
@@ -3629,40 +3776,48 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me do that for you now.")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me do that for you now."))
+                                : SKIP)));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -3786,76 +3941,90 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me do that for you now.")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me do that for you now."))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
-                            KeyValue.of("content", Value.of("\"50 degrees and raining\"")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of("\"50 degrees and raining\""))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
-                            KeyValue.of("content", Value.of("\"70 degrees and sunny\"")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of("\"70 degrees and sunny\""))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "Thank you for your patience. I've retrieved the current weather information for both cities. Here's the weather report for Seattle and San Francisco today:\n"
-                                        + "\n"
-                                        + "Seattle: 50 degrees and raining\n"
-                                        + "San Francisco: 70 degrees and sunny\n"
-                                        + "\n"
-                                        + "As you can see, the weather conditions are quite different in these two cities today. Seattle is experiencing cooler temperatures with rain, which is fairly typical for the Pacific Northwest. On the other hand, San Francisco is enjoying a warmer, sunny day, which is pleasant for outdoor activities.\n"
-                                        + "\n"
-                                        + "Is there anything else you'd like to know about the weather in these or any other cities?")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "Thank you for your patience. I've retrieved the current weather information for both cities. Here's the weather report for Seattle and San Francisco today:\n"
+                                            + "\n"
+                                            + "Seattle: 50 degrees and raining\n"
+                                            + "San Francisco: 70 degrees and sunny\n"
+                                            + "\n"
+                                            + "As you can see, the weather conditions are quite different in these two cities today. Seattle is experiencing cooler temperatures with rain, which is fairly typical for the Pacific Northwest. On the other hand, San Francisco is enjoying a warmer, sunny day, which is pleasant for outdoor activities.\n"
+                                            + "\n"
+                                            + "Is there anything else you'd like to know about the weather in these or any other cities?"))
+                                : SKIP)));
   }
 
   @Test
@@ -4090,40 +4259,48 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx0)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("tool_use")),
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "To get the current weather for both Seattle and San Francisco, I'll need to use the get_current_weather function for each city. I'll make two separate calls within the same function calls block since these requests are independent of each other.")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "To get the current weather for both Seattle and San Francisco, I'll need to use the get_current_weather function for each city. I'll make two separate calls within the same function calls block since these requests are independent of each other."))
+                                : SKIP)));
 
     // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
@@ -4288,76 +4465,94 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "What is the weather in Seattle and San Francisco today?")))),
+                        isCaptureMessageContentEnabled()
+                            ? Value.of(
+                                KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "What is the weather in Seattle and San Francisco today?")))
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.assistant.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of(
                                 "toolCalls",
                                 Value.of(
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments", Value.of("{\"location\":\"Seattle\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(seattleToolUseId)),
                                         KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
+                                    mapValue(
                                         KeyValue.of("name", Value.of("get_current_weather")),
-                                        KeyValue.of(
-                                            "arguments",
-                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        isCaptureMessageContentEnabled()
+                                            ? KeyValue.of(
+                                                "arguments",
+                                                Value.of("{\"location\":\"San Francisco\"}"))
+                                            : SKIP,
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "To get the current weather for both Seattle and San Francisco, I'll need to use the get_current_weather function for each city. I'll make two separate calls within the same function calls block since these requests are independent of each other.")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "To get the current weather for both Seattle and San Francisco, I'll need to use the get_current_weather function for each city. I'll make two separate calls within the same function calls block since these requests are independent of each other."))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(seattleToolUseId)),
-                            KeyValue.of("content", Value.of("\"50 degrees and raining\"")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of("\"50 degrees and raining\""))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.tool.message"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
-                            KeyValue.of("content", Value.of("\"70 degrees and sunny\"")))),
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of("content", Value.of("\"70 degrees and sunny\""))
+                                : SKIP)),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx1)
                     .hasBody(
-                        Value.of(
+                        mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "content",
-                                Value.of(
-                                    "\n"
-                                        + "\n"
-                                        + "Based on the results from the weather function, I can provide you with the current weather information for both cities:\n"
-                                        + "\n"
-                                        + "Seattle: The current weather in Seattle is 50 degrees and raining.\n"
-                                        + "\n"
-                                        + "San Francisco: The current weather in San Francisco is 70 degrees and sunny.\n"
-                                        + "\n"
-                                        + "As you can see, there's quite a difference in the weather between these two West Coast cities today. Seattle is experiencing cooler temperatures with rain, which is fairly typical for the city. On the other hand, San Francisco is enjoying warmer weather with sunshine. If you're planning any activities in either of these cities, you might want to dress accordingly and perhaps bring an umbrella if you're in Seattle!")))));
+                            isCaptureMessageContentEnabled()
+                                ? KeyValue.of(
+                                    "content",
+                                    Value.of(
+                                        "\n"
+                                            + "\n"
+                                            + "Based on the results from the weather function, I can provide you with the current weather information for both cities:\n"
+                                            + "\n"
+                                            + "Seattle: The current weather in Seattle is 50 degrees and raining.\n"
+                                            + "\n"
+                                            + "San Francisco: The current weather in San Francisco is 70 degrees and sunny.\n"
+                                            + "\n"
+                                            + "As you can see, there's quite a difference in the weather between these two West Coast cities today. Seattle is experiencing cooler temperatures with rain, which is fairly typical for the city. On the other hand, San Francisco is enjoying warmer weather with sunshine. If you're planning any activities in either of these cities, you might want to dress accordingly and perhaps bring an umbrella if you're in Seattle!"))
+                                : SKIP)));
+  }
+
+  private static Value<?> mapValue(KeyValue... fields) {
+    return Value.of(Arrays.stream(fields).filter(field -> field != SKIP).toArray(KeyValue[]::new));
   }
 }

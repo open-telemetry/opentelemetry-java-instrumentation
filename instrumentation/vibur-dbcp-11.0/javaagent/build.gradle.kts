@@ -20,9 +20,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:vibur-dbcp-11.0:testing"))
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-}

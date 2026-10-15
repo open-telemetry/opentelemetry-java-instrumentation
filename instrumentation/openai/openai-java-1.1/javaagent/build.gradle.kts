@@ -27,7 +27,6 @@ tasks {
     // TODO run tests both with and without genai message capture
 
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {

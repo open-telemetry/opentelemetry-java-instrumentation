@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.sns;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.sqs;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -83,7 +84,7 @@ class SnsTracingTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(RPC_METHOD, "ReceiveMessage"),

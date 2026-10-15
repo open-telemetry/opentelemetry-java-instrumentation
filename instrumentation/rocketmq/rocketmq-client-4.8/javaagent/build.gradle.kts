@@ -24,7 +24,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
