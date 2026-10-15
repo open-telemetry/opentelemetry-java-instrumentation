@@ -7,6 +7,8 @@
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available, as required by the FaaS semantic conventions. For example, an ARN
   ending in `:prod` becomes `:42`.
+- The Java agent no longer captures thread details by default. Set
+  `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
   remain, instead of emitting an empty object.
 - Process command resource attributes are now disabled by default. Set
