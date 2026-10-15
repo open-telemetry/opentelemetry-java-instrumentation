@@ -29,14 +29,14 @@ class OptimizedOperationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // Both OptimizedGetImpl classes declare addOperation(GetOperation), while
-    // OptimizedSetImpl declares addOperation(CASOperation).
     transformer.applyAdviceToMethod(
         named("addOperation")
             .and(takesArguments(1))
             .and(
                 takesArgument(
                     0,
+                    // Both OptimizedGetImpl classes declare addOperation(GetOperation), while
+                    // OptimizedSetImpl declares addOperation(CASOperation).
                     namedOneOf(
                         "net.spy.memcached.ops.GetOperation",
                         "net.spy.memcached.ops.CASOperation"))),
