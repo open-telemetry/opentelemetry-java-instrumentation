@@ -86,6 +86,7 @@ tasks {
         includeTestsMatching("$testClassName.requestWithException")
       }
       jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
       if (suiteName == "version5Test" && !testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
         enabled = false
       }
@@ -99,6 +100,7 @@ tasks {
         includeTestsMatching("$testClassName.requestWithException")
       }
       jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs/dup")
       if (suiteName == "version5Test" && !testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
         enabled = false
       }

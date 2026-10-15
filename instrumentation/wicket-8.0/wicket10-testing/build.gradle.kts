@@ -21,6 +21,7 @@ tasks {
       includeTestsMatching("*WicketTest.testException")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
   val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
@@ -30,6 +31,7 @@ tasks {
       includeTestsMatching("*WicketTest.testException")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs/dup")
   }
 
   check {

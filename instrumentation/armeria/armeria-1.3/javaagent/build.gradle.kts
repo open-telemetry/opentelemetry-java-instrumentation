@@ -54,6 +54,7 @@ tasks {
       includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
   val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
@@ -63,6 +64,7 @@ tasks {
       includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs/dup")
   }
 
   val testArmeria19ExceptionSignalLogs = register<Test>("testArmeria19ExceptionSignalLogs") {
@@ -73,6 +75,7 @@ tasks {
       includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
   val testArmeria19ExceptionSignalLogsDup =
@@ -84,6 +87,7 @@ tasks {
         includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
       }
       jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs/dup")
     }
 
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)

@@ -88,6 +88,10 @@ tasks {
       includeTestsMatching("*RatpackHttpServerTest.exceptionLogCorrelatesWithHandlerSpan")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv.exception.signal.preview=logs"
+    )
     systemProperty("ratpack14Test", true)
   }
 
@@ -99,6 +103,10 @@ tasks {
       includeTestsMatching("*RatpackHttpServerTest.exceptionLogCorrelatesWithHandlerSpan")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv.exception.signal.preview=logs/dup"
+    )
     systemProperty("ratpack14Test", true)
   }
 
@@ -111,6 +119,10 @@ tasks {
       includeTestsMatching("*RatpackHttpServerTest.exceptionLogCorrelatesWithHandlerSpan")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv.exception.signal.preview=logs"
+    )
   }
 
   val version17TestExceptionSignalLogsDup =
@@ -123,6 +135,10 @@ tasks {
         includeTestsMatching("*RatpackHttpServerTest.exceptionLogCorrelatesWithHandlerSpan")
       }
       jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv.exception.signal.preview=logs/dup"
+      )
     }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
