@@ -309,7 +309,7 @@ class ReactorKafkaOwnershipTest {
   }
 
   @SafeVarargs
-  @SuppressWarnings("varargs")
+  @SuppressWarnings({"varargs", "removal"})
   private static <K, V> ConsumerRecords<K, V> records(ConsumerRecord<K, V>... records) {
     return new ConsumerRecords<>(singletonMap(PARTITION, asList(records)));
   }

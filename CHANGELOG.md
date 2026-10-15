@@ -5,12 +5,15 @@
 ### ⚠️ Breaking changes
 
 - Kotlin suspend function `@WithSpan` instrumentation is disabled by default. Enable it with
-  `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true`. Ordinary coroutine context
-  propagation and `@WithSpan` on `Flow`-returning methods remain enabled.
+  `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true`.
   The `kotlinx-coroutines`, `kotlinx-coroutines-1.0`,
   `kotlinx-coroutines-opentelemetry-instrumentation-annotations`, and
   `opentelemetry-instrumentation-annotations` selectors no longer enable suspend function
   annotations.
+- The Java agent no longer captures thread details by default. Set
+  `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
+- GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
+  remain, instead of emitting an empty object.
 - Process command resource attributes are now disabled by default. Set
   `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
