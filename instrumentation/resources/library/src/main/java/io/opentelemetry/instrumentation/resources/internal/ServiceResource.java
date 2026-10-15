@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.resources.internal.Entity;
@@ -21,10 +22,6 @@ import javax.annotation.Nullable;
  * at any time.
  */
 public final class ServiceResource {
-
-  private static final AttributeKey<String> SERVICE_NAME = AttributeKey.stringKey("service.name");
-  private static final AttributeKey<String> SERVICE_VERSION =
-      AttributeKey.stringKey("service.version");
 
   public static Resource create(@Nullable String serviceName, @Nullable String serviceVersion) {
     Attributes description = Attributes.builder().put(SERVICE_VERSION, serviceVersion).build();
