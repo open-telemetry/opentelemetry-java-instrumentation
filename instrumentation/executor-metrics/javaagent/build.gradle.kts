@@ -16,10 +16,6 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   test {
     jvmArgs("-Dotel.instrumentation.executor-metrics.enabled=true")
     jvmArgs("-Dotel.instrumentation.executors.enabled=false")
