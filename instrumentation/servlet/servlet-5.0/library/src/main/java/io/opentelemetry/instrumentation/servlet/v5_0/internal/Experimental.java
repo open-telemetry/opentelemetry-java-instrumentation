@@ -29,6 +29,9 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
 
+  @Nullable
+  private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureRequestBody;
+
   /**
    * Sets whether experimental HTTP telemetry should be emitted.
    *
@@ -93,6 +96,19 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether to capture the request body as a span attribute.
+   *
+   * @param builder the telemetry builder
+   * @param captureRequestBody {@code true} to capture the request body
+   */
+  public static void setCaptureRequestBody(
+      ServletTelemetryBuilder builder, boolean captureRequestBody) {
+    if (setCaptureRequestBody != null) {
+      setCaptureRequestBody.accept(builder, captureRequestBody);
+    }
+  }
+
   public static void internalSetEmitExperimentalTelemetry(
       BiConsumer<ServletTelemetryBuilder, Boolean> setEmitExperimentalTelemetry) {
     Experimental.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry;
@@ -111,6 +127,11 @@ public final class Experimental {
   public static void internalSetRequestParameters(
       BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters) {
     Experimental.setRequestParameters = setRequestParameters;
+  }
+
+  public static void internalSetCaptureRequestBody(
+      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureRequestBody) {
+    Experimental.setCaptureRequestBody = setCaptureRequestBody;
   }
 
   private Experimental() {}

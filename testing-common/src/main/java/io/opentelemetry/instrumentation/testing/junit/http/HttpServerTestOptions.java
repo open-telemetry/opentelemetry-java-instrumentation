@@ -229,6 +229,7 @@ public class HttpServerTestOptions {
     this.testRequestBodyCapture = testRequestBodyCapture;
     return this;
   }
+
   // TODO: convert make this class follow the same pattern as HttpClientTestOptions
   @CanIgnoreReturnValue
   public HttpServerTestOptions disableTestNonStandardHttpMethod() {

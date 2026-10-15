@@ -42,6 +42,7 @@ public final class ServletTelemetryBuilder {
       builder;
   private final ServletInstrumenterBuilder<HttpServletRequest, HttpServletResponse> servletBuilder;
   private boolean addTraceIdRequestAttribute = false;
+  private boolean captureRequestBody = false;
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
@@ -53,6 +54,11 @@ public final class ServletTelemetryBuilder {
             builder.servletBuilder.setRequestParameters(requestParameters));
     Experimental.internalSetCaptureUserName(
         (builder, value) -> builder.servletBuilder.setCaptureUserName(value));
+    Experimental.internalSetCaptureRequestBody(
+        (builder, value) -> {
+          builder.servletBuilder.setCaptureRequestBody(value);
+          builder.captureRequestBody = value;
+        });
   }
 
   ServletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -160,6 +166,6 @@ public final class ServletTelemetryBuilder {
   public ServletTelemetry build() {
     return new ServletTelemetry(
         servletBuilder.build(HttpSpanNameExtractor.create(httpAttributesGetter)),
-        addTraceIdRequestAttribute);
+        addTraceIdRequestAttribute, captureRequestBody);
   }
 }

@@ -20,12 +20,14 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
@@ -39,15 +41,17 @@ public final class Servlet5TelemetryFilter implements Filter {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       instrumenter;
   private final boolean addTraceIdRequestAttribute;
+  private final boolean captureRequestBody;
 
   public Servlet5TelemetryFilter(
       Instrumenter<
               ServletRequestContext<HttpServletRequest>,
               ServletResponseContext<HttpServletResponse>>
           instrumenter,
-      boolean addTraceIdRequestAttribute) {
+      boolean addTraceIdRequestAttribute, boolean captureRequestBody) {
     this.instrumenter = instrumenter;
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
+    this.captureRequestBody = captureRequestBody;
   }
 
   @Override
@@ -64,6 +68,10 @@ public final class Servlet5TelemetryFilter implements Filter {
 
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;
+
+    if(captureRequestBody) {
+      httpRequest = new Servlet5BodyCaptureRequestWrapper(httpRequest, 1024);
+    }
 
     Context parentContext = Context.current();
     ServletRequestContext<HttpServletRequest> requestContext =
@@ -123,6 +131,12 @@ public final class Servlet5TelemetryFilter implements Filter {
       this.context = context;
       this.requestContext = requestContext;
       this.responseContext = responseContext;
+    }
+
+    @Override
+    public ServletInputStream getInputStream() throws IOException {
+      ByteBuffer buffer = ByteBuffer.allocate(10);
+      return new Servlet5BodyCaptureInputStreamWrapper(super.getInputStream(), buffer);
     }
 
     @Override
