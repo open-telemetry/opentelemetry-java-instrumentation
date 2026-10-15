@@ -31,8 +31,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ServletBodyCaptureTest {
 
@@ -44,8 +47,37 @@ class ServletBodyCaptureTest {
       stringKey("http.request.body.content");
 
   @Test
-  void doesNotCaptureRequestBodyByDefault() throws Exception {
-    Filter filter = ServletTelemetry.builder(testing.getOpenTelemetry()).build().createFilter();
+  void capturesRequestBody_default() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    testCaptureRequestBody(builder, null);
+  }
+
+  @Test
+  void capturesRequestBody_enabled() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBodyMaxSize(builder, 32);
+    testCaptureRequestBody(builder, "request-body");
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 0})
+  void capturesRequestBody_disabled(int maxSize) throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBodyMaxSize(builder, maxSize);
+    testCaptureRequestBody(builder, null);
+  }
+
+  @Test
+  void capturesRequestBody_truncated() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBodyMaxSize(builder, 7);
+    testCaptureRequestBody(builder, "request");
+  }
+
+  private static void testCaptureRequestBody(
+      ServletTelemetryBuilder builder, @Nullable String expected) throws Exception {
+
+    Filter filter = builder.build().createFilter();
 
     HttpServletRequest request = requestWithBody();
     HttpServletResponse response = mock(HttpServletResponse.class);
@@ -53,8 +85,8 @@ class ServletBodyCaptureTest {
     filter.doFilter(request, response, (req, res) -> readRequestBody(req));
 
     List<List<SpanData>> traces = testing.waitForTraces(1);
-    assertThat(traces.get(0).get(0).getAttributes().asMap().keySet())
-        .doesNotContain(BODY_ATTRIBUTE_KEY);
+
+    assertThat(traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY)).isEqualTo(expected);
   }
 
   private static void readRequestBody(ServletRequest req) throws IOException {
@@ -66,31 +98,6 @@ class ServletBodyCaptureTest {
     }
     // the application must always see the full body, whatever is captured in the span
     assertThat(content.toString(UTF_8.name())).isEqualTo("request-body");
-  }
-
-  @Test
-  void capturesRequestBodyWhenEnabled() throws Exception {
-    testCaptureRequestBody(32, "request-body");
-  }
-
-  @Test
-  void capturesRequestBodyWhenEnabledWithMaxSize() throws Exception {
-    testCaptureRequestBody(7, "request");
-  }
-
-  private static void testCaptureRequestBody(int maxSize, String expected) throws Exception {
-    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setCaptureRequestBodyMaxSize(builder, maxSize);
-    Filter filter = builder.build().createFilter();
-
-    HttpServletRequest request = requestWithBody();
-    HttpServletResponse response = mock(HttpServletResponse.class);
-
-    filter.doFilter(request, response, (req, res) -> readRequestBody(req));
-
-    List<List<SpanData>> traces = testing.waitForTraces(1);
-
-    assertThat(traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY)).isEqualTo(expected);
   }
 
   private static HttpServletRequest requestWithBody() throws IOException {
