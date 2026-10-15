@@ -36,14 +36,14 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   public static RequestTracer create(OpenTelemetry openTelemetry) {
     String instrumentationName = "com.couchbase.client.jvm";
+    Tracer tracer =
+        openTelemetry.tracerBuilder(instrumentationName).setSchemaUrl(SchemaUrls.V1_44_0).build();
     Logger exceptionLogger =
         openTelemetry
             .getLogsBridge()
             .loggerBuilder(instrumentationName)
             .setSchemaUrl(SchemaUrls.V1_44_0)
             .build();
-    Tracer tracer =
-        openTelemetry.tracerBuilder(instrumentationName).setSchemaUrl(SchemaUrls.V1_44_0).build();
     return new CouchbaseRequestTracer(
         new CouchbaseTracer(tracer, exceptionLogger, true, false, false));
   }
