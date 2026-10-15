@@ -5,17 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.logs.Logger;
-import io.opentelemetry.api.logs.LoggerBuilder;
+import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.semconv.SchemaUrls;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,7 +18,9 @@ import javax.annotation.Nullable;
  */
 public final class HttpServerExceptionRecorder {
 
-  @Nullable private final Logger logger;
+  private static final Object NO_REQUEST = new Object();
+
+  private final ExceptionRecorder<Object> exceptionRecorder;
 
   public static HttpServerExceptionRecorder create(
       OpenTelemetry openTelemetry, String instrumentationName) {
@@ -31,32 +28,23 @@ public final class HttpServerExceptionRecorder {
   }
 
   private HttpServerExceptionRecorder(OpenTelemetry openTelemetry, String instrumentationName) {
-    if (emitExceptionAsLogs()) {
-      LoggerBuilder loggerBuilder =
-          openTelemetry.getLogsBridge().loggerBuilder(instrumentationName);
-      String instrumentationVersion =
-          EmbeddedInstrumentationProperties.findVersion(instrumentationName);
-      if (instrumentationVersion != null) {
-        loggerBuilder.setInstrumentationVersion(instrumentationVersion);
-      }
-      logger = loggerBuilder.setSchemaUrl(SchemaUrls.V1_41_0).build();
-    } else {
-      logger = null;
-    }
+    String instrumentationVersion =
+        EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+    exceptionRecorder =
+        ExceptionRecorder.create(
+            openTelemetry,
+            instrumentationName,
+            instrumentationVersion,
+            SchemaUrls.V1_41_0,
+            HttpServerExceptionRecorder::extractExceptionEvent);
   }
 
   public void recordException(Context context, Span span, Throwable throwable) {
-    if (emitExceptionAsSpanEvents()) {
-      span.recordException(throwable);
-    }
-    if (logger != null) {
-      logger
-          .logRecordBuilder()
-          .setContext(context.with(span))
-          .setEventName("http.server.request.exception")
-          .setSeverity(Severity.ERROR)
-          .setException(throwable)
-          .emit();
-    }
+    exceptionRecorder.recordException(context, span, throwable, NO_REQUEST, null);
+  }
+
+  private static void extractExceptionEvent(
+      LogRecordBuilder logRecordBuilder, Context context, Object request) {
+    logRecordBuilder.setEventName("http.server.request.exception").setSeverity(Severity.ERROR);
   }
 }

@@ -14,7 +14,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.api.logs.LoggerBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -25,6 +24,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
@@ -332,16 +332,14 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return tracerBuilder.build();
   }
 
-  io.opentelemetry.api.logs.Logger buildLogger() {
-    LoggerBuilder loggerBuilder = openTelemetry.getLogsBridge().loggerBuilder(instrumentationName);
-    if (instrumentationVersion != null) {
-      loggerBuilder.setInstrumentationVersion(instrumentationVersion);
-    }
-    String schemaUrl = getSchemaUrl();
-    if (schemaUrl != null) {
-      loggerBuilder.setSchemaUrl(schemaUrl);
-    }
-    return loggerBuilder.build();
+  ExceptionRecorder<REQUEST> buildExceptionRecorder(
+      InternalExceptionEventExtractor<? super REQUEST> exceptionEventExtractor) {
+    return ExceptionRecorder.create(
+        openTelemetry,
+        instrumentationName,
+        instrumentationVersion,
+        getSchemaUrl(),
+        exceptionEventExtractor);
   }
 
   List<OperationListener> buildOperationListeners() {
