@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -21,7 +22,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyMap;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -132,8 +132,6 @@ class CouchbaseClient32Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, seedPort));
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
-              .isEqualTo("io.opentelemetry.couchbase-3.2");
           if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
@@ -244,6 +242,7 @@ class CouchbaseClient32Test {
       SpanDataAssert span, String operation, String documentId, StatusData status) {
     span.hasKind(CLIENT)
         .hasName(operation + " _default")
+        .satisfies(hasScopeName("io.opentelemetry.couchbase-3.2"))
         .hasStatus(status)
         .hasAttributesSatisfyingExactly(
             equalTo(DB_SYSTEM_NAME, "couchbase"),

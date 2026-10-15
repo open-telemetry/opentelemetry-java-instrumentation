@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -20,7 +21,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static java.util.Collections.singleton;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.env.TimeoutConfig;
@@ -139,8 +139,6 @@ class CouchbaseClient31Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, kvPort));
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
-              .isEqualTo("io.opentelemetry.couchbase-3.1");
           if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
@@ -230,6 +228,7 @@ class CouchbaseClient31Test {
   private static void assertOperationSpan(SpanDataAssert span, String operation, Long retries) {
     span.hasKind(CLIENT)
         .hasName(operation + " _default")
+        .satisfies(hasScopeName("io.opentelemetry.couchbase-3.1"))
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(DB_SYSTEM_NAME, "couchbase"),
