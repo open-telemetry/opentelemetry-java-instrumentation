@@ -27,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -216,7 +215,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -338,7 +337,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -473,7 +472,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -631,7 +630,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -750,7 +749,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("What time is it?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -942,7 +941,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1120,7 +1119,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1362,7 +1361,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1455,7 +1454,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1591,7 +1590,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1742,7 +1741,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             ? Value.of(
                                 KeyValue.of(
                                     "content", Value.of("List out every country in the world")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1897,7 +1896,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2068,7 +2067,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             ? Value.of(
                                 KeyValue.of(
                                     "content", Value.of("List out every country in the world")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2209,7 +2208,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2612,7 +2611,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             ? Value.of(
                                 KeyValue.of(
                                     "content", Value.of("List out every country in the world")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2809,7 +2808,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2996,7 +2995,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -3308,7 +3307,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -3539,7 +3538,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -3783,7 +3782,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -3948,7 +3947,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -4266,7 +4265,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -4472,7 +4471,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "content",
                                     Value.of(
                                         "What is the weather in Seattle and San Francisco today?")))
-                            : Value.of(emptyMap())),
+                            : null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
