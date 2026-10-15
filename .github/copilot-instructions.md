@@ -79,8 +79,10 @@ of where its implementation lives.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
 - Add hand-written changelog entries only for deprecations or breaking changes, as specified in
-  CONTRIBUTING.md; normal changes rely on the generated changelog. Write these entries around the
-  user-visible change and any required migration. Describe the released behavior directly, without
+  CONTRIBUTING.md; normal changes rely on the generated changelog. Keep entries short and focused on
+  the user-visible change. Include migration guidance only when the required action is not obvious
+  from the change description; omit generic advice to handle the new behavior.
+  Describe the released behavior directly, without
   referring to preview flags used to stage the change. Omit statements about behavior that is
   unchanged unless they are necessary to clarify the change's scope.
 - Add or request README and usage documentation for a concrete reader need: setup,
