@@ -48,10 +48,6 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   named<Test>("version343Test") {
     systemProperty("collectMetadata", false)
   }

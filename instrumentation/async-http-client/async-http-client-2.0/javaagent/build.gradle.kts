@@ -39,8 +39,6 @@ tasks {
     if (otelProps.testLatestDeps && testJavaVersion.isJava8) {
       enabled = false
     }
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {

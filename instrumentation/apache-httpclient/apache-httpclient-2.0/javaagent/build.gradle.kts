@@ -22,7 +22,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {

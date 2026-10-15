@@ -83,8 +83,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
@@ -110,7 +108,6 @@ tasks {
       includeTestsMatching("CouchbaseQuerySanitizationTest")
     }
     jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
-    systemProperty("collectMetadata", "false")
     systemProperty("testQuerySanitizationEnabled", "false")
   }
 

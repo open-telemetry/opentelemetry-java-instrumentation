@@ -94,7 +94,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(vaadinBuildService)
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     // Enable legacy OpenSSL provider for Node.js 17+ compatibility with webpack 4
     environment("NODE_OPTIONS", "--openssl-legacy-provider")
   }

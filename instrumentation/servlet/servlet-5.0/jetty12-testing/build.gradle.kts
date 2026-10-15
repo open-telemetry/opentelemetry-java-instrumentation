@@ -18,10 +18,6 @@ otelJava {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath

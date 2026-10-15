@@ -508,7 +508,7 @@ class KafkaConsumerBatchSelectionTest {
   }
 
   @SafeVarargs
-  @SuppressWarnings("varargs")
+  @SuppressWarnings({"varargs", "removal"})
   private static ConsumerRecords<String, String> records(
       ConsumerRecord<String, String>... records) {
     return new ConsumerRecords<>(singletonMap(new TopicPartition("orders", 0), asList(records)));
