@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@Deprecated // will be removed in 3.0.0
+@Deprecated // to be removed in 3.0
 public abstract class V3PreviewFallbackEnabledInstrumentationModule extends InstrumentationModule {
 
   protected V3PreviewFallbackEnabledInstrumentationModule(

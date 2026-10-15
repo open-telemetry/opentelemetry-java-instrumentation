@@ -5,26 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -32,13 +28,22 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Transaction;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis30ClientTest {
@@ -72,6 +77,7 @@ class Jedis30ClientTest {
 
   @BeforeEach
   void reset() {
+    jedis.select(0);
     jedis.flushAll();
     testing.clearData();
   }
@@ -84,16 +90,16 @@ class Jedis30ClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
 
@@ -102,10 +108,58 @@ class Jedis30ClientTest {
         "io.opentelemetry.jedis-3.0",
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
+        DB_NAMESPACE,
         SERVER_ADDRESS,
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
+  }
+
+  @Test
+  void pooledCommand() {
+    JedisPool pool = new JedisPool(host, port);
+    cleanup.deferCleanup(pool);
+    try (Jedis pooled = pool.getResource()) {
+      pooled.set("pooled", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET pooled ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @Test
+  void directHostAndPortCommandUsesOriginalTarget() {
+    HostAndPort endpoint = HostAndPort.parseString("localhost:" + port);
+    try (Jedis direct = new Jedis(endpoint)) {
+      direct.set("direct-host-and-port", "value");
+    }
+
+    assertHostAndPortTarget();
+  }
+
+  private static void assertHostAndPortTarget() {
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo("localhost");
+              assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
+            });
   }
 
   @Test
@@ -119,31 +173,31 @@ class Jedis30ClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "GET foo"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(DB_NAMESPACE, "0"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
@@ -159,35 +213,260 @@ class Jedis30ClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "RANDOMKEY " + host + ":" + port
-                                : "RANDOMKEY")
+                    span.hasName("RANDOMKEY " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
-                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
+                            equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
+                            equalTo(DB_NAMESPACE, "0"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @Test
+  void nonDefaultDatabaseIndex() {
+    jedis.select(1);
+    jedis.set("foo", "bar");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SELECT 1"),
+                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                            // jedis 3.x updates the database index only after SELECT succeeds, so
+                            // this span still reports the database it was sent on
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "1"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void pipelineCommand(BatchScenario<Pipeline> scenario) {
+    Pipeline pipeline = jedis.pipelined();
+    scenario.commands.accept(pipeline);
+    pipeline.sync();
+
+    if (scenario.operationName == null) {
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(scenario.operationName + " " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, scenario.queryText),
+                            equalTo(DB_OPERATION_NAME, scenario.operationName),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("transactionScenarios")
+  void transactionCommand(BatchScenario<Transaction> scenario) {
+    // A MULTI/EXEC transaction is reported as a single batch span (db.operation.name "MULTI"),
+    // mirroring how a pipeline is reported as "PIPELINE". The framing MULTI/EXEC commands and the
+    // individual queued commands do not get their own spans.
+    Transaction transaction = jedis.multi();
+    scenario.commands.accept(transaction);
+    transaction.exec();
+
+    if (scenario.operationName == null) {
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(scenario.operationName + " " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, scenario.queryText),
+                            equalTo(DB_OPERATION_NAME, scenario.operationName),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @Test
+  void transactionDiscardEmitsNoSpans() {
+    // A discarded transaction is abandoned: its queued commands are dropped and the framing
+    // MULTI/DISCARD commands do not produce any spans.
+    Transaction transaction = jedis.multi();
+    transaction.set("tx1", "v1");
+    transaction.get("tx1");
+    transaction.discard();
+
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        // no span is created for empty pipelines
+        argumentSet("empty", BatchScenario.<Pipeline>builder().build()),
+        argumentSet(
+            "single",
+            BatchScenario.<Pipeline>builder()
+                .addCommand(pipeline -> pipeline.set("batch1", "v1"))
+                .operationName("SET")
+                .queryText("SET batch1 ?")
+                .build()),
+        argumentSet(
+            "twoSameOperation",
+            BatchScenario.<Pipeline>builder()
+                .addCommand(pipeline -> pipeline.set("batch1", "v1"))
+                .addCommand(pipeline -> pipeline.set("batch2", "v2"))
+                .operationName("PIPELINE SET")
+                .queryText("SET batch1 ?; SET batch2 ?")
+                .batchSize(2)
+                .build()),
+        argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.<Pipeline>builder()
+                .addCommand(pipeline -> pipeline.set("batch1", "v1"))
+                .addCommand(pipeline -> pipeline.get("batch1"))
+                .operationName("PIPELINE")
+                .queryText("SET batch1 ?; GET batch1")
+                .batchSize(2)
+                .build()));
+  }
+
+  private static Stream<Arguments> transactionScenarios() {
+    return Stream.of(
+        // no span is created for empty transactions
+        argumentSet("empty", BatchScenario.<Transaction>builder().build()),
+        argumentSet(
+            "single",
+            BatchScenario.<Transaction>builder()
+                .addCommand(transaction -> transaction.set("tx1", "v1"))
+                .operationName("SET")
+                .queryText("SET tx1 ?")
+                .build()),
+        argumentSet(
+            "twoSameOperation",
+            BatchScenario.<Transaction>builder()
+                .addCommand(transaction -> transaction.set("tx1", "v1"))
+                .addCommand(transaction -> transaction.set("tx2", "v2"))
+                .operationName("MULTI SET")
+                .queryText("SET tx1 ?; SET tx2 ?")
+                .batchSize(2)
+                .build()),
+        argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.<Transaction>builder()
+                .addCommand(transaction -> transaction.set("tx1", "v1"))
+                .addCommand(transaction -> transaction.get("tx1"))
+                .operationName("MULTI")
+                .queryText("SET tx1 ?; GET tx1")
+                .batchSize(2)
+                .build()));
+  }
+
+  private static class BatchScenario<T> {
+    private final Consumer<T> commands;
+    private final String operationName;
+    private final String queryText;
+    private final Long batchSize;
+
+    private BatchScenario(Builder<T> builder) {
+      this.commands = builder.commands;
+      this.operationName = builder.operationName;
+      this.queryText = builder.queryText;
+      this.batchSize = builder.batchSize;
+    }
+
+    private static <T> Builder<T> builder() {
+      return new Builder<>();
+    }
+
+    private static class Builder<T> {
+      private Consumer<T> commands = command -> {};
+      private String operationName;
+      private String queryText;
+      private Long batchSize;
+
+      private Builder<T> addCommand(Consumer<T> command) {
+        this.commands = this.commands.andThen(command);
+        return this;
+      }
+
+      private Builder<T> operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      private Builder<T> queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      private Builder<T> batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      private BatchScenario<T> build() {
+        return new BatchScenario<>(this);
+      }
+    }
   }
 }

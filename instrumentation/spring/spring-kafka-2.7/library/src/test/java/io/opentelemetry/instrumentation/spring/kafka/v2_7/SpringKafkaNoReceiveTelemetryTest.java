@@ -13,10 +13,11 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.testing.AbstractSpringKafkaNoReceiveTelemetryTest;
 import java.util.List;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ContainerCustomizer;
+import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 
 class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTelemetryTest {
@@ -43,9 +44,12 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
   static class KafkaInstrumentationConfig {
 
     @Bean
-    DefaultKafkaProducerFactoryCustomizer producerInstrumentation() {
+    SmartInitializingSingleton producerInstrumentation(
+        List<ProducerFactory<?, ?>> producerFactories) {
       KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(testing.getOpenTelemetry());
-      return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
+      return () ->
+          producerFactories.forEach(
+              producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap));
     }
 
     @Bean

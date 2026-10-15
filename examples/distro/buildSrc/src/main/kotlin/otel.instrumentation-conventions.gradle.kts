@@ -3,8 +3,8 @@ plugins {
   id("com.gradleup.shadow")
 }
 
-val testInstrumentation by configurations.creating
-val testAgent by configurations.creating
+val testInstrumentation = configurations.create("testInstrumentation")
+val testAgent = configurations.create("testAgent")
 
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk")
@@ -28,6 +28,10 @@ tasks.shadowJar {
   mergeServiceFiles()
   // mergeServiceFiles requires that duplicate strategy is set to include
   filesMatching("META-INF/services/**") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
+  // avoid warning about duplicate kotlin module files being silently dropped
+  filesMatching("META-INF/*.kotlin_module") {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
   }
 

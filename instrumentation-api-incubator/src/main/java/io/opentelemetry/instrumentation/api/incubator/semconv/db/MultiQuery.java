@@ -15,31 +15,34 @@ class MultiQuery {
   @Nullable private final String storedProcedureName;
   private final Set<String> queryTexts;
   @Nullable private final String querySummary;
+  @Nullable private final String operationName;
+  @Nullable private final String collectionName;
 
   private MultiQuery(
-      @Nullable String storedProcedureName, Set<String> queryTexts, @Nullable String querySummary) {
+      @Nullable String storedProcedureName,
+      Set<String> queryTexts,
+      @Nullable String querySummary,
+      @Nullable String operationName,
+      @Nullable String collectionName) {
     this.storedProcedureName = storedProcedureName;
     this.queryTexts = queryTexts;
     this.querySummary = querySummary;
+    this.operationName = operationName;
+    this.collectionName = collectionName;
   }
 
-  static MultiQuery analyzeWithSummary(
-      Collection<String> rawQueryTexts, SqlDialect dialect, boolean querySanitizationEnabled) {
-    UniqueValue uniqueStoredProcedureName = new UniqueValue();
-    Set<String> uniqueQueryTexts = new LinkedHashSet<>();
-    UniqueValue uniqueQuerySummary = new UniqueValue();
+  static MultiQuery analyze(Collection<String> rawQueryTexts, SqlDialect dialect) {
+    Builder builder = builder();
     for (String rawQueryText : rawQueryTexts) {
-      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
-      uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
-      uniqueQueryTexts.add(querySanitizationEnabled ? analyzedQuery.getQueryText() : rawQueryText);
-      uniqueQuerySummary.set(analyzedQuery.getQuerySummary());
+      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
+      builder.add(analyzedQuery, rawQueryText);
     }
 
-    String querySummary = uniqueQuerySummary.getValue();
-    return new MultiQuery(
-        uniqueStoredProcedureName.getValue(),
-        uniqueQueryTexts,
-        querySummary == null ? "BATCH" : "BATCH " + querySummary);
+    return builder.build();
+  }
+
+  static Builder builder() {
+    return new Builder();
   }
 
   @Nullable
@@ -52,8 +55,45 @@ class MultiQuery {
     return querySummary;
   }
 
+  @Nullable
+  public String getOperationName() {
+    return operationName;
+  }
+
+  @Nullable
+  public String getCollectionName() {
+    return collectionName;
+  }
+
   public Set<String> getQueryTexts() {
     return queryTexts;
+  }
+
+  static class Builder {
+    private final UniqueValue uniqueStoredProcedureName = new UniqueValue();
+    private final Set<String> uniqueQueryTexts = new LinkedHashSet<>();
+    private final UniqueValue uniqueQuerySummary = new UniqueValue();
+    private final UniqueValue uniqueOperationName = new UniqueValue();
+    private final UniqueValue uniqueCollectionName = new UniqueValue();
+
+    void add(SqlQuery analyzedQuery, @Nullable String queryText) {
+      uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
+      uniqueQueryTexts.add(queryText);
+      uniqueQuerySummary.set(analyzedQuery.getQuerySummary());
+      uniqueOperationName.set(analyzedQuery.getOperationName());
+      uniqueCollectionName.set(analyzedQuery.getCollectionName());
+    }
+
+    MultiQuery build() {
+      String querySummary = uniqueQuerySummary.getValue();
+      String operationName = uniqueOperationName.getValue();
+      return new MultiQuery(
+          uniqueStoredProcedureName.getValue(),
+          uniqueQueryTexts,
+          querySummary == null ? "BATCH" : "BATCH " + querySummary,
+          operationName == null ? "BATCH" : "BATCH " + operationName,
+          uniqueCollectionName.getValue());
+    }
   }
 
   private static class UniqueValue {

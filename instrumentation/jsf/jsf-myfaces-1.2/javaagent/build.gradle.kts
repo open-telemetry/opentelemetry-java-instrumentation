@@ -26,7 +26,7 @@ dependencies {
 
 testing {
   suites {
-    val myfaces12Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("myfaces12Test") {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
         implementation("com.sun.facelets:jsf-facelets:1.1.14")
@@ -36,7 +36,7 @@ testing {
       }
     }
 
-    val myfaces2Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("myfaces2Test") {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
         implementation("javax.xml.bind:jaxb-api:2.2.11")
@@ -56,7 +56,6 @@ tasks {
 }
 
 tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+  systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
 }

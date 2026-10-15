@@ -36,8 +36,6 @@ import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.JavaModule;
 
 /**
- *
- *
  * <ul>
  *   There two core parts to the cache...
  *   <li>a cache of ClassLoader to WeakReference&lt;ClassLoader&gt;
@@ -57,8 +55,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   @Nullable private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
-  static final int TYPE_CAPACITY = 64;
-
+  private static final int TYPE_CAPACITY = 64;
   static final int BOOTSTRAP_HASH = 7236344; // Just a random number
 
   /**
@@ -69,16 +66,16 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    *   <li>Allow for quick fast path equivalence check of composite keys
    * </ul>
    */
-  final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache = Cache.weak();
+  private final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache = Cache.weak();
 
   /**
    * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name
    */
-  final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
+  private final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache =
       Cache.bounded(TYPE_CAPACITY);
 
   // fast path for bootstrap
-  final SharedResolutionCacheAdapter bootstrapCacheProvider =
+  private final SharedResolutionCacheAdapter bootstrapCacheProvider =
       new SharedResolutionCacheAdapter(BOOTSTRAP_HASH, null, sharedResolutionCache);
 
   private final AgentLocationStrategy locationStrategy;
@@ -134,8 +131,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
   }
 
-  @Override
-  public AgentTypePool typePool(ClassFileLocator classFileLocator, ClassLoader classLoader) {
+  private AgentTypePool agentTypePool(ClassFileLocator classFileLocator, ClassLoader classLoader) {
     return new AgentTypePool(
         getCacheProvider(classLoader),
         classFileLocator,
@@ -144,7 +140,12 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   }
 
   @Override
-  public AgentTypePool typePool(
+  public TypePool typePool(ClassFileLocator classFileLocator, ClassLoader classLoader) {
+    return agentTypePool(classFileLocator, classLoader);
+  }
+
+  @Override
+  public TypePool typePool(
       ClassFileLocator classFileLocator, ClassLoader classLoader, String name) {
     return typePool(classFileLocator, classLoader);
   }
@@ -655,7 +656,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     if (pool.classLoaderRef.get() != clazz.getClassLoader()) {
       ClassFileLocator classFileLocator =
           poolStrategy.locationStrategy.classFileLocator(clazz.getClassLoader());
-      pool = poolStrategy.typePool(classFileLocator, clazz.getClassLoader());
+      pool = poolStrategy.agentTypePool(classFileLocator, clazz.getClassLoader());
     }
     return pool.new LazyTypeDescriptionWithClass(clazz);
   }

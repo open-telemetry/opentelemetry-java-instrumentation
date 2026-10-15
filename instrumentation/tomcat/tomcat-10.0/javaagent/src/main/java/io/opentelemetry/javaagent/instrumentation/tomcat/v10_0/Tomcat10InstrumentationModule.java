@@ -29,7 +29,7 @@ import org.apache.coyote.Response;
 public class Tomcat10InstrumentationModule extends InstrumentationModule {
 
   public Tomcat10InstrumentationModule() {
-    super("tomcat", "tomcat-10.0");
+    super("tomcat-10.0", "tomcat");
   }
 
   @Override

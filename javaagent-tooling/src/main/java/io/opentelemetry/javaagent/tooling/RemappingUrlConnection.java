@@ -15,6 +15,7 @@ import java.net.URLConnection;
 import java.security.Permission;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -50,7 +51,7 @@ public class RemappingUrlConnection extends URLConnection {
   private final JarFile delegateJarFile;
   private final JarEntry entry;
 
-  private byte[] cacheClassBytes;
+  @Nullable private byte[] cacheClassBytes;
 
   public RemappingUrlConnection(URL url, JarFile delegateJarFile, JarEntry entry) {
     super(url);
@@ -89,6 +90,7 @@ public class RemappingUrlConnection extends URLConnection {
     return cw.toByteArray();
   }
 
+  @Nullable
   @Override
   public Permission getPermission() {
     // No permissions needed because all classes are in memory

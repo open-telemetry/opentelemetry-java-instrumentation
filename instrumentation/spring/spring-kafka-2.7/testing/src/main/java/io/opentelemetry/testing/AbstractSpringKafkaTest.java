@@ -5,12 +5,16 @@
 
 package io.opentelemetry.testing;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -61,6 +65,8 @@ public abstract class AbstractSpringKafkaTest {
   @SuppressWarnings("unchecked")
   @BeforeEach
   void setUpApp() {
+    SingleRecordListener.runOnNextNestedRecord(null);
+    BatchRecordListener.runOnNextNestedRecord(null);
     Map<String, Object> props = new HashMap<>();
     props.put("spring.jmx.enabled", false);
     props.put("spring.main.web-application-type", "none");
@@ -124,6 +130,14 @@ public abstract class AbstractSpringKafkaTest {
     }
   }
 
+  protected void runOnNextNestedRecord(Runnable callback) {
+    SingleRecordListener.runOnNextNestedRecord(callback);
+  }
+
+  protected void runOnNextNestedBatch(Runnable callback) {
+    BatchRecordListener.runOnNextNestedRecord(callback);
+  }
+
   protected void sendBatchMessages(Map<String, String> keyToData) throws InterruptedException {
     // This test assumes that messages are sent and received as a batch. Occasionally it happens
     // that the messages are not received as a batch, but one by one. This doesn't match what the
@@ -157,22 +171,43 @@ public abstract class AbstractSpringKafkaTest {
     assertThat(BatchRecordListener.getLastBatchSize()).isEqualTo(keyToData.size());
   }
 
-  protected static Consumer<List<? extends LinkData>> links(SpanContext... spanContexts) {
+  protected static Consumer<List<? extends LinkData>> links(SpanData... producerSpans) {
     return links -> {
-      assertThat(links).hasSize(spanContexts.length);
-      for (SpanContext spanContext : spanContexts) {
+      assertThat(links).hasSize(producerSpans.length);
+      for (SpanData producerSpan : producerSpans) {
         assertThat(links)
             .anySatisfy(
                 link -> {
                   assertThat(link.getSpanContext().getTraceId())
-                      .isEqualTo(spanContext.getTraceId());
-                  assertThat(link.getSpanContext().getSpanId()).isEqualTo(spanContext.getSpanId());
+                      .isEqualTo(producerSpan.getSpanContext().getTraceId());
+                  assertThat(link.getSpanContext().getSpanId())
+                      .isEqualTo(producerSpan.getSpanContext().getSpanId());
                   assertThat(link.getSpanContext().getTraceFlags())
-                      .isEqualTo(spanContext.getTraceFlags());
+                      .isEqualTo(producerSpan.getSpanContext().getTraceFlags());
                   assertThat(link.getSpanContext().getTraceState())
-                      .isEqualTo(spanContext.getTraceState());
+                      .isEqualTo(producerSpan.getSpanContext().getTraceState());
+                  assertThat(link.getAttributes().asMap())
+                      .containsOnlyKeys(MESSAGING_KAFKA_MESSAGE_KEY, MESSAGING_KAFKA_OFFSET);
+                  assertThat(link.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+                      .isEqualTo(producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY));
+                  assertThat(link.getAttributes().get(MESSAGING_KAFKA_OFFSET))
+                      .isEqualTo(producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET));
                 });
       }
     };
+  }
+
+  // the offset and the message key stay on the links even when the batch carries a single record,
+  // because they are only recommended on spans that describe a single message operation
+  protected static LinkData recordLink(SpanData producerSpan) {
+
+    return LinkData.create(
+        asRemote(producerSpan.getSpanContext()),
+        Attributes.builder()
+            .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
+            .put(
+                MESSAGING_KAFKA_MESSAGE_KEY,
+                producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+            .build());
   }
 }

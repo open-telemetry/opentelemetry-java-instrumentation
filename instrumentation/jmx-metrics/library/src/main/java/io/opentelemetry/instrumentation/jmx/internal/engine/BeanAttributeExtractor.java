@@ -53,7 +53,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     if (segments.isEmpty()) {
       return new BeanAttributeExtractor(baseName);
     }
-    return new BeanAttributeExtractor(baseName, segments.toArray(new String[segments.size()]));
+    return new BeanAttributeExtractor(baseName, segments.toArray(new String[0]));
   }
 
   /*
@@ -325,7 +325,6 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
         return 0;
       }
 
-      @Nullable
       @Override
       protected Number extractNumericalAttribute(
           MBeanServerConnection connection, ObjectName objectName) {

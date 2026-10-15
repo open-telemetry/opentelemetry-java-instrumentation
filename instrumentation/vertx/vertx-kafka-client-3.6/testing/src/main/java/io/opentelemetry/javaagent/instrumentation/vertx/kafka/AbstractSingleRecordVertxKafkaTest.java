@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,13 +31,22 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
   void setUpTopicAndConsumer() {
     kafkaConsumer.handler(
         record -> {
-          testing().runWithSpan("consumer", () -> {});
-          if ("error".equals(record.value())) {
-            throw new IllegalArgumentException("boom");
+          try {
+            assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
+            testing().runWithSpan("consumer", () -> {});
+            if ("error".equals(record.value())) {
+              throw new IllegalArgumentException("boom");
+            }
+          } finally {
+            kafkaConsumer.pause();
           }
         });
 
-    kafkaConsumer.partitionsAssignedHandler(partitions -> consumerReady.countDown());
+    kafkaConsumer.partitionsAssignedHandler(
+        partitions -> {
+          kafkaConsumer.pause();
+          consumerReady.countDown();
+        });
     subscribe("testSingleTopic");
   }
 
@@ -43,40 +56,39 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
     KafkaProducerRecord<String, String> record =
         KafkaProducerRecord.create("testSingleTopic", "10", "testSpan");
-    CountDownLatch sent = new CountDownLatch(1);
-    testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
-    assertThat(sent.await(30, SECONDS)).isTrue();
+    sendSingleRecord(record);
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testSingleTopic publish")
+                      span.hasName("send testSingleTopic")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(sendAttributes(record)));
-
+                          .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                  span ->
+                      span.hasName("process testSingleTopic")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
+                          .hasAttributesSatisfyingExactly(processAttributes(record)),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
               producer.set(trace.getSpan(1));
             },
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("testSingleTopic receive")
-                            .hasKind(SpanKind.CONSUMER)
+                        span.hasName("poll testSingleTopic")
+                            .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic")),
-                    span ->
-                        span.hasName("testSingleTopic process")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(0))
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                            .hasAttributesSatisfyingExactly(processAttributes(record)),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+                            .hasLinks(batchRecordLink(producer.get()))
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic"))));
+    assertSingleMetrics(null);
   }
 
   @Test
@@ -85,41 +97,75 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
     KafkaProducerRecord<String, String> record =
         KafkaProducerRecord.create("testSingleTopic", "10", "error");
-    CountDownLatch sent = new CountDownLatch(1);
-    testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
-    assertThat(sent.await(30, SECONDS)).isTrue();
+    sendSingleRecord(record);
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testSingleTopic publish")
+                      span.hasName("send testSingleTopic")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(sendAttributes(record)));
-
+                          .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                  span ->
+                      span.hasName("process testSingleTopic")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
+                          .hasStatus(StatusData.error())
+                          .hasException(new IllegalArgumentException("boom"))
+                          .hasAttributesSatisfyingExactly(withErrorType(processAttributes(record))),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
               producer.set(trace.getSpan(1));
             },
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("testSingleTopic receive")
-                            .hasKind(SpanKind.CONSUMER)
+                        span.hasName("poll testSingleTopic")
+                            .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic")),
-                    span ->
-                        span.hasName("testSingleTopic process")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(0))
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                            .hasStatus(StatusData.error())
-                            .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(processAttributes(record)),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+                            .hasLinks(batchRecordLink(producer.get()))
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic"))));
+    assertSingleMetrics(IllegalArgumentException.class.getName());
+  }
+
+  private void assertSingleMetrics(String errorType) {
+    String group = hasConsumerGroup() ? "test" : null;
+    // the receive operation records poll duration and consumed messages,
+    // whether or not it produced a receive span
+    assertReceiveMetrics(
+        testing(),
+        "io.opentelemetry.kafka-clients-0.11",
+        "testSingleTopic",
+        group,
+        "0",
+        1,
+        1,
+        null);
+    assertProcessMetrics(
+        testing(),
+        "io.opentelemetry.vertx-kafka-client-3.6",
+        "testSingleTopic",
+        group,
+        "0",
+        1,
+        errorType);
+  }
+
+  private void sendSingleRecord(KafkaProducerRecord<String, String> record)
+      throws InterruptedException {
+    // Wait for the poll that was in flight when the consumer paused to finish.
+    Thread.sleep(1_000);
+    testing().clearData();
+
+    CountDownLatch sent = new CountDownLatch(1);
+    testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
+    assertThat(sent.await(30, SECONDS)).isTrue();
+    kafkaConsumer.resume();
   }
 }

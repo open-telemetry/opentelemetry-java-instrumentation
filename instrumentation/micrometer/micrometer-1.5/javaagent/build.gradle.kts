@@ -20,7 +20,7 @@ dependencies {
 }
 
 tasks {
-  val testPrometheusMode by registering(Test::class) {
+  val testPrometheusMode = register<Test>("testPrometheusMode") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -30,7 +30,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
   }
 
-  val testBaseTimeUnit by registering(Test::class) {
+  val testBaseTimeUnit = register<Test>("testBaseTimeUnit") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -40,14 +40,14 @@ tasks {
     jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
   }
 
-  val testHistogramGauges by registering(Test::class) {
+  val testHistogramGauges = register<Test>("testHistogramGauges") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*HistogramGaugesTest")
     }
     include("**/*HistogramGaugesTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true")
+    jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
   }
 
   test {
@@ -59,7 +59,11 @@ tasks {
   }
 
   check {
-    dependsOn(testBaseTimeUnit, testPrometheusMode, testHistogramGauges)
+    dependsOn(
+      testBaseTimeUnit,
+      testPrometheusMode,
+      testHistogramGauges,
+    )
   }
 
   withType<Test>().configureEach {

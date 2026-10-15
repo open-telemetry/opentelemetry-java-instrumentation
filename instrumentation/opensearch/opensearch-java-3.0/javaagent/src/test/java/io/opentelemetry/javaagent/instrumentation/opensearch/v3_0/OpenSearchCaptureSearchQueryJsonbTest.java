@@ -5,19 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -42,6 +41,10 @@ import org.opensearch.client.transport.rest_client.RestClientTransport;
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest {
+
+  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
+  private static final String JSON_PREFIX = "{\"query\":{\"match\":{\"";
+  private static final String JSON_SUFFIX = "\":{\"query\":\"?\"}}}}";
 
   @SuppressWarnings("deprecation") // RestClientTransport is deprecated
   @Override
@@ -82,14 +85,68 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
+                                equalTo(DB_SYSTEM_NAME, "opensearch"),
+                                equalTo(DB_OPERATION_NAME, "POST"),
                                 equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                                    DB_QUERY_TEXT,
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
+                    span ->
+                        span.hasName("POST")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                satisfies(
+                                    URL_FULL,
+                                    val ->
+                                        val.asString()
+                                            .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+  }
+
+  @Test
+  void shouldTruncateSearchQueryBodyOverLimitWithJsonbMapper() throws IOException {
+    String field =
+        "a".repeat(MAX_QUERY_BODY_LENGTH - JSON_PREFIX.length() - JSON_SUFFIX.length() + 1);
+    String expected = (JSON_PREFIX + field + JSON_SUFFIX).substring(0, MAX_QUERY_BODY_LENGTH);
+    SearchRequest searchRequest =
+        SearchRequest.of(
+            request ->
+                request
+                    .index(INDEX_NAME)
+                    .query(
+                        Query.of(
+                            query ->
+                                query.match(
+                                    match ->
+                                        match
+                                            .field(field)
+                                            .query(value -> value.stringValue("value"))))));
+
+    openSearchClient.search(searchRequest, TestDocument.class);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, "opensearch"),
+                                equalTo(DB_OPERATION_NAME, "POST"),
+                                equalTo(DB_QUERY_TEXT, expected),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)

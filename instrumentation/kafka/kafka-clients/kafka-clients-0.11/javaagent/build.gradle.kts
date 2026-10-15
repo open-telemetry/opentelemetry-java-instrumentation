@@ -30,10 +30,9 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testPropagationDisabled by registering(Test::class) {
+  val testPropagationDisabled = register<Test>("testPropagationDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -44,7 +43,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kafka.producer-propagation.enabled=false")
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -53,7 +52,28 @@ tasks {
     include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -61,29 +81,11 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
 
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    // kafka metrics are disabled by default with v3-preview enabled
-    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 
   test {
@@ -91,11 +93,18 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
   }
 
   check {
-    dependsOn(testPropagationDisabled, testReceiveSpansDisabled, testExperimental)
+    dependsOn(
+      testDisabled,
+      testPropagationDisabled,
+      testReceiveSpansDisabled,
+      testV3Preview,
+      testExperimental,
+    )
   }
 }
 

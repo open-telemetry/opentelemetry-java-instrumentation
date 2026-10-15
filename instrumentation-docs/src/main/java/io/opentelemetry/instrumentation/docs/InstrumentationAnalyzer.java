@@ -8,12 +8,14 @@ package io.opentelemetry.instrumentation.docs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
+import io.opentelemetry.instrumentation.docs.internal.EmittedEvents;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryMerger;
 import io.opentelemetry.instrumentation.docs.parsers.EmittedScopeParser;
+import io.opentelemetry.instrumentation.docs.parsers.EventParser;
 import io.opentelemetry.instrumentation.docs.parsers.GradleParser;
 import io.opentelemetry.instrumentation.docs.parsers.MetricParser;
 import io.opentelemetry.instrumentation.docs.parsers.ModuleParser;
@@ -23,6 +25,8 @@ import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,8 +55,7 @@ class InstrumentationAnalyzer {
    */
   public List<InstrumentationModule> analyze() throws IOException {
     List<InstrumentationPath> paths = fileManager.getInstrumentationPaths();
-    List<InstrumentationModule> modules =
-        ModuleParser.convertToModules(fileManager.rootDir(), paths);
+    List<InstrumentationModule> modules = ModuleParser.convertToModules(paths);
 
     for (InstrumentationModule module : modules) {
       enrichModule(module);
@@ -69,13 +72,13 @@ class InstrumentationAnalyzer {
 
     module.setAgentTargetVersions(getVersionInformation(module));
 
-    // Handle telemetry merging (manual + emitted)
-    setMergedTelemetry(module, metaData);
-
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
     if (scopeInfo != null) {
       module.setScopeInfo(scopeInfo);
     }
+
+    // Handle telemetry merging (manual + emitted)
+    setMergedTelemetry(module, metaData);
   }
 
   @Nullable
@@ -94,8 +97,9 @@ class InstrumentationAnalyzer {
   }
 
   private Set<String> getVersionInformation(InstrumentationModule module) {
-    List<String> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
-    return GradleParser.extractVersions(gradleFiles, module);
+    Path moduleRoot = fileManager.rootDir().resolve(module.getSrcPath());
+    List<Path> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
+    return GradleParser.extractVersions(moduleRoot, gradleFiles, module);
   }
 
   /**
@@ -107,6 +111,14 @@ class InstrumentationAnalyzer {
     Map<String, List<EmittedMetrics.Metric>> emittedMetrics =
         MetricParser.getMetrics(module, fileManager);
     Map<String, List<EmittedSpans.Span>> emittedSpans = SpanParser.getSpans(module, fileManager);
+
+    // Events are collected from tests only, there is no manual authoring path for them. They still
+    // honor override_telemetry, which means "ignore the auto-generated .telemetry files".
+    Map<String, List<EmittedEvents.Event>> emittedEvents =
+        metadata != null && metadata.getOverrideTelemetry()
+            ? new HashMap<>()
+            : EventParser.getEvents(module, fileManager);
+    module.setEvents(emittedEvents);
 
     if (metadata != null && !metadata.getAdditionalTelemetry().isEmpty()) {
       TelemetryMerger.MergedTelemetryData merged =

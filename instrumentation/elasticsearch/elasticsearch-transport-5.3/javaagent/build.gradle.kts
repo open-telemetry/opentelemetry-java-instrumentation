@@ -54,7 +54,6 @@ dependencies {
 
   testLibrary("org.springframework.data:spring-data-elasticsearch:3.0.0.RELEASE")
 
-  latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.+") // see elasticsearch-transport-6.0 module
   latestDepTestLibrary("org.elasticsearch.client:transport:5.+") // see elasticsearch-transport-6.0 module
   latestDepTestLibrary("org.springframework.data:spring-data-elasticsearch:3.0.+") // see elasticsearch-transport-6.0 module
 }
@@ -66,19 +65,9 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -87,7 +76,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.logging.internal;
 
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.ConsoleExporterModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.SimpleSpanProcessorModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.SpanExporterModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.SpanProcessorModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.TracerProviderModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ConsoleExporterModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SimpleSpanProcessorModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SpanExporterModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SpanProcessorModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.TracerProviderModel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,18 +47,18 @@ public abstract class AbstractSpanLoggingCustomizerProvider
     TracerProviderModel tracerProvider = model.getTracerProvider();
     if (tracerProvider == null) {
       tracerProvider = new TracerProviderModel();
-      model.withTracerProvider(tracerProvider);
+      model.setTracerProvider(tracerProvider);
     }
     List<SpanProcessorModel> processors = tracerProvider.getProcessors();
     if (processors == null) {
       processors = new ArrayList<>();
-      tracerProvider.withProcessors(processors);
+      tracerProvider.setProcessors(processors);
     }
     SpanProcessorModel processor =
         new SpanProcessorModel()
-            .withSimple(
+            .setSimple(
                 new SimpleSpanProcessorModel()
-                    .withExporter(new SpanExporterModel().withConsole(new ConsoleExporterModel())));
+                    .setExporter(new SpanExporterModel().setConsole(new ConsoleExporterModel())));
     processors.add(processor);
   }
 

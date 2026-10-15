@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -20,21 +18,23 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@SuppressWarnings("deprecation") // getDbName is used for old semconv span names
 @ExtendWith(MockitoExtension.class)
 class DbClientSpanNameExtractorTest {
   @Mock DbClientAttributesGetter<DbRequest, Void> dbAttributesGetter;
 
-  @Mock SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
+  @Mock(answer = Answers.CALLS_REAL_METHODS)
+  SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
 
   @BeforeEach
   void setUp() {
     lenient()
         .when(sqlAttributesGetter.getSqlDialect(any()))
         .thenReturn(DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    lenient().when(sqlAttributesGetter.getDbOperationBatchSize(any())).thenReturn(null);
   }
 
   @Test
@@ -44,18 +44,13 @@ class DbClientSpanNameExtractorTest {
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
         .thenReturn(singleton("SELECT * from table"));
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("database");
-    }
-
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName)
-        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT table" : "SELECT database.table");
+    assertThat(spanName).isEqualTo("SELECT table");
   }
 
   @Test
@@ -65,10 +60,6 @@ class DbClientSpanNameExtractorTest {
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
         .thenReturn(singleton("SELECT * from another.table"));
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("database");
-    }
-
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
     // when
@@ -101,13 +92,7 @@ class DbClientSpanNameExtractorTest {
     DbRequest dbRequest = new DbRequest();
 
     when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
-    if (emitStableDatabaseSemconv()) {
-      when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
-    }
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(dbAttributesGetter.getDbName(dbRequest)).thenReturn("database");
-    }
-
+    when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
     // when
@@ -118,12 +103,28 @@ class DbClientSpanNameExtractorTest {
   }
 
   @Test
+  void shouldPreferCollectionNameOverNamespace() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
+    lenient().when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
+    when(dbAttributesGetter.getDbCollectionName(dbRequest)).thenReturn("users");
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName).isEqualTo("SELECT users");
+  }
+
+  @Test
   void shouldExtractOperation() {
     // given
     DbRequest dbRequest = new DbRequest();
 
     when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
-
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
     // when
@@ -138,13 +139,7 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    if (emitStableDatabaseSemconv()) {
-      when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
-    }
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(dbAttributesGetter.getDbName(dbRequest)).thenReturn("database");
-    }
-
+    when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
     // when
@@ -152,6 +147,17 @@ class DbClientSpanNameExtractorTest {
 
     // then
     assertThat(spanName).isEqualTo("database");
+  }
+
+  @Test
+  void shouldUseConfiguredTargetWithoutAddingAPort() {
+    DbRequest dbRequest = new DbRequest();
+    when(dbAttributesGetter.getServerAddress(dbRequest))
+        .thenReturn("db1.example:5432,db2.example:5432");
+    when(dbAttributesGetter.getServerPort(dbRequest)).thenReturn(null);
+    String spanName = DbClientSpanNameExtractor.create(dbAttributesGetter).extract(dbRequest);
+
+    assertThat(spanName).isEqualTo("db1.example:5432,db2.example:5432");
   }
 
   @Test
@@ -173,22 +179,14 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    if (emitStableDatabaseSemconv()) {
-      when(dbAttributesGetter.getDbQuerySummary(dbRequest)).thenReturn("SELECT users");
-    }
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
-      when(dbAttributesGetter.getDbName(dbRequest)).thenReturn("database");
-    }
-
+    when(dbAttributesGetter.getDbQuerySummary(dbRequest)).thenReturn("SELECT users");
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName)
-        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT users" : "SELECT database");
+    assertThat(spanName).isEqualTo("SELECT users");
   }
 
   @Test
@@ -198,17 +196,13 @@ class DbClientSpanNameExtractorTest {
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
         .thenReturn(asList("INSERT INTO table VALUES(1)", "INSERT INTO table VALUES(2)"));
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("database");
-    }
-
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName).isEqualTo(emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database");
+    assertThat(spanName).isEqualTo("BATCH INSERT table");
   }
 
   @Test
@@ -218,92 +212,63 @@ class DbClientSpanNameExtractorTest {
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
         .thenReturn(singleton("INSERT INTO table VALUES(?)"));
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("database");
-    }
-    if (emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(2L);
-    }
-
+    when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(2L);
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName)
-        .isEqualTo(emitStableDatabaseSemconv() ? "BATCH INSERT table" : "INSERT database.table");
+    assertThat(spanName).isEqualTo("BATCH INSERT table");
   }
 
   @Test
-  void shouldFallBackToExplicitOperationNameForEmptySqlQuery() {
-    // given
-    DbRequest dbRequest = new DbRequest();
-
-    when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
-    when(sqlAttributesGetter.getDbOperationName(dbRequest)).thenReturn("WRITE");
-    if (emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
-    }
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("mydb");
-    }
-
-    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
-
-    // when
-    String spanName = underTest.extract(dbRequest);
-
-    // then
-    assertThat(spanName).isEqualTo("WRITE mydb");
-  }
-
-  @Test
-  @SuppressWarnings("deprecation") // testing deprecated method
-  void shouldPreserveOldSemconvSpanNameForMigration() {
+  void shouldExtractFullSpanNameForSingleQueryEmptyBatch() {
     // given
     DbRequest dbRequest = new DbRequest();
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
-        .thenReturn(singleton("SELECT * from table"));
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("database");
-    }
-
-    SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.createWithGenericOldSpanName(sqlAttributesGetter);
+        .thenReturn(singleton("INSERT INTO table VALUES(?)"));
+    when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(0L);
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName)
-        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT table" : "SELECT database");
+    assertThat(spanName).isEqualTo("BATCH INSERT table");
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing deprecated method
-  void shouldFallBackToExplicitOperationForEmptySqlQueryInMigration() {
+  void shouldFallBackToNamespaceForEmptySqlQuery() {
     // given
     DbRequest dbRequest = new DbRequest();
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
-    when(sqlAttributesGetter.getDbOperationName(dbRequest)).thenReturn("WRITE");
-    if (emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
-    }
-    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("mydb");
-    }
-
-    SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.createWithGenericOldSpanName(sqlAttributesGetter);
+    when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName).isEqualTo("WRITE mydb");
+    assertThat(spanName).isEqualTo("mydb");
+  }
+
+  @Test
+  void shouldExtractBatchSpanNameForEmptySqlQueryBatch() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
+    when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(0L);
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName).isEqualTo("BATCH");
   }
 
   static class DbRequest {}

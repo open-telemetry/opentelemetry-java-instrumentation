@@ -1,0 +1,751 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.hbase.testing;
+
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
+import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.NamespaceDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Append;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Increment;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Row;
+import org.apache.hadoop.hbase.client.RowMutations;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.ipc.CallTimeoutException;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.assertj.core.api.AbstractAssert;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
+import org.testcontainers.utility.DockerImageName;
+
+@SuppressWarnings("deprecation") // using deprecated semconv
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public abstract class AbstractHbaseTest {
+
+  protected static final int MASTER_PORT = 16000;
+  protected static final int REGION_SERVER_PORT = 16020;
+
+  private static final String NAMESPACE = "ot_test";
+  protected static final byte[] COLUMN_FAMILY = Bytes.toBytes("cf");
+  protected static final TableName TABLE_NAME = TableName.valueOf("ot_test:eleven_test_table");
+  protected static final TableName META = TableName.valueOf("hbase:meta");
+
+  private static final String DB_SYSTEM_VALUE = "hbase";
+  protected static final String SCAN = "Scan";
+  protected static final String MUTATE = "Mutate";
+  protected static final String GET = "Get";
+  protected static final String MULTI = "Multi";
+
+  private static final int GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS = 1000;
+  private static final int GET_TIMEOUT_RPC_TIMEOUT_MILLIS = 200;
+  protected static final String ROW_1 = "row1";
+  private static final String ROW_2 = "row2";
+  protected static final String ROW_3 = "row3";
+  private static final String ROW_4 = "row4";
+  private static final String SCAN_ROW = "scan-row";
+  protected static final String CHECK_MUTATE_ROW = "check-mutate-row";
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private final String hostname = getHostName();
+  protected final GenericContainer<?> hbaseContainer = createHbaseContainer(hostname);
+
+  protected Connection connection;
+  private String serverTarget;
+  private String networkPeerAddress;
+
+  protected abstract InstrumentationExtension testing();
+
+  protected abstract String instrumentationName();
+
+  protected abstract void createTable(Admin admin) throws IOException;
+
+  protected int getTimeoutClientRetriesNumber() {
+    return 0;
+  }
+
+  // HBase 1.0-1.3 overrides this with IOException because IPCUtil.wrapException() wraps the
+  // timeout in a plain IOException.
+  protected Class<? extends IOException> getTimeoutSpanExceptionType() {
+    return CallTimeoutException.class;
+  }
+
+  // HBase 1.0-1.3 overrides this to 3 because a one-row scan deterministically sends open, next,
+  // and close RPCs; newer clients complete it with a single RPC.
+  protected int getScanTraceCount() {
+    return 1;
+  }
+
+  // The HBase 2.4+ client overrides this to 2 because opening a connection scans the meta region
+  // twice; the other tested clients scan it once.
+  protected int getMetaScanTraceCount() {
+    return 1;
+  }
+
+  protected void checkAndMutate(Table table, byte[] checkedRowKey, RowMutations rowMutations)
+      throws IOException {
+    table.checkAndMutate(
+        checkedRowKey,
+        COLUMN_FAMILY,
+        Bytes.toBytes("col1"),
+        CompareFilter.CompareOp.EQUAL,
+        Bytes.toBytes("col1_val_1"),
+        rowMutations);
+  }
+
+  protected byte[] checkAndMutateCheckedRowKey() {
+    return Bytes.toBytes(CHECK_MUTATE_ROW);
+  }
+
+  protected byte[] checkAndMutateMutatedRowKey() {
+    return Bytes.toBytes(ROW_3);
+  }
+
+  private static String getHostName() {
+    try {
+      return InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      return "localhost";
+    }
+  }
+
+  private static GenericContainer<?> createHbaseContainer(String hostname) {
+    return new GenericContainer<>(DockerImageName.parse("harisekhon/hbase:2.0"))
+        .withCreateContainerCmdModifier(
+            cmd ->
+                cmd.getHostConfig()
+                    .withPortBindings(
+                        new PortBinding(Ports.Binding.bindPort(2181), new ExposedPort(2181)),
+                        new PortBinding(Ports.Binding.bindPort(16000), new ExposedPort(16000)),
+                        new PortBinding(Ports.Binding.bindPort(16010), new ExposedPort(16010)),
+                        new PortBinding(Ports.Binding.bindPort(16020), new ExposedPort(16020)),
+                        new PortBinding(Ports.Binding.bindPort(16030), new ExposedPort(16030)),
+                        new PortBinding(Ports.Binding.bindPort(16201), new ExposedPort(16201)),
+                        new PortBinding(Ports.Binding.bindPort(16301), new ExposedPort(16301))))
+        .withExposedPorts(2181, 16000, 16010, 16020, 16030, 16201, 16301)
+        .withStartupTimeout(Duration.ofMinutes(2))
+        .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostname))
+        .waitingFor(
+            new WaitAllStrategy()
+                .withStrategy(Wait.forLogMessage(".*Master has completed initialization.*\\n", 1))
+                .withStrategy(Wait.forListeningPorts(2181, MASTER_PORT, REGION_SERVER_PORT))
+                .withStartupTimeout(Duration.ofMinutes(2)));
+  }
+
+  @BeforeAll
+  void setUp() throws IOException {
+    hbaseContainer.start();
+    cleanup.deferAfterAll(hbaseContainer::stop);
+    String host = hbaseContainer.getHost();
+    Configuration config = HBaseConfiguration.create();
+    config.set("hbase.zookeeper.quorum", host);
+    config.set("hbase.zookeeper.property.clientPort", "2181");
+    connection = ConnectionFactory.createConnection(config);
+    serverTarget = host + ":2181:/hbase";
+    networkPeerAddress =
+        reportsNetworkPeerAddress() ? InetAddress.getByName(hostname).getHostAddress() : null;
+    cleanup.deferAfterAll(connection);
+    testing()
+        .runWithSpan(
+            "setup",
+            () -> {
+              createNamespaceAndTable();
+              seedRows();
+            });
+    testing().waitForTraces(1);
+  }
+
+  private void createNamespaceAndTable() throws IOException {
+    try (Admin admin = connection.getAdmin()) {
+      NamespaceDescriptor namespaceDescriptor = NamespaceDescriptor.create(NAMESPACE).build();
+      admin.createNamespace(namespaceDescriptor);
+      createTable(admin);
+    }
+  }
+
+  private void seedRows() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      table.put(row("batch-seed-row", "col1_val", "col2_val"));
+      table.put(row(ROW_1, "col1_val_1", "col2_val_1"));
+      table.put(row(SCAN_ROW, "scan_col1_val", "scan_col2_val"));
+      table.put(row(CHECK_MUTATE_ROW, "col1_val_1", "col2_val_1"));
+    }
+  }
+
+  private static Put row(String rowKey, String col1Value, String col2Value) {
+    Put put = new Put(Bytes.toBytes(rowKey));
+    put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes(col1Value));
+    put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col2"), Bytes.toBytes(col2Value));
+    return put;
+  }
+
+  @Test
+  void testListNamespace() throws IOException {
+    Admin admin = connection.getAdmin();
+    cleanup.deferCleanup(admin);
+
+    List<String> namespaces = new ArrayList<>();
+    for (NamespaceDescriptor ns : admin.listNamespaceDescriptors()) {
+      namespaces.add(ns.getName());
+    }
+    assertThat(namespaces).contains(NAMESPACE);
+
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(null, "IsMasterRunning", MASTER_PORT, false),
+            traceAssertConsumer(null, "ListNamespaceDescriptors", MASTER_PORT, false));
+  }
+
+  @Test
+  void testListTable() throws IOException {
+    Admin admin = connection.getAdmin();
+    cleanup.deferCleanup(admin);
+
+    assertThat(admin.listTableNames()).contains(TABLE_NAME);
+
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(null, "IsMasterRunning", MASTER_PORT, false),
+            traceAssertConsumer(null, "GetTableNames", MASTER_PORT, false));
+  }
+
+  @Test
+  void testPut() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      Put put = row("put-row", "put_col1_val", "put_col2_val");
+      table.put(put);
+    }
+    testing()
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void testGet() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      Get get = new Get(Bytes.toBytes(ROW_1));
+      Result result = table.get(get);
+      assertThat(value(result, "col1")).isEqualTo("col1_val_1");
+      assertThat(value(result, "col2")).isEqualTo("col2_val_1");
+    }
+    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void zookeeperQuorumIsReportedAsTheServerTarget() throws IOException {
+    String host = hbaseContainer.getHost();
+    String quorumHost = host.equals(hostname) ? host.toUpperCase(Locale.ROOT) : host;
+    String resolvedHost = InetAddress.getByName(host).getHostAddress();
+    Configuration config = HBaseConfiguration.create();
+    config.set("hbase.zookeeper.quorum", quorumHost + "," + resolvedHost);
+    config.set("hbase.zookeeper.property.clientPort", "2181");
+
+    try (Connection quorumConnection = ConnectionFactory.createConnection(config);
+        Table table = quorumConnection.getTable(TABLE_NAME)) {
+      table.get(new Get(Bytes.toBytes(ROW_1)));
+    }
+
+    String expectedServerTarget = quorumHost + "," + resolvedHost + ":2181:/hbase";
+    List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
+    for (int i = 0; i < getMetaScanTraceCount(); i++) {
+      traceAssertions.add(
+          traceAssertConsumerForTarget(META, SCAN, REGION_SERVER_PORT, true, expectedServerTarget));
+    }
+    traceAssertions.add(
+        traceAssertConsumerForTarget(
+            TABLE_NAME, GET, REGION_SERVER_PORT, true, expectedServerTarget));
+    testing().waitAndAssertTraces(traceAssertions);
+  }
+
+  private static String value(Result result, String column) {
+    return Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes(column)));
+  }
+
+  @Test
+  void testGetTimeout() throws IOException {
+    try (Connection timeoutConnection = ConnectionFactory.createConnection(getTimeoutConfig());
+        Table table = timeoutConnection.getTable(TABLE_NAME)) {
+      warmUpTimeoutConnection(table);
+
+      assertThatExceptionOfType(IOException.class).isThrownBy(() -> getWithPausedContainer(table));
+    }
+
+    String timeoutSpanExceptionType = getTimeoutSpanExceptionType().getName();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      span.hasName(GET + " " + TABLE_NAME.getQualifierAsString())
+                          .hasKind(SpanKind.CLIENT)
+                          .hasStatus(StatusData.error())
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(DB_SYSTEM_NAME, DB_SYSTEM_VALUE),
+                              equalTo(DB_OPERATION_NAME, GET),
+                              equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()),
+                              equalTo(DB_COLLECTION_NAME, TABLE_NAME.getQualifierAsString()),
+                              equalTo(SERVER_ADDRESS, serverTarget),
+                              equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                              equalTo(
+                                  NETWORK_PEER_PORT,
+                                  networkPeerAddress == null
+                                      ? null
+                                      : Long.valueOf(REGION_SERVER_PORT)),
+                              equalTo(ERROR_TYPE, timeoutSpanExceptionType));
+                      if (emitExceptionAsSpanEvents()) {
+                        span.hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
+                                        satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE, AbstractAssert::isNotNull)));
+                      } else {
+                        span.hasEventsSatisfyingExactly();
+                      }
+                    }));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("db.client.operation.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
+                          satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
+                          satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull)));
+    }
+  }
+
+  private Configuration getTimeoutConfig() {
+    Configuration timeoutConfig = HBaseConfiguration.create(connection.getConfiguration());
+    timeoutConfig.setInt(HConstants.HBASE_CLIENT_RETRIES_NUMBER, getTimeoutClientRetriesNumber());
+    timeoutConfig.setLong(HConstants.HBASE_CLIENT_PAUSE, 1);
+    timeoutConfig.setInt(
+        HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS);
+    timeoutConfig.setInt(HConstants.HBASE_RPC_TIMEOUT_KEY, GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    // HBASE_RPC_READ_TIMEOUT_KEY and HBASE_RPC_WRITE_TIMEOUT_KEY were added in HConstants 1.4.0.
+    timeoutConfig.setInt("hbase.rpc.read.timeout", GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    timeoutConfig.setInt("hbase.rpc.write.timeout", GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    return timeoutConfig;
+  }
+
+  private void warmUpTimeoutConnection(Table table) throws IOException {
+    table.exists(new Get(Bytes.toBytes(ROW_1)));
+    testing().waitForTraces(2);
+    testing().clearData();
+  }
+
+  private void getWithPausedContainer(Table table) throws IOException {
+    hbaseContainer.getDockerClient().pauseContainerCmd(hbaseContainer.getContainerId()).exec();
+    try {
+      table.get(new Get(Bytes.toBytes(ROW_1)));
+    } finally {
+      hbaseContainer.getDockerClient().unpauseContainerCmd(hbaseContainer.getContainerId()).exec();
+    }
+  }
+
+  @Test
+  void testScan() throws IOException {
+    List<String> rowIdList = new ArrayList<>();
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      Scan scan = new Scan();
+      scan.setCaching(5);
+      scan.setRowPrefixFilter(Bytes.toBytes(SCAN_ROW));
+      try (ResultScanner scanner = table.getScanner(scan)) {
+        for (Result result : scanner) {
+          rowIdList.add(Bytes.toString(result.getRow()));
+        }
+      }
+    }
+    assertThat(rowIdList).containsExactly(SCAN_ROW);
+
+    List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
+    for (int i = 0; i < getScanTraceCount(); i++) {
+      traceAssertions.add(traceAssertConsumer(TABLE_NAME, SCAN, REGION_SERVER_PORT, true));
+    }
+    testing().waitAndAssertTraces(traceAssertions);
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void testBatch(BatchScenario scenario) throws IOException, InterruptedException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      table.batch(scenario.actions, new Object[scenario.actions.size()]);
+    }
+
+    // an empty batch sends nothing to the server, so no span is produced under either semconv
+    if (scenario.actions.isEmpty()) {
+      assertThat(testing().spans()).isEmpty();
+      return;
+    }
+
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(
+                TABLE_NAME, scenario.operationName, REGION_SERVER_PORT, true, scenario.batchSize));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        // an empty batch sends nothing to the server, so it produces no span
+        argumentSet("empty", BatchScenario.builder().build()),
+        // a single operation is modeled as a non-batch operation (no db.operation.batch.size)
+        argumentSet(
+            "single", BatchScenario.builder().addAction(get(ROW_1)).operationName(GET).build()),
+        argumentSet(
+            "twoGets",
+            BatchScenario.builder()
+                .addAction(get(ROW_1))
+                .addAction(get(ROW_2))
+                .operationName("BATCH " + GET)
+                .batchSize(2L)
+                .build()),
+        argumentSet(
+            "twoMutations",
+            BatchScenario.builder()
+                .addAction(put("batch-mutation-row-1"))
+                .addAction(put("batch-mutation-row-2"))
+                .operationName("BATCH " + MUTATE)
+                .batchSize(2L)
+                .build()),
+        // The mutation and get are on opposite sides of the table's split key.
+        argumentSet(
+            "mixedAcrossRegions",
+            BatchScenario.builder()
+                .addAction(put("batch-mixed-put-row"))
+                .addAction(get(ROW_1))
+                .operationName("BATCH")
+                .batchSize(2L)
+                .build()));
+  }
+
+  private static Get get(String rowKey) {
+    return new Get(Bytes.toBytes(rowKey));
+  }
+
+  private static Put put(String rowKey) {
+    Put put = new Put(Bytes.toBytes(rowKey));
+    put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val"));
+    return put;
+  }
+
+  @Test
+  void testDelete() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      table.delete(new Delete(Bytes.toBytes(ROW_4)));
+    }
+    testing()
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void testAppend() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      Append append = new Append(Bytes.toBytes("append-row"));
+      append.add(COLUMN_FAMILY, Bytes.toBytes("col3"), Bytes.toBytes(1L));
+      table.append(append);
+    }
+    testing()
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void testIncrement() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      Increment increment = new Increment(Bytes.toBytes("increment-row"));
+      increment.addColumn(COLUMN_FAMILY, Bytes.toBytes("col3"), 1L);
+      table.increment(increment);
+    }
+    testing()
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void testCheckAndPutSuccess() throws IOException {
+    boolean success;
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      byte[] rowKey = Bytes.toBytes(ROW_1);
+      Put put = new Put(rowKey);
+      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"), Bytes.toBytes("new_value"));
+      success =
+          table.checkAndPut(
+              rowKey, COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_1"), put);
+    }
+    assertThat(success).isTrue();
+    testing()
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void testCheckAndPutFail() throws IOException {
+    boolean success;
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      byte[] rowKey = Bytes.toBytes(ROW_1);
+      Put put = new Put(rowKey);
+      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col5"), Bytes.toBytes("new_value"));
+      success =
+          table.checkAndPut(
+              rowKey, COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("expected_value"), put);
+    }
+    assertThat(success).isFalse();
+    testing()
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void testCheckAndMutateSuccess() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      byte[] checkedRowKey = checkAndMutateCheckedRowKey();
+      byte[] mutatedRowKey = checkAndMutateMutatedRowKey();
+      Put put = new Put(mutatedRowKey);
+      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"), Bytes.toBytes("new_value1"));
+      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col5"), Bytes.toBytes("new_value2"));
+
+      RowMutations rowMutations = new RowMutations(mutatedRowKey);
+      rowMutations.add(put);
+      Delete delete = new Delete(mutatedRowKey);
+      delete.addColumns(COLUMN_FAMILY, Bytes.toBytes("col1"));
+      rowMutations.add(delete);
+
+      checkAndMutate(table, checkedRowKey, rowMutations);
+
+      Result result = table.get(new Get(mutatedRowKey));
+      assertThat(value(result, "col4")).isEqualTo("new_value1");
+      assertThat(value(result, "col5")).isEqualTo("new_value2");
+      assertThat(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col1"))).isNull();
+    }
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(TABLE_NAME, "BATCH " + MUTATE, REGION_SERVER_PORT, true, 2L),
+            traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void testCheckAndDeleteSuccess() throws IOException {
+    boolean success;
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      byte[] rowKey = Bytes.toBytes(ROW_1);
+      Delete delete = new Delete(rowKey);
+      delete.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"));
+      success =
+          table.checkAndDelete(
+              rowKey, COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_1"), delete);
+    }
+    assertThat(success).isTrue();
+    testing()
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void hasDurationMetric() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      table.get(new Get(Bytes.toBytes(ROW_1)));
+    }
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.satisfies(
+                            spanData -> {
+                              assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
+                                  .isEqualTo(networkPeerAddress);
+                              assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
+                                  .isEqualTo(
+                                      networkPeerAddress == null
+                                          ? null
+                                          : Long.valueOf(REGION_SERVER_PORT));
+                            })));
+    if (reportsNetworkPeerAddress()) {
+      assertDurationMetric(
+          testing(),
+          instrumentationName(),
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          DB_COLLECTION_NAME,
+          SERVER_ADDRESS,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT);
+    } else {
+      assertDurationMetric(
+          testing(),
+          instrumentationName(),
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          DB_COLLECTION_NAME,
+          SERVER_ADDRESS);
+    }
+  }
+
+  private Consumer<TraceAssert> traceAssertConsumerForTarget(
+      TableName table, String operation, int port, boolean hasTable, String expectedServerTarget) {
+    return traceAssertConsumer(table, operation, port, hasTable, null, expectedServerTarget);
+  }
+
+  protected Consumer<TraceAssert> traceAssertConsumer(
+      TableName table, String operation, int port, boolean hasTable) {
+    return traceAssertConsumer(table, operation, port, hasTable, null, serverTarget);
+  }
+
+  private Consumer<TraceAssert> traceAssertConsumer(
+      TableName table, String operation, int port, boolean hasTable, Long batchSize) {
+    return traceAssertConsumer(table, operation, port, hasTable, batchSize, serverTarget);
+  }
+
+  private Consumer<TraceAssert> traceAssertConsumer(
+      TableName table,
+      String operation,
+      int port,
+      boolean hasTable,
+      Long batchSize,
+      String expectedServerTarget) {
+    String spanName;
+    if (hasTable) {
+      spanName = operation + " " + table.getQualifierAsString();
+    } else {
+      spanName = operation + " " + expectedServerTarget;
+    }
+    return trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(spanName)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, DB_SYSTEM_VALUE),
+                        equalTo(DB_OPERATION_NAME, operation),
+                        equalTo(DB_NAMESPACE, dbNamespace(table, hasTable)),
+                        equalTo(DB_COLLECTION_NAME, dbCollectionName(table, hasTable)),
+                        equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
+                        equalTo(SERVER_ADDRESS, expectedServerTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                        equalTo(
+                            NETWORK_PEER_PORT,
+                            networkPeerAddress == null ? null : Long.valueOf(port))));
+  }
+
+  protected boolean reportsNetworkPeerAddress() {
+    return false;
+  }
+
+  private static String dbNamespace(TableName table, boolean hasTable) {
+    if (!hasTable) {
+      return null;
+    }
+    return table.getNamespaceAsString();
+  }
+
+  private static String dbCollectionName(TableName table, boolean hasTable) {
+    if (hasTable) {
+      return table.getQualifierAsString();
+    }
+    return null;
+  }
+
+  private static class BatchScenario {
+    final List<Row> actions;
+    final String operationName;
+    final Long batchSize;
+
+    BatchScenario(Builder builder) {
+      this.actions = builder.actions;
+      this.operationName = builder.operationName;
+      this.batchSize = builder.batchSize;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static class Builder {
+      private final List<Row> actions = new ArrayList<>();
+      private String operationName;
+      private Long batchSize;
+
+      Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      Builder batchSize(Long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder addAction(Row action) {
+        this.actions.add(action);
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
+  }
+}

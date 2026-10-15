@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0.SpringPulsarSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0.SpringPulsarSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -40,38 +40,44 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
   @SuppressWarnings("unused")
   public static class DispatchMessageToListenerAdvice {
     public static class AdviceScope {
-      private final Context context;
-      private final Scope scope;
+      private final Message<?> request;
+      private final Context currentContext;
+      private final Scope currentScope;
 
-      public AdviceScope(Context context, Scope scope) {
-        this.context = context;
-        this.scope = scope;
+      private AdviceScope(Message<?> request, Context currentContext, Scope currentScope) {
+        this.request = request;
+        this.currentContext = currentContext;
+        this.currentScope = currentScope;
       }
 
-      public void end(@Nullable Throwable throwable, Message<?> message) {
-        scope.close();
-        instrumenter().end(context, message, null, throwable);
+      @Nullable
+      public static AdviceScope start(Message<?> request) {
+        Context parentContext = VirtualFieldStore.extractProcessParentContext(request);
+        if (!consumerProcessInstrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context currentContext = consumerProcessInstrumenter().start(parentContext, request);
+        return new AdviceScope(request, currentContext, currentContext.makeCurrent());
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        currentScope.close();
+        consumerProcessInstrumenter().end(currentContext, request, null, throwable);
       }
     }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Message<?> message) {
-      Context parentContext = VirtualFieldStore.extract(message);
-      if (!instrumenter().shouldStart(parentContext, message)) {
-        return null;
-      }
-      Context context = instrumenter().start(parentContext, message);
-      return new AdviceScope(context, context.makeCurrent());
+      return AdviceScope.start(message);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Argument(0) Message<?> message,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.end(throwable, message);
+        adviceScope.end(throwable);
       }
     }
   }

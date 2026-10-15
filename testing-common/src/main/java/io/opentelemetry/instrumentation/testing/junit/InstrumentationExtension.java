@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -50,6 +51,11 @@ public abstract class InstrumentationExtension
 
   @Override
   public void afterEach(ExtensionContext context) throws Exception {
+    // Unlike spans and metrics, which are collected inside the assertion helpers, events are swept
+    // up here so that they are captured regardless of how the test asserted on them. Exported data
+    // is cleared in beforeEach, so everything emitted by this test is still available.
+    testRunner.collectEmittedEventsIfEnabled();
+
     ContextStorage storage = ContextStorage.get();
     ContextStorageCloser.close(storage);
   }
@@ -63,6 +69,19 @@ public abstract class InstrumentationExtension
   /** Return the {@link OpenTelemetry} instance used to produce telemetry data. */
   public OpenTelemetry getOpenTelemetry() {
     return testRunner.getOpenTelemetry();
+  }
+
+  /**
+   * Returns the peer service name expected on spans that target a local test server, or {@code
+   * null} when no peer service is expected.
+   *
+   * <p>Peer service mapping is a javaagent-only feature, so only javaagent tests expect a value.
+   * Library instrumentation never applies the peer service extractor; library users add peer
+   * service through their own attributes extractor.
+   */
+  @Nullable
+  public String expectedPeerService() {
+    return testRunner.expectedPeerService();
   }
 
   /** Return a list of all captured spans. */

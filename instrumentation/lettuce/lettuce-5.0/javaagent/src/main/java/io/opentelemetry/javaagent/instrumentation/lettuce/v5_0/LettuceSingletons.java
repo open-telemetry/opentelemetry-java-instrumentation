@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
@@ -14,17 +16,20 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.semconv.SchemaUrls;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
 
   private static final Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter;
+  private static final Instrumenter<LettuceBatchRequest, Void> batchInstrumenter;
   private static final Instrumenter<RedisURI, Void> connectInstrumenter;
 
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
@@ -36,14 +41,27 @@ public class LettuceSingletons {
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
 
-    instrumenter =
+    InstrumenterBuilder<RedisCommand<?, ?, ?>, Void> builder =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
+
+    LettuceBatchAttributesGetter batchAttributesGetter = new LettuceBatchAttributesGetter();
+    InstrumenterBuilder<LettuceBatchRequest, Void> batchBuilder =
+        Instrumenter.<LettuceBatchRequest, Void>builder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                RedisSpanNameExtractor.create(batchAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(batchBuilder);
+    batchInstrumenter = batchBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     LettuceConnectNetworkAttributesGetter connectNetworkAttributesGetter =
         new LettuceConnectNetworkAttributesGetter();
@@ -57,6 +75,7 @@ public class LettuceSingletons {
                 ServicePeerAttributesExtractor.create(
                     connectNetworkAttributesGetter, GlobalOpenTelemetry.get()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .setEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
                     .get("connection_telemetry")
@@ -66,6 +85,10 @@ public class LettuceSingletons {
 
   public static Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static Instrumenter<LettuceBatchRequest, Void> batchInstrumenter() {
+    return batchInstrumenter;
   }
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {

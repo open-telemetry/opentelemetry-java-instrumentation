@@ -5,16 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
+import java.util.Iterator;
 import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -52,7 +61,12 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
 
     awaitUntilConsumerIsReady();
     // check that the message was received
-    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
+    ConsumerRecords<?, ?> records;
+    Context inheritedContext =
+        KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
+    try (Scope ignored = inheritedContext.makeCurrent()) {
+      records = poll(Duration.ofSeconds(5));
+    }
     for (ConsumerRecord<?, ?> record : records) {
       testing.runWithSpan(
           "processing",
@@ -67,12 +81,12 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(SHARED_TOPIC + " publish")
+                    span.hasName("send " + SHARED_TOPIC)
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, false)),
                 span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -85,6 +99,18 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                     span.hasName("producer callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+    String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
+    assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
+    assertProcessMetricsWithConsumedMessages(
+        testing,
+        instrumentationName,
+        SHARED_TOPIC,
+        testLatestDeps() ? "test" : null,
+        "0",
+        1,
+        1,
+        null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
   @Test
@@ -104,16 +130,50 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " publish")
+                    span.hasName("send " + SHARED_TOPIC)
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(sendAttributes(null, null, false)),
                 span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, null, false, false))));
+  }
+
+  @Test
+  void testAbandonedIteratorDoesNotSuppressNextPoll() throws Exception {
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, "first")).get(5, SECONDS);
+    awaitUntilConsumerIsReady();
+    ConsumerRecords<?, ?> firstRecords = poll(Duration.ofSeconds(5));
+    Iterator<? extends ConsumerRecord<?, ?>> first = firstRecords.iterator();
+    assertThat(first.next().value()).isEqualTo("first");
+    Span firstSpan = Span.current();
+
+    try (Scope ignored = Context.root().makeCurrent()) {
+      producer.send(new ProducerRecord<>(SHARED_TOPIC, "second")).get(5, SECONDS);
+    }
+    ConsumerRecords<?, ?> secondRecords = poll(Duration.ofSeconds(5));
+    assertThat(secondRecords).isNotSameAs(firstRecords);
+    Iterator<? extends ConsumerRecord<?, ?>> second = secondRecords.iterator();
+    assertThat(second.next().value()).isEqualTo("second");
+    assertThat(Span.current().getSpanContext().getSpanId())
+        .isNotEqualTo(firstSpan.getSpanContext().getSpanId());
+    assertThat(second.hasNext()).isFalse();
+    assertThat(Span.current().getSpanContext().getSpanId())
+        .isEqualTo(firstSpan.getSpanContext().getSpanId());
+    assertThat(first.hasNext()).isFalse();
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+
+    String processName = "process " + SHARED_TOPIC;
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals(processName))
+        .hasSize(2)
+        .allSatisfy(
+            span ->
+                assertThat(span.getParentSpanId())
+                    .isNotEqualTo(firstSpan.getSpanContext().getSpanId()));
   }
 
   @Test
@@ -139,12 +199,12 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " publish")
+                    span.hasName("send " + SHARED_TOPIC)
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(sendAttributes(null, greeting, false)),
                 span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

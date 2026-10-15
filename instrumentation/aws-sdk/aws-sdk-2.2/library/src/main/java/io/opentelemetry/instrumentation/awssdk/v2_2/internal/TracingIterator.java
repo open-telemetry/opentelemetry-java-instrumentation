@@ -5,22 +5,19 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
-import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.services.sqs.model.Message;
 
 class TracingIterator implements Iterator<Message> {
 
   private final Iterator<Message> delegateIterator;
-  private final Instrumenter<SqsProcessRequest, Response> instrumenter;
-  private final ExecutionAttributes request;
-  private final Response response;
-  private final TracingExecutionInterceptor config;
-  private final Context receiveContext;
+  private final TracingList tracingList;
 
   /*
    * Note: this may potentially create problems if this iterator is used from different threads. But
@@ -30,30 +27,14 @@ class TracingIterator implements Iterator<Message> {
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
 
-  private TracingIterator(
-      Iterator<Message> delegateIterator,
-      Instrumenter<SqsProcessRequest, Response> instrumenter,
-      ExecutionAttributes request,
-      Response response,
-      TracingExecutionInterceptor config,
-      Context receiveContext) {
+  TracingIterator(Iterator<Message> delegateIterator, TracingList tracingList) {
     this.delegateIterator = delegateIterator;
-    this.instrumenter = instrumenter;
-    this.request = request;
-    this.response = response;
-    this.config = config;
-    this.receiveContext = receiveContext;
+    this.tracingList = tracingList;
   }
 
   public static Iterator<Message> wrap(
-      Iterator<Message> delegateIterator,
-      Instrumenter<SqsProcessRequest, Response> instrumenter,
-      ExecutionAttributes request,
-      Response response,
-      TracingExecutionInterceptor config,
-      Context receiveContext) {
-    return new TracingIterator(
-        delegateIterator, instrumenter, request, response, config, receiveContext);
+      Iterator<Message> delegateIterator, TracingList tracingList) {
+    return new TracingIterator(delegateIterator, tracingList);
   }
 
   @Override
@@ -67,34 +48,83 @@ class TracingIterator implements Iterator<Message> {
     // in case they didn't call hasNext()...
     closeScopeAndEndSpan();
 
-    // it's important not to suppress consumer span creation here using Instrumenter.shouldStart()
-    // because this instrumentation can leak the context and so there may be a leaked consumer span
-    // in the context, in which case it's important to overwrite the leaked span instead of
-    // suppressing the correct span
-    // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
     Message next = delegateIterator.next();
-    if (next != null) {
-      SqsMessage sqsMessage = SqsMessageImpl.wrap(next);
-      Context parentContext = receiveContext;
-      if (parentContext == null) {
-        parentContext = SqsParentContext.ofMessage(sqsMessage, config);
-      }
-
-      currentRequest = SqsProcessRequest.create(request, sqsMessage);
-      currentContext = instrumenter.start(parentContext, currentRequest);
-      currentScope = currentContext.makeCurrent();
-    }
+    startProcessing(next);
     return next;
   }
 
-  private void closeScopeAndEndSpan() {
+  void startProcessing(Message message) {
+    if (message != null && !tracingList.isProcessingOwnedOutsideSqsSdk()) {
+      SqsMessage sqsMessage = tracingList.getTracingMessage(message);
+      if (sqsMessage == null) {
+        sqsMessage = SqsMessageImpl.wrap(message, tracingList.getConfig());
+      }
+      Context parentContext = tracingList.getProcessParentContext();
+      if (parentContext == null) {
+        parentContext = sqsMessage.getCreationContext();
+      }
+
+      SqsProcessRequest request = SqsProcessRequest.create(tracingList.getRequest(), sqsMessage);
+      if (tracingList.getInstrumenter().shouldStart(parentContext, request)) {
+        currentRequest = request;
+        currentContext = tracingList.getInstrumenter().start(parentContext, request);
+        currentScope = currentContext.makeCurrent();
+      }
+    }
+  }
+
+  void closeScopeAndEndSpan() {
     if (currentScope != null) {
       currentScope.close();
-      instrumenter.end(currentContext, currentRequest, response, null);
+      tracingList
+          .getInstrumenter()
+          .end(currentContext, currentRequest, tracingList.getResponse(), null);
       currentScope = null;
       currentRequest = null;
       currentContext = null;
     }
+  }
+
+  static void processCallback(
+      TracingList tracingList, Message message, Consumer<? super Message> action) {
+    requireNonNull(action);
+    if (message == null || tracingList.isProcessingOwnedOutsideSqsSdk()) {
+      action.accept(message);
+      return;
+    }
+
+    SqsMessage sqsMessage = tracingList.getTracingMessage(message);
+    if (sqsMessage == null) {
+      sqsMessage = SqsMessageImpl.wrap(message, tracingList.getConfig());
+    }
+
+    Context parentContext = tracingList.getProcessParentContext();
+    if (parentContext == null) {
+      parentContext = sqsMessage.getCreationContext();
+    }
+    SqsProcessRequest request = SqsProcessRequest.create(tracingList.getRequest(), sqsMessage);
+    if (!tracingList.getInstrumenter().shouldStart(parentContext, request)) {
+      action.accept(message);
+      return;
+    }
+
+    Context context = tracingList.getInstrumenter().start(parentContext, request);
+    Throwable error = null;
+    try (Scope ignored = context.makeCurrent()) {
+      action.accept(message);
+    } catch (Throwable t) {
+      error = t;
+      throw t;
+    } finally {
+      tracingList.getInstrumenter().end(context, request, tracingList.getResponse(), error);
+    }
+  }
+
+  @Override
+  public void forEachRemaining(Consumer<? super Message> action) {
+    requireNonNull(action);
+    closeScopeAndEndSpan();
+    delegateIterator.forEachRemaining(message -> processCallback(tracingList, message, action));
   }
 
   @Override

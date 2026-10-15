@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 
 import io.opentelemetry.api.logs.Logger;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
 
 public class ApplicationLogger implements application.io.opentelemetry.api.logs.Logger {
 

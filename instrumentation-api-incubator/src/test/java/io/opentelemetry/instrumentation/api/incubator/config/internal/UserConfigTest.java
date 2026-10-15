@@ -1,0 +1,42 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.api.incubator.config.internal;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import org.junit.jupiter.api.Test;
+
+class UserConfigTest {
+
+  @Test
+  void readsUserConfig() {
+    DeclarativeConfigProperties commonConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(commonConfig.get("user").get("name").getBoolean("enabled", false)).thenReturn(true);
+    when(commonConfig.get("user").get("roles").getBoolean("enabled", false)).thenReturn(false);
+
+    UserConfig userConfig = new UserConfig(commonConfig);
+
+    assertThat(userConfig.isNameEnabled()).isTrue();
+    assertThat(userConfig.isRolesEnabled()).isFalse();
+  }
+
+  @Test
+  void disabledByDefault() {
+    DeclarativeConfigProperties commonConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+
+    UserConfig userConfig = new UserConfig(commonConfig);
+
+    assertThat(userConfig.isNameEnabled()).isFalse();
+    assertThat(userConfig.isRolesEnabled()).isFalse();
+    assertThat(userConfig.isAnyEnabled()).isFalse();
+  }
+}

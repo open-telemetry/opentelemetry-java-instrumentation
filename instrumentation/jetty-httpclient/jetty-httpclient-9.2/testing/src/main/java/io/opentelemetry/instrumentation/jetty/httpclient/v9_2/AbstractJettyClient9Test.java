@@ -62,7 +62,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     Request request = theClient.newRequest(uri).method(method).agent("Jetty");
     headers.forEach(request::header);
 
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       request.timeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
     } else if (uri.toString().contains("192.0.2.1")) {
       request.timeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);

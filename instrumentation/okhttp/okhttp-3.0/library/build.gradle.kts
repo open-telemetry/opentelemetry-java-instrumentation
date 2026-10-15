@@ -1,7 +1,12 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.instrumentation-version-class")
   id("otel.nullaway-conventions")
   id("otel.animalsniffer-conventions")
+}
+
+instrumentationVersionClass {
+  className.set("io.opentelemetry.instrumentation.okhttp.v3_0.internal.InstrumentationVersion")
 }
 
 dependencies {
@@ -14,7 +19,7 @@ dependencies {
 
 testing {
   suites {
-    val http2Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("http2Test") {
       dependencies {
         implementation(project())
         implementation("com.squareup.okhttp3:okhttp:${baseVersion("3.11.0").orLatest()}")
@@ -28,17 +33,17 @@ testing {
 }
 
 tasks {
-  check {
-    dependsOn(testing.suites)
-  }
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}PreviewSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-  }
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+      }
+    }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, previewSemconvSuites)
   }
 }

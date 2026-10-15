@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -29,20 +30,42 @@ configurations {
 
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
+  test {
+    jvmArgs(
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+    )
+  }
+
+  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+    // the deprecated setting matches keys literally, so "*" alongside another entry does not
+    // capture every key
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
+    systemProperty("testMdcConfiguration", "legacy")
+  }
+
+  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
+    systemProperty("testMdcConfiguration", "exclude-only")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(
+      testLegacyMdcAttributes,
+      testMdcAttributeExclusionsOnly,
+    )
   }
 }

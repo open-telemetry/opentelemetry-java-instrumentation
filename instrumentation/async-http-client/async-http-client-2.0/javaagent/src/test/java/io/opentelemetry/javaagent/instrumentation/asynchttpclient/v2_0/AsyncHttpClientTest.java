@@ -34,14 +34,28 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
+  private static final int READ_TIMEOUT_MS = (int) READ_TIMEOUT.toMillis();
 
-  // request timeout is needed in addition to connect timeout on async-http-client versions 2.1.0+
-  static final AsyncHttpClient client = Dsl.asyncHttpClient(configureTimeout(Dsl.config()));
+  private static final AsyncHttpClient client = buildClient(false);
+  private static final AsyncHttpClient clientWithReadTimeout = buildClient(true);
+
+  private static AsyncHttpClient buildClient(boolean readTimeout) {
+    return Dsl.asyncHttpClient(configureTimeout(Dsl.config(), readTimeout));
+  }
+
+  static AsyncHttpClient getClient(URI uri) {
+    if (uri.getPath().endsWith("/read-timeout")) {
+      return clientWithReadTimeout;
+    }
+    return client;
+  }
 
   private static DefaultAsyncHttpClientConfig.Builder configureTimeout(
-      DefaultAsyncHttpClientConfig.Builder builder) {
+      DefaultAsyncHttpClientConfig.Builder builder, boolean readTimeout) {
     setTimeout(builder, "setConnectTimeout", CONNECTION_TIMEOUT_MS);
-    setTimeout(builder, "setRequestTimeout", CONNECTION_TIMEOUT_MS);
+    if (readTimeout) {
+      setTimeout(builder, "setRequestTimeout", READ_TIMEOUT_MS);
+    }
     return builder;
   }
 
@@ -68,7 +82,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   @Override
   public int sendRequest(Request request, String method, URI uri, Map<String, String> headers)
       throws ExecutionException, InterruptedException {
-    return client.executeRequest(request).get().getStatusCode();
+    return getClient(uri).executeRequest(request).get().getStatusCode();
   }
 
   @Override
@@ -78,20 +92,21 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
       URI uri,
       Map<String, String> headers,
       HttpClientResult requestResult) {
-    client.executeRequest(
-        request,
-        new AsyncCompletionHandler<Void>() {
-          @Override
-          public Void onCompleted(Response response) {
-            requestResult.complete(response.getStatusCode());
-            return null;
-          }
+    getClient(uri)
+        .executeRequest(
+            request,
+            new AsyncCompletionHandler<Void>() {
+              @Override
+              public Void onCompleted(Response response) {
+                requestResult.complete(response.getStatusCode());
+                return null;
+              }
 
-          @Override
-          public void onThrowable(Throwable throwable) {
-            requestResult.complete(throwable);
-          }
-        });
+              @Override
+              public void onThrowable(Throwable throwable) {
+                requestResult.complete(throwable);
+              }
+            });
   }
 
   @Override

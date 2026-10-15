@@ -7,6 +7,8 @@ muzzle {
     group.set("org.opensearch.client")
     module.set("opensearch-java")
     versions.set("[3.0,)")
+    assertInverse.set(true)
+    extraDependency("org.opensearch.client:opensearch-rest-client:3.0.0")
   }
 }
 
@@ -16,12 +18,18 @@ otelJava {
 
 dependencies {
   library("org.opensearch.client:opensearch-java:3.0.0")
+
+  implementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent"))
+
   compileOnly("com.google.auto.value:auto-value-annotations")
+  compileOnly("org.opensearch.client:opensearch-rest-client:3.0.0")
   annotationProcessor("com.google.auto.value:auto-value")
   compileOnly("com.fasterxml.jackson.core:jackson-core")
 
   testImplementation("org.opensearch.client:opensearch-rest-client:3.0.0")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:testing"))
+  testInstrumentation(project(":instrumentation:opensearch:opensearch-rest-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
   // AwsSdk2Transport supports awssdk version 2.26.0
@@ -37,41 +45,31 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   test {
     filter {
-      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
+      excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+      excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
   }
 
-  val testDisabledCaptureSearchQuery by registering(Test::class) {
+  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
+      includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+      includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
-    jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
+    jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.opensearch.capture-search-query=false",
+      "otel.instrumentation.opensearch.query-sanitization.enabled=false",
     )
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
-    }
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testStableSemconv, testDisabledCaptureSearchQuery)
+    dependsOn(testQuerySanitizationDisabled)
   }
 }

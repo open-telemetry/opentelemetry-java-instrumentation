@@ -20,7 +20,6 @@ public final class SqlQueryAnalyzer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private static final Cache<CacheKey, SqlQuery> sqlToQueryCache = Cache.bounded(1000);
-  private static final Cache<CacheKey, SqlQuery> sqlToQueryCacheWithSummary = Cache.bounded(1000);
   private static final int LARGE_QUERY_THRESHOLD = 10 * 1024;
 
   public static SqlQueryAnalyzer create(boolean querySanitizationEnabled) {
@@ -33,6 +32,11 @@ public final class SqlQueryAnalyzer {
     this.querySanitizationEnabled = querySanitizationEnabled;
   }
 
+  /**
+   * Returns sanitized query text, a low-cardinality summary, and operation and target names.
+   *
+   * <p>When sanitization is disabled, returns the original query text without analysis.
+   */
   public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {
     if (!querySanitizationEnabled || query == null) {
       return SqlQuery.create(query, null, null);
@@ -50,26 +54,6 @@ public final class SqlQueryAnalyzer {
   private static SqlQuery analyzeImpl(String query, SqlDialect dialect) {
     supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
     return AutoSqlSanitizer.sanitize(query, dialect);
-  }
-
-  /** Analyze and extract query summary. */
-  public SqlQuery analyzeWithSummary(@Nullable String query, SqlDialect dialect) {
-    if (!querySanitizationEnabled || query == null) {
-      return SqlQuery.createWithSummary(query, null, null);
-    }
-    // sanitization result will not be cached for queries larger than the threshold to avoid
-    // cache growing too large
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13180
-    if (query.length() > LARGE_QUERY_THRESHOLD) {
-      return analyzeWithSummaryImpl(query, dialect);
-    }
-    return sqlToQueryCacheWithSummary.computeIfAbsent(
-        CacheKey.create(query, dialect), k -> analyzeWithSummaryImpl(query, dialect));
-  }
-
-  private static SqlQuery analyzeWithSummaryImpl(String query, SqlDialect dialect) {
-    supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
-    return AutoSqlSanitizerWithSummary.sanitize(query, dialect);
   }
 
   // visible for tests

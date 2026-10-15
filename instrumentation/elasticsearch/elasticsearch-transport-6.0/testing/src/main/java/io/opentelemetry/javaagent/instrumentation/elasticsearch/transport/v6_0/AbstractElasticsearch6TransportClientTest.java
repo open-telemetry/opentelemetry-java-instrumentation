@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static java.util.Collections.singletonMap;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
@@ -82,11 +81,10 @@ public abstract class AbstractElasticsearch6TransportClientTest
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", false)));
+                          singletonMap("cluster.routing.allocation.disk.threshold_enabled", false)))
+              .actionGet(TIMEOUT);
         });
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   protected abstract NodeFactory getNodeFactory();
@@ -108,6 +106,6 @@ public abstract class AbstractElasticsearch6TransportClientTest
 
   @Override
   protected boolean hasNetworkType() {
-    return emitOldDatabaseSemconv();
+    return false;
   }
 }

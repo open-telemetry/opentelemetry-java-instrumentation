@@ -8,7 +8,7 @@ otelJava {
 }
 
 dependencies {
-  implementation("org.yaml:snakeyaml:2.6")
+  implementation("org.yaml:snakeyaml:2.7")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
 
@@ -33,7 +33,7 @@ tasks {
       .withPathSensitivity(PathSensitivity.RELATIVE)
   }
 
-  val runAnalysis by registering(JavaExec::class) {
+  register<JavaExec>("runAnalysis") {
     dependsOn(classes)
 
     systemProperty("basePath", project.rootDir)
@@ -41,11 +41,12 @@ tasks {
     classpath(sourceSets["main"].runtimeClasspath)
   }
 
-  val docSiteAudit by registering(JavaExec::class) {
+  register<JavaExec>("docSiteAudit") {
     dependsOn(classes)
 
     systemProperty("basePath", project.rootDir)
     mainClass.set("io.opentelemetry.instrumentation.docs.DocSynchronization")
     classpath(sourceSets["main"].runtimeClasspath)
+    args(layout.buildDirectory.file("audit-result").get().asFile.absolutePath)
   }
 }

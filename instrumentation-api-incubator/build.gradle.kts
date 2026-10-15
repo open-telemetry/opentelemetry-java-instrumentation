@@ -2,6 +2,7 @@ plugins {
   id("otel.java-conventions")
   id("otel.animalsniffer-conventions")
   id("otel.jacoco-conventions")
+  id("otel.osgi-conventions")
   id("otel.publish-conventions")
   id("otel.nullaway-conventions")
 }
@@ -29,7 +30,7 @@ dependencies {
 val jflexSourceDir = layout.projectDirectory.dir("src/main/jflex")
 val jflexOutputDir = layout.buildDirectory.dir("generated/sources/jflex")
 
-val generateJflex by tasks.registering(JavaExec::class) {
+val generateJflex = tasks.register<JavaExec>("generateJflex") {
   classpath(jflex)
   mainClass.set("jflex.Main")
 
@@ -41,10 +42,12 @@ val generateJflex by tasks.registering(JavaExec::class) {
 
   doFirst {
     val outputDir = outputDirProvider.get().asFile
+    check(outputDir.deleteRecursively()) {
+      "Failed to clear generated JFlex sources: $outputDir"
+    }
     outputDir.mkdirs()
     val specFiles = listOf(
       sourceDir.asFile.resolve("SqlSanitizer.jflex"),
-      sourceDir.asFile.resolve("SqlSanitizerWithSummary.jflex"),
     )
     args(
       listOf("-d", outputDir.absolutePath, "--nobak") + specFiles.map { it.absolutePath },
@@ -66,7 +69,6 @@ tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
     exclude("**/AutoSqlSanitizer.java")
-    exclude("**/AutoSqlSanitizerWithSummary.java")
   }
 
   // Work around https://github.com/jflex-de/jflex/issues/762
@@ -88,21 +90,40 @@ tasks {
     }
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer,rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
     inputs.dir(jflexOutputDir)
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup,service.peer/dup,rpc/dup")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer/dup")
+    inputs.dir(jflexOutputDir)
+  }
+
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    inputs.dir(jflexOutputDir)
+  }
+
+  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
     inputs.dir(jflexOutputDir)
   }
 
   check {
-    dependsOn(testStableSemconv, testBothSemconv)
+    dependsOn(
+      testPreviewSemconv,
+      testBothSemconv,
+      testExceptionSignalLogs,
+      testExceptionSignalLogsDup,
+    )
   }
 }

@@ -13,20 +13,21 @@ permissions:
 
 jobs:
   update-cloudfoundry-index-yml:
-    permissions:
-      contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
         # need to run this script before we switch branches
         # since the script doesn't exist on the cloudfoundry branch
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: 'cloudfoundry'
+          persist-credentials: false
 
       - name: create working branch
         run: git checkout -b otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
@@ -39,17 +40,20 @@ jobs:
       - name: display changes
         run: git diff
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: create pr with repo changes
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
+          gh auth setup-git
           git add index.yml
           if git diff-index --quiet --cached HEAD ; then
             echo "index.yml already current"
@@ -61,3 +65,13 @@ jobs:
             --head otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }} \
             --title 'Release updates for Cloudfoundry Repo' \
             --body '[Created by Github action]'
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - update-cloudfoundry-index-yml
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@c717adbcb56efc45c5dea293accfc6c3462bcdd1 # v0.19.0
+    with:
+      success: ${{ needs.update-cloudfoundry-index-yml.result == 'success' }}

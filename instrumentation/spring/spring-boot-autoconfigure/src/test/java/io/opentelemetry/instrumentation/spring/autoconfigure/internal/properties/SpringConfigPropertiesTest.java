@@ -36,7 +36,6 @@ import org.springframework.boot.test.context.ConfigDataApplicationContextInitial
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.core.env.Environment;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 class SpringConfigPropertiesTest {
   private final ApplicationContextRunner contextRunner =
@@ -228,7 +227,6 @@ class SpringConfigPropertiesTest {
               SpringConfigProperties config =
                   new SpringConfigProperties(
                       spyEnvironment,
-                      new SpelExpressionParser(),
                       context.getBean(OtlpExporterProperties.class),
                       context.getBean(OtelResourceProperties.class),
                       context.getBean(OtelSpringProperties.class),
@@ -247,7 +245,7 @@ class SpringConfigPropertiesTest {
   void mapPropertyCaching() {
     this.contextRunner
         .withSystemProperties(
-            "otel.instrumentation.common.peer-service-mapping={'host1':'serviceA','host2':'serviceB'}")
+            "otel.instrumentation.common.peer-service-mapping=host1=serviceA,host2=serviceB")
         .run(
             context -> {
               Environment realEnvironment = context.getBean("environment", Environment.class);
@@ -256,7 +254,6 @@ class SpringConfigPropertiesTest {
               SpringConfigProperties config =
                   new SpringConfigProperties(
                       spyEnvironment,
-                      new SpelExpressionParser(),
                       context.getBean(OtlpExporterProperties.class),
                       context.getBean(OtelResourceProperties.class),
                       context.getBean(OtelSpringProperties.class),
@@ -286,7 +283,6 @@ class SpringConfigPropertiesTest {
       AssertableApplicationContext context, Map<String, String> fallback) {
     return new SpringConfigProperties(
         context.getBean("environment", Environment.class),
-        new SpelExpressionParser(),
         context.getBean(OtlpExporterProperties.class),
         context.getBean(OtelResourceProperties.class),
         context.getBean(OtelSpringProperties.class),

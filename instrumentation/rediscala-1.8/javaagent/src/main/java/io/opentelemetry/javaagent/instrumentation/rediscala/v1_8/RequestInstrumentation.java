@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -62,28 +63,35 @@ class RequestInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
+      private final RediscalaRequest request;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope, RediscalaRequest request) {
         this.context = context;
         this.scope = scope;
+        this.request = request;
       }
 
       @Nullable
-      public static AdviceScope start(RedisCommand<?, ?> cmd) {
-        Context parentContext = Context.current();
-        if (!instrumenter().shouldStart(parentContext, cmd)) {
+      public static AdviceScope start(Object action, RedisCommand<?, ?> cmd) {
+        if (action instanceof BufferedRequest) {
+          // TransactionInstrumentation records the span when exec() sends the batch.
           return null;
         }
 
-        Context context = instrumenter().start(parentContext, cmd);
-        return new AdviceScope(context, context.makeCurrent());
+        ServerEndpoint endpoint = ServerEndpoint.create(action, cmd.isMasterOnly());
+        RedisServerTarget serverTarget = RediscalaServerTargets.get(action);
+        RediscalaRequest request = RediscalaRequest.create(cmd, endpoint, serverTarget);
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(context, context.makeCurrent(), request);
       }
 
       public void end(
-          Object action,
-          RedisCommand<?, ?> cmd,
-          @Nullable Future<Object> responseFuture,
-          @Nullable Throwable throwable) {
+          Object action, @Nullable Future<Object> responseFuture, @Nullable Throwable throwable) {
         scope.close();
 
         ExecutionContext ctx = null;
@@ -97,18 +105,19 @@ class RequestInstrumentation implements TypeInstrumentation {
           ctx = ((RoundRobinPoolRequest) action).executionContext();
         }
 
-        if (throwable != null || responseFuture == null) {
-          instrumenter().end(context, cmd, null, throwable);
+        if (throwable != null || responseFuture == null || ctx == null) {
+          instrumenter().end(context, request, null, throwable);
         } else {
-          responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
+          responseFuture.onComplete(new OnCompleteHandler(context, request), ctx);
         }
       }
     }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?> cmd) {
-      return AdviceScope.start(cmd);
+    public static AdviceScope onEnter(
+        @Advice.This Object action, @Advice.Argument(0) RedisCommand<?, ?> cmd) {
+      return AdviceScope.start(action, cmd);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -119,7 +128,7 @@ class RequestInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return @Nullable Future<Object> responseFuture) {
       if (adviceScope != null) {
-        adviceScope.end(action, cmd, responseFuture, throwable);
+        adviceScope.end(action, responseFuture, throwable);
       }
     }
   }

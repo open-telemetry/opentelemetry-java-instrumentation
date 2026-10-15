@@ -1,0 +1,123 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context;
+
+import io.opentelemetry.context.ContextKey;
+import java.lang.reflect.Field;
+import java.util.function.Function;
+import javax.annotation.Nullable;
+
+final class ContextKeyBridge<APPLICATION, AGENT> {
+
+  private final application.io.opentelemetry.context.ContextKey<APPLICATION> applicationContextKey;
+  private final ContextKey<AGENT> agentContextKey;
+  private final Function<APPLICATION, AGENT> toAgent;
+  private final Function<AGENT, APPLICATION> toApplication;
+
+  // TODO: maybe add a builder instead of all those constructors?
+  ContextKeyBridge(
+      String applicationKeyHolderClassName,
+      String agentKeyHolderClassName,
+      Function<AGENT, APPLICATION> toApplication,
+      Function<APPLICATION, AGENT> toAgent)
+      throws Throwable {
+    this(applicationKeyHolderClassName, agentKeyHolderClassName, "KEY", toApplication, toAgent);
+  }
+
+  ContextKeyBridge(
+      String applicationKeyHolderClassName,
+      String agentKeyHolderClassName,
+      String fieldName,
+      Function<AGENT, APPLICATION> toApplication,
+      Function<APPLICATION, AGENT> toAgent)
+      throws Throwable {
+    this(
+        applicationKeyHolderClassName,
+        agentKeyHolderClassName,
+        fieldName,
+        fieldName,
+        toApplication,
+        toAgent);
+  }
+
+  ContextKeyBridge(
+      String applicationKeyHolderClassName,
+      String agentKeyHolderClassName,
+      String applicationFieldName,
+      String agentFieldName,
+      Function<AGENT, APPLICATION> toApplication,
+      Function<APPLICATION, AGENT> toAgent)
+      throws Throwable {
+    this(
+        Class.forName(applicationKeyHolderClassName),
+        Class.forName(agentKeyHolderClassName),
+        applicationFieldName,
+        agentFieldName,
+        toApplication,
+        toAgent);
+  }
+
+  @SuppressWarnings("unchecked") // casting reflection results
+  ContextKeyBridge(
+      Class<?> applicationKeyHolderClass,
+      Class<?> agentKeyHolderClass,
+      String applicationFieldName,
+      String agentFieldName,
+      Function<AGENT, APPLICATION> toApplication,
+      Function<APPLICATION, AGENT> toAgent)
+      throws Throwable {
+
+    Field applicationContextKeyField =
+        applicationKeyHolderClass.getDeclaredField(applicationFieldName);
+    applicationContextKeyField.setAccessible(true);
+    this.applicationContextKey =
+        (application.io.opentelemetry.context.ContextKey<APPLICATION>)
+            applicationContextKeyField.get(null);
+
+    Field agentContextKeyField = agentKeyHolderClass.getDeclaredField(agentFieldName);
+    agentContextKeyField.setAccessible(true);
+    this.agentContextKey = (ContextKey<AGENT>) agentContextKeyField.get(null);
+
+    this.toApplication = toApplication;
+    this.toAgent = toAgent;
+  }
+
+  @Nullable
+  <V> V get(
+      AgentContextWrapper contextWrapper,
+      application.io.opentelemetry.context.ContextKey<V> requestedKey) {
+    if (requestedKey == applicationContextKey) {
+      AGENT agentValue = contextWrapper.agentContext.get(agentContextKey);
+      if (agentValue == null) {
+        return null;
+      }
+      APPLICATION applicationValue = toApplication.apply(agentValue);
+      @SuppressWarnings("unchecked") // fine
+      V castValue = (V) applicationValue;
+      return castValue;
+    }
+    return null;
+  }
+
+  @Nullable
+  <V> application.io.opentelemetry.context.Context with(
+      AgentContextWrapper contextWrapper,
+      application.io.opentelemetry.context.ContextKey<V> requestedKey,
+      V value) {
+    if (requestedKey == applicationContextKey) {
+      @SuppressWarnings("unchecked") // fine
+      APPLICATION applicationValue = (APPLICATION) value;
+      AGENT agentValue = toAgent.apply(applicationValue);
+      if (agentValue == null) {
+        return contextWrapper;
+      }
+      return new AgentContextWrapper(
+          contextWrapper.agentContext.with(agentContextKey, agentValue),
+          contextWrapper.applicationContext);
+    }
+    return null;
+  }
+}

@@ -34,7 +34,7 @@ dependencies {
 
 testing {
   suites {
-    val testCoreOnly by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testCoreOnly") {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
@@ -47,7 +47,7 @@ testing {
       }
     }
 
-    val testLambda by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testLambda") {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
@@ -56,12 +56,22 @@ testing {
       }
     }
 
-    val testBedrockRuntime by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testBedrockRuntime") {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        compileOnly("software.amazon.awssdk:bedrockruntime:2.26.5")
         val version = baseVersion("2.25.63").orLatest()
-        implementation("software.amazon.awssdk:bedrockruntime:$version")
+        runtimeOnly("software.amazon.awssdk:bedrockruntime:$version")
+      }
+    }
+
+    register<JvmTestSuite>("testRdsData") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        val version = baseVersion("2.5.54").orLatest()
+        implementation("software.amazon.awssdk:rdsdata:$version")
       }
     }
   }
@@ -75,14 +85,17 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(
+      testing.suites,
+      testExceptionSignalLogs,
+    )
   }
 }

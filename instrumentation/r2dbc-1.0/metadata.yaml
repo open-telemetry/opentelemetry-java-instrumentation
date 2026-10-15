@@ -10,26 +10,19 @@ configurations:
   - name: otel.instrumentation.r2dbc.query-sanitization.enabled
     declarative_name: java.r2dbc.query_sanitization.enabled
     description: >
-      Enables query sanitization for database queries. Takes precedence over
-      otel.instrumentation.common.db.query-sanitization.enabled.
+      Enables query sanitization for database queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
     type: boolean
-    default: true
-  - name: otel.instrumentation.common.db.query-sanitization.enabled
-    declarative_name: java.common.db.query_sanitization.enabled
-    description: Enables query sanitization for database queries.
-    type: boolean
-    default: true
+  - ref: common.db.query-sanitization.enabled
   - name: otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
     declarative_name: java.r2dbc.sqlcommenter/development.enabled
     description: >
       Enables augmenting queries with a comment containing the tracing information. See
-      [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
-      queries with tracing context will make query texts unique, which may have adverse impact on
-      database performance.
+      [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. Overrides
+      `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` for this instrumentation;
+      when unset, that setting applies. WARNING: augmenting queries with tracing context will make
+      query texts unique, which may have adverse impact on database performance.
     type: boolean
-    default: false
-  - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
-    description: Used to specify a mapping from host names or IP addresses to peer services.
-    type: map
-    default: ""
+  - ref: common.db.sqlcommenter.enabled
+  - ref: common.peer-service-mapping

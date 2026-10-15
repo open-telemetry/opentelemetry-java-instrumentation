@@ -5,24 +5,17 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
@@ -30,18 +23,28 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PASSWORD;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.r2dbc.spi.Batch;
+import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.Result;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -54,6 +57,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -178,32 +182,57 @@ public abstract class AbstractR2dbcStatementTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    DB_CONNECTION_STRING,
-                                    emitStableDatabaseSemconv()
-                                        ? null
-                                        : parameter.system + "://localhost:" + port),
-                                equalTo(maybeStable(DB_SYSTEM), parameter.system),
-                                equalTo(maybeStable(DB_NAME), DB),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv()
-                                        ? parameter.getQuerySummary()
-                                        : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : parameter.operation),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : parameter.table),
+                                equalTo(DB_SYSTEM_NAME, parameter.system),
+                                equalTo(DB_NAMESPACE, DB),
+                                equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
+                                equalTo(DB_QUERY_SUMMARY, parameter.getQuerySummary()),
                                 equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void filteredResultConsumptionFinishesQuerySpan() {
+    ConnectionFactoryOptions options =
+        ConnectionFactoryOptions.parse("r2dbc:h2:mem:///filtered_result_" + UUID.randomUUID());
+    Connection connection =
+        Mono.from(createProxyConnectionFactory(options).create()).block(Duration.ofSeconds(10));
+    try {
+      getTesting()
+          .runWithSpan(
+              "parent",
+              () ->
+                  assertThat(
+                          Flux.from(connection.createStatement("SELECT 42").execute())
+                              .flatMap(
+                                  result ->
+                                      result
+                                          .filter(segment -> segment instanceof Result.RowSegment)
+                                          .flatMap(
+                                              segment ->
+                                                  Mono.just(
+                                                      ((Result.RowSegment) segment)
+                                                          .row()
+                                                          .get(0, Integer.class))))
+                              .collectList()
+                              .block(Duration.ofSeconds(10)))
+                      .containsExactly(42));
+    } finally {
+      Mono.from(connection.close()).block(Duration.ofSeconds(10));
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("SELECT")
+                            .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))));
   }
 
@@ -215,13 +244,7 @@ public abstract class AbstractR2dbcStatementTest {
                     Arguments.of(
                         named(
                             system.system + " Simple Select",
-                            new Parameter(
-                                system.system,
-                                "SELECT 3",
-                                "SELECT ?",
-                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DB,
-                                null,
-                                "SELECT"))),
+                            new Parameter(system.system, "SELECT 3", "SELECT ?", "SELECT"))),
                     Arguments.of(
                         named(
                             system.system + " Create Table",
@@ -229,11 +252,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
-                                emitStableDatabaseSemconv()
-                                    ? "CREATE TABLE person"
-                                    : "CREATE TABLE " + DB + ".person",
-                                "person",
-                                "CREATE TABLE"))),
+                                "CREATE TABLE person"))),
                     Arguments.of(
                         named(
                             system.system + " Insert",
@@ -241,11 +260,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
                                 "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
-                                emitStableDatabaseSemconv()
-                                    ? "INSERT person"
-                                    : "INSERT " + DB + ".person",
-                                "person",
-                                "INSERT"))),
+                                "INSERT person"))),
                     Arguments.of(
                         named(
                             system.system + " Select from Table",
@@ -253,11 +268,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT * FROM person where first_name = 'tom'",
                                 "SELECT * FROM person where first_name = ?",
-                                emitStableDatabaseSemconv()
-                                    ? "SELECT person"
-                                    : "SELECT " + DB + ".person",
-                                "person",
-                                "SELECT")))));
+                                "SELECT person")))));
   }
 
   @Test
@@ -289,9 +300,152 @@ public abstract class AbstractR2dbcStatementTest {
         "io.opentelemetry.r2dbc-1.0",
         DB_SYSTEM_NAME,
         DB_NAMESPACE,
-        emitStableDatabaseSemconv() ? DB_QUERY_SUMMARY : DB_OPERATION_NAME,
+        DB_QUERY_SUMMARY,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchQueries(BatchScenario scenario) {
+    DbSystemProps props = systems.get(MARIADB.system);
+    startContainer(props);
+    ConnectionFactory connectionFactory =
+        createProxyConnectionFactory(
+            ConnectionFactoryOptions.builder()
+                .option(DRIVER, props.system)
+                .option(HOST, container.getHost())
+                .option(PORT, port)
+                .option(USER, USER_DB)
+                .option(PASSWORD, PW_DB)
+                .option(DATABASE, DB)
+                .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
+                .build());
+
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios; the table also lets the collection
+    // name be captured in db.query.summary
+    recreateBatchTestTable(connectionFactory);
+    getTesting().waitForTraces(2);
+    getTesting().clearData();
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                getTesting()
+                    .runWithSpan(
+                        "parent",
+                        () -> {
+                          Mono.from(connectionFactory.create())
+                              .flatMapMany(
+                                  connection -> {
+                                    Batch batch = connection.createBatch();
+                                    for (String query : scenario.queries) {
+                                      batch.add(query);
+                                    }
+                                    return Flux.from(batch.execute())
+                                        .flatMap(result -> result.map((row, metadata) -> ""))
+                                        .concatWith(
+                                            Mono.from(connection.close()).cast(String.class));
+                                  })
+                              .blockLast(Duration.ofMinutes(1));
+                        }));
+
+    if (scenario.queries.isEmpty()) {
+      // an empty batch fails to execute but still produces a client span
+      assertThat(thrown).isInstanceOf(NoSuchElementException.class);
+      getTesting()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                      span ->
+                          span.hasName("BATCH")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(DB_SYSTEM_NAME, MARIADB.system),
+                                  equalTo(DB_NAMESPACE, DB),
+                                  equalTo(DB_QUERY_SUMMARY, "BATCH"),
+                                  equalTo(DB_OPERATION_BATCH_SIZE, 0L),
+                                  equalTo(maybeStablePeerService(), "test-peer-service"),
+                                  equalTo(SERVER_ADDRESS, container.getHost()),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
+      return;
+    }
+
+    assertThat(thrown).isNull();
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName(scenario.spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, MARIADB.system),
+                                equalTo(DB_NAMESPACE, DB),
+                                equalTo(DB_QUERY_TEXT, scenario.queryText),
+                                equalTo(DB_QUERY_SUMMARY, scenario.summary),
+                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                                equalTo(maybeStablePeerService(), "test-peer-service"),
+                                equalTo(SERVER_ADDRESS, container.getHost()),
+                                equalTo(SERVER_PORT, port))));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        argumentSet("empty", BatchScenario.builder().build()),
+        argumentSet(
+            "single",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .spanName("INSERT batch_test")
+                .summary("INSERT batch_test")
+                .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .build()),
+        argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (2, 2)")
+                .spanName("BATCH INSERT batch_test")
+                .summary("BATCH INSERT batch_test")
+                .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .batchSize(2)
+                .build()),
+        argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .addQuery("UPDATE batch_test SET num = 5 WHERE id = 1")
+                .spanName("BATCH")
+                .summary("BATCH")
+                .queryText(
+                    "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
+                .batchSize(2)
+                .build()));
+  }
+
+  private void recreateBatchTestTable(ConnectionFactory connectionFactory) {
+    Mono.from(connectionFactory.create())
+        .flatMapMany(
+            connection ->
+                Mono.from(connection.createStatement("DROP TABLE IF EXISTS batch_test").execute())
+                    .flatMapMany(result -> result.map((row, metadata) -> ""))
+                    .concatWith(
+                        Mono.from(
+                                connection
+                                    .createStatement(
+                                        "CREATE TABLE batch_test (id INTEGER PRIMARY KEY, num INTEGER)")
+                                    .execute())
+                            .flatMapMany(result -> result.map((row, metadata) -> "")))
+                    .concatWith(Mono.from(connection.close()).cast(String.class)))
+        .blockLast(Duration.ofMinutes(1));
   }
 
   private static class Parameter {
@@ -300,29 +454,15 @@ public abstract class AbstractR2dbcStatementTest {
     private final String queryText;
     private final String expectedQueryText;
     private final String spanName;
-    private final String table;
-    private final String operation;
 
-    private Parameter(
-        String system,
-        String queryText,
-        String expectedQueryText,
-        String spanName,
-        String table,
-        String operation) {
+    private Parameter(String system, String queryText, String expectedQueryText, String spanName) {
       this.system = system;
       this.queryText = queryText;
       this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
-      this.table = table;
-      this.operation = operation;
     }
 
     private String getQuerySummary() {
-      if (!emitStableDatabaseSemconv()) {
-        return null;
-      }
-      // spanName contains the expected query summary for stable semconv
       return spanName;
     }
   }
@@ -345,6 +485,63 @@ public abstract class AbstractR2dbcStatementTest {
         envVariables.put(keyValues[2 * i], keyValues[2 * i + 1]);
       }
       return this;
+    }
+  }
+
+  private static final class BatchScenario {
+    final List<String> queries;
+    final String spanName;
+    final String summary;
+    final String queryText;
+    final Long batchSize;
+
+    BatchScenario(Builder builder) {
+      this.queries = builder.queries;
+      this.spanName = builder.spanName;
+      this.summary = builder.summary;
+      this.queryText = builder.queryText;
+      this.batchSize = builder.batchSize;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private final List<String> queries = new ArrayList<>();
+      private String spanName;
+      private String summary;
+      private String queryText;
+      private Long batchSize;
+
+      Builder addQuery(String query) {
+        queries.add(query);
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder summary(String summary) {
+        this.summary = summary;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
     }
   }
 }

@@ -32,11 +32,53 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-spring-kafka-2.7:
 The instrumentation library provides interceptors that can be added to Spring Kafka message
 listener containers and producers to provide spans and context propagation.
 
+For Spring Boot 2.x and 3.x, instrument producers with:
+
 ```java
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
-import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class KafkaInstrumentationConfig {
+
+  @Bean
+  public DefaultKafkaProducerFactoryCustomizer producerInstrumentation(
+      OpenTelemetry openTelemetry) {
+    KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
+    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
+  }
+}
+```
+
+For Spring Boot 4.x, use the new package for the same customizer:
+
+```java
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
+import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class KafkaInstrumentationConfig {
+
+  @Bean
+  public DefaultKafkaProducerFactoryCustomizer producerInstrumentation(
+      OpenTelemetry openTelemetry) {
+    KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
+    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
+  }
+}
+```
+
+Instrument consumers with:
+
+```java
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ContainerCustomizer;
@@ -45,15 +87,6 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 @Configuration
 public class KafkaInstrumentationConfig {
 
-  // Instrument Kafka producers
-  @Bean
-  public DefaultKafkaProducerFactoryCustomizer producerInstrumentation(
-      OpenTelemetry openTelemetry) {
-    KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
-    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
-  }
-
-  // Instrument Kafka consumers
   @Bean
   public ContainerCustomizer<String, String, ConcurrentMessageListenerContainer<String, String>>
       listenerCustomizer(OpenTelemetry openTelemetry) {

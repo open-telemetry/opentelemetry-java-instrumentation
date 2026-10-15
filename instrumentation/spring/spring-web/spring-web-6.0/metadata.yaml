@@ -13,3 +13,28 @@ configurations:
       as the span name.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: >
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only
+      applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+        - pattern
+        - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+          example: '/users/\d+'
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+          example: '/users/{id}'
+        override:
+          type: boolean
+          default: false
+          description: Whether this rule overrides an already-applied template.

@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   common:
-    uses: ./.github/workflows/build-common.yml
+    uses: $/.github/workflows/build-common.yml
 
   # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
@@ -20,6 +20,9 @@ jobs:
 
   release:
     environment: protected
+    concurrency:
+      group: publish-release
+      cancel-in-progress: false
     permissions:
       contents: write # for creating the release
       id-token: write # for signing artifacts with Sigstore
@@ -30,6 +33,7 @@ jobs:
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
       prior-version: ${{ steps.create-github-release.outputs.prior-version }}
+      development-branch: ${{ steps.create-github-release.outputs.development-branch }}
     steps:
       - run: |
           if [[ $GITHUB_REF_NAME != release/* ]]; then
@@ -37,40 +41,24 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # fetch development branch refs so the release destination can be resolved
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Set environment variables
-        run: |
-          version=$(.github/scripts/get-version.sh)
-          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
-            major="${BASH_REMATCH[1]}"
-            minor="${BASH_REMATCH[2]}"
-            patch="${BASH_REMATCH[3]}"
-          else
-            echo "unexpected version: $version"
-            exit 1
-          fi
-          if [[ $patch == 0 ]]; then
-            if [[ $minor == 0 ]]; then
-              prior_major=$((major - 1))
-              prior_minor=$(grep -Po "^## Version $prior_major.\K[0-9]+" CHANGELOG.md | head -1)
-              prior_version="$prior_major.$prior_minor"
-            else
-              prior_version="$major.$((minor - 1)).0"
-            fi
-          else
-            prior_version="$major.$minor.$((patch - 1))"
-          fi
-          echo "VERSION=$version" >> $GITHUB_ENV
-          echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
+        # Sets VERSION, DEVELOPMENT_BRANCH, and PRIOR_VERSION.
+        run: python .github/scripts/release-config.py release --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
-        # check out main branch to verify there won't be problems with merging the change log
+        # check out the development branch to verify there won't be problems merging the change log
         # at the end of this workflow
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: main
+          ref: ${{ env.DEVELOPMENT_BRANCH }}
+          persist-credentials: false
 
-      - name: Check that change log update was merged to main
+      - name: Check that change log update was merged to the development branch
         run: |
           if [[ $VERSION == *.0 ]]; then
             # not making a patch release
@@ -81,21 +69,33 @@ jobs:
           fi
 
         # back to the release branch
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Determine whether to mark the release as latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Sets MAKE_LATEST.
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
+            --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name' \
+            | python .github/scripts/release-config.py latest --version "$VERSION" >> "$GITHUB_ENV"
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
-      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
 
       - name: Build and publish artifacts
         env:
@@ -124,7 +124,7 @@ jobs:
           cp javaagent/build/spdx/*.spdx.json sboms
           zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM
@@ -135,7 +135,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # CHANGELOG_SECTION.md is also used at the end of the release workflow
-          # for copying the change log updates to main
+          # for copying the change log updates to the development branch
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/CHANGELOG_SECTION.md
 
@@ -153,7 +153,7 @@ jobs:
 
           EOF
 
-          .github/scripts/generate-release-contributors.sh v$PRIOR_VERSION >> /tmp/release-notes.txt
+          .github/scripts/generate-release-contributors.sh "v$PRIOR_VERSION" "$DEVELOPMENT_BRANCH" >> /tmp/release-notes.txt
           fi
 
       - name: Simplify paths for attaching
@@ -161,11 +161,19 @@ jobs:
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
 
-      - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+      - name: Generate checksums
+        run: |
+          sha256sum opentelemetry-javaagent.jar \
+                    opentelemetry-javaagent.jar.asc \
+                    opentelemetry-java-instrumentation-SBOM.zip \
+                    > checksums.txt
+
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: |
             opentelemetry-javaagent.jar
             opentelemetry-java-instrumentation-SBOM.zip
+            checksums.txt
 
       - id: create-github-release
         name: Create GitHub release
@@ -174,15 +182,18 @@ jobs:
         run: |
           gh release create --target $GITHUB_REF_NAME \
                             --title "Version $VERSION" \
+                            --latest="$MAKE_LATEST" \
                             --notes-file /tmp/release-notes.txt \
                             v$VERSION \
                             opentelemetry-javaagent.jar \
                             opentelemetry-javaagent.jar.asc \
-                            opentelemetry-java-instrumentation-SBOM.zip
+                            opentelemetry-java-instrumentation-SBOM.zip \
+                            checksums.txt
 
           # these are used as job outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
+          echo "development-branch=$DEVELOPMENT_BRANCH" >> $GITHUB_OUTPUT
 
   documentation-audit:
     permissions:
@@ -190,18 +201,20 @@ jobs:
       issues: write
     needs:
       - release
-    uses: ./.github/workflows/documentation-synchronization-audit.yml
+    uses: $/.github/workflows/documentation-synchronization-audit.yml
 
   post-release-updates:
-    permissions:
-      contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     needs:
       - release
+    env:
+      DEVELOPMENT_BRANCH: ${{ needs.release.outputs.development-branch }}
     steps:
       # add change log sync (if any) into this PR since the apidiff update
       # is required before any other PR can be merged anyway
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Copy change log section from release branch
         env:
@@ -210,11 +223,19 @@ jobs:
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/changelog-section.md
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: main
+          ref: ${{ env.DEVELOPMENT_BRANCH }}
+          persist-credentials: false
 
-      - name: Merge change log to main
+      - name: Determine whether to update the API baseline
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        # Sets UPDATE_API_BASELINE.
+        run: |
+          python .github/scripts/release-config.py post-release --version "$VERSION" >> "$GITHUB_ENV"
+
+      - name: Merge change log to the development branch
         env:
           VERSION: ${{ needs.release.outputs.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -223,6 +244,7 @@ jobs:
           RELEASE_DATE=$release_date .github/scripts/merge-change-log-after-release.sh
 
       - name: Wait for release to be available in maven central
+        if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         env:
           VERSION: ${{ needs.release.outputs.version }}
         run: |
@@ -236,15 +258,20 @@ jobs:
             sleep 60
           done
 
-      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        if: ${{ env.UPDATE_API_BASELINE == 'true' }}
+        with:
+          cache-read-only: true
 
       - name: Update apidiff baseline
+        if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         env:
           VERSION: ${{ needs.release.outputs.version }}
           PRIOR_VERSION: ${{ needs.release.outputs.prior-version }}
@@ -254,31 +281,43 @@ jobs:
           sed -i "s/^val apidiffBaselineVersion = .*/val apidiffBaselineVersion = \"$VERSION\"/" version.gradle.kts
           ./gradlew --refresh-dependencies japicmp
 
+      - name: Update development branch download link
+        if: ${{ startsWith(env.DEVELOPMENT_BRANCH, 'maintenance/v') && env.UPDATE_API_BASELINE == 'true' }}
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          sed -Ei "s,https://github\.com/open-telemetry/opentelemetry-java-instrumentation/releases/(latest/download|download/v[0-9]+\.[0-9]+\.[0-9]+)/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
+
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
-      - name: Create pull request against main
+      - name: Create pull request against the development branch
         env:
           VERSION: ${{ needs.release.outputs.version }}
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Post-release updates for $VERSION"
           body="Post-release updates for \`$VERSION\`."
           branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
+          gh auth setup-git
           git checkout -b $branch
           git add CHANGELOG.md
+          git add README.md
           git add docs/apidiffs
           git add version.gradle.kts
           git commit -m "$message"
           git push --set-upstream origin $branch
-          gh pr create --title "$message" \
-                       --body "$body" \
-                       --base main
+          gh pr create \
+            --title "$message" \
+            --body "$body" \
+            --base "$DEVELOPMENT_BRANCH"

@@ -12,6 +12,7 @@ import com.noelios.restlet.http.HttpCall;
 import com.noelios.restlet.http.HttpRequest;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.restlet.data.Form;
@@ -55,6 +56,11 @@ final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(Request request) {
+    return headerNames(getHeaders(request));
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       Request request, Response response, @Nullable Throwable error) {
     return response.getStatus().getCode();
@@ -67,6 +73,15 @@ final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
       return emptyList();
     }
     return parametersToList(headers.subList(name, /* ignoreCase= */ true));
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(Request request, Response response) {
+    return headerNames(getHeaders(response));
+  }
+
+  private static Collection<String> headerNames(@Nullable Form headers) {
+    return headers == null ? emptyList() : headers.getNames();
   }
 
   // minimize memory overhead by not using streams

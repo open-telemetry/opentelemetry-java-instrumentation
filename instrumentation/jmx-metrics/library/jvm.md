@@ -1,11 +1,11 @@
 # JVM Metrics
 
-Here is the list of metrics based on MBeans exposed by the JVM and that are defined in [`jvm.yaml`](./src/main/resources/jmx/rules/jvm.yaml).
+Here is the list of metrics based on MBeans exposed by the JVM and that are defined in [`jvm.yaml`](./src/main/resources/jmx/rules/jvm.yaml) (stable metrics) and [`jvm_unstable.yaml`](./src/main/resources/jmx/rules/jvm_unstable.yaml) (experimental metrics).
 
 Those metrics are defined in the [JVM runtime metrics semantic conventions](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/).
 
 | Metric Name                                                                                                                           | semconv maturity | Type          | Unit              | Attributes                            | Description                                                 |
-|---------------------------------------------------------------------------------------------------------------------------------------|:-----------------|---------------|-------------------|---------------------------------------|-------------------------------------------------------------|
+| ------------------------------------------------------------------------------------------------------------------------------------- | :--------------- | ------------- | ----------------- | ------------------------------------- | ----------------------------------------------------------- |
 | [jvm.memory.used](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/#metric-jvmmemoryused)                              | stable           | UpDownCounter | By                | jvm.memory.pool.name, jvm.memory.type | Used memory                                                 |
 | [jvm.memory.committed](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/#metric-jvmmemorycommitted)                    | stable           | UpDownCounter | By                | jvm.memory.pool.name, jvm.memory.type | Committed memory                                            |
 | [jvm.memory.limit](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/#metric-jvmmemorylimit)                            | stable           | UpDownCounter | By                | jvm.memory.pool.name, jvm.memory.type | Max obtainable memory                                       |

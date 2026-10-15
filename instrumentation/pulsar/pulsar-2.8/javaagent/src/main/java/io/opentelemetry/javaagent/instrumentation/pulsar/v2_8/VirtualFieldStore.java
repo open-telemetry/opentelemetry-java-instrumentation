@@ -16,7 +16,7 @@ import org.apache.pulsar.client.impl.SendCallback;
 import org.apache.pulsar.client.impl.TopicMessageImpl;
 
 public class VirtualFieldStore {
-  private static final VirtualField<Message<?>, Context> MSG_FIELD =
+  private static final VirtualField<Message<?>, Context> PROCESS_PARENT_CONTEXT_FIELD =
       VirtualField.find(Message.class, Context.class);
   private static final VirtualField<Producer<?>, ProducerData> PRODUCER_FIELD =
       VirtualField.find(Producer.class, ProducerData.class);
@@ -26,16 +26,6 @@ public class VirtualFieldStore {
       VirtualField.find(SendCallback.class, SendCallbackData.class);
 
   private VirtualFieldStore() {}
-
-  public static void inject(Message<?> instance, @Nullable Context context) {
-    if (instance instanceof TopicMessageImpl<?>) {
-      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
-      instance = topicMessage.getMessage();
-    }
-    if (instance != null) {
-      MSG_FIELD.set(instance, context);
-    }
-  }
 
   public static void inject(Producer<?> instance, String serviceUrl, String topic) {
     PRODUCER_FIELD.set(instance, ProducerData.create(serviceUrl, topic));
@@ -51,16 +41,34 @@ public class VirtualFieldStore {
     }
   }
 
-  public static Context extract(Message<?> instance) {
-    if (instance instanceof TopicMessageImpl<?>) {
-      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
-      instance = topicMessage.getMessage();
+  public static void clearProcessParentContext(Message<?> instance) {
+    setProcessParentContext(instance, null);
+  }
+
+  public static void setProcessParentContext(
+      Message<?> instance, @Nullable Context processParentContext) {
+    instance = unwrap(instance);
+    if (instance != null) {
+      PROCESS_PARENT_CONTEXT_FIELD.set(instance, processParentContext);
     }
+  }
+
+  public static Context extractProcessParentContext(Message<?> instance) {
+    instance = unwrap(instance);
     if (instance == null) {
       return Context.current();
     }
-    Context ctx = MSG_FIELD.get(instance);
-    return ctx == null ? Context.current() : ctx;
+    Context context = PROCESS_PARENT_CONTEXT_FIELD.get(instance);
+    return context == null ? Context.current() : context;
+  }
+
+  @Nullable
+  private static Message<?> unwrap(@Nullable Message<?> instance) {
+    if (instance instanceof TopicMessageImpl<?>) {
+      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
+      return topicMessage.getMessage();
+    }
+    return instance;
   }
 
   public static ProducerData extract(Producer<?> instance) {
@@ -73,7 +81,9 @@ public class VirtualFieldStore {
   }
 
   @Nullable
-  public static SendCallbackData extract(SendCallback instance) {
-    return CALLBACK_FIELD.get(instance);
+  public static SendCallbackData takeSendCallbackData(SendCallback instance) {
+    SendCallbackData callbackData = CALLBACK_FIELD.get(instance);
+    CALLBACK_FIELD.set(instance, null);
+    return callbackData;
   }
 }

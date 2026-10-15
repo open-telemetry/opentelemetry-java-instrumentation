@@ -9,11 +9,13 @@ import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.
 import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_SPANS;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
+import io.opentelemetry.instrumentation.docs.internal.EmittedEvents;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
@@ -23,6 +25,7 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -30,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.Yaml;
 
 class YamlHelperTest {
   @Test
@@ -76,12 +80,7 @@ class YamlHelperTest {
             .group("struts")
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -111,7 +110,7 @@ class YamlHelperTest {
           - org.apache.struts:struts2-core:2.1.0
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -175,14 +174,16 @@ class YamlHelperTest {
                 Set.of("io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)"))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
+            definitions:
+              configurations:
+                otel.instrumentation.spring-web-6.0.enabled:
+                  name: otel.instrumentation.spring-web-6.0.enabled
+                  description: Enables or disables Spring Web 6.0 instrumentation.
+                  type: boolean
+                  default: true
             libraries:
             - name: spring-web-6.0
               description: Spring Web 6.0 instrumentation
@@ -198,11 +199,8 @@ class YamlHelperTest {
                 name: io.opentelemetry.spring-web-6.0
               javaagent_target_versions:
               - org.springframework:spring-web:[6.0.0,)
-              configurations:
-              - name: otel.instrumentation.spring-web-6.0.enabled
-                description: Enables or disables Spring Web 6.0 instrumentation.
-                type: boolean
-                default: true
+              configuration_refs:
+              - otel.instrumentation.spring-web-6.0.enabled
             custom:
             - name: opentelemetry-external-annotations
               source_path: instrumentation/opentelemetry-external-annotations-1.0
@@ -212,7 +210,7 @@ class YamlHelperTest {
               - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
             """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -237,12 +235,7 @@ class YamlHelperTest {
                     "org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)"))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -262,7 +255,7 @@ class YamlHelperTest {
           - org.springframework:spring-aop:[1.2,)
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -408,25 +401,13 @@ class YamlHelperTest {
             .metrics(Map.of("default", List.of(metric)))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
-        libraries:
-        - name: mylib-2.3
-          source_path: instrumentation/mylib/mylib-core-2.3
-          scope:
-            name: io.opentelemetry.mylib-2.3
-          javaagent_target_versions:
-          - org.apache.mylib:mylib-core:2.3.0
-          telemetry:
-          - when: default
-            metrics:
-            - name: db.client.operation.duration
+        definitions:
+          metrics:
+            db.client.operation.duration-fce1854c:
+              name: db.client.operation.duration
               description: Duration of database client operations.
               instrument: histogram
               data_type: HISTOGRAM
@@ -442,9 +423,20 @@ class YamlHelperTest {
                 type: STRING
               - name: server.port
                 type: LONG
+        libraries:
+        - name: mylib-2.3
+          source_path: instrumentation/mylib/mylib-core-2.3
+          scope:
+            name: io.opentelemetry.mylib-2.3
+          javaagent_target_versions:
+          - org.apache.mylib:mylib-core:2.3.0
+          telemetry:
+          - when: default
+            metric_refs:
+            - db.client.operation.duration-fce1854c
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -468,14 +460,39 @@ class YamlHelperTest {
             .metrics(Map.of("default", metrics))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
+        definitions:
+          metrics:
+            test.counter-0cc8d1c0:
+              name: test.counter
+              description: desc
+              instrument: counter
+              data_type: LONG_SUM
+              unit: '1'
+              attributes: []
+            test.gauge-3c51c34b:
+              name: test.gauge
+              description: desc
+              instrument: gauge
+              data_type: DOUBLE_GAUGE
+              unit: '{test}'
+              attributes: []
+            test.histogram-f3e00ac6:
+              name: test.histogram
+              description: desc
+              instrument: histogram
+              data_type: HISTOGRAM
+              unit: s
+              attributes: []
+            test.updowncounter-368958ee:
+              name: test.updowncounter
+              description: desc
+              instrument: updowncounter
+              data_type: LONG_SUM
+              unit: '1'
+              attributes: []
         libraries:
         - name: test-1.0
           source_path: instrumentation/test/test-1.0
@@ -483,34 +500,14 @@ class YamlHelperTest {
             name: io.opentelemetry.test-1.0
           telemetry:
           - when: default
-            metrics:
-            - name: test.counter
-              description: desc
-              instrument: counter
-              data_type: LONG_SUM
-              unit: '1'
-              attributes: []
-            - name: test.gauge
-              description: desc
-              instrument: gauge
-              data_type: DOUBLE_GAUGE
-              unit: '{test}'
-              attributes: []
-            - name: test.histogram
-              description: desc
-              instrument: histogram
-              data_type: HISTOGRAM
-              unit: s
-              attributes: []
-            - name: test.updowncounter
-              description: desc
-              instrument: updowncounter
-              data_type: LONG_SUM
-              unit: '1'
-              attributes: []
+            metric_refs:
+            - test.counter-0cc8d1c0
+            - test.gauge-3c51c34b
+            - test.histogram-f3e00ac6
+            - test.updowncounter-368958ee
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -537,12 +534,7 @@ class YamlHelperTest {
             .spans(Map.of("default", List.of(span)))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -568,7 +560,152 @@ class YamlHelperTest {
                 type: LONG
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
+  }
+
+  @Test
+  void testEventParsing() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+
+    EmittedEvents.Event exceptionEvent =
+        new EmittedEvents.Event(
+            "db.client.operation.exception",
+            "WARN",
+            List.of(
+                new TelemetryAttribute("db.system.name", "STRING"),
+                new TelemetryAttribute("exception.type", "STRING")));
+
+    // an event with no severity, to confirm the key is omitted rather than emitted as null
+    EmittedEvents.Event packageInfo =
+        new EmittedEvents.Event(
+            "package.info", null, List.of(new TelemetryAttribute("package.name", "STRING")));
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/mylib/mylib-core-2.3")
+            .instrumentationName("mylib-2.3")
+            .namespace("mylib")
+            .hasStandaloneLibrary(true)
+            .group("mylib")
+            .events(Map.of("default", List.of(exceptionEvent, packageInfo)))
+            .build());
+
+    String result = generateInstrumentationYaml(modules);
+    String expectedYaml =
+        """
+        definitions:
+          events:
+            db.client.operation.exception-e1a80bbd:
+              name: db.client.operation.exception
+              severity: WARN
+              attributes:
+              - name: db.system.name
+                type: STRING
+              - name: exception.type
+                type: STRING
+            package.info-ba4a9905:
+              name: package.info
+              attributes:
+              - name: package.name
+                type: STRING
+        libraries:
+        - name: mylib-2.3
+          source_path: instrumentation/mylib/mylib-core-2.3
+          scope:
+            name: io.opentelemetry.mylib-2.3
+          has_standalone_library: true
+          telemetry:
+          - when: default
+            event_refs:
+            - db.client.operation.exception-e1a80bbd
+            - package.info-ba4a9905
+        """;
+
+    assertThat(result).isEqualTo(expectedYaml);
+  }
+
+  @Test
+  void testEventOnlyTelemetryGroupIsEmitted() throws Exception {
+    // A `when` group carrying only events must not be suppressed.
+    EmittedEvents.Event event = new EmittedEvents.Event("gen_ai.choice", null, emptyList());
+
+    List<InstrumentationModule> modules =
+        List.of(
+            new InstrumentationModule.Builder("mylib-1.0")
+                .srcPath("instrumentation/mylib-1.0")
+                .events(Map.of("otel.semconv.exception.signal.preview=logs", List.of(event)))
+                .build());
+
+    String result = generateInstrumentationYaml(modules);
+
+    assertThat(result).contains("- when: otel.semconv.exception.signal.preview=logs");
+    assertThat(result).contains("event_refs:");
+  }
+
+  @Test
+  void testSharedEventDefinitionIsDeduplicatedAcrossModules() throws Exception {
+    // The exception events are emitted identically by many modules; catalog them once.
+    EmittedEvents.Event event =
+        new EmittedEvents.Event(
+            "exception", "WARN", List.of(new TelemetryAttribute("exception.type", "STRING")));
+
+    List<InstrumentationModule> modules = new ArrayList<>();
+    for (String name : List.of("alpha-1.0", "beta-1.0")) {
+      modules.add(
+          new InstrumentationModule.Builder(name)
+              .srcPath("instrumentation/" + name)
+              .events(Map.of("default", List.of(event)))
+              .build());
+    }
+
+    String result = generateInstrumentationYaml(modules);
+
+    long definitionCount =
+        result
+            .lines()
+            .filter(l -> l.trim().startsWith("exception-") && l.trim().endsWith(":"))
+            .count();
+    long refCount = result.lines().filter(l -> l.trim().startsWith("- exception-")).count();
+
+    assertThat(definitionCount).isEqualTo(1);
+    assertThat(refCount).isEqualTo(2);
+  }
+
+  @Test
+  void testSameEventNameWithDifferentSeveritiesGetsSeparateDefinitions() throws Exception {
+    // One scope can emit the same event at two severities - the default exception event is ERROR
+    // for server and consumer operations and WARN for client and producer ones - and each is a
+    // distinct shape that has to survive into the catalog.
+    EmittedEvents.Event serverException =
+        new EmittedEvents.Event(
+            "exception", "ERROR", List.of(new TelemetryAttribute("exception.type", "STRING")));
+    EmittedEvents.Event clientException =
+        new EmittedEvents.Event(
+            "exception", "WARN", List.of(new TelemetryAttribute("exception.type", "STRING")));
+
+    List<InstrumentationModule> modules =
+        List.of(
+            new InstrumentationModule.Builder("sofa-rpc-5.4")
+                .srcPath("instrumentation/sofa-rpc-5.4")
+                .events(
+                    Map.of(
+                        "otel.semconv.exception.signal.preview=logs",
+                        List.of(serverException, clientException)))
+                .build());
+
+    String result = generateInstrumentationYaml(modules);
+
+    long definitionCount =
+        result
+            .lines()
+            .filter(l -> l.trim().startsWith("exception-") && l.trim().endsWith(":"))
+            .count();
+    long refCount = result.lines().filter(l -> l.trim().startsWith("- exception-")).count();
+
+    assertThat(definitionCount).isEqualTo(2);
+    assertThat(refCount).isEqualTo(2);
+    assertThat(result).contains("severity: ERROR");
+    assertThat(result).contains("severity: WARN");
   }
 
   @Test
@@ -598,11 +735,7 @@ class YamlHelperTest {
             .spans(spans1)
             .build());
 
-    StringWriter stringWriter1 = new StringWriter();
-    BufferedWriter writer1 = new BufferedWriter(stringWriter1);
-    YamlHelper.generateInstrumentationYaml(modules1, writer1);
-    writer1.flush();
-    String yaml1 = stringWriter1.toString();
+    String yaml1 = generateInstrumentationYaml(modules1);
 
     // Different ordering
     Map<String, List<EmittedMetrics.Metric>> metrics2 = new LinkedHashMap<>();
@@ -625,11 +758,7 @@ class YamlHelperTest {
             .spans(spans2)
             .build());
 
-    StringWriter stringWriter2 = new StringWriter();
-    BufferedWriter writer2 = new BufferedWriter(stringWriter2);
-    YamlHelper.generateInstrumentationYaml(modules2, writer2);
-    writer2.flush();
-    String yaml2 = stringWriter2.toString();
+    String yaml2 = generateInstrumentationYaml(modules2);
 
     assertThat(yaml1).isEqualTo(yaml2);
   }
@@ -675,12 +804,7 @@ class YamlHelperTest {
             .metadata(metadataWithoutLink)
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
             libraries:
@@ -701,7 +825,7 @@ class YamlHelperTest {
               - com.example:test-library:[1.0.0,)
             """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -726,12 +850,7 @@ class YamlHelperTest {
             .hasStandaloneLibrary(true)
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -747,7 +866,7 @@ class YamlHelperTest {
           has_javaagent: true
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -793,12 +912,7 @@ class YamlHelperTest {
             .metadata(metadata)
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
             libraries:
@@ -824,6 +938,201 @@ class YamlHelperTest {
                 name: io.opentelemetry.opentelemetry-api-2.0
             """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
+  }
+
+  @Test
+  void testConfigurationRefIsResolvedFromSharedRegistry() throws JsonProcessingException {
+    String input =
+        """
+        configurations:
+          - ref: http.known-methods
+        """;
+
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+
+    assertThat(metadata.getConfigurations()).hasSize(1);
+    ConfigurationOption resolved = metadata.getConfigurations().get(0);
+    assertThat(resolved.id()).isEqualTo("http.known-methods");
+    assertThat(resolved.name()).isEqualTo("otel.instrumentation.http.known-methods");
+    assertThat(resolved.type()).isEqualTo(ConfigurationType.LIST);
+  }
+
+  @Test
+  void testInlineConfigurationCannotSupplyId() throws JsonProcessingException {
+    // The definition id is assigned internally; an inline option must not be able to claim one from
+    // metadata.yaml, otherwise it could overwrite a registry-backed definition in the catalog.
+    String input =
+        """
+        configurations:
+          - name: otel.instrumentation.my-module.example
+            description: Example option.
+            type: boolean
+            default: false
+            id: http.known-methods
+        """;
+
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+
+    assertThat(metadata.getConfigurations()).hasSize(1);
+    assertThat(metadata.getConfigurations().get(0).id()).isNull();
+  }
+
+  @Test
+  void testUnknownConfigurationRefFails() {
+    String input =
+        """
+        configurations:
+          - ref: does.not.exist
+        """;
+
+    assertThatThrownBy(() -> YamlHelper.metaDataParser(input))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("does.not.exist");
+  }
+
+  @Test
+  void testSharedMetricDefinitionIsDeduplicatedAcrossModules() throws Exception {
+    // Two modules emit an identical metric; it should be cataloged once and referenced by both.
+    EmittedMetrics.Metric metric =
+        new EmittedMetrics.Metric(
+            "http.client.request.duration",
+            "Duration of HTTP client requests.",
+            "HISTOGRAM",
+            "s",
+            emptyList());
+
+    List<InstrumentationModule> modules = new ArrayList<>();
+    for (String name : List.of("alpha-1.0", "beta-1.0")) {
+      modules.add(
+          new InstrumentationModule.Builder(name)
+              .srcPath("instrumentation/" + name)
+              .metrics(Map.of("default", List.of(metric)))
+              .build());
+    }
+
+    String result = generateInstrumentationYaml(modules);
+
+    long definitionCount =
+        result
+            .lines()
+            .filter(
+                l -> l.trim().startsWith("http.client.request.duration-") && l.trim().endsWith(":"))
+            .count();
+    long refCount =
+        result.lines().filter(l -> l.trim().startsWith("- http.client.request.duration-")).count();
+
+    assertThat(definitionCount).isEqualTo(1);
+    assertThat(refCount).isEqualTo(2);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void listsGlobalConfigurationsInCatalogAndGlobalRefs() throws IOException {
+    ConfigurationOption global =
+        new ConfigurationOption(
+                "otel.instrumentation.common.v3-preview",
+                "java.common.v3_preview",
+                "Enables v3 preview.",
+                "false",
+                ConfigurationType.BOOLEAN,
+                null,
+                null,
+                null,
+                null,
+                null)
+            .withId("common.v3-preview");
+
+    StringWriter stringWriter = new StringWriter();
+    try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
+      YamlHelper.generateInstrumentationYaml(emptyList(), List.of(global), writer);
+    }
+    Map<String, Object> parsed = new Yaml().load(stringWriter.toString());
+
+    Map<String, Object> configurations =
+        (Map<String, Object>)
+            ((Map<String, Object>) parsed.get("definitions")).get("configurations");
+    assertThat((Map<String, Object>) configurations.get("common.v3-preview"))
+        .containsEntry("name", "otel.instrumentation.common.v3-preview")
+        .containsEntry("declarative_name", "java.common.v3_preview");
+    assertThat(parsed.get("global_configuration_refs")).isEqualTo(List.of("common.v3-preview"));
+  }
+
+  @Test
+  void marksDeprecatedConfigurations() throws IOException {
+    ConfigurationOption deprecated =
+        new ConfigurationOption(
+                "otel.instrumentation.common.logging.trace-id",
+                "java.common.logging.trace_id",
+                "Deprecated: use `otel.instrumentation.common.logging.trace-id-key` instead.",
+                "trace_id",
+                ConfigurationType.STRING,
+                null,
+                null,
+                null,
+                null,
+                true,
+                "otel.instrumentation.common.logging.trace-id-key",
+                null)
+            .withId("common.logging.trace-id");
+
+    Map<String, Object> definition = configurationDefinition(deprecated, "common.logging.trace-id");
+
+    assertThat(definition)
+        .containsEntry("default", "trace_id")
+        .containsEntry("deprecated", true)
+        .containsEntry("replaced_by", "otel.instrumentation.common.logging.trace-id-key");
+  }
+
+  @Test
+  void omitsMissingDefault() throws IOException {
+    ConfigurationOption option =
+        new ConfigurationOption(
+                null,
+                "general.db.semconv.version",
+                "When unset, the opt-in list selects the conventions.",
+                null,
+                ConfigurationType.INT,
+                null,
+                null,
+                null,
+                null,
+                null)
+            .withId("db.semconv.version");
+
+    Map<String, Object> definition = configurationDefinition(option, "db.semconv.version");
+
+    assertThat(definition)
+        .containsEntry("type", "int")
+        .doesNotContainKeys("default", "deprecated", "replaced_by");
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> configurationDefinition(
+      ConfigurationOption configuration, String id) throws IOException {
+    InstrumentationModule module =
+        new InstrumentationModule.Builder("test-1.0")
+            .srcPath("instrumentation/test-1.0")
+            .metadata(
+                new InstrumentationMetadata.Builder()
+                    .classification(InstrumentationClassification.LIBRARY.name())
+                    .configurations(List.of(configuration))
+                    .build())
+            .build();
+    Map<String, Object> parsed = new Yaml().load(generateInstrumentationYaml(List.of(module)));
+    Map<String, Object> configurations =
+        (Map<String, Object>)
+            ((Map<String, Object>) parsed.get("definitions")).get("configurations");
+    return (Map<String, Object>) configurations.get(id);
+  }
+
+  private static String generateInstrumentationYaml(List<InstrumentationModule> modules)
+      throws IOException {
+    StringWriter stringWriter = new StringWriter();
+    try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
+      // no global configurations, so the output reflects only the given modules
+      YamlHelper.generateInstrumentationYaml(modules, List.of(), writer);
+    }
+    return stringWriter.toString();
   }
 }

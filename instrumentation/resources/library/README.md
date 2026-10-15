@@ -40,6 +40,9 @@ Implemented attributes:
 
 - `host.id`
 
+The Java agent disables this provider by default. Enable it by setting
+`otel.resource.providers.host-id.enabled=true`.
+
 ### Operating System
 
 Provider: `io.opentelemetry.instrumentation.resources.OsResource`
@@ -65,7 +68,15 @@ Implemented attributes:
 
 - `process.pid`
 - `process.executable.path` (note, we assume the `java` binary is located in the `bin` subfolder of `JAVA_HOME`)
+- `process.command_args` (note this includes all system properties and arguments when running)
 - `process.command_line` (note this includes all system properties and arguments when running)
+
+`process.command_args` and `process.command_line` are not collected by default because they may
+contain sensitive information. Enable collection by setting
+`otel.instrumentation.resources.experimental.process-command-attributes.enabled=true`.
+This setting applies only to property-based configuration. With declarative configuration, the
+`process` resource detector does not collect `process.command_args` or `process.command_line`, and
+there is currently no option to enable them.
 
 ### Java Runtime
 

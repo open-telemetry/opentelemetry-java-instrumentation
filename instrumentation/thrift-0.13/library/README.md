@@ -37,6 +37,14 @@ TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, St
   return thriftTelemetry.wrapServerProcessor(processor, serviceName);
 }
 
+// When using AsyncProcessor also wrap input and output protocol factories.
+void configureServer(OpenTelemetry openTelemetry, TNonblockingServer.Args tnbArgs) {
+  ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
+  // TBinaryProtocol.Factory is the default
+  tnbArgs.inputProtocolFactory(thriftTelemetry.wrapServerInProtocolFactory(new TBinaryProtocol.Factory()));
+  tnbArgs.outputProtocolFactory(thriftTelemetry.wrapServerOutProtocolFactory(new TBinaryProtocol.Factory()));
+}
+
 // For client-side, decorate protocol and client with a tracing wrappers.
 TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol protocol) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);

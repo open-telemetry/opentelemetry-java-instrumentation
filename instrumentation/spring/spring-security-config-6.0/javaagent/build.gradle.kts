@@ -34,7 +34,7 @@ dependencies {
   // parent POM, switch back to testLibrary when a new version is released
   // testLibrary("jakarta.servlet:jakarta.servlet-api:6.0.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
-  latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // documented limitation
+  latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // related dependency
 }
 
 otelJava {
@@ -43,8 +43,7 @@ otelJava {
 
 tasks {
   test {
-    systemProperty("otel.instrumentation.common.enduser.id.enabled", "true")
-    systemProperty("otel.instrumentation.common.enduser.role.enabled", "true")
-    systemProperty("otel.instrumentation.common.enduser.scope.enabled", "true")
+    systemProperty("otel.instrumentation.common.user.name.enabled", "true")
+    systemProperty("otel.instrumentation.common.user.roles.enabled", "true")
   }
 }

@@ -20,7 +20,7 @@ import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
 final class InstrumentationContexts {
-  private static final VirtualField<HttpClientRequest, Context> requestContextVirtualField =
+  private static final VirtualField<HttpClientRequest, Context> REQUEST_CONTEXT =
       VirtualField.find(HttpClientRequest.class, Context.class);
 
   private static final AtomicReferenceFieldUpdater<InstrumentationContexts, Context>
@@ -59,7 +59,7 @@ final class InstrumentationContexts {
     Context context = null;
     if (instrumenter().shouldStart(parentContext, request)) {
       context = instrumenter().start(parentContext, request);
-      requestContextVirtualField.set(request, context);
+      REQUEST_CONTEXT.set(request, context);
       clientContexts.offer(new RequestAndContext(request, context));
     }
     return context;
@@ -71,7 +71,7 @@ final class InstrumentationContexts {
     RequestAndContext requestAndContext = clientContexts.poll();
     if (response instanceof HttpClientRequest) {
       request = (HttpClientRequest) response;
-      context = requestContextVirtualField.get(request);
+      context = REQUEST_CONTEXT.get(request);
     } else if (requestAndContext != null) {
       // this branch is taken when there was an error (e.g. timeout) and response was null
       request = requestAndContext.request;

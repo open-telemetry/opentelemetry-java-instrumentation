@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ClassLoaderInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   public ClassLoaderInstrumentationModule() {
     super("internal-class-loader");
   }
@@ -24,11 +22,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
   public boolean defaultEnabled() {
     // internal instrumentations are always enabled by default
     return true;
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return getAdditionalHelperClassNames();
   }
 
   @Override

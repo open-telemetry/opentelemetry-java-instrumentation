@@ -48,7 +48,7 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
   }
 
   private static RestTemplate getClient(URI uri) {
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       return restTemplateWithReadTimeout;
     }
     return restTemplate;

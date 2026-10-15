@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
@@ -101,6 +104,7 @@ public final class DubboTelemetryBuilder {
             .addOperationMetrics(RpcServerMetrics.get())
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+    setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
 
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
@@ -112,6 +116,7 @@ public final class DubboTelemetryBuilder {
             .addOperationMetrics(RpcClientMetrics.get())
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+    setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return new DubboTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(new DubboHeadersGetter()),

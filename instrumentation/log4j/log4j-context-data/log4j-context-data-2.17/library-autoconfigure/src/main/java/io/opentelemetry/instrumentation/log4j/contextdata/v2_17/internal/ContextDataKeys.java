@@ -9,42 +9,64 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class ContextDataKeys {
-
   private final String traceIdKey;
   private final String spanIdKey;
-  private final String traceFlags;
+  private final String traceFlagsKey;
 
-  @SuppressWarnings("deprecation") // using deprecated config property
   public static ContextDataKeys create(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties logging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("logging");
-    return new ContextDataKeys(
-        logging.getString(
-            "trace_id",
-            ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID)),
-        logging.getString(
-            "span_id",
-            ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID)),
-        logging.getString(
-            "trace_flags",
-            ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.trace-flags",
-                LoggingContextConstants.TRACE_FLAGS)));
+    String traceIdKey =
+        getConfig(
+            logging,
+            "trace_id_key",
+            "otel.instrumentation.common.logging.trace-id-key",
+            LoggingContextConstants.TRACE_ID);
+    String spanIdKey =
+        getConfig(
+            logging,
+            "span_id_key",
+            "otel.instrumentation.common.logging.span-id-key",
+            LoggingContextConstants.SPAN_ID);
+    String traceFlagsKey =
+        getConfig(
+            logging,
+            "trace_flags_key",
+            "otel.instrumentation.common.logging.trace-flags-key",
+            LoggingContextConstants.TRACE_FLAGS);
+    return new ContextDataKeys(traceIdKey, spanIdKey, traceFlagsKey);
   }
 
-  private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlags) {
+  private static String getConfig(
+      DeclarativeConfigProperties config,
+      String declarativeKey,
+      String property,
+      String defaultValue) {
+    String value = config.getString(declarativeKey);
+    if (value != null) {
+      return value;
+    }
+    // The context data provider is loaded through the Log4j SPI and has no programmatic
+    // configuration API. Declarative instrumentation configuration is not stable yet, so a
+    // system-property fallback is still needed.
+    value = SystemProperty.getString(property);
+    if (value != null) {
+      return value;
+    }
+    return defaultValue;
+  }
+
+  private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlagsKey) {
     this.traceIdKey = traceIdKey;
     this.spanIdKey = spanIdKey;
-    this.traceFlags = traceFlags;
+    this.traceFlagsKey = traceFlagsKey;
   }
 
   public String getTraceIdKey() {
@@ -55,7 +77,7 @@ public final class ContextDataKeys {
     return spanIdKey;
   }
 
-  public String getTraceFlags() {
-    return traceFlags;
+  public String getTraceFlagsKey() {
+    return traceFlagsKey;
   }
 }

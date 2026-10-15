@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VaadinInstrumentationModule extends InstrumentationModule {
 
   public VaadinInstrumentationModule() {
-    super("vaadin", "vaadin-14.2");
+    super("vaadin-14.2", "vaadin");
   }
 
   @Override

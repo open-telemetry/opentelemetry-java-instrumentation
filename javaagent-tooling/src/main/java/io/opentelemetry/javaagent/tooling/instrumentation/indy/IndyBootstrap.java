@@ -121,12 +121,14 @@ public class IndyBootstrap {
         // a nested bootstrap call from lambda instrumentation which could lead to stack overflow
         new PrivilegedAction<CallSite>() {
           @Override
+          @Nullable
           public CallSite run() {
             return internalBootstrap(lookup, adviceMethodName, adviceMethodType, args);
           }
         });
   }
 
+  @Nullable
   private static CallSite internalBootstrap(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
@@ -198,7 +200,8 @@ public class IndyBootstrap {
         // Update the callsite of those to run the actual instrumentation
         logger.log(
             FINE,
-            "Fixing nested instrumentation invokedynamic instruction bootstrapping for instrumented class {0} and advice {1}.{2}, the instrumentation should be active now",
+            "Fixing nested instrumentation invokedynamic instruction bootstrapping for instrumented"
+                + " class {0} and advice {1}.{2}, the instrumentation should be active now",
             new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
         nestedBootstrapCallSite.setTarget(methodHandle);
         MutableCallSite.syncAll(new MutableCallSite[] {nestedBootstrapCallSite});

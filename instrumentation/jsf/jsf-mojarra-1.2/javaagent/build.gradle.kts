@@ -59,7 +59,7 @@ dependencies {
 
 testing {
   suites {
-    val mojarra12Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("mojarra12Test") {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
         implementation("javax.faces:jsf-api:1.2")
@@ -70,7 +70,7 @@ testing {
       }
     }
 
-    val mojarra2Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("mojarra2Test") {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
 
@@ -86,8 +86,7 @@ tasks {
     dependsOn(testing.suites)
   }
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 }

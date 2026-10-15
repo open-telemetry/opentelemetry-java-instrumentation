@@ -68,7 +68,7 @@ class PlayJavaWsClientTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
   }
 
   private static StandaloneWSClient getClient(URI uri) {
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       return wsClientWithReadTimeout;
     }
     return wsClient;

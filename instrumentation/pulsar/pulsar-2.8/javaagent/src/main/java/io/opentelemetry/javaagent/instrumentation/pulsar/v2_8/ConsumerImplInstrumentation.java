@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.internalReceiveSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.startAndEndConsumerReceive;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrapBatch;
@@ -20,6 +21,7 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -51,7 +53,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         isProtected()
             .and(named("internalReceive"))
             .and(takesArguments(2))
-            .and(takesArgument(1, named("java.util.concurrent.TimeUnit"))),
+            .and(takesArgument(1, TimeUnit.class)),
         getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(
@@ -66,6 +68,11 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isProtected().and(named("internalBatchReceiveAsync")).and(takesArguments(0)),
         getClass().getName() + "$ConsumerBatchAsyncReceiveAdvice");
+
+    // only in MultiTopicsConsumerImpl
+    transformer.applyAdviceToMethod(
+        named("receiveMessageFromConsumer"),
+        getClass().getName() + "$SuppressInstrumentationAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -96,12 +103,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Message<?> message,
         @Advice.Thrown @Nullable Throwable throwable) {
       Context parent = Context.current();
-      Context current = startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
-      if (current != null && throwable == null) {
-        // ConsumerBase#internalReceive(long,TimeUnit) will be called before
-        // ConsumerListener#receive(Consumer,Message), so, need to inject Context into Message.
-        VirtualFieldStore.inject(message, current);
-      }
+      startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
     }
   }
 
@@ -158,6 +160,24 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Return CompletableFuture<Messages<?>> future,
         @Advice.Enter Timer timer) {
       return wrapBatch(future, timer, consumer);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SuppressInstrumentationAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static boolean before() {
+      // MultiTopicsConsumerImpl#receiveMessageFromConsumer is called from a background thread, we
+      // don't want to create a span for it.
+      return internalReceiveSpanSuppression().tryAcquire();
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void after(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        internalReceiveSpanSuppression().release();
+      }
     }
   }
 }

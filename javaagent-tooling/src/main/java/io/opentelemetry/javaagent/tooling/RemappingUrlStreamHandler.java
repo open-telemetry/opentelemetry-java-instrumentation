@@ -19,12 +19,8 @@ import java.util.jar.JarFile;
 class RemappingUrlStreamHandler extends URLStreamHandler {
   private final JarFile delegateJarFile;
 
-  public RemappingUrlStreamHandler(File delegateFile) {
-    try {
-      delegateJarFile = new JarFile(delegateFile, false);
-    } catch (IOException e) {
-      throw new IllegalStateException("Unable to read internal jar", e);
-    }
+  public RemappingUrlStreamHandler(File delegateFile) throws IOException {
+    delegateJarFile = new JarFile(delegateFile, false);
   }
 
   /** {@inheritDoc} */

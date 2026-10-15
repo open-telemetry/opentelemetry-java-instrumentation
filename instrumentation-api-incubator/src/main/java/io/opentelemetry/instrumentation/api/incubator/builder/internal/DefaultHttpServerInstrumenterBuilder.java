@@ -9,7 +9,9 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
@@ -117,10 +119,30 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures which HTTP request headers are captured as span attributes.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setRequestHeaders(
+      IncludeExclude requestHeaders) {
+    httpAttributesExtractorBuilder.setRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
    * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
@@ -129,10 +151,30 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures which HTTP response headers are captured as span attributes.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setResponseHeaders(
+      IncludeExclude responseHeaders) {
+    httpAttributesExtractorBuilder.setResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
    * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
@@ -230,7 +272,13 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get())
-            .setSchemaUrl(SchemaUrls.V1_37_0);
+            .setSchemaUrl(SchemaUrls.V1_41_0);
+    Experimental.setExceptionEventExtractor(
+        builder,
+        (logRecordBuilder, context, request) -> {
+          logRecordBuilder.setEventName("http.server.request.exception");
+          logRecordBuilder.setSeverity(Severity.ERROR);
+        });
     if (emitExperimentalHttpServerTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))

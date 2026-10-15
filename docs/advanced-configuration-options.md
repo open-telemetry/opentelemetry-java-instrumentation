@@ -23,8 +23,24 @@ which could have unknown side-effects.
 This option can be used to exclude classes loaded by given class loaders from being instrumented.
 
 | System property                      | Environment variable                 | Purpose                                                                         |
-|--------------------------------------|--------------------------------------|---------------------------------------------------------------------------------|
+| ------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------- |
 | otel.javaagent.exclude-class-loaders | OTEL_JAVAAGENT_EXCLUDE_CLASS_LOADERS | Ignore the specified class loaders, format is "my.package.MyClass,my.package2." |
+
+## Selecting instrumentation modules in declarative configuration
+
+In the declarative `distribution.javaagent.instrumentation.enabled` and `disabled` lists, replace
+hyphens and periods in instrumentation module names with underscores:
+
+```yaml
+distribution:
+  javaagent:
+    instrumentation:
+      enabled:
+        - reactor_3_1
+```
+
+Flat-property selectors retain hyphens and periods, for example
+`otel.instrumentation.reactor-3.1.enabled`.
 
 ## Running application with security manager
 
@@ -46,7 +62,7 @@ We plan to integrate OpenTelemetry's own client-side monitoring solution by defa
 (see the [browser instrumentation proposal](https://github.com/open-telemetry/community/blob/main/projects/browser-phase-1.md)).
 
 | System property                      | Environment variable                 | Purpose                                                                                                                                                                                                                                                                                      |
-|--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | otel.experimental.javascript-snippet | OTEL_EXPERIMENTAL_JAVASCRIPT_SNIPPET | Experimental setting to inject a JavaScript snippet into HTML responses after the opening `<head>` tag. The value should be a complete JavaScript snippet including `<script>` tags if needed, e.g. `-Dotel.experimental.javascript-snippet="<script>console.log('Hello world!');</script>"` |
 
 **Important notes:**

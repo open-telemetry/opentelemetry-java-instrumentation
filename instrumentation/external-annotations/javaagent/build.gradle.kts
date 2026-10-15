@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -11,8 +12,6 @@ muzzle {
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-
-  compileOnly(project(":javaagent-tooling"))
 
   testImplementation("com.newrelic.agent.java:newrelic-api:5.14.0")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2") {
@@ -34,8 +33,19 @@ dependencies {
   testCompileOnly("org.springframework:spring-core:4.3.30.RELEASE")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+      }
+    }
+  }
+}
+
 tasks {
-  val testIncludeProperty by registering(Test::class) {
+  val testIncludeProperty = register<Test>("testIncludeProperty") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -46,7 +56,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.external.annotations.OuterClass\$InterestingMethod")
   }
 
-  val testDeclarativeConfigInclude by registering(Test::class) {
+  val testDeclarativeConfigInclude = register<Test>("testDeclarativeConfigInclude") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -59,7 +69,7 @@ tasks {
     )
   }
 
-  val testExcludeMethodsProperty by registering(Test::class) {
+  val testExcludeMethodsProperty = register<Test>("testExcludeMethodsProperty") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -72,7 +82,7 @@ tasks {
     )
   }
 
-  val testDeclarativeConfigExcludeMethods by registering(Test::class) {
+  val testDeclarativeConfigExcludeMethods = register<Test>("testDeclarativeConfigExcludeMethods") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -93,6 +103,12 @@ tasks {
   }
 
   check {
-    dependsOn(testIncludeProperty, testExcludeMethodsProperty, testDeclarativeConfigInclude, testDeclarativeConfigExcludeMethods)
+    dependsOn(
+      testing.suites,
+      testIncludeProperty,
+      testExcludeMethodsProperty,
+      testDeclarativeConfigInclude,
+      testDeclarativeConfigExcludeMethods,
+    )
   }
 }

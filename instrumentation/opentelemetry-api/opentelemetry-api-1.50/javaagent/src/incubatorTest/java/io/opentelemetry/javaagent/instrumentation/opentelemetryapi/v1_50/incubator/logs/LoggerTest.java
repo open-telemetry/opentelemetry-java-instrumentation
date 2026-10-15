@@ -106,8 +106,10 @@ class LoggerTest {
                           assertThat(logRecordData.getBodyValue().getType())
                               .isEqualTo(ValueType.STRING);
                           assertThat(logRecordData.getBodyValue().getValue()).isEqualTo("body");
-                          assertThat(
-                                  ((ExtendedLogRecordData) logRecordData).getExtendedAttributes())
+                          assertThat(logRecordData).isInstanceOf(ExtendedLogRecordData.class);
+                          ExtendedLogRecordData extendedLogRecordData =
+                              (ExtendedLogRecordData) logRecordData;
+                          assertThat(extendedLogRecordData.getExtendedAttributes())
                               .isEqualTo(
                                   ExtendedAttributes.builder()
                                       .put("key1", "value")

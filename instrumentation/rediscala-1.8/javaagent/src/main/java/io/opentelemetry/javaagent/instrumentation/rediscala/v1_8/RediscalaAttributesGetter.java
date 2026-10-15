@@ -6,33 +6,54 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.util.Locale;
 import javax.annotation.Nullable;
-import redis.RedisCommand;
 
-final class RediscalaAttributesGetter
-    implements DbClientAttributesGetter<RedisCommand<?, ?>, Void> {
+final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
   @Override
-  public String getDbSystemName(RedisCommand<?, ?> redisCommand) {
+  public String getDbSystemName(RediscalaRequest request) {
     return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override
   @Nullable
-  public String getDbNamespace(RedisCommand<?, ?> redisCommand) {
-    return null;
+  public String getDbNamespace(RediscalaRequest request) {
+    // Rediscala only selects the database when the connection is established, so a SELECT sent
+    // later by application code is not reflected here.
+    Integer databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
   @Override
   @Nullable
-  public String getDbQueryText(RedisCommand<?, ?> redisCommand) {
+  public String getDbQueryText(RediscalaRequest request) {
     return null;
   }
 
   @Override
-  public String getDbOperationName(RedisCommand<?, ?> redisCommand) {
-    return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
+  public String getDbOperationName(RediscalaRequest request) {
+    return request.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(RediscalaRequest request) {
+    return request.getBatchSize();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(RediscalaRequest request) {
+    RedisServerTarget serverTarget = request.getServerTarget();
+    return serverTarget != null ? serverTarget.getAddress() : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(RediscalaRequest request) {
+    RedisServerTarget serverTarget = request.getServerTarget();
+    return serverTarget != null ? serverTarget.getPort() : null;
   }
 }

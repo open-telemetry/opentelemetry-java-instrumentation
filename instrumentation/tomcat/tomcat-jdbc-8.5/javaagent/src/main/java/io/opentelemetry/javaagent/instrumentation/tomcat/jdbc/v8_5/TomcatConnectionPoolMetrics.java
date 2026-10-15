@@ -11,14 +11,19 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
+import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.tomcat.jdbc.pool.DataSourceProxy;
+import org.apache.tomcat.jdbc.pool.PoolConfiguration;
 
 public class TomcatConnectionPoolMetrics {
 
   private static final OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-jdbc";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-jdbc-8.5";
+  private static final String DEFAULT_POOL_NAME = "tomcat-jdbc";
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // DataSourceProxy does not implement equals()/hashCode(), so it's safe to keep them in a plain
@@ -31,9 +36,19 @@ public class TomcatConnectionPoolMetrics {
   }
 
   private static BatchCallback createInstruments(DataSourceProxy dataSource) {
+    DbInfo dbInfo = getDbInfo(dataSource);
+    PoolConfiguration poolProperties = dataSource.getPoolProperties();
+    String configuredPoolName = dataSource.getPoolName();
+    String poolName =
+        configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)
+            ? configuredPoolName
+            : null;
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
-            openTelemetry, INSTRUMENTATION_NAME, dataSource.getPoolName());
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            JdbcConnectionPoolMetricsUtil.poolName(dbInfo, poolName, DEFAULT_POOL_NAME),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
@@ -59,6 +74,11 @@ public class TomcatConnectionPoolMetrics {
         maxIdleConnections,
         maxConnections,
         pendingRequestsForConnection);
+  }
+
+  private static DbInfo getDbInfo(DataSourceProxy dataSource) {
+    PoolConfiguration poolProperties = dataSource.getPoolProperties();
+    return JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {

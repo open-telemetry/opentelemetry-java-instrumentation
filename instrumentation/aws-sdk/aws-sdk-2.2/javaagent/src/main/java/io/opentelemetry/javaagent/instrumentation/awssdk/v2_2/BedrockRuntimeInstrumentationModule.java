@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.awssdk.v2_2.internal.BedrockRuntimeAdviceBridge;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.BedrockRuntimeImpl;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public BedrockRuntimeInstrumentationModule() {
-    super("aws-sdk-2.2-bedrock-runtime");
+    super("aws-sdk-2.2", "aws-sdk-bedrock-runtime", "aws-sdk");
   }
 
   @Override
@@ -48,9 +48,11 @@ public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumen
   public static class RegisterAdvice {
     @Advice.OnMethodExit(inline = false)
     public static void onExit() {
-      // (indirectly) using BedrockRuntimeImpl class here to make sure it is available from
+      // using BedrockRuntimeImpl class here to make sure it is available from
       // BedrockRuntimeAccess (injected into app classloader) and checked by Muzzle
-      BedrockRuntimeAdviceBridge.referenceForMuzzleOnly();
+      throw new UnsupportedOperationException(
+          BedrockRuntimeImpl.class.getName()
+              + " referencing for muzzle, should never be actually called");
     }
   }
 }

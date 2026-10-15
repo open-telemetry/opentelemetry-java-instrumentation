@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 
 final class ConfigurationFile {
 
-  private static Map<String, String> configFileContents;
+  @Nullable private static Map<String, String> configFileContents;
 
   // this class is used early, and must not use logging in most of its methods
   // in case any file loading/parsing error occurs, we save the error message and log it later, when

@@ -10,6 +10,8 @@ import org.apache.thrift.protocol.TMessage;
 import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
+import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.transport.TTransport;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,6 +25,10 @@ public final class ServerOutProtocolDecorator extends TProtocolDecorator {
     super(protocol);
   }
 
+  public void resetExceptionState() {
+    hasException = false;
+  }
+
   @Override
   public void writeMessageBegin(TMessage message) throws TException {
     if (message.type == TMessageType.EXCEPTION) {
@@ -33,5 +39,24 @@ public final class ServerOutProtocolDecorator extends TProtocolDecorator {
 
   public boolean hasException() {
     return hasException;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static class Factory implements TProtocolFactory {
+
+    private final TProtocolFactory protocolFactory;
+
+    public Factory(TProtocolFactory protocolFactory) {
+      this.protocolFactory = protocolFactory;
+    }
+
+    @Override
+    public TProtocol getProtocol(TTransport transport) {
+      TProtocol protocol = protocolFactory.getProtocol(transport);
+      return new ServerOutProtocolDecorator(protocol);
+    }
   }
 }

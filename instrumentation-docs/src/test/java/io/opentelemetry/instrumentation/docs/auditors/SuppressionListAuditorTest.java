@@ -139,10 +139,10 @@ libraries:
       - com.typesafe.akka:akka-actor_2.11:[2.3,)
       - com.typesafe.akka:akka-actor_2.12:[2.3,)
       - com.typesafe.akka:akka-actor_2.13:[2.3,)
-  - name: akka-actor-fork-join-2.5
-    source_path: instrumentation/akka/akka-actor-fork-join-2.5
+  - name: akka-actor-forkjoin-2.5
+    source_path: instrumentation/akka/akka-actor-forkjoin-2.5
     scope:
-      name: io.opentelemetry.akka-actor-fork-join-2.5
+      name: io.opentelemetry.akka-actor-forkjoin-2.5
     target_versions:
       javaagent:
       - com.typesafe.akka:akka-actor_2.12:[2.5,2.6)
@@ -160,7 +160,7 @@ libraries:
     assertThat(result).hasSize(4);
     assertThat(result)
         .containsExactlyInAnyOrder(
-            "activej-http-6.0", "akka-actor-2.3", "akka-actor-fork-join-2.5", "akka-http-10.0");
+            "activej-http-6.0", "akka-actor-2.3", "akka-actor-forkjoin-2.5", "akka-http-10.0");
   }
 
   @Test
@@ -171,7 +171,7 @@ libraries:
             "methods",
             "akka-actor-2.3",
             "activej-http-6.0",
-            "akka-actor-fork-join-2.5",
+            "akka-actor-forkjoin-2.5",
             "camel-2.20");
 
     var missingItems =

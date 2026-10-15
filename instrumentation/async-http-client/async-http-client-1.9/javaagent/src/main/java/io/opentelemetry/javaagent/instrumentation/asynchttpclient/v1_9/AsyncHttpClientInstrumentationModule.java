@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class AsyncHttpClientInstrumentationModule extends InstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
-    super("async-http-client", "async-http-client-1.9");
+    super("async-http-client-1.9", "async-http-client");
   }
 
   @Override

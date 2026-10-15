@@ -10,26 +10,18 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class GatewayInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class GatewayInstrumentationModule extends InstrumentationModule {
 
   public GatewayInstrumentationModule() {
-    super("spring-cloud-gateway", "spring-cloud-gateway-2.0");
+    super("spring-cloud-gateway-2.0", "spring-cloud-gateway");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HandlerAdapterInstrumentation());
-  }
-
-  @Override
-  public String getModuleGroup() {
-    // relies on netty
-    return "netty";
   }
 
   @Override

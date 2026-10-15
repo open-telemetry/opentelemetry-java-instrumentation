@@ -9,14 +9,28 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageClientIDSetter;
 
 final class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {
+
+  private final boolean messageCreation;
+
+  RocketMqProducerAttributeGetter() {
+    this(false);
+  }
+
+  RocketMqProducerAttributeGetter(boolean messageCreation) {
+    this.messageCreation = messageCreation;
+  }
 
   @Override
   public String getSystem(SendMessageContext request) {
@@ -27,7 +41,11 @@ final class RocketMqProducerAttributeGetter
   @Override
   public String getDestination(SendMessageContext request) {
     Message message = request.getMessage();
-    return message == null ? null : message.getTopic();
+    if (message == null) {
+      return null;
+    }
+    return RocketMqNamespaceUtil.withoutNamespace(
+        message.getTopic(), RocketMqNamespaceUtil.getNamespace(request));
   }
 
   @Nullable
@@ -54,19 +72,15 @@ final class RocketMqProducerAttributeGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(SendMessageContext request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SendMessageContext request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(SendMessageContext request, @Nullable Void unused) {
+    if (messageCreation) {
+      return MessageClientIDSetter.getUniqID(request.getMessage());
+    }
+    // the send result of a batch carries the concatenated ids of every message it contains, which
+    // is not a per-message id, so it is not reported
+    if (isBatch(request)) {
+      return null;
+    }
     SendResult sendResult = request.getSendResult();
     return sendResult == null ? null : sendResult.getMsgId();
   }
@@ -80,11 +94,33 @@ final class RocketMqProducerAttributeGetter
   @Nullable
   @Override
   public Long getBatchMessageCount(SendMessageContext request, @Nullable Void unused) {
-    return null;
+    if (!isBatch(request)) {
+      return null;
+    }
+    if (request instanceof RocketMqProducerWrapper.BatchSendContext) {
+      return ((RocketMqProducerWrapper.BatchSendContext) request).messageCount;
+    }
+    if (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
+      return RocketMqBatchSendSpanLinksExtractor.getBatchMessageCount(request);
+    }
+    long batchSize = 0;
+    for (Object ignored : (Iterable<?>) request.getMessage()) {
+      batchSize++;
+    }
+    return batchSize;
+  }
+
+  private static boolean isBatch(SendMessageContext request) {
+    return RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)
+        || request instanceof RocketMqProducerWrapper.BatchSendContext
+        || RocketMqMessageUtil.isBatch(request.getMessage());
   }
 
   @Override
   public List<String> getMessageHeader(SendMessageContext request, String name) {
+    if (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
+      return emptyList();
+    }
     Message message = request.getMessage();
     if (message == null) {
       return emptyList();
@@ -94,5 +130,18 @@ final class RocketMqProducerAttributeGetter
       return singletonList(value);
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(SendMessageContext request) {
+    if (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
+      return emptyList();
+    }
+    Message message = request.getMessage();
+    if (message == null) {
+      return emptyList();
+    }
+    Map<String, String> properties = message.getProperties();
+    return properties == null ? emptyList() : new ArrayList<>(properties.keySet());
   }
 }

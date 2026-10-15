@@ -50,7 +50,8 @@ import javax.annotation.Nullable;
   "MissingSummary",
   "UngroupedOverloads",
   "FieldMissingNullable",
-  "SuppressWarningsWithoutExplanation"
+  "SuppressWarningsWithoutExplanation",
+  "ReferenceEquality"
 })
 public class WeakConcurrentMap<K, V>
     extends AbstractWeakConcurrentMap<K, V, WeakConcurrentMap.LookupKey<K>> {
@@ -222,6 +223,7 @@ public class WeakConcurrentMap<K, V>
     }
 
     @Override
+    @Nullable
     public V remove(K key) {
       expungeStaleEntries();
       return super.remove(key);

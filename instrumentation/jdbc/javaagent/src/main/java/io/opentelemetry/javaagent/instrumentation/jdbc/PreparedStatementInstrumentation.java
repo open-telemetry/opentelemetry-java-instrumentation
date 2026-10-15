@@ -21,13 +21,8 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.URL;
-import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.sql.RowId;
 import java.sql.Statement;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.Calendar;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -43,7 +38,10 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("java.sql.PreparedStatement"));
+    // SQLite declares many PreparedStatement methods on JDBC3PreparedStatement, but only its
+    // JDBC4PreparedStatement subclass implements java.sql.PreparedStatement.
+    return implementsInterface(named("java.sql.PreparedStatement"))
+        .or(named("org.sqlite.jdbc3.JDBC3PreparedStatement"));
   }
 
   @Override
@@ -103,7 +101,11 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static JdbcAdviceScope onEnter(@Advice.This PreparedStatement statement) {
+    public static JdbcAdviceScope onEnter(@Advice.This Object object) {
+      if (!(object instanceof PreparedStatement)) {
+        return null;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       // skip prepared statements without attached sql, probably a wrapper around the actual
       // prepared statement
       if (JdbcData.PREPARED_STATEMENT.get(statement) == null) {
@@ -130,7 +132,11 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class AddBatchAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void addBatch(@Advice.This PreparedStatement statement) {
+    public static void addBatch(@Advice.This Object object) {
+      if (!(object instanceof PreparedStatement)) {
+        return;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
         return;
       }
@@ -143,32 +149,22 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class SetParameter2Advice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This PreparedStatement statement,
+        @Advice.This Object object,
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value) {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }
+      if (!(object instanceof PreparedStatement)) {
+        return;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 
-      String str = null;
-
-      if (value instanceof Boolean
-          // Byte, Short, Int, Long, Float, Double, BigDecimal
-          || value instanceof Number
-          || value instanceof String
-          || value instanceof Date
-          || value instanceof Time
-          || value instanceof Timestamp
-          || value instanceof URL
-          || value instanceof RowId) {
-        str = value.toString();
-      }
-
-      if (str != null) {
-        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      if (value != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), value.toString());
       }
     }
   }
@@ -177,33 +173,23 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class SetParameter3Advice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This PreparedStatement statement,
+        @Advice.This Object object,
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value,
         @Advice.Argument(2) int targetSqlType) {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }
+      if (!(object instanceof PreparedStatement)) {
+        return;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 
-      String str = null;
-
-      if (value instanceof Boolean
-          // Byte, Short, Int, Long, Float, Double, BigDecimal
-          || value instanceof Number
-          || value instanceof String
-          || value instanceof Date
-          || value instanceof Time
-          || value instanceof Timestamp
-          || value instanceof URL
-          || value instanceof RowId) {
-        str = value.toString();
-      }
-
-      if (str != null) {
-        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      if (value != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), value.toString());
       }
     }
   }
@@ -212,25 +198,23 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class SetTimeParameter3Advice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This PreparedStatement statement,
+        @Advice.This Object object,
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value,
         @Advice.Argument(2) Calendar calendar) {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }
+      if (!(object instanceof PreparedStatement)) {
+        return;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 
-      String str = null;
-
-      if (value instanceof Date || value instanceof Time || value instanceof Timestamp) {
-        str = value.toString();
-      }
-
-      if (str != null) {
-        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      if (value != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), value.toString());
       }
     }
   }
@@ -239,8 +223,11 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class ClearParametersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void clearParameters(@Advice.This PreparedStatement statement) {
-      JdbcData.clearParameters(statement);
+    public static void clearParameters(@Advice.This Object object) {
+      if (object instanceof PreparedStatement) {
+        PreparedStatement statement = (PreparedStatement) object;
+        JdbcData.clearParameters(statement);
+      }
     }
   }
 }

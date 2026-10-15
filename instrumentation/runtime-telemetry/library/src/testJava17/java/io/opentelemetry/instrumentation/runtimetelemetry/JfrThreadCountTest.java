@@ -5,25 +5,18 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
-import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_DAEMON;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.UNIT_THREADS;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_THREAD_DAEMON;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JfrThreadCountTest {
 
-  @RegisterExtension
-  JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.THREAD_METRICS);
-          });
+  @RegisterExtension JfrExtension jfrExtension = new JfrExtension("jvm.thread.count");
 
   @Test
   void shouldHaveJfrThreadCountEvents() throws InterruptedException {
@@ -60,6 +53,6 @@ class JfrThreadCountTest {
   }
 
   private static boolean isDaemon(LongPointData point) {
-    return requireNonNull(point.getAttributes().get(ATTR_DAEMON));
+    return requireNonNull(point.getAttributes().get(JVM_THREAD_DAEMON));
   }
 }

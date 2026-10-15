@@ -6,16 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0;
 
 import static io.opentelemetry.context.ContextKey.named;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 @AutoValue
@@ -34,24 +33,29 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable private String localAddress;
   @Nullable private String operationId;
-  @Nullable private SocketAddress peerAddress;
+  @Nullable private volatile Node node;
 
   public static CouchbaseRequestInfo create(
-      @Nullable String bucket, Class<?> declaringClass, String methodName) {
+      @Nullable String bucket,
+      @Nullable DbServerTarget serverTarget,
+      Class<?> declaringClass,
+      String methodName) {
     String operation =
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, false, operation, serverTarget);
   }
 
-  public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
-    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
-    SqlQuery sqlQueryWithSummary =
-        emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
-    String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
+  public static CouchbaseRequestInfo create(
+      @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
+    String sqlQueryText = CouchbaseQueryText.getSqlQueryText(query);
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, sqlQuery, sqlQueryWithSummary, operation, false);
+        bucket,
+        sqlQueryText != null ? sqlQueryText : CouchbaseQueryText.getNonSqlQueryText(query),
+        sqlQueryText != null,
+        null,
+        serverTarget);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -73,15 +77,30 @@ public abstract class CouchbaseRequestInfo {
   public abstract String getBucket();
 
   @Nullable
-  public abstract SqlQuery getSqlQuery();
+  public abstract String getQueryText();
 
-  @Nullable
-  public abstract SqlQuery getSqlQueryWithSummary();
+  public abstract boolean isSqlQuery();
 
   @Nullable
   public abstract String getOperation();
 
-  public abstract boolean isMethodCall();
+  @Nullable
+  public abstract DbServerTarget getServerTarget();
+
+  // Each subscription needs independent mutable node state.
+  public Supplier<CouchbaseRequestInfo> copySupplier() {
+    return new Supplier<CouchbaseRequestInfo>() {
+      @Override
+      public CouchbaseRequestInfo get() {
+        return copy();
+      }
+    };
+  }
+
+  private CouchbaseRequestInfo copy() {
+    return new AutoValue_CouchbaseRequestInfo(
+        getBucket(), getQueryText(), isSqlQuery(), getOperation(), getServerTarget());
+  }
 
   @Nullable
   public String getLocalAddress() {
@@ -102,11 +121,27 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public SocketAddress getPeerAddress() {
-    return peerAddress;
+  public Node getNode() {
+    return node;
   }
 
-  public void setPeerAddress(@Nullable SocketAddress peerAddress) {
-    this.peerAddress = peerAddress;
+  public void setNode(@Nullable SocketAddress peerAddress) {
+    if (peerAddress == null) {
+      return;
+    }
+    node = new Node(peerAddress);
+  }
+
+  public static final class Node {
+
+    private final SocketAddress peerAddress;
+
+    private Node(SocketAddress peerAddress) {
+      this.peerAddress = peerAddress;
+    }
+
+    public SocketAddress getPeerAddress() {
+      return peerAddress;
+    }
   }
 }

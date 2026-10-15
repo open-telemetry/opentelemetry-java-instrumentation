@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxClientInstrumentationModule extends InstrumentationModule {
 
   public VertxClientInstrumentationModule() {
-    super("vertx-http-client", "vertx-http-client-4.0", "vertx");
+    super("vertx-http-client-4.0", "vertx-http-client", "vertx");
   }
 
   @Override

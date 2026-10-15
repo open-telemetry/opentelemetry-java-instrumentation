@@ -28,10 +28,66 @@ dependencies {
   }
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation("org.springframework.amqp:spring-rabbit:${baseVersion("2.1.7.RELEASE").orLatest()}")
+      }
+    }
+
+    register<JvmTestSuite>("version11Test") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.testcontainers:testcontainers")
+        implementation("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE")
+      }
+    }
+
+    register<JvmTestSuite>("version20Test") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.testcontainers:testcontainers")
+        implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
+      }
+    }
+  }
+}
+
 tasks {
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+  withType<Test>().configureEach {
+    if (!name.endsWith("unitTests", ignoreCase = true)) {
+      if (name != "testSpringDisabled") {
+        usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+      }
+    }
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+
+    // add byte buddy agent for mockito
+    configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
+      jvmArgs("-javaagent:$absolutePath")
+    }
+  }
+
+  val testSpringDisabled = register<Test>("testSpringDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*SpringRabbitRegistrationTest")
+      includeTestsMatching("*SpringRabbitTemplateTest")
+    }
+    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.spring-rabbit.enabled=false",
+    )
+  }
+
+  check {
+    dependsOn(testing.suites, testSpringDisabled)
   }
 }
 

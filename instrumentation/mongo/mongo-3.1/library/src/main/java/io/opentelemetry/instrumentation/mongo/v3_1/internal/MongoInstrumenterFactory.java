@@ -5,13 +5,17 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -27,7 +31,21 @@ public final class MongoInstrumenterFactory {
         openTelemetry,
         instrumentationName,
         querySanitizationEnabled,
-        DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+        DEFAULT_MAX_NORMALIZED_QUERY_LENGTH,
+        null);
+  }
+
+  public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      boolean querySanitizationEnabled,
+      MongoConnectionPeerResolver connectionPeerResolver) {
+    return createInstrumenter(
+        openTelemetry,
+        instrumentationName,
+        querySanitizationEnabled,
+        DEFAULT_MAX_NORMALIZED_QUERY_LENGTH,
+        connectionPeerResolver);
   }
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
@@ -35,19 +53,33 @@ public final class MongoInstrumenterFactory {
       String instrumentationName,
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
+    return createInstrumenter(
+        openTelemetry,
+        instrumentationName,
+        querySanitizationEnabled,
+        maxNormalizedQueryLength,
+        null);
+  }
 
-    MongoAttributesExtractor attributesExtractor = new MongoAttributesExtractor();
+  private static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      boolean querySanitizationEnabled,
+      int maxNormalizedQueryLength,
+      @Nullable MongoConnectionPeerResolver connectionPeerResolver) {
+
     MongoDbAttributesGetter dbAttributesGetter =
-        new MongoDbAttributesGetter(querySanitizationEnabled, maxNormalizedQueryLength);
-    SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
-        new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
-
-    return Instrumenter.<CommandStartedEvent, Void>builder(
-            openTelemetry, instrumentationName, spanNameExtractor)
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(attributesExtractor)
-        .addOperationMetrics(DbClientMetrics.get())
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+        new MongoDbAttributesGetter(
+            querySanitizationEnabled, maxNormalizedQueryLength, connectionPeerResolver);
+    InstrumenterBuilder<CommandStartedEvent, Void> builder =
+        Instrumenter.<CommandStartedEvent, Void>builder(
+                openTelemetry,
+                instrumentationName,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private MongoInstrumenterFactory() {}

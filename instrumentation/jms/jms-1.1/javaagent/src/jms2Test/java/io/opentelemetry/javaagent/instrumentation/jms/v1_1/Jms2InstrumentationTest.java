@@ -5,18 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -36,9 +41,11 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
 import org.assertj.core.api.AbstractAssert;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientSession;
@@ -56,12 +63,12 @@ import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.HornetQServers;
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class Jms2InstrumentationTest {
 
   @RegisterExtension
@@ -69,6 +76,8 @@ class Jms2InstrumentationTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  private static HornetQConnectionFactory connectionFactory;
+  private static Connection connection;
   private static Session session;
 
   @BeforeAll
@@ -104,16 +113,185 @@ class Jms2InstrumentationTest {
     sf.close();
     serverLocator.close();
 
-    HornetQConnectionFactory connectionFactory =
+    connectionFactory =
         HornetQJMSClient.createConnectionFactoryWithoutHA(
             JMSFactoryType.CF, new TransportConfiguration(InVMConnectorFactory.class.getName()));
-    Connection connection = connectionFactory.createConnection();
+    connection = connectionFactory.createConnection();
+    connection.setClientID("jms-2-test");
     connection.start();
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     session.run();
     cleanup.deferAfterAll(connectionFactory::close);
     cleanup.deferAfterAll(connection);
     cleanup.deferAfterAll(session);
+  }
+
+  @Test
+  void capturesDurableConsumerName() throws JMSException {
+    Topic topic = session.createTopic("someTopic");
+    TextMessage sentMessage = session.createTextMessage("a message");
+    MessageProducer producer = session.createProducer(topic);
+    cleanup.deferCleanup(producer);
+    MessageConsumer consumer = session.createDurableConsumer(topic, "durable-subscription");
+    cleanup.deferCleanup(consumer);
+    MessageListener listener = message -> {};
+    consumer.setMessageListener(listener);
+    assertThat(consumer.getMessageListener()).isSameAs(listener);
+    consumer.setMessageListener(null);
+
+    testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
+    TextMessage receivedMessage =
+        testing.runWithSpan("consumer parent", () -> (TextMessage) consumer.receive());
+
+    String messageId = receivedMessage.getJMSMessageID();
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer parent").hasNoParent(),
+              span ->
+                  span.hasKind(PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          messagingDestinationName("someTopic", false),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
+                          messagingTempDestination(false)));
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasNoParent(),
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName("someTopic", false),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("sharedReceiveConsumerArguments")
+  void capturesSharedConsumerNameOnReceive(
+      String subscriptionName, SharedConsumerFactory consumerFactory) throws JMSException {
+    Topic topic = session.createTopic("someTopic");
+    TextMessage sentMessage = session.createTextMessage("a message");
+    MessageProducer producer = session.createProducer(topic);
+    cleanup.deferCleanup(producer);
+    MessageConsumer consumer = consumerFactory.create(session, topic, subscriptionName);
+    cleanup.deferCleanup(consumer);
+
+    testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
+    TextMessage receivedMessage =
+        testing.runWithSpan("consumer parent", () -> (TextMessage) consumer.receive());
+
+    String messageId = receivedMessage.getJMSMessageID();
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer parent").hasNoParent(),
+              span ->
+                  span.hasKind(PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          messagingDestinationName("someTopic", false),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
+                          messagingTempDestination(false)));
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasNoParent(),
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName("someTopic", false),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("sharedListenerConsumerArguments")
+  void capturesSharedConsumerNameOnProviderStyleListenerDispatch(
+      String subscriptionName, SharedConsumerFactory consumerFactory) throws JMSException {
+    Topic topic = session.createTopic("someTopic");
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
+    MessageConsumer consumer = consumerFactory.create(session, topic, subscriptionName);
+    cleanup.deferCleanup(consumer);
+    MessageListener listener = ignored -> {};
+    consumer.setMessageListener(listener);
+
+    MessageListener providerListener = consumer.getMessageListener();
+    assertThat(providerListener).isSameAs(listener);
+    providerListener.onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("process someTopic")
+                        .hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName("someTopic", false),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            messagingTempDestination(false),
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
+  }
+
+  @Test
+  void capturesMostRecentSubscriptionNameForReusedListener() throws JMSException {
+    Topic topic = session.createTopic("someTopic");
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    MessageConsumer consumerWithoutSubscription = session.createConsumer(topic);
+    cleanup.deferCleanup(consumerWithoutSubscription);
+    consumerWithoutSubscription.setMessageListener(listener);
+
+    MessageConsumer sharedConsumer =
+        session.createSharedConsumer(topic, "reused-listener-subscription");
+    cleanup.deferCleanup(sharedConsumer);
+    sharedConsumer.setMessageListener(listener);
+
+    sharedConsumer.getMessageListener().onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName("someTopic", false),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            messagingTempDestination(false),
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                "reused-listener-subscription"))));
   }
 
   @MethodSource("destinationArguments")
@@ -148,13 +326,17 @@ class Jms2InstrumentationTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer parent").hasNoParent(),
               span ->
-                  span.hasName(destinationName + " publish")
+                  span.hasName(
+                          destinationName.equals("(temporary)")
+                              ? "send"
+                              : "send " + destinationName)
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
-                          equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                          equalTo(MESSAGING_OPERATION, "publish"),
+                          messagingDestinationName(destinationName, isTemporary),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -164,14 +346,18 @@ class Jms2InstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasName(destinationName + " receive")
-                        .hasKind(CONSUMER)
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "receive"
+                                : "receive " + destinationName)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(MESSAGING_OPERATION, "receive"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }
@@ -211,23 +397,31 @@ class Jms2InstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer parent").hasNoParent(),
                 span ->
-                    span.hasName(destinationName + " publish")
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "send"
+                                : "send " + destinationName)
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(MESSAGING_OPERATION, "publish"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
-                    span.hasName(destinationName + " process")
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "process"
+                                : "process " + destinationName)
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(MESSAGING_OPERATION, "process"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -259,6 +453,13 @@ class Jms2InstrumentationTest {
         : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
+  private static AttributeAssertion messagingDestinationName(
+      String destinationName, boolean isTemporary) {
+    return isTemporary
+        ? satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty())
+        : equalTo(MESSAGING_DESTINATION_NAME, destinationName);
+  }
+
   private static Stream<Arguments> emptyReceiveArguments() {
     DestinationFactory topic = session -> session.createTopic("someTopic");
     DestinationFactory queue = session -> session.createQueue("someQueue");
@@ -285,6 +486,28 @@ class Jms2InstrumentationTest {
         arguments(tempQueue, "(temporary)", true));
   }
 
+  private static Stream<Arguments> sharedReceiveConsumerArguments() {
+    return sharedConsumerArguments("receive");
+  }
+
+  private static Stream<Arguments> sharedListenerConsumerArguments() {
+    return sharedConsumerArguments("listener");
+  }
+
+  // durable subscriptions outlive the consumer that created them, so each test needs its own
+  // subscription names
+  private static Stream<Arguments> sharedConsumerArguments(String scenario) {
+    return Stream.of(
+        argumentSet(
+            "shared",
+            "shared-" + scenario + "-subscription",
+            (SharedConsumerFactory) Session::createSharedConsumer),
+        argumentSet(
+            "shared durable",
+            "shared-durable-" + scenario + "-subscription",
+            (SharedConsumerFactory) Session::createSharedDurableConsumer));
+  }
+
   @FunctionalInterface
   interface DestinationFactory {
 
@@ -295,5 +518,12 @@ class Jms2InstrumentationTest {
   interface MessageReceiver {
 
     Message receive(MessageConsumer consumer) throws JMSException;
+  }
+
+  @FunctionalInterface
+  interface SharedConsumerFactory {
+
+    MessageConsumer create(Session session, Topic topic, String subscriptionName)
+        throws JMSException;
   }
 }

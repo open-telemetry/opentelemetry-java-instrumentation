@@ -26,8 +26,10 @@ import javax.annotation.Nullable;
 
 /**
  * Spring flavor of {@link
- * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}, that tries
- * to coerce types, because spring doesn't tell what the original type was.
+ * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}. Typed
+ * getters convert Spring-resolved values to the requested type rather than requiring the stored
+ * scalar to already have that type. This also handles String-valued placeholders and
+ * system-property overrides.
  *
  * <p>The entire class is a copy of <a
  * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/YamlDeclarativeConfigProperties.java">YamlDeclarativeConfigProperties</a>
@@ -41,8 +43,7 @@ import javax.annotation.Nullable;
 final class SpringDeclarativeConfigProperties implements DeclarativeConfigProperties {
 
   private static final Set<Class<?>> SUPPORTED_SCALAR_TYPES =
-      Collections.unmodifiableSet(
-          new LinkedHashSet<>(asList(String.class, Boolean.class, Long.class, Double.class)));
+      new LinkedHashSet<>(asList(String.class, Boolean.class, Long.class, Double.class));
 
   /** Values are {@link #isPrimitive(Object)}, {@link List} of scalars. */
   private final Map<String, Object> simpleEntries;
@@ -202,6 +203,31 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     return doubleOrNull(simpleEntries.get(name));
   }
 
+  @Override
+  public boolean isString(String name) {
+    return getString(name) != null;
+  }
+
+  @Override
+  public boolean isBoolean(String name) {
+    return getBoolean(name) != null;
+  }
+
+  @Override
+  public boolean isInt(String name) {
+    return getInt(name) != null;
+  }
+
+  @Override
+  public boolean isLong(String name) {
+    return getLong(name) != null;
+  }
+
+  @Override
+  public boolean isDouble(String name) {
+    return getDouble(name) != null;
+  }
+
   @Nullable
   @Override
   public <T> List<T> getScalarList(String name, Class<T> scalarType) {
@@ -248,7 +274,7 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Nullable
   private static String stringOrNull(@Nullable Object value) {
-    if (value == null) {
+    if (value == null || !isPrimitive(value)) {
       return null;
     }
     return value.toString();

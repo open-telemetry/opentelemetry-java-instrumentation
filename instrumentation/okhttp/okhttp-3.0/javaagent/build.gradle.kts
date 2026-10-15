@@ -25,7 +25,7 @@ dependencies {
 
 testing {
   suites {
-    val http2Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("http2Test") {
       dependencies {
         implementation("com.squareup.okhttp3:okhttp:${baseVersion("3.11.0").orLatest()}")
         if (otelProps.testLatestDeps) {
@@ -38,22 +38,29 @@ testing {
 }
 
 tasks {
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}PreviewSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+      }
+    }
+
+  val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}ExceptionSignalLogs") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+      }
+    }
+
   check {
-    dependsOn(testing.suites)
-  }
-
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, previewSemconvSuites, exceptionSignalLogsSuites)
   }
 }

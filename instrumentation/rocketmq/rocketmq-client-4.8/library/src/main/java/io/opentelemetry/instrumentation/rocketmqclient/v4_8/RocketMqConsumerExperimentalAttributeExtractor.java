@@ -11,10 +11,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
+import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.common.message.MessageExt;
 
 final class RocketMqConsumerExperimentalAttributeExtractor
-    implements AttributesExtractor<MessageExt, Void> {
+    implements AttributesExtractor<RocketMqConsumerRequest, ConsumeMessageContext> {
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_MESSAGE_TAG =
@@ -28,7 +29,9 @@ final class RocketMqConsumerExperimentalAttributeExtractor
       AttributeKey.stringKey("messaging.rocketmq.broker_address");
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, MessageExt msg) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, RocketMqConsumerRequest request) {
+    MessageExt msg = request.getMessage();
     attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, msg.getTags());
     attributes.put(MESSAGING_ROCKETMQ_QUEUE_ID, msg.getQueueId());
     attributes.put(MESSAGING_ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());
@@ -46,7 +49,7 @@ final class RocketMqConsumerExperimentalAttributeExtractor
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      MessageExt consumeMessageContext,
-      @Nullable Void unused,
+      RocketMqConsumerRequest request,
+      @Nullable ConsumeMessageContext response,
       @Nullable Throwable error) {}
 }

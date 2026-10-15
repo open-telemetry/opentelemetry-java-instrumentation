@@ -29,6 +29,7 @@ public class KafkaProducerTelemetry {
   private final TextMapPropagator propagator;
   private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private final boolean producerPropagationEnabled;
+  private final boolean producerSpanContextPropagationEnabled;
 
   public KafkaProducerTelemetry(
       TextMapPropagator propagator,
@@ -37,6 +38,8 @@ public class KafkaProducerTelemetry {
     this.propagator = propagator;
     this.producerInstrumenter = producerInstrumenter;
     this.producerPropagationEnabled = producerPropagationEnabled;
+    this.producerSpanContextPropagationEnabled =
+        producerPropagationEnabled && KafkaPropagation.propagatesSpanContext(propagator);
   }
 
   /**
@@ -45,21 +48,24 @@ public class KafkaProducerTelemetry {
    * @param record the producer record to inject span info.
    */
   public <K, V> ProducerRecord<K, V> buildAndInjectSpan(
-      ProducerRecord<K, V> record, @Nullable String clientId, @Nullable String bootstrapServers) {
+      ProducerRecord<K, V> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId, bootstrapServers);
+    KafkaProducerRequest request =
+        KafkaProducerRequest.create(
+            record, clientId, bootstrapServers, producerSpanContextPropagationEnabled, clusterId);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return record;
     }
 
+    // The interceptor runs before send, so end immediately without measuring send duration.
     Context context = producerInstrumenter.start(parentContext, request);
-    try {
-      if (producerPropagationEnabled) {
-        record = KafkaPropagation.propagateContext(propagator, context, record);
-      }
-    } finally {
-      producerInstrumenter.end(context, request, null, null);
+    producerInstrumenter.end(context, request, null, null);
+    if (producerPropagationEnabled) {
+      record = KafkaPropagation.propagateContext(propagator, context, record);
     }
     return record;
   }
@@ -79,7 +85,9 @@ public class KafkaProducerTelemetry {
       String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, producer, bootstrapServers);
+    KafkaProducerRequest request =
+        KafkaProducerRequest.create(
+            record, producer, bootstrapServers, producerSpanContextPropagationEnabled);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return sendFn.apply(record, callback);
     }

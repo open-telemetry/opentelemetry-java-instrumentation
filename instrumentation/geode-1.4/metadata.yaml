@@ -5,8 +5,11 @@ semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
 configurations:
-  - name: otel.instrumentation.common.db.query-sanitization.enabled
-    declarative_name: java.common.db.query_sanitization.enabled
-    description: Enables query sanitization for database queries.
+  - name: otel.instrumentation.geode.query-sanitization.enabled
+    declarative_name: java.geode.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Geode queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
     type: boolean
-    default: true
+  - ref: common.db.query-sanitization.enabled

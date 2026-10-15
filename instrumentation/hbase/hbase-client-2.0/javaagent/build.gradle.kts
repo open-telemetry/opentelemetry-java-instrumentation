@@ -1,0 +1,80 @@
+plugins {
+  id("otel.javaagent-instrumentation")
+}
+
+otelJava {
+  // HBase 2.0.x test stack uses Subject.getSubject(), which is unsupported on JDK 23+.
+  // Cap tests at latest LTS release before JDK 23
+  maxJavaVersionForTests.set(JavaVersion.VERSION_21)
+}
+
+muzzle {
+  pass {
+    group.set("org.apache.hbase")
+    module.set("hbase-client")
+    versions.set("[2.0.0, 2.5.0)")
+    assertInverse.set(true)
+  }
+}
+
+dependencies {
+  library("org.apache.hbase:hbase-client:2.0.0")
+
+  implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))
+
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
+  testImplementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.4:javaagent"))
+
+  latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("shadedClientTest") {
+      dependencies {
+        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
+        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+      }
+    }
+  }
+}
+
+abstract class HbaseBuildService : BuildService<BuildServiceParameters.None>
+
+// HBase test container binds fixed host ports, disallow running tests in parallel.
+gradle.sharedServices.registerIfAbsent("hbaseBuildService", HbaseBuildService::class.java) {
+  maxParallelUsages.convention(1)
+}
+
+tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("*HbaseClient20Test.testGetTimeout")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
+  check {
+    dependsOn(testing.suites, testExceptionSignalLogs)
+  }
+
+  if (otelProps.denyUnsafe) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
+}

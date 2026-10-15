@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -19,7 +17,7 @@ public class SuppressNestedClientHelper {
 
   @Nullable
   public static Scope disallowNestedClientSpanSync(com.azure.core.util.Context azContext) {
-    Context parentContext = currentContext();
+    Context parentContext = Context.current();
     boolean hasAzureClientSpan = azContext.getData("client-method-call-flag").isPresent();
     if (doesNotHaveClientSpan(parentContext) && hasAzureClientSpan) {
       return disallowNestedClientSpan(parentContext).makeCurrent();
@@ -32,7 +30,7 @@ public class SuppressNestedClientHelper {
     return new Mono<T>() {
       @Override
       public void subscribe(CoreSubscriber<? super T> coreSubscriber) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
 
         boolean hasAzureClientSpan = azContext.getData("client-method-call-flag").isPresent();
         if (doesNotHaveClientSpan(parentContext) && hasAzureClientSpan) {

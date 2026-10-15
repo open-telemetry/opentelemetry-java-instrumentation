@@ -39,7 +39,6 @@ dependencies {
 
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+") // documented limitation
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // documented limitation
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-logging-juli:9.+") // documented limitation
 }
 
 tasks {
@@ -55,21 +54,19 @@ tasks {
     jvmArgs("--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    jvmArgs("-Dotel.instrumentation.common.view-telemetry.enabled=true")
   }
 
   test {
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.view-telemetry.enabled=true")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jsp.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true")
   }
 
   check {

@@ -89,8 +89,10 @@ class LoggerTest {
                         logRecordData -> {
                           assertThat(logRecordData.getInstrumentationScopeInfo().getName())
                               .isEqualTo(instrumentationName);
-                          assertThat(((ExtendedLogRecordData) logRecordData).getEventName())
-                              .isEqualTo("eventName");
+                          assertThat(logRecordData).isInstanceOf(ExtendedLogRecordData.class);
+                          ExtendedLogRecordData extendedLogRecordData =
+                              (ExtendedLogRecordData) logRecordData;
+                          assertThat(extendedLogRecordData.getEventName()).isEqualTo("eventName");
                           assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
                               .isEqualTo("1.2.3");
                           assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);

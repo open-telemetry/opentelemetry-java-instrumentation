@@ -1,6 +1,23 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.osgi-conventions")
   id("org.graalvm.buildtools.native")
+}
+
+otelJava {
+  // Logstash support is optional; the encoder is a compileOnly dependency and may be absent at
+  // runtime in an OSGi container.
+  osgiOptionalPackages.add("net.logstash.logback")
+  // The appender is compiled against Logback 1.3 / SLF4J 2.0 but supports Logback 1.0 / SLF4J 1.6.4
+  // at runtime (newer APIs are guarded via reflection - see LoggingEventMapper). Widen the version
+  // ranges bnd infers from the compile-time dependencies so the bundle also resolves against those
+  // older versions, and make org.slf4j.event (SLF4J 2.0+ only, used only behind Class.forName)
+  // optional so its absence on older SLF4J does not block resolution.
+  osgiImportPackages.addAll(
+    "ch.qos.logback.*;version=\"[1.0,2)\"",
+    "org.slf4j.event;version=\"[2.0,3)\";resolution:=optional",
+    "org.slf4j;version=\"[1.6,3)\"",
+  )
 }
 
 dependencies {
@@ -45,6 +62,9 @@ dependencies {
 }
 
 graalvmNative {
+  binaries.named("test") {
+    quickBuild.set(true)
+  }
 
   binaries.all {
     resources.autodetect()
@@ -66,7 +86,7 @@ tasks.named("collectReachabilityMetadata").configure {
 
 testing {
   suites {
-    val slf4j2ApiTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("slf4j2ApiTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -84,7 +104,7 @@ testing {
       }
     }
 
-    val logstashMarkerTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("logstashMarkerTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -107,7 +127,7 @@ testing {
       }
     }
 
-    val logstashStructuredArgsTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("logstashStructuredArgsTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -130,7 +150,7 @@ testing {
       }
     }
 
-    val asyncAppenderTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("asyncAppenderTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -155,20 +175,7 @@ testing {
 }
 
 tasks {
-
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=code")
-  }
-
-  val testBothSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
-  }
-
   check {
-    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
+    dependsOn(testing.suites)
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.spring.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -30,6 +31,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 class OtelSpringStarterDisabledSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private TestRestTemplate testRestTemplate;
+  @Autowired private ConfigProvider configProvider;
+
+  @Test
+  void shouldExposeNoopConfigProvider() {
+    assertThat(configProvider).isEqualTo(ConfigProvider.noop());
+  }
 
   @Test
   void shouldNotSendTelemetry() throws InterruptedException {

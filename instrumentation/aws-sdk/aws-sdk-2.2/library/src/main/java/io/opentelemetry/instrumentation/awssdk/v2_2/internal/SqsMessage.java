@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import io.opentelemetry.context.Context;
+import java.util.Collection;
 import java.util.Map;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
@@ -17,11 +19,19 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
  */
 public interface SqsMessage {
 
+  Context getCreationContext();
+
+  default boolean claimDelivery() {
+    return true;
+  }
+
   Map<String, MessageAttributeValue> messageAttributes();
 
   Map<String, String> attributesAsStrings();
 
   String getMessageAttribute(String name);
+
+  Collection<String> getMessageAttributeNames();
 
   String getMessageId();
 }

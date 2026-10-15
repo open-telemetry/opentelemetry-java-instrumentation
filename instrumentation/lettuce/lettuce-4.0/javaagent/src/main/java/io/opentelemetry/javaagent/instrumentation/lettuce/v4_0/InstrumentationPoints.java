@@ -10,6 +10,7 @@ import static com.lambdaworks.redis.protocol.CommandType.DEBUG;
 import static com.lambdaworks.redis.protocol.CommandType.SHUTDOWN;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 
+import com.lambdaworks.redis.RedisCommandExecutionException;
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.ProtocolKeyword;
@@ -37,7 +38,7 @@ public class InstrumentationPoints {
       @Nullable Throwable throwable,
       @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
     if (throwable != null) {
-      instrumenter().end(context, command, null, throwable);
+      endCommand(command, context, throwable, asyncCommand);
     } else if (expectsResponse(command)) {
       asyncCommand.handleAsync(
           (value, ex) -> {
@@ -49,13 +50,57 @@ public class InstrumentationPoints {
               // and don't report this as an error
               ex = null;
             }
-            instrumenter().end(context, command, null, ex);
+            endCommand(command, context, ex, asyncCommand);
             return null;
           });
     } else {
       // No response is expected, so we must finish the span now.
-      instrumenter().end(context, command, null, null);
+      endCommand(command, context, null, asyncCommand);
     }
+  }
+
+  private static void endCommand(
+      RedisCommand<?, ?, ?> command,
+      Context context,
+      @Nullable Throwable throwable,
+      @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
+    LettuceSingletons.finishCommandPeer(command);
+    try {
+      instrumenter().end(context, command, null, throwable);
+    } finally {
+      LettuceSingletons.clearCommandPeer(command);
+      if (asyncCommand != null) {
+        LettuceSingletons.clearCommandPeer(asyncCommand);
+      }
+    }
+  }
+
+  public static void endReactiveCommand(
+      RedisCommand<?, ?, ?> command,
+      Context context,
+      String methodName,
+      @Nullable Throwable commandError) {
+    if (!expectsResponse(command)) {
+      return;
+    }
+
+    LettuceSingletons.finishCommandPeer(command);
+    Throwable error = null;
+    if ("completeExceptionally".equals(methodName)) {
+      error = commandError;
+    }
+    if (error == null
+        && "complete".equals(methodName)
+        && command.getOutput() != null
+        && command.getOutput().hasError()) {
+      error = new RedisCommandExecutionException(command.getOutput().getError());
+    }
+
+    if (error == null && "cancel".equals(methodName) && CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      Span.fromContext(context).setAttribute("lettuce.command.cancelled", true);
+    }
+
+    instrumenter().end(context, command, null, error);
   }
 
   /**

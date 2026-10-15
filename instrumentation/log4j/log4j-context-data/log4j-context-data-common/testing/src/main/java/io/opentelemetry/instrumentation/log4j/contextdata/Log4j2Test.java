@@ -43,8 +43,11 @@ public abstract class Log4j2Test {
   void testNoIdsWhenNoSpan() {
     Logger logger = LogManager.getLogger("TestLogger");
 
-    logger.info("log message 1");
-    logger.info("log message 2");
+    Baggage baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
+    try (Scope ignored = baggage.makeCurrent()) {
+      logger.info("log message 1");
+      logger.info("log message 2");
+    }
 
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
 
@@ -55,12 +58,16 @@ public abstract class Log4j2Test {
               assertThat(event.getContextData().get(getLoggingKey("trace_id"))).isNull();
               assertThat(event.getContextData().get(getLoggingKey("span_id"))).isNull();
               assertThat(event.getContextData().get(getLoggingKey("trace_flags"))).isNull();
+              assertThat(event.getContextData().get("baggage.baggage_key"))
+                  .isEqualTo(expectBaggage() ? "baggage_value" : null);
             },
             event -> {
               assertThat(event.getMessage()).isEqualTo("log message 2");
               assertThat(event.getContextData().get(getLoggingKey("trace_id"))).isNull();
               assertThat(event.getContextData().get(getLoggingKey("span_id"))).isNull();
               assertThat(event.getContextData().get(getLoggingKey("trace_flags"))).isNull();
+              assertThat(event.getContextData().get("baggage.baggage_key"))
+                  .isEqualTo(expectBaggage() ? "baggage_value" : null);
             });
   }
 
@@ -71,7 +78,7 @@ public abstract class Log4j2Test {
     Baggage baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
     AtomicReference<Span> spanParent = new AtomicReference<>();
     AtomicReference<Span> spanChild = new AtomicReference<>();
-    try (Scope unusedScope = baggage.makeCurrent()) {
+    try (Scope ignored = baggage.makeCurrent()) {
       getInstrumentationExtension()
           .runWithSpan(
               "test",

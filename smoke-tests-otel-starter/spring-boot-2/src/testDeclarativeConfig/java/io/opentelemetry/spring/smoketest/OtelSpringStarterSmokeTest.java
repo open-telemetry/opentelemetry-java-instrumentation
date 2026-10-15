@@ -11,7 +11,13 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.jupiter.api.Test;
@@ -21,6 +27,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,10 +42,60 @@ import org.springframework.web.client.RestTemplate;
 class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private RestTemplateBuilder restTemplateBuilder;
+  @Autowired private ConfigProvider configProvider;
 
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
   private int port;
+
+  @Test
+  void debugLogsSpans(CapturedOutput output) {
+    // No console exporter is configured in application.yaml. Bootstrap discovery and conversion
+    // of spring_starter.debug must install it before the SDK is built.
+    openTelemetry
+        .getTracer("debug-smoke-test")
+        .spanBuilder("declarative-debug-span")
+        .startSpan()
+        .end();
+    assertThat(output.getAll()).containsOnlyOnce("declarative-debug-span");
+  }
+
+  @Test
+  void configProviderReflectsDeclarativeConfig() {
+    // otel.instrumentation/development.java.common.http.client.emit_experimental_telemetry
+    // in application.yaml
+    DeclarativeConfigProperties httpClientConfig =
+        configProvider
+            .getInstrumentationConfig()
+            .getStructured("java")
+            .getStructured("common")
+            .getStructured("http")
+            .getStructured("client");
+    assertThat(httpClientConfig.getBoolean("emit_experimental_telemetry/development")).isTrue();
+  }
+
+  @Test
+  void ruleBasedSampler() {
+    testing.clearAllExportedData();
+
+    openTelemetry
+        .getTracer("sampler-smoke-test")
+        .spanBuilder("matching span")
+        .setAttribute(URL_PATH, "/actuator/health")
+        .startSpan()
+        .end();
+    assertThat(testing.getExportedSpans()).isEmpty();
+
+    openTelemetry
+        .getTracer("sampler-smoke-test")
+        .spanBuilder("fallback span")
+        .setAttribute(URL_PATH, "/greeting")
+        .startSpan()
+        .end();
+    assertThat(testing.getExportedSpans())
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(URL_PATH)).isEqualTo("/greeting"));
+  }
 
   @Test
   void restTemplate() {
@@ -72,7 +129,9 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
                                         satisfies(
                                             SERVICE_INSTANCE_ID,
                                             AbstractCharSequenceAssert::isNotBlank)))
-                        .hasAttribute(HTTP_ROUTE, "/ping"),
+                        .hasAttribute(HTTP_ROUTE, "/ping")
+                        .hasAttribute(satisfies(THREAD_ID, val -> val.isNotZero()))
+                        .hasAttribute(satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 AbstractSpringStarterSmokeTest::withSpanAssert));
   }
 }

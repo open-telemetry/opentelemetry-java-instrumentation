@@ -1,0 +1,172 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
+
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
+import com.couchbase.client.core.cnc.RequestSpan;
+import com.couchbase.client.core.cnc.RequestTracer;
+import com.couchbase.client.core.cnc.TracingIdentifiers;
+import com.couchbase.client.core.msg.RequestContext;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseTracer;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConfiguredTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Peer;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSpanName;
+import io.opentelemetry.semconv.SchemaUrls;
+import java.time.Duration;
+import java.time.Instant;
+import javax.annotation.Nullable;
+import reactor.core.publisher.Mono;
+
+public final class CouchbaseRequestTracer implements RequestTracer {
+
+  private final CouchbaseTracer tracer;
+
+  public static RequestTracer create(OpenTelemetry openTelemetry) {
+    return new CouchbaseRequestTracer(
+        new CouchbaseTracer(
+            openTelemetry
+                .tracerBuilder("com.couchbase.client.jvm")
+                .setSchemaUrl(SchemaUrls.V1_44_0)
+                .build(),
+            true,
+            false,
+            false));
+  }
+
+  public static void captureServerTarget(
+      RequestSpan requestSpan, @Nullable CouchbaseServerTarget target) {
+    if (target != null && requestSpan instanceof AgentRequestSpan) {
+      ((AgentRequestSpan) requestSpan).captureServerTarget(target);
+    }
+  }
+
+  private CouchbaseRequestTracer(CouchbaseTracer tracer) {
+    this.tracer = tracer;
+  }
+
+  @Override
+  public RequestSpan requestSpan(String name, RequestSpan parent) {
+    Peer peer =
+        TracingIdentifiers.SPAN_DISPATCH.equals(name) || "cb.dispatch_to_server".equals(name)
+            ? CouchbaseRequestPeers.consume(parent)
+            : null;
+    CouchbaseSpan parentSpan = null;
+    if (parent != null) {
+      if (!(parent instanceof AgentRequestSpan)) {
+        throw new IllegalArgumentException(
+            "RequestSpan must be created by the OpenTelemetry agent");
+      }
+      parentSpan = ((AgentRequestSpan) parent).delegate;
+    }
+    return new AgentRequestSpan(name, tracer.startSpan(name, parentSpan), peer);
+  }
+
+  @Override
+  public Mono<Void> start() {
+    return Mono.empty();
+  }
+
+  @Override
+  public Mono<Void> stop(Duration timeout) {
+    return Mono.empty();
+  }
+
+  private static final class AgentRequestSpan implements RequestSpan {
+
+    private final CouchbaseSpan delegate;
+    private final CouchbaseSpanName spanName;
+    private final boolean hasCapturedPeer;
+
+    private AgentRequestSpan(String name, CouchbaseSpan delegate, @Nullable Peer peer) {
+      this.delegate = delegate;
+      this.spanName = new CouchbaseSpanName(name);
+      this.hasCapturedPeer = peer != null;
+      if (peer != null) {
+        delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), peer.getAddress());
+        delegate.setRawAttribute(NETWORK_PEER_PORT.getKey(), (long) peer.getPort());
+      }
+    }
+
+    @Override
+    public void attribute(String key, String value) {
+      spanName.captureAttribute(key, value);
+      if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_HOSTNAME.equals(key)) {
+        delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), value);
+      }
+      delegate.setAttribute(key, value);
+    }
+
+    @Override
+    public void attribute(String key, boolean value) {
+      delegate.setAttribute(key, value);
+    }
+
+    @Override
+    public void attribute(String key, long value) {
+      if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_PORT.equals(key)) {
+        delegate.setRawAttribute(NETWORK_PEER_PORT.getKey(), value);
+      }
+      delegate.setAttribute(key, value);
+    }
+
+    @Override
+    public void event(String name, Instant timestamp) {
+      delegate.addEvent(name, timestamp);
+    }
+
+    @Override
+    public void status(RequestSpan.StatusCode statusCode) {
+      io.opentelemetry.api.trace.StatusCode openTelemetryStatus =
+          io.opentelemetry.api.trace.StatusCode.UNSET;
+      switch (statusCode) {
+        case UNSET:
+          break;
+        case OK:
+          openTelemetryStatus = io.opentelemetry.api.trace.StatusCode.OK;
+          break;
+        case ERROR:
+          openTelemetryStatus = io.opentelemetry.api.trace.StatusCode.ERROR;
+          break;
+      }
+      delegate.setStatus(openTelemetryStatus);
+    }
+
+    @Override
+    public void recordException(Throwable throwable) {
+      delegate.recordException(throwable);
+    }
+
+    @Override
+    public void end() {
+      if (spanName.isDatabaseRequest()) {
+        delegate.updateName(spanName.spanName());
+      }
+      delegate.end();
+    }
+
+    @Override
+    public void requestContext(RequestContext requestContext) {
+      CouchbaseConfiguredTarget.capture(delegate, spanName, requestContext);
+    }
+
+    private void captureServerTarget(CouchbaseServerTarget target) {
+      spanName.captureServerTarget(target);
+      delegate.setRawAttribute(SERVER_ADDRESS.getKey(), target.getAddress());
+      Integer port = target.getPort();
+      if (port != null) {
+        delegate.setRawAttribute(SERVER_PORT.getKey(), port.longValue());
+      }
+    }
+  }
+}

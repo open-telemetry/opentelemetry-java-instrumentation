@@ -32,11 +32,13 @@ sourceSets {
 }
 
 configurations {
+  // the javaSpring3 and javaSpring4 source sets are bundled into the main jar, so they need to see
+  // the same dependencies as the main source set
   named("javaSpring3CompileOnly") {
-    extendsFrom(configurations["compileOnly"])
+    extendsFrom(configurations["compileOnly"], configurations["implementation"])
   }
   named("javaSpring4CompileOnly") {
-    extendsFrom(configurations["compileOnly"])
+    extendsFrom(configurations["compileOnly"], configurations["implementation"])
   }
 }
 
@@ -78,6 +80,8 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-r2dbc:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
+  // TODO: Remove in 3.0.0; retained for compatibility with the 2.x Spring artifacts.
+  api("io.opentelemetry.semconv:opentelemetry-semconv")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation(project(":sdk-autoconfigure-support"))
@@ -86,7 +90,6 @@ dependencies {
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
   compileOnly("io.opentelemetry:opentelemetry-exporter-otlp")
-  compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
   compileOnly(project(":instrumentation-annotations"))
 
   compileOnly(project(":instrumentation:resources:library"))
@@ -111,7 +114,6 @@ dependencies {
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
-  testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation(project(":instrumentation-annotations"))
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
 
@@ -173,7 +175,19 @@ val testSpring3 =
 
 testing {
   suites {
-    val testLogbackAppender by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testLog4jAppender") {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+
+        implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
+        implementation("org.apache.logging.log4j:log4j-core:2.17.0")
+      }
+    }
+
+    register<JvmTestSuite>("testLogbackAppender") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk")
@@ -182,6 +196,7 @@ testing {
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
+        implementation("net.logstash.logback:logstash-logback-encoder:6.6")
         // using the same versions as in the spring-boot-autoconfigure
         implementation("ch.qos.logback:logback-classic") {
           version {
@@ -196,7 +211,7 @@ testing {
       }
     }
 
-    val testLogbackMissing by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testLogbackMissing") {
       dependencies {
         implementation(project())
         implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
@@ -209,7 +224,7 @@ testing {
       }
     }
 
-    val testSpring2 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSpring2") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk")
@@ -234,7 +249,7 @@ testing {
       }
     }
 
-    val testSpring3 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSpring3") {
       dependencies {
         implementation(project())
         val version = baseVersion("3.2.4").orLatest("3.+")
@@ -248,7 +263,7 @@ testing {
       }
     }
 
-    val testSpring4 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSpring4") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
@@ -271,12 +286,13 @@ testing {
       }
     }
 
-    val testDeclarativeConfig by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testDeclarativeConfig") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-exporter-otlp")
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }
@@ -359,13 +375,11 @@ tasks {
     from(sourceSets["javaSpring4"].java)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites)
   }
+}
+
+configurations.named("testLog4jAppenderRuntimeClasspath") {
+  exclude(group = "ch.qos.logback")
 }

@@ -17,10 +17,10 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.DistributionModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.DistributionPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionModel;
 import java.io.IOException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Allows access to the Javaagent distribution node, which cannot be accessed using the {@link
@@ -55,14 +55,16 @@ public final class JavaagentDistributionAccessCustomizerProvider
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
         model -> {
-          AgentDistributionConfig.set(parseConfig(model.getDistribution()));
+          AgentDistributionConfig distributionConfig = parseConfig(model.getDistribution());
+          AgentDistributionConfig.set(distributionConfig);
           return model;
         });
   }
 
-  private static AgentDistributionConfig parseConfig(DistributionModel distribution) {
+  private static AgentDistributionConfig parseConfig(@Nullable DistributionModel distribution) {
+
     if (distribution != null) {
-      DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
+      Object javaagent = distribution.getExtensionProperties().get("javaagent");
       if (javaagent != null) {
         try {
           return mapper.convertValue(javaagent, AgentDistributionConfig.class);
@@ -71,6 +73,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
         }
       }
     }
+
     return AgentDistributionConfig.create();
   }
 }

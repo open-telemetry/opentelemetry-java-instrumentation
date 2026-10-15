@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
-    super("jedis", "jedis-4.0");
+    super("jedis-4.0", "jedis");
   }
 
   @Override
@@ -29,6 +29,13 @@ public class JedisInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new JedisConnectionInstrumentation(), new JedisInstrumentation());
+    return asList(
+        new DefaultJedisSocketFactoryInstrumentation(),
+        new JedisConnectionInstrumentation(),
+        new JedisConnectionProviderInstrumentation(),
+        new JedisSentinelPoolInstrumentation(),
+        new JedisInstrumentation(),
+        new JedisPipelineInstrumentation(),
+        new JedisTransactionInstrumentation());
   }
 }

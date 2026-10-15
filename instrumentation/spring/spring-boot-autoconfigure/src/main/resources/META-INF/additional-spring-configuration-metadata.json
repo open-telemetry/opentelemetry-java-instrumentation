@@ -267,12 +267,6 @@
       "defaultValue": "10000"
     },
     {
-      "name": "otel.exporter.zipkin.endpoint",
-      "type": "java.lang.String",
-      "description": "The Zipkin endpoint to connect to.<br/>Currently only HTTP is supported.",
-      "defaultValue": "http://localhost:9411/api/v2/spans"
-    },
-    {
       "name": "otel.instrumentation.annotations.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the <code>@WithSpan</code> annotation.",
@@ -293,7 +287,7 @@
     {
       "name": "otel.instrumentation.common.peer-service-mapping",
       "type": "java.util.Map<java.lang.String, java.lang.String>",
-      "description": "Used to specify a mapping from host names or IP addresses to peer services, as a comma-separated list of <code>host_or_ip=user_assigned_name</code> pairs. The peer service is added as an attribute to a span whose host or IP address match the mapping. See https://opentelemetry.io/docs/zero-code/java/agent/configuration/#peer-service-name."
+      "description": "Used to specify a mapping from server addresses or configured targets to peer services, as a comma-separated list of <code>server_address_or_configured_target=user_assigned_name</code> pairs. Configured targets containing commas or equals signs cannot be represented in this flat property; map them with declarative <code>service_peer_mapping</code> instead. The peer service is added as an attribute to a span whose server address or configured target matches the mapping. See https://opentelemetry.io/docs/zero-code/java/agent/configuration/#peer-service-name."
     },
     {
       "name": "otel.instrumentation.common.thread-details.enabled",
@@ -340,15 +334,20 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+      "name": "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
       "type": "java.lang.Boolean",
       "description": "Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.",
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.messaging.experimental.capture-headers",
+      "name": "otel.instrumentation.common.messaging.headers.included",
       "type": "java.util.List<java.lang.String>",
-      "description": "A comma-separated list of header names to capture as span attributes."
+      "description": "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
+    },
+    {
+      "name": "otel.instrumentation.common.messaging.headers.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
     },
     {
       "name": "otel.instrumentation.jdbc.enabled",
@@ -417,6 +416,16 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.common.logging.structured-attributes.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. `*` matches any number of characters and `?` matches one character. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. Excluded patterns take precedence. An exclude-only selector captures every key not excluded. An absent or empty selector captures all structured attributes by default. MDC and logger-context attributes remain separate and opt-in."
+    },
+    {
+      "name": "otel.instrumentation.common.logging.structured-attributes.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys not to capture. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. An exclude-only selector captures every key not excluded; `*` captures no structured attributes. This does not affect `otel.event.name`, MDC, or logger context."
+    },
+    {
       "name": "otel.instrumentation.log4j-appender.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Log4J2 appender instrumentation.",
@@ -446,39 +455,51 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of Logback key value pairs as attributes.",
-      "defaultValue": false
-    },
-    {
       "name": "otel.instrumentation.logback-appender.experimental-log-attributes",
       "type": "java.lang.Boolean",
       "description": "Enable the capture of experimental log attributes thread.name and thread.id.",
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for Logback logger context property keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all logger context attributes. Excluded patterns take precedence over included patterns. No logger context attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes` setting is configured; configuring only excluded patterns captures all logger context attributes that do not match them. Captured logger context attributes may contain sensitive information."
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for Logback logger context property keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No logger context attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes` setting is configured; configuring only excluded patterns captures all logger context attributes that do not match them. Captured logger context attributes may contain sensitive information."
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of Logback logger context properties as attributes.",
-      "defaultValue": false
+      "description": "Deprecated setting that enables the capture of all attributes from the Logback logger context. It is ignored when `otel.instrumentation.logback-appender.experimental.logger-context-attributes.included` or `otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.logger-context-attributes.included` instead.",
+      "defaultValue": false,
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the logger context attribute selector properties instead.",
+        "replacement": "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included"
+      }
     },
     {
-      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of Logstash marker attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.",
-      "defaultValue": false
+      "name": "otel.instrumentation.logback-appender.experimental.mdc-attributes.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all MDC attributes. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-mdc-attributes` setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information."
     },
     {
-      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`).",
-      "defaultValue": false
+      "name": "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-mdc-attributes` setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information."
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
       "type": "java.lang.String",
-      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes. This is a comma-separated list of attribute names."
+      "description": "Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including `*` and `?`, except that the single value `*` captures all MDC attributes. It is ignored when `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` or `otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` instead.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the MDC attribute selector properties instead.",
+        "replacement": "otel.instrumentation.logback-appender.experimental.mdc-attributes.included"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-template",
@@ -498,19 +519,19 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.common.logging.trace-id",
+      "name": "otel.instrumentation.common.logging.trace-id-key",
       "type": "java.lang.String",
       "description": "Customize MDC key name for the trace id.",
       "defaultValue": "trace_id"
     },
     {
-      "name": "otel.instrumentation.common.logging.span-id",
+      "name": "otel.instrumentation.common.logging.span-id-key",
       "type": "java.lang.String",
       "description": "Customize MDC key name for the span id.",
       "defaultValue": "span_id"
     },
     {
-      "name": "otel.instrumentation.common.logging.trace-flags",
+      "name": "otel.instrumentation.common.logging.trace-flags-key",
       "type": "java.lang.String",
       "description": "Customize MDC key name for the trace flags.",
       "defaultValue": "trace_flags"
@@ -534,12 +555,6 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry.capture-gc-cause",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.",
-      "defaultValue": false
-    },
-    {
       "name": "otel.instrumentation.runtime-telemetry.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable runtime telemetry metrics.",
@@ -558,16 +573,20 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr",
-      "type": "java.lang.Boolean",
-      "description": "Prefer JFR over JMX for metrics available from both sources, on Java 17+.",
-      "defaultValue": false
+      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Include JVM runtime metrics to source from JFR on Java 17+ using case-sensitive * and ? glob patterns. Configuring either selector property activates JFR; omitted included patterns select all metrics not excluded."
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Exclude JVM runtime metrics from JFR on Java 17+ using case-sensitive * and ? glob patterns. Exclusions take precedence."
     },
     {
       "name": "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters",
       "type": "java.util.List<java.lang.String>",
-      "description": "List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.",
-      "defaultValue": "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
+      "description": "List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full.",
+      "defaultValue": "AWSAccessKeyId,Signature,X-Amz-Signature,X-Amz-Credential,X-Amz-Security-Token,sig,X-Goog-Signature"
     },
     {
       "name": "otel.instrumentation.spring-web.enabled",
@@ -868,10 +887,6 @@
         {
           "value": "otlp",
           "description": "OpenTelemetry Protocol (OTLP) exporter."
-        },
-        {
-          "value": "zipkin",
-          "description": "Zipkin exporter."
         }
       ]
     },

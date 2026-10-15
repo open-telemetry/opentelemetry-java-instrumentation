@@ -1,9 +1,63 @@
 # [Testing] General Test Patterns
 
-## Quick Reference
+Consult this article when changing test structure, assertions, resource
+cleanup, or mode-dependent expectations. It gives the setup and API details
+behind the shorter Java test instructions.
 
-- Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
+## Javaagent integration coverage versus unit coverage
+
+Unit suites and legacy `javaagent-unit-tests` projects exercise helper or instrumentation classes
+directly without installing the javaagent against a live target library. They do not verify agent
+loading, class transformation, or runtime behavior of clients, pools, clusters, sentinels, and
+other integrations.
+
+When a change must support multiple runtime versions, retain real agent-backed integration tests
+for each required version. Keep tests that run on the baseline in the default `test` suite and
+place only newer-version-specific tests in a dedicated `JvmTestSuite`; do not count a unit suite
+as coverage for the missing integration runtime.
+
+## Configuration test ownership
+
+For settings available in both forms, prefer default-behavior and module-specific flat-property tests.
+The bridge exposes flat properties through the declarative API; test conversion centrally rather
+than repeating behavior assertions for equivalent YAML.
+
+Shared helpers own defaults, fallback, and precedence tests. Keep caller-specific logic covered,
+and add missing central coverage before removing a module test.
+
+Retain declarative tests for structured/YAML-only settings, distinct binding, parsing, initialization,
+or migration paths, and native configuration integration. Single-source declarative unit tests are not duplicates.
+
+Remove unused fixtures, dependencies, task registrations, and metadata-collection inputs with redundant
+variants. Keep metadata describing supported settings.
+
+## Instrumentation enablement selectors
+
+Javaagent selectors such as `otel.instrumentation.<name>.enabled` are escape
+hatches for disabling buggy instrumentation until a fix is available, not a
+recommended way to tune telemetry.
+
+Do not add per-instrumentation selector tests, including for new modules,
+renames, aliases, or consolidations:
+
+- No `instrumentationNames()` or name-order assertions.
+- No enable/disable matrices, precedence, fallback, legacy/v3-preview, flat/YAML
+  parity, or deprecation-warning checks.
+- No test projects, source sets, JVM variants, fixtures, or dependencies solely
+  for those checks.
+
+This applies to unit tests and installed-agent tests alike. Test shared
+enablement and alias-helper changes centrally, not in every caller. Existing
+coverage includes `InstrumentationModuleInstallerTest` for flat resolution and
+`AgentDistributionConfigTest` for declarative resolution.
+
+Keep instrumentation behavior and compatibility coverage, including propagation,
+scopes, runtime versions, and Muzzle. Tests may use selectors to disable unrelated
+instrumentation without testing the selectors themselves.
+
+Changes to [default enablement](testing-default-enablement.md), feature settings,
+and experimental telemetry still need behavior coverage. An `.enabled` suffix
+alone does not make a setting an instrumentation selector.
 
 ## Assertion Framework
 
@@ -12,6 +66,14 @@
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
 
+### Scala assertion imports
+
+In Scala tests, import `assertThat` from `org.assertj.core.api.Assertions`. Qualify
+`OpenTelemetryAssertions.assertThat(...)` where the OpenTelemetry-specific assertion is needed,
+and import individual helpers such as `equalTo` separately. Scala does not expose AssertJ's
+inherited Java static methods through `OpenTelemetryAssertions`, so the Java convention of using
+that class as the single `assertThat` entry point does not apply.
+
 ## Parameterized Tests
 
 - When the same test logic is repeated for multiple input/output cases, prefer
@@ -19,10 +81,12 @@
   duplicate the same setup.
 - Prefer `@MethodSource` with a private static `Stream<Arguments>` provider for multi-field cases.
   Keep the provider close to the test that uses it.
-- Prefer a human-readable case name as the first parameter so failures identify the scenario
-  without reading the whole row.
-- Each `Arguments.of(...)` entry should describe one coherent scenario. Prefer one expected outcome
-  per row instead of packing several unrelated expectations into a single parameterized case.
+- Use `Arguments.argumentSet(String name, Object... args)` to name each case. This requires no
+  changes to the test method signature and no `name =` attribute on the annotation. Prefer this
+  over passing a `String name` as the first parameter with `@ParameterizedTest(name = "{0}")`.
+- Each `Arguments.argumentSet(...)` entry should describe one coherent scenario. Prefer one
+  expected outcome per row instead of packing several unrelated expectations into a single
+  parameterized case.
 - In the test body, keep the setup and assertion flow the same for every row. If different rows need
   materially different control flow, split them into separate tests instead of forcing everything
   into one parameterized method.
@@ -35,15 +99,15 @@
 Example shape:
 
 ```java
-@ParameterizedTest(name = "{0}")
+@ParameterizedTest
 @MethodSource("testCases")
-void test(String name, Input input, Output expected) {
+void test(Input input, Output expected) {
   assertThat(run(input)).isEqualTo(expected);
 }
 
 private static Stream<Arguments> testCases() {
   return Stream.of(
-      Arguments.of("valid input", new Input("input"), new Output("expected")));
+      Arguments.argumentSet("valid input", new Input("input"), new Output("expected")));
 }
 ```
 
@@ -112,6 +176,14 @@ private static Stream<Arguments> testCases() {
 - If the test intentionally closes the resource mid-test or asserts behavior around explicit
   close, keep the direct close or try-with-resources in the test body.
 
+## Test Port Allocation
+
+When a test needs an available TCP port that another server or container will bind later, use
+`PortUtils.findOpenPort()` or `PortUtils.findOpenPorts(count)`. Do not implement a local probe by
+opening `new ServerSocket(0)`, reading its port, and closing it; that bypasses the repository
+allocator's coordination between parallel test processes. Keep port `0` when the same socket
+remains bound and becomes the test server.
+
 ## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
 
 When an abstract test base is shared by multiple concrete subclasses run in the same JVM
@@ -142,6 +214,14 @@ subclass may have already started the container, so `withCommand` on the running
 instance is a no-op; with per-instance state each subclass mutates and starts its own
 fresh container.
 
+## Trace Assertions
+
+When a test knows the complete expected trace and span structure, use
+`InstrumentationExtension.waitAndAssertTraces(...)` with `TraceAssert` and `SpanDataAssert`. Do not
+call `waitForTraces(...)` and then flatten `testing.spans()` for the same exact assertion; the trace
+DSL retries the complete assertion and preserves trace grouping. Keep raw `spans()` access for
+intentionally ad hoc or cross-trace filtering that the trace DSL cannot express.
+
 ## Span Attribute Assertions
 
 - Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
@@ -166,6 +246,15 @@ fresh container.
   is already an `int` expression or variable. The assertion API already has an
   `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
   preferred over `equalTo(longKey("iteration"), (long) iteration)`.
+- The previous rule does not apply when an `int` value is one branch of a conditional and the other
+  branch is `null`. Cast the `int` branch to `long`:
+
+  ```java
+  equalTo(SERVER_PORT, enabled ? (long) port : null)
+  ```
+
+  The cast makes the conditional a `Long`. Without it, Java selects the primitive `int` overload
+  and tries to unbox `null`, causing a `NullPointerException`.
 
 ## Metric Assertions
 
@@ -183,6 +272,21 @@ fresh container.
   expanding the check into one `waitAndAssertMetrics(..., AbstractIterableAssert::isEmpty)` call per
   possible metric name. Do not add an exporter-interval sleep before or after `clearData()` solely
   to wait for metrics; the test runners force-flush metrics when reading them.
+
+## Trace Clearing After Asynchronous Operations
+
+- When test setup or cleanup performs an operation that can complete or export spans
+  asynchronously, call `testing.waitForTraces(expectedTraceCount)` before its captured telemetry
+  is cleared, whether by `testing.clearData()` or an `InstrumentationExtension` lifecycle clear.
+  Keep the wait at the end of setup or cleanup even when removing a redundant explicit clear. The
+  expected count is the total number of traces that should be captured at that point. Waiting
+  prevents spans exported after the clear from leaking into the next assertion or test.
+- Add the wait only when the exact trace count is deterministic. Do not guess a count when it can
+  vary because of retries, concurrent/background work, timing, or external-system behavior.
+- `InstrumentationExtension` already clears captured telemetry before each test. Do not add or keep
+  a setup/cleanup `clearData()` solely for per-test isolation when that lifecycle clear is
+  sufficient; keep explicit clears only when the test needs a mid-test reset, including to discard
+  telemetry from a preceding asynchronous operation after its exports have been drained.
 
 ## Attribute Assertion `satisfies()` Lambda Parameters
 
@@ -208,12 +312,12 @@ already proper AssertJ assertions - they throw on failure. Do **not** wrap them 
 
 Prefer built-in AssertJ collection/list assertions over extracting values manually:
 
-| Anti-pattern | Idiomatic form |
-| --- | --- |
-| `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
-| `assertThat(list.isEmpty()).isTrue()` | `assertThat(list).isEmpty()` |
-| `assertThat(list).hasSize(0)` | `assertThat(list).isEmpty()` |
-| `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
+| Anti-pattern                                                                                                      | Idiomatic form                           |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `assertThat(list.size()).isEqualTo(N)`                                                                            | `assertThat(list).hasSize(N)`            |
+| `assertThat(list.isEmpty()).isTrue()`                                                                             | `assertThat(list).isEmpty()`             |
+| `assertThat(list).hasSize(0)`                                                                                     | `assertThat(list).isEmpty()`             |
+| `assertThat(list.contains(x)).isTrue()`                                                                           | `assertThat(list).contains(x)`           |
 | sequential `assertThat(list.get(0)).isEqualTo(a)` / `assertThat(list.get(1)).isEqualTo(b)` checking every element | `assertThat(list).containsExactly(a, b)` |
 
 The `containsExactly` form verifies both size and element values in order, making a
@@ -221,10 +325,10 @@ separate `hasSize` check redundant.
 
 Similar patterns apply to maps, arrays, and strings:
 
-| Anti-pattern | Idiomatic form |
-| --- | --- |
-| `assertThat(str.length()).isEqualTo(N)` | `assertThat(str).hasSize(N)` |
-| `assertThat(map.size()).isEqualTo(N)` | `assertThat(map).hasSize(N)` |
+| Anti-pattern                            | Idiomatic form                 |
+| --------------------------------------- | ------------------------------ |
+| `assertThat(str.length()).isEqualTo(N)` | `assertThat(str).hasSize(N)`   |
+| `assertThat(map.size()).isEqualTo(N)`   | `assertThat(map).hasSize(N)`   |
 | `assertThat(array.length).isEqualTo(N)` | `assertThat(array).hasSize(N)` |
 
 ## Span Ordering Assertions
@@ -242,7 +346,8 @@ expected:
 
 - Experimental attributes (`-Dotel.instrumentation.<module>.experimental-*=true`) — see
   [testing-experimental-flags.md](testing-experimental-flags.md).
-- Semconv stability (`-Dotel.semconv-stability.opt-in=...`) — see
+- Semconv selection (`-Dotel.semconv-stability.opt-in=<domain>` for selectable stable
+  conventions or `-Dotel.semconv-stability.preview=<domain>` for preview conventions), see
   [testing-semconv-stability.md](testing-semconv-stability.md).
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
@@ -253,22 +358,73 @@ Each flag has a shared static accessor; static-import it and call it directly. N
 `Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
 site.
 
-| Flag | Shared accessor | Where it lives |
-| --- | --- | --- |
-| `-PtestLatestDeps=true` | `testLatestDeps()` | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…` | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc. | `io.opentelemetry.instrumentation.api.internal.SemconvStability` |
-| `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class |
+| Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
+| `otel.semconv-stability.opt-in=<domain>`       | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.preview=<domain>`      | the domain's `emitOld*Semconv()` / `emitPreview*Semconv()` accessors                                               | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
-### Inline ternary in `equalTo(...)` with `null` for "absent"
+Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
+and `emitPreview*Semconv()` for preview selection.
 
-Push the ternary as deep as possible — into the `equalTo` value or single attribute key —
-rather than duplicating two whole `hasAttributesSatisfyingExactly(...)` blocks under a
-`flag ? a : b`. The assertion API treats `null` as "expect attribute absent":
+### Mode-dependent expected values
+
+Assert keys and values directly when expectations do not depend on a mode:
 
 ```java
-equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
-equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
-equalTo(SOME_KEY, EXPERIMENTAL_ATTRIBUTES ? "value" : null)
+equalTo(DB_SYSTEM_NAME, ELASTICSEARCH)
+equalTo(DB_OPERATION_NAME, "info")
+equalTo(ERROR_TYPE, "42601")
+```
+
+For selectable domains, when no established semconv utility applies, put the ternary inside the
+`equalTo` value or single attribute key. Do not duplicate two whole
+`hasAttributesSatisfyingExactly(...)` blocks under a `flag ? a : b`. This
+includes attributes that exist in only one mode and attributes whose expected
+values differ by mode. The assertion API treats `null` as "expect attribute
+absent":
+
+```java
+equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null)
+equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null)
+equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
+```
+
+Keep short conditional expected values directly in the assertion when no
+established semconv utility applies, even when several assertions repeat the
+same condition. Do not extract the branch selection into helpers such as
+`spanName(...)`, `oldOrExperimental(value)`, or `expectedNamespace()`. Those
+helpers hide the expected values at the point where a reader needs them. The
+conventional `experimental(value)` helper is the exception. It means the value
+is expected only when experimental attributes are enabled, and `null`
+otherwise, so keep it instead of inlining
+`EXPERIMENTAL_ATTRIBUTES ? value : null`.
+
+A helper may obtain the mode flag or derive a value from test data. Do not
+conditionally build a `List<AttributeAssertion>` and then pass that list to
+`hasAttributesSatisfyingExactly(...)`. Pass each assertion directly and keep
+the mode check with its expected value. Keep helpers for genuinely nontrivial
+derivation only:
+
+```java
+// Bad: the helper conditionally builds a list and hides the expected shape.
+private static List<AttributeAssertion> rpcAttributes() {
+  List<AttributeAssertion> attributes = new ArrayList<>();
+  if (emitOldRpcSemconv()) {
+    attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
+  }
+  if (emitPreviewRpcSemconv()) {
+    attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
+  }
+  return attributes;
+}
+span.hasAttributesSatisfyingExactly(rpcAttributes());
+
+// Good: pass each assertion directly and keep its mode check visible.
+span.hasAttributesSatisfyingExactly(
+    equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
+    equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
 ```

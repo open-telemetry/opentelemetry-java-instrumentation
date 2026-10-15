@@ -7,13 +7,11 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/redis/lettuce
 configurations:
-  - name: otel.instrumentation.lettuce.experimental.command-encoding-events.enabled
-    declarative_name: java.lettuce.command_encoding_events/development.enabled
-    description: Enables capturing `redis.encode.start` and `redis.encode.end` span events.
+  - name: otel.instrumentation.lettuce.query-sanitization.enabled
+    declarative_name: java.lettuce.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Lettuce queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
     type: boolean
-    default: false
-  - name: otel.instrumentation.common.db.query-sanitization.enabled
-    declarative_name: java.common.db.query_sanitization.enabled
-    description: Enables query sanitization for database queries.
-    type: boolean
-    default: true
+  - ref: common.db.query-sanitization.enabled

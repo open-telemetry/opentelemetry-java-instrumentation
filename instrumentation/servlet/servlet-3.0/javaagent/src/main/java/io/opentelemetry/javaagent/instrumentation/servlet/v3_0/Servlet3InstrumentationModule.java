@@ -11,7 +11,6 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
@@ -22,24 +21,17 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Servlet3InstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class Servlet3InstrumentationModule extends InstrumentationModule {
   private static final String BASE_PACKAGE = "javax.servlet";
 
   public Servlet3InstrumentationModule() {
-    super("servlet", "servlet-3.0");
+    super("servlet-3.0", "servlet");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in Servlet 3.0
     return hasClassesNamed("javax.servlet.ServletRegistration");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    // depends on servlet instrumentation
-    return "servlet";
   }
 
   @Override

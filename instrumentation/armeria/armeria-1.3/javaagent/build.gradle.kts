@@ -26,7 +26,7 @@ dependencies {
 
 testing {
   suites {
-    val testArmeria19 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testArmeria19") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java", "src/testArmeria19/java"))
@@ -45,18 +45,21 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-  }
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}PreviewSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+      }
+    }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, previewSemconvSuites)
   }
 
   if (otelProps.denyUnsafe) {

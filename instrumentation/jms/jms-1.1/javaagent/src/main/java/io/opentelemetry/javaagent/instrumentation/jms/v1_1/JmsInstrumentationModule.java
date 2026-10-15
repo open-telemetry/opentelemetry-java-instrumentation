@@ -15,12 +15,13 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JmsInstrumentationModule extends InstrumentationModule {
   public JmsInstrumentationModule() {
-    super("jms", "jms-1.1");
+    super("jms-1.1", "jms");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new JmsSessionInstrumentation(),
         new JmsMessageConsumerInstrumentation(),
         new JmsMessageListenerInstrumentation(),
         new JmsMessageProducerInstrumentation());

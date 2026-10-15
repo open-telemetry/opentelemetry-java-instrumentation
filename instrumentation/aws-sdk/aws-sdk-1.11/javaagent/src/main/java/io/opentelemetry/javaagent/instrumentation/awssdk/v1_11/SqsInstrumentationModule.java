@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.awssdk.v1_11.SqsAdviceBridge;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsImpl;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SqsInstrumentationModule() {
-    super("aws-sdk-1.11-sqs");
+    super("aws-sdk-1.11", "aws-sdk-sqs", "aws-sdk");
   }
 
   @Override
@@ -29,9 +29,10 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
   public static class RegisterAdvice {
     @Advice.OnMethodExit(inline = false)
     public static void onExit() {
-      // (indirectly) using SqsImpl class here to make sure it is available from SqsAccess
+      // using SqsImpl class here to make sure it is available from SqsAccess
       // (injected into app classloader) and checked by Muzzle
-      SqsAdviceBridge.referenceForMuzzleOnly();
+      throw new UnsupportedOperationException(
+          SqsImpl.class.getName() + " referencing for muzzle, should never be actually called");
     }
   }
 }

@@ -32,11 +32,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testConnectionSpan by registering(Test::class) {
+  val testConnectionSpan = register<Test>("testConnectionSpan") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -53,17 +49,17 @@ tasks {
     }
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
     }
   }
 
   check {
-    dependsOn(testConnectionSpan, testStableSemconv)
+    dependsOn(testConnectionSpan, testPreviewSemconv)
   }
 }

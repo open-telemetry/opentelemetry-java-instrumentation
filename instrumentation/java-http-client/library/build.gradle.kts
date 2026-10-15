@@ -12,13 +12,13 @@ dependencies {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testPreviewSemconv)
   }
 }

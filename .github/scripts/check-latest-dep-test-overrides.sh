@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 # all missing version coverage should be documented in supported-libraries.md
+# (otherwise add one of the required annotations below)
 
 if grep -r --include build.gradle.kts latestDepTestLibrary instrumentation \
     | grep -v -e :+\" -e :latest.release\" \
@@ -15,7 +16,7 @@ if grep -r --include build.gradle.kts latestDepTestLibrary instrumentation \
   echo
   echo "Found an undocumented latestDepTestLibrary (see above)."
   echo
-  echo "See .gith/scripts/check-latest-dep-test-overrides.sh in this repository"
+  echo "See .github/scripts/check-latest-dep-test-overrides.sh in this repository"
   echo "and add one of the required comments."
   exit 1
 fi

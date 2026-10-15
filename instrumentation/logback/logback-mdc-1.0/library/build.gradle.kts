@@ -4,7 +4,7 @@ plugins {
 
 testing {
   suites {
-    val addBaggageTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("addBaggageTest") {
       targets {
         all {
           testTask.configure {
@@ -14,13 +14,13 @@ testing {
       }
     }
 
-    val loggingKeysTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("loggingKeysTest") {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-id=trace_id_test")
-            jvmArgs("-Dotel.instrumentation.common.logging.span-id=span_id_test")
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags=trace_flags_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
           }
         }
       }

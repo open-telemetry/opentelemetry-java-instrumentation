@@ -1,0 +1,8 @@
+rules:
+  - bean: java.lang:type=Threading
+    mapping:
+      ThreadCount:
+        metric: tomcat.test.stable
+        type: gauge
+        unit: "{thread}"
+        desc: Current number of threads.

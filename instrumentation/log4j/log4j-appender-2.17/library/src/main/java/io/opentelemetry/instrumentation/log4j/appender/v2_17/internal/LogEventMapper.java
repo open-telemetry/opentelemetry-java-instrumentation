@@ -6,21 +6,20 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
-import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
@@ -35,11 +34,6 @@ import org.apache.logging.log4j.message.Message;
  */
 public final class LogEventMapper<T> {
 
-  // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FILEPATH = stringKey("code.filepath");
-  private static final AttributeKey<String> CODE_FUNCTION = stringKey("code.function");
-  private static final AttributeKey<String> CODE_NAMESPACE = stringKey("code.namespace");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
@@ -51,45 +45,39 @@ public final class LogEventMapper<T> {
       Cache.bounded(100);
 
   private static final AttributeKey<String> LOG_MARKER = stringKey("log4j.marker");
+  private static final AttributeKey<String> LOG_BODY_TEMPLATE = stringKey("log.body.template");
+  private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
+      AttributeKey.stringArrayKey("log.body.parameters");
 
   private final ContextDataAccessor<T> contextDataAccessor;
 
   private final boolean captureExperimentalAttributes;
   private final boolean captureCodeAttributes;
-  private final boolean captureMapMessageAttributes;
+  @Nullable private final Predicate<String> mapMessageAttributes;
   private final boolean captureMarkerAttribute;
-  private final List<AttributeKey<String>> captureContextDataAttributeKeys;
-  private final boolean captureAllContextDataAttributes;
-  private final boolean v3Preview;
+  private final boolean captureTemplate;
+  private final boolean captureArguments;
+  @Nullable private final Predicate<String> contextDataAttributes;
 
+  @SuppressWarnings("TooManyParameters")
   public LogEventMapper(
       ContextDataAccessor<T> contextDataAccessor,
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
-      boolean captureMapMessageAttributes,
+      @Nullable Predicate<String> mapMessageAttributes,
       boolean captureMarkerAttribute,
-      List<String> captureContextDataAttributes,
-      boolean v3Preview) {
+      boolean captureTemplate,
+      boolean captureArguments,
+      @Nullable Predicate<String> contextDataAttributes) {
 
     this.contextDataAccessor = contextDataAccessor;
     this.captureCodeAttributes = captureCodeAttributes;
     this.captureExperimentalAttributes = captureExperimentalAttributes;
-    this.captureMapMessageAttributes = captureMapMessageAttributes;
+    this.mapMessageAttributes = mapMessageAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
-    this.captureAllContextDataAttributes =
-        captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
-    if (captureAllContextDataAttributes) {
-      this.captureContextDataAttributeKeys = emptyList();
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
-      for (String key : captureContextDataAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getContextDataAttributeKey(key));
-        }
-      }
-      this.captureContextDataAttributeKeys = keys;
-    }
-    this.v3Preview = v3Preview;
+    this.captureTemplate = captureTemplate;
+    this.captureArguments = captureArguments;
+    this.contextDataAttributes = contextDataAttributes;
   }
 
   /**
@@ -120,6 +108,17 @@ public final class LogEventMapper<T> {
 
     captureMessage(builder, message);
 
+    Object[] parameters = message == null ? null : message.getParameters();
+    if (parameters != null && parameters.length > 0) {
+      if (captureTemplate) {
+        builder.setAttribute(LOG_BODY_TEMPLATE, message.getFormat());
+      }
+      if (captureArguments) {
+        builder.setAttribute(
+            LOG_BODY_PARAMETERS, Arrays.stream(parameters).map(String::valueOf).collect(toList()));
+      }
+    }
+
     if (captureMarkerAttribute) {
       if (marker != null) {
         String markerName = marker.getName();
@@ -145,29 +144,13 @@ public final class LogEventMapper<T> {
       StackTraceElement source = sourceSupplier.get();
       if (source != null) {
         String fileName = source.getFileName();
-        if (emitStableCodeSemconv()) {
-          builder.setAttribute(CODE_FILE_PATH, fileName);
-        }
-        if (emitOldCodeSemconv()) {
-          builder.setAttribute(CODE_FILEPATH, fileName);
-        }
-        if (emitStableCodeSemconv()) {
-          builder.setAttribute(
-              CODE_FUNCTION_NAME, source.getClassName() + "." + source.getMethodName());
-        }
-        if (emitOldCodeSemconv()) {
-          builder.setAttribute(CODE_NAMESPACE, source.getClassName());
-          builder.setAttribute(CODE_FUNCTION, source.getMethodName());
-        }
+        builder.setAttribute(CODE_FILE_PATH, fileName);
+        builder.setAttribute(
+            CODE_FUNCTION_NAME, source.getClassName() + "." + source.getMethodName());
 
         int lineNumber = source.getLineNumber();
         if (lineNumber > 0) {
-          if (emitStableCodeSemconv()) {
-            builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
-          }
-          if (emitOldCodeSemconv()) {
-            builder.setAttribute(CODE_LINENO, (long) lineNumber);
-          }
+          builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
         }
       }
     }
@@ -202,16 +185,18 @@ public final class LogEventMapper<T> {
       builder.setEventName(eventName);
     }
 
-    if (captureMapMessageAttributes) {
+    if (mapMessageAttributes != null) {
       // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
       mapMessage
           .getData()
           .forEach(
               (key, value) -> {
                 if (value != null
+                    && !key.isEmpty()
                     && !key.equals(OTEL_EVENT_NAME.getKey())
                     && (!checkSpecialMapMessageAttribute
-                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
+                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))
+                    && mapMessageAttributes.test(key)) {
                   builder.setAttribute(getMapMessageAttributeKey(key), value.toString());
                 }
               });
@@ -226,21 +211,17 @@ public final class LogEventMapper<T> {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllContextDataAttributes) {
-      contextDataAccessor.forEach(
-          contextData,
-          (key, value) -> {
-            if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-              builder.setAttribute(getContextDataAttributeKey(key), value);
-            }
-          });
+    if (contextDataAttributes == null) {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : captureContextDataAttributeKeys) {
-      String value = contextDataAccessor.getValue(contextData, attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
-    }
+    contextDataAccessor.forEach(
+        contextData,
+        (key, value) -> {
+          if (!OTEL_EVENT_NAME.getKey().equals(key) && contextDataAttributes.test(key)) {
+            builder.setAttribute(getContextDataAttributeKey(key), value);
+          }
+        });
   }
 
   public static AttributeKey<String> getContextDataAttributeKey(String key) {
@@ -248,8 +229,7 @@ public final class LogEventMapper<T> {
   }
 
   public AttributeKey<String> getMapMessageAttributeKey(String key) {
-    return mapMessageAttributeKeyCache.computeIfAbsent(
-        key, k -> stringKey(v3Preview ? k : "log4j.map_message." + k));
+    return mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static Severity levelToSeverity(Level level) {

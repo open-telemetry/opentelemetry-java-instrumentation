@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PR
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH;
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_PID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
@@ -34,8 +35,55 @@ class ProcessResourceTest {
     assertResource(true);
   }
 
+  @Test
+  void commandAttributesDisabledByDefault() {
+    Resource resource = ProcessResource.create();
+    Attributes attributes = resource.getAttributes();
+
+    assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
+    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH)).isNotNull();
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
+    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
+  }
+
+  @Test
+  @SetSystemProperty(key = "sun.java.command", value = "app.jar -DappSecret=abc\ndef --other=test")
+  void commandAttributesEnabled() {
+    Resource resource = ProcessResource.create(true);
+    Attributes attributes = resource.getAttributes();
+
+    if (isJava8() || IS_WINDOWS) {
+      assertThat(attributes.get(PROCESS_COMMAND_LINE))
+          .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
+          .contains("-DtestSecret=***")
+          .contains("-DtestPassword=***")
+          .contains("-DtestMultilineSecret=***")
+          .doesNotContain("leaked")
+          .contains("-DtestNotRedacted=test")
+          .endsWith(" app.jar -DappSecret=***");
+    } else {
+      assertThat(attributes.get(PROCESS_COMMAND_ARGS))
+          .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
+          .contains("-DtestSecret=***")
+          .contains("-DtestPassword=***")
+          .contains("-DtestMultilineSecret=***")
+          .contains("-DtestNotRedacted=test");
+    }
+  }
+
+  @Test
+  @SetSystemProperty(key = "sun.java.command", value = "app.jar -Dmy secret=abc --other=test")
+  void commandLineScrubsPropertyNameContainingSpaces() {
+    assumeTrue(isJava8() || IS_WINDOWS);
+
+    Resource resource = ProcessResource.create(true);
+    Attributes attributes = resource.getAttributes();
+
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).endsWith(" app.jar -Dmy secret=***");
+  }
+
   private static void assertResource(boolean windows) {
-    Resource resource = ProcessResource.buildResource();
+    Resource resource = ProcessResource.create();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     Attributes attributes = resource.getAttributes();
 
@@ -43,19 +91,11 @@ class ProcessResourceTest {
     assertThat(attributes.get(PROCESS_EXECUTABLE_PATH))
         .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
 
-    boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
-    if (java8 || IS_WINDOWS) {
-      assertThat(attributes.get(PROCESS_COMMAND_LINE))
-          .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
-          .contains("-DtestSecret=***")
-          .contains("-DtestPassword=***")
-          .contains("-DtestNotRedacted=test");
-    } else {
-      assertThat(attributes.get(PROCESS_COMMAND_ARGS))
-          .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
-          .contains("-DtestSecret=***")
-          .contains("-DtestPassword=***")
-          .contains("-DtestNotRedacted=test");
-    }
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
+    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
+  }
+
+  private static boolean isJava8() {
+    return "1.8".equals(System.getProperty("java.specification.version"));
   }
 }

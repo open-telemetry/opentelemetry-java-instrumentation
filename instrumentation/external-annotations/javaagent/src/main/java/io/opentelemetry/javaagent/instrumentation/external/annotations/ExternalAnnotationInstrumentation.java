@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.external.annotations.ExternalAnnotationSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableList;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -27,7 +28,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
+import io.opentelemetry.javaagent.tooling.config.internal.MethodsConfigurationParser;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,16 +58,17 @@ class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   // visible for testing
   static final List<String> DEFAULT_ANNOTATIONS =
-      asList(
-          "com.appoptics.api.ext.LogMethod",
-          "com.newrelic.api.agent.Trace",
-          "com.signalfx.tracing.api.Trace",
-          "com.tracelytics.api.ext.LogMethod",
-          "datadog.trace.api.Trace",
-          "io.opentracing.contrib.dropwizard.Trace",
-          "kamon.annotation.Trace",
-          "kamon.annotation.api.Trace",
-          "org.springframework.cloud.sleuth.annotation.NewSpan");
+      unmodifiableList(
+          asList(
+              "com.appoptics.api.ext.LogMethod",
+              "com.newrelic.api.agent.Trace",
+              "com.signalfx.tracing.api.Trace",
+              "com.tracelytics.api.ext.LogMethod",
+              "datadog.trace.api.Trace",
+              "io.opentracing.contrib.dropwizard.Trace",
+              "kamon.annotation.Trace",
+              "kamon.annotation.api.Trace",
+              "org.springframework.cloud.sleuth.annotation.NewSpan"));
 
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;

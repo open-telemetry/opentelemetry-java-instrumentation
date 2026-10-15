@@ -9,7 +9,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.logging.internal.AbstractSpanLoggingCustomizerProvider;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 
 /** Adds span logging exporter for debug mode */
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)

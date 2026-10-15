@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.JaxWsSingletons.instrumenter;
@@ -68,7 +67,7 @@ class WebServiceProviderInstrumentation implements TypeInstrumentation {
         if (callDepth.getAndIncrement() > 0) {
           return new AdviceScope(callDepth, null, null, null);
         }
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         JaxWsRequest request = new JaxWsRequest(target.getClass(), methodName);
         if (!instrumenter().shouldStart(parentContext, request)) {
           return new AdviceScope(callDepth, null, null, null);
@@ -78,7 +77,10 @@ class WebServiceProviderInstrumentation implements TypeInstrumentation {
       }
 
       public void end(@Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0 || scope == null) {
+        if (callDepth.decrementAndGet() > 0
+            || scope == null
+            || context == null
+            || request == null) {
           return;
         }
         scope.close();

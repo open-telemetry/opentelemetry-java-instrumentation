@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
@@ -132,7 +131,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(ClassicHttpRequest request) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
 
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;

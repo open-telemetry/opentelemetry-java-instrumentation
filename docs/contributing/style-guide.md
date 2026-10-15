@@ -19,6 +19,15 @@ In addition to Google Java Style formatting, spotless applies
 [custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
 (e.g. rewriting `Objects.requireNonNull` to a static import).
 
+Markdown files are formatted and linted separately through
+[flint](https://github.com/grafana/flint), run via [mise](https://mise.jdx.dev/):
+
+```bash
+mise run lint:fix
+```
+
+flint also checks that links in markdown files resolve.
+
 #### Pre-commit hook
 
 To completely delegate code style formatting to the machine,
@@ -49,6 +58,12 @@ still allows the code to function correctly.
 
 Static fields should be `private`, except for constant-like static fields with an
 uppercase (`SCREAMING_SNAKE_CASE`) name.
+
+### Public API
+
+Public API consists of Java types that published artifacts intentionally expose for use by external
+code. A `public` modifier alone does not make a class public API. Determine API status from the
+artifact's published contract and intended use, not source path or visibility alone.
 
 ### Internal packages
 
@@ -87,16 +102,7 @@ methods.
 
 ### `final` keyword usage
 
-**Classes**: Declare public classes `final` where possible, but only in public API code.
-
-The following are **not** public API — do not add `final` to classes there:
-
-- `javaagent/src/main/` — internal implementation detail, even when classes are `public` for
-  service loading or cross-package access
-- `.internal` packages
-- Test code — `src/test/` directories and modules whose directory name starts or ends with
-  `testing` or `tests` (e.g., `testing/`, `testing-common/`, `quarkus-2.0-testing/`,
-  `smoke-tests/`)
+**Classes**: Declare public API classes `final` where possible.
 
 **Methods**: Declare `final` only in non-final public API classes.
 
@@ -121,9 +127,17 @@ Examples that may remain uppercase include:
 - literal strings, numbers, and booleans that behave like module constants
 - immutable value objects that are treated as fixed constants after initialization, such as
   `Duration` timeouts, intervals, or deadlines
-- semantic keys and handles such as `AttributeKey`, `ContextKey`, `VirtualField`,
-  `MethodHandle`, and `Pattern`
 - canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
+
+Semantic key and handle types such as `AttributeKey`, `ContextKey`, `VirtualField`, `MethodHandle`,
+and `Pattern` identify a fixed, well-known slot or pattern rather than a mutable collaborator, so
+`static final` fields of these types are good candidates for uppercase names.
+
+`VirtualField` handles are a specific case where this is required: a `static final VirtualField`
+field **must** use an uppercase name, regardless of visibility (`private` or `public`) and
+regardless of the fact that `VirtualField.find(...)` creates the handle at runtime rather than at
+compile time. The runtime-created origin does not make it a mutable collaborator — it still
+identifies one fixed, well-known storage slot for the lifetime of the class.
 
 Private `static final` arrays of constant or immutable values should also use uppercase names when
 the array is not exposed outside the class and is not mutated after initialization. Even though Java

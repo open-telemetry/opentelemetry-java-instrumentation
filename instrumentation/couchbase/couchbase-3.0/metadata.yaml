@@ -1,0 +1,14 @@
+display_name: Couchbase Client
+description: >
+  This instrumentation uses the Couchbase tracing SPI to create spans for Couchbase Java SDK 3.0.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+library_link: https://github.com/couchbase/couchbase-java-client
+configurations:
+  - name: otel.instrumentation.couchbase.emit-experimental-telemetry
+    declarative_name: java.couchbase.emit_experimental_telemetry/development
+    description: >
+      Enables experimental span attributes and the request_encoding and dispatch_to_server internal
+      spans emitted by the Couchbase SDK.
+    type: boolean
+    default: false

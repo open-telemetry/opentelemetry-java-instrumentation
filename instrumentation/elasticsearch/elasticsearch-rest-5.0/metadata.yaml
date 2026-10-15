@@ -5,17 +5,12 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
 configurations:
-  - name: otel.instrumentation.elasticsearch.capture-search-query
-    declarative_name: java.elasticsearch.capture_search_query
+  - name: otel.instrumentation.elasticsearch.query-sanitization.enabled
+    declarative_name: java.elasticsearch.query_sanitization.enabled
     description: >
-      Enable the capture of search query bodies. It is important to note that Elasticsearch queries
-      may contain personal or sensitive information.
+      Enables sanitization of the captured search query bodies. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
     type: boolean
-    default: false
-  - name: otel.instrumentation.http.known-methods
-    declarative_name: java.common.http.known_methods
-    description: >
-      Configures the instrumentation to recognize an alternative set of HTTP request methods. All
-      other methods will be treated as `_OTHER`.
-    type: list
-    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+  - ref: common.db.query-sanitization.enabled
+  - ref: http.known-methods

@@ -11,10 +11,18 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.AsyncMethodCallbackUtil;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientCallContext;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientProtocolDecorator;
+import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerAsyncProcessorDecorator;
+import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerInProtocolDecorator;
+import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerOutProtocolDecorator;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerProcessorDecorator;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.SocketAccessor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.thrift.AsyncProcessFunction;
+import org.apache.thrift.AsyncProcessorUtil;
+import org.apache.thrift.TBaseAsyncProcessor;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.TServiceClient;
 import org.apache.thrift.async.AsyncMethodCallback;
@@ -50,7 +58,33 @@ public final class ThriftTelemetry {
 
   /** Returns a {@link TProcessor} that instruments Thrift server requests. */
   public TProcessor wrapServerProcessor(TProcessor delegate, String serviceName) {
+    if (delegate instanceof TBaseAsyncProcessor) {
+      TBaseAsyncProcessor<?> asyncProcessor = (TBaseAsyncProcessor<?>) delegate;
+      Map<String, AsyncProcessFunction<?, ?, ?, ?>> processMap =
+          AsyncProcessorUtil.getProcessMap(asyncProcessor);
+      Map<String, AsyncProcessFunction<?, ?, ?, ?>> copy = new HashMap<>(processMap);
+      for (Map.Entry<String, AsyncProcessFunction<?, ?, ?, ?>> entry : copy.entrySet()) {
+        processMap.put(entry.getKey(), AsyncMethodCallbackUtil.wrap(entry.getValue()));
+      }
+      return new ServerAsyncProcessorDecorator(asyncProcessor, serviceName);
+    }
     return new ServerProcessorDecorator(delegate, serviceName, serverInstrumenter);
+  }
+
+  /**
+   * Returns a {@link TProtocolFactory} that instruments incoming protocol for Thrift server
+   * requests.
+   */
+  public TProtocolFactory wrapServerInProtocolFactory(TProtocolFactory delegate) {
+    return new ServerInProtocolDecorator.Factory(delegate, serverInstrumenter);
+  }
+
+  /**
+   * Returns a {@link TProtocolFactory} that instruments outgoing protocol for Thrift server
+   * requests.
+   */
+  public TProtocolFactory wrapServerOutProtocolFactory(TProtocolFactory delegate) {
+    return new ServerOutProtocolDecorator.Factory(delegate);
   }
 
   /** Returns a {@link TProtocol} that instruments Thrift client requests. */

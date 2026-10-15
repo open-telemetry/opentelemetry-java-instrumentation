@@ -4,17 +4,17 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.39.0")
+  implementation("com.linecorp.armeria:armeria-junit5:1.42.0")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
-  implementation("com.google.protobuf:protobuf-java-util:4.35.0")
+  implementation("com.google.protobuf:protobuf-java-util:4.36.2")
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   // we'll replace caffeine shaded in armeria with a later version that doesn't use Unsafe. Caffeine
   // 3+ doesn't work with Java 8, but that is fine since --sun-misc-unsafe-memory-access=deny
   // requires Java 23.
   if (otelProps.denyUnsafe) {
-    implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.3.1")
   }
 }
 
@@ -74,6 +74,10 @@ tasks {
     filesMatching("META-INF/services/**") {
       duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
+    // avoid warning about duplicate kotlin module files being silently dropped
+    filesMatching("META-INF/*.kotlin_module") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
     // exclude caffeine shaded in armeria
     if (otelProps.denyUnsafe) {
       exclude("com/linecorp/armeria/internal/shaded/caffeine/**")
@@ -84,7 +88,7 @@ tasks {
     relocationPrefix = "io.opentelemetry.testing.internal"
   }
 
-  val extractShadowJar by registering(Copy::class) {
+  register<Copy>("extractShadowJar") {
     dependsOn(shadowJar)
     // there's both "LICENSE" file and "license" and without excluding one of these build fails on case insensitive file systems
     // there's a LICENSE.txt file that has the same contents anyway, so we're not losing anything excluding that

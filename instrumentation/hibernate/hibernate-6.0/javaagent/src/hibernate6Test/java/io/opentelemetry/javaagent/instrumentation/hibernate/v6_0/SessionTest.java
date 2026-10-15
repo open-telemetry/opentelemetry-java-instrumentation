@@ -6,22 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
@@ -32,7 +25,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -135,7 +127,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Session." + parameter.methodName + " " + parameter.resource),
-                span -> assertClientSpan(span, trace.getSpan(1), "SELECT"),
+                span -> assertClientSpan(span, trace.getSpan(1), "select"),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -224,7 +216,7 @@ class SessionTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAttachesStateToQueryParameters")
-  void testAttachesStateToQuery(Parameter parameter) {
+  void testAttachesStateToQuery(QueryParameter parameter) {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -240,28 +232,15 @@ class SessionTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameter.sessionSpanName),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
-                            equalTo(maybeStable(DB_NAME), "db1"),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT Value" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "Value")),
+                            equalTo(DB_SYSTEM_NAME, "h2database"),
+                            equalTo(DB_NAMESPACE, "db1"),
+                            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
+                            equalTo(DB_QUERY_SUMMARY, parameter.clientSpanName)),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -316,7 +295,7 @@ class SessionTest extends AbstractHibernateTest {
                   sessionId2.set(
                       trace.getSpan(2).getAttributes().get(stringKey("hibernate.session_id")));
                 },
-                span -> assertClientSpan(span, trace.getSpan(2), "INSERT"),
+                span -> assertClientSpan(span, trace.getSpan(2), "insert"),
                 span -> {
                   assertSessionSpan(
                       span,
@@ -334,8 +313,8 @@ class SessionTest extends AbstractHibernateTest {
                 span ->
                     assertSpanWithSessionId(
                         span, trace.getSpan(0), "Transaction.commit", sessionId1.get()),
-                span -> assertClientSpan(span, trace.getSpan(6), "INSERT"),
-                span -> assertClientSpan(span, trace.getSpan(6), "DELETE")));
+                span -> assertClientSpan(span, trace.getSpan(6), "insert"),
+                span -> assertClientSpan(span, trace.getSpan(6), "delete")));
 
     if (ExperimentalTestHelper.EXPERIMENTAL_ATTRIBUTES) {
       assertThat(sessionId2.get()).isNotEqualTo(sessionId1.get());
@@ -365,20 +344,18 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "lock",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(0),
                     null))),
         Arguments.of(
             named(
                 "lock with entity name",
-                new Parameter("lock", "Value", null, sessionMethodTests.get(1), null))),
+                new Parameter("lock", "Value", sessionMethodTests.get(1), null))),
         Arguments.of(
             named(
                 "lock with null name",
                 new Parameter(
                     "lock",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(2),
                     null))),
         Arguments.of(
@@ -387,7 +364,6 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "lock",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(3),
                     null))),
         Arguments.of(
@@ -396,20 +372,18 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "refresh",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(4),
                     null))),
         Arguments.of(
             named(
                 "refresh with entity name",
-                new Parameter("refresh", "Value", null, sessionMethodTests.get(5), null))),
+                new Parameter("refresh", "Value", sessionMethodTests.get(5), null))),
         Arguments.of(
             named(
                 "get with entity name",
                 new Parameter(
                     "get",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(6),
                     null))),
         Arguments.of(
@@ -418,7 +392,6 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "get",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(7),
                     null))));
   }
@@ -468,7 +441,6 @@ class SessionTest extends AbstractHibernateTest {
                     "refresh",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     null,
-                    null,
                     statelessSessionMethodTests.get(0)))),
         Arguments.of(
             named(
@@ -476,7 +448,6 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "refresh",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     null,
                     statelessSessionMethodTests.get(1)))),
         Arguments.of(
@@ -486,7 +457,6 @@ class SessionTest extends AbstractHibernateTest {
                     "get",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     null,
-                    null,
                     statelessSessionMethodTests.get(2)))),
         Arguments.of(
             named(
@@ -494,7 +464,6 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "get",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     null,
                     statelessSessionMethodTests.get(3)))),
         Arguments.of(
@@ -504,7 +473,6 @@ class SessionTest extends AbstractHibernateTest {
                     "insert",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     null,
-                    null,
                     statelessSessionMethodTests.get(4)))),
         Arguments.of(
             named(
@@ -512,7 +480,6 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "insert",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     null,
                     statelessSessionMethodTests.get(5)))),
         Arguments.of(
@@ -522,7 +489,6 @@ class SessionTest extends AbstractHibernateTest {
                     "insert",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     null,
-                    null,
                     statelessSessionMethodTests.get(6)))),
         Arguments.of(
             named(
@@ -530,7 +496,6 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "update",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     null,
                     statelessSessionMethodTests.get(7)))),
         Arguments.of(
@@ -540,7 +505,6 @@ class SessionTest extends AbstractHibernateTest {
                     "update",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     null,
-                    null,
                     statelessSessionMethodTests.get(8)))),
         Arguments.of(
             named(
@@ -549,7 +513,6 @@ class SessionTest extends AbstractHibernateTest {
                     "delete",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     null,
-                    null,
                     statelessSessionMethodTests.get(9)))),
         Arguments.of(
             named(
@@ -557,7 +520,6 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "delete",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     null,
                     statelessSessionMethodTests.get(10)))));
   }
@@ -583,13 +545,12 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "replicate",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(0),
                     null))),
         Arguments.of(
             named(
                 "replicate by entityName",
-                new Parameter("replicate", "Value", null, sessionMethodTests.get(1), null))));
+                new Parameter("replicate", "Value", sessionMethodTests.get(1), null))));
   }
 
   private static Stream<Arguments> provideHibernateCommitActionParameters() {
@@ -632,63 +593,58 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "save",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(0),
                     null))),
         Arguments.of(
             named(
                 "save with entity name",
-                new Parameter("save", "Value", null, sessionMethodTests.get(1), null))),
+                new Parameter("save", "Value", sessionMethodTests.get(1), null))),
         Arguments.of(
             named(
                 "saveOrUpdate save",
                 new Parameter(
                     "saveOrUpdate",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(2),
                     null))),
         Arguments.of(
             named(
                 "saveOrUpdate save with entity name",
-                new Parameter("saveOrUpdate", "Value", null, sessionMethodTests.get(3), null))),
+                new Parameter("saveOrUpdate", "Value", sessionMethodTests.get(3), null))),
         Arguments.of(
             named(
                 "saveOrUpdate update with entity name",
-                new Parameter("saveOrUpdate", "Value", null, sessionMethodTests.get(4), null))),
+                new Parameter("saveOrUpdate", "Value", sessionMethodTests.get(4), null))),
         Arguments.of(
             named(
                 "merge",
                 new Parameter(
                     "merge",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(5),
                     null))),
         Arguments.of(
             named(
                 "merge with entity name",
-                new Parameter("merge", "Value", null, sessionMethodTests.get(6), null))),
+                new Parameter("merge", "Value", sessionMethodTests.get(6), null))),
         Arguments.of(
             named(
                 "persist",
                 new Parameter(
                     "persist",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(7),
                     null))),
         Arguments.of(
             named(
                 "persist with entity name",
-                new Parameter("persist", "Value", null, sessionMethodTests.get(8), null))),
+                new Parameter("persist", "Value", sessionMethodTests.get(8), null))),
         Arguments.of(
             named(
                 "persist with null entity name",
                 new Parameter(
                     "persist",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(9),
                     null))),
         Arguments.of(
@@ -697,26 +653,24 @@ class SessionTest extends AbstractHibernateTest {
                 new Parameter(
                     "update",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(10),
                     null))),
         Arguments.of(
             named(
                 "update by entityName (Session)",
-                new Parameter("update", "Value", null, sessionMethodTests.get(11), null))),
+                new Parameter("update", "Value", sessionMethodTests.get(11), null))),
         Arguments.of(
             named(
                 "delete (Session)",
                 new Parameter(
                     "delete",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    null,
                     sessionMethodTests.get(12),
                     null))),
         Arguments.of(
             named(
                 "delete by entityName (Session)",
-                new Parameter("delete", "Value", null, sessionMethodTests.get(13), null))));
+                new Parameter("delete", "Value", sessionMethodTests.get(13), null))));
   }
 
   private static Stream<Arguments> provideAttachesStateToQueryParameters() {
@@ -731,55 +685,60 @@ class SessionTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "createQuery",
-                new Parameter(
-                    "createQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    queryBuildMethods.get(0),
-                    null,
-                    null))),
+                new QueryParameter(
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    "select Value",
+                    queryBuildMethods.get(0)))),
         Arguments.of(
             named(
                 "getNamedQuery",
-                new Parameter(
-                    "getNamedQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    queryBuildMethods.get(1),
-                    null,
-                    null))),
+                new QueryParameter(
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    "select Value",
+                    queryBuildMethods.get(1)))),
         Arguments.of(
             named(
                 "createNativeQuery",
-                new Parameter(
-                    "createNativeQuery", "SELECT Value", queryBuildMethods.get(2), null, null))),
+                new QueryParameter("SELECT Value", "SELECT Value", queryBuildMethods.get(2)))),
         Arguments.of(
             named(
                 "createSelectionQuery",
-                new Parameter(
-                    "createSelectionQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    queryBuildMethods.get(3),
-                    null,
-                    null))));
+                new QueryParameter(
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    "select Value",
+                    queryBuildMethods.get(3)))));
   }
 
   private static class Parameter {
     final String methodName;
     final String resource;
-    final Function<Session, SelectionQuery<?>> queryBuildMethod;
     final BiConsumer<Session, Value> sessionMethodTest;
     final BiConsumer<StatelessSession, Value> statelessSessionMethodTest;
 
     Parameter(
         String methodName,
         String resource,
-        Function<Session, SelectionQuery<?>> queryBuildMethod,
         BiConsumer<Session, Value> sessionMethodTest,
         BiConsumer<StatelessSession, Value> statelessSessionMethodTest) {
       this.methodName = methodName;
       this.resource = resource;
       this.sessionMethodTest = sessionMethodTest;
-      this.queryBuildMethod = queryBuildMethod;
       this.statelessSessionMethodTest = statelessSessionMethodTest;
+    }
+  }
+
+  private static class QueryParameter {
+    final String sessionSpanName;
+    final String clientSpanName;
+    final Function<Session, SelectionQuery<?>> queryBuildMethod;
+
+    QueryParameter(
+        String sessionSpanName,
+        String clientSpanName,
+        Function<Session, SelectionQuery<?>> queryBuildMethod) {
+      this.sessionSpanName = sessionSpanName;
+      this.clientSpanName = clientSpanName;
+      this.queryBuildMethod = queryBuildMethod;
     }
   }
 
@@ -808,48 +767,31 @@ class SessionTest extends AbstractHibernateTest {
     return span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
-            equalTo(maybeStable(DB_NAME), "db1"),
-            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
-            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
-            satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
+            equalTo(DB_SYSTEM_NAME, "h2database"),
+            equalTo(DB_NAMESPACE, "db1"),
+            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
             satisfies(
                 DB_QUERY_SUMMARY,
                 val -> {
-                  if (emitStableDatabaseSemconv()) {
-                    val.isInstanceOf(String.class);
-                  } else {
-                    val.isNull();
-                  }
+                  val.isInstanceOf(String.class);
                 }),
             satisfies(
-                maybeStable(DB_OPERATION),
+                DB_OPERATION_NAME,
                 val -> {
-                  if (emitStableDatabaseSemconv()) {
-                    val.isNull();
-                  } else {
-                    val.isInstanceOf(String.class);
-                  }
-                }),
-            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
+                  val.isNull();
+                }));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(
       SpanDataAssert span, SpanData parent, String verb) {
-    return span.hasName(
-            emitStableDatabaseSemconv() ? verb.concat(" Value") : verb.concat(" db1.Value"))
+    return span.hasName(verb.concat(" Value"))
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
-            equalTo(maybeStable(DB_NAME), "db1"),
-            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
-            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
-            satisfies(
-                maybeStable(DB_STATEMENT), val -> val.startsWith(verb.toLowerCase(Locale.ROOT))),
-            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null),
-            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : verb),
-            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
+            equalTo(DB_SYSTEM_NAME, "h2database"),
+            equalTo(DB_NAMESPACE, "db1"),
+            satisfies(DB_QUERY_TEXT, val -> val.startsWithIgnoringCase(verb)),
+            equalTo(DB_QUERY_SUMMARY, verb + " Value"));
   }
 }

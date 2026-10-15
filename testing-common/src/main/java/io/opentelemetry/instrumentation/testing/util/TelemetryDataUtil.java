@@ -13,11 +13,14 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -30,14 +33,22 @@ import java.util.function.Supplier;
 
 public class TelemetryDataUtil {
 
+  public static SpanContext asRemote(SpanContext spanContext) {
+    return SpanContext.createFromRemoteParent(
+        spanContext.getTraceId(),
+        spanContext.getSpanId(),
+        spanContext.getTraceFlags(),
+        spanContext.getTraceState());
+  }
+
   public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
     List<SpanKind> list = asList(spanKinds);
-    return Comparator.comparing(span -> list.indexOf(span.get(0).getKind()));
+    return Comparator.comparingInt(span -> list.indexOf(span.get(0).getKind()));
   }
 
   public static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
     List<String> list = asList(names);
-    return Comparator.comparing(span -> list.indexOf(span.get(0).getName()));
+    return Comparator.comparingInt(span -> list.indexOf(span.get(0).getName()));
   }
 
   public static <T extends Comparable<T>> Comparator<List<SpanData>> comparingRootSpanAttribute(
@@ -96,17 +107,29 @@ public class TelemetryDataUtil {
     Set<String> missingScopeVersionErrors = new LinkedHashSet<>();
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
-        InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
-        if (!scopeInfo.getName().startsWith("test") && scopeInfo.getVersion() == null) {
-          missingScopeVersionErrors.add(
-              "Instrumentation version of module "
-                  + scopeInfo.getName()
-                  + " was empty; make sure that the instrumentation name matches the gradle"
-                  + " module name");
-        }
+        recordIfMissingScopeVersion(span.getInstrumentationScopeInfo(), missingScopeVersionErrors);
       }
     }
     assertThat(missingScopeVersionErrors).isEmpty();
+  }
+
+  public static void assertMetricScopeVersion(Collection<MetricData> metrics) {
+    Set<String> missingScopeVersionErrors = new LinkedHashSet<>();
+    for (MetricData metric : metrics) {
+      recordIfMissingScopeVersion(metric.getInstrumentationScopeInfo(), missingScopeVersionErrors);
+    }
+    assertThat(missingScopeVersionErrors).isEmpty();
+  }
+
+  private static void recordIfMissingScopeVersion(
+      InstrumentationScopeInfo scopeInfo, Set<String> errors) {
+    if (!scopeInfo.getName().startsWith("test") && scopeInfo.getVersion() == null) {
+      errors.add(
+          "Instrumentation version of module "
+              + scopeInfo.getName()
+              + " was empty; make sure that the instrumentation name matches the gradle"
+              + " module name");
+    }
   }
 
   private static long elapsedSeconds(long startTime) {

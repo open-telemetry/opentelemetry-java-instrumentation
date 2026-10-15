@@ -19,8 +19,17 @@ dependencies {
   bootstrap(project(":instrumentation:undertow-1.4:bootstrap"))
 }
 
-tasks.test {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
+tasks {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
 }
 
 // since 2.3.x, undertow is compiled by JDK 11

@@ -16,10 +16,14 @@ import javax.annotation.Nullable;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TField;
 import org.apache.thrift.protocol.TMessage;
+import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
+import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.protocol.TProtocolUtil;
 import org.apache.thrift.protocol.TStruct;
 import org.apache.thrift.protocol.TType;
+import org.apache.thrift.transport.TTransport;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -29,8 +33,8 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   private final TProtocol protocol;
   private final Instrumenter<ThriftRequest, ThriftResponse> instrumenter;
-  private final String serviceName;
-
+  private boolean isOneway;
+  @Nullable private String serviceName;
   @Nullable private String methodName;
   @Nullable private ThriftRequest currentRequest;
   @Nullable private Context currentContext;
@@ -39,7 +43,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   public ServerInProtocolDecorator(
       TProtocol protocol,
-      String serviceName,
+      @Nullable String serviceName,
       Instrumenter<ThriftRequest, ThriftResponse> instrumenter) {
     super(protocol);
     this.protocol = protocol;
@@ -51,6 +55,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   public TMessage readMessageBegin() throws TException {
     TMessage message = super.readMessageBegin();
     this.methodName = message.name;
+    this.isOneway = message.type == TMessageType.ONEWAY;
     structDepth = 0;
     return message;
   }
@@ -73,6 +78,11 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   @Override
   public TField readFieldBegin() throws TException {
+    // ignore context propagation fields when the span has already been started
+    if (currentRequest != null) {
+      return readNextField();
+    }
+
     TField field = super.readFieldBegin();
     // start span when context propagation field is read, if the message doesn't include context
     // propagation field, span will be started in readMessageEnd()
@@ -83,14 +93,23 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       ThriftRequest request = new ThriftRequest(methodName, serviceName, getSocket(), headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
-        // proceed to the next field
-        return this.readFieldBegin();
+        return readNextField();
       }
       currentRequest = request;
       currentContext = instrumenter.start(parentContext, request);
 
-      // proceed to the next field
-      return this.readFieldBegin();
+      return readNextField();
+    }
+    return field;
+  }
+
+  private TField readNextField() throws TException {
+    TField field = super.readFieldBegin();
+    // skip over context propagation fields
+    while (isContextPropagationField(field)) {
+      TProtocolUtil.skip(this, field.type);
+      super.readFieldEnd();
+      field = super.readFieldBegin();
     }
     return field;
   }
@@ -123,20 +142,58 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     return socket;
   }
 
+  public void closeScope() {
+    if (currentScope != null) {
+      currentScope.close();
+    }
+    currentScope = null;
+  }
+
   public void endSpan(@Nullable Throwable throwable, boolean failed) {
     if (currentContext == null || currentRequest == null) {
       return;
     }
-    if (currentScope != null) {
-      currentScope.close();
-    }
     instrumenter.end(
         currentContext, currentRequest, failed ? ThriftResponse.FAILED : null, throwable);
+    // Avoid duplicate end invocations from exceptions in asynchronous workflows
+    currentContext = null;
+    currentRequest = null;
   }
 
   private boolean isContextPropagationField(TField field) {
     return structDepth == 1
         && field.id == ContextPropagationUtil.TRACE_CONTEXT_FIELD_ID
         && field.type == TType.MAP;
+  }
+
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+  }
+
+  public boolean isOneway() {
+    return isOneway;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static class Factory implements TProtocolFactory {
+
+    private final TProtocolFactory protocolFactory;
+    private final Instrumenter<ThriftRequest, ThriftResponse> instrumenter;
+
+    public Factory(
+        TProtocolFactory protocolFactory,
+        Instrumenter<ThriftRequest, ThriftResponse> instrumenter) {
+      this.protocolFactory = protocolFactory;
+      this.instrumenter = instrumenter;
+    }
+
+    @Override
+    public TProtocol getProtocol(TTransport transport) {
+      TProtocol protocol = protocolFactory.getProtocol(transport);
+      return new ServerInProtocolDecorator(protocol, null, instrumenter);
+    }
   }
 }

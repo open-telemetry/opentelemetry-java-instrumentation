@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc.v8_5;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -15,11 +15,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class TomcatJdbcInstrumentationModule extends InstrumentationModule {
   public TomcatJdbcInstrumentationModule() {
-    super("tomcat-jdbc", "tomcat-jdbc-8.5");
+    super("tomcat-jdbc-8.5", "tomcat-jdbc");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new DataSourceProxyInstrumentation());
+    return asList(new PoolPropertiesInstrumentation(), new DataSourceProxyInstrumentation());
   }
 }

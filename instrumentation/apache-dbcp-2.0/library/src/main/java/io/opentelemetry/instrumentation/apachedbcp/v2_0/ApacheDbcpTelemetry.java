@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.apachedbcp.v2_0;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import org.apache.commons.dbcp2.BasicDataSourceMXBean;
 
 /** Entrypoint for instrumenting Apache DBCP database connection pools. */
@@ -24,6 +25,12 @@ public final class ApacheDbcpTelemetry {
   /** Start collecting metrics for given connection pool. */
   public void registerMetrics(BasicDataSourceMXBean dataSource, String dataSourceName) {
     DataSourceMetrics.registerMetrics(openTelemetry, dataSource, dataSourceName);
+  }
+
+  public void registerMetrics(
+      BasicDataSourceMXBean dataSource, String dataSourceName, Attributes databaseAttributes) {
+    DataSourceMetrics.registerMetrics(
+        openTelemetry, dataSource, dataSourceName, databaseAttributes);
   }
 
   /** Stop collecting metrics for given connection pool. */

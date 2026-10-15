@@ -28,16 +28,19 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.glassfish.jaxb:jaxb-runtime:2.3.3")
 
-  latestDepTestLibrary("org.hibernate:hibernate-core:5.+") // documented limitation
-  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // documented limitation
+  latestDepTestLibrary("org.hibernate:hibernate-core:5.+") // see hibernate-6.0 module
+  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // see hibernate-6.0 module
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -45,15 +48,17 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testDisabled, testExperimental)
   }
 }

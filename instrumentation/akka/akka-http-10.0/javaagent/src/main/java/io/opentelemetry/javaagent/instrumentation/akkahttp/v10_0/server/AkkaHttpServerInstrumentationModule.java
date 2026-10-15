@@ -11,20 +11,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AkkaHttpServerInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
   public AkkaHttpServerInstrumentationModule() {
-    super("akka-http", "akka-http-10.0", "akka-http-server");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    return "akka-http";
+    super("akka-http-10.0", "akka-http-server", "akka-http", "akka");
   }
 
   @Override
@@ -39,6 +32,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new HttpExtServerInstrumentation(),
+        new HttpServerAttributesInstrumentation(),
         new GraphInterpreterInstrumentation(),
         new AkkaHttpServerSourceInstrumentation());
   }

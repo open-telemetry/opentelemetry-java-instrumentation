@@ -17,20 +17,25 @@ public class SpringJmsSingletons {
   public static final boolean RECEIVE_TELEMETRY_ENABLED =
       ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
   private static final Instrumenter<MessageWithDestination, Void> listenerInstrumenter;
+  private static final Instrumenter<MessageWithDestination, Void>
+      listenerInstrumenterWithConsumedMessages;
   private static final Instrumenter<MessageWithDestination, Void> receiveInstrumenter;
 
   static {
     JmsInstrumenterFactory factory =
         new JmsInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
-            .setMessagingReceiveTelemetryEnabled(RECEIVE_TELEMETRY_ENABLED);
+            .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
 
-    listenerInstrumenter = factory.createConsumerProcessInstrumenter(true);
+    listenerInstrumenter = factory.createConsumerProcessInstrumenter(false);
+    listenerInstrumenterWithConsumedMessages = factory.createConsumerProcessInstrumenter(true);
     receiveInstrumenter = factory.createConsumerReceiveInstrumenter();
   }
 
-  public static Instrumenter<MessageWithDestination, Void> listenerInstrumenter() {
-    return listenerInstrumenter;
+  public static Instrumenter<MessageWithDestination, Void> listenerInstrumenter(
+      boolean consumedMessagesRecorded) {
+    return consumedMessagesRecorded
+        ? listenerInstrumenter
+        : listenerInstrumenterWithConsumedMessages;
   }
 
   public static Instrumenter<MessageWithDestination, Void> receiveInstrumenter() {

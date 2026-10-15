@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -112,9 +113,7 @@ public abstract class AbstractBaseAwsClientTest {
 
                       if (hasRequestId()) {
                         attributes.add(
-                            satisfies(
-                                stringKey("aws.request_id"),
-                                val -> val.isInstanceOf(String.class)));
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                       }
 
                       attributes.addAll(additionalAttributes);

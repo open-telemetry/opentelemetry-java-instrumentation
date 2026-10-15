@@ -5,9 +5,14 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -31,7 +36,6 @@ import java.util.regex.Pattern;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class MysqlUrlParser implements JdbcUrlParser {
 
   // copied from DbAttributes.DbSystemNameValues
@@ -65,8 +69,8 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       system = OTHER_SQL;
     }
     ctx.system(system);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyUserProperty();
 
@@ -76,42 +80,66 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     if (subtype != null) {
       // Has subprotocol (e.g., mysql:aurora://...)
-      ctx.subtype(subtype);
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser
-      GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);
+      GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
     } else {
       // Non-standard format: type/host:port/db?params
       parseNonStandardUrl(jdbcUrl, ctx);
     }
   }
 
+  private static int indexOf(String string, int start, char... chars) {
+    for (int i = start; i < string.length(); i++) {
+      char c = string.charAt(i);
+      for (char match : chars) {
+        if (c == match) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
   private static void parseNonStandardUrl(String jdbcUrl, ParseContext ctx) {
     int typeEndLoc = jdbcUrl.indexOf(':');
-    int portLoc = jdbcUrl.indexOf(":", typeEndLoc + 1);
-    int dbLoc = jdbcUrl.indexOf("/", typeEndLoc);
-    int paramLoc = jdbcUrl.indexOf("?", dbLoc);
+    int sectionEnd = indexOf(jdbcUrl, typeEndLoc + 1, ':', '/', '?');
+    int portLoc = -1;
+    if (sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == ':') {
+      portLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '/', '?');
+    }
+    int dbLoc = -1;
+    if (sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == '/') {
+      dbLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '?');
+    }
+    int paramLoc = -1;
+    if (dbLoc != -1 && sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == '?') {
+      paramLoc = sectionEnd;
+    }
 
     // Extract database name
-    String databaseName;
     if (paramLoc > 0) {
-      databaseName = jdbcUrl.substring(dbLoc + 1, paramLoc);
-    } else {
-      databaseName = jdbcUrl.substring(dbLoc + 1);
+      ctx.databaseName(jdbcUrl.substring(dbLoc + 1, paramLoc));
+    } else if (dbLoc != -1) {
+      ctx.databaseName(jdbcUrl.substring(dbLoc + 1));
     }
-    ctx.databaseName(databaseName);
 
     // Host and port from URL
     int hostEndLoc;
+    // without a database the host/port segment ends at the query string, if any
+    int urlEndLoc = dbLoc != -1 ? dbLoc : jdbcUrl.indexOf('?');
+    int effectiveDbLoc = urlEndLoc != -1 ? urlEndLoc : jdbcUrl.length();
     if (portLoc > 0) {
       hostEndLoc = portLoc;
-      Integer parsedPort = parsePort(jdbcUrl.substring(portLoc + 1, dbLoc));
+      Integer parsedPort = parsePort(jdbcUrl.substring(portLoc + 1, effectiveDbLoc));
       if (parsedPort != null) {
         ctx.port(parsedPort);
       }
     } else {
-      hostEndLoc = dbLoc;
+      hostEndLoc = effectiveDbLoc;
     }
     ctx.host(jdbcUrl.substring(typeEndLoc + 1, hostEndLoc));
 
@@ -120,14 +148,40 @@ public final class MysqlUrlParser implements JdbcUrlParser {
   }
 
   private static void parseMariaSubProtocol(String jdbcUrl, ParseContext ctx) {
-    int hostEndLoc;
-    int clusterSepLoc = jdbcUrl.indexOf(",");
-    int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
-    int portLoc = jdbcUrl.indexOf(":", Math.max(0, ipv6End));
-    portLoc = clusterSepLoc != -1 && clusterSepLoc < portLoc ? -1 : portLoc;
-    int dbLoc = jdbcUrl.indexOf("/", Math.max(portLoc, clusterSepLoc));
+    if (!applyHostGroup(jdbcUrl, ctx)) {
+      ctx.host(null);
+      ctx.port(null);
+      return;
+    }
 
-    int paramLoc = dbLoc != -1 ? jdbcUrl.indexOf("?", dbLoc) : -1;
+    int hostEndLoc;
+    int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
+    int sectionEnd = indexOf(jdbcUrl, Math.max(0, ipv6End), ':', '/', '?', ',');
+    int clusterSepLoc = -1;
+    if (sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == ',') {
+      clusterSepLoc = sectionEnd;
+      // port will be skipped if cluster separator was found
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '/', '?');
+    }
+    int portLoc = -1;
+    if (clusterSepLoc == -1 && sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == ':') {
+      portLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '/', '?', ',');
+    }
+    // when there are multiple addresses we only care about the first one
+    if (portLoc != -1 && sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == ',') {
+      clusterSepLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '/', '?');
+    }
+    int dbLoc = -1;
+    if (sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == '/') {
+      dbLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '?');
+    }
+    int paramLoc = -1;
+    if (dbLoc != -1 && sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == '?') {
+      paramLoc = sectionEnd;
+    }
 
     if (paramLoc > 0) {
       ctx.databaseName(jdbcUrl.substring(dbLoc + 1, paramLoc));
@@ -142,7 +196,9 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       return;
     }
 
-    int effectiveDbLoc = dbLoc != -1 ? dbLoc : jdbcUrl.length();
+    // without a database the host/port segment ends at the query string, if any
+    int urlEndLoc = dbLoc != -1 ? dbLoc : jdbcUrl.indexOf('?');
+    int effectiveDbLoc = urlEndLoc != -1 ? urlEndLoc : jdbcUrl.length();
     if (portLoc > 0) {
       hostEndLoc = portLoc;
       int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : effectiveDbLoc;
@@ -164,12 +220,25 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     ctx.applyCommonParams(jdbcUrl, "?", "&");
   }
 
+  private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
+    String authority = extractAuthority("mariadb://" + jdbcUrl);
+    if (authority == null) {
+      authority = extractAuthorityWithQueryAt(jdbcUrl);
+      if (authority == null) {
+        return false;
+      }
+    }
+    DbServerTarget target = parseServerTargetGroup(authority, DEFAULT_PORT);
+    if (target != null || hasMultipleTargets(jdbcUrl)) {
+      ctx.resolveConfiguredServerTarget(target);
+    }
+    return true;
+  }
+
   private static final Pattern HOST_PATTERN =
       Pattern.compile("\\(\\s*host\\s*=\\s*([^ )]+)\\s*\\)");
   private static final Pattern PORT_PATTERN =
       Pattern.compile("\\(\\s*port\\s*=\\s*([\\d]+)\\s*\\)");
-  private static final Pattern USER_PATTERN =
-      Pattern.compile("\\(\\s*user\\s*=\\s*([^ )]+)\\s*\\)");
 
   private static void parseMariaAddress(String jdbcUrl, ParseContext ctx) {
     int addressEnd = jdbcUrl.indexOf(",address=");
@@ -183,11 +252,6 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     Matcher portMatcher = PORT_PATTERN.matcher(addressUrl);
     if (portMatcher.find()) {
       ctx.port(Integer.parseInt(portMatcher.group(1)));
-    }
-
-    Matcher userMatcher = USER_PATTERN.matcher(addressUrl);
-    if (userMatcher.find()) {
-      ctx.user(userMatcher.group(1));
     }
   }
 }

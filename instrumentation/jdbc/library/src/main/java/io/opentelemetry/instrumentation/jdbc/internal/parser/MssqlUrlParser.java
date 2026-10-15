@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
+
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
+import java.util.Map;
+import java.util.Properties;
+import javax.annotation.Nullable;
 
 /**
  * Parser for Microsoft SQL Server JDBC URLs.
@@ -24,13 +29,10 @@ import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.Hos
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class MssqlUrlParser implements JdbcUrlParser {
 
   // copied from DbAttributes.DbSystemNameValues
   private static final String MICROSOFT_SQL_SERVER = "microsoft.sql_server";
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String MSSQL = "mssql";
 
   private static final String DEFAULT_HOST = "localhost";
   private static final int DEFAULT_PORT = 1433;
@@ -42,27 +44,166 @@ public final class MssqlUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(MICROSOFT_SQL_SERVER);
-    ctx.oldSemconvSystem(MSSQL);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
-
-    // Extract subtype from URL like microsoft:sqlserver://...
-    String subtype = UrlParsingUtils.extractSubtype(jdbcUrl);
-    if (subtype != null) {
-      ctx.subtype(subtype);
-    }
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     // Layer 3: URL params (SQL Server-specific: servername)
-    ctx.applyCommonParams(jdbcUrl, ";", ";");
+    // Parse semicolon-delimited parameters once and apply both standard and
+    // MSSQL-specific properties from the same map to avoid re-parsing the URL.
+    Map<String, String> urlParams = UrlParsingUtils.extractSemicolonParams(jdbcUrl);
+    ctx.applyCommonParams(urlParams);
+    applyDatabaseAliasParam(ctx, urlParams);
 
     // Layer 4: Parse URL structure (host:port/path)
     String instanceName = parseUrlWithInstance(jdbcUrl, ctx);
 
     // DataSource properties applied last — SQL Server driver gives DataSource precedence over URL
     ctx.applyDataSourceProperties();
+    String targetInstanceName = resolveInstanceName(ctx.props(), urlParams, instanceName);
 
     // Namespace depends on the effective databaseName, so derive it after DataSource overrides.
     setNamespace(ctx, instanceName);
+
+    applyFailoverPartnerGroup(
+        ctx,
+        urlParams,
+        targetInstanceName,
+        hasConfiguredServer(jdbcUrl, urlParams, ctx.props()),
+        hasConfiguredPort(jdbcUrl, urlParams, ctx.props()));
+  }
+
+  /** Build the configured primary and failover partner group. */
+  private static void applyFailoverPartnerGroup(
+      ParseContext ctx,
+      Map<String, String> params,
+      @Nullable String instanceName,
+      boolean serverConfigured,
+      boolean portConfigured) {
+    String failoverPartner = null;
+    if (ctx.props() != null) {
+      failoverPartner = ctx.props().getProperty("failoverPartner");
+    }
+    if (failoverPartner == null || failoverPartner.isEmpty()) {
+      failoverPartner = params.get("failoverpartner");
+    }
+    if (failoverPartner == null || failoverPartner.isEmpty()) {
+      return;
+    }
+    ctx.disableSingleServerFallback();
+    String host = ctx.host();
+    if (!serverConfigured || host == null) {
+      return;
+    }
+    StringBuilder group = new StringBuilder();
+    appendPrimary(group, ctx, host, instanceName, portConfigured);
+    group.append(',');
+    appendServerAddress(group, failoverPartner);
+    ctx.resolveConfiguredServerTarget(parseServerTargetGroup(group.toString(), DEFAULT_PORT));
+  }
+
+  /** Returns whether a server was configured by the data source, parameters, or URL authority. */
+  private static boolean hasConfiguredServer(
+      String jdbcUrl, Map<String, String> params, @Nullable Properties properties) {
+    if (properties != null) {
+      String serverName = properties.getProperty("serverName");
+      if (serverName != null && !serverName.isEmpty()) {
+        return true;
+      }
+    }
+    String serverName = params.get("servername");
+    if (serverName != null && !serverName.isEmpty()) {
+      return true;
+    }
+
+    String urlPart = jdbcUrl.split(";", 2)[0];
+    int hostIndex = urlPart.indexOf("://");
+    if (hostIndex <= 0) {
+      return false;
+    }
+    String urlServerName = urlPart.substring(hostIndex + 3);
+    int pathLoc = urlServerName.indexOf('/');
+    return pathLoc < 0 ? !urlServerName.isEmpty() : pathLoc > 0;
+  }
+
+  /** Append the effective primary server, including its configured port or instance. */
+  private static void appendPrimary(
+      StringBuilder group,
+      ParseContext ctx,
+      String host,
+      @Nullable String instanceName,
+      boolean portConfigured) {
+    if (portConfigured) {
+      UrlParsingUtils.appendHostPort(group, host, ctx.port());
+      return;
+    }
+    if (instanceName == null || instanceName.isEmpty()) {
+      UrlParsingUtils.appendHostPort(group, host, null);
+      return;
+    }
+    appendServerAddress(group, host + "\\" + instanceName);
+  }
+
+  /** Resolve the effective instance name using SQL Server property precedence. */
+  @Nullable
+  private static String resolveInstanceName(
+      @Nullable Properties properties,
+      Map<String, String> params,
+      @Nullable String parsedInstanceName) {
+    String instanceName = parsedInstanceName;
+    if (instanceName == null || instanceName.isEmpty()) {
+      instanceName = params.get("instancename");
+    }
+    if (properties == null) {
+      return instanceName;
+    }
+    String propertyInstanceName = properties.getProperty("instanceName");
+    if (propertyInstanceName != null && !propertyInstanceName.isEmpty()) {
+      return propertyInstanceName;
+    }
+    String propertyServerName = properties.getProperty("serverName");
+    return propertyServerName == null || propertyServerName.isEmpty() ? instanceName : null;
+  }
+
+  /** Returns whether a port was configured by the data source, parameters, or URL authority. */
+  private static boolean hasConfiguredPort(
+      String jdbcUrl, Map<String, String> params, @Nullable Properties properties) {
+    if (properties != null
+        && UrlParsingUtils.parsePort(properties.getProperty("portNumber")) != null) {
+      return true;
+    }
+    if (UrlParsingUtils.parsePort(params.get("portnumber")) != null) {
+      return true;
+    }
+
+    String urlPart = jdbcUrl.split(";", 2)[0];
+    int hostIndex = urlPart.indexOf("://");
+    if (hostIndex <= 0) {
+      return false;
+    }
+    String serverName = urlPart.substring(hostIndex + 3);
+    int pathLoc = serverName.indexOf('/');
+    if (pathLoc > 0) {
+      serverName = serverName.substring(0, pathLoc);
+    }
+    return UrlParsingUtils.extractHostPort(serverName).port() != null;
+  }
+
+  /**
+   * Append a SQL Server address, bracketing an unbracketed IPv6 host and preserving its instance.
+   */
+  private static void appendServerAddress(StringBuilder group, String serverAddress) {
+    int instanceStart = serverAddress.indexOf('\\');
+    String hostPort = instanceStart < 0 ? serverAddress : serverAddress.substring(0, instanceStart);
+    boolean unbracketedIpv6 =
+        !hostPort.startsWith("[") && hostPort.indexOf(':') != hostPort.lastIndexOf(':');
+    if (unbracketedIpv6) {
+      group.append('[').append(hostPort).append(']');
+    } else {
+      group.append(hostPort);
+    }
+    if (instanceStart >= 0) {
+      group.append(serverAddress, instanceStart, serverAddress.length());
+    }
   }
 
   /**
@@ -125,11 +266,12 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     // SQL Server-specific: Extract backslash-separated instance name (host\instance)
     int instanceLoc = serverName.indexOf("\\");
     if (instanceLoc > 0) {
-      if (hostPort.ipv6Address() != null) {
+      String ipv6Address = hostPort.ipv6Address();
+      if (ipv6Address != null) {
         int closingBracket = serverName.lastIndexOf(']');
         int instanceEnd = closingBracket > instanceLoc ? closingBracket : serverName.length();
         instanceName = serverName.substring(instanceLoc + 1, instanceEnd);
-        serverName = "[" + hostPort.ipv6Address() + "]";
+        serverName = ipv6Address;
       } else {
         instanceName = serverName.substring(instanceLoc + 1);
         serverName = serverName.substring(0, instanceLoc);
@@ -144,6 +286,33 @@ public final class MssqlUrlParser implements JdbcUrlParser {
   }
 
   /**
+   * Apply the {@code database} URL parameter alias when {@code databasename} has not already been
+   * set by {@link ParseContext#applyCommonParams(Map)}.
+   */
+  private static void applyDatabaseAliasParam(ParseContext ctx, Map<String, String> params) {
+    if (ctx.databaseName() != null) {
+      return;
+    }
+    String databaseName = getDatabaseNameParam(params);
+    if (databaseName != null) {
+      ctx.databaseName(databaseName);
+    }
+  }
+
+  /**
+   * Resolve the SQL Server database name from URL parameters, trying {@code databasename} first and
+   * falling back to {@code database}. Returns {@code null} if neither key has a non-empty value.
+   */
+  @Nullable
+  static String getDatabaseNameParam(Map<String, String> params) {
+    String databaseName = params.get("databasename");
+    if (databaseName == null || databaseName.isEmpty()) {
+      databaseName = params.get("database");
+    }
+    return databaseName == null || databaseName.isEmpty() ? null : databaseName;
+  }
+
+  /**
    * Sets the namespace after parsing completes.
    *
    * <p>For SQL Server, namespace format is:
@@ -154,14 +323,11 @@ public final class MssqlUrlParser implements JdbcUrlParser {
    *       parameter)
    * </ul>
    */
-  @SuppressWarnings("deprecation") // dbName is deprecated, to be removed in 3.0
   private static void setNamespace(ParseContext ctx, String instanceName) {
     String database = ctx.databaseName();
 
     // When we have an instance name
     if (instanceName != null && !instanceName.isEmpty()) {
-      // Preserve old behavior: dbName is the instance name (not the database name)
-      ctx.dbName(instanceName);
       // If there's a non-empty database that's different from instance: format as instance|database
       if (database != null && !database.isEmpty() && !database.equals(instanceName)) {
         ctx.namespace(instanceName + "|" + database);

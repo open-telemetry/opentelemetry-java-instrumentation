@@ -26,13 +26,15 @@ tasks {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
+    }
 
     // Uncomment for debugging:
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -40,8 +42,16 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hystrix.experimental-span-attributes=true")
   }
 
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testDisabled, testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

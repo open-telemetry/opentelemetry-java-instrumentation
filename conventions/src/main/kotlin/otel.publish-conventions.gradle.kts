@@ -22,7 +22,7 @@ publishing {
       }
 
       afterEvaluate {
-        val mavenGroupId: String? by project
+        val mavenGroupId = project.extra.properties["mavenGroupId"] as String?
         if (mavenGroupId != null) {
           groupId = mavenGroupId
         }

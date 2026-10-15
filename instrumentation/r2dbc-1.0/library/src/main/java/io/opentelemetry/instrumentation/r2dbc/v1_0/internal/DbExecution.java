@@ -5,22 +5,14 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
-import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
-import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
-import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
-import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
-import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
-import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
-import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
-import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -28,126 +20,69 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class DbExecution {
-  // copied from DbAttributes.DbSystemNameValues
-  private static final String POSTGRESQL = "postgresql";
-  // copied from DbAttributes.DbSystemNameValues
-  private static final String MYSQL = "mysql";
-  // copied from DbAttributes.DbSystemNameValues
-  private static final String MARIADB = "mariadb";
-  // copied from DbAttributes.DbSystemNameValues
-  private static final String MICROSOFT_SQL_SERVER = "microsoft.sql_server";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String ORACLE_DB = "oracle.db";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String H2DATABASE = "h2database";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String OTHER_SQL = "other_sql";
-
-  // R2DBC driver identifier → stable semconv db.system.name value
-  private static final Map<String, String> DRIVER_TO_SYSTEM_NAME = buildDriverToSystemName();
-
-  private static Map<String, String> buildDriverToSystemName() {
-    Map<String, String> map = new HashMap<>();
-    map.put("postgresql", POSTGRESQL);
-    map.put("mysql", MYSQL);
-    map.put("mariadb", MARIADB);
-    map.put("mssql", MICROSOFT_SQL_SERVER);
-    map.put("oracle", ORACLE_DB);
-    map.put("h2", H2DATABASE);
-    return map;
-  }
-
-  private final String systemName;
-  private final String system;
-  @Nullable private final String user;
-  @Nullable private final String namespace;
-  @Nullable private final String serverAddress;
-  @Nullable private final Integer serverPort;
-  private final String connectionString;
-  private final String rawQueryText;
+  private final R2dbcConnectionInfo connectionInfo;
+  private final List<String> rawQueryTexts;
+  @Nullable private final Long batchSize;
   private final boolean parameterizedQuery;
 
   @Nullable private Context context;
 
   public DbExecution(QueryExecutionInfo queryInfo, ConnectionFactoryOptions factoryOptions) {
-    Connection originalConnection = queryInfo.getConnectionInfo().getOriginalConnection();
-    this.system =
-        originalConnection != null
-            ? originalConnection
-                .getMetadata()
-                .getDatabaseProductName()
-                .toLowerCase(Locale.ROOT)
-                .split(" ")[0]
-            : OTHER_SQL;
-    this.user = factoryOptions.hasOption(USER) ? (String) factoryOptions.getValue(USER) : null;
-    this.namespace =
-        factoryOptions.hasOption(DATABASE)
-            ? ((String) factoryOptions.getValue(DATABASE)).toLowerCase(Locale.ROOT)
-            : null;
-    String driver =
-        factoryOptions.hasOption(DRIVER) ? (String) factoryOptions.getValue(DRIVER) : null;
-    String protocol =
-        factoryOptions.hasOption(PROTOCOL) ? (String) factoryOptions.getValue(PROTOCOL) : null;
-    this.systemName = resolveDbSystemName(driver, protocol);
-    this.serverAddress =
-        factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
-    this.serverPort =
-        factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
-    this.connectionString =
-        String.format(
-            "%s%s:%s%s",
-            driver != null ? driver : "",
-            protocol != null ? ":" + protocol : "",
-            serverAddress != null ? "//" + serverAddress : "",
-            serverPort != null ? ":" + serverPort : "");
-    this.rawQueryText =
+    this(queryInfo, new R2dbcConnectionInfo(factoryOptions));
+  }
+
+  DbExecution(QueryExecutionInfo queryInfo, R2dbcConnectionInfo connectionInfo) {
+    this.connectionInfo = connectionInfo;
+    this.rawQueryTexts =
         queryInfo.getQueries().stream()
             .map(QueryInfo::getQuery)
             .map(
                 query ->
                     R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
-            .collect(joining(";\n"));
+            .collect(toList());
+    int queryInfoBatchSize = queryInfo.getBatchSize();
+    // r2dbc-proxy reports 0 as the default size for ordinary non-batch executions. Those still
+    // have a query text; an empty Batch.execute() is represented with no query texts.
+    boolean emptyBatch = rawQueryTexts.isEmpty();
+    this.batchSize = queryInfoBatchSize > 1 || emptyBatch ? (long) queryInfoBatchSize : null;
     this.parameterizedQuery =
         queryInfo.getQueries().stream()
             .anyMatch(queryInfo1 -> !queryInfo1.getBindingsList().isEmpty());
     R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
   }
 
-  @Nullable
-  public String getServerAddress() {
-    return serverAddress;
+  R2dbcConnectionInfo connectionInfo() {
+    return connectionInfo;
   }
 
   @Nullable
-  public Integer getServerPort() {
-    return serverPort;
+  public String getConfiguredServerAddress() {
+    DbServerTarget target = connectionInfo.getConfiguredServerTarget();
+    return target == null ? null : target.getAddress();
+  }
+
+  @Nullable
+  public Integer getConfiguredServerPort() {
+    DbServerTarget target = connectionInfo.getConfiguredServerTarget();
+    return target == null ? null : target.getPort();
   }
 
   public String getSystemName() {
-    return systemName;
-  }
-
-  @Deprecated // to be removed in 3.0
-  public String getSystem() {
-    return system;
-  }
-
-  @Nullable
-  public String getUser() {
-    return user;
+    return connectionInfo.getSystemName();
   }
 
   @Nullable
   public String getNamespace() {
-    return namespace;
+    return connectionInfo.getNamespace();
   }
 
-  public String getConnectionString() {
-    return connectionString;
+  public List<String> getRawQueryTexts() {
+    return rawQueryTexts;
   }
 
-  public String getRawQueryText() {
-    return rawQueryText;
+  @Nullable
+  public Long getBatchSize() {
+    return batchSize;
   }
 
   public boolean isParameterizedQuery() {
@@ -161,12 +96,5 @@ public final class DbExecution {
 
   public void setContext(Context context) {
     this.context = context;
-  }
-
-  private static String resolveDbSystemName(@Nullable String driver, @Nullable String protocol) {
-    // Use PROTOCOL when DRIVER is "pool" (r2dbc-pool wraps the real driver in PROTOCOL),
-    // otherwise use DRIVER directly.
-    String rawDriver = "pool".equals(driver) && protocol != null ? protocol : driver;
-    return rawDriver != null ? DRIVER_TO_SYSTEM_NAME.getOrDefault(rawDriver, OTHER_SQL) : OTHER_SQL;
   }
 }

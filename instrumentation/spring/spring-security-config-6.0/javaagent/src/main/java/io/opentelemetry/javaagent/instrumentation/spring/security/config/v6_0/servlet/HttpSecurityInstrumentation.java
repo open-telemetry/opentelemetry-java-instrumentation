@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.servlet;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturerSingletons.enduserAttributesCapturer;
+import static io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.UserAttributesCapturerSingletons.userAttributesCapturer;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.spring.security.config.v6_0.servlet.EnduserAttributesHttpSecurityCustomizer;
+import io.opentelemetry.instrumentation.spring.security.config.v6_0.servlet.UserAttributesHttpSecurityCustomizer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -38,8 +38,7 @@ class HttpSecurityInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This HttpSecurity httpSecurity) {
-      new EnduserAttributesHttpSecurityCustomizer(enduserAttributesCapturer())
-          .customize(httpSecurity);
+      new UserAttributesHttpSecurityCustomizer(userAttributesCapturer()).customize(httpSecurity);
     }
   }
 }

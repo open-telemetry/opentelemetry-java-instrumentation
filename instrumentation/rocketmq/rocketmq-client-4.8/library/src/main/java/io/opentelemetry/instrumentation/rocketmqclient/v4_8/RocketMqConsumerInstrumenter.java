@@ -8,52 +8,74 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
+import javax.annotation.Nullable;
+import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.common.message.MessageExt;
 
 final class RocketMqConsumerInstrumenter {
 
-  private final Instrumenter<MessageExt, Void> singleProcessInstrumenter;
-  private final Instrumenter<MessageExt, Void> batchProcessInstrumenter;
-  private final Instrumenter<Void, Void> batchReceiveInstrumenter;
+  private final Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
+      singleProcessInstrumenter;
+  private final Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
+      batchProcessInstrumenter;
 
   RocketMqConsumerInstrumenter(
-      Instrumenter<MessageExt, Void> singleProcessInstrumenter,
-      Instrumenter<MessageExt, Void> batchProcessInstrumenter,
-      Instrumenter<Void, Void> batchReceiveInstrumenter) {
+      Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext> singleProcessInstrumenter,
+      Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext> batchProcessInstrumenter) {
     this.singleProcessInstrumenter = singleProcessInstrumenter;
     this.batchProcessInstrumenter = batchProcessInstrumenter;
-    this.batchReceiveInstrumenter = batchReceiveInstrumenter;
   }
 
-  Context start(Context parentContext, List<MessageExt> msgs) {
-    if (msgs.size() == 1) {
-      if (singleProcessInstrumenter.shouldStart(parentContext, msgs.get(0))) {
-        return singleProcessInstrumenter.start(parentContext, msgs.get(0));
+  @Nullable
+  ConsumerContext start(
+      Context parentContext,
+      List<MessageExt> msgs,
+      String consumerGroup,
+      @Nullable String namespace) {
+    int batchSize = msgs.size();
+    if (batchSize == 1) {
+      RocketMqConsumerRequest request =
+          new RocketMqConsumerRequest(msgs.get(0), consumerGroup, batchSize, namespace);
+      if (singleProcessInstrumenter.shouldStart(parentContext, request)) {
+        Context context = singleProcessInstrumenter.start(parentContext, request);
+        return new ConsumerContext(context, request);
       }
-    } else {
-      if (batchReceiveInstrumenter.shouldStart(parentContext, null)) {
-        Context rootContext = batchReceiveInstrumenter.start(parentContext, null);
-        for (MessageExt message : msgs) {
-          createChildSpan(rootContext, message);
-        }
-        return rootContext;
-      }
+      return null;
     }
-    return parentContext;
+
+    RocketMqConsumerRequest request =
+        new RocketMqConsumerRequest(msgs, consumerGroup, batchSize, namespace);
+    if (!batchProcessInstrumenter.shouldStart(parentContext, request)) {
+      return null;
+    }
+    Context context = batchProcessInstrumenter.start(parentContext, request);
+    return new ConsumerContext(context, request);
   }
 
-  private void createChildSpan(Context parentContext, MessageExt msg) {
-    if (batchProcessInstrumenter.shouldStart(parentContext, msg)) {
-      Context context = batchProcessInstrumenter.start(parentContext, msg);
-      batchProcessInstrumenter.end(context, msg, null, null);
+  void end(ConsumerContext consumerContext, ConsumeMessageContext response) {
+    RocketMqConsumerRequest request = consumerContext.getRequest();
+    if (request.getBatchSize() == 1) {
+      singleProcessInstrumenter.end(consumerContext.getContext(), request, response, null);
+      return;
     }
+    batchProcessInstrumenter.end(consumerContext.getContext(), request, response, null);
   }
 
-  void end(Context context, List<MessageExt> msgs) {
-    if (msgs.size() == 1) {
-      singleProcessInstrumenter.end(context, msgs.get(0), null, null);
-    } else {
-      batchReceiveInstrumenter.end(context, null, null, null);
+  static final class ConsumerContext {
+    private final Context context;
+    private final RocketMqConsumerRequest request;
+
+    private ConsumerContext(Context context, RocketMqConsumerRequest request) {
+      this.context = context;
+      this.request = request;
+    }
+
+    Context getContext() {
+      return context;
+    }
+
+    RocketMqConsumerRequest getRequest() {
+      return request;
     }
   }
 }

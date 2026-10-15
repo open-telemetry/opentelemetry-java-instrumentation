@@ -24,8 +24,7 @@ import javax.annotation.Nullable;
 public final class HelperResources {
 
   private static final Cache<ClassLoader, Map<String, List<URL>>> RESOURCES = Cache.weak();
-  private static final Map<String, List<URL>> ALL_CLASSLOADERS_RESOURCES =
-      new ConcurrentHashMap<>();
+  private static final Map<String, List<URL>> allClassLoadersResources = new ConcurrentHashMap<>();
 
   /**
    * Registers the {@code urls} to be available to instrumentation at {@code path}, when given
@@ -39,7 +38,7 @@ public final class HelperResources {
 
   /** Registers the {@code urls} to be available to instrumentation at {@code path}. */
   public static void registerForAllClassLoaders(String path, List<URL> urls) {
-    ALL_CLASSLOADERS_RESOURCES.compute(path, (k, v) -> append(v, urls));
+    allClassLoadersResources.compute(path, (k, v) -> append(v, urls));
   }
 
   private static List<URL> append(@Nullable List<URL> resources, List<URL> toAdd) {
@@ -87,7 +86,7 @@ public final class HelperResources {
       resources = map.get(path);
     }
     if (resources == null) {
-      resources = ALL_CLASSLOADERS_RESOURCES.get(path);
+      resources = allClassLoadersResources.get(path);
     }
     return resources == null ? emptyList() : resources;
   }

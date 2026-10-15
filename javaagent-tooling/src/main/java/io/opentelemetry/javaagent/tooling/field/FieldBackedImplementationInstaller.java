@@ -19,14 +19,15 @@ import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings.Mapping;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -72,13 +73,12 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   private final VirtualFieldImplementations virtualFieldImplementations;
   private final AgentBuilder.Transformer virtualFieldImplementationsInjector;
 
-  private final Instrumentation instrumentation;
+  @Nullable private final Instrumentation instrumentation;
 
   public FieldBackedImplementationInstaller(
       Class<?> instrumenterClass, VirtualFieldMappings virtualFieldMappings) {
     this.instrumenterClass = instrumenterClass;
     this.virtualFieldMappings = virtualFieldMappings;
-    // This class is used only when running with javaagent, thus this calls is safe
     this.instrumentation = InstrumentationHolder.getInstrumentation();
 
     ByteBuddy byteBuddy = new ByteBuddy();
@@ -153,30 +153,31 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
           ClassLoader classLoader,
           JavaModule javaModule,
           ProtectionDomain protectionDomain) {
-        return injector.transform(
+        injector.transform(
             builder,
             typeDescription,
             // virtual field implementation classes will always go to the bootstrap
             null,
             javaModule,
             protectionDomain);
+        return builder;
       }
     };
   }
 
   /*
-  Set of pairs (type name, field type name) for which we have matchers installed.
+  Set of mappings (type name, field type name, field name) for which we have matchers installed.
   We use this to make sure we do not install matchers repeatedly for cases when same
   context class is used by multiple instrumentations.
    */
-  private final Set<Map.Entry<String, String>> installedVirtualFieldMatchers = new HashSet<>();
+  private final Set<Mapping> installedVirtualFieldMatchers = new HashSet<>();
 
   @Override
   public AgentBuilder.Identified.Extendable injectFields(
       AgentBuilder.Identified.Extendable builder) {
 
     if (FieldBackedImplementationConfiguration.isFieldInjectionEnabled()) {
-      for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
+      for (Mapping mapping : virtualFieldMappings.getMappings()) {
         /*
          * For each virtual field defined in a current instrumentation we create an agent builder
          * that injects necessary fields.
@@ -185,12 +186,12 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
          * class transformation.
          */
         synchronized (installedVirtualFieldMatchers) {
-          if (installedVirtualFieldMatchers.contains(entry)) {
+          if (installedVirtualFieldMatchers.contains(mapping)) {
             if (logger.isLoggable(FINEST)) {
               logger.log(
                   FINEST,
                   "Skipping builder for {0} {1}",
-                  new Object[] {instrumenterClass.getName(), entry});
+                  new Object[] {instrumenterClass.getName(), mapping});
             }
             continue;
           }
@@ -199,9 +200,9 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
             logger.log(
                 FINEST,
                 "Making builder for {0} {1}",
-                new Object[] {instrumenterClass.getName(), entry});
+                new Object[] {instrumenterClass.getName(), mapping});
           }
-          installedVirtualFieldMatchers.add(entry);
+          installedVirtualFieldMatchers.add(mapping);
 
           /*
            * For each virtual field defined in a current instrumentation we create an agent builder
@@ -211,12 +212,16 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
               new NamedMatcher<>(
                   "VirtualField",
                   new IgnoreFailedTypeMatcher(
-                      not(isAbstract()).and(hasSuperType(named(entry.getKey())))));
+                      not(isAbstract()).and(hasSuperType(named(mapping.getTypeName())))));
 
           builder =
               builder
                   .type(typeMatcher)
-                  .and(safeToInjectFieldMatcher(entry.getKey(), entry.getValue()))
+                  .and(
+                      safeToInjectFieldMatcher(
+                          mapping.getTypeName(),
+                          mapping.getFieldTypeName(),
+                          mapping.getFieldName()))
                   .and(InstrumentationModuleInstaller.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);
 
@@ -231,7 +236,10 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
               builder.transform(
                   getTransformerForAsmVisitor(
                       new RealFieldInjector(
-                          fieldAccessorInterfaces, entry.getKey(), entry.getValue())));
+                          fieldAccessorInterfaces,
+                          mapping.getTypeName(),
+                          mapping.getFieldTypeName(),
+                          mapping.getFieldName())));
         }
       }
     }
@@ -239,7 +247,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   }
 
   private static AgentBuilder.RawMatcher safeToInjectFieldMatcher(
-      String typeName, String fieldTypeName) {
+      String typeName, String fieldTypeName, String fieldName) {
     return (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
       /*
        * The idea here is that we can add fields if class is just being loaded
@@ -248,7 +256,8 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
        */
       return classBeingRedefined == null
           || VirtualFieldDetector.hasVirtualField(
-              classBeingRedefined, getFieldAccessorInterfaceName(typeName, fieldTypeName));
+              classBeingRedefined,
+              getFieldAccessorInterfaceName(typeName, fieldTypeName, fieldName));
     };
   }
 

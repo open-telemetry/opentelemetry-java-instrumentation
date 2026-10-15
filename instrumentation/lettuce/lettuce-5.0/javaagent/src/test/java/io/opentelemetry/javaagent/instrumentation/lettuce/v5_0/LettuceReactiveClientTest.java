@@ -7,32 +7,45 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.EXPERIMENTAL_ATTRIBUTES_ENABLED;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import io.lettuce.core.KeyValue;
 import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.codec.StringCodec;
+import io.lettuce.core.output.StatusOutput;
+import io.lettuce.core.protocol.CommandArgs;
+import io.lettuce.core.protocol.CommandType;
 import io.opentelemetry.api.trace.SpanKind;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import reactor.core.Disposable;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -57,9 +70,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
 
     syncCommands.set("TESTKEY", "TESTVAL");
 
-    // 1 set + 1 connect trace
-    testing.waitForTraces(2);
-    testing.clearData();
+    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
   }
 
   @AfterAll
@@ -93,13 +104,18 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
+                            equalTo(DB_OPERATION_NAME, "SET")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -125,12 +141,139 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
+                            equalTo(DB_OPERATION_NAME, "GET"))));
+  }
+
+  @Test
+  void resubscribedCommandRetainsPeerCapture() {
+    Mono<String> command = reactiveCommands.set("resubscribed", "value");
+    assertThat(command.block()).isEqualTo("OK");
+    assertThat(command.block()).isEqualTo("OK");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET resubscribed ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET resubscribed ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))));
+  }
+
+  @Test
+  void overlappingSubscriptionsUseIndependentCommands() throws Exception {
+    redisServer.execInContainer("redis-cli", "DEL", "overlapping");
+    Mono<KeyValue<String, String>> command = reactiveCommands.blpop(30, "overlapping");
+
+    CompletableFuture<KeyValue<String, String>> first = command.toFuture();
+    cleanup.deferCleanup(() -> first.cancel(true));
+    CompletableFuture<KeyValue<String, String>> second = command.toFuture();
+    cleanup.deferCleanup(() -> second.cancel(true));
+
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () ->
+                assertThat(
+                        redisServer
+                            .execInContainer("redis-cli", "CLIENT", "LIST")
+                            .getStdout()
+                            .split("\\R"))
+                    .filteredOn(line -> line.contains("cmd=blpop"))
+                    .hasSize(1));
+    assertThat(first).isNotDone();
+    assertThat(second).isNotDone();
+
+    redisServer.execInContainer("redis-cli", "LPUSH", "overlapping", "first", "second");
+
+    assertThat(first.get(10, SECONDS).getKey()).isEqualTo("overlapping");
+    assertThat(second.get(10, SECONDS).getKey()).isEqualTo("overlapping");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("BLPOP " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "BLPOP overlapping 30"),
+                            equalTo(DB_OPERATION_NAME, "BLPOP"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("BLPOP " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "BLPOP overlapping 30"),
+                            equalTo(DB_OPERATION_NAME, "BLPOP"))));
+  }
+
+  @Test
+  void testCommandCancelOnMonoPublisher() {
+    withIsolatedContainer(
+        (connection, isolatedPort) -> {
+          // holding the command in the write buffer keeps the peer unknown until the span ends
+          connection.setAutoFlushCommands(false);
+          Disposable subscription = connection.reactive().blpop(30, "cancelled-mono").subscribe();
+          subscription.dispose();
+
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("BLPOP " + host + ":" + isolatedPort)
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, isolatedPort),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_NAMESPACE, "0"),
+                                  equalTo(DB_QUERY_TEXT, "BLPOP cancelled-mono 30"),
+                                  equalTo(DB_OPERATION_NAME, "BLPOP"))));
+        });
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -164,12 +307,17 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
-                            equalTo(maybeStable(DB_OPERATION), "GET")),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
+                            equalTo(DB_OPERATION_NAME, "GET")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -194,12 +342,17 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("RANDOMKEY")
+                    span.hasName("RANDOMKEY " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
-                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
+                            equalTo(DB_OPERATION_NAME, "RANDOMKEY"))));
   }
 
   @Test
@@ -210,12 +363,17 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("COMMAND")
+                    span.hasName("COMMAND " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
-                            equalTo(maybeStable(DB_OPERATION), "COMMAND"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "COMMAND"),
+                            equalTo(DB_OPERATION_NAME, "COMMAND"),
                             satisfies(
                                 longKey("lettuce.command.results.count"),
                                 val -> {
@@ -233,12 +391,17 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("COMMAND")
+                    span.hasName("COMMAND " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
-                            equalTo(maybeStable(DB_OPERATION), "COMMAND"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "COMMAND"),
+                            equalTo(DB_OPERATION_NAME, "COMMAND"),
                             equalTo(booleanKey("lettuce.command.cancelled"), experimental(true)),
                             satisfies(
                                 longKey("lettuce.command.results.count"),
@@ -250,8 +413,42 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
+  void testNoResponseCommandFluxCancellationEndsSpanOnce() {
+    withIsolatedContainer(
+        (connection, port) -> {
+          connection.setAutoFlushCommands(false);
+          AtomicBoolean cancelled = new AtomicBoolean();
+          Disposable subscription =
+              connection
+                  .reactive()
+                  .dispatch(
+                      CommandType.DEBUG,
+                      new StatusOutput<>(StringCodec.UTF8),
+                      new CommandArgs<>(StringCodec.UTF8).add("HELP"))
+                  .doOnCancel(() -> cancelled.set(true))
+                  .subscribe();
+
+          subscription.dispose();
+
+          assertThat(cancelled).isTrue();
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("DEBUG " + host + ":" + port).hasKind(SpanKind.CLIENT)));
+          testing.waitAndAssertMetrics(
+              "io.opentelemetry.lettuce-5.0",
+              metrics ->
+                  metrics
+                      .hasName("db.client.operation.duration")
+                      .hasHistogramSatisfying(
+                          histogram -> histogram.hasPointsSatisfying(point -> point.hasCount(1))));
+        });
+  }
+
+  @Test
   void testNonReactiveCommandShouldNotProduceSpan() {
-    String res = reactiveCommands.digest(null);
+    // digest computes a SHA locally without contacting redis
+    String res = reactiveCommands.digest("test");
 
     assertThat(res).isNotNull();
     assertThat(testing.spans()).isEmpty();
@@ -259,44 +456,48 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testDebugSegfaultCommandReturnsMonoVoidWithNoArgumentShouldProduceSpan() {
-    // Test Causes redis to crash therefore it needs its own container
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-    cleanup.deferCleanup(statefulConnection);
+    withIsolatedContainer(
+        (connection, port) -> {
+          RedisReactiveCommands<String, String> commands = connection.reactive();
+          commands.debugSegfault().subscribe();
 
-    RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
-    commands.debugSegfault().subscribe();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("DEBUG")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
-                            equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("DEBUG " + host + ":" + port)
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_NAMESPACE, "0"),
+                                  equalTo(DB_QUERY_TEXT, "DEBUG SEGFAULT"),
+                                  equalTo(DB_OPERATION_NAME, "DEBUG"))));
+        });
   }
 
   @Test
   void testShutdownCommandShouldProduceSpan() {
-    // Test Causes redis to crash therefore it needs its own container
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-    cleanup.deferCleanup(statefulConnection);
+    withIsolatedContainer(
+        (connection, port) -> {
+          RedisReactiveCommands<String, String> commands = connection.reactive();
+          commands.shutdown(false).subscribe();
 
-    RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
-    commands.shutdown(false).subscribe();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SHUTDOWN")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
-                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("SHUTDOWN " + host + ":" + port)
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_NAMESPACE, "0"),
+                                  equalTo(DB_QUERY_TEXT, "SHUTDOWN NOSAVE"),
+                                  equalTo(DB_OPERATION_NAME, "SHUTDOWN"))));
+        });
   }
 
   @Test
@@ -310,21 +511,31 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET a ?"),
+                            equalTo(DB_OPERATION_NAME, "SET")),
                 span ->
-                    span.hasName("GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET a"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET a"),
+                            equalTo(DB_OPERATION_NAME, "GET"))));
   }
 
   @Test
@@ -338,21 +549,31 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET a ?"),
+                            equalTo(DB_OPERATION_NAME, "SET")),
                 span ->
-                    span.hasName("GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET a"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET a"),
+                            equalTo(DB_OPERATION_NAME, "GET"))));
   }
 
   @Test
@@ -363,7 +584,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
             reactiveCommands
                 .set("a", "1")
                 .then(reactiveCommands.get("a"))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.parallel())
                 .subscribe());
 
     testing.waitAndAssertTraces(
@@ -371,20 +592,30 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET a ?"),
+                            equalTo(DB_OPERATION_NAME, "SET")),
                 span ->
-                    span.hasName("GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET a"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET a"),
+                            equalTo(DB_OPERATION_NAME, "GET"))));
   }
 }

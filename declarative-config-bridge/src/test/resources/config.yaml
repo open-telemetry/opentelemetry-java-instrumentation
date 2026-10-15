@@ -1,12 +1,11 @@
-file_format: 1.0
+file_format: 1.1
 instrumentation/development:
   java:
     acme:
       full_name:
         preserved: true
     agent:
-      experimental:
-        indy: true
+      enabled: false
     runtime_telemetry:
       enabled: false
     example_instrumentation:

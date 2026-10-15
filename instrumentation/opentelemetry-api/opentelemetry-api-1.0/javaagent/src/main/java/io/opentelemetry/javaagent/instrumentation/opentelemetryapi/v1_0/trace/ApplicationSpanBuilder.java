@@ -1,0 +1,129 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace;
+
+import static io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Bridging.toAgentOrNull;
+
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
+import java.util.concurrent.TimeUnit;
+
+public class ApplicationSpanBuilder implements application.io.opentelemetry.api.trace.SpanBuilder {
+
+  private final SpanBuilder agentBuilder;
+
+  protected ApplicationSpanBuilder(SpanBuilder agentBuilder) {
+    this.agentBuilder = agentBuilder;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder setParent(
+      application.io.opentelemetry.context.Context applicationContext) {
+    agentBuilder.setParent(AgentContextStorage.getAgentContext(applicationContext));
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder setNoParent() {
+    agentBuilder.setNoParent();
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder addLink(
+      application.io.opentelemetry.api.trace.SpanContext applicationSpanContext) {
+    agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder addLink(
+      application.io.opentelemetry.api.trace.SpanContext applicationSpanContext,
+      application.io.opentelemetry.api.common.Attributes applicationAttributes) {
+    agentBuilder.addLink(
+        Bridging.toAgent(applicationSpanContext), Bridging.toAgent(applicationAttributes));
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder setAttribute(String key, String value) {
+    agentBuilder.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder setAttribute(String key, long value) {
+    agentBuilder.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder setAttribute(String key, double value) {
+    agentBuilder.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder setAttribute(
+      String key, boolean value) {
+    agentBuilder.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  // unchecked: toAgent returns raw AttributeKey, VALUE bridging requires casting to Object key
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public <T> application.io.opentelemetry.api.trace.SpanBuilder setAttribute(
+      application.io.opentelemetry.api.common.AttributeKey<T> applicationKey, T value) {
+    AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
+    if (agentKey != null) {
+      // For VALUE type attributes, need to bridge the Value object as well
+      if (applicationKey.getType().name().equals("VALUE")) {
+        agentBuilder.setAttribute((AttributeKey) agentKey, ValueBridging.toAgent(value));
+      } else {
+        agentBuilder.setAttribute(agentKey, value);
+      }
+    }
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder setSpanKind(
+      application.io.opentelemetry.api.trace.SpanKind applicationSpanKind) {
+    SpanKind agentSpanKind = toAgentOrNull(applicationSpanKind);
+    if (agentSpanKind != null) {
+      agentBuilder.setSpanKind(agentSpanKind);
+    }
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public application.io.opentelemetry.api.trace.SpanBuilder setStartTimestamp(
+      long startTimestamp, TimeUnit unit) {
+    agentBuilder.setStartTimestamp(startTimestamp, unit);
+    return this;
+  }
+
+  @Override
+  public application.io.opentelemetry.api.trace.Span startSpan() {
+    return new ApplicationSpan(agentBuilder.startSpan());
+  }
+}

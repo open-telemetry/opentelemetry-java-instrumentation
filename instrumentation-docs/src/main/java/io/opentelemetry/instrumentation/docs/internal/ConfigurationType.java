@@ -18,7 +18,8 @@ public enum ConfigurationType {
   STRING("string"),
   INT("int"),
   MAP("map"),
-  LIST("list");
+  LIST("list"),
+  STRUCTURED_LIST("structured_list");
 
   ConfigurationType(String unused) {}
 

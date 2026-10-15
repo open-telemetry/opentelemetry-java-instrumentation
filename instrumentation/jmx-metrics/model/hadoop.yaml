@@ -1,0 +1,111 @@
+groups:
+  - id: attributes.hadoop
+    type: attribute_group
+    brief: Hadoop attributes
+    attributes:
+      - id: hadoop.node.name
+        type: string
+        stability: development
+        brief: "Hadoop node name."
+        examples:
+          - "test-host"
+
+  - id: metric.hadoop.dfs.capacity.limit
+    metric_name: hadoop.dfs.capacity.limit
+    type: metric
+    stability: development
+    brief: Current raw capacity of DataNodes.
+    unit: By
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.dfs.capacity.used
+    metric_name: hadoop.dfs.capacity.used
+    type: metric
+    stability: development
+    brief: Current used capacity across all DataNodes.
+    unit: By
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.dfs.block.count
+    metric_name: hadoop.dfs.block.count
+    type: metric
+    stability: development
+    brief: Current number of allocated blocks in the system.
+    unit: "{block}"
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.dfs.block.missing
+    metric_name: hadoop.dfs.block.missing
+    type: metric
+    stability: development
+    brief: Current number of missing blocks.
+    unit: "{block}"
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.dfs.block.corrupt
+    metric_name: hadoop.dfs.block.corrupt
+    type: metric
+    stability: development
+    brief: Current number of blocks with corrupt replicas.
+    unit: "{block}"
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.dfs.volume.failure.count
+    metric_name: hadoop.dfs.volume.failure.count
+    type: metric
+    stability: development
+    brief: Total number of volume failures across all DataNodes.
+    unit: "{failure}"
+    instrument: counter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.dfs.file.count
+    metric_name: hadoop.dfs.file.count
+    type: metric
+    stability: development
+    brief: Current number of files and directories.
+    unit: "{file}"
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.dfs.connection.count
+    metric_name: hadoop.dfs.connection.count
+    type: metric
+    stability: development
+    brief: Current number of connections.
+    unit: "{connection}"
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.datanode.live
+    metric_name: hadoop.datanode.live
+    type: metric
+    stability: development
+    brief: Number of data nodes which are currently live.
+    unit: "{node}"
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name
+
+  - id: metric.hadoop.datanode.dead
+    metric_name: hadoop.datanode.dead
+    type: metric
+    stability: development
+    brief: Number of data nodes which are currently dead.
+    unit: "{node}"
+    instrument: updowncounter
+    attributes:
+      - ref: hadoop.node.name

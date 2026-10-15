@@ -5,22 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_17;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LoggingConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -37,29 +37,29 @@ public class Log4jHelper {
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender");
-    DeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
 
     captureExperimentalAttributes =
         config.getBoolean("experimental_log_attributes/development", false);
     boolean captureCodeAttributes = config.getBoolean("capture_code_attributes/development", false);
-    boolean captureMapMessageAttributes =
-        config.getBoolean("capture_map_message_attributes/development", false);
+    Predicate<String> mapMessageAttributes =
+        LoggingConfig.resolveStructuredAttributes(GlobalOpenTelemetry.get());
     boolean captureMarkerAttribute =
         config.getBoolean("capture_marker_attribute/development", false);
-    List<String> captureContextDataAttributes =
-        config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
+    boolean captureTemplate = config.getBoolean("capture_template/development", false);
+    boolean captureArguments = config.getBoolean("capture_arguments/development", false);
+    Predicate<String> contextDataAttributes =
+        SelectorConfig.resolveLegacyLiteral(config, "log4j-appender", "mdc-attributes");
 
     mapper =
         new LogEventMapper<>(
             new ContextDataAccessorImpl(),
             captureExperimentalAttributes,
             captureCodeAttributes,
-            captureMapMessageAttributes,
+            mapMessageAttributes,
             captureMarkerAttribute,
-            captureContextDataAttributes,
-            v3Preview);
+            captureTemplate,
+            captureArguments,
+            contextDataAttributes);
   }
 
   public static void capture(

@@ -3,6 +3,8 @@
 [global]
 # disable link text should be descriptive check
 disable = ["MD059", "line-length", "no-inline-html", "MD041", "MD022", "ul-style", "fenced-code-language"]
+# MD060 (table-cell-alignment)
+extend-enable = ["MD060"]
 
 [per-file-ignores]
 ".github/workflows/*.md" = ["MD046"]

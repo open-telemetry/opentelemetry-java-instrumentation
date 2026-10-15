@@ -22,21 +22,21 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
 
-  // copied from EnduserIncubatingAttributes
-  private static final AttributeKey<String> ENDUSER_ID = AttributeKey.stringKey("enduser.id");
+  // copied from UserIncubatingAttributes
+  private static final AttributeKey<String> USER_NAME = AttributeKey.stringKey("user.name");
   private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final boolean captureExperimentalAttributes;
-  private final boolean captureEnduserId;
+  private final boolean captureUserName;
 
   public ServletAdditionalAttributesExtractor(
       ServletAccessor<REQUEST, RESPONSE> accessor,
       boolean captureExperimentalAttributes,
-      boolean captureEnduserId) {
+      boolean captureUserName) {
     this.accessor = accessor;
     this.captureExperimentalAttributes = captureExperimentalAttributes;
-    this.captureEnduserId = captureEnduserId;
+    this.captureUserName = captureUserName;
   }
 
   @Override
@@ -52,10 +52,10 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
-    if (captureEnduserId) {
+    if (captureUserName) {
       Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
       if (principal != null) {
-        attributes.put(ENDUSER_ID, principal.getName());
+        attributes.put(USER_NAME, principal.getName());
       }
     }
     if (!captureExperimentalAttributes) {

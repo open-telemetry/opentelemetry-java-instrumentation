@@ -9,8 +9,10 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
 
-import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,11 +87,23 @@ public class RuleParser {
     if (beans != null) {
       beans.forEach(jmxRule::addBean);
     }
+    String handler = (String) ruleYaml.remove("handler");
+    if (handler != null) {
+      jmxRule.addHandler(handler);
+    }
+    List<String> handlers = (List<String>) ruleYaml.remove("handlers");
+    if (handlers != null) {
+      handlers.forEach(jmxRule::addHandler);
+    }
     String prefix = (String) ruleYaml.remove("prefix");
     if (prefix != null) {
       jmxRule.setPrefix(prefix);
     }
-    jmxRule.setMapping(parseMappings((Map<String, Object>) ruleYaml.remove("mapping")));
+    Map<String, Metric> mapping = parseMappings((Map<String, Object>) ruleYaml.remove("mapping"));
+    // if there are no handlers empty mappings are not allowed and trigger an error
+    if (!mapping.isEmpty() || !jmxRule.hasHandlers()) {
+      jmxRule.setMapping(mapping);
+    }
     parseMetricStructure(ruleYaml, jmxRule);
 
     failOnExtraKeys(ruleYaml);
@@ -162,18 +176,21 @@ public class RuleParser {
   }
 
   /**
-   * Parse the YAML rules from the specified input stream and add them, after converting to the
-   * internal representation, to the provided metric configuration.
+   * Parse the YAML rules from the specified input stream
    *
-   * @param conf the metric configuration
    * @param is the InputStream with the YAML rules
+   * @return parsed collection of MetricDef
    * @throws IllegalArgumentException when unable to parse YAML
    */
-  public void addMetricDefsTo(MetricConfiguration conf, InputStream is) {
+  public List<MetricDef> parseMetricDefs(InputStream is) {
     try {
       JmxConfig config = loadConfig(is);
       logger.log(FINE, "Found {0} metric rules", config.getRules().size());
-      config.addMetricDefsTo(conf);
+      List<MetricDef> metricDefs = new ArrayList<>();
+      for (JmxRule rule : config.getRules()) {
+        metricDefs.add(rule.buildMetricDef());
+      }
+      return metricDefs;
     } catch (Exception e) {
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
@@ -190,13 +207,9 @@ public class RuleParser {
    * @return a String describing the probable root cause
    */
   private static String rootCause(Throwable exception) {
-    String rootClass = "";
-    String message = null;
     // Go to the bottom of it
-    for (; exception != null; exception = exception.getCause()) {
-      rootClass = exception.getClass().getSimpleName();
-      message = exception.getMessage();
-    }
-    return message == null ? rootClass : message;
+    Throwable rootCause = CauseUnwrapper.rootCause(exception);
+    String message = rootCause.getMessage();
+    return message == null ? rootCause.getClass().getSimpleName() : message;
   }
 }

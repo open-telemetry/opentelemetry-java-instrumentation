@@ -58,7 +58,7 @@ val muzzlePinnedVersions: Map<String, String>? by lazy {
     )
     null
   } else {
-    logger.info("Using pinned latest-dep versions file: ${file}")
+    logger.info("Using pinned latest-dep versions file: $file")
     @Suppress("UNCHECKED_CAST")
     groovy.json.JsonSlurper().parse(file) as Map<String, String>
   }
@@ -95,17 +95,17 @@ fun resolveUpperBound(group: String, module: String): Version? {
 
 val muzzleConfig = extensions.create<MuzzleExtension>("muzzle")
 
-val muzzleTooling: Configuration by configurations.creating {
+val muzzleTooling = configurations.create("muzzleTooling") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
 
-val muzzleBootstrap: Configuration by configurations.creating {
+val muzzleBootstrap = configurations.create("muzzleBootstrap") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
 
-val shadowModule by tasks.registering(ShadowJar::class) {
+val shadowModule = tasks.register<ShadowJar>("shadowModule") {
   from(zipTree(tasks.jar.get().archiveFile))
 
   configurations = listOf(project.configurations.runtimeClasspath.get())
@@ -115,13 +115,13 @@ val shadowModule by tasks.registering(ShadowJar::class) {
   dependsOn(tasks.jar)
 }
 
-val shadowMuzzleTooling by tasks.registering(ShadowJar::class) {
+val shadowMuzzleTooling = tasks.register<ShadowJar>("shadowMuzzleTooling") {
   configurations = listOf(muzzleTooling)
 
   archiveFileName.set("tooling-for-muzzle-check.jar")
 }
 
-val shadowMuzzleBootstrap by tasks.registering(ShadowJar::class) {
+val shadowMuzzleBootstrap = tasks.register<ShadowJar>("shadowMuzzleBootstrap") {
   configurations = listOf(muzzleBootstrap)
 
   // exclude the agent part of the javaagent-extension-api
@@ -137,6 +137,10 @@ listOf(shadowModule, shadowMuzzleTooling, shadowMuzzleBootstrap).forEach { task 
     mergeServiceFiles()
     // mergeServiceFiles requires that duplicate strategy is set to include
     filesMatching("META-INF/services/**") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+    // avoid warning about duplicate kotlin module files being silently dropped
+    filesMatching("META-INF/*.kotlin_module") {
       duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
     // Merge any AWS SDK service files that may be present (too bad they didn't just use normal
@@ -182,13 +186,13 @@ listOf(shadowModule, shadowMuzzleTooling, shadowMuzzleBootstrap).forEach { task 
   }
 }
 
-val compileMuzzle by tasks.registering {
+val compileMuzzle = tasks.register("compileMuzzle") {
   dependsOn(shadowMuzzleBootstrap)
   dependsOn(shadowMuzzleTooling)
   dependsOn(tasks.named("classes"))
 }
 
-val muzzle by tasks.registering {
+val muzzle = tasks.register("muzzle") {
   group = "Muzzle"
   description = "Run instrumentation muzzle on compile time dependencies"
   dependsOn(compileMuzzle)
@@ -199,11 +203,11 @@ tasks.register("printMuzzleReferences") {
   description = "Print references created by instrumentation muzzle"
   val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
   val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
-  
+
   dependsOn(compileMuzzle)
   dependsOn(shadowModule)
   dependsOn(shadowMuzzleTooling)
-  
+
   doLast {
     // Create instrumentation classloader
     val instrumentationUrls = arrayOf(
@@ -211,7 +215,7 @@ tasks.register("printMuzzleReferences") {
       muzzleToolingShadowJarFile.get().asFile.toURI().toURL()
     )
     val instrumentationCL = URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
-    
+
     MuzzleGradlePluginUtil.printMuzzleReferences(instrumentationCL)
   }
 }
@@ -266,7 +270,8 @@ fun getProjectRepositories(project: Project): List<RemoteRepository> {
       RemoteRepository.Builder(
         it.name,
         "default",
-        it.url.toString())
+        it.url.toString()
+      )
         .build()
     }
   // dependencyResolutionManagement.repositories are not being added to project.repositories,
@@ -275,9 +280,10 @@ fun getProjectRepositories(project: Project): List<RemoteRepository> {
     // Manually add mavenCentral until https://github.com/gradle/gradle/issues/17295
     // Adding mavenLocal is much more complicated but hopefully isn't required for normal usage of
     // Muzzle.
-    return listOf(RemoteRepository.Builder(
-      "MavenCentral", "default", "https://repo.maven.apache.org/maven2/")
-      .build())
+    return listOf(
+      RemoteRepository.Builder("MavenCentral", "default", "https://repo.maven.apache.org/maven2/")
+        .build()
+    )
   }
   return projectRepositories
 }
@@ -291,25 +297,23 @@ fun classpathLoader(classpath: FileCollection, parent: ClassLoader): ClassLoader
   logger.info("Adding to class loader:")
   val urls: Array<URL> = StreamSupport.stream(classpath.spliterator(), false)
     .map {
-      logger.info("--${it}")
+      logger.info("--$it")
       it.toURI().toURL()
     }
     .toArray(::arrayOfNulls)
   if (parent is URLClassLoader) {
     parent.urLs.forEach {
-      logger.info("--${it}")
+      logger.info("--$it")
     }
   }
   return URLClassLoader(urls, parent)
 }
 
-fun newRepositorySystem(): RepositorySystem {
-  return MavenRepositorySystemUtils.newServiceLocator().apply {
-    addService(RepositoryConnectorFactory::class.java, BasicRepositoryConnectorFactory::class.java)
-    addService(TransporterFactory::class.java, HttpTransporterFactory::class.java)
-  }.run {
-    getService(RepositorySystem::class.java)
-  }
+fun newRepositorySystem(): RepositorySystem = MavenRepositorySystemUtils.newServiceLocator().apply {
+  addService(RepositoryConnectorFactory::class.java, BasicRepositoryConnectorFactory::class.java)
+  addService(TransporterFactory::class.java, HttpTransporterFactory::class.java)
+}.run {
+  getService(RepositorySystem::class.java)
 }
 
 fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSession {
@@ -320,10 +324,9 @@ fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSessio
   }
 }
 
-fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, runAfter: TaskProvider<Task>)
-  : TaskProvider<Task> {
+fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, runAfter: TaskProvider<Task>): TaskProvider<Task> {
   val taskName = if (versionArtifact == null) {
-    "muzzle-Assert${muzzleDirective}"
+    "muzzle-Assert$muzzleDirective"
   } else {
     StringBuilder("muzzle-Assert").apply {
       if (muzzleDirective.assertPass.get()) {
@@ -344,7 +347,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
   }
   val config = configurations.create(taskName)
   if (versionArtifact != null) {
-    val dep = (dependencies.create(versionArtifact.run { "${groupId}:${artifactId}:${version}" }) as ModuleDependency).apply {
+    val dep = (dependencies.create(versionArtifact.run { "$groupId:$artifactId:$version" }) as ModuleDependency).apply {
       isTransitive = true
       exclude("com.sun.jdmk", "jmxtools")
       exclude("com.sun.jmx", "jmxri")
@@ -358,7 +361,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     for (additionalDependency in muzzleDirective.additionalDependencies.get()) {
       val additional = if (additionalDependency is String && additionalDependency.count { it == ':' } < 2) {
         // Dependency definition without version, use the artifact's version.
-        "${additionalDependency}:${versionArtifact.version}"
+        "$additionalDependency:${versionArtifact.version}"
       } else {
         additionalDependency
       }
@@ -377,18 +380,26 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     // add more mismatches. For assertPass a missing transitive can cause a
     // false muzzle failure but never a false pass; such versions should be
     // skipped in the module's build.gradle.kts when found.
-    val configFiles = config.incoming.artifactView { lenient(true) }.files
+    val artifactView = config.incoming.artifactView { lenient(true) }
+    val configFiles = artifactView.files
     val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
     val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
     val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
     val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
+    val excludedModules = muzzleDirective.excludedInstrumentationModules.get()
     val shouldAssertPass = muzzleDirective.assertPass.get()
-    
+    // Snapshot diagnostics as text: resolution objects cannot be captured by configuration cache.
+    val resolutionFailures = if (shouldAssertPass) {
+      artifactView.artifacts.failures.map { it.stackTraceToString() }
+    } else {
+      emptyList()
+    }
+
     dependsOn(configurations.named("runtimeClasspath"))
     dependsOn(shadowModule)
     dependsOn(shadowMuzzleTooling)
     dependsOn(shadowMuzzleBootstrap)
-    
+
     doLast {
       // Create instrumentation classloader
       val instrumentationUrls = arrayOf(
@@ -396,13 +407,26 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
         muzzleToolingShadowJarFile.get().asFile.toURI().toURL()
       )
       val instrumentationCL = URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
-      
+
       // Create user classloader
       val userUrls = (configFiles + muzzleBootstrapShadowJarFile.get().asFile).map { it.toURI().toURL() }.toTypedArray()
       val userCL = URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader())
-      
-      MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL,
-        excludedNames, shouldAssertPass)
+
+      try {
+        MuzzleGradlePluginUtil.assertInstrumentationMuzzled(
+          instrumentationCL,
+          userCL,
+          excludedNames,
+          excludedModules,
+          shouldAssertPass
+        )
+      } catch (e: Exception) {
+        if (shouldAssertPass && resolutionFailures.isNotEmpty()) {
+          logger.error("Dependency resolution failures collected for $path (lenient resolution):")
+          resolutionFailures.forEach { logger.error(it) }
+        }
+        throw e
+      }
     }
   }
 
@@ -426,13 +450,15 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
     directiveModule,
     muzzleDirective.classifier.get(),
     "jar",
-    "[,)")
+    "[,)"
+  )
   val directiveArtifact = DefaultArtifact(
     directiveGroup,
     directiveModule,
     muzzleDirective.classifier.get(),
     "jar",
-    muzzleDirective.versions.get())
+    muzzleDirective.versions.get()
+  )
 
   val allRangeRequest = VersionRangeRequest().apply {
     repositories = repos
@@ -459,6 +485,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
       additionalDependencies.set(muzzleDirective.additionalDependencies)
       excludedDependencies.set(muzzleDirective.excludedDependencies)
       excludedInstrumentationNames.set(muzzleDirective.excludedInstrumentationNames)
+      excludedInstrumentationModules.set(muzzleDirective.excludedInstrumentationModules)
     }
     inverseDirectives.add(inverseDirective)
   }
@@ -468,8 +495,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 
 fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version?) = sequence {
   val predicate = AcceptableVersions(skipVersions)
-  fun accept(version: Version?): Boolean =
-    version != null && predicate.test(version) && (upperBound == null || version <= upperBound)
+  fun accept(version: Version?): Boolean = version != null && predicate.test(version) && (upperBound == null || version <= upperBound)
   if (accept(range.lowestVersion)) {
     yield(range.lowestVersion.toString())
   }
@@ -494,7 +520,8 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
     module,
     muzzleDirective.classifier.get(),
     "jar",
-    muzzleDirective.versions.get())
+    muzzleDirective.versions.get()
+  )
 
   val rangeRequest = VersionRangeRequest().apply {
     repositories = repos
@@ -509,7 +536,8 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
         muzzleDirective.module.get(),
         muzzleDirective.classifier.get(),
         "jar",
-        it)
+        it
+      )
     }
 
   allVersionArtifacts.ifEmpty {

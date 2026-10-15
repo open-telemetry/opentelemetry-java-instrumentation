@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {
@@ -10,14 +11,25 @@ dependencies {
 }
 
 tasks {
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
   }
 
+  val testCaptureTemplateAndArguments = register<Test>("testCaptureTemplateAndArguments") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.java-util-logging.experimental.capture-template=true",
+      "-Dotel.instrumentation.java-util-logging.experimental.capture-arguments=true",
+    )
+  }
+
   check {
     dependsOn(testExperimental)
+    dependsOn(testCaptureTemplateAndArguments)
   }
 }

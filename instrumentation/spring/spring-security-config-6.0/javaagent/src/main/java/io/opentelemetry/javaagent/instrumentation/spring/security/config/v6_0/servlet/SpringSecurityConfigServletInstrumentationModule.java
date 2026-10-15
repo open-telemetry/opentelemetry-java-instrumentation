@@ -12,33 +12,27 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrumentation module for servlet-based applications that use spring-security-config. */
 @AutoService(InstrumentationModule.class)
-public class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule {
   public SpringSecurityConfigServletInstrumentationModule() {
-    super(
-        "spring-security-config",
-        "spring-security-config-6.0",
-        "spring-security-config-servlet",
-        "spring-security-config-servlet-6.0");
+    super("spring-security-config-6.0", "spring-security-config");
   }
 
   @Override
   public boolean defaultEnabled() {
     return super.defaultEnabled()
         /*
-         * Since the only thing this module currently does is capture enduser attributes,
-         * the module can be completely disabled if enduser attributes are disabled.
+         * Since the only thing this module currently does is capture user identity attributes,
+         * the module can be completely disabled if user identity capture is disabled.
          *
-         * If any functionality not related to enduser attributes is added to this module,
-         * then this check will need to move elsewhere to only guard the enduser attributes logic.
+         * If any functionality not related to user identity attributes is added to this module,
+         * then this check will need to move elsewhere to only guard the identity capture logic.
          */
-        && AgentCommonConfig.get().getEnduserConfig().isAnyEnabled();
+        && AgentCommonConfig.get().getUserConfig().isAnyEnabled();
   }
 
   @Override
@@ -51,12 +45,6 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
     // added in 6.0
     return hasClassesNamed(
         "org.springframework.security.authentication.ObservationAuthenticationManager");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    // depends on servlet instrumentation
-    return "servlet";
   }
 
   @Override

@@ -1,14 +1,15 @@
 # OpenTelemetry Javaagent Instrumentation: Spring Security Config
 
-Javaagent automatic instrumentation to capture `enduser.*` semantic attributes
+Javaagent automatic instrumentation to capture identity semantic attributes
 from Spring Security `Authentication` objects.
+
+When explicitly enabled, this instrumentation emits `user.name` and `user.roles` as a string array.
+Identity capture is disabled by default.
 
 ## Settings
 
-This module honors the [common `otel.instrumentation.common.enduser.*` properties](https://opentelemetry.io/docs/zero-code/java/agent/instrumentation/#capturing-enduser-attributes)
-and the following properties:
-
-| Property                                                                      | Type    | Default  | Description                                                                                             |
-|-------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------------------|
-| `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix`  | String  | `ROLE_`  | Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute.    |
-| `otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix` | String  | `SCOPE_` | Prefix of granted authorities identifying scopes to capture in the `enduser.scopes` semantic attribute. |
+| Property                                                                   | Type    | Default | Description                                                          |
+| -------------------------------------------------------------------------- | ------- | ------- | -------------------------------------------------------------------- |
+| `otel.instrumentation.common.user.name.enabled`                            | Boolean | `false` | Capture the authenticated user name as `user.name`.                  |
+| `otel.instrumentation.common.user.roles.enabled`                           | Boolean | `false` | Capture granted authorities as string-array `user.roles`.            |
+| `otel.instrumentation.spring-security.user.roles.granted-authority-prefix` | String  | `ROLE_` | Prefix of granted authorities identifying roles to capture as roles. |

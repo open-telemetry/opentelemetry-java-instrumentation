@@ -9,8 +9,10 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
+import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -26,6 +28,14 @@ public final class ObjectAllocationOutsideTlabHandler implements RecordedEventHa
 
   private final LongHistogram histogram;
   private final Attributes attributes;
+
+  @Nullable
+  public static ObjectAllocationOutsideTlabHandler create(
+      Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(Constants.METRIC_NAME_MEMORY_ALLOCATION)
+        ? new ObjectAllocationOutsideTlabHandler(meter)
+        : null;
+  }
 
   public ObjectAllocationOutsideTlabHandler(Meter meter) {
     histogram =
@@ -45,8 +55,8 @@ public final class ObjectAllocationOutsideTlabHandler implements RecordedEventHa
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.MEMORY_ALLOCATION_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(Constants.METRIC_NAME_MEMORY_ALLOCATION);
   }
 
   @Override

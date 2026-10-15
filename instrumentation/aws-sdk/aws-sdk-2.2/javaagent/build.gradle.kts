@@ -15,10 +15,10 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
 
   fail {
@@ -31,7 +31,7 @@ muzzle {
 
     // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
     // actually expected to succeed, so exclude it from checks.
-    excludeInstrumentationName("aws-sdk-2.2-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.AwsSdkInstrumentationModule")
   }
 
   pass {
@@ -43,9 +43,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
 
   pass {
@@ -56,9 +56,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -69,9 +69,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -81,9 +81,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
   }
 }
 
@@ -122,7 +122,7 @@ dependencies {
 
 testing {
   suites {
-    val s3PresignerTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("s3PresignerTest") {
       dependencies {
         val version = baseVersion("2.10.12").orLatest()
         implementation("software.amazon.awssdk:s3:$version")
@@ -130,7 +130,7 @@ testing {
       }
     }
 
-    val s3CrtTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("s3CrtTest") {
       dependencies {
         implementation("software.amazon.awssdk:s3:${baseVersion("2.27.21").orLatest()}")
         implementation("software.amazon.awssdk.crt:aws-crt:${baseVersion("0.30.11").orLatest()}")
@@ -147,7 +147,7 @@ testing {
       }
     }
 
-    val testBedrockRuntime by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testBedrockRuntime") {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         // 2.25.63 is the first release with Converse API
@@ -164,11 +164,19 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("testRdsData") {
+      dependencies {
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        val version = baseVersion("2.5.54").orLatest()
+        implementation("software.amazon.awssdk:rdsdata:$version")
+      }
+    }
   }
 }
 
 tasks {
-  val testExperimentalSqs by registering(Test::class) {
+  val testExperimentalSqs = register<Test>("testExperimentalSqs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -176,10 +184,15 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging=true," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -189,28 +202,19 @@ tasks {
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
   test {
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
   }
 
   check {
-    dependsOn(testing.suites, testExperimentalSqs, testStableSemconv, testReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+      testExperimentalSqs,
+      testReceiveSpansDisabled,
+    )
   }
 
   withType<Test>().configureEach {
@@ -218,7 +222,6 @@ tasks {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   withType<ShadowJar>().configureEach {

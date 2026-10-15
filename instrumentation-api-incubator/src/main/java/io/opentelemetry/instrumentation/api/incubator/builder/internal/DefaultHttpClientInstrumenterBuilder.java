@@ -9,8 +9,10 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
@@ -116,10 +118,30 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures which HTTP request headers are captured as span attributes.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setRequestHeaders(
+      IncludeExclude requestHeaders) {
+    httpAttributesExtractorBuilder.setRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
    * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
@@ -128,10 +150,30 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures which HTTP response headers are captured as span attributes.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setResponseHeaders(
+      IncludeExclude responseHeaders) {
+    httpAttributesExtractorBuilder.setResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
    * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
@@ -225,7 +267,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
-            .setSchemaUrl(SchemaUrls.V1_37_0);
+            .setSchemaUrl(SchemaUrls.V1_41_0);
+    setHttpClientExceptionEventExtractor(builder);
     if (emitExperimentalHttpClientTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
@@ -245,7 +288,17 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
           SpanNameExtractor<? super BUILDERREQUEST> spanNameExtractor) {
     return Instrumenter.<BUILDERREQUEST, BUILDERRESPONSE>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
-        .setSchemaUrl(SchemaUrls.V1_37_0);
+        .setSchemaUrl(SchemaUrls.V1_41_0);
+  }
+
+  public static <REQUEST> void setHttpClientExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
+    Experimental.setExceptionEventExtractor(
+        builder,
+        (logRecordBuilder, context, request) -> {
+          logRecordBuilder.setEventName("http.client.request.exception");
+          logRecordBuilder.setSeverity(Severity.WARN);
+        });
   }
 
   @CanIgnoreReturnValue

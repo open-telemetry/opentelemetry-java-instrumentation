@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -25,11 +26,12 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    jvmArgs(
+      "-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true",
+    )
   }
 
-  val testDataFetcher by registering(Test::class) {
+  val testDataFetcher = register<Test>("testDataFetcher") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

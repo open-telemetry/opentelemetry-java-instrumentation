@@ -28,6 +28,8 @@ def main() -> None:
     rerun_attempts = run["run_attempt"] - 1
     if rerun_attempts >= max_rerun_attempts:
         print(f"Skipped {label}: already rerun {rerun_attempts} times.")
+        if workflow_failure_issue_enabled():
+            open_issue_if_missing(owner, repo, run)
         return
 
     ignored_job_suffixes = tuple(
@@ -54,6 +56,8 @@ def main() -> None:
             f"Skipped {label}: {len(failed_real_jobs)} failed jobs"
             f" exceeded limit {max_failed_jobs}."
         )
+        if workflow_failure_issue_enabled():
+            open_issue_or_add_comment(owner, repo, run)
         return
 
     subprocess.run(
@@ -90,6 +94,91 @@ def gh_get(path: str, query: dict[str, str] | None = None):
         url += "?" + urllib.parse.urlencode(query)
     result = subprocess.run(["gh", "api", url], capture_output=True, text=True, check=True)
     return json.loads(result.stdout) if result.stdout.strip() else {}
+
+
+def workflow_failure_issue_enabled() -> bool:
+    return os.getenv("CREATE_WORKFLOW_FAILURE_ISSUE") == "true"
+
+
+def open_issue_if_missing(owner: str, repo: str, run: dict) -> None:
+    if find_workflow_issue_number(owner, repo, run) is not None:
+        return
+    create_workflow_issue(owner, repo, run)
+
+
+def open_issue_or_add_comment(owner: str, repo: str, run: dict) -> None:
+    number = find_workflow_issue_number(owner, repo, run)
+    if number is None:
+        create_workflow_issue(owner, repo, run)
+    else:
+        subprocess.run(
+            [
+                "gh",
+                "issue",
+                "comment",
+                str(number),
+                "--repo",
+                f"{owner}/{repo}",
+                "--body",
+                workflow_issue_body(owner, repo, run),
+            ],
+            check=True,
+        )
+
+
+def find_workflow_issue_number(owner: str, repo: str, run: dict) -> int | None:
+    title = workflow_issue_title(run)
+    result = subprocess.run(
+        [
+            "gh",
+            "issue",
+            "list",
+            "--repo",
+            f"{owner}/{repo}",
+            "--search",
+            f"in:title {title}",
+            "--limit",
+            "20",
+            "--json",
+            "number,title",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    for issue in json.loads(result.stdout):
+        issue_title = issue.get("title") or ""
+        if issue_title == title or issue_title.startswith(f"{title} (#"):
+            return issue["number"]
+    return None
+
+
+def create_workflow_issue(owner: str, repo: str, run: dict) -> None:
+    subprocess.run(
+        [
+            "gh",
+            "issue",
+            "create",
+            "--repo",
+            f"{owner}/{repo}",
+            "--title",
+            f"{workflow_issue_title(run)} (#{run['run_number']})",
+            "--body",
+            workflow_issue_body(owner, repo, run),
+        ],
+        check=True,
+    )
+
+
+def workflow_issue_title(run: dict) -> str:
+    return f"Workflow failed: {run['name']}"
+
+
+def workflow_issue_body(owner: str, repo: str, run: dict) -> str:
+    return (
+        f"See [{run['name']} #{run['run_number']}]"
+        f"(https://github.com/{owner}/{repo}/actions/runs/{run['id']})."
+    )
 
 
 def resolve_pr_number(owner: str, repo: str, run: dict) -> int | None:

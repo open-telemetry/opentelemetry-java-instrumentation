@@ -10,7 +10,7 @@ extra["mavenGroupId"] = "io.opentelemetry.javaagent.instrumentation"
 base.archivesName.set(projectDir.parentFile.name)
 
 configurations {
-  val bootstrap by creating {
+  val bootstrap = configurations.create("bootstrap") {
     isCanBeResolved = false
     isCanBeConsumed = false
   }

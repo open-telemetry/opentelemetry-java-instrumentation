@@ -19,13 +19,12 @@ import java.util.Set;
  * any time.
  */
 public final class CommonConfig {
-
   private final List<String> clientRequestHeaders;
   private final List<String> clientResponseHeaders;
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
   private final Set<String> knownHttpRequestMethods;
-  private final EnduserConfig enduserConfig;
+  private final UserConfig userConfig;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
   private final Set<String> sensitiveQueryParameters;
@@ -76,7 +75,7 @@ public final class CommonConfig {
         generalConfig
             .get("sanitization")
             .get("url")
-            .getScalarList("sensitive_query_parameters/development", String.class);
+            .getScalarList("sensitive_query_parameters", String.class);
     sensitiveQueryParameters =
         sensitiveQueryParameterList != null
             ? new HashSet<>(sensitiveQueryParameterList)
@@ -87,14 +86,13 @@ public final class CommonConfig {
             .get("http")
             .get("server")
             .getBoolean("emit_experimental_telemetry/development", false);
-    enduserConfig = new EnduserConfig(commonConfig);
-    loggingTraceIdKey =
-        commonConfig.get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
-    loggingSpanIdKey =
-        commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
-    loggingTraceFlagsKey =
-        commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
     v3Preview = commonConfig.getBoolean("v3_preview", false);
+    userConfig = new UserConfig(commonConfig);
+    DeclarativeConfigProperties logging = commonConfig.get("logging");
+    loggingTraceIdKey = logging.getString("trace_id_key", LoggingContextConstants.TRACE_ID);
+    loggingSpanIdKey = logging.getString("span_id_key", LoggingContextConstants.SPAN_ID);
+    loggingTraceFlagsKey =
+        logging.getString("trace_flags_key", LoggingContextConstants.TRACE_FLAGS);
   }
 
   public List<String> getClientRequestHeaders() {
@@ -117,8 +115,8 @@ public final class CommonConfig {
     return knownHttpRequestMethods;
   }
 
-  public EnduserConfig getEnduserConfig() {
-    return enduserConfig;
+  public UserConfig getUserConfig() {
+    return userConfig;
   }
 
   public boolean shouldEmitExperimentalHttpClientTelemetry() {

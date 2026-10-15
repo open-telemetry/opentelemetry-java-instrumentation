@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0.Elasticsearch5TransportSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -26,6 +25,7 @@ import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.client.support.AbstractClient;
 
 class AbstractClientInstrumentation implements TypeInstrumentation {
   @Override
@@ -63,8 +63,10 @@ class AbstractClientInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope start(ElasticTransportRequest request) {
-        Context parentContext = currentContext();
+      public static AdviceScope start(AbstractClient client, Object action, Object actionRequest) {
+        ElasticTransportRequest request =
+            Elasticsearch5TransportRequests.request(client, action, actionRequest);
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
@@ -89,13 +91,13 @@ class AbstractClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
+        @Advice.This AbstractClient client,
         @Advice.Argument(0) Action<?, ?, ?> action,
         @Advice.Argument(1) ActionRequest<?> actionRequest,
         @Advice.Argument(2) ActionListener<ActionResponse> originalActionListener) {
       ActionListener<ActionResponse> actionListener = originalActionListener;
 
-      ElasticTransportRequest request = ElasticTransportRequest.create(action, actionRequest);
-      AdviceScope adviceScope = AdviceScope.start(request);
+      AdviceScope adviceScope = AdviceScope.start(client, action, actionRequest);
       if (adviceScope == null) {
         return new Object[] {null, actionListener};
       }

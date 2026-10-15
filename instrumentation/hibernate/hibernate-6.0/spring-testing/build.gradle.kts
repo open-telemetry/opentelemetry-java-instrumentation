@@ -2,7 +2,7 @@ plugins {
   id("otel.javaagent-testing")
 }
 
-val springAgent by configurations.creating
+val springAgent = configurations.create("springAgent")
 
 dependencies {
   library("org.hibernate.orm:hibernate-core:6.0.0.Final")
@@ -28,23 +28,17 @@ otelJava {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
+    jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testExperimental, testStableSemconv)
+    dependsOn(testExperimental)
   }
 }

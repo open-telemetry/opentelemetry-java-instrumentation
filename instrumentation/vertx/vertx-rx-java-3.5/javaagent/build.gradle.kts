@@ -32,7 +32,7 @@ dependencies {
 
 testing {
   suites {
-    val version35Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version35Test") {
       dependencies {
         val version = baseVersion("3.5.0").orLatest("3.+")
         implementation("org.hsqldb:hsqldb:2.3.4")
@@ -45,7 +45,7 @@ testing {
       }
     }
 
-    val version41Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version41Test") {
       dependencies {
         val version = baseVersion("4.1.0").orLatest("4.+")
         implementation("org.hsqldb:hsqldb:2.3.4")
@@ -58,7 +58,7 @@ testing {
       }
     }
 
-    val version5Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version5Test") {
       dependencies {
         val version = baseVersion("5.0.0").orLatest()
         implementation("org.hsqldb:hsqldb:2.3.4")
@@ -78,26 +78,14 @@ tasks {
     options.release.set(11)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    }
-  }
-
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
     named("version5Test", Test::class).configure {
       enabled = false
     }
-    named("version5TestStableSemconv", Test::class).configure {
-      enabled = false
-    }
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

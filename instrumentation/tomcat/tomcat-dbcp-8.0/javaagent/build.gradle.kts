@@ -1,0 +1,19 @@
+plugins {
+  id("otel.javaagent-instrumentation")
+}
+
+muzzle {
+  pass {
+    group.set("org.apache.tomcat")
+    module.set("tomcat-dbcp")
+    versions.set("[8.0.3,)")
+    assertInverse.set(true)
+  }
+}
+
+dependencies {
+  library("org.apache.tomcat:tomcat-dbcp:8.0.3")
+
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+}

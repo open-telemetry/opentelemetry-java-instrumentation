@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A class providing a complete definition on how to create an OpenTelemetry metric out of the JMX
@@ -79,9 +83,9 @@ public class MetricDef {
 
   // Describes the MBeans to use
   private final BeanGroup beans;
-
   // Describes how to get the metric values and their attributes, and how to report them
   private final List<MetricExtractor> metricExtractors;
+  private final List<MetricHandlerHolder> handlers;
 
   /**
    * Constructor for MetricDef.
@@ -91,9 +95,11 @@ public class MetricDef {
    *     MetricExtractor is provided, they should use unique metric names or unique metric
    *     attributes
    */
-  public MetricDef(BeanGroup beans, List<MetricExtractor> metricExtractors) {
+  public MetricDef(
+      BeanGroup beans, List<MetricExtractor> metricExtractors, List<MetricHandlerHolder> handlers) {
     this.beans = beans;
     this.metricExtractors = metricExtractors;
+    this.handlers = handlers;
   }
 
   BeanGroup getBeanGroup() {
@@ -102,5 +108,31 @@ public class MetricDef {
 
   List<MetricExtractor> getMetricExtractors() {
     return metricExtractors;
+  }
+
+  List<MetricHandlerHolder> getHandlers() {
+    return handlers;
+  }
+
+  /**
+   * Get metric names included in this MetricDef, does not include metrics from handlers.
+   *
+   * @return metric names.
+   */
+  public Set<String> getMetricNames() {
+    Set<String> metricNames = new HashSet<>();
+    for (MetricExtractor extractor : metricExtractors) {
+      metricNames.add(extractor.getInfo().getMetricName());
+    }
+    return metricNames;
+  }
+
+  /**
+   * Get handler names included in this MetricDef.
+   *
+   * @return handler names.
+   */
+  public Set<String> getHandlerNames() {
+    return handlers.stream().map(MetricHandlerHolder::getHandlerName).collect(toSet());
   }
 }

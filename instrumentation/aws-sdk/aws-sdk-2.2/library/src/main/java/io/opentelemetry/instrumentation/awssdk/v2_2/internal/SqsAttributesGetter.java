@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
@@ -60,18 +61,6 @@ class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribut
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(ExecutionAttributes request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(ExecutionAttributes request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(ExecutionAttributes request, @Nullable Response response) {
@@ -91,7 +80,8 @@ class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribut
   @Nullable
   @Override
   public Long getBatchMessageCount(ExecutionAttributes request, @Nullable Response response) {
-    return null;
+    SdkRequest sdkRequest = request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
+    return SqsAccess.getBatchMessageCount(sdkRequest);
   }
 
   @Override
@@ -99,5 +89,11 @@ class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribut
     SdkRequest sdkRequest = request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
     String value = SqsAccess.getMessageAttribute(sdkRequest, name);
     return value != null ? singletonList(value) : emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(ExecutionAttributes request) {
+    SdkRequest sdkRequest = request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
+    return SqsAccess.getMessageAttributeNames(sdkRequest);
   }
 }

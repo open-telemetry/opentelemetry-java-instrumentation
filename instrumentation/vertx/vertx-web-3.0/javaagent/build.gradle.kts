@@ -22,7 +22,7 @@ dependencies {
 
 testing {
   suites {
-    val version3Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version3Test") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
@@ -34,7 +34,7 @@ testing {
       }
     }
 
-    val version41Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version41Test") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
@@ -45,7 +45,7 @@ testing {
       }
     }
 
-    val version5Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version5Test") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 

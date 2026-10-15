@@ -12,7 +12,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-grpc:1.39.0")
+  implementation("com.linecorp.armeria:armeria-grpc:1.42.0")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   runtimeOnly("org.slf4j:slf4j-simple")
 }
@@ -21,6 +21,11 @@ val extraTag = findProperty("extraTag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
 
 jib {
   from {
@@ -59,12 +64,17 @@ tasks {
   }
 
   shadowJar {
+    // avoid warning about duplicate kotlin module files being silently dropped
+    filesMatching("META-INF/*.kotlin_module") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+
     manifest {
       attributes("Main-Class" to "io.opentelemetry.smoketest.fakebackend.FakeBackendMain")
     }
   }
 
-  val windowsBackendImagePrepare by registering(Copy::class) {
+  val windowsBackendImagePrepare = register<Copy>("windowsBackendImagePrepare") {
     dependsOn(shadowJar)
     into(backendDockerBuildDir)
     from("src/docker/backend")
@@ -73,7 +83,7 @@ tasks {
     }
   }
 
-  val windowsBackendImageBuild by registering(DockerBuildImage::class) {
+  val windowsBackendImageBuild = register<DockerBuildImage>("windowsBackendImageBuild") {
     dependsOn(windowsBackendImagePrepare)
     inputDir.set(backendDockerBuildDir)
 
@@ -81,7 +91,7 @@ tasks {
     dockerFile.set(File(backendDockerBuildDir.get().asFile, "windows.dockerfile"))
   }
 
-  val dockerPush by registering(DockerPushImage::class) {
+  register<DockerPushImage>("dockerPush") {
     group = "publishing"
     description = "Push all Docker images for the test backend"
     dependsOn(windowsBackendImageBuild)

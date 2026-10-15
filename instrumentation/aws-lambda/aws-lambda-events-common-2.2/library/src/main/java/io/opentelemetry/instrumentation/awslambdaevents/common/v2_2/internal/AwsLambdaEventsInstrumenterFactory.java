@@ -5,13 +5,17 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.faas.internal.FaasExceptionEventExtractors.setFaasInvocationExceptionEventExtractor;
+
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionAttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionInstrumenter;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Set;
 
 /**
@@ -21,14 +25,21 @@ import java.util.Set;
 public final class AwsLambdaEventsInstrumenterFactory {
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(
-      OpenTelemetry openTelemetry, String instrumentationName, Set<String> knownMethods) {
-    return new AwsLambdaFunctionInstrumenter(
-        openTelemetry,
-        Instrumenter.builder(
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      Set<String> knownMethods,
+      Set<String> sensitiveQueryParameters) {
+    InstrumenterBuilder<AwsLambdaRequest, Object> builder =
+        Instrumenter.<AwsLambdaRequest, Object>builder(
                 openTelemetry, instrumentationName, AwsLambdaEventsInstrumenterFactory::spanName)
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
-            .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor(knownMethods))
-            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
+            .addAttributesExtractor(
+                new ApiGatewayProxyAttributesExtractor(knownMethods, sensitiveQueryParameters));
+    setFaasInvocationExceptionEventExtractor(builder);
+
+    return new AwsLambdaFunctionInstrumenter(
+        openTelemetry, builder.buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {

@@ -44,13 +44,12 @@ dependencies {
   testLibrary("com.typesafe.play:play-test_2.11:2.5.0")
 
   latestDepTestLibrary("com.typesafe.play:play-java_2.11:2.5.+") // see play-2.6 module
-  latestDepTestLibrary("com.typesafe.play:play-java-ws_2.11:2.5.+") // see play-2.6 module
   latestDepTestLibrary("com.typesafe.play:play-test_2.11:2.5.+") // see play-2.6 module
 }
 
 testing {
   suites {
-    val play24Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("play24Test") {
       dependencies {
         val version = baseVersion("2.4.0").orLatest("2.4.+")
         implementation("com.typesafe.play:play-java_2.11:$version")
@@ -63,27 +62,30 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true"
+      "otel.instrumentation.common.controller-telemetry.enabled=true"
     )
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
-        "otel.semconv-stability.opt-in=service.peer"
-    )
-  }
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}PreviewSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        systemProperty(
+          "metadataConfig",
+          "otel.instrumentation.common.controller-telemetry.enabled=true," +
+            "otel.semconv-stability.preview=service.peer"
+        )
+      }
+    }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, previewSemconvSuites)
   }
 }
 

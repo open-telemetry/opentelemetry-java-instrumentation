@@ -13,14 +13,16 @@ dependencies {
   testImplementation(project(":instrumentation:rocketmq:rocketmq-client-4.8:testing"))
 }
 
-tasks.test {
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  // with default settings tests will fail when disk is 90% full
-  jvmArgs("-Drocketmq.broker.diskSpaceWarningLevelRatio=1.0")
+tasks {
+  test {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    // with default settings tests will fail when disk is 90% full
+    jvmArgs("-Drocketmq.broker.diskSpaceWarningLevelRatio=1.0")
 
-  // used for experimental attributes test assertion logic which looks for this property
-  jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
+    // used for experimental attributes test assertion logic which looks for this property
+    jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
+  }
 }

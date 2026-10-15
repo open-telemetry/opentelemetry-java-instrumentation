@@ -32,15 +32,14 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-myfaces-1.2:javaagent"))
 
   // JSF 4+ requires CDI instead of BeanManager, the test should be upgraded first
-  latestDepTestLibrary("jakarta.el:jakarta.el-api:4.+") // documented limitation
+  latestDepTestLibrary("jakarta.el:jakarta.el-api:4.+") // related dependency
   latestDepTestLibrary("org.apache.myfaces.core:myfaces-api:3.+") // documented limitation
   latestDepTestLibrary("org.apache.myfaces.core:myfaces-impl:3.+") // documented limitation
 }
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 }

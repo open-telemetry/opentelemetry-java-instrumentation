@@ -1,0 +1,126 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
+
+import static java.util.Collections.emptyList;
+
+import io.lettuce.core.protocol.RedisCommand;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
+import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nullable;
+
+final class LettuceBatchRequest {
+  private static final RedisCommandSanitizer sanitizer =
+      RedisCommandSanitizer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "lettuce"));
+  private static final int LIMIT = 32 * 1024;
+
+  private final String operationName;
+  @Nullable private final String queryText;
+  @Nullable private final Long batchSize;
+  private final List<RedisCommand<?, ?, ?>> commands;
+  @Nullable private final LettuceConnectionState connectionState;
+
+  private LettuceBatchRequest(
+      String operationName,
+      @Nullable String queryText,
+      @Nullable Long batchSize,
+      List<RedisCommand<?, ?, ?>> commands,
+      @Nullable LettuceConnectionState connectionState) {
+    this.operationName = operationName;
+    this.queryText = queryText;
+    this.batchSize = batchSize;
+    this.commands = commands;
+    this.connectionState = connectionState;
+  }
+
+  static LettuceBatchRequest create(
+      List<RedisCommand<?, ?, ?>> commands, @Nullable LettuceConnectionState connectionState) {
+    List<RedisCommand<?, ?, ?>> commandSnapshot = new ArrayList<>(commands);
+    return new LettuceBatchRequest(
+        operationName(commandSnapshot),
+        queryText(commandSnapshot),
+        commandSnapshot.size() != 1 ? (long) commandSnapshot.size() : null,
+        commandSnapshot,
+        connectionState);
+  }
+
+  String getOperationName() {
+    return operationName;
+  }
+
+  @Nullable
+  String getQueryText() {
+    return queryText;
+  }
+
+  @Nullable
+  Long getBatchSize() {
+    return batchSize;
+  }
+
+  @Nullable
+  SocketAddress getPeerAddress() {
+    // Read when the span ends so an outbound write after the flush can still supply the peer.
+    return LettuceCommandPeer.batchAddress(commands);
+  }
+
+  @Nullable
+  Integer getDatabaseIndex() {
+    return connectionState == null ? null : connectionState.databaseIndex;
+  }
+
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return connectionState == null ? null : connectionState.serverTarget;
+  }
+
+  private static String operationName(List<RedisCommand<?, ?, ?>> commands) {
+    if (commands.size() == 1) {
+      return LettuceInstrumentationUtil.getCommandName(commands.get(0));
+    }
+    String operationName = LettuceInstrumentationUtil.getCommandName(commands.get(0));
+    for (int i = 1; i < commands.size(); i++) {
+      if (!operationName.equals(LettuceInstrumentationUtil.getCommandName(commands.get(i)))) {
+        return "PIPELINE";
+      }
+    }
+    return "PIPELINE " + operationName;
+  }
+
+  @Nullable
+  private static String queryText(List<RedisCommand<?, ?, ?>> commands) {
+    if (commands.isEmpty()) {
+      return null;
+    }
+
+    StringBuilder builder = new StringBuilder();
+    for (RedisCommand<?, ?, ?> command : commands) {
+      String commandQueryText = queryText(command);
+      String separator = builder.length() == 0 ? "" : "; ";
+      if (builder.length() + separator.length() + commandQueryText.length() > LIMIT) {
+        break;
+      }
+      builder.append(separator).append(commandQueryText);
+    }
+    return builder.toString();
+  }
+
+  private static String queryText(RedisCommand<?, ?, ?> command) {
+    String commandName = LettuceInstrumentationUtil.getCommandName(command);
+    List<String> args =
+        command.getArgs() == null
+            ? emptyList()
+            : LettuceArgSplitter.splitArgs(command.getArgs().toCommandString());
+    return sanitizer.sanitize(commandName, args);
+  }
+}

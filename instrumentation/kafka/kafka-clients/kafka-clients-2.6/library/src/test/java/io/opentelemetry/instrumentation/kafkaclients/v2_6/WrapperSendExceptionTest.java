@@ -46,7 +46,7 @@ class WrapperSendExceptionTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("test-topic publish")
+                    span.hasName("send test-topic")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())));

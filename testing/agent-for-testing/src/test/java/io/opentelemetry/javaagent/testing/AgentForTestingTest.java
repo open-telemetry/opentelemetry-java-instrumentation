@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.testing;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -27,6 +29,11 @@ class AgentForTestingTest {
   @Test
   void empty() {
     assertThat(AgentTestingExporterAccess.getExportedSpans().size()).isEqualTo(0);
+  }
+
+  @Test
+  void initializesContextStorageBeforeInstrumentation() {
+    assertThat(TestAgentListenerAccess.isContextStorageInitializedBeforeInstrumentation()).isTrue();
   }
 
   @Test
@@ -51,10 +58,13 @@ class AgentForTestingTest {
   @Test
   void exportAndRetrieveLogRecords() {
     Logger logger = GlobalOpenTelemetry.get().getLogsBridge().loggerBuilder("test").build();
-    logger.logRecordBuilder().setBody("testBody").emit();
+    logger.logRecordBuilder().setBody("testBody").setAttribute("testKey", "testValue").emit();
 
     List<LogRecordData> logRecords = AgentTestingExporterAccess.getExportedLogRecords();
-    assertThat(logRecords.size()).isEqualTo(1);
-    assertThat(logRecords.get(0).getBodyValue().getValue()).isEqualTo("testBody");
+    assertThat(logRecords).hasSize(1);
+    LogRecordData logRecord = logRecords.get(0);
+    assertThat(logRecord.getBodyValue().getValue()).isEqualTo("testBody");
+    assertThat(logRecord.getAttributes().get(stringKey("testKey"))).isEqualTo("testValue");
+    assertThat(logRecord.getTotalAttributeCount()).isEqualTo(1);
   }
 }

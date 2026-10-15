@@ -15,14 +15,21 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class LettuceInstrumentationModule extends InstrumentationModule {
   public LettuceInstrumentationModule() {
-    super("lettuce", "lettuce-4.0");
+    super("lettuce-4.0", "lettuce");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new LettuceAbstractRedisClientInstrumentation(),
         new LettuceAsyncCommandInstrumentation(),
         new LettuceAsyncCommandsInstrumentation(),
-        new LettuceConnectInstrumentation());
+        new LettuceCommandHandlerInstrumentation(),
+        new LettuceCommandWrapperInstrumentation(),
+        new LettuceReactiveCommandDispatcherInstrumentation(),
+        new LettuceObservableCommandInstrumentation(),
+        new LettuceConnectInstrumentation(),
+        new LettuceClusterClientInstrumentation(),
+        new LettuceMasterSlaveInstrumentation());
   }
 }

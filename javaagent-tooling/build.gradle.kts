@@ -2,6 +2,7 @@ import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
   id("otel.publish-conventions")
   id("otel.jmh-conventions")
 }
@@ -39,7 +40,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-logging-otlp")
 
   implementation("io.opentelemetry:opentelemetry-exporter-prometheus")
-  implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
 
@@ -50,8 +50,6 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
-  implementation("io.opentelemetry.contrib:opentelemetry-samplers")
-
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
   implementation("org.ow2.asm:asm-util")
@@ -71,7 +69,7 @@ dependencies {
 
 testing {
   suites {
-    val testExceptionHandler by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testExceptionHandler") {
       dependencies {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
@@ -82,7 +80,7 @@ testing {
       }
     }
 
-    val testMissingType by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testMissingType") {
       dependencies {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
@@ -106,7 +104,7 @@ testing {
       }
     }
 
-    val testConfigFile by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testConfigFile") {
       dependencies {
         implementation(project(":javaagent-tooling"))
         // requires mockito-inline
@@ -114,7 +112,7 @@ testing {
       }
     }
 
-    val testDistributionConfig by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testDistributionConfig") {
       dependencies {
         implementation(project(":javaagent-extension-api"))
         implementation(project(":instrumentation-api-incubator"))

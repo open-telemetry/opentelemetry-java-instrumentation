@@ -11,12 +11,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import java.util.Map;
 
 /**
- * Spring flavor of {@code SdkConfigProvider} that tries to coerce types, because spring doesn't
- * tell what the original type was.
+ * Adapts Spring-resolved configuration so each typed getter converts to the consumer's requested
+ * type. Values resolved from properties, placeholders, and system-property overrides can be
+ * Strings.
+ *
+ * <p>Runtime consumers share the provider built from the final SDK configuration. Bootstrap model
+ * customizers use a separate view of their current model because the final provider is not yet
+ * available and later customizers may still change the configuration.
  *
  * <p>The entire class is a copy of <a
  * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/SdkConfigProvider.java">SdkConfigProvider</a>
@@ -27,10 +32,8 @@ final class SpringConfigProvider implements ConfigProvider {
 
   private final DeclarativeConfigProperties instrumentationConfig;
 
-  private SpringConfigProvider(
-      OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-    DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
-    this.instrumentationConfig = configProperties.get("instrumentation/development");
+  private SpringConfigProvider(DeclarativeConfigProperties instrumentationConfig) {
+    this.instrumentationConfig = instrumentationConfig;
   }
 
   private static DeclarativeConfigProperties toConfigProperties(
@@ -53,7 +56,15 @@ final class SpringConfigProvider implements ConfigProvider {
    */
   static SpringConfigProvider create(
       OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-    return new SpringConfigProvider(model, componentLoader);
+    DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
+    return new SpringConfigProvider(configProperties.get("instrumentation/development"));
+  }
+
+  static SpringConfigProvider create(DeclarativeConfigProperties instrumentationConfig) {
+    return new SpringConfigProvider(
+        SpringDeclarativeConfigProperties.create(
+            DeclarativeConfigProperties.toMap(instrumentationConfig),
+            instrumentationConfig.getComponentLoader()));
   }
 
   @Override

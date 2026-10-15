@@ -23,6 +23,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
 
   compileOnly("javax.jms:jms-api:1.1-rev-1")
 
@@ -33,7 +34,18 @@ dependencies {
 
 testing {
   suites {
-    val jms2Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("javax.jms:jms-api:1.1-rev-1")
+      }
+    }
+
+    register<JvmTestSuite>("jms2Test") {
       dependencies {
         implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
         implementation("org.hornetq:hornetq-jms-server:2.4.7.Final")
@@ -42,10 +54,10 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
             systemProperty(
               "metadataConfig",
-              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+              "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
             )
           }
         }
@@ -55,11 +67,7 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testReceiveSpansDisabled by registering(Test::class) {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -75,15 +83,18 @@ tasks {
     filter {
       excludeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 
   check {
-    dependsOn(testing.suites, testReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+      testReceiveSpansDisabled,
+    )
   }
 }
 

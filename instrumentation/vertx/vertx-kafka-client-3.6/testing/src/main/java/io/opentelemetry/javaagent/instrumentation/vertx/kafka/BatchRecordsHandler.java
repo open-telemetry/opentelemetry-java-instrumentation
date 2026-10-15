@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,12 +22,14 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
   static final BatchRecordsHandler INSTANCE = new BatchRecordsHandler();
 
   private static final AtomicInteger lastBatchSize = new AtomicInteger();
+  private static final AtomicInteger remainingRecords = new AtomicInteger();
   private static volatile CountDownLatch messageReceived = new CountDownLatch(0);
 
   private BatchRecordsHandler() {}
 
   @Override
   public void handle(KafkaConsumerRecords<String, String> records) {
+    assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
     lastBatchSize.set(records.size());
     IntStream.range(0, records.size()).forEach(it -> messageReceived.countDown());
 
@@ -42,6 +45,7 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
   static void reset(int expectedBatchSize) {
     messageReceived = new CountDownLatch(expectedBatchSize);
     lastBatchSize.set(0);
+    remainingRecords.set(expectedBatchSize);
   }
 
   static void waitForMessages() throws InterruptedException {
@@ -50,5 +54,9 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
 
   static int getLastBatchSize() {
     return lastBatchSize.get();
+  }
+
+  static boolean recordProcessed() {
+    return remainingRecords.decrementAndGet() == 0;
   }
 }

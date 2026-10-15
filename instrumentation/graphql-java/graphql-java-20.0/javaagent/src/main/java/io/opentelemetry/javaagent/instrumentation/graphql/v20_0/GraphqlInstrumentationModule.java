@@ -11,17 +11,15 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @SuppressWarnings("unused")
 @AutoService(InstrumentationModule.class)
-public class GraphqlInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class GraphqlInstrumentationModule extends InstrumentationModule {
 
   public GraphqlInstrumentationModule() {
-    super("graphql-java", "graphql-java-20.0");
+    super("graphql-java-20.0", "graphql-java");
   }
 
   @Override

@@ -360,7 +360,22 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
     assertThat(metricNames).containsAll(expectedMetricNames);
 
-    assertThat(metrics)
+    // After a real produce/consume cycle the broker fires onUpdate() on each reporter; at least one
+    // metric point must carry the resulting cluster id.
+    assertThat(
+            metrics.stream()
+                .flatMap(m -> m.getData().getPoints().stream())
+                .anyMatch(
+                    p -> {
+                      String id = p.getAttributes().get(KafkaClusterId.ATTRIBUTE_KEY);
+                      return id != null && !id.isEmpty();
+                    }))
+        .isTrue();
+
+    // All data points for a given metric must carry the same set of attribute keys, with the
+    // exception of messaging.kafka.cluster.id which may be absent on points emitted before
+    // onUpdate() fires (lazy metadata fetch on first broker contact).
+    assertThat(metrics.stream().filter(metric -> metric.getName().startsWith("kafka.")))
         .allSatisfy(
             metricData -> {
               Set<String> expectedKeys =
@@ -370,6 +385,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                           point ->
                               point.getAttributes().asMap().keySet().stream()
                                   .map(AttributeKey::getKey)
+                                  .filter(k -> !k.equals(KafkaClusterId.ATTRIBUTE_KEY.getKey()))
                                   .collect(toSet()))
                       .orElse(emptySet());
               assertThat(metricData.getData().getPoints())
@@ -378,6 +394,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                       attributes ->
                           attributes.asMap().keySet().stream()
                               .map(AttributeKey::getKey)
+                              .filter(k -> !k.equals(KafkaClusterId.ATTRIBUTE_KEY.getKey()))
                               .collect(toSet()))
                   .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
             });
@@ -430,7 +447,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
           kafkaMetricsByGroup.get(group).stream()
               .sorted(
                   comparing(KafkaMetricId::getName)
-                      .thenComparing(kafkaMetricId -> kafkaMetricId.getAttributeKeys().size()))
+                      .thenComparingInt(kafkaMetricId -> kafkaMetricId.getAttributeKeys().size()))
               .collect(toList());
       // Iterate through metrics in alpha order by name
       for (KafkaMetricId kafkaMetricId : kafkaMetricIds) {

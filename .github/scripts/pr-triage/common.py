@@ -110,9 +110,24 @@ def progress(message: str) -> None:
     print(f"[pr-triage] {message}", flush=True)
 
 
-def run(cmd: list[str], summary: Summary | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
+def run(
+    cmd: list[str],
+    summary: Summary | None = None,
+    check: bool = True,
+    *,
+    stream_output: bool = False,
+) -> subprocess.CompletedProcess[str]:
     if summary is not None:
         progress(f"Running: {format_cmd(cmd)}")
+    if stream_output:
+        return subprocess.run(
+            cmd,
+            cwd=REPO_ROOT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=check,
+        )
     return subprocess.run(
         cmd,
         cwd=REPO_ROOT,
@@ -329,7 +344,14 @@ def make_temp_dir(prefix: str, pr: int, keep_temp: bool) -> Path:
 
 def download_actions_job_log(owner: str, repo: str, job_id: int, path: Path, summary: Summary) -> None:
     api_path = f"repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
-    cmd = ["gh", "api", "-H", "Accept: application/vnd.github+json", api_path]
+    cmd = [
+        "gh",
+        "api",
+        "--allow-escape-sequences",
+        "-H",
+        "Accept: application/vnd.github+json",
+        api_path,
+    ]
     progress(f"Downloading Actions job log {job_id} to {path}")
     with path.open("wb") as output:
         subprocess.run(

@@ -11,26 +11,24 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class HibernateInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class HibernateInstrumentationModule extends InstrumentationModule {
   public HibernateInstrumentationModule() {
-    super("hibernate-procedure-call", "hibernate-procedure-call-4.3", "hibernate");
+    super("hibernate-procedure-call-4.3", "hibernate");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return false;
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 4.3.0.Final
     return hasClassesNamed("org.hibernate.procedure.ProcedureCall");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    return "hibernate";
   }
 
   @Override

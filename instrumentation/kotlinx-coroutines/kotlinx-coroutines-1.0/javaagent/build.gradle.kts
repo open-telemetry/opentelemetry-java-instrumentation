@@ -10,6 +10,7 @@ muzzle {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core")
     versions.set("[1.0.0,1.3.8)")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
@@ -19,14 +20,39 @@ muzzle {
     module.set("kotlinx-coroutines-core-jvm")
     versions.set("[1.3.9,)")
     assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directives above document the range
+    name.set("Kotlin Coroutines Flow core")
+    group.set("org.jetbrains.kotlinx")
+    module.set("kotlinx-coroutines-core")
+    versions.set("[1.3.0,1.3.8)")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
+    excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
+  }
+  // 1.3.9 (and beyond?) have changed how artifact names are resolved due to multiplatform variants
+  pass {
+    // instrumentation-docs:ignore - verification only, the directives above document the range
+    name.set("Kotlin Coroutines Flow JVM")
+    group.set("org.jetbrains.kotlinx")
+    module.set("kotlinx-coroutines-core-jvm")
+    versions.set("[1.3.9,)")
+    assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
+    excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
   }
 }
 
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-kotlin")
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+  compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
+  compileOnly(project(":instrumentation-annotations-support"))
   compileOnly(project(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
   implementation("org.ow2.asm:asm-tree")
@@ -51,5 +77,40 @@ kotlin {
     jvmTarget.set(JvmTarget.JVM_1_8)
     // generate metadata for Java 1.8 reflection on method parameters, used in @WithSpan tests
     javaParameters = true
+  }
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("version13Test") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-extension-kotlin")
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+        implementation(
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.3.0").orLatest()}",
+        )
+        implementation(
+          "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.3.0").orLatest()}",
+        )
+        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+        implementation(project(":instrumentation-annotations"))
+      }
+    }
+  }
+}
+
+tasks {
+  named("byteBuddyKotlin") {
+    enabled = false
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
+  check {
+    dependsOn(testing.suites, testV3Preview)
   }
 }

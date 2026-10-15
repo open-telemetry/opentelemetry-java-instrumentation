@@ -415,7 +415,7 @@ class RuleParserTest {
     assertThat(metricAttributeMap.get("state_attribute")).isInstanceOf(Map.class);
 
     assertThat(jmxRule.getBeans()).containsExactly("my-test:type=9");
-    ObjectName objectName = new ObjectName(jmxRule.getBeans().get(0));
+    ObjectName objectName = new ObjectName(jmxRule.getBeans().iterator().next());
     MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
 
     // mock attribute value
@@ -532,7 +532,7 @@ class RuleParserTest {
 
     MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
     assertThat(rule.getBeans()).containsExactly("my-test:type=11_Hello");
-    ObjectName objectName = new ObjectName(rule.getBeans().get(0));
+    ObjectName objectName = new ObjectName(rule.getBeans().iterator().next());
 
     // mock attribute values
     when(mockConnection.getAttribute(objectName, "negativeDropped")).thenReturn(value);

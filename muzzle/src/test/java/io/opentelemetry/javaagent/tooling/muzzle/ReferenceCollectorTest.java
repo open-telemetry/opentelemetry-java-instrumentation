@@ -10,12 +10,13 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumV
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings.Mapping;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldTestClasses.State;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
@@ -343,10 +344,13 @@ class ReferenceCollectorTest {
     collector.prune();
 
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
-    assertThat(virtualFieldMappings.entrySet())
+    assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
-            entry(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
+            new Mapping(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName(), ""),
+            new Mapping(
+                VirtualFieldTestClasses.Key2.class.getName(),
+                Context.class.getName(),
+                "namedField"));
   }
 
   @Test
@@ -357,10 +361,11 @@ class ReferenceCollectorTest {
     collector.prune();
 
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
-    assertThat(virtualFieldMappings.entrySet())
+    assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
-            entry(VirtualFieldTestClasses.Key1.class.getName(), State.class.getName()));
+            new Mapping(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName(), ""),
+            new Mapping(
+                VirtualFieldTestClasses.Key1.class.getName(), State.class.getName(), "namedField"));
   }
 
   @Test
@@ -371,16 +376,15 @@ class ReferenceCollectorTest {
     collector.prune();
 
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
-    assertThat(virtualFieldMappings.entrySet())
+    assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
-            entry(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
+            new Mapping(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName(), ""),
+            new Mapping(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName(), ""));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource
-  public void shouldNotCollectVirtualFieldsForInvalidScenario(
-      @SuppressWarnings("unused") String desc, String adviceClassName) {
+  public void shouldNotCollectVirtualFieldsForInvalidScenario(String adviceClassName) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
     assertThatExceptionOfType(MuzzleCompilationException.class)
@@ -394,19 +398,19 @@ class ReferenceCollectorTest {
   @SuppressWarnings("unused")
   private static List<Arguments> shouldNotCollectVirtualFieldsForInvalidScenario() {
     return asList(
-        Arguments.of(
+        argumentSet(
             "passing arbitrary variables or parameters to VirtualField.find()",
             VirtualFieldTestClasses.NotUsingClassRefAdvice.class.getName()),
-        Arguments.of(
+        argumentSet(
             "storing class ref in a local var",
             VirtualFieldTestClasses.PassingVariableAdvice.class.getName()),
-        Arguments.of(
+        argumentSet(
             "using array type as the field owner type",
             VirtualFieldTestClasses.UsingArrayAsOwnerAdvice.class.getName()),
-        Arguments.of(
+        argumentSet(
             "using primitive type as the field owner type",
             VirtualFieldTestClasses.UsingPrimitiveAsOwnerAdvice.class.getName()),
-        Arguments.of(
+        argumentSet(
             "using primitive type as the field type",
             VirtualFieldTestClasses.UsingPrimitiveAsFieldAdvice.class.getName()));
   }
@@ -419,11 +423,12 @@ class ReferenceCollectorTest {
     collector.prune();
 
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
-    assertThat(virtualFieldMappings.entrySet())
+    assertThat(virtualFieldMappings.getMappings())
         .containsExactly(
-            entry(
+            new Mapping(
                 VirtualFieldTestClasses.Key1.class.getName(),
-                Type.getType(Context[].class).getClassName()));
+                Type.getType(Context[].class).getClassName(),
+                ""));
   }
 
   private static void assertHelperSuperClassMethod(ClassRef reference, boolean isAbstract) {

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.playws.v1_0.PlayWs10Singletons.instrumenter;
 import static java.util.Arrays.asList;
 
@@ -28,7 +27,7 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 @AutoService(InstrumentationModule.class)
 public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
-    super("play-ws", "play-ws-1.0");
+    super("play-ws-1.0", "play-ws", "play");
   }
 
   @Override
@@ -56,7 +55,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
 
       @Nullable
       public static AdviceScope start(Request request) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }

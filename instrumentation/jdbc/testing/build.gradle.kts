@@ -14,6 +14,7 @@ dependencies {
   compileOnly("com.h2database:h2:1.3.169")
   compileOnly("org.apache.derby:derby:10.6.1.0")
   compileOnly("org.hsqldb:hsqldb:2.0.0")
+  compileOnly("org.xerial:sqlite-jdbc:3.53.1.0")
 
   compileOnly("org.apache.tomcat:tomcat-jdbc:7.0.19")
   compileOnly("org.apache.tomcat:tomcat-juli:7.0.19")

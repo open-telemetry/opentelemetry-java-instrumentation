@@ -5,43 +5,46 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
 
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#span-name">
-   * messaging semantic conventions</a>: {@code <destination name> <operation name>}.
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-name">
+   * messaging semantic conventions</a>.
    *
+   * @param operationName the system-specific name of the operation, used as the {@code <operation
+   *     name>} part of the span name, e.g. {@code send}, {@code poll} or {@code ack}.
    * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <destination
    *     name>}.
-   * @see MessageOperation used to extract {@code <operation name>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
-    return new MessagingSpanNameExtractor<>(getter, operation);
+      MessagingAttributesGetter<REQUEST, ?> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    requireNonNull(operationType, "operationType");
+    return new MessagingSpanNameExtractor<>(getter, requireNonNull(operationName, "operationName"));
   }
 
   private final MessagingAttributesGetter<REQUEST, ?> getter;
-  private final MessageOperation operation;
+  private final String operationName;
 
-  private MessagingSpanNameExtractor(
-      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
+  MessagingSpanNameExtractor(MessagingAttributesGetter<REQUEST, ?> getter, String operationName) {
     this.getter = getter;
-    this.operation = operation;
+    this.operationName = operationName;
   }
 
   @Override
   public String extract(REQUEST request) {
-    String destinationName =
-        getter.isTemporaryDestination(request)
-            ? MessagingAttributesExtractor.TEMP_DESTINATION_NAME
-            : getter.getDestination(request);
-    if (destinationName == null) {
-      destinationName = "unknown";
+    String destinationName = getter.getDestinationTemplate(request);
+    if (destinationName == null
+        && !getter.isTemporaryDestination(request)
+        && !getter.isAnonymousDestination(request)) {
+      destinationName = getter.getDestination(request);
     }
-
-    return destinationName + " " + operation.operationName();
+    return destinationName == null ? operationName : operationName + " " + destinationName;
   }
 }

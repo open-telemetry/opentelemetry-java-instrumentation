@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -22,6 +23,11 @@ import org.junit.jupiter.api.io.TempDir;
 class JarDetailsTest {
 
   @Test
+  void toHex_encodesBytes() {
+    assertThat(JarDetails.toHex("hello".getBytes(UTF_8))).isEqualTo("68656c6c6f");
+  }
+
+  @Test
   void forUrl_handlesPathWithSpaces(@TempDir Path tempDir) throws IOException {
     Path dirWithSpaces = Files.createDirectories(tempDir.resolve("dir with spaces"));
     Path jarPath = dirWithSpaces.resolve("test.jar");
@@ -33,7 +39,7 @@ class JarDetailsTest {
     JarDetails details = JarDetails.forUrl(url);
 
     assertThat(details.packageDescription()).isEqualTo("Test Title by Test Vendor");
-    assertThat(details.computeSha1()).isNotEmpty();
+    assertThat(details.computeSha256()).matches("[0-9a-f]{64}");
   }
 
   @Test
@@ -59,7 +65,7 @@ class JarDetailsTest {
     JarDetails details = JarDetails.forUrl(url);
 
     assertThat(details.packageDescription()).isEqualTo("Inner Title by Inner Vendor");
-    assertThat(details.computeSha1()).isNotEmpty();
+    assertThat(details.computeSha256()).matches("[0-9a-f]{64}");
   }
 
   @Test
@@ -86,7 +92,7 @@ class JarDetailsTest {
     JarDetails details = JarDetails.forUrl(url);
 
     assertThat(details.packageDescription()).isEqualTo("Inner Title by Inner Vendor");
-    assertThat(details.computeSha1()).isNotEmpty();
+    assertThat(details.computeSha256()).matches("[0-9a-f]{64}");
   }
 
   private static Manifest manifest(String title, String vendor) {

@@ -17,6 +17,7 @@ dependencies {
   compileOnly("software.amazon.awssdk:kinesis:2.2.0")
   compileOnly("software.amazon.awssdk:lambda:2.2.0")
   compileOnly("software.amazon.awssdk:rds:2.2.0")
+  compileOnly("software.amazon.awssdk:rdsdata:2.5.54")
   compileOnly("software.amazon.awssdk:s3:2.2.0")
   compileOnly("software.amazon.awssdk:secretsmanager:2.2.0")
   compileOnly("software.amazon.awssdk:ses:2.2.0")

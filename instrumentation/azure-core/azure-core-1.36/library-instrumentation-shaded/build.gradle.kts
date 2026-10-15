@@ -24,7 +24,7 @@ tasks {
     relocate("com.azure.core.tracing.opentelemetry", "io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.shaded.com.azure.core.tracing.opentelemetry")
   }
 
-  val extractShadowJar by registering(Copy::class) {
+  register<Copy>("extractShadowJar") {
     dependsOn(shadowJar)
     from(zipTree(shadowJar.get().archiveFile))
     into("build/extracted/shadow")

@@ -8,12 +8,11 @@ package io.opentelemetry.spring.smoketest;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
@@ -21,9 +20,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Arrays.asList;
@@ -34,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
@@ -84,14 +82,11 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
   @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired private ConfigProvider configProvider;
 
   abstract void makeClientCall();
 
   abstract void restTemplateCall(String path);
-
-  protected boolean preferJfr() {
-    return false;
-  }
 
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
@@ -158,6 +153,14 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   }
 
   @Test
+  void configProviderReflectsConfiguredProperties() {
+    // otel.instrumentation.kafka.experimental-span-attributes=true in application.yaml
+    DeclarativeConfigProperties kafkaConfig =
+        configProvider.getInstrumentationConfig().getStructured("java").getStructured("kafka");
+    assertThat(kafkaConfig.getBoolean("experimental_span_attributes/development")).isTrue();
+  }
+
+  @Test
   void propertyConversion() {
     ConfigProperties configProperties =
         SpringConfigProperties.create(
@@ -176,7 +179,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
-  @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() throws InterruptedException, TimeoutException {
     makeClientCall();
 
@@ -187,7 +189,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                     spanDataAssert
                         .hasKind(SpanKind.CLIENT)
                         .hasAttribute(
-                            DB_STATEMENT,
+                            DB_QUERY_TEXT,
                             "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
@@ -233,8 +235,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
     // Also not available on Windows (getSystemLoadAverage returns -1)
-    // Not available when prefer-jfr is enabled (JMX-only metric with no JFR equivalent)
-    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs() && !preferJfr()) {
+    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs()) {
       runtimeMetrics.add("jvm.system.cpu.load_1m");
     }
 
@@ -269,15 +270,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       MapAssert<AttributeKey<?>, Object> attributesAssert =
           assertThat(firstLog.getAttributes().asMap());
 
-      if (emitStableDatabaseSemconv()) {
-        attributesAssert.containsEntry(
-            CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
-      }
-      if (emitOldCodeSemconv()) {
-        attributesAssert
-            .containsEntry(CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger")
-            .containsEntry(CODE_FUNCTION, "logStarting");
-      }
+      attributesAssert.containsEntry(
+          CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
     }
   }
 
@@ -339,7 +333,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                 span -> span.hasName("server"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasAttribute(DB_STATEMENT, "select name from customer where id = 1")));
+                        .hasAttribute(DB_QUERY_TEXT, "select name from customer where id = 1")));
   }
 
   @Test

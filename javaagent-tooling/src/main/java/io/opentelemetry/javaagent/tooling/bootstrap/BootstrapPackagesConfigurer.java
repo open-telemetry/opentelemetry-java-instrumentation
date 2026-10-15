@@ -24,5 +24,13 @@ public interface BootstrapPackagesConfigurer {
    * Configure the passed {@code builder} and define which classes should always be loaded by the
    * bootstrap class loader.
    */
-  void configure(BootstrapPackagesBuilder builder, ConfigProperties config);
+  default void configure(BootstrapPackagesBuilder builder) {}
+
+  /**
+   * Configure the passed {@code builder} and define which classes should always be loaded by the
+   * bootstrap class loader.
+   */
+  default void configure(BootstrapPackagesBuilder builder, ConfigProperties config) {
+    configure(builder);
+  }
 }

@@ -17,7 +17,8 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -30,12 +31,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
+import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -43,54 +48,121 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
   @Override
   protected void assertSqsTraces(boolean withParent, boolean captureHeaders) {
+    // with an ambient span the process span is parented to it rather than to the message creation
+    // context, which puts it in the same trace as the ambient span
+    boolean processInParentTrace = withParent;
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+
     List<Consumer<TraceAssert>> traceAsserts =
         new ArrayList<>(
             asList(
                 trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)),
-                trace ->
-                    trace.hasSpansSatisfyingExactly(
-                        span -> publishSpan(span, queueUrl, "SendMessage"),
-                        span -> processSpan(span, trace.getSpan(0)),
+                trace -> {
+                  List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
+                  spanAsserts.add(
+                      span -> {
+                        publishSpan.set(trace.getSpan(0));
+                        publishSpan(span, queueUrl, "SendMessage");
+                      });
+                  if (!processInParentTrace) {
+                    spanAsserts.add(span -> processSpan(span, trace.getSpan(0)));
+                    spanAsserts.add(
                         span ->
                             span.hasName("process child")
                                 .hasParent(trace.getSpan(1))
-                                .hasTotalAttributeCount(0))));
+                                .hasTotalAttributeCount(0));
+                  }
+                  trace.hasSpansSatisfyingExactly(spanAsserts);
+                }));
 
     if (withParent) {
-      /*
-       * This span represents HTTP "sending of receive message" operation. It's always single,
-       * while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then
-       * HTTP instrumentation span would appear)
-       */
       traceAsserts.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasNoParent(),
+          trace -> {
+            List<Consumer<SpanDataAssert>> spanAsserts =
+                new ArrayList<>(
+                    asList(
+                        span -> span.hasName("parent").hasNoParent(),
+                        /*
+                         * This span represents HTTP "sending of receive message" operation. It's always single,
+                         * while there can be multiple CONSUMER spans (one per consumed message).
+                         * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then
+                         * HTTP instrumentation span would appear)
+                         */
+                        span ->
+                            span.hasName("Sqs.ReceiveMessage")
+                                .hasKind(SpanKind.CLIENT)
+                                .hasTotalRecordedLinks(0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                    equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                                    satisfies(
+                                        AWS_REQUEST_ID,
+                                        val ->
+                                            val.matches(
+                                                "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
+                                    equalTo(RPC_SYSTEM, "aws-api"),
+                                    equalTo(RPC_SERVICE, "Sqs"),
+                                    equalTo(RPC_METHOD, "ReceiveMessage"),
+                                    equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                    satisfies(
+                                        URL_FULL,
+                                        val -> val.startsWith("http://localhost:" + sqsPort)),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, sqsPort))));
+
+            if (processInParentTrace) {
+              spanAsserts.add(span -> processSpan(span, trace.getSpan(0), publishSpan.get()));
+              spanAsserts.add(
                   span ->
-                      span.hasName("Sqs.ReceiveMessage")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasTotalRecordedLinks(0)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                              equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                              satisfies(
-                                  AWS_REQUEST_ID,
-                                  val ->
-                                      val.matches(
-                                          "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
-                              equalTo(RPC_SYSTEM, "aws-api"),
-                              equalTo(RPC_SERVICE, "Sqs"),
-                              equalTo(RPC_METHOD, "ReceiveMessage"),
-                              equalTo(HTTP_REQUEST_METHOD, "POST"),
-                              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(
-                                  URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              equalTo(SERVER_PORT, sqsPort))));
+                      span.hasName("process child")
+                          .hasParent(trace.getSpan(2))
+                          .hasTotalAttributeCount(0));
+            }
+
+            trace.hasSpansSatisfyingExactly(spanAsserts);
+          });
     }
 
     getTesting().waitAndAssertTraces(traceAsserts);
+  }
+
+  @Test
+  void testAbandonedIteratorDoesNotParentNextProcessSpan() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+
+    client.createQueue(createQueueRequest);
+    client.sendMessage(sendMessageRequest.toBuilder().messageBody("first").build());
+    ReceiveMessageResponse firstResponse = client.receiveMessage(receiveMessageRequest);
+    client.sendMessage(sendMessageRequest.toBuilder().messageBody("second").build());
+    ReceiveMessageResponse secondResponse = client.receiveMessage(receiveMessageRequest);
+
+    Iterator<Message> firstIterator = firstResponse.messages().iterator();
+    Iterator<Message> secondIterator = secondResponse.messages().iterator();
+    assertThat(firstIterator.hasNext()).isTrue();
+    firstIterator.next();
+    assertThat(secondIterator.hasNext()).isTrue();
+    secondIterator.next();
+    assertThat(secondIterator.hasNext()).isFalse();
+    assertThat(firstIterator.hasNext()).isFalse();
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("Sqs.CreateQueue").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("send testSdkSqs").hasNoParent(),
+                    span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("send testSdkSqs").hasNoParent(),
+                    span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
+
+    SqsMetricsAssertions.assertProcessMetrics(getTesting(), sqsPort, 2);
   }
 
   @Test
@@ -113,8 +185,46 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
     assertThat(response.messages()).hasSize(3);
 
-    // +2: 3 messages, 2x traceparent, 1x not injected due to too many attrs
-    assertThat(totalAttrs).isEqualTo(18 + (isSqsAttributeInjectionEnabled() ? 2 : 0));
+    assertThat(totalAttrs).isEqualTo(10 + (isSqsAttributeInjectionEnabled() ? 3 : 0));
+
+    if (canInjectBatchCreationContext()) {
+      List<SpanData> createSpans = new ArrayList<>();
+      List<Consumer<TraceAssert>> traceAsserts = new ArrayList<>();
+      traceAsserts.add(trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)));
+      for (int i = 0; i < 3; i++) {
+        traceAsserts.add(
+            trace -> {
+              SpanData createSpan = trace.getSpan(0);
+              createSpans.add(createSpan);
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("create testSdkSqs")
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                              equalTo(MESSAGING_OPERATION_NAME, "create"),
+                              equalTo(MESSAGING_OPERATION_TYPE, "create")),
+                  span -> processSpan(span, createSpan, createSpan));
+            });
+      }
+      traceAsserts.add(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      publishSpan(span, queueUrl, "SendMessageBatch", 3L)
+                          .hasLinksSatisfying(
+                              links ->
+                                  assertThat(links)
+                                      .extracting(link -> link.getSpanContext().getSpanId())
+                                      .containsExactlyInAnyOrder(
+                                          createSpans.get(0).getSpanId(),
+                                          createSpans.get(1).getSpanId(),
+                                          createSpans.get(2).getSpanId()))));
+      getTesting().waitAndAssertTraces(traceAsserts);
+      return;
+    }
 
     List<Consumer<TraceAssert>> traceAsserts =
         new ArrayList<>(
@@ -123,20 +233,24 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                 trace -> {
                   List<Consumer<SpanDataAssert>> spanAsserts =
                       new ArrayList<>(
-                          singletonList(span -> publishSpan(span, queueUrl, "SendMessageBatch")));
+                          singletonList(
+                              span -> publishSpan(span, queueUrl, "SendMessageBatch", 3L)));
 
-                  for (int i = 0; i <= (isXrayInjectionEnabled() ? 2 : 1); i++) {
+                  int propagatedMessages =
+                      isXrayInjectionEnabled() || isSqsAttributeInjectionEnabled() ? 3 : 0;
+                  for (int i = 0; i < propagatedMessages; i++) {
                     spanAsserts.add(span -> processSpan(span, trace.getSpan(0)));
                   }
                   trace.hasSpansSatisfyingExactly(spanAsserts);
                 }));
 
-    if (!isXrayInjectionEnabled()) {
+    int propagatedMessages = isXrayInjectionEnabled() || isSqsAttributeInjectionEnabled() ? 3 : 0;
+    for (int i = propagatedMessages; i < 3; i++) {
       traceAsserts.add(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName("testSdkSqs process")
+                      span.hasName("process testSdkSqs")
                           .hasKind(SpanKind.CONSUMER)
                           // TODO: This is not good, and can also happen if producer is not
                           // instrumented
@@ -155,7 +269,8 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                               equalTo(SERVER_PORT, sqsPort),
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                              equalTo(MESSAGING_OPERATION, "process"),
+                              equalTo(MESSAGING_OPERATION_NAME, "process"),
+                              equalTo(MESSAGING_OPERATION_TYPE, "process"),
                               satisfies(
                                   MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)))));
     }

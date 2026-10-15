@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.util;
 
 import io.opentelemetry.javaagent.tooling.util.ClassLoaderMap.Injector;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * Associate value with a class loader. Added value will behave as if it was stored in a field in
@@ -27,6 +28,7 @@ public final class ClassLoaderValue<T> {
     this.classInjector = classInjector;
   }
 
+  @Nullable
   @SuppressWarnings("unchecked") // we lose generic type when storing it in ClassLoaderMap
   public T get(ClassLoader classLoader) {
     return (T) ClassLoaderMap.get(classLoader, classInjector, this);

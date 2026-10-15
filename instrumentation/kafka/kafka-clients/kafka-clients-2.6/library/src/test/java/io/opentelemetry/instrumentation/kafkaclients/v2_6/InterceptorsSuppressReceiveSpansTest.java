@@ -8,23 +8,30 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
   private static final KafkaTelemetry kafkaTelemetry =
-      KafkaTelemetry.create(testing.getOpenTelemetry());
+      KafkaTelemetry.builder(testing.getOpenTelemetry())
+          .setMessagingReceiveTelemetryEnabled(false)
+          .build();
 
   @Override
   protected KafkaTelemetry kafkaTelemetry() {
@@ -36,7 +43,11 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
     return false;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Override
+  protected boolean receiveTelemetryEnabled() {
+    return false;
+  }
+
   @Override
   void assertTraces() {
     testing.waitAndAssertTraces(
@@ -44,32 +55,15 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(SHARED_TOPIC + " publish")
+                    span.hasName("send " + SHARED_TOPIC)
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "kafka"),
-                            equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                            equalTo(MESSAGING_OPERATION, "publish"),
-                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer"))),
+                        .hasAttributesSatisfyingExactly(sendAttributes()),
                 span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "kafka"),
-                            equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                            equalTo(MESSAGING_OPERATION, "process"),
-                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
-                            satisfies(
-                                MESSAGING_DESTINATION_PARTITION_ID,
-                                AbstractStringAssert::isNotEmpty),
-                            satisfies(
-                                MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-                            equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
-                            equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"),
-                            equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2")),
+                        .hasAttributesSatisfyingExactly(processAttributes()),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
@@ -80,5 +74,37 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  private static List<AttributeAssertion> sendAttributes() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send")));
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    return assertions;
+  }
+
+  private static List<AttributeAssertion> processAttributes() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
+                equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"),
+                equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    return assertions;
   }
 }

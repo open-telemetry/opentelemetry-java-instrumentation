@@ -46,15 +46,17 @@ final class JarAnalyzer implements ClassFileTransformer {
       java.util.logging.Logger.getLogger(JarAnalyzer.class.getName());
 
   private static final String EVENT_NAME_INFO = "package.info";
-  static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
-  static final AttributeKey<String> PACKAGE_VERSION = AttributeKey.stringKey("package.version");
-  static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
-  static final AttributeKey<String> PACKAGE_DESCRIPTION =
+  private static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
+  private static final AttributeKey<String> PACKAGE_VERSION =
+      AttributeKey.stringKey("package.version");
+  private static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
+  private static final AttributeKey<String> PACKAGE_DESCRIPTION =
       AttributeKey.stringKey("package.description");
-  static final AttributeKey<String> PACKAGE_CHECKSUM = AttributeKey.stringKey("package.checksum");
-  static final AttributeKey<String> PACKAGE_CHECKSUM_ALGORITHM =
+  private static final AttributeKey<String> PACKAGE_CHECKSUM =
+      AttributeKey.stringKey("package.checksum");
+  private static final AttributeKey<String> PACKAGE_CHECKSUM_ALGORITHM =
       AttributeKey.stringKey("package.checksum_algorithm");
-  static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
+  private static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
 
   private final Set<URI> seenUris = ConcurrentHashMap.newKeySet();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
@@ -220,9 +222,9 @@ final class JarAnalyzer implements ClassFileTransformer {
     builder.put(PACKAGE_VERSION, jarDetails.version());
     builder.put(PACKAGE_DESCRIPTION, jarDetails.packageDescription());
 
-    String packageChecksum = jarDetails.computeSha1();
+    String packageChecksum = jarDetails.computeSha256();
     builder.put(PACKAGE_CHECKSUM, packageChecksum);
-    builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA1");
+    builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256");
 
     logger
         .logRecordBuilder()

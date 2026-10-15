@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation.ApplicationContextPropagators;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerFactory;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.propagation.ApplicationContextPropagators;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.ApplicationTracerFactory;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeterFactory;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeterProvider;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics.ApplicationMeterFactory115;
@@ -66,10 +66,16 @@ public class ApplicationOpenTelemetry127 implements application.io.opentelemetry
   }
 
   private static ApplicationMeterFactory getMeterFactory() {
-    // this class is defined in opentelemetry-api-1.40
+    // this class is defined in opentelemetry-api-1.65
     ApplicationMeterFactory meterFactory =
         getMeterFactory(
-            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics.ApplicationMeterFactory140Incubator");
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_65.incubator.metrics.ApplicationMeterFactory165Incubator");
+    if (meterFactory == null) {
+      // this class is defined in opentelemetry-api-1.40
+      meterFactory =
+          getMeterFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics.ApplicationMeterFactory140Incubator");
+    }
     if (meterFactory == null) {
       // this class is defined in opentelemetry-api-1.38
       meterFactory =
@@ -119,10 +125,22 @@ public class ApplicationOpenTelemetry127 implements application.io.opentelemetry
   }
 
   private static ApplicationLoggerFactory getLoggerFactory() {
-    // this class is defined in opentelemetry-api-1.50
+    // this class is defined in opentelemetry-api-1.63
     ApplicationLoggerFactory loggerFactory =
         getLoggerFactory(
-            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs.ApplicationLoggerFactory150Incubator");
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_63.incubator.logs.ApplicationLoggerFactory163Incubator");
+    if (loggerFactory == null) {
+      // this class is defined in opentelemetry-api-1.63
+      loggerFactory =
+          getLoggerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_63.logs.ApplicationLoggerFactory163");
+    }
+    // this class is defined in opentelemetry-api-1.50
+    if (loggerFactory == null) {
+      loggerFactory =
+          getLoggerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs.ApplicationLoggerFactory150Incubator");
+    }
     if (loggerFactory == null) {
       // this class is defined in opentelemetry-api-1.50
       loggerFactory =

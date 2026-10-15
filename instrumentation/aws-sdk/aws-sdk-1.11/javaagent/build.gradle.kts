@@ -16,7 +16,7 @@ muzzle {
     versions.set("[1.10.33,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("aws-sdk-1.11-sqs")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.SqsInstrumentationModule")
   }
 
   fail {
@@ -24,7 +24,7 @@ muzzle {
     module.set("aws-java-sdk-core")
     versions.set("[1.10.33,)")
 
-    excludeInstrumentationName("aws-sdk-1.11-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkInstrumentationModule")
   }
 
   pass {
@@ -75,7 +75,7 @@ testing {
     // in 1.11.106 than 1.11.84.
     // We test older version in separate test set to test newer version and latest deps in the 'default'
     // test dir. Otherwise we get strange warnings in Idea.
-    val test_before_1_11_106 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("test_before_1_11_106") {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
@@ -94,7 +94,7 @@ testing {
     // We test SQS separately since we have special logic for it and want to make sure the presence of
     // SQS on the classpath doesn't conflict with tests for usage of the core SDK. This only affects
     // the agent.
-    val testSqs by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSqs") {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
         implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
@@ -103,13 +103,13 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
           }
         }
       }
     }
 
-    val testSqsNoReceiveTelemetry by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSqsNoReceiveTelemetry") {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
         implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
@@ -134,19 +134,6 @@ tasks {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 
   if (otelProps.denyUnsafe) {

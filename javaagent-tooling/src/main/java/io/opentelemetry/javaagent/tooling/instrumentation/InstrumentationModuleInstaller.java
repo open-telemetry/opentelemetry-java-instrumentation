@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
-import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -59,20 +58,22 @@ public final class InstrumentationModuleInstaller {
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
 
   private final Instrumentation instrumentation;
+  private final ClassLoader extensionsClassLoader;
   private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
       VirtualFieldImplementationInstallerFactory.getInstance();
-  private final AdviceInspector adviceInspector =
-      new AdviceInspector(
-          new ClassFileLocator.Compound(
-              ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader()),
-              ClassFileLocator.ForClassLoader.of(Utils.getExtensionsClassLoader())));
+  private final AdviceInspector adviceInspector;
 
-  public InstrumentationModuleInstaller(Instrumentation instrumentation) {
+  public InstrumentationModuleInstaller(
+      Instrumentation instrumentation, ClassLoader extensionsClassLoader) {
     this.instrumentation = instrumentation;
+    this.extensionsClassLoader = extensionsClassLoader;
+    this.adviceInspector =
+        new AdviceInspector(
+            new ClassFileLocator.Compound(
+                ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader()),
+                ClassFileLocator.ForClassLoader.of(extensionsClassLoader)));
   }
 
-  // Need to call deprecated API for backward compatibility with modules that haven't migrated
-  @SuppressWarnings("deprecation")
   AgentBuilder install(
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
@@ -103,10 +104,6 @@ public final class InstrumentationModuleInstaller {
   }
 
   private boolean useIndy(InstrumentationModule instrumentationModule) {
-    // currently needs to be enabled with a flag
-    if (!AgentDistributionConfig.get().isIndyEnabled()) {
-      return false;
-    }
     // first check whether user has specified how the helper classes should be handled
     if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
       HelperClassStrategy helperClassStrategy =
@@ -120,6 +117,7 @@ public final class InstrumentationModuleInstaller {
           // fallthrough to the next check
       }
     }
+
     // check whether muzzle has collected information about the advice classes
     if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
       Boolean useIsolated =
@@ -150,24 +148,15 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    List<String> injectedHelperClassNames;
-    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
-      ExperimentalInstrumentationModule experimentalInstrumentationModule =
-          (ExperimentalInstrumentationModule) instrumentationModule;
-      injectedHelperClassNames = experimentalInstrumentationModule.injectedClassNames();
-    } else {
-      injectedHelperClassNames = emptyList();
-    }
+    List<String> injectedHelperClassNames = instrumentationModule.injectedClassNames();
 
     MuzzleMatcher muzzleMatcher =
         new MuzzleMatcher(
             logger,
             instrumentationModule,
             cl ->
-                // In indy modules muzzle searches for types in both application class loader and in
-                // the agent class loader. Since we allow using agent class in indy instrumentation
-                // these classes are treated as regular non-helper classes for which muzzle performs
-                // reference checks.
+                // With isolated helpers, muzzle searches application and agent class loaders.
+                // Agent classes are non-helper classes, so muzzle checks their references.
                 IndyModuleRegistry.createInstrumentationClassLoaderForMuzzle(
                     instrumentationModule, cl));
 
@@ -244,7 +233,7 @@ public final class InstrumentationModuleInstaller {
             instrumentationModule.instrumentationName(),
             helperClassNames,
             helperResourceBuilder.getResources(),
-            Utils.getExtensionsClassLoader(),
+            extensionsClassLoader,
             instrumentation);
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);

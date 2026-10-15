@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
@@ -74,6 +77,7 @@ public final class ThriftInstrumenterFactory {
         .addOperationMetrics(RpcClientMetrics.get())
         .addContextCustomizer(
             RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+    setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
@@ -105,6 +109,7 @@ public final class ThriftInstrumenterFactory {
         .addOperationMetrics(RpcServerMetrics.get())
         .addContextCustomizer(
             RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+    setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
 

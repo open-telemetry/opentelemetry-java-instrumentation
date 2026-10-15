@@ -1,20 +1,20 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "3.1.2"
-    id("com.google.cloud.tools.jib") version "3.5.3"
-    id("com.gradle.plugin-publish") version "2.1.1"
+    id("com.github.jk1.dependency-license-report") version "3.1.4"
+    id("com.google.cloud.tools.jib") version "3.5.4"
+    id("com.gradle.plugin-publish") version "2.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.3.21"
+    id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
-    id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "1.1.0"
+    id("com.github.bjornvester.xjc") version "1.9.1"
+    id("org.graalvm.buildtools.native") version "1.1.14"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.6.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.8.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.4.1"
+  id("com.gradle.develocity") version "4.6.0"
 }
 
 dependencyResolutionManagement {
@@ -68,11 +68,15 @@ dependencyResolutionManagement {
   }
 }
 
-val develocityServer = "https://develocity.opentelemetry.io"
+val develocityServer = "https://community.develocity.cloud"
 val isCI = System.getenv("CI") != null
 val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
+val isRemoteBuildCachePushEnabled = isCI && develocityAccessKey.isNotEmpty()
+val shouldDisableLocalBuildCache =
+  isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
+  projectId = "OpenTelemetry"
   if (develocityAccessKey.isNotEmpty()) {
     server = develocityServer
   }
@@ -106,9 +110,15 @@ develocity {
 }
 
 buildCache {
+  // a task loaded from the local build cache is never pushed to the remote build cache, so on main
+  // builds that write the remote cache the local cache is disabled, otherwise everything that
+  // doesn't change is served locally, never re-executed, and never reaches the remote cache
+  local {
+    isEnabled = !shouldDisableLocalBuildCache
+  }
   remote(develocity.buildCache) {
     server = develocityServer
-    isPush = isCI && develocityAccessKey.isNotEmpty()
+    isPush = isRemoteBuildCachePushEnabled
   }
 }
 
@@ -171,6 +181,8 @@ include(":smoke-tests:images:spring-boot")
 include(":smoke-tests:extensions:testapp")
 include(":smoke-tests:extensions:extension")
 
+include(":smoke-tests-osgi")
+
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
@@ -183,11 +195,14 @@ include(":smoke-tests-otel-starter:spring-boot-reactive-common")
 
 include(":instrumentation:activej-http-6.0:javaagent")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
-include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:library")
 include(":instrumentation:alibaba-druid-1.0:testing")
+include(":instrumentation:apache-commons-pool-2.0:bootstrap")
+include(":instrumentation:apache-commons-pool-2.0:javaagent")
+include(":instrumentation:apache-commons-pool-2.0:library")
+include(":instrumentation:apache-commons-pool-2.0:testing")
 include(":instrumentation:apache-dbcp-2.0:javaagent")
 include(":instrumentation:apache-dbcp-2.0:library")
 include(":instrumentation:apache-dbcp-2.0:testing")
@@ -241,8 +256,11 @@ include(":instrumentation:c3p0-0.9:testing")
 include(":instrumentation:camel-2.20:javaagent")
 include(":instrumentation:camel-2.20:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-3.0:javaagent")
+include(":instrumentation:cassandra:cassandra-3.0:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.0:javaagent")
+include(":instrumentation:cassandra:cassandra-4.0:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.4:javaagent")
+include(":instrumentation:cassandra:cassandra-4.4:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.4:library")
 include(":instrumentation:cassandra:cassandra-4.4:testing")
 include(":instrumentation:cassandra:cassandra-common-4.0:testing")
@@ -251,17 +269,15 @@ include(":instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent")
 include(":instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent")
 include(":instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent")
 include(":instrumentation:couchbase:couchbase-2.0:javaagent")
-include(":instrumentation:couchbase:couchbase-2.6:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent-unit-tests")
+include(":instrumentation:couchbase:couchbase-common-3.0:javaagent")
+include(":instrumentation:couchbase:couchbase-common-3.0:javaagent-unit-tests")
+include(":instrumentation:couchbase:couchbase-common-3.1:javaagent")
+include(":instrumentation:couchbase:couchbase-common-3.1:javaagent-unit-tests")
+include(":instrumentation:couchbase:couchbase-3.0:javaagent")
 include(":instrumentation:couchbase:couchbase-3.1:javaagent")
-include(":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded")
-include(":instrumentation:couchbase:couchbase-3.1.6:javaagent")
-include(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-3.2:javaagent")
-include(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
-include(":instrumentation:couchbase:couchbase-3.4:javaagent")
-include(":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-common:testing")
 include(":instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent")
 include(":instrumentation:dropwizard:dropwizard-testing")
@@ -271,26 +287,27 @@ include(":instrumentation:elasticsearch:elasticsearch-api-client-7.16:javaagent-
 include(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-6.4:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-7.0:javaagent")
-include(":instrumentation:elasticsearch:elasticsearch-rest-7.0:library")
+include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:bootstrap")
 include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent")
-include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:library")
+include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent-unit-tests")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent")
+include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent-unit-tests")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing")
 include(":instrumentation:executors:bootstrap")
 include(":instrumentation:executors:javaagent")
 include(":instrumentation:executors:jdk21-testing")
 include(":instrumentation:executors:testing")
 include(":instrumentation:external-annotations:javaagent")
-include(":instrumentation:external-annotations:javaagent-unit-tests")
 include(":instrumentation:failsafe-3.0:library")
 include(":instrumentation:finagle-http-23.11:compile-stub")
 include(":instrumentation:finagle-http-23.11:javaagent")
 include(":instrumentation:finatra-2.9:javaagent")
 include(":instrumentation:geode-1.4:javaagent")
+include(":instrumentation:geode-1.4:javaagent-unit-tests")
 include(":instrumentation:google-http-client-1.19:javaagent")
 include(":instrumentation:grails-3.0:javaagent")
 include(":instrumentation:graphql-java:graphql-java-12.0:javaagent")
@@ -306,6 +323,12 @@ include(":instrumentation:grpc-1.6:testing")
 include(":instrumentation:guava-10.0:javaagent")
 include(":instrumentation:guava-10.0:library")
 include(":instrumentation:gwt-2.0:javaagent")
+include(":instrumentation:hbase:hbase-client-1.0:javaagent")
+include(":instrumentation:hbase:hbase-client-1.4:javaagent")
+include(":instrumentation:hbase:hbase-client-2.0:javaagent")
+include(":instrumentation:hbase:hbase-client-common-1.0:javaagent")
+include(":instrumentation:hbase:hbase-client-common-1.0:javaagent-unit-tests")
+include(":instrumentation:hbase:hbase-client-common-1.0:testing")
 include(":instrumentation:helidon-4.3:javaagent")
 include(":instrumentation:helidon-4.3:library")
 include(":instrumentation:helidon-4.3:testing")
@@ -348,7 +371,7 @@ include(":instrumentation:java-util-logging:shaded-stub-for-instrumenting")
 include(":instrumentation:javalin:javalin-5.0:javaagent")
 include(":instrumentation:javalin:javalin-7.0:javaagent")
 include(":instrumentation:javalin:testing")
-include(":instrumentation:jaxrs:jaxrs-1.0:javaagent")
+include(":instrumentation:jaxrs:jaxrs-1.0-annotations:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing")
 include(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent")
@@ -390,12 +413,14 @@ include(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaage
 include(":instrumentation:jboss-logmanager:jboss-logmanager-mdc-1.1:javaagent")
 include(":instrumentation:jdbc:bootstrap")
 include(":instrumentation:jdbc:javaagent")
+include(":instrumentation:jdbc:javaagent-common")
 include(":instrumentation:jdbc:library")
 include(":instrumentation:jdbc:testing")
-include(":instrumentation:jedis:jedis-1.4:javaagent")
-include(":instrumentation:jedis:jedis-1.4:testing")
+include(":instrumentation:jedis:jedis-2.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent")
+include(":instrumentation:jedis:jedis-3.0:javaagent-unit-tests")
 include(":instrumentation:jedis:jedis-4.0:javaagent")
+include(":instrumentation:jedis:jedis-4.0:javaagent-unit-tests")
 include(":instrumentation:jedis:jedis-common-1.4:javaagent")
 include(":instrumentation:jetty:jetty-8.0:javaagent")
 include(":instrumentation:jetty:jetty-11.0:javaagent")
@@ -412,7 +437,6 @@ include(":instrumentation:jms:jms-1.1:javaagent")
 include(":instrumentation:jms:jms-3.0:javaagent")
 include(":instrumentation:jms:jms-common-1.1:bootstrap")
 include(":instrumentation:jms:jms-common-1.1:javaagent")
-include(":instrumentation:jms:jms-common-1.1:javaagent-unit-tests")
 include(":instrumentation:jmx-metrics:javaagent")
 include(":instrumentation:jmx-metrics:library")
 include(":instrumentation:jmx-metrics:testing-apps:camel-testing-app")
@@ -430,6 +454,7 @@ include(":instrumentation:jsf:jsf-myfaces-3.0:javaagent")
 include(":instrumentation:jsp-2.3:javaagent")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent")
+include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent-unit-tests")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
@@ -437,8 +462,6 @@ include(":instrumentation:kafka:kafka-connect-2.6:javaagent")
 include(":instrumentation:kafka:kafka-connect-2.6:testing")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")
-include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent")
-include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent-kotlin")
 include(":instrumentation:ktor:ktor-1.0:library")
 include(":instrumentation:ktor:ktor-2.0:javaagent")
 include(":instrumentation:ktor:ktor-2.0:library")
@@ -450,8 +473,8 @@ include(":instrumentation:ktor:ktor-3.0:testing")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
+include(":instrumentation:lettuce:lettuce-4.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-5.0:javaagent")
-include(":instrumentation:lettuce:lettuce-5.1:javaagent")
 include(":instrumentation:lettuce:lettuce-5.1:library")
 include(":instrumentation:lettuce:lettuce-5.1:testing")
 include(":instrumentation:lettuce:lettuce-common:library")
@@ -478,10 +501,11 @@ include(":instrumentation:micrometer:micrometer-1.5:javaagent")
 include(":instrumentation:micrometer:micrometer-1.5:library")
 include(":instrumentation:micrometer:micrometer-1.5:testing")
 include(":instrumentation:mongo:mongo-3.1:javaagent")
+include(":instrumentation:mongo:mongo-3.1:javaagent-unit-tests")
 include(":instrumentation:mongo:mongo-3.1:library")
 include(":instrumentation:mongo:mongo-3.1:testing")
-include(":instrumentation:mongo:mongo-3.7:javaagent")
 include(":instrumentation:mongo:mongo-4.0:javaagent")
+include(":instrumentation:mongo:mongo-4.0:javaagent-unit-tests")
 include(":instrumentation:mongo:mongo-async-3.3:javaagent")
 include(":instrumentation:mongo:mongo-common:testing")
 include(":instrumentation:mybatis-3.2:javaagent")
@@ -507,9 +531,11 @@ include(":instrumentation:openai:openai-java-1.1:testing")
 include(":instrumentation:openai:openai-java-1.1:openai3-testing")
 include(":instrumentation:opencensus-shim:testing")
 include(":instrumentation:opensearch:opensearch-java-3.0:javaagent")
+include(":instrumentation:opensearch:opensearch-java-3.0:javaagent-unit-tests")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent")
+include(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent-unit-tests")
 include(":instrumentation:opensearch:opensearch-rest-common-1.0:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing")
@@ -530,11 +556,13 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.61:testing")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
-include(":instrumentation:opentelemetry-instrumentation-api:javaagent")
-include(":instrumentation:opentelemetry-instrumentation-api:testing")
+include(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent")
+include(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:testing")
 include(":instrumentation:oracle-ucp-11.2:javaagent")
 include(":instrumentation:oracle-ucp-11.2:library")
 include(":instrumentation:oracle-ucp-11.2:testing")
@@ -544,6 +572,7 @@ include(":instrumentation:oshi-5.0:testing")
 include(":instrumentation:payara-5.2020:javaagent")
 include(":instrumentation:pekko:pekko-actor-1.0:javaagent")
 include(":instrumentation:pekko:pekko-http-1.0:javaagent")
+include(":instrumentation:pekko:pekko-remote-1.0:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.6:javaagent")
 include(":instrumentation:play:play-ws:play-ws-1.0:javaagent")
@@ -573,22 +602,28 @@ include(":instrumentation:r2dbc-1.0:testing")
 include(":instrumentation:rabbitmq-2.7:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:testing")
-include(":instrumentation:ratpack:ratpack-1.7:javaagent")
 include(":instrumentation:ratpack:ratpack-1.7:library")
 include(":instrumentation:reactor:reactor-3.1:javaagent")
 include(":instrumentation:reactor:reactor-3.1:library")
 include(":instrumentation:reactor:reactor-3.1:testing")
-include(":instrumentation:reactor:reactor-3.4:javaagent")
 include(":instrumentation:reactor:reactor-kafka-1.0:javaagent")
 include(":instrumentation:reactor:reactor-kafka-1.0:testing")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent-unit-tests")
 include(":instrumentation:rediscala-1.8:javaagent")
+include(":instrumentation:rediscala-1.8:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-3.0:javaagent")
+include(":instrumentation:redisson:redisson-3.0:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
+include(":instrumentation:redisson:redisson-3.17:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-common-3.0:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:testing")
+include(":instrumentation:redisson:redisson-metrics-2.3:javaagent")
+include(":instrumentation:redisson:redisson-metrics-3.18:javaagent")
+include(":instrumentation:redisson:redisson-metrics-3.26:javaagent")
+include(":instrumentation:redisson:redisson-metrics-common-2.3:javaagent")
+include(":instrumentation:redisson:redisson-metrics-common-2.3:testing")
 include(":instrumentation:resources:library")
 include(":instrumentation:restlet:restlet-1.1:javaagent")
 include(":instrumentation:restlet:restlet-1.1:library")
@@ -602,6 +637,7 @@ include(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:library")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:testing")
 include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent-unit-tests")
 include(":instrumentation:runtime-telemetry:javaagent")
 include(":instrumentation:runtime-telemetry:library")
 include(":instrumentation:runtime-telemetry:testing")
@@ -616,7 +652,7 @@ include(":instrumentation:rxjava:rxjava-3.1.1:javaagent")
 include(":instrumentation:rxjava:rxjava-3.1.1:library")
 include(":instrumentation:rxjava:rxjava-common-3.0:library")
 include(":instrumentation:rxjava:rxjava-common-3.0:testing")
-include(":instrumentation:scala-fork-join-2.8:javaagent")
+include(":instrumentation:scala-forkjoin-2.8:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent-testing")
@@ -634,6 +670,10 @@ include(":instrumentation:servlet:servlet-common:bootstrap")
 include(":instrumentation:servlet:servlet-common:javaagent")
 include(":instrumentation:servlet:servlet-common:library")
 include(":instrumentation:servlet:servlet-common-javax:library")
+include(":instrumentation:sofa-rpc-5.4:javaagent")
+include(":instrumentation:sofa-rpc-5.4:library")
+include(":instrumentation:sofa-rpc-5.4:library-autoconfigure")
+include(":instrumentation:sofa-rpc-5.4:testing")
 include(":instrumentation:spark-2.3:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
 include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")
@@ -689,8 +729,8 @@ include(":instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:testing"
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
 include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
-include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
+include(":instrumentation:spymemcached-2.12:javaagent-unit-tests")
 include(":instrumentation:struts:struts-2.3:javaagent")
 include(":instrumentation:struts:struts-7.0:javaagent")
 include(":instrumentation:tapestry-5.4:javaagent")
@@ -700,6 +740,7 @@ include(":instrumentation:thrift-0.13:testing")
 include(":instrumentation:tomcat:tomcat-7.0:javaagent")
 include(":instrumentation:tomcat:tomcat-10.0:javaagent")
 include(":instrumentation:tomcat:tomcat-common-7.0:javaagent")
+include(":instrumentation:tomcat:tomcat-dbcp-8.0:javaagent")
 include(":instrumentation:tomcat:tomcat-jdbc-8.5:javaagent")
 include(":instrumentation:twilio-6.6:javaagent")
 include(":instrumentation:undertow-1.4:bootstrap")
@@ -715,11 +756,14 @@ include(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-4-testing")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-5-testing")
-include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent-unit-tests")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent-unit-tests")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent-unit-tests")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:vibur-dbcp-11.0:javaagent")

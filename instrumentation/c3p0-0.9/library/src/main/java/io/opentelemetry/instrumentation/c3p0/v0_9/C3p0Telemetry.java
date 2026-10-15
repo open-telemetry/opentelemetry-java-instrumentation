@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.c3p0.v0_9;
 
 import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 
 public final class C3p0Telemetry {
   private final OpenTelemetry openTelemetry;
@@ -23,6 +24,21 @@ public final class C3p0Telemetry {
   /** Start collecting metrics for given connection pool. */
   public void registerMetrics(PooledDataSource dataSource) {
     ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource);
+  }
+
+  /** Start collecting metrics for given connection pool using the provided data source name. */
+  public void registerMetrics(PooledDataSource dataSource, String dataSourceName) {
+    ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource, dataSourceName);
+  }
+
+  /**
+   * Start collecting metrics for given connection pool using the provided data source name and
+   * configured database attributes.
+   */
+  public void registerMetrics(
+      PooledDataSource dataSource, String dataSourceName, Attributes databaseAttributes) {
+    ConnectionPoolMetrics.registerMetrics(
+        openTelemetry, dataSource, dataSourceName, databaseAttributes);
   }
 
   /** Stop collecting metrics for given connection pool. */
