@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.couchbase.client.core.env.CoreEnvironment;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -43,12 +44,19 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
       } else {
         instrumentationName = "com.couchbase.client.jvm";
       }
+      Logger exceptionLogger =
+          openTelemetry
+              .getLogsBridge()
+              .loggerBuilder(instrumentationName)
+              .setSchemaUrl(SchemaUrls.V1_44_0)
+              .build();
       builder.requestTracer(
           CouchbaseRequestTracer.create(
               openTelemetry
                   .tracerBuilder(instrumentationName)
                   .setSchemaUrl(SchemaUrls.V1_44_0)
                   .build(),
+              exceptionLogger,
               legacyBridge));
     }
 

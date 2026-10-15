@@ -12,6 +12,7 @@ import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.cnc.TracingIdentifiers;
 import com.couchbase.client.core.msg.RequestContext;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseTracer;
@@ -28,9 +29,9 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   private final CouchbaseTracer tracer;
 
-  public static RequestTracer create(Tracer tracer, boolean legacyBridge) {
+  public static RequestTracer create(Tracer tracer, Logger exceptionLogger, boolean legacyBridge) {
     return new CouchbaseRequestTracer(
-        new CouchbaseTracer(tracer, !legacyBridge, legacyBridge, false));
+        new CouchbaseTracer(tracer, exceptionLogger, !legacyBridge, legacyBridge, false));
   }
 
   private CouchbaseRequestTracer(CouchbaseTracer tracer) {
