@@ -330,7 +330,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 equalTo(RPC_SYSTEM, "aws-api"),
                 equalTo(RPC_SERVICE, service),
                 equalTo(RPC_METHOD, operation),
-                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                 equalTo(AWS_REQUEST_ID, requestId)));
 
     if (service.equals("S3")) {
@@ -385,7 +385,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     }
 
     if (service.equals("Sqs") && operation.equals("CreateQueue")) {
-      attributes.add(equalTo(stringKey("aws.queue.name"), "somequeue"));
+      attributes.add(equalTo(stringKey("aws.queue.name"), experimental("somequeue")));
     }
 
     if (service.equals("Sqs") && operation.equals("SendMessage")) {
@@ -419,14 +419,17 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       switch (operation) {
         case "GetFunction":
           attributes.add(
-              equalTo(stringKey("aws.lambda.function.name"), "lambda-function-name-foo"));
+              equalTo(
+                  stringKey("aws.lambda.function.name"), experimental("lambda-function-name-foo")));
           attributes.add(
               equalTo(
                   stringKey("aws.lambda.function.arn"),
-                  "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo"));
+                  experimental(
+                      "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo")));
           break;
         case "CreateEventSourceMapping":
-          attributes.add(equalTo(stringKey("aws.lambda.function.name"), "myFn01-Temp"));
+          attributes.add(
+              equalTo(stringKey("aws.lambda.function.name"), experimental("myFn01-Temp")));
           attributes.add(
               equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "e31def54-5e5d-4c1b-8e0f-bf1b11c137b7"));
           break;
@@ -923,7 +926,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                                 equalTo(AWS_S3_BUCKET, "somebucket"))));
 
     if (emitExceptionAsLogs()) {
