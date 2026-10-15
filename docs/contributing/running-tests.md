@@ -83,6 +83,9 @@ Use this helper instead of setting `metadataConfig` manually for these execution
 `systemProperty` and `jvmArgs` settings do not add metadata conditions. A default execution without
 telemetry conditions leaves `metadataConfig` unset.
 
+The conventions regression tests run in the common CI workflow. To run them locally, use
+`./gradlew -p conventions test -Pkotlin.daemon.jvmargs=-Xmx2g`.
+
 ### How to prevent linting and formatting warnings from failing tests
 
 During local development, you may want to ignore lint warnings when running tests.
