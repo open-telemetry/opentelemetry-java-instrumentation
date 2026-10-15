@@ -29,6 +29,8 @@ class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // enqueue declares RealCall.AsyncCall, which lives in okhttp3 or
+    // okhttp3.internal.connection depending on the OkHttp version.
     transformer.applyAdviceToMethod(
         namedOneOf("enqueue", "enqueue$okhttp")
             .and(
