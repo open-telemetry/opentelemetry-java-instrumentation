@@ -38,7 +38,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand"))),
         getClass().getName() + "$DispatchAdvice");
     transformer.applyAdviceToMethod(
-        named("setAutoFlushCommands").and(takesArguments(1)),
+        named("setAutoFlushCommands").and(takesArguments(1)).and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetAutoFlushAdvice");
     transformer.applyAdviceToMethod(
         named("flushCommands").and(takesArguments(0)), getClass().getName() + "$FlushAdvice");
