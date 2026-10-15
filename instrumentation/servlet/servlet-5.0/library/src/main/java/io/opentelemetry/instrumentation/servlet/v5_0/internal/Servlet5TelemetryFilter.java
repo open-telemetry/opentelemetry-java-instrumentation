@@ -136,7 +136,7 @@ public final class Servlet5TelemetryFilter implements Filter {
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-      ByteBuffer buffer = ByteBuffer.allocate(10);
+      ByteBuffer buffer = ByteBuffer.allocate(10); // TODO: make it configurable
       return new Servlet5BodyCaptureInputStreamWrapper(super.getInputStream(), buffer);
     }
 

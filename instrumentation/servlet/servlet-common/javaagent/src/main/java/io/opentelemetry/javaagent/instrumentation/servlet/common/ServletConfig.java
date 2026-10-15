@@ -20,6 +20,7 @@ class ServletConfig {
   private final boolean captureExperimentalAttributes;
   private final boolean traceIdRequestAttributeEnabled;
   private final boolean captureRequestBody;
+  private final int captureRequestBodyMaxSize;
 
   static ServletConfig get() {
     return SingletonHolder.INSTANCE;
@@ -32,7 +33,11 @@ class ServletConfig {
         config.getBoolean("experimental_span_attributes/development", false);
     traceIdRequestAttributeEnabled =
         config.get("trace_id_request_attribute/development").getBoolean("enabled", false);
-    captureRequestBody = config.getBoolean("capture_request_body/development", false);
+
+    DeclarativeConfigProperties captureRequestBodyConfig = config.get("capture_request_body/development");
+    captureRequestBody = captureRequestBodyConfig.getBoolean("enabled", false);
+
+    captureRequestBodyMaxSize = captureRequestBodyConfig.getInt("max_size", 1024);
   }
 
   @Nullable
@@ -48,8 +53,12 @@ class ServletConfig {
     return traceIdRequestAttributeEnabled;
   }
 
-  boolean getCaptureRequestBody() {
-    return captureRequestBody;
+  boolean getCaptureRequestBodyEnabled() {
+    return captureRequestBody && captureRequestBodyMaxSize > 0;
+  }
+
+  int getCaptureRequestBodyMaxSize() {
+    return captureRequestBodyMaxSize;
   }
 
   private static final class SingletonHolder {

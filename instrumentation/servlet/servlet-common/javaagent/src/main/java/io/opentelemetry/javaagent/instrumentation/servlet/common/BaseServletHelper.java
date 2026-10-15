@@ -139,7 +139,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void captureRequestBody(Span serverSpan, REQUEST request) {
-    if (!servletConfig.getCaptureRequestBody()) {
+    if (!servletConfig.getCaptureRequestBodyEnabled()) {
       return;
     }
 
@@ -202,5 +202,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {
     return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
+  }
+
+  public int captureRequestBodyMaxSize() {
+    return servletConfig.getCaptureRequestBodyMaxSize();
+  }
+
+  public boolean captureRequestBodyEnabled() {
+    return servletConfig.getCaptureRequestBodyEnabled();
   }
 }
