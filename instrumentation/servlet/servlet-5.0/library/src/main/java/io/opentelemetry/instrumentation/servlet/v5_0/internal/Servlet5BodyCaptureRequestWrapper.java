@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.REQUEST_BODY_ATTRIBUTE;
 
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.REQUEST_BODY_ATTRIBUTE;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at

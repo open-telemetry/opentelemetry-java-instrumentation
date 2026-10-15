@@ -41,17 +41,18 @@ public final class Servlet5TelemetryFilter implements Filter {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       instrumenter;
   private final boolean addTraceIdRequestAttribute;
-  private final boolean captureRequestBody;
+  private final int captureRequestBodyMaxSize;
 
   public Servlet5TelemetryFilter(
       Instrumenter<
               ServletRequestContext<HttpServletRequest>,
               ServletResponseContext<HttpServletResponse>>
           instrumenter,
-      boolean addTraceIdRequestAttribute, boolean captureRequestBody) {
+      boolean addTraceIdRequestAttribute,
+      int captureRequestBodyMaxSize) {
     this.instrumenter = instrumenter;
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
-    this.captureRequestBody = captureRequestBody;
+    this.captureRequestBodyMaxSize = captureRequestBodyMaxSize;
   }
 
   @Override
@@ -69,8 +70,8 @@ public final class Servlet5TelemetryFilter implements Filter {
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-    if(captureRequestBody) {
-      httpRequest = new Servlet5BodyCaptureRequestWrapper(httpRequest, 1024);
+    if (captureRequestBodyMaxSize > 0) {
+      httpRequest = new Servlet5BodyCaptureRequestWrapper(httpRequest, captureRequestBodyMaxSize);
     }
 
     Context parentContext = Context.current();

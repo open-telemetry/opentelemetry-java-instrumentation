@@ -20,7 +20,7 @@ public final class ServletTelemetry {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       instrumenter;
   private final boolean addTraceIdRequestAttribute;
-  private final boolean captureRequestBody;
+  private final int captureRequestBodyMaxSize;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static ServletTelemetry create(OpenTelemetry openTelemetry) {
@@ -37,14 +37,16 @@ public final class ServletTelemetry {
               ServletRequestContext<HttpServletRequest>,
               ServletResponseContext<HttpServletResponse>>
           instrumenter,
-      boolean addTraceIdRequestAttribute, boolean captureRequestBody) {
+      boolean addTraceIdRequestAttribute,
+      int captureRequestBodyMaxSize) {
     this.instrumenter = instrumenter;
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
-    this.captureRequestBody = captureRequestBody;
+    this.captureRequestBodyMaxSize = captureRequestBodyMaxSize;
   }
 
   /** Returns a {@link Filter} that instruments HTTP requests. */
   public Filter createFilter() {
-    return new Servlet5TelemetryFilter(instrumenter, addTraceIdRequestAttribute, captureRequestBody);
+    return new Servlet5TelemetryFilter(
+        instrumenter, addTraceIdRequestAttribute, captureRequestBodyMaxSize);
   }
 }

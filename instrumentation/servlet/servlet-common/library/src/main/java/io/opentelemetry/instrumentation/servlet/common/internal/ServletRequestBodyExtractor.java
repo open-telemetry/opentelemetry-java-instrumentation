@@ -21,18 +21,14 @@ import javax.annotation.Nullable;
  */
 public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
-    ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
+        ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
 
-  /**
-   * Semconv attribute used to store request body in span
-   */
+  /** Semconv attribute used to store request body in span */
   // TODO: replace this when available in semconv 1.45.0
   public static final AttributeKey<?> SPAN_BODY_ATTRIBUTE =
       AttributeKey.valueKey("http.request.body.content");
 
-  /**
-   * Servlet attribute name used to store the request body.
-   */
+  /** Servlet attribute name used to store the request body. */
   public static final String REQUEST_BODY_ATTRIBUTE = "otel.request.body";
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
@@ -45,8 +41,7 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   public void onStart(
       AttributesBuilder attributes,
       Context parentContext,
-      ServletRequestContext<REQUEST> requestServletRequestContext) {
-  }
+      ServletRequestContext<REQUEST> requestServletRequestContext) {}
 
   @Override
   public void onEnd(

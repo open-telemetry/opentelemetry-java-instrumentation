@@ -49,10 +49,7 @@ class ServletBodyCaptureTest {
     HttpServletRequest request = requestWithBody();
     HttpServletResponse response = mock(HttpServletResponse.class);
 
-    filter.doFilter(
-        request,
-        response,
-        (req, res) -> readRequestBody(req));
+    filter.doFilter(request, response, (req, res) -> readRequestBody(req));
 
     List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces.get(0).get(0).getAttributes().asMap().keySet())
@@ -69,30 +66,34 @@ class ServletBodyCaptureTest {
 
   @Test
   void capturesRequestBodyWhenEnabled() throws Exception {
+    testCaptureRequestBody(32, "request-body");
+  }
+
+  @Test
+  void capturesRequestBodyWhenEnabledWithMaxSize() throws Exception {
+    testCaptureRequestBody(7, "request");
+  }
+
+  private static void testCaptureRequestBody(int maxSize, String expected) throws Exception {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setCaptureRequestBody(builder, true);
+    Experimental.setCaptureRequestBodyMaxSize(builder, maxSize);
     Filter filter = builder.build().createFilter();
 
     HttpServletRequest request = requestWithBody();
     HttpServletResponse response = mock(HttpServletResponse.class);
 
-    filter.doFilter(
-        request,
-        response,
-        (req, res) -> readRequestBody(req));
+    filter.doFilter(request, response, (req, res) -> readRequestBody(req));
 
     List<List<SpanData>> traces = testing.waitForTraces(1);
 
-    assertThat(traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY))
-        .isEqualTo("request-body");
+    assertThat(traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY)).isEqualTo(expected);
   }
 
   private static HttpServletRequest requestWithBody() throws IOException {
     HttpServletRequest request = mock(HttpServletRequest.class);
     // a mock does not keep attributes, so back them with a map
     Map<String, Object> attributes = new HashMap<>();
-    doAnswer(
-            invocation -> attributes.put(invocation.getArgument(0), invocation.getArgument(1)))
+    doAnswer(invocation -> attributes.put(invocation.getArgument(0), invocation.getArgument(1)))
         .when(request)
         .setAttribute(anyString(), any());
     when(request.getAttribute(anyString()))
