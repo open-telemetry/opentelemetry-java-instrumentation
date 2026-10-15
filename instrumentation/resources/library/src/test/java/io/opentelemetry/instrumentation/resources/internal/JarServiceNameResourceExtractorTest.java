@@ -9,7 +9,10 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.resources.internal.Entity;
+import io.opentelemetry.sdk.resources.internal.EntityUtil;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
@@ -62,6 +65,9 @@ class JarServiceNameResourceExtractorTest {
     Resource resource = serviceNameProvider.extract();
 
     assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
+    assertThat(EntityUtil.getEntities(resource))
+        .containsExactly(
+            Entity.builder("service", Attributes.of(SERVICE_NAME, "my-service")).build());
   }
 
   @Test
