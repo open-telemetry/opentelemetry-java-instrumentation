@@ -1,11 +1,8 @@
 # [Testing] Experimental Feature Flag Tests
 
-## Quick Reference
-
-- Use when: any `experimental` flag (e.g., `experimental-span-attributes`,
-  `emit-experimental-telemetry`, `experimental-metrics.enabled`) appears in JVM args or
-  system properties of a test task
-- Review focus: task wiring/metadata config and assertion patterns for flag-on vs flag-off behavior
+Consult this article when adding experimental-attribute coverage or moving a
+flag out of the default test task. It shows how to wire `testExperimental` and
+assert both flag modes.
 
 ## What `testExperimental` Is For
 
@@ -47,7 +44,7 @@ settings with checks against `suite.name`.
 The domain-specific parts are the `jvmArgs` and `metadataConfig` values:
 
 ```kotlin
-val testExperimental by registering(Test::class) {
+val testExperimental = register<Test>("testExperimental") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.instrumentation.<module>.experimental-span-attributes=true")

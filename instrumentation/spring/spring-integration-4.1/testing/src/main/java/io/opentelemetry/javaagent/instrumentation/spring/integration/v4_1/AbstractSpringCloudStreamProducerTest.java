@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertSendMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,33 +41,23 @@ abstract class AbstractSpringCloudStreamProducerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send testProducer.output"
-                                : "testProducer.output publish")
+                    span.hasName("send testProducer.output")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("send", "testProducer.output")),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process testConsumer.input"
-                                : "testConsumer.input process")
+                    span.hasName("process testConsumer.input")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasLinksSatisfying(
                             links -> {
-                              if (emitStableMessagingSemconv()) {
-                                assertThat(links)
-                                    .singleElement()
-                                    .satisfies(
-                                        link ->
-                                            assertThat(link.getSpanContext().getSpanId())
-                                                .isEqualTo(trace.getSpan(1).getSpanId()));
-                              } else {
-                                assertThat(links).isEmpty();
-                              }
+                              assertThat(links)
+                                  .singleElement()
+                                  .satisfies(
+                                      link ->
+                                          assertThat(link.getSpanContext().getSpanId())
+                                              .isEqualTo(trace.getSpan(1).getSpanId()));
                             })
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "testConsumer.input")),
@@ -78,10 +66,6 @@ abstract class AbstractSpringCloudStreamProducerTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(2))));
 
-    if (emitStableMessagingSemconv()) {
-      assertSendMetrics(testing, "testProducer.output");
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertSendMetrics(testing, "testProducer.output");
   }
 }

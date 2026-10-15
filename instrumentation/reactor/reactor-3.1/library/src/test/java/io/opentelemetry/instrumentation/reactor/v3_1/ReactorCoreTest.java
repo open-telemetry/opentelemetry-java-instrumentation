@@ -429,6 +429,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     Flux<Integer> publish =
         Flux.create(
             sink -> {
+              assertThat(Context.current().get(TEST_CONTEXT_KEY)).isEqualTo("test-context-value");
               for (int i = 0; i < 2; i++) {
                 int index = i;
                 testing.runWithSpan(
@@ -460,30 +461,35 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         throw new IllegalStateException("Unsupported retry kind " + retryKind);
     }
 
-    flux.subscribe();
+    try (Scope ignored =
+        Context.root().with(TEST_CONTEXT_KEY, "test-context-value").makeCurrent()) {
+      flux.subscribe();
+    }
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
             "produce before retry 0",
             "produce before retry 1",
             "produce after retry 0",
-            "produce after retry 1"),
+            "produce after retry 1",
+            "process 0",
+            "process 1"),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce before retry 0").hasNoParent(),
-                span -> span.hasName("process 0").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce before retry 0").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce before retry 1").hasNoParent(),
-                span -> span.hasName("process 1").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce before retry 1").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce after retry 0").hasNoParent(),
-                span -> span.hasName("process 0").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce after retry 0").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce after retry 1").hasNoParent(),
-                span -> span.hasName("process 1").hasParent(trace.getSpan(0))));
+                span -> span.hasName("produce after retry 1").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 0").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 0").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 1").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 1").hasNoParent()));
   }
 
   @Test

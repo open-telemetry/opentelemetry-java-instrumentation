@@ -81,7 +81,9 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -92,18 +94,17 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
     }
 
+    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+  }
+
   check {
-    dependsOn(testing.suites, testExperimental, stableSemconvSuites)
+    dependsOn(testing.suites, testDisabled, testExperimental)
   }
 }

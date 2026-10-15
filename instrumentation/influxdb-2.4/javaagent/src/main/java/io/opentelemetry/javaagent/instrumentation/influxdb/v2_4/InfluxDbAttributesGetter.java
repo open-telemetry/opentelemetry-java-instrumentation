@@ -16,14 +16,6 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     return request.getOperation();
   }
 
-  @Nullable
-  @Override
-  @SuppressWarnings("deprecation") // old database semconv still use db.operation
-  public String getDbOperation(InfluxDbOperation request) {
-    String operation = request.getOperation();
-    return "write".equals(operation) ? "WRITE" : operation;
-  }
-
   @Override
   public String getDbSystemName(InfluxDbOperation request) {
     return "influxdb";

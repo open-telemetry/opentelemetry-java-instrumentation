@@ -20,12 +20,18 @@ public record ConfigurationOption(
     @Nullable String name,
     @JsonProperty("declarative_name") @Nullable String declarativeName,
     String description,
-    @JsonProperty("default") String defaultValue,
+    // Absent when leaving the option unset means falling back to another setting (for example a
+    // per-module override of a common setting) rather than using a fixed value.
+    @JsonProperty("default") @Nullable String defaultValue,
     ConfigurationType type,
     @Nullable List<String> examples,
     @JsonProperty("declarative_type") @Nullable ConfigurationType declarativeType,
     @JsonProperty("declarative_schema") @Nullable DeclarativeSchema declarativeSchema,
     @Nullable String ref,
+    @Nullable Boolean deprecated,
+    // The configuration that replaces a deprecated one: its flat property name, or its declarative
+    // name when the replacement has no flat property.
+    @JsonProperty("replaced_by") @Nullable String replacedBy,
     // The definition id is assigned internally via withId() during registry resolution; it must
     // never be supplied from metadata.yaml, otherwise an inline option could claim a registry id
     // and
@@ -51,6 +57,8 @@ public record ConfigurationOption(
           || examples != null
           || declarativeType != null
           || declarativeSchema != null
+          || deprecated != null
+          || replacedBy != null
           || id != null) {
         throw new IllegalArgumentException(
             "A ref ConfigurationOption must not specify any other fields; it carries only the ref"
@@ -58,7 +66,6 @@ public record ConfigurationOption(
       }
     } else {
       requireNonNull(description, "description");
-      requireNonNull(defaultValue, "defaultValue");
       requireNonNull(type, "type");
 
       // Most configs are backed by a flat system property (name). Declarative-only configs (such as
@@ -84,12 +91,43 @@ public record ConfigurationOption(
               "declarative_schema required keys must be a subset of its properties");
         }
       }
+      if (replacedBy != null && !Boolean.TRUE.equals(deprecated)) {
+        throw new IllegalArgumentException("replaced_by is only valid on a deprecated option");
+      }
     }
+  }
+
+  // for options that are not deprecated, which is almost all of them
+  @SuppressWarnings("TooManyParameters")
+  public ConfigurationOption(
+      @Nullable String name,
+      @Nullable String declarativeName,
+      String description,
+      @Nullable String defaultValue,
+      ConfigurationType type,
+      @Nullable List<String> examples,
+      @Nullable ConfigurationType declarativeType,
+      @Nullable DeclarativeSchema declarativeSchema,
+      @Nullable String ref,
+      @Nullable String id) {
+    this(
+        name,
+        declarativeName,
+        description,
+        defaultValue,
+        type,
+        examples,
+        declarativeType,
+        declarativeSchema,
+        ref,
+        null,
+        null,
+        id);
   }
 
   public ConfigurationOption(
       String name, String description, String defaultValue, ConfigurationType type) {
-    this(name, null, description, defaultValue, type, null, null, null, null, null);
+    this(name, null, description, defaultValue, type, null, null, null, null, null, null, null);
   }
 
   /** Returns a copy of this option with the given definition id assigned. */
@@ -104,6 +142,13 @@ public record ConfigurationOption(
         declarativeType,
         declarativeSchema,
         ref,
+        deprecated,
+        replacedBy,
         id);
+  }
+
+  /** Returns whether this option is deprecated. */
+  public boolean isDeprecated() {
+    return Boolean.TRUE.equals(deprecated);
   }
 }

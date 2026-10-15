@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Elasticsearch6TransportClientInstrumentationModule extends InstrumentationModule {
   public Elasticsearch6TransportClientInstrumentationModule() {
-    super("elasticsearch-transport", "elasticsearch-transport-6.0", "elasticsearch");
+    super("elasticsearch-transport-6.0", "elasticsearch-transport", "elasticsearch");
   }
 
   @Override

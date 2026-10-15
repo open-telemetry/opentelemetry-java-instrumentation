@@ -40,18 +40,6 @@ abstract class SqsAttributesGetter<REQUEST> implements MessagingAttributesGetter
 
   @Nullable
   @Override
-  public final Long getMessageBodySize(REQUEST request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public final Long getMessageEnvelopeSize(REQUEST request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(REQUEST request, @Nullable Void unused) {
     return null;
   }

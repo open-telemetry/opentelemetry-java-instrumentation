@@ -60,3 +60,5 @@ configurations:
       may be removed in the next minor release.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included

@@ -103,11 +103,8 @@ public abstract class AbstractOracleUcpInstrumentationTest {
   }
 
   protected static String expectedDefaultMetricPoolName() {
-    return oracle.getHost().toLowerCase(Locale.ROOT)
-        + ":"
-        + oracle.getOraclePort()
-        + "/"
-        + oracle.getDatabaseName().toLowerCase(Locale.ROOT);
+    String databaseName = oracle.getDatabaseName().toLowerCase(Locale.ROOT);
+    return databaseName;
   }
 
   private void assertNoConnectionPoolMetrics() {

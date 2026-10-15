@@ -16,7 +16,7 @@ import java.util.List;
 public class SpymemcachedInstrumentationModule extends InstrumentationModule {
 
   public SpymemcachedInstrumentationModule() {
-    super("spymemcached", "spymemcached-2.12");
+    super("spymemcached-2.12", "spymemcached");
   }
 
   @Override

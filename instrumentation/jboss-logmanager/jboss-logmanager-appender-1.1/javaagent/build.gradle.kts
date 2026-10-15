@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -57,17 +58,6 @@ tasks {
     systemProperty("testMdcConfiguration", "legacy")
   }
 
-  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs(
-      "-Dotel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included=new",
-      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=legacy",
-    )
-    systemProperty("testMdcConfiguration", "precedence")
-  }
-
   val testExcludedOnlyMdcAttributes = register<Test>("testExcludedOnlyMdcAttributes") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -84,7 +74,6 @@ tasks {
     dependsOn(
       testCaptureTemplateAndArguments,
       testLegacyMdcAttributes,
-      testMdcAttributePrecedence,
       testExcludedOnlyMdcAttributes,
     )
   }

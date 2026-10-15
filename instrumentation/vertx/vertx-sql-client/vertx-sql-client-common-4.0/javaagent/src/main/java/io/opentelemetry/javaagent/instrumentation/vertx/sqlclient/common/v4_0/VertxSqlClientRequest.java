@@ -31,39 +31,20 @@ public class VertxSqlClientRequest {
   }
 
   @Nullable
-  public String getUser() {
-    return info.getUser();
-  }
-
-  @Nullable
   public String getDatabase() {
-    return info.getNamespace();
-  }
-
-  @Nullable
-  public String getHost() {
-    return info.getLegacyServerAddress();
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return info.getLegacyServerPort();
+    return getInfo().getNamespace();
   }
 
   @Nullable
   public String getConfiguredServerAddress() {
-    DbServerTarget serverTarget = info.getServerTarget();
+    DbServerTarget serverTarget = getInfo().getServerTarget();
     return serverTarget != null ? serverTarget.getAddress() : null;
   }
 
   @Nullable
   public Integer getConfiguredServerPort() {
-    DbServerTarget serverTarget = info.getServerTarget();
+    DbServerTarget serverTarget = getInfo().getServerTarget();
     return serverTarget != null ? serverTarget.getPort() : null;
-  }
-
-  public boolean isServerTargetCaptured() {
-    return info.isServerTargetCaptured();
   }
 
   public boolean isParameterizedQuery() {
@@ -71,11 +52,15 @@ public class VertxSqlClientRequest {
   }
 
   public String getDbSystemName() {
-    return info.getDbSystemName();
+    return getInfo().getDbSystemName();
   }
 
   @Nullable
   public Long getOperationBatchSize() {
     return operationBatchSize;
+  }
+
+  protected VertxSqlClientInfo getInfo() {
+    return info;
   }
 }

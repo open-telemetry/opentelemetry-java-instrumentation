@@ -25,15 +25,12 @@ import java.util.Map;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class JtdsUrlParser implements JdbcUrlParser {
 
   public static final JtdsUrlParser INSTANCE = new JtdsUrlParser();
 
   // copied from DbAttributes.DbSystemNameValues
   private static final String MICROSOFT_SQL_SERVER = "microsoft.sql_server";
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String MSSQL = "mssql";
 
   private static final String DEFAULT_HOST = "localhost";
   private static final int DEFAULT_PORT = 1433;
@@ -43,11 +40,8 @@ public final class JtdsUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(MICROSOFT_SQL_SERVER);
-    ctx.oldSemconvSystem(MSSQL);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
-
-    ctx.subtype("sqlserver");
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     // Use ParseContext.parseUrl() to handle URL structure parsing (user, host, port, path)
     // Note: for jTDS, parseUrl() maps the URL path to the database name
@@ -80,8 +74,6 @@ public final class JtdsUrlParser implements JdbcUrlParser {
 
     // Set namespace with instance formatting (mirrors MssqlUrlParser behavior)
     if (instanceName != null && !instanceName.isEmpty()) {
-      // Preserve old behavior: dbName is the instance name (not the database name)
-      ctx.dbName(instanceName);
       if (ctx.databaseName() != null && !ctx.databaseName().isEmpty()) {
         ctx.namespace(instanceName + "|" + ctx.databaseName());
       } else {

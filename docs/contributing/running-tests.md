@@ -22,9 +22,10 @@ instrumented library.
 
 ### Executing tests with specific java version
 
-We run all tests on `Java 21` by default, along with Java 8, 11, 17, and 23. To run on
-a specific version, set the `testJavaVersion` gradle property to the desired major
-version, e.g., `./gradlew test -PtestJavaVersion=8`, `./gradlew test -PtestJavaVersion=23`.
+We run all tests on `Java 25` by default, along with Java 8, 11, 17, 21, and
+27. To run on a specific version, set the `testJavaVersion` gradle property to
+the desired major version, e.g., `./gradlew test -PtestJavaVersion=8` or
+`./gradlew test -PtestJavaVersion=27`.
 If you don't have a JDK of these versions installed, Gradle will automatically download
 it for you.
 
@@ -87,6 +88,10 @@ To execute all the instrumentation tests runnable as GraalVM native executables:
 ./gradlew nativeTest
 ```
 
+Native test executables use GraalVM's quick-build mode (`-Ob`) to reduce compilation time in CI
+and local runs. This setting applies only to test executables.
+
+CI runs native tests only on Oracle GraalVM 25.0 LTS, using the latest available patch release.
 [A Github workflow](../../.github/workflows/native-tests-daily.yml) executes the native tests every day.
 
 ## Docker disk space

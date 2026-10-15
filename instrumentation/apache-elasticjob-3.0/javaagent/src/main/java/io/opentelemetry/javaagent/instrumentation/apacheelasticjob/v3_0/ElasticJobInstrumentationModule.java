@@ -16,7 +16,7 @@ import java.util.List;
 public class ElasticJobInstrumentationModule extends InstrumentationModule {
 
   public ElasticJobInstrumentationModule() {
-    super("apache-elasticjob", "apache-elasticjob-3.0");
+    super("apache-elasticjob-3.0", "apache-elasticjob");
   }
 
   @Override

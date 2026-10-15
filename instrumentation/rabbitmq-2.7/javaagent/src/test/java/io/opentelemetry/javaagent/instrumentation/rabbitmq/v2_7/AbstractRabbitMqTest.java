@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import com.rabbitmq.client.ConnectionFactory;
+import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,7 +28,7 @@ abstract class AbstractRabbitMqTest {
   private static final Logger logger =
       LoggerFactory.getLogger("io.opentelemetry.testing.rabbitmq-container");
 
-  private static GenericContainer<?> rabbitMqContainer;
+  static GenericContainer<?> rabbitMqContainer;
   protected static ConnectionFactory connectionFactory;
 
   protected static String rabbitMqHost;
@@ -38,7 +38,7 @@ abstract class AbstractRabbitMqTest {
   protected static int rabbitMqPort;
 
   @BeforeAll
-  static void startRabbit() throws UnknownHostException {
+  static void startRabbit() throws IOException, InterruptedException {
     rabbitMqContainer =
         new GenericContainer<>("rabbitmq:4.2")
             .withExposedPorts(5672)
@@ -47,10 +47,18 @@ abstract class AbstractRabbitMqTest {
             .withStartupTimeout(Duration.ofMinutes(2));
     rabbitMqContainer.start();
 
+    // use a non-default vhost to verify that instrumentation reads the connection's configured
+    // value rather than emitting a hard-coded default
+    rabbitMqContainer.execInContainer("rabbitmqctl", "set_cluster_name", "otel-test-cluster");
+    rabbitMqContainer.execInContainer("rabbitmqctl", "add_vhost", "otel-test");
+    rabbitMqContainer.execInContainer(
+        "rabbitmqctl", "set_permissions", "-p", "otel-test", "guest", ".*", ".*", ".*");
+
     connectionFactory = new ConnectionFactory();
     connectionFactory.setHost(rabbitMqContainer.getHost());
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
     connectionFactory.setAutomaticRecoveryEnabled(false);
+    connectionFactory.setVirtualHost("otel-test");
 
     rabbitMqHost = rabbitMqContainer.getHost();
     rabbitMqIp = InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();

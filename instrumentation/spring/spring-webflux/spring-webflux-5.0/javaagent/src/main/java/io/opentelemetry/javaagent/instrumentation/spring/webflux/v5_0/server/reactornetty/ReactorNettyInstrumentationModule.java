@@ -16,7 +16,7 @@ import java.util.List;
 public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
-    super("spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server");
+    super("spring-webflux-5.0", "reactor-netty-server", "spring-webflux-server", "spring-webflux");
   }
 
   @Override

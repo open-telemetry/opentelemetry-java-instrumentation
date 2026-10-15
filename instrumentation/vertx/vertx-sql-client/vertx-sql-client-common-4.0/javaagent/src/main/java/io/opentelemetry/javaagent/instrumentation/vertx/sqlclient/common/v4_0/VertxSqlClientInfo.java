@@ -17,11 +17,7 @@ public final class VertxSqlClientInfo {
 
   private final String dbSystemName;
   @Nullable private final String namespace;
-  @Nullable private final String user;
-  @Nullable private final String legacyServerAddress;
-  @Nullable private final Integer legacyServerPort;
   @Nullable private final DbServerTarget serverTarget;
-  private final boolean serverTargetCaptured;
 
   @Nullable
   public static VertxSqlClientInfo create(
@@ -33,11 +29,7 @@ public final class VertxSqlClientInfo {
     return new VertxSqlClientInfo(
         normalizedDbSystemName,
         connectOptions.getDatabase(),
-        connectOptions.getUser(),
-        connectOptions.getHost(),
-        connectOptions.getPort(),
-        VertxServerTarget.from(connectOptions, normalizedDbSystemName),
-        true);
+        VertxServerTarget.from(connectOptions, normalizedDbSystemName));
   }
 
   @Nullable
@@ -46,49 +38,22 @@ public final class VertxSqlClientInfo {
     if (connectOptions == null || connectOptions.isEmpty() || connectOptions.get(0) == null) {
       return null;
     }
-    SqlConnectOptions first = connectOptions.get(0);
     String normalizedDbSystemName = normalizedDbSystemName(dbSystemName);
     return new VertxSqlClientInfo(
         normalizedDbSystemName,
-        commonValue(connectOptions, false),
-        commonValue(connectOptions, true),
-        first.getHost(),
-        first.getPort(),
-        VertxServerTarget.from(connectOptions, normalizedDbSystemName),
-        true);
+        commonNamespace(connectOptions),
+        VertxServerTarget.from(connectOptions, normalizedDbSystemName));
   }
 
-  @Nullable
-  public static VertxSqlClientInfo createLegacy(
-      @Nullable SqlConnectOptions connectOptions, @Nullable String dbSystemName) {
-    if (connectOptions == null) {
-      return null;
-    }
-    return new VertxSqlClientInfo(
-        normalizedDbSystemName(dbSystemName),
-        connectOptions.getDatabase(),
-        connectOptions.getUser(),
-        connectOptions.getHost(),
-        connectOptions.getPort(),
-        null,
-        false);
+  public static VertxSqlClientInfo createUnknown(@Nullable String dbSystemName) {
+    return new VertxSqlClientInfo(normalizedDbSystemName(dbSystemName), null, null);
   }
 
   private VertxSqlClientInfo(
-      String dbSystemName,
-      @Nullable String namespace,
-      @Nullable String user,
-      @Nullable String legacyServerAddress,
-      @Nullable Integer legacyServerPort,
-      @Nullable DbServerTarget serverTarget,
-      boolean serverTargetCaptured) {
+      String dbSystemName, @Nullable String namespace, @Nullable DbServerTarget serverTarget) {
     this.dbSystemName = dbSystemName;
     this.namespace = namespace;
-    this.user = user;
-    this.legacyServerAddress = legacyServerAddress;
-    this.legacyServerPort = legacyServerPort;
     this.serverTarget = serverTarget;
-    this.serverTargetCaptured = serverTargetCaptured;
   }
 
   public String getDbSystemName() {
@@ -101,38 +66,17 @@ public final class VertxSqlClientInfo {
   }
 
   @Nullable
-  public String getUser() {
-    return user;
-  }
-
-  @Nullable
-  public String getLegacyServerAddress() {
-    return legacyServerAddress;
-  }
-
-  @Nullable
-  public Integer getLegacyServerPort() {
-    return legacyServerPort;
-  }
-
-  @Nullable
   public DbServerTarget getServerTarget() {
     return serverTarget;
   }
 
-  public boolean isServerTargetCaptured() {
-    return serverTargetCaptured;
-  }
-
   @Nullable
-  private static String commonValue(
-      List<? extends SqlConnectOptions> connectOptions, boolean userValue) {
+  private static String commonNamespace(List<? extends SqlConnectOptions> connectOptions) {
     SqlConnectOptions first = connectOptions.get(0);
-    String value = userValue ? first.getUser() : first.getDatabase();
+    String value = first.getDatabase();
     for (int i = 1; i < connectOptions.size(); i++) {
       SqlConnectOptions options = connectOptions.get(i);
-      if (options == null
-          || !Objects.equals(value, userValue ? options.getUser() : options.getDatabase())) {
+      if (options == null || !Objects.equals(value, options.getDatabase())) {
         return null;
       }
     }

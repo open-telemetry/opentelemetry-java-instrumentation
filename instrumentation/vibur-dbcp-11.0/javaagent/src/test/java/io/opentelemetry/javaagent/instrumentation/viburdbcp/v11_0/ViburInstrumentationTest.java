@@ -60,13 +60,8 @@ class ViburInstrumentationTest extends AbstractViburInstrumentationTest {
     driverProperties.setProperty("databaseName", "inventory");
 
     return Stream.of(
-        argumentSet(
-            "JDBC URL", "jdbc:postgresql://db.example:5432/orders", null, "db.example:5432/orders"),
-        argumentSet(
-            "driver properties",
-            "jdbc:postgresql:ignored",
-            driverProperties,
-            "properties.example:5433/inventory"),
+        argumentSet("JDBC URL", "jdbc:postgresql://db.example:5432/orders", null, "orders"),
+        argumentSet("driver properties", "jdbc:postgresql:ignored", driverProperties, "inventory"),
         argumentSet("database namespace", "jdbc:h2:mem:orders", null, "orders"),
         argumentSet("fallback", null, null, "vibur-dbcp"));
   }

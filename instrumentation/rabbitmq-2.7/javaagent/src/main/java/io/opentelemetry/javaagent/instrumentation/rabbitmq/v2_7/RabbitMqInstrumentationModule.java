@@ -15,11 +15,14 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class RabbitMqInstrumentationModule extends InstrumentationModule {
   public RabbitMqInstrumentationModule() {
-    super("rabbitmq", "rabbitmq-2.7");
+    super("rabbitmq-2.7", "rabbitmq");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new RabbitChannelInstrumentation(), new RabbitCommandInstrumentation());
+    return asList(
+        new RabbitChannelInstrumentation(),
+        new RabbitCommandInstrumentation(),
+        new RabbitConnectionInstrumentation());
   }
 }

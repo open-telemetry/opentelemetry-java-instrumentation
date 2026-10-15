@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.FLUSH_TIMEOUT;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.eventInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.functionInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.messageInstrumenter;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -22,6 +22,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.SqsProcessingSelection;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -58,22 +59,22 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final AwsLambdaRequest lambdaRequest;
-      private final Scope functionScope;
-      private final io.opentelemetry.context.Context functionContext;
-      @Nullable private final Scope messageScope;
-      @Nullable private final io.opentelemetry.context.Context messageContext;
+      @Nullable private final Scope functionScope;
+      @Nullable private final io.opentelemetry.context.Context functionContext;
+      @Nullable private final Scope eventScope;
+      @Nullable private final io.opentelemetry.context.Context eventContext;
 
       private AdviceScope(
           AwsLambdaRequest lambdaRequest,
-          io.opentelemetry.context.Context functionContext,
-          Scope functionScope,
-          @Nullable io.opentelemetry.context.Context messageContext,
-          @Nullable Scope messageScope) {
+          @Nullable io.opentelemetry.context.Context functionContext,
+          @Nullable Scope functionScope,
+          @Nullable io.opentelemetry.context.Context eventContext,
+          @Nullable Scope eventScope) {
         this.lambdaRequest = lambdaRequest;
         this.functionContext = functionContext;
         this.functionScope = functionScope;
-        this.messageContext = messageContext;
-        this.messageScope = messageScope;
+        this.eventContext = eventContext;
+        this.eventScope = eventScope;
       }
 
       @Nullable
@@ -84,36 +85,53 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
           headers = MapUtils.lowercaseMap(((APIGatewayProxyRequestEvent) arg).getHeaders());
         }
         AwsLambdaRequest lambdaRequest = AwsLambdaRequest.create(context, arg, headers);
-        io.opentelemetry.context.Context parentContext =
-            functionInstrumenter().extract(lambdaRequest);
+        io.opentelemetry.context.Context ambientContext =
+            io.opentelemetry.context.Context.current();
 
-        if (!functionInstrumenter().shouldStart(parentContext, lambdaRequest)) {
-          return null;
-        }
-
-        io.opentelemetry.context.Context functionContext =
-            functionInstrumenter().start(parentContext, lambdaRequest);
-        Scope functionScope = functionContext.makeCurrent();
-
-        io.opentelemetry.context.Context messageContext = null;
-        Scope messageScope = null;
-        if (arg instanceof SQSEvent) {
-          if (messageInstrumenter().shouldStart(functionContext, (SQSEvent) arg)) {
-            messageContext = messageInstrumenter().start(functionContext, (SQSEvent) arg);
-            messageScope = messageContext.makeCurrent();
+        io.opentelemetry.context.Context functionContext = null;
+        Scope functionScope = null;
+        boolean processingSelectionPresent =
+            arg instanceof SQSEvent && SqsProcessingSelection.isPresent(ambientContext);
+        if (!processingSelectionPresent) {
+          io.opentelemetry.context.Context parentContext =
+              functionInstrumenter().extract(lambdaRequest);
+          if (functionInstrumenter().shouldStart(parentContext, lambdaRequest)) {
+            functionContext = functionInstrumenter().start(parentContext, lambdaRequest);
+            functionScope = functionContext.makeCurrent();
           }
         }
+
+        io.opentelemetry.context.Context eventContext = null;
+        Scope eventScope = null;
+        if (arg instanceof SQSEvent) {
+          SQSEvent sqsEvent = (SQSEvent) arg;
+          boolean processingSelected = SqsProcessingSelection.isSelected(ambientContext, sqsEvent);
+          io.opentelemetry.context.Context eventParentContext =
+              functionContext != null ? functionContext : ambientContext;
+          if (!processingSelected
+              && eventInstrumenter().shouldStart(eventParentContext, sqsEvent)) {
+            io.opentelemetry.context.Context selectedContext =
+                SqsProcessingSelection.select(eventParentContext, sqsEvent);
+            eventContext = eventInstrumenter().start(selectedContext, sqsEvent);
+            eventScope = eventContext.makeCurrent();
+          }
+        }
+        if (functionContext == null && eventContext == null) {
+          return null;
+        }
         return new AdviceScope(
-            lambdaRequest, functionContext, functionScope, messageContext, messageScope);
+            lambdaRequest, functionContext, functionScope, eventContext, eventScope);
       }
 
       public void end(Object arg, @Nullable Object result, @Nullable Throwable throwable) {
-        if (messageScope != null) {
-          messageScope.close();
-          messageInstrumenter().end(messageContext, (SQSEvent) arg, null, throwable);
+        if (eventScope != null) {
+          eventScope.close();
+          eventInstrumenter().end(eventContext, (SQSEvent) arg, null, throwable);
         }
-        functionScope.close();
-        functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
+        if (functionScope != null && functionContext != null) {
+          functionScope.close();
+          functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
+        }
         OpenTelemetrySdkAccess.forceFlush(FLUSH_TIMEOUT.toNanos(), NANOSECONDS);
       }
     }

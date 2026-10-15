@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringWebInstrumentationModule extends InstrumentationModule {
 
   public SpringWebInstrumentationModule() {
-    super("spring-web", "spring-web-6.0");
+    super("spring-web-6.0", "spring-web");
   }
 
   @Override

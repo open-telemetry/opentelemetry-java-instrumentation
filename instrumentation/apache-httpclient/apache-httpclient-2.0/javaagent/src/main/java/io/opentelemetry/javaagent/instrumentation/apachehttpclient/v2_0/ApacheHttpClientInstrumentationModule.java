@@ -16,7 +16,7 @@ import java.util.List;
 public class ApacheHttpClientInstrumentationModule extends InstrumentationModule {
 
   public ApacheHttpClientInstrumentationModule() {
-    super("apache-httpclient", "apache-httpclient-2.0");
+    super("apache-httpclient-2.0", "apache-httpclient");
   }
 
   @Override

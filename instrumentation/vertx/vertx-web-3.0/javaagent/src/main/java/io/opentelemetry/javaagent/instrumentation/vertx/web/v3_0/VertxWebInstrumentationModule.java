@@ -16,7 +16,7 @@ import java.util.List;
 public class VertxWebInstrumentationModule extends InstrumentationModule {
 
   public VertxWebInstrumentationModule() {
-    super("vertx-web", "vertx-web-3.0", "vertx");
+    super("vertx-web-3.0", "vertx-web", "vertx");
   }
 
   @Override

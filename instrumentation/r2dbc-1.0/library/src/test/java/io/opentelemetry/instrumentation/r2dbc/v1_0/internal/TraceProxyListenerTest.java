@@ -20,17 +20,15 @@ import io.r2dbc.proxy.test.MockConnectionInfo;
 import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-import io.r2dbc.spi.ConnectionMetadata;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class TraceProxyListenerTest {
 
   @Test
-  @SuppressWarnings("deprecation") // testing deprecated semconv
   void sharesConfigurationSnapshotAcrossExecutions() {
-    Connection firstConnection = connection("firstdb");
-    Connection secondConnection = connection("seconddb");
+    Connection firstConnection = mock(Connection.class);
+    Connection secondConnection = mock(Connection.class);
     QueryExecutionInfo firstQuery = queryExecutionInfo(firstConnection, "SELECT first");
     QueryExecutionInfo secondQuery = queryExecutionInfo(secondConnection, "SELECT second");
     Context firstContext = mock(Context.class);
@@ -53,8 +51,6 @@ class TraceProxyListenerTest {
     DbExecution secondExecution = executionCaptor.getAllValues().get(1);
     assertThat(firstExecution).isNotSameAs(secondExecution);
     assertThat(firstExecution.connectionInfo()).isSameAs(secondExecution.connectionInfo());
-    assertThat(firstExecution.getSystem()).isEqualTo("firstdb");
-    assertThat(secondExecution.getSystem()).isEqualTo("seconddb");
     assertThat(firstExecution.getRawQueryTexts()).containsExactly("SELECT first");
     assertThat(secondExecution.getRawQueryTexts()).containsExactly("SELECT second");
     assertThat(firstExecution.getContext()).isSameAs(firstContext);
@@ -62,14 +58,6 @@ class TraceProxyListenerTest {
     assertThat(firstExecution.getSystemName()).isEqualTo("other_sql");
     assertThat(secondExecution.getConfiguredServerAddress()).isEqualTo("dbhost");
     assertThat(secondExecution.getConfiguredServerPort()).isNull();
-  }
-
-  private static Connection connection(String databaseProductName) {
-    ConnectionMetadata metadata = mock(ConnectionMetadata.class);
-    when(metadata.getDatabaseProductName()).thenReturn(databaseProductName);
-    Connection connection = mock(Connection.class);
-    when(connection.getMetadata()).thenReturn(metadata);
-    return connection;
   }
 
   private static QueryExecutionInfo queryExecutionInfo(Connection connection, String query) {

@@ -58,7 +58,7 @@ class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This UniversalConnectionPool connectionPool) {
-      OracleUcpSingletons.clearPoolName(connectionPool);
+      OracleUcpSingletons.updatePoolName(connectionPool);
     }
   }
 

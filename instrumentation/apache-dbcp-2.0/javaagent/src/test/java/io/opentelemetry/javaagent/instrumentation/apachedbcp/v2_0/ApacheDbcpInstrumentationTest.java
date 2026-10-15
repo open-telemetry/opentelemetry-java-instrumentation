@@ -39,7 +39,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    assertDataSourceName(dataSource, "db.example:5432/orders");
+    assertDataSourceName(dataSource, "orders");
   }
 
   @Test
@@ -47,7 +47,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+    assertDataSourceName(dataSource, "orders");
   }
 
   @Test
@@ -59,7 +59,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     dataSource.addConnectionProperty("portNumber", "5433");
     dataSource.addConnectionProperty("databaseName", "inventory");
 
-    assertDataSourceName(dataSource, "properties.example:5433/inventory");
+    assertDataSourceName(dataSource, "inventory");
   }
 
   @Test
@@ -150,7 +150,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   }
 
   @Test
-  void shouldUpdateDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
+  void shouldUpdateDataSourceNameOnLateMBeanRegistrationOnlyWithLegacySemconv() throws Exception {
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
     ObjectName objectName =
@@ -159,10 +159,11 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
 
     try {
       dataSource.getConnection().close();
-      assertDataSourceMetrics("db.example:5432/orders");
+      assertDataSourceMetrics("orders");
 
       objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
-      assertDataSourceMetrics("lateRegisteredPool");
+      testing.clearData();
+      assertDataSourceMetrics("orders");
     } finally {
       dataSource.close();
       if (mbeanServer.isRegistered(objectName)) {
