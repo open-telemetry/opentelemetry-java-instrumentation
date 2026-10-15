@@ -94,6 +94,10 @@ public final class Servlet5TelemetryFilter implements Filter {
       request.setAttribute("span_id", spanContext.getSpanId());
     }
 
+    if(captureRequestBodyMaxSize > 0) {
+      httpRequest = new Servlet5BodyCaptureRequestWrapper(httpRequest, captureRequestBodyMaxSize);
+    }
+
     OtelHttpServletRequest otelRequest =
         new OtelHttpServletRequest(httpRequest, context, requestContext, responseContext);
     Throwable error = null;
@@ -132,12 +136,6 @@ public final class Servlet5TelemetryFilter implements Filter {
       this.context = context;
       this.requestContext = requestContext;
       this.responseContext = responseContext;
-    }
-
-    @Override
-    public ServletInputStream getInputStream() throws IOException {
-      ByteBuffer buffer = ByteBuffer.allocate(10); // TODO: make it configurable
-      return new Servlet5BodyCaptureInputStreamWrapper(super.getInputStream(), buffer);
     }
 
     @Override
