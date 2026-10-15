@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -46,6 +47,8 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.testing.internal.armeria.common.HttpMethod.POST;
+import static io.opentelemetry.testing.internal.armeria.common.MediaType.JSON;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -423,8 +426,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     QueryParams formBody = QueryParams.builder().add("test-parameter", "test value õäöü").build();
     AggregatedHttpRequest request =
         AggregatedHttpRequest.of(
-            RequestHeaders.builder(
-                    HttpMethod.POST, resolveAddress(CAPTURE_PARAMETERS, getProtocolPrefix()))
+            RequestHeaders.builder(POST, resolveAddress(CAPTURE_PARAMETERS, getProtocolPrefix()))
                 .contentType(MediaType.FORM_DATA)
                 .build(),
             HttpData.ofUtf8(formBody.toQueryString()));
@@ -629,6 +631,23 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       assertThat(responses.get(i)).isEqualTo(Integer.toString(i));
     }
     assertHighConcurrencyWithRequestBody(count);
+  }
+
+  @Test
+  void requestBodyCapture() {
+    assumeTrue(options.testRequestBodyCapture);
+
+    String body = "{\"test\": \"value\"}";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            POST, resolveAddress(CAPTURE_BODY, getProtocolPrefix()), JSON, body);
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(CAPTURE_BODY.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(CAPTURE_BODY.getBody());
+
+    String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_BODY, null);
+    assertTheTraces(1, null, null, spanId, "POST", CAPTURE_BODY);
   }
 
   private void writeChunkedRequest(
@@ -1070,6 +1089,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                 }
               }
             }
+
+            if (endpoint == CAPTURE_BODY) {
+              List<SpanData> serverSpans =
+                  trace.actual().stream()
+                      .filter(span -> span.getKind() == SpanKind.SERVER)
+                      .collect(toList());
+              assertThat(serverSpans).hasSize(1);
+              SpanData serverSpan = serverSpans.get(0);
+              assertThat(serverSpan.getAttributes())
+                  .containsEntry("http.request.body.content", "{\"test\": \"value\"}");
+            }
           });
     }
 
@@ -1303,8 +1333,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         // The request id belongs on the nested body-consumer span only, not on the controller.
         .satisfies(
             spanData ->
-                assertThat(spanData.getAttributes().get(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME)))
-                    .isNull());
+                assertThat(spanData.getAttributes())
+                    .doesNotContainKey(ServerEndpoint.ID_ATTRIBUTE_NAME));
     return span;
   }
 
