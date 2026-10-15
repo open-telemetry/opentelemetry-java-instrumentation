@@ -5,15 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -21,12 +20,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -154,25 +147,14 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                    span.hasName("select test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), "select * from test"),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "select test" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "test"),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "select * from test"),
+                            equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
@@ -225,16 +207,13 @@ class VertxSqlClientTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "invalid"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)),
+                            equalTo(ERROR_TYPE, "42601")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -250,7 +229,7 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, SECONDS);
 
-    assertPreparedSelect(query, "select * from test where id = $1 and name = ?");
+    assertPreparedSelect(query);
 
     assertDurationMetric(
         testing,
@@ -264,36 +243,23 @@ class VertxSqlClientTest {
 
   private static void assertPreparedSelect() {
     String query = "select * from test where id = $1";
-    assertPreparedSelect(query, query);
+    assertPreparedSelect(query);
   }
 
-  private static void assertPreparedSelect(String query, String sanitizedQuery) {
+  private static void assertPreparedSelect(String query) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                    span.hasName("select test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv() ? query : sanitizedQuery),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "select test" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "test"),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, query),
+                            equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -308,7 +274,7 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, SECONDS);
 
-    assertPreparedSelect(query, "select * from test where id = $1 and name = ?");
+    assertPreparedSelect(query);
 
     assertDurationMetric(
         testing,
@@ -372,7 +338,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                    span.hasName("select test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
@@ -389,29 +355,14 @@ class VertxSqlClientTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? query
-                                    : "select * from test where id = $1 or $1 / $1 = ?"),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "select test" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "test"),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, query),
+                            equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "22012" : null))));
+                            equalTo(ERROR_TYPE, "22012"))));
   }
 
   private static Future<?> executePreparedStatement(String query, Tuple tuple) {
@@ -466,38 +417,16 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? scenario.stableSpanName
-                                : "INSERT tempdb.batch_test")
+                    span.hasName(scenario.stableSpanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? scenario.preparedQuery
-                                    : scenario.sanitizedQuery),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? scenario.querySummary : null),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "INSERT"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "batch_test"),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv() ? scenario.errorType : null),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, scenario.preparedQuery),
+                            equalTo(DB_QUERY_SUMMARY, scenario.querySummary),
+                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(ERROR_TYPE, scenario.errorType),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -518,7 +447,6 @@ class VertxSqlClientTest {
             "empty",
             BatchScenario.builder()
                 .preparedQuery("insert into batch_test values ($1, $2 + 1) returning *")
-                .sanitizedQuery("insert into batch_test values ($1, $2 + ?) returning *")
                 .tuples(emptyList())
                 .stableSpanName("BATCH insert batch_test")
                 .querySummary("BATCH insert batch_test")
@@ -529,7 +457,6 @@ class VertxSqlClientTest {
             "single",
             BatchScenario.builder()
                 .preparedQuery("insert into batch_test values ($1, $2 + 1) returning *")
-                .sanitizedQuery("insert into batch_test values ($1, $2 + ?) returning *")
                 .tuples(singletonList(Tuple.of(1, 1)))
                 .stableSpanName("insert batch_test")
                 .querySummary("insert batch_test")
@@ -538,7 +465,6 @@ class VertxSqlClientTest {
             "twoSameOperation",
             BatchScenario.builder()
                 .preparedQuery("insert into batch_test values ($1, $2 + 1) returning *")
-                .sanitizedQuery("insert into batch_test values ($1, $2 + ?) returning *")
                 .tuples(asList(Tuple.of(1, 1), Tuple.of(2, 2)))
                 .stableSpanName("BATCH insert batch_test")
                 .querySummary("BATCH insert batch_test")
@@ -619,26 +545,14 @@ class VertxSqlClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                        span.hasName("select test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    maybeStable(DB_SYSTEM),
-                                    emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                                equalTo(maybeStable(DB_NAME), DB),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(maybeStable(DB_STATEMENT), "select * from test"),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "select test" : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : "SELECT"),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : "test"),
+                                equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                                equalTo(DB_NAMESPACE, DB),
+                                equalTo(DB_QUERY_TEXT, "select * from test"),
+                                equalTo(DB_QUERY_SUMMARY, "select test"),
                                 equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
@@ -696,27 +610,14 @@ class VertxSqlClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                        span.hasName("select test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    maybeStable(DB_SYSTEM),
-                                    emitStableDatabaseSemconv() ? POSTGRESQL : null),
-                                equalTo(maybeStable(DB_NAME), DB),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT), "select * from test where id = $1"),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "select test" : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : "SELECT"),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : "test"),
+                                equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                                equalTo(DB_NAMESPACE, DB),
+                                equalTo(DB_QUERY_TEXT, "select * from test where id = $1"),
+                                equalTo(DB_QUERY_SUMMARY, "select test"),
                                 equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
@@ -729,7 +630,6 @@ class VertxSqlClientTest {
 
   private static final class BatchScenario {
     final String preparedQuery;
-    final String sanitizedQuery;
     final List<Tuple> tuples;
     final String stableSpanName;
     final String querySummary;
@@ -738,7 +638,6 @@ class VertxSqlClientTest {
 
     BatchScenario(Builder builder) {
       this.preparedQuery = builder.preparedQuery;
-      this.sanitizedQuery = builder.sanitizedQuery;
       this.tuples = builder.tuples;
       this.stableSpanName = builder.stableSpanName;
       this.querySummary = builder.querySummary;
@@ -752,7 +651,6 @@ class VertxSqlClientTest {
 
     static final class Builder {
       private String preparedQuery;
-      private String sanitizedQuery;
       private List<Tuple> tuples;
       private String stableSpanName;
       private String querySummary;
@@ -761,11 +659,6 @@ class VertxSqlClientTest {
 
       Builder preparedQuery(String preparedQuery) {
         this.preparedQuery = preparedQuery;
-        return this;
-      }
-
-      Builder sanitizedQuery(String sanitizedQuery) {
-        this.sanitizedQuery = sanitizedQuery;
         return this;
       }
 

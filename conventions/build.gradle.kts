@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "8.10.3"
+  id("com.diffplug.spotless") version "8.10.4"
 }
 
 spotless {
@@ -54,8 +54,8 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.10.3")
-  implementation("com.google.guava:guava:33.7.1-jre")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.10.4")
+  implementation("com.google.guava:guava:33.7.2-jre")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.6.1") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
     // causing "No XmlService implementation found" in Gradle's classloader
@@ -77,7 +77,7 @@ dependencies {
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:5.1.1")
-  implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.2.0")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.3.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
   // Used by otel.spring-native-test-conventions for typed access to the metadata repository
   // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.

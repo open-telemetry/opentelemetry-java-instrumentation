@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
@@ -34,11 +32,8 @@ final class OpenTelemetryTracing implements Tracing {
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(
-      Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-      RedisCommandSanitizer sanitizer,
-      boolean encodingEventsEnabled) {
-    this.tracerProvider =
-        new OpenTelemetryTracerProvider(instrumenter, sanitizer, encodingEventsEnabled);
+      Instrumenter<LettuceRequest, LettuceResponse> instrumenter, RedisCommandSanitizer sanitizer) {
+    this.tracerProvider = new OpenTelemetryTracerProvider(instrumenter, sanitizer);
   }
 
   @Override
@@ -77,9 +72,8 @@ final class OpenTelemetryTracing implements Tracing {
 
     OpenTelemetryTracerProvider(
         Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-        RedisCommandSanitizer sanitizer,
-        boolean encodingEventsEnabled) {
-      openTelemetryTracer = new OpenTelemetryTracer(instrumenter, sanitizer, encodingEventsEnabled);
+        RedisCommandSanitizer sanitizer) {
+      openTelemetryTracer = new OpenTelemetryTracer(instrumenter, sanitizer);
     }
 
     @Override
@@ -120,15 +114,12 @@ final class OpenTelemetryTracing implements Tracing {
 
     private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
     private final RedisCommandSanitizer sanitizer;
-    private final boolean encodingEventsEnabled;
 
     OpenTelemetryTracer(
         Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-        RedisCommandSanitizer sanitizer,
-        boolean encodingEventsEnabled) {
+        RedisCommandSanitizer sanitizer) {
       this.instrumenter = instrumenter;
       this.sanitizer = sanitizer;
-      this.encodingEventsEnabled = encodingEventsEnabled;
     }
 
     @Override
@@ -147,7 +138,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     private OpenTelemetrySpan nextSpan(Context parentContext) {
-      return new OpenTelemetrySpan(parentContext, instrumenter, sanitizer, encodingEventsEnabled);
+      return new OpenTelemetrySpan(parentContext, instrumenter, sanitizer);
     }
   }
 
@@ -159,7 +150,6 @@ final class OpenTelemetryTracing implements Tracing {
 
     private final Context parentContext;
     private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
-    private final boolean encodingEventsEnabled;
     private final LettuceRequest request;
 
     @Nullable private List<Object> events;
@@ -171,11 +161,9 @@ final class OpenTelemetryTracing implements Tracing {
     OpenTelemetrySpan(
         Context parentContext,
         Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-        RedisCommandSanitizer sanitizer,
-        boolean encodingEventsEnabled) {
+        RedisCommandSanitizer sanitizer) {
       this.parentContext = parentContext;
       this.instrumenter = instrumenter;
-      this.encodingEventsEnabled = encodingEventsEnabled;
       this.request = new LettuceRequest(sanitizer);
     }
 
@@ -257,7 +245,7 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span annotate(String value) {
-      if (!encodingEventsEnabled && value.startsWith("redis.encode.")) {
+      if (value.startsWith("redis.encode.")) {
         // skip noisy encode events produced by io.lettuce.core.protocol.TracedCommand
         return this;
       }
@@ -294,11 +282,6 @@ final class OpenTelemetryTracing implements Tracing {
           // ignore invalid values
         }
         return this;
-      }
-      // Under old semconv forward unknown tags as raw span attributes for backward compatibility;
-      // under stable semconv these are either captured structurally (e.g. error.type) or not needed
-      if (emitOldDatabaseSemconv() && context != null) {
-        Span.fromContext(context).setAttribute(key, value);
       }
       return this;
     }

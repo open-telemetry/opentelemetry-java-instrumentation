@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.hikaricp;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,10 +38,8 @@ public abstract class AbstractHikariInstrumentationTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hikaricp-3.0";
   private static final AttributeKey<String> POOL_NAME_KEY =
-      AttributeKey.stringKey(
-          emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");
-  private static final String CONNECTION_USAGE_METRIC_NAME =
-      emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage";
+      AttributeKey.stringKey("db.client.connection.pool.name");
+  private static final String CONNECTION_USAGE_METRIC_NAME = "db.client.connection.count";
 
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();

@@ -45,7 +45,6 @@ public class VertxRedisClientSingletons {
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(getter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
-            .addAttributesExtractor(new VertxRedisClientAttributesExtractor())
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());

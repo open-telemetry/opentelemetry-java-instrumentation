@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getDataSourceName;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -68,9 +67,6 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (!emitStableDatabaseSemconv()) {
-        TomcatDbcpDataSourceMetrics.unregisterMetrics(dataSource);
-      }
       TomcatDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }

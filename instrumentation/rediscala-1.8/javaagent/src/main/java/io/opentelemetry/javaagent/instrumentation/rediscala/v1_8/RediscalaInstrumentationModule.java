@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +16,7 @@ import java.util.List;
 public class RediscalaInstrumentationModule extends InstrumentationModule {
 
   public RediscalaInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "rediscala-1.8" : "rediscala",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"rediscala"}
-            : new String[] {"rediscala-1.8"});
+    super("rediscala-1.8", "rediscala");
   }
 
   @Override

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -75,13 +74,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
       String database = client.getConfiguration().get("database");
       Context parentContext = currentContext();
       ClickHouseDbRequest request =
-          ClickHouseDbRequest.create(
-              currentServerInfo.getAddress(),
-              currentServerInfo.getPort(),
-              currentServerInfo.getPeer(),
-              serverTarget,
-              database,
-              sqlQuery);
+          ClickHouseDbRequest.create(currentServerInfo.getPeer(), serverTarget, database, sqlQuery);
 
       return ClickHouseScope.start(instrumenter(), parentContext, request);
     }
@@ -96,7 +89,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (!emitStableDatabaseSemconv() || throwable != null || future == null) {
+      if (throwable != null || future == null) {
         scope.end(throwable);
       } else {
         scope.endOnCompletion(future);

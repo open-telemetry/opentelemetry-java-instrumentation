@@ -492,16 +492,10 @@ targets:
       target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:bootstrap'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent'
@@ -621,9 +615,6 @@ targets:
       target: ':instrumentation:jboss-logmanager:jboss-logmanager-mdc-1.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jedis:jedis-1.4:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jedis:jedis-2.0:javaagent'
     - type: gradle
       path: ./
@@ -721,9 +712,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:lettuce:lettuce-5.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:lettuce:lettuce-5.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:lettuce:lettuce-5.1:library'
@@ -1063,9 +1051,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:spring:starters:spring-boot-starter'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:spring:starters:zipkin-spring-boot-starter'
     - type: gradle
       path: ./
       target: ':instrumentation:struts:struts-2.3:javaagent'

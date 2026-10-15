@@ -57,18 +57,6 @@ final class KafkaReceiveAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(KafkaReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(KafkaReceiveRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(KafkaReceiveRequest request, @Nullable Void unused) {
