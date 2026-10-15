@@ -18,13 +18,20 @@ otelJava {
 }
 
 tasks {
-  test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
+  val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-parameter")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter",
     )
+  }
+
+  check {
+    dependsOn(testRequestParameterCapture)
   }
 }

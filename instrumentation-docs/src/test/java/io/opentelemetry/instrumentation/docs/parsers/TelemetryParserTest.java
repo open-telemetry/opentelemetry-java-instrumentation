@@ -16,7 +16,7 @@ class TelemetryParserTest {
   @ParameterizedTest
   @CsvSource({
     "io.opentelemetry.ratpack-1.4, true",
-    "io.opentelemetry.ratpack-1.7, true",
+    "io.opentelemetry.ratpack-1.7, false",
     "io.opentelemetry.netty-4.1, false"
   })
   void ratpackScopes(String telemetryScope, boolean expected) {
@@ -27,7 +27,7 @@ class TelemetryParserTest {
   @ParameterizedTest
   @CsvSource({
     "io.opentelemetry.mongo-3.1, true",
-    "io.opentelemetry.mongo-3.7, true",
+    "io.opentelemetry.mongo-3.7, false",
     "io.opentelemetry.mongo-4.0, false",
     "io.opentelemetry.mongo-async-3.3, false",
     "io.opentelemetry.jdbc, false"

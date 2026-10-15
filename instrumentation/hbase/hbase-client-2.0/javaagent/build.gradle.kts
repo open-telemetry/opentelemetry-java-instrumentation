@@ -55,7 +55,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {

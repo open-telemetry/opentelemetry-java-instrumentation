@@ -1289,10 +1289,15 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     stringArrayKey("http.response.header.x-test-response"), singletonList("test"));
           }
           if (endpoint == CAPTURE_PARAMETERS) {
-            assertThat(attrs)
-                .containsEntry(
-                    stringArrayKey("servlet.request.parameter.test-parameter"),
-                    singletonList("test value õäöü"));
+            if (options.expectCapturedRequestParameters) {
+              assertThat(attrs)
+                  .containsEntry(
+                      stringArrayKey("servlet.request.parameter.test-parameter"),
+                      singletonList("test value õäöü"));
+            } else {
+              assertThat(attrs)
+                  .doesNotContainKey(stringArrayKey("servlet.request.parameter.test-parameter"));
+            }
           }
         });
 

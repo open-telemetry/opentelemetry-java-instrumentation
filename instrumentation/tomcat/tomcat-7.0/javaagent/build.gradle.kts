@@ -35,11 +35,20 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-parameter")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-parameter")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter",
+    )
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -47,10 +56,9 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
   }
 
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testRequestParameterCapture)
   }
 }

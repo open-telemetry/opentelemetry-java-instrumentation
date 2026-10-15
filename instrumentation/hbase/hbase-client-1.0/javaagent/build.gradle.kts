@@ -59,7 +59,6 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {

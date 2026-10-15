@@ -81,10 +81,6 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty(
-      "collectMetadata",
-      otelProps.collectMetadata && name !in setOf("unitTests", "version343Test", "version344Test"),
-    )
   }
 
   val testExperimental = register<Test>("testExperimental") {

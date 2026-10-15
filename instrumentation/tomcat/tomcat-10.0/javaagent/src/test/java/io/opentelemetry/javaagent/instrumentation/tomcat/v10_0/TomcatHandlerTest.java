@@ -51,6 +51,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
 
+  private static final boolean REQUEST_PARAMETER_CAPTURE_ENABLED =
+      System.getProperty("otel.instrumentation.servlet.experimental.request-parameters.included")
+              != null
+          || System.getProperty(
+                  "otel.instrumentation.servlet.experimental.request-parameters.excluded")
+              != null;
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -133,6 +140,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setContextPath("/app");
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
+    options.setExpectCapturedRequestParameters(REQUEST_PARAMETER_CAPTURE_ENABLED);
     options.setTestHttpBodyPipelining(true);
     options.setTestErrorBody(false);
 

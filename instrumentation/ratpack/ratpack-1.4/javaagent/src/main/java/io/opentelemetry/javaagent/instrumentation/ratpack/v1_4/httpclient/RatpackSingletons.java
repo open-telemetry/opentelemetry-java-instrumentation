@@ -25,10 +25,7 @@ public class RatpackSingletons {
     httpClient =
         new OpenTelemetryHttpClient(
             RatpackClientInstrumenterBuilderFactory.create(
-                    AgentCommonConfig.get().isV3Preview()
-                        ? "io.opentelemetry.ratpack-1.4"
-                        : "io.opentelemetry.ratpack-1.7",
-                    GlobalOpenTelemetry.get())
+                    "io.opentelemetry.ratpack-1.4", GlobalOpenTelemetry.get())
                 .addAttributesExtractor(new RatpackProtocolVersionAttributesExtractor())
                 .configure(AgentCommonConfig.get())
                 .build());

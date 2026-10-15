@@ -20,10 +20,6 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath

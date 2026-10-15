@@ -35,7 +35,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {

@@ -122,6 +122,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     return config;
   }
 
+  @SuppressWarnings("removal")
   private static ConsumerRecords<Integer, String> records(String topic, String value) {
     TopicPartition partition = new TopicPartition(topic, 0);
     ConsumerRecord<Integer, String> record = new ConsumerRecord<>(topic, 0, 0, 1, value);
