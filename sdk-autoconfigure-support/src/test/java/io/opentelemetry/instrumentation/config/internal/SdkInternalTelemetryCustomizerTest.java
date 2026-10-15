@@ -94,6 +94,7 @@ class SdkInternalTelemetryCustomizerTest {
       }
     } finally {
       TestSpanExporterComponentProvider.setSpanExporter(null);
+      TestMetricExporterComponentProvider.setMetricExporter(null);
     }
   }
 

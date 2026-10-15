@@ -53,6 +53,7 @@ public final class SdkInternalTelemetryCustomizer
                       "otel_sdk",
                       key -> new ExperimentalLanguageSpecificInstrumentationPropertyModel());
           sdk.getAdditionalProperties().putIfAbsent("internal_telemetry_version", "latest");
+          // The accessor copies the subtree, so populate it before attaching it to the model.
           OpenTelemetryConfigurationModelAccessor.setInstrumentation(model, instrumentation);
           return model;
         });
