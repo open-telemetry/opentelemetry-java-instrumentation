@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.
