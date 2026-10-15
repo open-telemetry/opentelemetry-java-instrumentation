@@ -115,10 +115,7 @@ class JaxRsAnnotations1InstrumentationTest {
   @MethodSource("provideArguments")
   void createSpanForAnnotatedMethod(String path, Jax action) {
     String className = getClassName(action.getClass());
-    testing.runWithHttpServerSpan(
-        () -> {
-          action.call();
-        });
+    testing.runWithHttpServerSpan(action::call);
 
     Consumer<SpanDataAssert> serverSpan =
         span ->
@@ -152,10 +149,7 @@ class JaxRsAnnotations1InstrumentationTest {
           @Override
           public void call() {}
         };
-    testing.runWithHttpServerSpan(
-        () -> {
-          action.call();
-        });
+    testing.runWithHttpServerSpan(action::call);
 
     testing.waitAndAssertTraces(
         trace ->
