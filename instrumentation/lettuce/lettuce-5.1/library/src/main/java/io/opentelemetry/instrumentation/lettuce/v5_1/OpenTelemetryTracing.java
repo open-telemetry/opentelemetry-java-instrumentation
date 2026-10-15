@@ -188,27 +188,30 @@ final class OpenTelemetryTracing implements Tracing {
     // @Override
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
-    public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
-      // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
-      // so take name from the command. Later versions already set the name correctly,
-      // so only fill it in when it is still null.
-      // Use toString(): name() was removed from ProtocolKeyword in 6.5.0+.
-      ProtocolKeyword type = command.getType();
-      if (request.getCommand() == null && type != null) {
-        request.setCommand(type.toString());
+    public Tracer.Span start(RedisCommand<?, ?, ?> command) {
+      synchronized (this) {
+        // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
+        // so take name from the command. Later versions already set the name correctly,
+        // so only fill it in when it is still null.
+        // Use toString(): name() was removed from ProtocolKeyword in 6.5.0+.
+        ProtocolKeyword type = command.getType();
+        if (request.getCommand() == null && type != null) {
+          request.setCommand(type.toString());
+        }
+
+        // Extract args BEFORE calling start() so db.query.text can include them
+        if (command.getArgs() != null) {
+          request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
+        }
+
+        start();
+
+        if (context == null) {
+          return this;
+        }
       }
 
-      // Extract args BEFORE calling start() so db.query.text can include them
-      if (command.getArgs() != null) {
-        request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
-      }
-
-      start();
-
-      if (context == null) {
-        return this;
-      }
-
+      // Already-completed commands can invoke the callback during registration.
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
         completeableCommand.onComplete(
@@ -293,27 +296,37 @@ final class OpenTelemetryTracing implements Tracing {
       return this;
     }
 
-    private synchronized void finishWithResponse(LettuceResponse resp) {
-      this.response = resp;
-      if (this.error == null && resp.getThrowable() != null) {
-        this.error = resp.getThrowable();
-      }
-      finish();
+    @Override
+    public void finish() {
+      finishWithResponse(null);
     }
 
-    @Override
-    public synchronized void finish() {
-      if (context != null) {
-        LettuceResponse response = this.response;
+    private void finishWithResponse(@Nullable LettuceResponse resp) {
+      Context context;
+      LettuceResponse response;
+      Throwable error;
+      synchronized (this) {
+        if (resp != null) {
+          this.response = resp;
+          if (this.error == null && resp.getThrowable() != null) {
+            this.error = resp.getThrowable();
+          }
+        }
+        context = this.context;
+        if (context == null) {
+          return;
+        }
+        response = this.response;
         if (response == null && errorMessage != null) {
           response = new LettuceResponse(errorMessage, null);
         }
+        error = this.error;
 
-        instrumenter.end(context, request, response, error);
         // Null out context to prevent double-ending if both the onComplete callback and Lettuce's
         // direct finish() call execute.
-        context = null;
+        this.context = null;
       }
+      instrumenter.end(context, request, response, error);
     }
   }
 }
