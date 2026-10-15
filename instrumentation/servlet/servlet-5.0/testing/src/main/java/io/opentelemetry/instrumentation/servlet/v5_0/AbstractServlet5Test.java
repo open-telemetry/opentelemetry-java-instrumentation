@@ -78,6 +78,7 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
       options.setHasResponseCustomizer(e -> true);
       options.setHasResponseSpan(this::hasResponseSpan);
     }
+    options.setTestRequestBodyCapture(true);
   }
 
   protected boolean isAgentTest() {

@@ -19,6 +19,7 @@ otelJava {
 
 tasks {
   test {
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-parameter")
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(

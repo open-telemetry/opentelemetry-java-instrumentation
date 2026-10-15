@@ -22,5 +22,6 @@ otelJava {
 tasks {
   test {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-?arameter")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
   }
 }
