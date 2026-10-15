@@ -95,8 +95,28 @@ tasks {
     )
   }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets["version343Test"].output.classesDirs
+    classpath = sourceSets["version343Test"].runtimeClasspath
+    filter {
+      includeTestsMatching("*CouchbaseExceptionSignalTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
+  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
+    testClassesDirs = sourceSets["version343Test"].output.classesDirs
+    classpath = sourceSets["version343Test"].runtimeClasspath
+    filter {
+      includeTestsMatching("*CouchbaseExceptionSignalTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs/dup")
+  }
+
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testExceptionSignalLogs, testExceptionSignalLogsDup)
   }
 
   if (otelProps.denyUnsafe) {
