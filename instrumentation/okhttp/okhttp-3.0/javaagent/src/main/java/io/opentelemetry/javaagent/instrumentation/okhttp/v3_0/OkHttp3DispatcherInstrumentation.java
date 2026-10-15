@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttp3Singletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -32,7 +31,12 @@ class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("enqueue", "enqueue$okhttp")
-            .and(takesArgument(0, implementsInterface(named(Runnable.class.getName())))),
+            .and(
+                takesArgument(
+                    0,
+                    namedOneOf(
+                        "okhttp3.RealCall$AsyncCall",
+                        "okhttp3.internal.connection.RealCall$AsyncCall"))),
         getClass().getName() + "$AttachStateAdvice");
   }
 
