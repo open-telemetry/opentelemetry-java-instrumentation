@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -36,12 +37,13 @@ class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Exception exception) {
-      Span serverSpan = LocalRootSpan.fromContextOrNull(Java8BytecodeBridge.currentContext());
+      Context context = Java8BytecodeBridge.currentContext();
+      Span serverSpan = LocalRootSpan.fromContextOrNull(context);
       if (serverSpan != null) {
         // unwrap exception
         Throwable throwable = WicketErrorUnwrapper.unwrap(exception);
         // as we don't create a span for wicket we record exception on server span
-        serverSpan.recordException(throwable);
+        WicketExceptionRecorder.recordException(context, serverSpan, throwable);
       }
     }
   }

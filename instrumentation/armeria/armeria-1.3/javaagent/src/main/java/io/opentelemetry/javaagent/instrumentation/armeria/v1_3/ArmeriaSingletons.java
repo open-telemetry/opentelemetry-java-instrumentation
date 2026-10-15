@@ -9,6 +9,7 @@ import com.linecorp.armeria.client.HttpClient;
 import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetry;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetry;
@@ -24,8 +25,13 @@ public class ArmeriaSingletons {
 
   private static final Function<HttpService, HttpService> serverDecorator;
 
+  private static final HttpServerExceptionRecorder serverExceptionRecorder;
+
   static {
     CommonConfig config = AgentCommonConfig.get();
+    serverExceptionRecorder =
+        HttpServerExceptionRecorder.create(
+            GlobalOpenTelemetry.get(), "io.opentelemetry.armeria-1.3");
 
     ArmeriaClientTelemetryBuilder clientBuilder =
         ArmeriaClientTelemetry.builder(GlobalOpenTelemetry.get());
@@ -53,6 +59,10 @@ public class ArmeriaSingletons {
 
   public static Function<HttpService, HttpService> serverDecorator() {
     return serverDecorator;
+  }
+
+  public static HttpServerExceptionRecorder serverExceptionRecorder() {
+    return serverExceptionRecorder;
   }
 
   private ArmeriaSingletons() {}

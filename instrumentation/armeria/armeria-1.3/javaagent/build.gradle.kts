@@ -47,6 +47,45 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
+  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+  }
+
+  val testArmeria19ExceptionSignalLogs = register<Test>("testArmeria19ExceptionSignalLogs") {
+    val suite = testing.suites.named<JvmTestSuite>("testArmeria19").get()
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+    filter {
+      includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
+  val testArmeria19ExceptionSignalLogsDup =
+    register<Test>("testArmeria19ExceptionSignalLogsDup") {
+      val suite = testing.suites.named<JvmTestSuite>("testArmeria19").get()
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+      filter {
+        includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
+      }
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+    }
+
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
       register<Test>("${suite.name}PreviewSemconv") {
@@ -59,7 +98,14 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(
+      testing.suites,
+      previewSemconvSuites,
+      testExceptionSignalLogs,
+      testExceptionSignalLogsDup,
+      testArmeria19ExceptionSignalLogs,
+      testArmeria19ExceptionSignalLogsDup
+    )
   }
 
   if (otelProps.denyUnsafe) {

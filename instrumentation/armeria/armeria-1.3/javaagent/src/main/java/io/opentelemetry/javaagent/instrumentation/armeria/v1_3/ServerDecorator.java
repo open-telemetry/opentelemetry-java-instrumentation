@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
+import static io.opentelemetry.javaagent.instrumentation.armeria.v1_3.ArmeriaSingletons.serverExceptionRecorder;
+
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.server.HttpService;
@@ -51,7 +53,8 @@ class ServerDecorator extends SimpleDecoratingHttpService {
     } catch (Throwable t) {
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      span.recordException(ErrorCauseExtractor.getDefault().extract(t));
+      serverExceptionRecorder()
+          .recordException(otelContext, span, ErrorCauseExtractor.getDefault().extract(t));
 
       throw t;
     }

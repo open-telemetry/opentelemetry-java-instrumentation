@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.ratpack.server;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -304,6 +306,35 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
         });
   }
 
+  @Test
+  void exceptionLogCorrelatesWithHandlerSpan() {
+    AggregatedHttpResponse response = client.execute(request(EXCEPTION, "GET")).aggregate().join();
+    assertThat(response.status().code()).isEqualTo(EXCEPTION.getStatus());
+
+    assertTheTraces(1, null, null, null, "GET", EXCEPTION);
+    assertThat(testing().getExportedLogRecords())
+        .filteredOn(log -> "http.server.request.exception".equals(log.getEventName()))
+        .hasSize(emitExceptionAsLogs() ? 1 : 0);
+
+    if (emitExceptionAsLogs()) {
+      assertExceptionLogs(
+          new IllegalStateException(EXCEPTION.getBody()), "http.server.request.exception");
+      assertThat(testing().getExportedLogRecords())
+          .filteredOn(log -> "http.server.request.exception".equals(log.getEventName()))
+          .singleElement()
+          .satisfies(
+              log ->
+                  assertThat(testing().getExportedSpans())
+                      .filteredOn(span -> span.getSpanContext().equals(log.getSpanContext()))
+                      .singleElement()
+                      .satisfies(
+                          span -> {
+                            assertThat(span.getName()).isEqualTo("/exception");
+                            assertThat(span.getKind()).isEqualTo(SpanKind.INTERNAL);
+                          }));
+    }
+  }
+
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
@@ -318,7 +349,13 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     span.hasName(spanName).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error())
-          .hasException(new IllegalStateException(EXCEPTION.getBody()));
+          .hasException(
+              emitExceptionAsSpanEvents() ? new IllegalStateException(EXCEPTION.getBody()) : null)
+          .hasEventsSatisfying(
+              events ->
+                  assertThat(events)
+                      .filteredOn(event -> "exception".equals(event.getName()))
+                      .hasSize(emitExceptionAsSpanEvents() ? 1 : 0));
     }
     return span;
   }

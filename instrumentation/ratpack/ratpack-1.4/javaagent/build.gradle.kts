@@ -80,6 +80,51 @@ tasks {
     systemProperty("ratpack14Test", true)
   }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*RatpackHttpServerTest.requestWithException")
+      includeTestsMatching("*RatpackHttpServerTest.exceptionLogCorrelatesWithHandlerSpan")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("ratpack14Test", true)
+  }
+
+  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*RatpackHttpServerTest.requestWithException")
+      includeTestsMatching("*RatpackHttpServerTest.exceptionLogCorrelatesWithHandlerSpan")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+    systemProperty("ratpack14Test", true)
+  }
+
+  val version17TestExceptionSignalLogs = register<Test>("version17TestExceptionSignalLogs") {
+    val suite = testing.suites.named<JvmTestSuite>("version17Test").get()
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+    filter {
+      includeTestsMatching("*RatpackHttpServerTest.requestWithException")
+      includeTestsMatching("*RatpackHttpServerTest.exceptionLogCorrelatesWithHandlerSpan")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
+  val version17TestExceptionSignalLogsDup =
+    register<Test>("version17TestExceptionSignalLogsDup") {
+      val suite = testing.suites.named<JvmTestSuite>("version17Test").get()
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+      filter {
+        includeTestsMatching("*RatpackHttpServerTest.requestWithException")
+        includeTestsMatching("*RatpackHttpServerTest.exceptionLogCorrelatesWithHandlerSpan")
+      }
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+    }
+
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -96,7 +141,15 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv)
+    dependsOn(
+      testing.suites,
+      testPreviewSemconv,
+      version17TestPreviewSemconv,
+      testExceptionSignalLogs,
+      testExceptionSignalLogsDup,
+      version17TestExceptionSignalLogs,
+      version17TestExceptionSignalLogsDup
+    )
   }
 
   if (otelProps.denyUnsafe) {

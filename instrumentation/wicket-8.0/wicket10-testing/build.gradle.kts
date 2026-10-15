@@ -13,6 +13,30 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
 }
 
+tasks {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*WicketTest.testException")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
+  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*WicketTest.testException")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs, testExceptionSignalLogsDup)
+  }
+}
+
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
