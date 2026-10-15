@@ -20,14 +20,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
@@ -94,7 +92,7 @@ public final class Servlet5TelemetryFilter implements Filter {
       request.setAttribute("span_id", spanContext.getSpanId());
     }
 
-    if(captureRequestBodyMaxSize > 0) {
+    if (captureRequestBodyMaxSize > 0) {
       httpRequest = new Servlet5BodyCaptureRequestWrapper(httpRequest, captureRequestBodyMaxSize);
     }
 

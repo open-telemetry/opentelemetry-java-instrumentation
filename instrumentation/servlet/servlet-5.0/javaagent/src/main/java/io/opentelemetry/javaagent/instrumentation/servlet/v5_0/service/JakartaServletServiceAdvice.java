@@ -81,10 +81,7 @@ public class JakartaServletServiceAdvice {
       if (context != null) {
         // Only trigger response customizer once, so only if server span was created here
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(
-                contextToUpdate,
-                response,
-                new Servlet5HttpServerResponseMutator());
+            .customize(contextToUpdate, response, new Servlet5HttpServerResponseMutator());
       }
     }
 
@@ -105,7 +102,8 @@ public class JakartaServletServiceAdvice {
       @Advice.Argument(0) ServletRequest servletRequest,
       @Advice.Argument(1) ServletResponse servletResponse) {
 
-    if (!(servletRequest instanceof HttpServletRequest) || !(servletResponse instanceof HttpServletResponse)) {
+    if (!(servletRequest instanceof HttpServletRequest)
+        || !(servletResponse instanceof HttpServletResponse)) {
       return new Object[] {null, servletRequest, servletResponse};
     }
 
@@ -117,7 +115,8 @@ public class JakartaServletServiceAdvice {
       response = new Servlet5SnippetInjectingResponseWrapper(response, snippet);
     }
 
-    HttpServletRequest request = Servlet5Singletons.wrapForBodyCaptureIfNeeded((HttpServletRequest) servletRequest);
+    HttpServletRequest request =
+        Servlet5Singletons.wrapForBodyCaptureIfNeeded((HttpServletRequest) servletRequest);
 
     AdviceScope adviceScope =
         new AdviceScope(

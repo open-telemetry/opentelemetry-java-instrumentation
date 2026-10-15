@@ -34,7 +34,8 @@ class ServletConfig {
     traceIdRequestAttributeEnabled =
         config.get("trace_id_request_attribute/development").getBoolean("enabled", false);
 
-    DeclarativeConfigProperties captureRequestBodyConfig = config.get("capture_request_body/development");
+    DeclarativeConfigProperties captureRequestBodyConfig =
+        config.get("capture_request_body/development");
     captureRequestBody = captureRequestBodyConfig.getBoolean("enabled", false);
 
     captureRequestBodyMaxSize = captureRequestBodyConfig.getInt("max_size", 1024);
