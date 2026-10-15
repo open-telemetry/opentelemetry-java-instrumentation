@@ -50,7 +50,8 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void intercept(
-        @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClientImpl client) {
+        @Advice.This ProducerImpl<?> producer,
+        @Advice.Argument(value = 0) PulsarClientImpl client) {
       String brokerUrl = client.getLookup().getServiceUrl();
       String topic = producer.getTopic();
       VirtualFieldStore.inject(producer, brokerUrl, topic);
