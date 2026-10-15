@@ -42,7 +42,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.grpc.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-integration.enabled=false")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testMessagingPreview = register<Test>("testMessagingPreview") {
