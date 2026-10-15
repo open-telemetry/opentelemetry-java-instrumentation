@@ -67,7 +67,7 @@ dependencies {
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.6.0")
-  implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:4.1.0-02")
+  implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:4.1.1-01")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.12.0")
   // When updating, also update dependencyManagement/build.gradle.kts
@@ -77,7 +77,7 @@ dependencies {
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:5.1.1")
-  implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.2.0")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.3.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
   // Used by otel.spring-native-test-conventions for typed access to the metadata repository
   // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.
