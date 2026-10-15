@@ -5,8 +5,7 @@
 ### ⚠️ Breaking changes
 
 - The Java agent and Spring Boot starter now emit the latest SDK health metrics, including
-  `otel.sdk.exporter.span.exported` instead of `otlp.exporter.exported`. Update dashboards and
-  alerts that use the legacy SDK metrics.
+  `otel.sdk.exporter.span.exported` instead of `otlp.exporter.exported`.
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
   remain, instead of emitting an empty object.
 - Process command resource attributes are now disabled by default. Set
