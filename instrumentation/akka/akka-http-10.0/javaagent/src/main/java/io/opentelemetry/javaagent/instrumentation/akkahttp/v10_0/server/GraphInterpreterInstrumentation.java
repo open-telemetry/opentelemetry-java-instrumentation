@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.stream.impl.fusing.GraphInterpreter;
 import io.opentelemetry.context.Context;
@@ -25,7 +26,10 @@ class GraphInterpreterInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("processPush"), getClass().getName() + "$PushAdvice");
+    transformer.applyAdviceToMethod(
+        named("processPush")
+            .and(takesArgument(0, named("akka.stream.impl.fusing.GraphInterpreter$Connection"))),
+        getClass().getName() + "$PushAdvice");
   }
 
   @SuppressWarnings("unused")

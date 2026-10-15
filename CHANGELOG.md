@@ -7,6 +7,8 @@
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available, as required by the FaaS semantic conventions. For example, an ARN
   ending in `:prod` becomes `:42`.
+- GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
+  remain, instead of emitting an empty object.
 - Process command resource attributes are now disabled by default. Set
   `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
