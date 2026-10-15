@@ -243,10 +243,13 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
       }
       return element instanceof String ? parseLong((String) element) : null;
     }
-    if (element instanceof Number) {
-      return ((Number) element).doubleValue();
+    if (scalarType == Double.class) {
+      if (element instanceof Number) {
+        return ((Number) element).doubleValue();
+      }
+      return element instanceof String ? parseDouble((String) element) : null;
     }
-    return element instanceof String ? parseDouble((String) element) : null;
+    return null;
   }
 
   @Nullable
