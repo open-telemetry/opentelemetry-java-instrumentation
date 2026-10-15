@@ -27,7 +27,7 @@
   | `io.opentelemetry.tomcat-jdbc` | `io.opentelemetry.tomcat-jdbc-8.5` |
 - Couchbase Java SDK 3.1 and 3.2+ spans now use the agent-owned scope names instead of
   `com.couchbase.client.jvm`. SDK 3.1 uses `io.opentelemetry.couchbase-3.1`; SDK 3.2+ uses
-  `io.opentelemetry.couchbase-3.2`. The existing legacy-bridge 3.1 scope is unchanged.
+  `io.opentelemetry.couchbase-3.2`.
 
 - Java agent instrumentation selectors now always use the versioned component name first,
   followed by supported role, versionless and umbrella selectors. When several selectors are
