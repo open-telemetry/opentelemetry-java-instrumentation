@@ -23,10 +23,6 @@ dependencies {
   testImplementation("com.alibaba.nacos:nacos-client:2.0.0")
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}
-
 val testAgentInstrumentation by tasks.registering(Test::class) {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
