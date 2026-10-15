@@ -20,6 +20,14 @@ tracer_provider:
           otlp_http:
             endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces
 
+meter_provider:
+  readers:
+    - periodic:
+        interval: 1000
+        exporter:
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/metrics
+
 # add extra resource attributes to verify that declarative config is picked up
 resource:
   detection/development:

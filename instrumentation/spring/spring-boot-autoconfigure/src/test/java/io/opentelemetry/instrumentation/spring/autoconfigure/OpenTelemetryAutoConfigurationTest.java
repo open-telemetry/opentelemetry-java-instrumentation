@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -16,8 +18,11 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.exporter.otlp.internal.OtlpSpanExporterProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.AutoConfigureListener;
+import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +50,33 @@ class OpenTelemetryAutoConfigurationTest {
               "otel.propagators=b3",
               "otel.experimental.resource.disabled.keys=a,b",
               "otel.java.disabled.resource.providers=d");
+
+  @Test
+  void sdkHealthMetricsEnabledByDefault() {
+    InMemoryMetricReader reader = InMemoryMetricReader.create();
+    this.contextRunner
+        .withPropertyValues("otel.traces.exporter=logging")
+        .withBean(
+            AutoConfigurationCustomizerProvider.class,
+            () ->
+                customizer ->
+                    customizer.addMeterProviderCustomizer(
+                        (builder, config) -> builder.registerMetricReader(reader)))
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .run(
+            context -> {
+              OpenTelemetrySdk sdk = context.getBean(OpenTelemetrySdk.class);
+              sdk.getTracer("test").spanBuilder("test").startSpan().end();
+              sdk.getSdkTracerProvider().forceFlush().join(10, SECONDS);
+
+              await()
+                  .untilAsserted(
+                      () ->
+                          assertThat(reader.collectAllMetrics())
+                              .extracting(MetricData::getName)
+                              .contains("otel.sdk.processor.span.processed"));
+            });
+  }
 
   @Test
   @DisplayName(

@@ -12,7 +12,10 @@ import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_NAME;
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -55,5 +58,13 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
     client().get("/greeting").aggregate().join();
     testing.waitAndAssertTraces(
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasAttribute(URL_PATH, "/greeting")));
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.metrics())
+                    .extracting(MetricData::getName)
+                    .contains(
+                        "otel.sdk.exporter.span.exported", "otel.sdk.processor.span.processed"));
   }
 }

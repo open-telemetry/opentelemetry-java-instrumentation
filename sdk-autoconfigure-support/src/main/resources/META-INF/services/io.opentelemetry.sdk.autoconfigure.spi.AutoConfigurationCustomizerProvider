@@ -1,1 +1,2 @@
+io.opentelemetry.instrumentation.config.internal.SdkInternalTelemetryCustomizer
 io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizer

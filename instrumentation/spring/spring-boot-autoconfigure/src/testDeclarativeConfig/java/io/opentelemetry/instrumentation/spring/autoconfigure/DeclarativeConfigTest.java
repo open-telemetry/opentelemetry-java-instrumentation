@@ -85,6 +85,12 @@ class DeclarativeConfigTest {
                     assertThat(config.getLong("int_key")).isEqualTo(42);
                   });
           assertThat(context).getBean("configProvider", ConfigProvider.class).isNotNull();
+          assertThat(
+                  context
+                      .getBean(ConfigProvider.class)
+                      .getInstrumentationConfig("otel_sdk")
+                      .getString("internal_telemetry_version"))
+              .isEqualTo("latest");
         });
   }
 
