@@ -18,6 +18,7 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -68,6 +69,12 @@ class ExceptionRecorderTest {
           .hasSeverity(Severity.ERROR)
           .hasSpanContext(selectedSpanContext);
       assertThat(logs.get(0).getTimestampEpochNanos()).isEqualTo(123_000_000_456L);
+      assertThat(logs.get(0).getInstrumentationScopeInfo())
+          .isEqualTo(
+              InstrumentationScopeInfo.builder("test")
+                  .setVersion("1.2.3")
+                  .setSchemaUrl(SchemaUrls.V1_41_0)
+                  .build());
     }
   }
 
