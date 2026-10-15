@@ -26,6 +26,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -58,10 +59,13 @@ class ServletBodyCaptureTest {
 
   private static void readRequestBody(ServletRequest req) throws IOException {
     ServletInputStream input = req.getInputStream();
+    ByteArrayOutputStream content = new ByteArrayOutputStream();
     int value;
-    do {
-      value = input.read();
-    } while (value > 0);
+    while ((value = input.read()) != -1) {
+      content.write(value);
+    }
+    // the application must always see the full body, whatever is captured in the span
+    assertThat(content.toString(UTF_8.name())).isEqualTo("request-body");
   }
 
   @Test
