@@ -31,10 +31,6 @@ public class RatpackSingletons {
     return instrumenter;
   }
 
-  public static HttpServerExceptionRecorder serverExceptionRecorder() {
-    return serverExceptionRecorder;
-  }
-
   public static void updateSpanNames(io.opentelemetry.context.Context otelContext, Context ctx) {
     String matchedRoute = updateServerSpanName(otelContext, ctx);
     // update ratpack span name
