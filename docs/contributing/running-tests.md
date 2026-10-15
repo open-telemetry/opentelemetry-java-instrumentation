@@ -40,6 +40,49 @@ To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradle
 
 Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <TEST FILE NAME>` will run only the selected test.
 
+### Suite-local test executions (proof of concept)
+
+Projects using `otel.java-conventions` can opt a `JvmTestSuite` into shared execution
+configuration. The suite still owns sources, dependencies, and compilation; executions reuse its
+compiled classes and runtime classpath.
+
+```kotlin
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          jvmArgs("-Djava.net.preferIPv4Stack=true")
+        }
+        register("Experimental") {
+          telemetryConfig("otel.instrumentation.grpc.experimental-span-attributes", "true")
+        }
+      }
+    }
+  }
+}
+```
+
+Declare one `executions` block per suite. `configureEach` configures the existing default
+task (`test` here) and each explicitly registered variant (`testExperimental` here).
+All common configuration runs before variant configuration, regardless of its position in the
+block. Both default and variant tasks are included in `check`. Variants apply only to their
+declaring suite; no additional source sets or default tasks are created.
+
+The configuration blocks accept ordinary `Test` configuration, including filters, services,
+classpath filtering, and JVM settings. Shared conventions still configure each task independently;
+settings are never copied from the default task. Put settings shared by a suite's executions in
+`configureEach`, not only in `tasks.test`.
+
+`telemetryConfig(key, value)` sets a test JVM system property and adds its `key=value` condition to
+`metadataConfig`. Common and variant conditions compose; a variant value for the same key wins.
+Use this helper instead of setting `metadataConfig` manually for these executions. Ordinary
+`systemProperty` and `jvmArgs` settings do not add metadata conditions. A default execution without
+telemetry conditions leaves `metadataConfig` unset.
+
 ### How to prevent linting and formatting warnings from failing tests
 
 During local development, you may want to ignore lint warnings when running tests.
