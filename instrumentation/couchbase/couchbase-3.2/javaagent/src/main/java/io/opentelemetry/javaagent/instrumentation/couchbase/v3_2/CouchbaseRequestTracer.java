@@ -36,7 +36,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     return new CouchbaseRequestTracer(
         new CouchbaseTracer(
             openTelemetry
-                .tracerBuilder("com.couchbase.client.jvm")
+                .tracerBuilder("io.opentelemetry.couchbase-3.2")
                 .setSchemaUrl(SchemaUrls.V1_44_0)
                 .build(),
             true,

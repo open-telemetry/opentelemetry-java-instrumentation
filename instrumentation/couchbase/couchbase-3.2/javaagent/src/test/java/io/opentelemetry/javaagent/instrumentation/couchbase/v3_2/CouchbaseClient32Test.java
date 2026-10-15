@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -131,6 +132,8 @@ class CouchbaseClient32Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, seedPort));
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
+          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
+              .isEqualTo("io.opentelemetry.couchbase-3.2");
           if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {

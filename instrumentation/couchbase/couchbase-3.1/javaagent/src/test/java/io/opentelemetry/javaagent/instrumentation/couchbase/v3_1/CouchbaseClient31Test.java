@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static java.util.Collections.singleton;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.env.TimeoutConfig;
@@ -138,6 +139,8 @@ class CouchbaseClient31Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, kvPort));
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
+          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
+              .isEqualTo("io.opentelemetry.couchbase-3.1");
           if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
