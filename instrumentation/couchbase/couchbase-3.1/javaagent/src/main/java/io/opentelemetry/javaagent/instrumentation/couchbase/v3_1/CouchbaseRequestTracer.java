@@ -12,14 +12,15 @@ import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.cnc.TracingIdentifiers;
 import com.couchbase.client.core.msg.RequestContext;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseTracer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConfiguredTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Peer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSpanName;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.time.Duration;
 import java.time.Instant;
 import javax.annotation.Nullable;
@@ -29,9 +30,25 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   private final CouchbaseTracer tracer;
 
-  public static RequestTracer create(Tracer tracer, Logger exceptionLogger, boolean legacyBridge) {
+  public static RequestTracer create(OpenTelemetry openTelemetry, boolean legacyBridge) {
+    String instrumentationName =
+        legacyBridge ? "io.opentelemetry.couchbase-3.1" : "com.couchbase.client.jvm";
+    Logger exceptionLogger =
+        openTelemetry
+            .getLogsBridge()
+            .loggerBuilder(instrumentationName)
+            .setSchemaUrl(SchemaUrls.V1_44_0)
+            .build();
     return new CouchbaseRequestTracer(
-        new CouchbaseTracer(tracer, exceptionLogger, !legacyBridge, legacyBridge, false));
+        new CouchbaseTracer(
+            openTelemetry
+                .tracerBuilder(instrumentationName)
+                .setSchemaUrl(SchemaUrls.V1_44_0)
+                .build(),
+            exceptionLogger,
+            !legacyBridge,
+            legacyBridge,
+            false));
   }
 
   private CouchbaseRequestTracer(CouchbaseTracer tracer) {
