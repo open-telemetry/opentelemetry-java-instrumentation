@@ -11,15 +11,15 @@ import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule.VirtualFieldRegistration;
-import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappingsBuilderImpl;
+import java.util.logging.Logger;
 
 public final class VirtualFieldImplementationInstallerFactory {
 
-  private static final TransformSafeLogger logger =
-      TransformSafeLogger.getLogger(VirtualFieldImplementationInstallerFactory.class);
+  private static final Logger logger =
+      Logger.getLogger(VirtualFieldImplementationInstallerFactory.class.getName());
   private static final VirtualFieldImplementationInstallerFactory INSTANCE =
       new VirtualFieldImplementationInstallerFactory();
 

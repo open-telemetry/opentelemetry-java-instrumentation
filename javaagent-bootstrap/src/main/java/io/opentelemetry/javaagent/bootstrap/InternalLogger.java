@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 
 public interface InternalLogger {
@@ -14,7 +15,12 @@ public interface InternalLogger {
   }
 
   static InternalLogger getLogger(String name) {
-    return InternalLoggerFactoryHolder.get().create(name);
+    return new TransformSafeLogging(InternalLoggerFactoryHolder.get().create(name));
+  }
+
+  /** Initializes the opt-in logging workaround before installing the agent transformers. */
+  static void initializeTransformSafeLogging(BooleanSupplier isCircularityLockHeld) {
+    TransformSafeLogging.initialize(isCircularityLockHeld);
   }
 
   boolean isLoggable(Level level);

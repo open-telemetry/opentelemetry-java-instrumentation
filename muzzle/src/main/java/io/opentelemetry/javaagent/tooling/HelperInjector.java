@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
@@ -71,8 +72,7 @@ import net.bytebuddy.utility.JavaModule;
  */
 public class HelperInjector implements Transformer {
 
-  private static final TransformSafeLogger logger =
-      TransformSafeLogger.getLogger(HelperInjector.class);
+  private static final Logger logger = Logger.getLogger(HelperInjector.class.getName());
 
   private static final ProtectionDomain PROTECTION_DOMAIN =
       HelperInjector.class.getProtectionDomain();
@@ -235,8 +235,9 @@ public class HelperInjector implements Transformer {
       } catch (IOException e) {
         logger.log(
             SEVERE,
-            "Unexpected exception occurred when loading resources {}; skipping",
-            new Object[] {helperResource.getAgentPath()},
+            "Unexpected exception occurred when loading resources "
+                + helperResource.getAgentPath()
+                + "; skipping",
             e);
         continue;
       }
@@ -313,9 +314,12 @@ public class HelperInjector implements Transformer {
       if (logger.isLoggable(SEVERE)) {
         logger.log(
             SEVERE,
-            "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes"
-                + " into instance {2}",
-            new Object[] {typeDescription, requestingName, classLoader},
+            "Error preparing helpers while processing "
+                + typeDescription
+                + " for "
+                + requestingName
+                + ". Failed to inject helper classes into instance "
+                + classLoader,
             e);
       }
       throw e;

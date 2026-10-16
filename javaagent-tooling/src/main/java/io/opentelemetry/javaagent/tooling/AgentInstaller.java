@@ -23,6 +23,7 @@ import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.LambdaTransformer;
 import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
@@ -46,6 +47,7 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
+import io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -88,6 +90,8 @@ public class AgentInstaller {
   private static volatile boolean instrumentationInstalled;
 
   public static void installBytebuddyAgent(Instrumentation inst, ClassLoader extensionClassLoader) {
+    InternalLogger.initializeTransformSafeLogging(
+        AgentCircularityLock.INSTANCE::isHeldByCurrentThread);
     addByteBuddyRawSetting();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
@@ -125,6 +129,7 @@ public class AgentInstaller {
                     .with(VisibilityBridgeStrategy.Default.NEVER)
                     .with(InstrumentedType.Factory.Default.FROZEN))
             .with(AgentBuilder.TypeStrategy.Default.DECORATE)
+            .with(AgentCircularityLock.INSTANCE)
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new RedefinitionDiscoveryStrategy())
@@ -459,8 +464,7 @@ public class AgentInstaller {
 
   static class TransformLoggingListener extends AgentBuilder.Listener.Adapter {
 
-    private static final TransformSafeLogger logger =
-        TransformSafeLogger.getLogger(TransformLoggingListener.class);
+    private static final Logger logger = Logger.getLogger(TransformLoggingListener.class.getName());
 
     @Override
     public void onError(
@@ -473,8 +477,7 @@ public class AgentInstaller {
       if (logger.isLoggable(FINE)) {
         logger.log(
             FINE,
-            "Failed to handle {0} for transformation on class loader {1}",
-            new Object[] {typeName, classLoader},
+            "Failed to handle " + typeName + " for transformation on class loader " + classLoader,
             throwable);
       }
     }
