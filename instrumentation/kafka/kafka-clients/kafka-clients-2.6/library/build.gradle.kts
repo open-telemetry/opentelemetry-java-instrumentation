@@ -22,19 +22,68 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
+  val testDefaultTelemetry = register<Test>("testDefaultTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("InterceptorsDefaultTest")
+    }
+  }
+
+  val testInterceptors = register<Test>("testInterceptors") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("InterceptorsTest")
+    }
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
+        "otel.instrumentation.common.messaging.headers.excluded=*-Excluded-Header," +
+        "otel.instrumentation.common.messaging.headers.included=Test-Message-*"
+    )
+  }
+
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("InterceptorsWithExperimentalAttributesTest")
+    }
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
+        "otel.instrumentation.common.messaging.headers.excluded=*-Excluded-Header," +
+        "otel.instrumentation.common.messaging.headers.included=Test-Message-*," +
+        "otel.instrumentation.kafka.experimental-span-attributes=true"
+    )
+  }
+
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("WrapperTest")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testConsumerError")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
+        "otel.semconv.exception.signal.preview=logs"
+    )
   }
 
   check {
-    dependsOn(testExceptionSignalLogs)
+    dependsOn(
+      testDefaultTelemetry,
+      testInterceptors,
+      testExperimental,
+      testExceptionSignalLogs,
+    )
   }
 }
 

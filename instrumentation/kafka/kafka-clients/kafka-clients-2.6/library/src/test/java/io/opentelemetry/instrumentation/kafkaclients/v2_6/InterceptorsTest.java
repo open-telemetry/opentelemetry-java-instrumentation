@@ -28,4 +28,9 @@ class InterceptorsTest extends AbstractInterceptorsTest {
   protected boolean captureExperimentalSpanAttributes() {
     return false;
   }
+
+  @Override
+  protected boolean captureHeaders() {
+    return true;
+  }
 }
