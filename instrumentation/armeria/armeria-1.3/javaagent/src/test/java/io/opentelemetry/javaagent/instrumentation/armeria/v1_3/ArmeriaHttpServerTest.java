@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.linecorp.armeria.server.ServerBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.AbstractArmeriaHttpServerTest;
@@ -23,6 +24,21 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   @Override
   protected ServerBuilder configureServer(ServerBuilder sb) {
     return sb;
+  }
+
+  @Override
+  protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+    super.assertExceptionLogs(expectedException, expectedEventName);
+    testing.logRecords().stream()
+        .filter(log -> expectedEventName.equals(log.getEventName()))
+        .forEach(
+            log ->
+                assertThat(log.getInstrumentationScopeInfo().getName())
+                    .isEqualTo(expectedExceptionScopeName()));
+  }
+
+  protected String expectedExceptionScopeName() {
+    return "io.opentelemetry.netty-4.1";
   }
 
   @Override

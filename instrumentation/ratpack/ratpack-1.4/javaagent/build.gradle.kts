@@ -95,8 +95,22 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*server.RatpackHttpServerTest.requestWithException")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv.exception.signal.preview=logs"
+    )
+    systemProperty("ratpack14Test", true)
+  }
+
   check {
-    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv)
+    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv, testExceptionSignalLogs)
   }
 
   if (otelProps.denyUnsafe) {

@@ -58,8 +58,19 @@ tasks {
       }
     }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
+      includeTestsMatching("*ArmeriaHttp2ServerTest.requestWithException")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites, previewSemconvSuites, testExceptionSignalLogs)
   }
 
   if (otelProps.denyUnsafe) {

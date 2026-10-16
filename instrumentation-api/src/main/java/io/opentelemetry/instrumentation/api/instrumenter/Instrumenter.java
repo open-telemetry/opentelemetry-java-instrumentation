@@ -19,6 +19,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
@@ -230,6 +231,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.setParent(context).startSpan();
     context = context.with(span);
+    context =
+        ExceptionRecorder.storeInContext(
+            context,
+            errorCauseExtractor,
+            (exceptionContext, eventSpan, error) ->
+                recordException(exceptionContext, eventSpan, error, request, null));
 
     if (operationListeners.length != 0) {
       if (operationListenerAttributesExtractors.length != 0) {
@@ -279,6 +286,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     try {
       doEndImpl(span, context, request, response, error, endTime);
     } finally {
+      ExceptionRecorder.end(context);
       if (endTime != null) {
         span.end(endTime);
       } else {
@@ -296,12 +304,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
       @Nullable Instant endTime) {
     if (error != null) {
       error = errorCauseExtractor.extract(error);
-      if (emitExceptionAsSpanEvents()) {
-        span.recordException(error);
-      }
-      // Exception logs are intentionally emitted even when the span is not recording.
-      if (emitExceptionAsLogs() && exceptionEventExtractor != null) {
-        emitExceptionLog(context, error, request, endTime);
+      if (ExceptionRecorder.shouldRecord(context, error)) {
+        recordException(context, span, error, request, endTime);
       }
     }
 
@@ -337,11 +341,17 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
   }
 
-  private void emitExceptionLog(
-      Context context, Throwable throwable, REQUEST request, @Nullable Instant endTime) {
+  private void recordException(
+      Context context,
+      Span eventSpan,
+      Throwable throwable,
+      REQUEST request,
+      @Nullable Instant endTime) {
+    if (emitExceptionAsSpanEvents()) {
+      eventSpan.recordException(throwable);
+    }
+    // Exception logs are intentionally emitted even when the span is not recording.
     if (logger == null || exceptionEventExtractor == null) {
-      // this condition is to keep nullaway happy
-      // doEnd already guards on exceptionEventExtractor != null, so this is unreachable
       return;
     }
     LogRecordBuilder logRecordBuilder = logger.logRecordBuilder();

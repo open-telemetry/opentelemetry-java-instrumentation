@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.ratpack.server;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -318,7 +320,12 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     span.hasName(spanName).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error())
-          .hasException(new IllegalStateException(EXCEPTION.getBody()));
+          .hasException(
+              emitExceptionAsSpanEvents() ? new IllegalStateException(EXCEPTION.getBody()) : null);
+      if (emitExceptionAsLogs()) {
+        assertExceptionLogs(
+            new IllegalStateException(EXCEPTION.getBody()), "http.server.request.exception");
+      }
     }
     return span;
   }

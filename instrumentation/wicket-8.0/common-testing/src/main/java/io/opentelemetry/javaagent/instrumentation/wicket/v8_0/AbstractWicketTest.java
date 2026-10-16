@@ -5,15 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket.v8_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import org.awaitility.Awaitility;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.AfterAll;
@@ -75,7 +80,37 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new Exception("test exception"))));
+                        .hasException(
+                            emitExceptionAsSpanEvents() ? new Exception("test exception") : null)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getEvents())
+                                    .hasSize(emitExceptionAsSpanEvents() ? 1 : 0))));
+
+    if (emitExceptionAsLogs()) {
+      Awaitility.await()
+          .untilAsserted(
+              () ->
+                  assertThat(testing.logRecords())
+                      .filteredOn(log -> "http.server.request.exception".equals(log.getEventName()))
+                      .singleElement()
+                      .satisfies(
+                          log -> {
+                            assertThat(log)
+                                .hasSeverity(Severity.ERROR)
+                                .hasEventName("http.server.request.exception")
+                                .hasException(new Exception("test exception"));
+                            assertThat(testing.spans())
+                                .singleElement()
+                                .satisfies(
+                                    serverSpan -> {
+                                      assertThat(log.getSpanContext())
+                                          .isEqualTo(serverSpan.getSpanContext());
+                                      assertThat(log.getInstrumentationScopeInfo())
+                                          .isEqualTo(serverSpan.getInstrumentationScopeInfo());
+                                    });
+                          }));
+    }
   }
 
   @Test
