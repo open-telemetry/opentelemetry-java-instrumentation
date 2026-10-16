@@ -83,7 +83,7 @@ val CORE_DEPENDENCIES = listOf(
 val DEPENDENCIES = listOf(
   "org.junit.jupiter:junit-jupiter-api:5.14.4",
 
-  "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
+  "io.r2dbc:r2dbc-proxy:1.1.7.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
   "com.uber.nullaway:nullaway:0.14.2",
