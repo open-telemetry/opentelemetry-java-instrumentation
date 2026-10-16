@@ -142,10 +142,8 @@ final class OpenTelemetryTracing implements Tracing {
     }
   }
 
-  // The order that callbacks will be called in or which thread they are called from is not well
-  // defined. We go ahead and buffer all data until we know we have a span. This implementation is
-  // particularly safe, synchronizing all accesses. Relying on implementation details would allow
-  // reducing synchronization but the impact should be minimal.
+  // Callback registration publishes initialized span state to the completing thread.
+  // Each completion callback runs once, and encoding annotations do not access span state.
   private static class OpenTelemetrySpan extends Tracer.Span {
 
     private final Context parentContext;
@@ -169,14 +167,14 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span name(String name) {
+    public Tracer.Span name(String name) {
       request.setCommand(name);
       return this;
     }
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
+    public Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
         OpenTelemetryEndpoint openTelemetryEndpoint = (OpenTelemetryEndpoint) endpoint;
         request.setAddress(openTelemetryEndpoint.address);
@@ -189,29 +187,26 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public Tracer.Span start(RedisCommand<?, ?, ?> command) {
-      synchronized (this) {
-        // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
-        // so take name from the command. Later versions already set the name correctly,
-        // so only fill it in when it is still null.
-        // Use toString(): name() was removed from ProtocolKeyword in 6.5.0+.
-        ProtocolKeyword type = command.getType();
-        if (request.getCommand() == null && type != null) {
-          request.setCommand(type.toString());
-        }
-
-        // Extract args BEFORE calling start() so db.query.text can include them
-        if (command.getArgs() != null) {
-          request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
-        }
-
-        start();
-
-        if (context == null) {
-          return this;
-        }
+      // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
+      // so take name from the command. Later versions already set the name correctly,
+      // so only fill it in when it is still null.
+      // Use toString(): name() was removed from ProtocolKeyword in 6.5.0+.
+      ProtocolKeyword type = command.getType();
+      if (request.getCommand() == null && type != null) {
+        request.setCommand(type.toString());
       }
 
-      // Already-completed commands can invoke the callback during registration.
+      // Extract args BEFORE calling start() so db.query.text can include them
+      if (command.getArgs() != null) {
+        request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
+      }
+
+      start();
+
+      if (context == null) {
+        return this;
+      }
+
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
         completeableCommand.onComplete(
@@ -228,7 +223,7 @@ final class OpenTelemetryTracing implements Tracing {
     // Not called by Lettuce in 6.0+ (though we call it ourselves above).
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span start() {
+    public Tracer.Span start() {
       if (instrumenter.shouldStart(parentContext, request)) {
         context = instrumenter.start(parentContext, request);
 
@@ -247,7 +242,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span annotate(String value) {
+    public Tracer.Span annotate(String value) {
       if (value.startsWith("redis.encode.")) {
         // skip noisy encode events produced by io.lettuce.core.protocol.TracedCommand
         return this;
@@ -267,7 +262,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span tag(String key, String value) {
+    public Tracer.Span tag(String key, String value) {
       if (value == null || value.isEmpty()) {
         return this;
       }
@@ -291,42 +286,31 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span error(Throwable throwable) {
+    public Tracer.Span error(Throwable throwable) {
       this.error = throwable;
       return this;
     }
 
-    @Override
-    public void finish() {
-      finishWithResponse(null);
+    private void finishWithResponse(LettuceResponse resp) {
+      this.response = resp;
+      if (this.error == null && resp.getThrowable() != null) {
+        this.error = resp.getThrowable();
+      }
+      finish();
     }
 
-    private void finishWithResponse(@Nullable LettuceResponse resp) {
-      Context context;
-      LettuceResponse response;
-      Throwable error;
-      synchronized (this) {
-        if (resp != null) {
-          this.response = resp;
-          if (this.error == null && resp.getThrowable() != null) {
-            this.error = resp.getThrowable();
-          }
-        }
-        context = this.context;
-        if (context == null) {
-          return;
-        }
-        response = this.response;
+    @Override
+    public void finish() {
+      Context context = this.context;
+      if (context != null) {
+        LettuceResponse response = this.response;
         if (response == null && errorMessage != null) {
           response = new LettuceResponse(errorMessage, null);
         }
-        error = this.error;
 
-        // Null out context to prevent double-ending if both the onComplete callback and Lettuce's
-        // direct finish() call execute.
         this.context = null;
+        instrumenter.end(context, request, response, error);
       }
-      instrumenter.end(context, request, response, error);
     }
   }
 }
