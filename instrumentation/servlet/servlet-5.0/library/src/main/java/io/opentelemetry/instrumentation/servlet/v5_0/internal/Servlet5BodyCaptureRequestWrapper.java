@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
-import static io.opentelemetry.instrumentation.servlet.common.internal.ServletConstants.REQUEST_BODY_ATTRIBUTE;
-import static io.opentelemetry.instrumentation.servlet.common.internal.ServletConstants.WRAPPED_ATTRIBUTE;
-
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
@@ -19,6 +17,34 @@ import java.nio.ByteBuffer;
  * any time.
  */
 public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper {
+
+  private static final BodyCaptureHelper<HttpServletRequest, ServletInputStream> helper =
+      new BodyCaptureHelper<HttpServletRequest, ServletInputStream>(Servlet5Accessor.INSTANCE) {
+        @Override
+        protected boolean isInputFinished(ServletInputStream inputStream) {
+          return inputStream.isFinished();
+        }
+
+        @Override
+        protected boolean isInputWrapped(ServletInputStream inputStream) {
+          return inputStream instanceof Servlet5BodyCaptureInputStreamWrapper;
+        }
+
+        @Override
+        protected ServletInputStream wrapInput(ServletInputStream inputStream, ByteBuffer buffer) {
+          return new Servlet5BodyCaptureInputStreamWrapper(inputStream, buffer);
+        }
+
+        @Override
+        protected boolean isRequestWrapped(HttpServletRequest request) {
+          return request instanceof Servlet5BodyCaptureRequestWrapper;
+        }
+
+        @Override
+        protected HttpServletRequest wrapRequest(HttpServletRequest request, int maxBufferSize) {
+          return new Servlet5BodyCaptureRequestWrapper(request, maxBufferSize);
+        }
+      };
 
   private final int maxBufferSize;
 
@@ -35,34 +61,10 @@ public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper
 
   @Override
   public ServletInputStream getInputStream() throws IOException {
-    ServletInputStream inputStream = super.getInputStream();
-    if (inputStream == null
-        || inputStream instanceof Servlet5BodyCaptureInputStreamWrapper
-        || inputStream.isFinished()) {
-      // nothing to capture or already captured
-      return inputStream;
-    }
-
-    if (getAttribute(REQUEST_BODY_ATTRIBUTE) != null) {
-      // The first stream obtained for this request is the one that is captured: later streams are
-      // not captured, so that a body read more than once is never recorded twice or overwritten.
-      return inputStream;
-    }
-
-    ByteBuffer buffer = ByteBuffer.allocate(maxBufferSize);
-    setAttribute(REQUEST_BODY_ATTRIBUTE, buffer);
-    return new Servlet5BodyCaptureInputStreamWrapper(inputStream, buffer);
+    return helper.getInputStream(this, super.getInputStream(), maxBufferSize);
   }
 
   public static HttpServletRequest wrapIfNeeded(HttpServletRequest request, int maxBufferSize) {
-    // The request body only needs to be captured once. The instanceof check is a cheap fast path,
-    // the attribute also detects our wrapper when it is hidden behind wrappers added by other
-    // filters or frameworks.
-    if (request instanceof Servlet5BodyCaptureRequestWrapper
-        || request.getAttribute(WRAPPED_ATTRIBUTE) != null) {
-      return request;
-    }
-    request.setAttribute(WRAPPED_ATTRIBUTE, true);
-    return new Servlet5BodyCaptureRequestWrapper(request, maxBufferSize);
+    return helper.wrapIfNeeded(request, maxBufferSize);
   }
 }
