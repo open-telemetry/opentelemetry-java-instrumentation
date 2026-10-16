@@ -120,7 +120,10 @@ class EmbeddedConfigFile {
           if (propertyName.startsWith("otel.")
               && propertySource.getProperty(propertyName) != null) {
             for (String listPath : listPaths(propertyName)) {
-              listSources.putIfAbsent(listPath, propertySource);
+              PropertySource<?> listSource = listSources.putIfAbsent(listPath, propertySource);
+              if (listSource != null && listSource != propertySource) {
+                break; // lists nested in another source's list items belong to that source
+              }
             }
           }
         }

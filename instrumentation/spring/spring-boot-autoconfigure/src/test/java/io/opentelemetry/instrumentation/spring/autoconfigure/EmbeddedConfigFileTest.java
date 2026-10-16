@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.AttributeNameValueModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.TextMapPropagatorModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ViewModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalInstrumentationModel;
 import java.util.HashMap;
 import java.util.List;
@@ -330,6 +331,26 @@ class EmbeddedConfigFileTest {
 
     assertThat(model.getPropagator().getComposite()).hasSize(1);
     assertThat(model.getPropagator().getComposite().get(0).getTracecontext()).isNotNull();
+  }
+
+  @Test
+  void extractModel_nestedListBelongsToOuterListSource() {
+    String view = "otel.meter_provider.views[0]";
+    String boundaries = view + ".stream.aggregation.explicit_bucket_histogram.boundaries[0]";
+    Map<String, Object> base = new HashMap<>();
+    base.put("otel.file_format", "1.1");
+    base.put(boundaries, "1.0");
+    Map<String, Object> profile = new HashMap<>();
+    profile.put(view + ".selector.instrument_name", "x");
+    profile.put(boundaries, null);
+
+    OpenTelemetryConfigurationModel model = extractModel(profile, base);
+
+    // the source that owns the outer list also owns the lists nested in its items
+    ViewModel viewModel = model.getMeterProvider().getViews().get(0);
+    assertThat(viewModel.getSelector().getInstrumentName()).isEqualTo("x");
+    assertThat(viewModel.getStream().getAggregation().getExplicitBucketHistogram().getBoundaries())
+        .containsExactly((Double) null);
   }
 
   @Test
