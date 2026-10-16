@@ -23,6 +23,13 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
   protected void configure(RatpackServerSpec serverSpec) {}
 
   @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+
+    options.setHasResponseCustomizer(endpoint -> true);
+  }
+
+  @Override
   protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
     super.assertExceptionLogs(expectedException, expectedEventName);
     testing.logRecords().stream()
@@ -31,12 +38,5 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
             log ->
                 assertThat(log.getInstrumentationScopeInfo().getName())
                     .isEqualTo("io.opentelemetry.netty-4.1"));
-  }
-
-  @Override
-  protected void configure(HttpServerTestOptions options) {
-    super.configure(options);
-
-    options.setHasResponseCustomizer(endpoint -> true);
   }
 }
