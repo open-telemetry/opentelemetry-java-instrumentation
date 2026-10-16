@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.reactivestreams.Subscription;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -24,20 +23,17 @@ final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
   private final CoreSubscriber<? super ClientResponse> actual;
   private final reactor.util.context.Context reactorContext;
   private final Context otelClientContext;
-  private final Context otelParentContext;
 
   TraceWebClientSubscriber(
       Instrumenter<ClientRequest, ClientResponse> instrumenter,
       ClientRequest request,
       CoreSubscriber<? super ClientResponse> actual,
-      Context otelClientContext,
-      Context otelParentContext) {
+      Context otelClientContext) {
     this.instrumenter = instrumenter;
     this.request = request;
     this.actual = actual;
     this.reactorContext = actual.currentContext();
     this.otelClientContext = otelClientContext;
-    this.otelParentContext = otelParentContext;
   }
 
   @Override
@@ -48,24 +44,18 @@ final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
   @Override
   public void onNext(ClientResponse response) {
     instrumenter.end(otelClientContext, request, response, null);
-    try (Scope ignored = otelParentContext.makeCurrent()) {
-      this.actual.onNext(response);
-    }
+    this.actual.onNext(response);
   }
 
   @Override
   public void onError(Throwable t) {
     instrumenter.end(otelClientContext, request, null, t);
-    try (Scope ignored = otelParentContext.makeCurrent()) {
-      this.actual.onError(t);
-    }
+    this.actual.onError(t);
   }
 
   @Override
   public void onComplete() {
-    try (Scope ignored = otelParentContext.makeCurrent()) {
-      this.actual.onComplete();
-    }
+    this.actual.onComplete();
   }
 
   @Override
