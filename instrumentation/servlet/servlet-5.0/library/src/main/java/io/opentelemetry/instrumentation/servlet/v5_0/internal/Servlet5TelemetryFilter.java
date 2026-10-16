@@ -79,12 +79,13 @@ public final class Servlet5TelemetryFilter implements Filter {
       return;
     }
 
-    if (captureRequestBodyMaxSize > 0) {
+    Context context = instrumenter.start(parentContext, requestContext);
+
+    if (captureRequestBodyMaxSize > 0 && Span.fromContext(context).isRecording()) {
+      // only capture when enabled and span is being sampled
       httpRequest =
           Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(httpRequest, captureRequestBodyMaxSize);
     }
-
-    Context context = instrumenter.start(parentContext, requestContext);
 
     if (addTraceIdRequestAttribute) {
       SpanContext spanContext = Span.fromContext(context).getSpanContext();

@@ -115,6 +115,8 @@ public class JakartaServletServiceAdvice {
       response = new Servlet5SnippetInjectingResponseWrapper(response, snippet);
     }
 
+    // TODO: optimize and avoid wrapping when span is not sampled
+    // or make the wrapping no-op when span is not sampled
     HttpServletRequest request =
         Servlet5Singletons.wrapForBodyCaptureIfNeeded((HttpServletRequest) servletRequest);
 
