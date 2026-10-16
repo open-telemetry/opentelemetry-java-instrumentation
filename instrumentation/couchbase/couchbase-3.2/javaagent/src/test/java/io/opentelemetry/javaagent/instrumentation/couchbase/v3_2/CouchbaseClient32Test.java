@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -241,6 +242,7 @@ class CouchbaseClient32Test {
       SpanDataAssert span, String operation, String documentId, StatusData status) {
     span.hasKind(CLIENT)
         .hasName(operation + " _default")
+        .satisfies(hasScopeName("io.opentelemetry.couchbase-3.2"))
         .hasStatus(status)
         .hasAttributesSatisfyingExactly(
             equalTo(DB_SYSTEM_NAME, "couchbase"),

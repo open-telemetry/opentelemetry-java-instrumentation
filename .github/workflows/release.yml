@@ -87,7 +87,7 @@ jobs:
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -258,7 +258,7 @@ jobs:
             sleep 60
           done
 
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         with:
           distribution: temurin
