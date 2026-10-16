@@ -80,7 +80,7 @@ class DbServerEndpointUtilTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"00001", "000001", "000000000000000000000000000000000000001"})
+  @ValueSource(strings = {"01", "001", "0001", "00001"})
   void acceptsPortsWithLeadingZeros(String value) {
     assertThat(DbServerEndpointUtil.parsePort(value)).isEqualTo(1);
   }
@@ -90,7 +90,10 @@ class DbServerEndpointUtilTest {
       strings = {
         "",
         "0",
+        "00000",
         "000000",
+        "000001",
+        "000000000000000000000000000000000000001",
         "65536",
         "00065536",
         "99999999999999999999",

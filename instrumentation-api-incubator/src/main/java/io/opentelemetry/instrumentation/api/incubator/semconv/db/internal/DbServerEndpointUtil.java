@@ -118,7 +118,10 @@ public final class DbServerEndpointUtil {
     return c >= '0' && c <= '9';
   }
 
-  /** Parses an ASCII decimal port in the range 1 to 65535, or returns {@code null} if invalid. */
+  /**
+   * Parses 1 to 5 ASCII decimal digits as a port in the range 1 to 65535, or returns {@code null}
+   * if invalid. Leading zeros are allowed.
+   */
   @Nullable
   public static Integer parsePort(String value) {
     if (value.isEmpty() || value.length() > 5) {
