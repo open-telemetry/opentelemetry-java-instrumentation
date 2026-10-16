@@ -5,16 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v1_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
@@ -109,22 +103,11 @@ public class LogEventMapper {
       LocationInfo locationInfo = new LocationInfo(new Throwable(), fqcn);
       String fileName = locationInfo.getFileName();
       if (fileName != null) {
-        if (emitStableCodeSemconv()) {
-          builder.setAttribute(CODE_FILE_PATH, fileName);
-        }
-        if (emitOldCodeSemconv()) {
-          builder.setAttribute(CODE_FILEPATH, fileName);
-        }
+        builder.setAttribute(CODE_FILE_PATH, fileName);
       }
 
-      if (emitStableCodeSemconv()) {
-        builder.setAttribute(
-            CODE_FUNCTION_NAME, locationInfo.getClassName() + "." + locationInfo.getMethodName());
-      }
-      if (emitOldCodeSemconv()) {
-        builder.setAttribute(CODE_NAMESPACE, locationInfo.getClassName());
-        builder.setAttribute(CODE_FUNCTION, locationInfo.getMethodName());
-      }
+      builder.setAttribute(
+          CODE_FUNCTION_NAME, locationInfo.getClassName() + "." + locationInfo.getMethodName());
 
       String lineNumber = locationInfo.getLineNumber();
       int codeLineNo = -1;
@@ -136,12 +119,7 @@ public class LogEventMapper {
         }
       }
       if (codeLineNo >= 0) {
-        if (emitStableCodeSemconv()) {
-          builder.setAttribute(CODE_LINE_NUMBER, (long) codeLineNo);
-        }
-        if (emitOldCodeSemconv()) {
-          builder.setAttribute(CODE_LINENO, (long) codeLineNo);
-        }
+        builder.setAttribute(CODE_LINE_NUMBER, (long) codeLineNo);
       }
     }
 

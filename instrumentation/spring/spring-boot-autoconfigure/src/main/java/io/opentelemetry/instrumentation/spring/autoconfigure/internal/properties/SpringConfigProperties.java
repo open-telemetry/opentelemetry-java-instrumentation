@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.propertie
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 
-import io.opentelemetry.api.internal.ConfigUtil;
+import io.opentelemetry.common.impl.ConfigUtil;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_17.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -80,9 +79,6 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
 
       @Nullable
       private static Long databaseIndex(RedisConnection connection) {
-        if (!emitStableDatabaseSemconv()) {
-          return null;
-        }
         RedisClient client = connection.getRedisClient();
         if (client == null) {
           return null;

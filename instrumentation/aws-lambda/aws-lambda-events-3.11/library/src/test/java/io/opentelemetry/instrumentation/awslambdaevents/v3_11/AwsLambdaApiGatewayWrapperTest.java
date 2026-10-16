@@ -5,10 +5,15 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
@@ -25,6 +30,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -98,6 +104,7 @@ class AwsLambdaApiGatewayWrapperTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET /hello/{param}")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
                         .hasTraceId("4fd0b6131f19f39af59518d127b0cafe")
                         .hasParentSpanId("0000000000000456")
@@ -109,8 +116,12 @@ class AwsLambdaApiGatewayWrapperTest {
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_PATH, "/hello/world"),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(HTTP_ROUTE, "/hello/{param}"),
                             equalTo(USER_AGENT_ORIGINAL, "Test Client"),
                             equalTo(URL_FULL, "http://localhost:123/hello/world?a=b&c=d"),
+                            equalTo(URL_QUERY, "a=b&c=d"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
@@ -135,6 +146,7 @@ class AwsLambdaApiGatewayWrapperTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("my_function")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(

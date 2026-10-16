@@ -5,15 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
 import static java.util.Collections.emptyMap;
 
@@ -71,15 +67,9 @@ class DefaultPoolTargetTest {
                     span.hasName("putAll default-pool-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "default-pool-region" : null),
-                            equalTo(
-                                DB_NAME,
-                                emitStableDatabaseSemconv() ? null : "default-pool-region"),
-                            equalTo(maybeStable(DB_OPERATION), "putAll"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : 40404L))));
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "default-pool-region"),
+                            equalTo(DB_OPERATION_NAME, "putAll"),
+                            equalTo(SERVER_ADDRESS, "localhost"))));
   }
 }

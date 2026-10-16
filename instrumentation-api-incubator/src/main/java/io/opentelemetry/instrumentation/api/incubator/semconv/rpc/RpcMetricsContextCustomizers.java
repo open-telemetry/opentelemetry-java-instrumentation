@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
@@ -30,7 +30,7 @@ public final class RpcMetricsContextCustomizers {
   public static <REQUEST> ContextCustomizer<REQUEST> dualEmitContextCustomizer(
       RpcAttributesGetter<REQUEST, ?> getter) {
     return (context, request, startAttributes) -> {
-      if (emitOldRpcSemconv() && emitStableRpcSemconv()) {
+      if (emitOldRpcSemconv() && emitPreviewRpcSemconv()) {
         String oldMethod = getter.getMethod(request);
         if (oldMethod != null) {
           return context.with(OLD_RPC_METHOD_CONTEXT_KEY, oldMethod);

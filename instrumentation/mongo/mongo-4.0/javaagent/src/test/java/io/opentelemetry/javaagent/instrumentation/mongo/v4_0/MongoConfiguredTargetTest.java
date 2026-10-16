@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -92,18 +91,16 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
         DB_OPERATION_NAME,
         DB_COLLECTION_NAME,
         SERVER_ADDRESS);
-    if (emitStableDatabaseSemconv()) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.mongo-4.0",
-          metric ->
-              metric
-                  .hasName("db.client.operation.duration")
-                  .hasHistogramSatisfying(
-                      histogram ->
-                          histogram.hasPointsSatisfying(
-                              point ->
-                                  point.hasAttribute(
-                                      SERVER_ADDRESS, "db1.example:27017,db2.example:27018"))));
-    }
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.mongo-4.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttribute(
+                                    SERVER_ADDRESS, "db1.example:27017,db2.example:27018"))));
   }
 }

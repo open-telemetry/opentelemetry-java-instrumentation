@@ -19,13 +19,9 @@ public abstract class HbaseRequest {
   public static HbaseRequest create(
       @Nullable String operation,
       @Nullable TableName tableName,
-      @Nullable String user,
-      @Nullable String serverAddress,
-      @Nullable Integer serverPort,
       @Nullable String serverTarget,
       @Nullable Long operationBatchSize) {
-    return new AutoValue_HbaseRequest(
-        operation, tableName, user, serverAddress, serverPort, serverTarget, operationBatchSize);
+    return new AutoValue_HbaseRequest(operation, tableName, serverTarget, operationBatchSize);
   }
 
   public void setNetworkPeer(InetSocketAddress networkPeer) {
@@ -37,15 +33,6 @@ public abstract class HbaseRequest {
 
   @Nullable
   public abstract TableName getTableName();
-
-  @Nullable
-  public abstract String getUser();
-
-  @Nullable
-  public abstract String getServerAddress();
-
-  @Nullable
-  public abstract Integer getServerPort();
 
   @Nullable
   public abstract String getServerTarget();

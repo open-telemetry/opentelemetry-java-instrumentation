@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +16,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class SpringKafkaInstrumentationModule extends InstrumentationModule {
   public SpringKafkaInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "spring-kafka-2.7" : "spring-kafka",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-kafka"}
-            : new String[] {"spring-kafka-2.7"});
+    super("spring-kafka-2.7", "spring-kafka");
   }
 
   @Override

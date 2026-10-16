@@ -36,8 +36,6 @@ final class MessagingMetricsAdvice {
       AttributeKey.booleanKey("messaging.destination.anonymous");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_TEMPORARY =
       AttributeKey.booleanKey("messaging.destination.temporary");
-  private static final AttributeKey<String> MESSAGING_OPERATION =
-      AttributeKey.stringKey("messaging.operation");
   private static final AttributeKey<String> MESSAGING_OPERATION_NAME =
       AttributeKey.stringKey("messaging.operation.name");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
@@ -50,18 +48,6 @@ final class MessagingMetricsAdvice {
       AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
       AttributeKey.stringKey("messaging.destination.template");
-
-  private static final List<AttributeKey<?>> OLD_ATTRIBUTES =
-      unmodifiableList(
-          asList(
-              MESSAGING_SYSTEM,
-              MESSAGING_DESTINATION_NAME,
-              MESSAGING_OPERATION,
-              MESSAGING_DESTINATION_PARTITION_ID,
-              MESSAGING_DESTINATION_TEMPLATE,
-              ERROR_TYPE,
-              SERVER_PORT,
-              SERVER_ADDRESS));
 
   private static final List<AttributeKey<?>> CLIENT_OPERATION_DURATION_ATTRIBUTES =
       buildAttributes(true, true, true);
@@ -118,13 +104,6 @@ final class MessagingMetricsAdvice {
     return builder.build();
   }
 
-  static void applyOldDurationAdvice(DoubleHistogramBuilder builder) {
-    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
-      return;
-    }
-    ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(OLD_ATTRIBUTES);
-  }
-
   static void applyClientOperationDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
@@ -138,13 +117,6 @@ final class MessagingMetricsAdvice {
       return;
     }
     ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(PROCESS_DURATION_ATTRIBUTES);
-  }
-
-  static void applyOldMessagesAdvice(LongCounterBuilder builder) {
-    if (!(builder instanceof ExtendedLongCounterBuilder)) {
-      return;
-    }
-    ((ExtendedLongCounterBuilder) builder).setAttributesAdvice(OLD_ATTRIBUTES);
   }
 
   static void applySentMessagesAdvice(LongCounterBuilder builder) {

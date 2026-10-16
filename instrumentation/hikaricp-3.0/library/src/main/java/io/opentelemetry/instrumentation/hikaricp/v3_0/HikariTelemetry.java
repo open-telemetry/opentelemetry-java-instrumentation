@@ -45,7 +45,7 @@ public final class HikariTelemetry {
 
   /**
    * Returns a metrics tracker factory that adds the supplied configured database attributes to
-   * stable database metrics.
+   * database metrics.
    */
   public MetricsTrackerFactory createMetricsTrackerFactory(
       @Nullable MetricsTrackerFactory delegate, Attributes databaseAttributes) {

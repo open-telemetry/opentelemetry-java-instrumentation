@@ -10,7 +10,6 @@ import com.clickhouse.client.api.ServerException;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
@@ -122,16 +121,11 @@ public class ClickHouseClientV2Singletons {
   }
 
   public static class CurrentServerInfo {
-    private static final CurrentServerInfo EMPTY = new CurrentServerInfo(null, null, null);
+    private static final CurrentServerInfo EMPTY = new CurrentServerInfo(null);
 
-    @Nullable private final String address;
-    @Nullable private final Integer port;
     @Nullable private final DbServerTarget peer;
 
-    private CurrentServerInfo(
-        @Nullable String address, @Nullable Integer port, @Nullable DbServerTarget peer) {
-      this.address = address;
-      this.port = port;
+    private CurrentServerInfo(@Nullable DbServerTarget peer) {
       this.peer = peer;
     }
 
@@ -149,17 +143,7 @@ public class ClickHouseClientV2Singletons {
           extracted == null
               ? null
               : DbServerTarget.builder(-1).addEndpoint(extracted.address, peerPort).build();
-      return new CurrentServerInfo(UrlParser.getHost(endpoint), UrlParser.getPort(endpoint), peer);
-    }
-
-    @Nullable
-    public String getAddress() {
-      return address;
-    }
-
-    @Nullable
-    public Integer getPort() {
-      return port;
+      return new CurrentServerInfo(peer);
     }
 
     @Nullable

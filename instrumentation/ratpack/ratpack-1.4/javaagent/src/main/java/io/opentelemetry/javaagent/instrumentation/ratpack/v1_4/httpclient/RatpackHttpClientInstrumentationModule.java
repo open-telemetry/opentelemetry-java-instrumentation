@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class RatpackHttpClientInstrumentationModule extends InstrumentationModule {
   public RatpackHttpClientInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "ratpack-1.4" : "ratpack",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"ratpack-client", "ratpack"}
-            : new String[] {"ratpack-1.7"});
+    super("ratpack-1.4", "ratpack-client", "ratpack");
   }
 
   @Override

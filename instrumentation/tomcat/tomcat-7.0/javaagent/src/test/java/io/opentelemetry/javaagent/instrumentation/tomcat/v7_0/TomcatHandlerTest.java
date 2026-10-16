@@ -19,13 +19,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -41,6 +42,13 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
+
+  private static final boolean REQUEST_PARAMETER_CAPTURE_ENABLED =
+      System.getProperty("otel.instrumentation.servlet.experimental.request-parameters.included")
+              != null
+          || System.getProperty(
+                  "otel.instrumentation.servlet.experimental.request-parameters.excluded")
+              != null;
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -100,6 +108,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setContextPath("/app");
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
+    options.setExpectCapturedRequestParameters(REQUEST_PARAMETER_CAPTURE_ENABLED);
     options.setTestHttpBodyPipelining(true);
     options.setTestErrorBody(false);
 
@@ -129,7 +138,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            SemconvCodeStabilityUtil.codeFunctionSuffixAssertions(methodName));
+            satisfies(CODE_FUNCTION_NAME, val -> val.endsWith("." + methodName)));
     return span;
   }
 }

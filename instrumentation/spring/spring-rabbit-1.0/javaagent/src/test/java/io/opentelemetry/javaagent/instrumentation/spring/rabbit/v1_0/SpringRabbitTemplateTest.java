@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -79,26 +78,18 @@ class SpringRabbitTemplateTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("Channel.basicQos")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("Channel.basicConsume")),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "process template" : "template process")
-                        .hasNoParent()),
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("process template").hasNoParent()),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("Channel.basicCancel")),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(emitStableMessagingSemconv() ? "ack" : "Channel.basicAck")));
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.rabbitmq-2.7",
-          "messaging.client.consumed.messages",
-          metrics ->
-              metrics.satisfiesExactly(
-                  metric ->
-                      assertThat(metric)
-                          .hasLongSumSatisfying(
-                              sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
-    }
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("ack")));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.rabbitmq-2.7",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
   }
 
   private static class StubChannel extends ChannelN {
