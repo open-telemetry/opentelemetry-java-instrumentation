@@ -18,9 +18,13 @@ import java.lang.reflect.Method;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransformSafeLoggingChecker {
+
+  private static final String TRANSFORMED_CLASS_NAME =
+      TransformSafeLoggingChecker.class.getName() + "$TestTask";
 
   public static void main(String[] args) throws Exception {
     boolean enabled = args[0].equals("true");
@@ -28,11 +32,25 @@ public class TransformSafeLoggingChecker {
     Class<?> lockClass =
         agentLoader.loadClass("io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock");
     Object lock = lockClass.getField("INSTANCE").get(null);
-    Method acquire = lockClass.getMethod("acquire");
-    Method release = lockClass.getMethod("release");
     Method isHeld = lockClass.getMethod("isHeldByCurrentThread");
+    AtomicBoolean lockHeldDuringTransformation = new AtomicBoolean();
+    Class<?> installerClass =
+        agentLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller");
+    installerClass
+        .getMethod("registerClassLoadCallback", String.class, Runnable.class)
+        .invoke(
+            null,
+            TRANSFORMED_CLASS_NAME,
+            (Runnable)
+                () -> {
+                  try {
+                    lockHeldDuringTransformation.set((Boolean) isHeld.invoke(lock));
+                  } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException(e);
+                  }
+                });
 
-    // Invoke an ordinary JUL caller from the built, shaded agent, not the removed logging wrapper.
+    // Use the agent's shaded JUL caller for records outside transformation.
     Class<?> listenerClass =
         agentLoader.loadClass(
             "io.opentelemetry.javaagent.tooling.AgentInstaller$TransformLoggingListener");
@@ -59,14 +77,10 @@ public class TransformSafeLoggingChecker {
       onError.invoke(listener, "routing-before", null, null, false, new Exception("before"));
       assertThat(output.threads.poll(10, SECONDS)).isSameAs(Thread.currentThread());
 
-      assertThat(acquire.invoke(lock)).isEqualTo(true);
-      try {
-        assertThat(isHeld.invoke(lock)).isEqualTo(true);
-        onError.invoke(listener, "routing-locked", null, null, false, new Exception("locked"));
-        assertThat(output.entered.await(10, SECONDS)).isTrue();
-      } finally {
-        release.invoke(lock);
-      }
+      Class.forName(TRANSFORMED_CLASS_NAME);
+      assertThat(lockHeldDuringTransformation.get()).isTrue();
+      assertThat(isHeld.invoke(lock)).isEqualTo(false);
+      assertThat(output.entered.await(10, SECONDS)).isTrue();
       Thread loggingThread = output.threads.poll(10, SECONDS);
       if (enabled) {
         assertThat(loggingThread).isNotSameAs(Thread.currentThread());
@@ -121,11 +135,12 @@ public class TransformSafeLoggingChecker {
 
     @Override
     public void println(String message) {
-      if (!message.contains("Failed to handle routing-")) {
+      boolean transformed = message.contains("Transformed " + TRANSFORMED_CLASS_NAME + " -- ");
+      if (!transformed && !message.contains("Failed to handle routing-")) {
         return;
       }
       threads.add(Thread.currentThread());
-      if (message.contains("routing-locked")) {
+      if (transformed) {
         entered.countDown();
         if (enabled) {
           try {
@@ -137,6 +152,12 @@ public class TransformSafeLoggingChecker {
         }
       }
     }
+  }
+
+  @SuppressWarnings("UnusedNestedClass")
+  private static final class TestTask implements Runnable {
+    @Override
+    public void run() {}
   }
 
   private TransformSafeLoggingChecker() {}
