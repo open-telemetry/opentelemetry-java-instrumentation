@@ -97,7 +97,7 @@ dependencies {
   Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
   and added to the resulting jar for our extension's distribution.
    */
-  implementation("org.apache.commons:commons-lang3:3.20.0")
+  implementation("org.apache.commons:commons-lang3:3.21.0")
 
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:2.0.5")
@@ -113,7 +113,7 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.6.4")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.6.5")
 
   //Otel Java instrumentation that we use and extend during integration tests
   add("otel", "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions["opentelemetryJavaagent"]}")
