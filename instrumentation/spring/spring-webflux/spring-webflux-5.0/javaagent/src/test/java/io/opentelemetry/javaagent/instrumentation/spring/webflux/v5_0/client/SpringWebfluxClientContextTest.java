@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.reactivestreams.Subscription;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
@@ -74,7 +74,10 @@ class SpringWebfluxClientContextTest {
     List<SpanContext> callbacks = new ArrayList<>();
     List<SpanContext> exchanges = new ArrayList<>();
     RuntimeException failure = new IllegalStateException("exchange failed");
-    ClientResponse response = mock(ClientResponse.class, RETURNS_DEEP_STUBS);
+    ClientResponse response = mock(ClientResponse.class);
+    ClientResponse.Headers headers = mock(ClientResponse.Headers.class);
+    when(headers.asHttpHeaders()).thenReturn(new HttpHeaders());
+    when(response.headers()).thenReturn(headers);
     when(response.statusCode()).thenReturn(HttpStatus.OK);
     WebClient independent = client(request -> Mono.just(response));
     WebClient client =
