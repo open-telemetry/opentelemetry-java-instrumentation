@@ -11,12 +11,16 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import graphql.ErrorType;
 import graphql.ExceptionWhileDataFetching;
+import graphql.ExecutionResult;
 import graphql.GraphQLError;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -31,6 +35,7 @@ import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -39,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class GraphqlErrorRecorderTest {
 
@@ -89,6 +95,77 @@ class GraphqlErrorRecorderTest {
     assertRecordedError("unversioned-graphql", true, null, error, "null", "failure");
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void operationHelperRecordsAllErrorsUnlessSuppressed(boolean suppressed) {
+    InMemorySpanExporter spans = InMemorySpanExporter.create();
+    InMemoryLogRecordExporter logs = InMemoryLogRecordExporter.create();
+    try (OpenTelemetrySdk openTelemetry = createOpenTelemetry(spans, logs, true)) {
+      GraphQLError firstError = mock(GraphQLError.class);
+      when(firstError.getErrorType()).thenReturn(ErrorType.ValidationError);
+      when(firstError.getMessage()).thenReturn("invalid field");
+      GraphQLError nullError = mock(GraphQLError.class);
+      ExecutionResult result = mock(ExecutionResult.class);
+      when(result.getErrors()).thenReturn(asList(firstError, nullError));
+      OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+      OpenTelemetryInstrumentationHelper helper =
+          OpenTelemetryInstrumentationHelper.create(
+              openTelemetry, INSTRUMENTATION_NAME, true, true, false);
+      Runnable execution = () -> helper.beginExecution(state).onCompleted(result, null);
+      if (suppressed) {
+        InstrumentationUtil.suppressInstrumentation(execution);
+        assertThat(state.getContext()).isNull();
+        assertThat(spans.getFinishedSpanItems()).isEmpty();
+        assertThat(logs.getFinishedLogRecordItems()).isEmpty();
+        return;
+      }
+      execution.run();
+
+      Attributes firstAttributes =
+          Attributes.of(EXCEPTION_TYPE, "ValidationError", EXCEPTION_MESSAGE, "invalid field");
+      Attributes nullAttributes = Attributes.of(EXCEPTION_TYPE, "null");
+      InstrumentationScopeInfo expectedScope =
+          InstrumentationScopeInfo.builder(INSTRUMENTATION_NAME)
+              .setVersion(EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME))
+              .setSchemaUrl(SchemaUrls.V1_44_0)
+              .build();
+      assertThat(spans.getFinishedSpanItems())
+          .singleElement()
+          .satisfies(
+              span -> {
+                assertThat(span)
+                    .hasName("GraphQL Operation")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.error())
+                    .hasInstrumentationScopeInfo(expectedScope);
+                if (emitExceptionAsSpanEvents()) {
+                  assertThat(span.getEvents())
+                      .extracting(event -> event.getAttributes())
+                      .containsExactly(firstAttributes, nullAttributes);
+                  assertThat(span.getEvents())
+                      .allSatisfy(event -> assertThat(event).hasName("exception"));
+                } else {
+                  assertThat(span.getEvents()).isEmpty();
+                }
+              });
+      if (emitExceptionAsLogs()) {
+        assertThat(logs.getFinishedLogRecordItems())
+            .extracting(log -> log.getAttributes())
+            .containsExactly(firstAttributes, nullAttributes);
+        assertThat(logs.getFinishedLogRecordItems())
+            .allSatisfy(
+                log ->
+                    assertThat(log)
+                        .hasEventName("exception")
+                        .hasSeverity(Severity.WARN)
+                        .hasInstrumentationScope(expectedScope)
+                        .hasSpanContext(Span.fromContext(state.getContext()).getSpanContext()));
+      } else {
+        assertThat(logs.getFinishedLogRecordItems()).isEmpty();
+      }
+    }
+  }
+
   private static void assertRecordedError(
       String instrumentationName,
       boolean sampled,
@@ -98,18 +175,7 @@ class GraphqlErrorRecorderTest {
       String expectedMessage) {
     InMemorySpanExporter spans = InMemorySpanExporter.create();
     InMemoryLogRecordExporter logs = InMemoryLogRecordExporter.create();
-    try (OpenTelemetrySdk openTelemetry =
-        OpenTelemetrySdk.builder()
-            .setTracerProvider(
-                SdkTracerProvider.builder()
-                    .setSampler(sampled ? Sampler.alwaysOn() : Sampler.alwaysOff())
-                    .addSpanProcessor(SimpleSpanProcessor.create(spans))
-                    .build())
-            .setLoggerProvider(
-                SdkLoggerProvider.builder()
-                    .addLogRecordProcessor(SimpleLogRecordProcessor.create(logs))
-                    .build())
-            .build()) {
+    try (OpenTelemetrySdk openTelemetry = createOpenTelemetry(spans, logs, sampled)) {
       String version = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
       if (instrumentationName.equals(INSTRUMENTATION_NAME)) {
         assertThat(version).isNotEmpty();
@@ -189,5 +255,20 @@ class GraphqlErrorRecorderTest {
         assertThat(logs.getFinishedLogRecordItems()).isEmpty();
       }
     }
+  }
+
+  private static OpenTelemetrySdk createOpenTelemetry(
+      InMemorySpanExporter spans, InMemoryLogRecordExporter logs, boolean sampled) {
+    return OpenTelemetrySdk.builder()
+        .setTracerProvider(
+            SdkTracerProvider.builder()
+                .setSampler(sampled ? Sampler.alwaysOn() : Sampler.alwaysOff())
+                .addSpanProcessor(SimpleSpanProcessor.create(spans))
+                .build())
+        .setLoggerProvider(
+            SdkLoggerProvider.builder()
+                .addLogRecordProcessor(SimpleLogRecordProcessor.create(logs))
+                .build())
+        .build();
   }
 }
