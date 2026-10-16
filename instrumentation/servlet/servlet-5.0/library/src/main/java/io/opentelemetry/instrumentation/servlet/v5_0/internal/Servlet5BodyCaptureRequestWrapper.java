@@ -39,6 +39,12 @@ public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper
     if (inputStream == null || inputStream.isFinished()) {
       return inputStream;
     }
+    if (getAttribute(REQUEST_BODY_ATTRIBUTE) != null) {
+      // request body already read once, in case the underlying input allows multiple reads
+      // we don't need to capture it again.
+      return inputStream;
+    }
+
     // TODO: we might consider using request object identity to keep current buffer when available
     // thus allowing to reduce allocation and overall memory usage
     ByteBuffer buffer = ByteBuffer.allocate(maxBufferSize);
