@@ -281,6 +281,8 @@ readonly INSTRUMENTATIONS=(
   "sofa-rpc-5.4:javaagent:testSofaRpcBothSemconv"
   "sofa-rpc-5.4:javaagent:testSofaRpcExceptionSignalLogs"
   "sofa-rpc-5.4:javaagent:testSofaRpcPreviewSemconv"
+  "spring:spring-ai-1.0:javaagent:test"
+  "spring:spring-ai-1.0:javaagent:testCaptureMessageContent"
   "spring:spring-batch-3.0:javaagent:test"
   "spring:spring-batch-3.0:javaagent:testExperimental"
   "spring:spring-data:spring-data-1.8:javaagent:test"
