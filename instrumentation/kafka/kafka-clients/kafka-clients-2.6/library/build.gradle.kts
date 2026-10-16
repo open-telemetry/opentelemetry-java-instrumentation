@@ -31,7 +31,7 @@ tasks {
     }
   }
 
-  val testInterceptors = register<Test>("testInterceptors") {
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -80,7 +80,7 @@ tasks {
   check {
     dependsOn(
       testDefaultTelemetry,
-      testInterceptors,
+      testReceiveTelemetry,
       testExperimental,
       testExceptionSignalLogs,
     )
