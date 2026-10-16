@@ -39,9 +39,7 @@ import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
-// is resolved.
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
   private static final String MODEL = "text-embedding-3-small";
 
