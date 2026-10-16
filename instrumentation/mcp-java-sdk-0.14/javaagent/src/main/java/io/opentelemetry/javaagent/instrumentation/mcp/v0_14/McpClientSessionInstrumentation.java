@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.mcp.v0_14;
 
+import static io.opentelemetry.javaagent.instrumentation.mcp.v0_14.McpSingletons.currentState;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -22,7 +23,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
 
 class McpClientSessionInstrumentation implements TypeInstrumentation {
-
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.modelcontextprotocol.spec.McpClientSession");
@@ -53,7 +53,8 @@ class McpClientSessionInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) @Nullable Object requestParameters) {
       McpToolCallState state = McpToolCallState.prepare(session, method, requestParameters);
       Object parameters = state == null ? requestParameters : state.getRequestParameters();
-      return new Object[] {parameters, state};
+      McpToolCallState previous = state == null ? null : currentState().set(state);
+      return new Object[] {parameters, state, previous};
     }
 
     @AssignReturned.ToReturned
@@ -67,6 +68,7 @@ class McpClientSessionInstrumentation implements TypeInstrumentation {
       if (enterResult != null) {
         McpToolCallState state = (McpToolCallState) enterResult[1];
         if (state != null) {
+          currentState().restore((McpToolCallState) enterResult[2]);
           result = state.finish(publisher);
         }
       }
@@ -79,7 +81,10 @@ class McpClientSessionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return String requestId) {
-      McpToolCallState.captureRequestId(requestId);
+      McpToolCallState state = currentState().get();
+      if (state != null) {
+        state.captureRequestId(requestId);
+      }
     }
   }
 }

@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOOL_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.EXECUTE_TOOL;
 import static io.opentelemetry.semconv.incubating.JsonrpcIncubatingAttributes.JSONRPC_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_METHOD_NAME;
 import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_PROTOCOL_VERSION;
@@ -23,7 +24,8 @@ import io.modelcontextprotocol.spec.McpClientSession;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.ProtocolVersions;
-import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -84,7 +86,7 @@ class McpClientSessionInstrumentationTest {
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MCP_METHOD_NAME, "tools/call"),
-                            equalTo(GEN_AI_OPERATION_NAME, "execute_tool"),
+                            equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
                             equalTo(GEN_AI_TOOL_NAME, "delete-file"),
                             equalTo(
                                 JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()))));
@@ -129,7 +131,7 @@ class McpClientSessionInstrumentationTest {
                                 point
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(MCP_METHOD_NAME, "tools/call"),
-                                        equalTo(GEN_AI_OPERATION_NAME, "execute_tool"),
+                                        equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
                                         equalTo(GEN_AI_TOOL_NAME, "lookup"),
                                         equalTo(
                                             MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05))
@@ -167,6 +169,34 @@ class McpClientSessionInstrumentationTest {
   }
 
   @Test
+  void propagatesToolCallContextThroughReactorPublisher() {
+    TestMcpClientTransport transport =
+        new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.SUCCESS);
+    McpClientSession session = newSession(transport);
+
+    assertThat(
+            session
+                .sendRequest(
+                    McpSchema.METHOD_TOOLS_CALL,
+                    new McpSchema.CallToolRequest("context-tool", Map.of(), null),
+                    CALL_TOOL_RESULT_TYPE)
+                .block())
+        .isNotNull();
+
+    assertThat(transport.getToolRequestContext()).isNotNull();
+    SpanContext propagatedSpanContext =
+        Span.fromContext(transport.getToolRequestContext()).getSpanContext();
+    assertThat(propagatedSpanContext.isValid()).isTrue();
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("tools/call context-tool").hasKind(CLIENT).hasNoParent());
+          assertThat(propagatedSpanContext.getTraceId()).isEqualTo(trace.getSpan(0).getTraceId());
+          assertThat(propagatedSpanContext.getSpanId()).isEqualTo(trace.getSpan(0).getSpanId());
+        });
+  }
+
+  @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
   void recordsJsonRpcError() {
     TestMcpClientTransport transport =
@@ -195,11 +225,11 @@ class McpClientSessionInstrumentationTest {
                     span.hasName("tools/call missing-tool")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.create(StatusCode.ERROR, "Method not found"))
+                        .hasStatus(StatusData.error())
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MCP_METHOD_NAME, "tools/call"),
-                            equalTo(GEN_AI_OPERATION_NAME, "execute_tool"),
+                            equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
                             equalTo(GEN_AI_TOOL_NAME, "missing-tool"),
                             equalTo(JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()),
                             equalTo(ERROR_TYPE, "-32601"),
@@ -234,7 +264,7 @@ class McpClientSessionInstrumentationTest {
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MCP_METHOD_NAME, "tools/call"),
-                            equalTo(GEN_AI_OPERATION_NAME, "execute_tool"),
+                            equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
                             equalTo(GEN_AI_TOOL_NAME, "failing-tool"),
                             equalTo(JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()),
                             equalTo(ERROR_TYPE, "tool_error"))));

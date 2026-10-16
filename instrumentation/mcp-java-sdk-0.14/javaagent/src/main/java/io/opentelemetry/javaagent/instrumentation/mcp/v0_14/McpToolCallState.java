@@ -19,13 +19,11 @@ import reactor.core.publisher.Mono;
 
 public final class McpToolCallState {
   private static final Logger logger = Logger.getLogger(McpToolCallState.class.getName());
-  private static final ThreadLocal<McpToolCallState> currentState = new ThreadLocal<>();
 
   private final McpClientSession session;
   private final String toolName;
   private final McpSchema.CallToolRequest requestParameters;
   private final Map<String, Object> propagationMeta;
-  @Nullable private final McpToolCallState previousState;
   @Nullable private volatile String requestId;
 
   @Nullable
@@ -45,9 +43,7 @@ public final class McpToolCallState {
               callToolRequest.name(),
               new McpSchema.CallToolRequest(
                   callToolRequest.name(), callToolRequest.arguments(), meta),
-              meta,
-              currentState.get());
-      currentState.set(state);
+              meta);
       return state;
     } catch (Throwable t) {
       logger.log(FINE, "Failed to prepare MCP tool call instrumentation", t);
@@ -59,20 +55,15 @@ public final class McpToolCallState {
       McpClientSession session,
       String toolName,
       McpSchema.CallToolRequest requestParameters,
-      Map<String, Object> propagationMeta,
-      @Nullable McpToolCallState previousState) {
+      Map<String, Object> propagationMeta) {
     this.session = session;
     this.toolName = toolName;
     this.requestParameters = requestParameters;
     this.propagationMeta = propagationMeta;
-    this.previousState = previousState;
   }
 
-  public static void captureRequestId(String requestId) {
-    McpToolCallState state = currentState.get();
-    if (state != null) {
-      state.requestId = requestId;
-    }
+  void captureRequestId(String requestId) {
+    this.requestId = requestId;
   }
 
   public Object getRequestParameters() {
@@ -89,23 +80,13 @@ public final class McpToolCallState {
   }
 
   void inject(Context context) {
-    try {
-      propagators()
-          .getTextMapPropagator()
-          .inject(context, propagationMeta, (carrier, key, value) -> carrier.put(key, value));
-    } catch (Throwable t) {
-      logger.log(FINE, "Failed to inject MCP tool call context", t);
-      // Preserve the original MCP request if a configured propagator fails.
-    }
+    propagators()
+        .getTextMapPropagator()
+        .inject(context, propagationMeta, (carrier, key, value) -> carrier.put(key, value));
   }
 
   @Nullable
   public Mono<?> finish(@Nullable Mono<?> publisher) {
-    if (previousState == null) {
-      currentState.remove();
-    } else {
-      currentState.set(previousState);
-    }
     return publisher == null ? null : McpToolCallMono.wrap(publisher, this);
   }
 }

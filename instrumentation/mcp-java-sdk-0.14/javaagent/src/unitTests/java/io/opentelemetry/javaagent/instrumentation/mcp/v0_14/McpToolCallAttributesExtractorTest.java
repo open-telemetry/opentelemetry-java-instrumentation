@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOOL_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.EXECUTE_TOOL;
 import static io.opentelemetry.semconv.incubating.JsonrpcIncubatingAttributes.JSONRPC_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_METHOD_NAME;
 import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_PROTOCOL_VERSION;
@@ -43,7 +44,7 @@ class McpToolCallAttributesExtractorTest {
     assertThat(attributes.build().asMap())
         .containsEntry(MCP_METHOD_NAME, "tools/call")
         .containsEntry(MCP_PROTOCOL_VERSION, "2024-11-05")
-        .containsEntry(GEN_AI_OPERATION_NAME, "execute_tool")
+        .containsEntry(GEN_AI_OPERATION_NAME, EXECUTE_TOOL)
         .containsEntry(GEN_AI_TOOL_NAME, "delete-file")
         .containsEntry(JSONRPC_REQUEST_ID, "session-1")
         .doesNotContainKeys(

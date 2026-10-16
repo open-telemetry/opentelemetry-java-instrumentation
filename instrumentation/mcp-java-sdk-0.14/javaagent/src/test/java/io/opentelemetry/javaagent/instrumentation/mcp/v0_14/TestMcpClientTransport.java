@@ -9,6 +9,7 @@ import io.modelcontextprotocol.json.TypeRef;
 import io.modelcontextprotocol.spec.McpClientTransport;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.ProtocolVersions;
+import io.opentelemetry.context.Context;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import reactor.core.publisher.Mono;
@@ -23,6 +24,7 @@ final class TestMcpClientTransport implements McpClientTransport {
 
   private final ToolResponse toolResponse;
   private final AtomicReference<McpSchema.JSONRPCRequest> toolRequest = new AtomicReference<>();
+  private final AtomicReference<Context> toolRequestContext = new AtomicReference<>();
   private Function<Mono<McpSchema.JSONRPCMessage>, Mono<McpSchema.JSONRPCMessage>> handler;
 
   TestMcpClientTransport(ToolResponse toolResponse) {
@@ -55,25 +57,30 @@ final class TestMcpClientTransport implements McpClientTransport {
     }
 
     toolRequest.set(request);
-    return switch (toolResponse) {
-      case SUCCESS ->
-          respond(
-              successResponse(
-                  request.id(),
-                  McpSchema.CallToolResult.builder().addTextContent("secret").build()));
-      case TOOL_ERROR ->
-          respond(
-              successResponse(
-                  request.id(), McpSchema.CallToolResult.builder().isError(true).build()));
-      case JSON_RPC_ERROR ->
-          respond(
-              new McpSchema.JSONRPCResponse(
-                  McpSchema.JSONRPC_VERSION,
-                  request.id(),
-                  null,
-                  new McpSchema.JSONRPCResponse.JSONRPCError(-32601, "Method not found", null)));
-      case NONE -> Mono.empty();
-    };
+    return Mono.defer(
+        () -> {
+          toolRequestContext.set(Context.current());
+          return switch (toolResponse) {
+            case SUCCESS ->
+                respond(
+                    successResponse(
+                        request.id(),
+                        McpSchema.CallToolResult.builder().addTextContent("secret").build()));
+            case TOOL_ERROR ->
+                respond(
+                    successResponse(
+                        request.id(), McpSchema.CallToolResult.builder().isError(true).build()));
+            case JSON_RPC_ERROR ->
+                respond(
+                    new McpSchema.JSONRPCResponse(
+                        McpSchema.JSONRPC_VERSION,
+                        request.id(),
+                        null,
+                        new McpSchema.JSONRPCResponse.JSONRPCError(
+                            -32601, "Method not found", null)));
+            case NONE -> Mono.empty();
+          };
+        });
   }
 
   private static McpSchema.JSONRPCResponse successResponse(Object id, Object result) {
@@ -92,6 +99,10 @@ final class TestMcpClientTransport implements McpClientTransport {
 
   McpSchema.JSONRPCRequest getToolRequest() {
     return toolRequest.get();
+  }
+
+  Context getToolRequestContext() {
+    return toolRequestContext.get();
   }
 
   enum ToolResponse {

@@ -16,7 +16,7 @@ import java.util.List;
 public class McpJavaSdkInstrumentationModule extends InstrumentationModule {
 
   public McpJavaSdkInstrumentationModule() {
-    super("mcp-java-sdk", "mcp-java-sdk-0.14");
+    super("mcp-java-sdk-0.14", "mcp-java-sdk");
   }
 
   @Override

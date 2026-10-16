@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.mcp.v0_14;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOOL_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.EXECUTE_TOOL;
 import static io.opentelemetry.semconv.incubating.JsonrpcIncubatingAttributes.JSONRPC_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_METHOD_NAME;
 import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_PROTOCOL_VERSION;
@@ -28,7 +29,7 @@ final class McpToolCallAttributesExtractor
       AttributesBuilder attributes, Context parentContext, McpToolCallRequest request) {
     attributes.put(MCP_METHOD_NAME, McpSchema.METHOD_TOOLS_CALL);
     attributes.put(MCP_PROTOCOL_VERSION, request.getProtocolVersion());
-    attributes.put(GEN_AI_OPERATION_NAME, "execute_tool");
+    attributes.put(GEN_AI_OPERATION_NAME, EXECUTE_TOOL);
     attributes.put(GEN_AI_TOOL_NAME, request.getToolName());
   }
 

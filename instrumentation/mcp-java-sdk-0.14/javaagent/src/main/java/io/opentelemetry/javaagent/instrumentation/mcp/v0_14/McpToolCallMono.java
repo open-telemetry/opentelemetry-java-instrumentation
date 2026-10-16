@@ -34,29 +34,15 @@ final class McpToolCallMono {
 
             Context context = instrumenter().start(parentContext, request);
             state.inject(context);
-            try {
-              return (Mono<?>)
-                  endStrategy.end(
-                      instrumenter(), context, request, publisher, McpSchema.CallToolResult.class);
-            } catch (Throwable t) {
-              logger.log(FINE, "Failed to wrap MCP tool call publisher", t);
-              endSpan(context, request);
-            }
+            return (Mono<?>)
+                endStrategy.end(
+                    instrumenter(), context, request, publisher, McpSchema.CallToolResult.class);
           } catch (Throwable t) {
             logger.log(FINE, "Failed to trace MCP tool call", t);
             // Ignore instrumentation failures to preserve application behavior.
           }
           return publisher;
         });
-  }
-
-  private static void endSpan(Context context, McpToolCallRequest request) {
-    try {
-      instrumenter().end(context, request, null, null);
-    } catch (Throwable t) {
-      logger.log(FINE, "Failed to end MCP tool call span", t);
-      // Ignore instrumentation failures to preserve application behavior.
-    }
   }
 
   private McpToolCallMono() {}
