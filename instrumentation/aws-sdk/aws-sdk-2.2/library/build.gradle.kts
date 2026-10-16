@@ -82,27 +82,100 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
+  val experimentalSpanAttributes = "otel.instrumentation.aws-sdk.experimental-span-attributes=true"
+
+  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("metadataConfig", experimentalSpanAttributes)
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+      excludeTestsMatching("Aws2SqsW3cPropagatorTest")
+      excludeTestsMatching("Aws2SqsW3cPropagatorAndXrayPropagatorTest")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansDefaultPropagatorTest")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorAndXrayPropagatorTest")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+      excludeTestsMatching("Aws2ClientNotRecordHttpErrorTest")
+      excludeTestsMatching("Aws2ClientRecordHttpErrorTest")
+    }
+  }
+
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty(
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+      "true",
+    )
+    systemProperty(
+      "metadataConfig",
+      "$experimentalSpanAttributes,otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
+    filter {
+      includeTestsMatching("Aws2SqsDefaultPropagatorTest")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+    }
+  }
+
+  val testIndividualHttpErrors = register<Test>("testIndividualHttpErrors") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-record-individual-http-error=true",
+    )
+    filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
+  }
+
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.aws-sdk.experimental-span-attributes=true,otel.semconv.exception.signal.preview=logs",
+      "$experimentalSpanAttributes,otel.semconv.exception.signal.preview=logs",
     )
-    if (otelProps.collectMetadata) {
-      // Collect a representative failure without mixing messaging and HTTP-error configurations.
-      filter {
-        includeTestsMatching("io.opentelemetry.instrumentation.awssdk.v2_2.Aws2ClientTest.testTimeoutAndRetryErrorsAreNotCaptured")
-      }
-    }
+    filter.includeTestsMatching("Aws2ClientTest")
+  }
+
+  val testCoreOnlyExperimentalAttributes = register<Test>("testCoreOnlyExperimentalAttributes") {
+    testClassesDirs = sourceSets["testCoreOnly"].output.classesDirs
+    classpath = sourceSets["testCoreOnly"].runtimeClasspath
+
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("metadataConfig", experimentalSpanAttributes)
+  }
+
+  val testRdsDataExperimentalAttributes = register<Test>("testRdsDataExperimentalAttributes") {
+    testClassesDirs = sourceSets["testRdsData"].output.classesDirs
+    classpath = sourceSets["testRdsData"].runtimeClasspath
+
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("metadataConfig", experimentalSpanAttributes)
   }
 
   check {
     dependsOn(
       testing.suites,
+      testExperimentalAttributes,
+      testReceiveTelemetry,
+      testIndividualHttpErrors,
       testExceptionSignalLogs,
+      testCoreOnlyExperimentalAttributes,
+      testRdsDataExperimentalAttributes,
     )
   }
 }
