@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -35,6 +36,35 @@ import reactor.core.publisher.Mono;
 class SpringWebfluxClientContextTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  void emptyExchangePreservesExistingSpanLifecycle() {
+    List<SpanContext> exchanges = new ArrayList<>();
+    WebClient client =
+        client(
+            request -> {
+              exchanges.add(Span.current().getSpanContext());
+              return Mono.empty();
+            });
+
+    ClientResponse response =
+        testing.runWithSpan(
+            "parent",
+            () ->
+                client
+                    .get()
+                    .uri("http://localhost/empty")
+                    .exchange()
+                    .onErrorResume(IllegalStateException.class, error -> Mono.empty())
+                    .block());
+
+    assertThat(response).isNull();
+    assertThat(exchanges)
+        .singleElement()
+        .satisfies(context -> assertThat(context.isValid()).isTrue());
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasNoParent()));
+  }
 
   @ParameterizedTest
   @CsvSource({"false,false", "false,true", "true,false", "true,true"})

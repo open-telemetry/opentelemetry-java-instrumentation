@@ -299,9 +299,9 @@ public final class ContextPropagationOperator {
   }
 
   /**
-   * Runs the source subscription and upstream request and cancellation calls in {@code
-   * operationContext}, and downstream callbacks in {@code applicationContext}, including when
-   * either context is {@link Context#root()}.
+   * Runs the source subscription, upstream Reactor context lookup, and request and cancellation
+   * calls in {@code operationContext}, and downstream callbacks in {@code applicationContext},
+   * including when either context is {@link Context#root()}.
    *
    * <p>The source sees {@code operationContext} in its Reactor context, preserving all unrelated
    * entries. This boundary works without registering propagation hooks; it does not propagate
@@ -313,9 +313,9 @@ public final class ContextPropagationOperator {
   }
 
   /**
-   * Runs the source subscription and upstream request and cancellation calls in {@code
-   * operationContext}, and downstream callbacks in {@code applicationContext}, including when
-   * either context is {@link Context#root()}.
+   * Runs the source subscription, upstream Reactor context lookup, and request and cancellation
+   * calls in {@code operationContext}, and downstream callbacks in {@code applicationContext},
+   * including when either context is {@link Context#root()}.
    *
    * <p>The source sees {@code operationContext} in its Reactor context, preserving all unrelated
    * entries. This boundary works without registering propagation hooks; it does not propagate
@@ -407,7 +407,9 @@ public final class ContextPropagationOperator {
 
     @Override
     public reactor.util.context.Context currentContext() {
-      return storeOpenTelemetryContext(actual.currentContext(), operationContext);
+      try (Scope ignored = operationContext.makeCurrent()) {
+        return storeOpenTelemetryContext(actual.currentContext(), operationContext);
+      }
     }
 
     @Override

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.reactor.v3_1;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,6 +29,7 @@ import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class ContextBoundaryTest {
   private static final ContextKey<String> KEY = ContextKey.named("boundary-test");
@@ -56,6 +59,18 @@ class ContextBoundaryTest {
                                                 operation ->
                                                     Arguments.of(
                                                         mono, hooks, operation, application)))));
+  }
+
+  private static Stream<Arguments> terminalCallbacks() {
+    return boundaries()
+        .flatMap(
+            boundary ->
+                Stream.of(false, true)
+                    .map(
+                        error -> {
+                          Object[] args = boundary.get();
+                          return Arguments.of(args[0], args[1], args[2], args[3], error);
+                        }));
   }
 
   @ParameterizedTest
@@ -119,6 +134,32 @@ class ContextBoundaryTest {
     }
     assertThat(probe.cancelled).isTrue();
     assertThat(actual.contexts).containsExactly(application);
+  }
+
+  @ParameterizedTest
+  @MethodSource("boundaries")
+  void scopesUpstreamContextLookup(
+      boolean mono, boolean hooks, Context operation, Context application) {
+    if (hooks) {
+      operator.registerOnEachOperator();
+    }
+    RecordingSubscriber actual =
+        new RecordingSubscriber(application) {
+          @Override
+          public reactor.util.context.Context currentContext() {
+            assertThat(Context.current()).isSameAs(operation);
+            return super.currentContext();
+          }
+        };
+    Probe probe = new Probe(operation);
+    subscribe(mono, probe, operation, application, actual);
+    try (Scope ignored = UNRELATED.makeCurrent()) {
+      assertThat(
+              ContextPropagationOperator.getOpenTelemetryContext(
+                  probe.actual.currentContext(), null))
+          .isSameAs(operation);
+      assertThat(Context.current()).isSameAs(UNRELATED);
+    }
   }
 
   @ParameterizedTest
@@ -231,6 +272,126 @@ class ContextBoundaryTest {
               () -> subscribe(mono, new Probe(operation), operation, application, actual))
           .isSameAs(failure);
       assertThat(Context.current()).isSameAs(UNRELATED);
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource("terminalCallbacks")
+  void restoresScopesWhenTerminalCallbackThrows(
+      boolean mono, boolean hooks, Context operation, Context application, boolean error) {
+    if (hooks) {
+      operator.registerOnEachOperator();
+    }
+    IllegalStateException failure = new IllegalStateException("terminal");
+    RecordingSubscriber actual =
+        new RecordingSubscriber(application) {
+          @Override
+          public void onError(Throwable error) {
+            assertThat(Context.current()).isSameAs(application);
+            throw failure;
+          }
+
+          @Override
+          public void onComplete() {
+            assertThat(Context.current()).isSameAs(application);
+            throw failure;
+          }
+        };
+    Probe probe = new Probe(operation);
+    subscribe(mono, probe, operation, application, actual);
+    try (Scope ignored = UNRELATED.makeCurrent()) {
+      assertThatThrownBy(
+              () -> {
+                if (error) {
+                  probe.actual.onError(new IllegalStateException("source"));
+                } else {
+                  probe.actual.onComplete();
+                }
+              })
+          .isSameAs(failure);
+      assertThat(Context.current()).isSameAs(UNRELATED);
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource("boundaries")
+  void supportsMultipleSubscriptions(
+      boolean mono, boolean hooks, Context operation, Context application) {
+    if (hooks) {
+      operator.registerOnEachOperator();
+    }
+    AtomicInteger subscriptions = new AtomicInteger();
+    Mono<String> monoSource =
+        Mono.fromCallable(
+            () -> {
+              assertThat(Context.current()).isSameAs(operation);
+              return "subscription-" + subscriptions.incrementAndGet();
+            });
+    RecordingSubscriber first = new RecordingSubscriber(application);
+    RecordingSubscriber second = new RecordingSubscriber(application);
+    try (Scope ignored = UNRELATED.makeCurrent()) {
+      if (mono) {
+        Mono<String> boundary =
+            ContextPropagationOperator.runWithContext(monoSource, operation, application);
+        boundary.subscribe(first);
+        boundary.subscribe(second);
+      } else {
+        Flux<String> boundary =
+            ContextPropagationOperator.runWithContext(monoSource.flux(), operation, application);
+        boundary.subscribe(first);
+        boundary.subscribe(second);
+      }
+      first.subscription.request(1);
+      second.subscription.request(1);
+      assertThat(Context.current()).isSameAs(UNRELATED);
+    }
+    assertThat(first.values).containsExactly("subscription-1");
+    assertThat(second.values).containsExactly("subscription-2");
+    assertThat(first.complete).isTrue();
+    assertThat(second.complete).isTrue();
+  }
+
+  @ParameterizedTest
+  @MethodSource("boundaries")
+  void scheduledUpstreamUsesRegisteredHooks(
+      boolean mono, boolean hooks, Context operation, Context application) {
+    assumeTrue(hooks && schedulerHooksSupported());
+    operator.registerOnEachOperator();
+    AtomicInteger calls = new AtomicInteger();
+    Mono<String> source =
+        Mono.fromCallable(
+                () -> {
+                  assertThat(Context.current()).isSameAs(operation);
+                  calls.incrementAndGet();
+                  return "scheduled";
+                })
+            .subscribeOn(Schedulers.single());
+    try (Scope ignored = application.makeCurrent()) {
+      if (mono) {
+        assertThat(
+                ContextPropagationOperator.runWithContext(source, operation, application)
+                    .doOnNext(value -> assertThat(Context.current()).isSameAs(application))
+                    .block())
+            .isEqualTo("scheduled");
+      } else {
+        assertThat(
+                ContextPropagationOperator.runWithContext(source.flux(), operation, application)
+                    .doOnNext(value -> assertThat(Context.current()).isSameAs(application))
+                    .collectList()
+                    .block())
+            .containsExactly("scheduled");
+      }
+      assertThat(Context.current()).isSameAs(application);
+    }
+    assertThat(calls).hasValue(1);
+  }
+
+  private static boolean schedulerHooksSupported() {
+    try {
+      Schedulers.class.getMethod("onScheduleHook", String.class, Function.class);
+      return true;
+    } catch (NoSuchMethodException ignored) {
+      return false;
     }
   }
 

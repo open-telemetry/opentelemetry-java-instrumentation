@@ -27,7 +27,16 @@ import reactor.core.publisher.Operators;
 
 class TracingSubscriberTest {
   private static final ContextKey<String> KEY = ContextKey.named("test");
-  private static final Context ACTIVE = Context.root().with(KEY, "active");
+  private static final Context ACTIVE =
+      Context.root()
+          .with(KEY, "active")
+          .with(
+              Span.wrap(
+                  SpanContext.create(
+                      "22222222222222222222222222222222",
+                      "2222222222222222",
+                      TraceFlags.getSampled(),
+                      TraceState.getDefault())));
 
   private static Stream<Context> explicitContexts() {
     return Stream.of(

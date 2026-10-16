@@ -14,24 +14,49 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.reactivestreams.Subscription;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Mono;
 
-@SuppressWarnings("deprecation") // WebClient.exchange() is supported on Spring 5.0.
 class SpringWebfluxClientContextTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @Test
+  void emptyExchangePreservesExistingSpanLifecycle() {
+    List<SpanContext> exchanges = new ArrayList<>();
+    ExchangeFunction client =
+        filteredExchange(
+            request -> {
+              exchanges.add(Span.current().getSpanContext());
+              return Mono.empty();
+            });
+
+    ClientResponse response =
+        testing.runWithSpan("parent", () -> exchange(client, "/empty").block());
+
+    assertThat(response).isNull();
+    assertThat(exchanges)
+        .singleElement()
+        .satisfies(context -> assertThat(context.isValid()).isTrue());
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasNoParent()));
+  }
 
   @ParameterizedTest
   @CsvSource({"false,false", "false,true", "true,false", "true,true"})
@@ -58,11 +83,15 @@ class SpringWebfluxClientContextTest {
       client
           .get()
           .uri("http://localhost/outer")
-          .exchange()
+          .exchangeToMono(Mono::just)
           .doOnSubscribe(
               subscription -> {
                 callbacks.add(Span.current().getSpanContext());
-                independent.get().uri("http://localhost/independent").exchange().block();
+                independent
+                    .get()
+                    .uri("http://localhost/independent")
+                    .exchangeToMono(Mono::just)
+                    .block();
               })
           .doOnNext(value -> callbacks.add(Span.current().getSpanContext()))
           .doOnError(error -> callbacks.add(Span.current().getSpanContext()))
@@ -88,8 +117,8 @@ class SpringWebfluxClientContextTest {
     List<SpanContext> requests = new ArrayList<>();
     List<SpanContext> cancellations = new ArrayList<>();
     List<SpanContext> callbacks = new ArrayList<>();
-    WebClient client =
-        client(
+    ExchangeFunction client =
+        filteredExchange(
             request -> {
               exchanges.add(Span.current().getSpanContext());
               return Mono.<ClientResponse>never()
@@ -105,7 +134,9 @@ class SpringWebfluxClientContextTest {
         };
 
     try (Scope ignored = parent.makeCurrent()) {
-      client.get().uri("http://localhost/cancelled").exchange().subscribe(subscriber);
+      // exchangeToMono requests upstream eagerly, so exercise delayed demand at the filter
+      // boundary.
+      exchange(client, "/cancelled").subscribe(subscriber);
     }
     subscriber.request(1);
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
@@ -151,12 +182,22 @@ class SpringWebfluxClientContextTest {
     }
   }
 
+  private static Mono<ClientResponse> exchange(ExchangeFunction client, String path) {
+    return client.exchange(
+        ClientRequest.create(HttpMethod.GET, URI.create("http://localhost" + path)).build());
+  }
+
+  private static ExchangeFunction filteredExchange(ExchangeFunction exchange) {
+    SpringWebfluxClientTelemetry telemetry =
+        SpringWebfluxClientTelemetry.create(testing.getOpenTelemetry());
+    List<ExchangeFilterFunction> filters = new ArrayList<>();
+    telemetry.addFilter(filters);
+    return filters.get(0).apply(exchange);
+  }
+
   private static WebClient client(ExchangeFunction exchange) {
     SpringWebfluxClientTelemetry telemetry =
         SpringWebfluxClientTelemetry.create(testing.getOpenTelemetry());
-    return WebClient.builder()
-        .exchangeFunction(exchange)
-        .filters(telemetry::addFilterAndRegisterReactorHook)
-        .build();
+    return WebClient.builder().exchangeFunction(exchange).filters(telemetry::addFilter).build();
   }
 }
