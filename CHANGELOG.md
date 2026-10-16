@@ -287,8 +287,8 @@
 
 - `HttpClientUrlTemplateCustomizer` and `InstrumenterCustomizerProvider` SPIs are no longer loaded by
   default on Android. On the JVM, these SPIs are still loaded by default using `ServiceLoader.load(Class)`.
-  To use them on Android, provide a function that loads SPI implementation classes via
-  `ServiceLoaderUtil.setLoadFunction(Function<Class, Iterable<Class>)`.
+  To use them on Android, provide a function that loads SPI implementations via
+  `ServiceLoaderUtil.setLoadFunction(Function<Class<?>, Iterable<?>>)`.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
   `create(Meter, String, Attributes)` overloads. Use the overloads accepting
   `OpenTelemetry`, the instrumentation name and the pool name instead.
