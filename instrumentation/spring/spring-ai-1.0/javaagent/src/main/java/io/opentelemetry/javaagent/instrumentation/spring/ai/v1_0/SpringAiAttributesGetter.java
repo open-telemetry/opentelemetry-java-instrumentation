@@ -106,7 +106,7 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
         .map(Generation::getMetadata)
         .filter(metadata -> metadata != null)
         .map(ChatGenerationMetadata::getFinishReason)
-        .filter(reason -> reason != null)
+        .filter(reason -> reason != null && !reason.isEmpty())
         .collect(toList());
   }
 

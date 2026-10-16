@@ -63,7 +63,7 @@ class SpringAiMessageEvents {
       Generation generation = results.get(index);
       Map<String, Value<?>> body = new LinkedHashMap<>();
       String finishReason = finishReason(generation);
-      if (finishReason != null) {
+      if (finishReason != null && !finishReason.isEmpty()) {
         body.put("finish_reason", Value.of(finishReason));
       }
       body.put("index", Value.of(choiceIndex(generation, index)));

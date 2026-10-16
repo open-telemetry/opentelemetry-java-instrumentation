@@ -55,6 +55,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -438,6 +439,27 @@ class ChatModelTest {
     assertMultiChoiceEvents(spanContext);
   }
 
+  @ParameterizedTest
+  @NullAndEmptySource
+  void streamPreservesFinishReasonAcrossChunks(String finishReason) {
+    ChatResponse firstChunk =
+        response(
+            singletonList(generation("", "stop")),
+            ChatResponseMetadata.builder()
+                .id("response-id")
+                .model(MODEL)
+                .usage(new DefaultUsage(3, 2))
+                .build());
+    ChatResponse lastChunk = new ChatResponse(singletonList(generation(RESPONSE, finishReason)));
+    chatModel.setStreamPublisher(Flux.just(firstChunk, lastChunk));
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertTraces("test", true);
+    assertMessageEvents(spanContext);
+  }
+
   @Test
   void streamAggregatesToolCallsAcrossChunks() {
     ChatResponse firstChunk =
@@ -651,6 +673,24 @@ class ChatModelTest {
     assertErrorTrace(error, true);
   }
 
+  @ParameterizedTest
+  @NullAndEmptySource
+  void streamErrorAfterPartialResponseOmitsMissingFinishReason(String finishReason) {
+    IllegalStateException error = new IllegalStateException("stream failed");
+    ChatResponse response = new ChatResponse(singletonList(generation(RESPONSE, finishReason)));
+    chatModel.setStreamPublisher(Flux.concat(Flux.just(response), Flux.error(error)));
+
+    assertThatThrownBy(
+            () -> testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast()))
+        .isSameAs(error);
+
+    assertErrorTrace(error, true);
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertMessageEvents(
+        spanContext,
+        Value.of(KeyValue.of("index", Value.of(0)), KeyValue.of("message", messageBody(RESPONSE))));
+  }
+
   @Test
   void synchronousStreamErrorEndsSpan() {
     IllegalStateException error = new IllegalStateException("stream failed synchronously");
@@ -695,6 +735,41 @@ class ChatModelTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.unset())));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void streamCancellationOmitsMissingFinishReason(String finishReason) {
+    ChatResponse response = new ChatResponse(singletonList(generation(RESPONSE, finishReason)));
+    chatModel.setStreamPublisher(Flux.concat(Flux.just(response), Flux.never()));
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).take(1).blockLast());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("chat " + MODEL)
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                            equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
+                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
+                            equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
+                            equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
+                            equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
+                            equalTo(GEN_AI_REQUEST_TOP_P, 0.5))));
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertMessageEvents(
+        spanContext,
+        Value.of(KeyValue.of("index", Value.of(0)), KeyValue.of("message", messageBody(RESPONSE))));
   }
 
   private static void assertTraces(String provider, boolean streaming) {
@@ -821,6 +896,10 @@ class ChatModelTest {
   }
 
   private static void assertMessageEvents(SpanContext spanContext) {
+    assertMessageEvents(spanContext, choiceBody("stop", 0, RESPONSE));
+  }
+
+  private static void assertMessageEvents(SpanContext spanContext, Value<?> choice) {
     testing.waitAndAssertLogRecords(
         log ->
             log.hasAttributesSatisfyingExactly(
@@ -833,7 +912,7 @@ class ChatModelTest {
                     equalTo(GEN_AI_PROVIDER_NAME, "test"),
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
-                .hasBody(choiceBody("stop", 0, RESPONSE)));
+                .hasBody(choice));
   }
 
   private static void assertMultiChoiceEvents(SpanContext spanContext) {

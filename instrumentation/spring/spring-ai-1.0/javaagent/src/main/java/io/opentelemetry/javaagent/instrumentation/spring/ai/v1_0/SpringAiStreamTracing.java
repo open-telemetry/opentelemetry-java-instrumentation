@@ -313,8 +313,9 @@ class SpringAiStreamTracing {
       AssistantMessage output = generation.getOutput();
       addToolCalls(output);
       ChatGenerationMetadata metadata = generation.getMetadata();
-      if (metadata != null && metadata.getFinishReason() != null) {
-        finishReason = metadata.getFinishReason();
+      String newFinishReason = metadata == null ? null : metadata.getFinishReason();
+      if (newFinishReason != null && !newFinishReason.isEmpty()) {
+        finishReason = newFinishReason;
       }
     }
 
