@@ -40,7 +40,7 @@ jobs:
       - name: display changes
         run: git diff
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: otelbot-token
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
@@ -72,6 +72,6 @@ jobs:
     needs:
       - update-cloudfoundry-index-yml
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@0cc57aeabf2a31cf41114e7b24561f21a04e360b # v0.18.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@30362d425ab746bb2ec4647538ea9154591cce91 # v0.22.0
     with:
       success: ${{ needs.update-cloudfoundry-index-yml.result == 'success' }}
