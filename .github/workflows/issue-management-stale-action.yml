@@ -76,6 +76,6 @@ jobs:
     needs:
       - stale
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@c717adbcb56efc45c5dea293accfc6c3462bcdd1 # v0.19.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@544059e5691c00818aa83bd1117c4e0b8b4a6e21 # v0.21.0
     with:
       success: ${{ needs.stale.result == 'success' }}
