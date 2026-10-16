@@ -52,13 +52,6 @@ public final class RedisSpanNameExtractor {
       return delegate.getDbOperationName(request);
     }
 
-    @SuppressWarnings("deprecation") // getDbOperation is used for old semconv span names
-    @Override
-    @Nullable
-    public String getDbOperation(REQUEST request) {
-      return delegate.getDbOperation(request);
-    }
-
     @Override
     public String getDbSystemName(REQUEST request) {
       return delegate.getDbSystemName(request);

@@ -11,8 +11,8 @@ muzzle {
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-network")
-    excludeInstrumentationName("couchbase-2.6")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -22,8 +22,8 @@ muzzle {
     versions.set("[2,2.6)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-core")
-    excludeInstrumentationName("couchbase-2.6")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the first directive is the range we document
@@ -35,8 +35,8 @@ muzzle {
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-core")
-    excludeInstrumentationName("couchbase-2.0-network")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
   }
   fail {
     group.set("com.couchbase.client")
@@ -83,19 +83,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      isEnabled = named<Test>(suite.name).get().enabled
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-    }
   }
 
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
@@ -109,18 +96,23 @@ tasks {
     }
   }
 
-  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
-    val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
-    isEnabled = named<Test>(suite.name).get().enabled
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
+  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
+    val sourceTask = named<Test>("test").get()
+    isEnabled = sourceTask.enabled
+    setJvmArgs(sourceTask.jvmArgs)
+    setSystemProperties(sourceTask.systemProperties)
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
+    filter {
+      includeTestsMatching("CouchbaseQuerySanitizationTest")
+    }
+    jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+    systemProperty("testQuerySanitizationEnabled", "false")
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig)
+    dependsOn(testing.suites, experimentalSuites, testQuerySanitizationDisabled)
   }
 
   if (otelProps.denyUnsafe) {

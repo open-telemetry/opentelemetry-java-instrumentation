@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RedissonInstrumentationModule extends InstrumentationModule {
 
   public RedissonInstrumentationModule() {
-    super("redisson", "redisson-3.0");
+    super("redisson-3.0", "redisson");
   }
 
   @Override

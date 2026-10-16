@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -22,15 +21,12 @@ class MessagingSpanKindExtractorTest {
   @ParameterizedTest
   @MethodSource("spanKinds")
   void extractsSpanKind(
-      MessagingOperationType operationType,
-      boolean isSpanContextPropagated,
-      SpanKind oldKind,
-      SpanKind kind) {
+      MessagingOperationType operationType, boolean isSpanContextPropagated, SpanKind kind) {
     SpanKind actualKind =
         MessagingSpanKindExtractor.<Object>create(operationType, request -> isSpanContextPropagated)
             .extract(new Object());
 
-    assertThat(actualKind).isEqualTo(emitStableMessagingSemconv() ? kind : oldKind);
+    assertThat(actualKind).isEqualTo(kind);
   }
 
   @Test
@@ -40,8 +36,7 @@ class MessagingSpanKindExtractorTest {
             MessagingOperationType.SEND, request -> request.equals("propagated"));
 
     assertThat(extractor.extract("propagated")).isEqualTo(SpanKind.PRODUCER);
-    assertThat(extractor.extract("not propagated"))
-        .isEqualTo(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.PRODUCER);
+    assertThat(extractor.extract("not propagated")).isEqualTo(SpanKind.CLIENT);
   }
 
   @Test
@@ -52,36 +47,15 @@ class MessagingSpanKindExtractorTest {
     assertThat(spanKind).isEqualTo(SpanKind.PRODUCER);
   }
 
-  @SuppressWarnings("deprecation")
-  @Test
-  void messageOperationUsesLegacySpanKind() {
-    SpanKind receiveKind =
-        MessagingSpanKindExtractor.create(MessageOperation.RECEIVE).extract(new Object());
-
-    assertThat(receiveKind).isEqualTo(SpanKind.CONSUMER);
-  }
-
   private static Stream<Arguments> spanKinds() {
     return Stream.of(
+        argumentSet("create", MessagingOperationType.CREATE, true, SpanKind.PRODUCER),
         argumentSet(
-            "create", MessagingOperationType.CREATE, true, SpanKind.PRODUCER, SpanKind.PRODUCER),
+            "send with propagated context", MessagingOperationType.SEND, true, SpanKind.PRODUCER),
         argumentSet(
-            "send with propagated context",
-            MessagingOperationType.SEND,
-            true,
-            SpanKind.PRODUCER,
-            SpanKind.PRODUCER),
-        argumentSet(
-            "send without propagated context",
-            MessagingOperationType.SEND,
-            false,
-            SpanKind.PRODUCER,
-            SpanKind.CLIENT),
-        argumentSet(
-            "receive", MessagingOperationType.RECEIVE, true, SpanKind.CONSUMER, SpanKind.CLIENT),
-        argumentSet(
-            "process", MessagingOperationType.PROCESS, true, SpanKind.CONSUMER, SpanKind.CONSUMER),
-        argumentSet(
-            "settle", MessagingOperationType.SETTLE, true, SpanKind.CLIENT, SpanKind.CLIENT));
+            "send without propagated context", MessagingOperationType.SEND, false, SpanKind.CLIENT),
+        argumentSet("receive", MessagingOperationType.RECEIVE, true, SpanKind.CLIENT),
+        argumentSet("process", MessagingOperationType.PROCESS, true, SpanKind.CONSUMER),
+        argumentSet("settle", MessagingOperationType.SETTLE, true, SpanKind.CLIENT));
   }
 }

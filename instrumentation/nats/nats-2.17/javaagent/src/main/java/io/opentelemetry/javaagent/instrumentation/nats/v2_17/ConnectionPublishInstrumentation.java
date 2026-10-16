@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.publishInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.settleInstrumenter;
@@ -154,9 +153,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(NatsRequest natsRequest) {
         Context parentContext = Context.current();
         Instrumenter<NatsRequest, NatsRequest> instrumenter =
-            emitStableMessagingSemconv() && natsRequest.isJetStreamSettlement()
-                ? settleInstrumenter()
-                : publishInstrumenter();
+            natsRequest.isJetStreamSettlement() ? settleInstrumenter() : publishInstrumenter();
         if (!instrumenter.shouldStart(parentContext, natsRequest)) {
           return null;
         }

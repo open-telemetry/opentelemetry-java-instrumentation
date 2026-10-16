@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Mongo31InstrumentationModule extends InstrumentationModule {
 
   public Mongo31InstrumentationModule() {
-    super("mongo", "mongo-3.1", "mongo-3.1-client-options");
+    super("mongo-3.1", "mongo");
   }
 
   @Override

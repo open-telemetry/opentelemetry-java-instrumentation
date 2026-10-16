@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ApacheCamelInstrumentationModule extends InstrumentationModule {
   public ApacheCamelInstrumentationModule() {
-    super("camel", "camel-2.20");
+    super("camel-2.20", "camel");
   }
 
   @Override

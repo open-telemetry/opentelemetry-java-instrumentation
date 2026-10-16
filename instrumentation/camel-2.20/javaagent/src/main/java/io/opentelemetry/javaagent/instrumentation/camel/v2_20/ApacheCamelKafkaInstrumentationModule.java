@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ApacheCamelKafkaInstrumentationModule extends InstrumentationModule {
 
   public ApacheCamelKafkaInstrumentationModule() {
-    super("camel", "camel-2.20", "camel-kafka");
+    super("camel-2.20", "camel-kafka", "camel");
   }
 
   @Override

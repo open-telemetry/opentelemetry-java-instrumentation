@@ -142,8 +142,10 @@ Keep the pre-rename name by passing the `"<current>|deprecated:<old>"` marker th
 ```java
 public CxfInstrumentationModule() {
   super(
-      "cxf",
-      expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
+      AgentCommonConfig.get().isV3Preview() ? "jaxws-2.0-cxf-3.0" : "cxf",
+      AgentCommonConfig.get().isV3Preview()
+          ? new String[] {"jaxws-cxf", "jaxws"}
+          : expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
 }
 ```
 
@@ -155,9 +157,10 @@ silently ignored, matching 3.0; releases before then still warn outside preview 
 ordinary replacement-property fallback, the alias warning is driven by explicit legacy-key presence,
 so it fires even when the current name determines the effective enablement.
 
-No per-module `AgentCommonConfig` branching, `isV3Preview()` checks, or bespoke logging are
-needed — the marker string plus the statically imported `expandDeprecatedNames` call is the
-entire change.
+Choose preview names using the module-directory primary and applicable component, role, feature,
+and umbrella secondaries. Preserve the existing names and order outside preview, using
+`expandDeprecatedNames` for renamed aliases. The helper handles deprecated-key detection and
+logging; do not add bespoke logging in each module.
 
 ### 2. Emitted instrumentation scope name (`INSTRUMENTATION_NAME` in `*Singletons`)
 

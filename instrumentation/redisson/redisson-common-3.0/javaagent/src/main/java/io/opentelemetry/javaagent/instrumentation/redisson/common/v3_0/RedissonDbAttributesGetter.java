@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -25,12 +23,6 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   public String getDbNamespace(RedissonRequest request) {
     Long databaseIndex = request.getDatabaseIndex();
     return databaseIndex != null ? String.valueOf(databaseIndex) : null;
-  }
-
-  @Nullable
-  @Override
-  public String getDbName(RedissonRequest request) {
-    return null;
   }
 
   @Override
@@ -54,10 +46,6 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Nullable
   @Override
   public String getServerAddress(RedissonRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      InetSocketAddress address = request.getAddress();
-      return address != null ? address.getHostString() : null;
-    }
     RedisServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
@@ -65,10 +53,6 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Nullable
   @Override
   public Integer getServerPort(RedissonRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      InetSocketAddress address = request.getAddress();
-      return address != null ? address.getPort() : null;
-    }
     RedisServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
   }

@@ -16,7 +16,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class SpringKafkaInstrumentationModule extends InstrumentationModule {
   public SpringKafkaInstrumentationModule() {
-    super("spring-kafka", "spring-kafka-2.7");
+    super("spring-kafka-2.7", "spring-kafka");
   }
 
   @Override

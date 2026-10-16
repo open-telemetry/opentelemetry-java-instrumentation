@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -103,10 +102,8 @@ class KafkaCamelTest {
                           () -> assertThat(exchange.getIn().getBody()).isEqualTo("test message"));
                       ConsumerRecords<String, String> records = nestedConsumer.poll(30_000);
                       nestedRecordReceived.set(!records.isEmpty());
-                      if (emitStableMessagingSemconv()) {
-                        for (ConsumerRecord<String, String> ignored : records) {
-                          nestedRecordProcessed.set(true);
-                        }
+                      for (ConsumerRecord<String, String> ignored : records) {
+                        nestedRecordProcessed.set(true);
                       }
                       processingCompleted.countDown();
                       throw new IllegalStateException("test");
@@ -138,47 +135,45 @@ class KafkaCamelTest {
     assertThat(received.await(1, MINUTES)).isTrue();
     assertThat(processingCompleted.await(1, MINUTES)).isTrue();
     assertThat(nestedRecordReceived).isTrue();
-    assertThat(nestedRecordProcessed.get()).isEqualTo(emitStableMessagingSemconv());
+    assertThat(nestedRecordProcessed.get()).isTrue();
 
-    testing.waitForTraces(emitStableMessagingSemconv() && !CAMEL_DISABLED ? 3 : 2);
-    if (emitStableMessagingSemconv()) {
-      await()
-          .atMost(Duration.ofSeconds(30))
-          .untilAsserted(
-              () -> {
-                List<SpanData> processSpans =
-                    testing.spans().stream()
-                        .filter(
-                            span ->
-                                span.getName().equals("process " + TOPIC)
-                                    || span.getName().equals(TOPIC + " process"))
-                        .collect(toList());
-                assertThat(processSpans).hasSize(1);
-                SpanData process = processSpans.get(0);
-                assertThat(process.getInstrumentationScopeInfo().getName())
-                    .isEqualTo(
-                        CAMEL_DISABLED || ADAPTER_DISABLED
-                            ? "io.opentelemetry.kafka-clients-0.11"
-                            : "io.opentelemetry.camel-2.20");
-                assertThat(testing.spans())
-                    .filteredOn(span -> span.getName().equals("camel-handler"))
-                    .singleElement()
-                    .satisfies(
-                        handler ->
-                            assertThat(handler.getParentSpanId()).isEqualTo(process.getSpanId()));
-                SpanData nestedProcess = nestedProcessSpan();
-                assertThat(testing.spans())
-                    .filteredOn(span -> span.getSpanId().equals(nestedProcess.getParentSpanId()))
-                    .singleElement()
-                    .satisfies(
-                        parent ->
-                            assertThat(parent.getInstrumentationScopeInfo().getName())
-                                .isEqualTo(
-                                    CAMEL_DISABLED || ADAPTER_DISABLED
-                                        ? "io.opentelemetry.kafka-clients-0.11"
-                                        : "io.opentelemetry.camel-2.20"));
-              });
-    }
+    testing.waitForTraces(!CAMEL_DISABLED ? 3 : 2);
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<SpanData> processSpans =
+                  testing.spans().stream()
+                      .filter(
+                          span ->
+                              span.getName().equals("process " + TOPIC)
+                                  || span.getName().equals(TOPIC + " process"))
+                      .collect(toList());
+              assertThat(processSpans).hasSize(1);
+              SpanData process = processSpans.get(0);
+              assertThat(process.getInstrumentationScopeInfo().getName())
+                  .isEqualTo(
+                      CAMEL_DISABLED || ADAPTER_DISABLED
+                          ? "io.opentelemetry.kafka-clients-0.11"
+                          : "io.opentelemetry.camel-2.20");
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().equals("camel-handler"))
+                  .singleElement()
+                  .satisfies(
+                      handler ->
+                          assertThat(handler.getParentSpanId()).isEqualTo(process.getSpanId()));
+              SpanData nestedProcess = nestedProcessSpan();
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getSpanId().equals(nestedProcess.getParentSpanId()))
+                  .singleElement()
+                  .satisfies(
+                      parent ->
+                          assertThat(parent.getInstrumentationScopeInfo().getName())
+                              .isEqualTo(
+                                  CAMEL_DISABLED || ADAPTER_DISABLED
+                                      ? "io.opentelemetry.kafka-clients-0.11"
+                                      : "io.opentelemetry.camel-2.20"));
+            });
     if (!CAMEL_DISABLED && !ADAPTER_DISABLED) {
       assertSendAndProcessMetrics(
           testing, "kafka", TOPIC, IllegalStateException.class.getName(), "0");

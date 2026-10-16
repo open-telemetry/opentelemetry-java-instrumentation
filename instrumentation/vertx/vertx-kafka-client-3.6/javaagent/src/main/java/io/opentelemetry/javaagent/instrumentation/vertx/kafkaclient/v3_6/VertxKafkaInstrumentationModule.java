@@ -16,7 +16,7 @@ import java.util.List;
 public class VertxKafkaInstrumentationModule extends InstrumentationModule {
 
   public VertxKafkaInstrumentationModule() {
-    super("vertx-kafka-client", "vertx-kafka-client-3.6", "vertx");
+    super("vertx-kafka-client-3.6", "vertx-kafka-client", "vertx");
   }
 
   @Override

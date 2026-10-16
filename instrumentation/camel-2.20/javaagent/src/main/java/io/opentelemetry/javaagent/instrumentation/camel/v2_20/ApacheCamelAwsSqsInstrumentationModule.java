@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ApacheCamelAwsSqsInstrumentationModule extends InstrumentationModule {
 
   public ApacheCamelAwsSqsInstrumentationModule() {
-    super("camel", "camel-2.20", "camel-aws-sqs");
+    super("camel-2.20", "camel-aws-sqs", "camel");
   }
 
   @Override

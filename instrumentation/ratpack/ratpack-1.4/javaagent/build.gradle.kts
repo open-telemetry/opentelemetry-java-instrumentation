@@ -7,7 +7,7 @@ muzzle {
     group.set("io.ratpack")
     module.set("ratpack-core")
     versions.set("[1.4.0,)")
-    excludeInstrumentationName("ratpack-1.7")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.RatpackHttpClientInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -16,7 +16,7 @@ muzzle {
     module.set("ratpack-core")
     versions.set("[1.7.0,)")
     assertInverse.set(true)
-    excludeInstrumentationName("ratpack-1.4")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.RatpackInstrumentationModule")
     excludeInstrumentationName("netty-4.1")
   }
 }
@@ -70,20 +70,9 @@ val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
 }
 
 tasks {
-  processResources {
-    // Preserve the legacy HTTP client scope version outside v3-preview.
-    // TODO: Remove in 3.0 when the HTTP client always uses the ratpack-1.4 scope.
-    from(named("generateInstrumentationVersionFile")) {
-      include("io.opentelemetry.ratpack-1.4.properties")
-      rename { "io.opentelemetry.ratpack-1.7.properties" }
-      into("META-INF/io/opentelemetry/instrumentation")
-    }
-  }
-
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
@@ -91,33 +80,23 @@ tasks {
     systemProperty("ratpack14Test", true)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
     systemProperty("ratpack14Test", true)
   }
 
-  val version17TestStableSemconv = register<Test>("version17TestStableSemconv") {
+  val version17TestPreviewSemconv = register<Test>("version17TestPreviewSemconv") {
     testClassesDirs = version17Test.get().sources.output.classesDirs
     classpath = version17Test.get().sources.runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-  }
-
-  val version17TestV3Preview = register<Test>("version17TestV3Preview") {
-    testClassesDirs = version17Test.get().sources.output.classesDirs
-    classpath = version17Test.get().sources.runtimeClasspath
-    filter {
-      includeTestsMatching("*RatpackHttpClientTest.durationMetricHasProtocolVersion")
-    }
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true,otel.instrumentation.common.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, version17TestStableSemconv, version17TestV3Preview)
+    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv)
   }
 
   if (otelProps.denyUnsafe) {

@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -20,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -30,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -46,7 +42,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
@@ -63,13 +58,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractSqsSuppressReceiveSpansTest {
+public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdkTest {
 
   private static int sqsPort;
   private static SQSRestServer sqsRestServer;
   private static AmazonSQSAsync sqsClient;
-
-  protected abstract InstrumentationExtension testing();
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
@@ -114,12 +107,10 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
     testing()
         .waitAndAssertTraces(
+            trace -> trace.hasSpansSatisfyingExactly(this::createQueueSpan),
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    AbstractSqsSuppressReceiveSpansTest::createQueueSpan),
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    AbstractSqsSuppressReceiveSpansTest::publishSpan,
+                    this::publishSpan,
                     span -> processSpan(span, trace.getSpan(0), trace.getSpan(0)),
                     span ->
                         span.hasName("process child")
@@ -129,7 +120,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   @Test
   void testAbandonedIteratorDoesNotParentNextProcessSpan() {
-    assumeTrue(emitStableMessagingSemconv());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
 
@@ -199,11 +189,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
           .isEqualTo(Span.fromContext(previous).getSpanContext());
     }
     assertThat(testing().spans())
-        .filteredOn(
-            span ->
-                span.getName()
-                    .equals(
-                        emitStableMessagingSemconv() ? "process testSdkSqs" : "testSdkSqs process"))
+        .filteredOn(span -> span.getName().equals("process testSdkSqs"))
         .hasSize(iteratorTraversal ? 1 : 0);
     if (iteratorTraversal) {
       SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
@@ -223,17 +209,12 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
     assertThat(unused).isNotNull();
     messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     assertThat(testing().spans())
-        .filteredOn(
-            span ->
-                span.getName()
-                    .equals(
-                        emitStableMessagingSemconv() ? "process testSdkSqs" : "testSdkSqs process"))
+        .filteredOn(span -> span.getName().equals("process testSdkSqs"))
         .isEmpty();
   }
 
   @Test
   void testSublistTraversalDoesNotTraceOrDisableResponse() {
-    assumeTrue(emitStableMessagingSemconv());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
@@ -255,7 +236,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   @Test
   void testNestedTraversalRestoresOuterProcessScope() {
-    assumeTrue(emitStableMessagingSemconv());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessage(new SendMessageRequest(queueUrl, "outer"));
@@ -305,14 +285,12 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
     // with an ambient span the process span is parented to it rather than to the message creation
     // context, which puts it in the same trace as the ambient span
-    boolean processInParentTrace = emitStableMessagingSemconv();
+
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
 
     testing()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    AbstractSqsSuppressReceiveSpansTest::createQueueSpan),
+            trace -> trace.hasSpansSatisfyingExactly(this::createQueueSpan),
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
               spanAsserts.add(
@@ -320,14 +298,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                     publishSpan.set(trace.getSpan(0));
                     publishSpan(span);
                   });
-              if (!processInParentTrace) {
-                spanAsserts.add(span -> processSpan(span, trace.getSpan(0), trace.getSpan(0)));
-                spanAsserts.add(
-                    span ->
-                        span.hasName("process child")
-                            .hasParent(trace.getSpan(1))
-                            .hasTotalAttributeCount(0));
-              }
+
               trace.hasSpansSatisfyingExactly(spanAsserts);
             },
             trace -> {
@@ -342,25 +313,23 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                            * HTTP instrumentation span would appear)
                            */
                           span -> receiveMessageSdkSpan(span, trace.getSpan(0))));
-              if (processInParentTrace) {
-                spanAsserts.add(span -> processSpan(span, trace.getSpan(0), publishSpan.get()));
-                spanAsserts.add(
-                    span ->
-                        span.hasName("process child")
-                            .hasParent(trace.getSpan(2))
-                            .hasTotalAttributeCount(0));
-              }
+              spanAsserts.add(span -> processSpan(span, trace.getSpan(0), publishSpan.get()));
+              spanAsserts.add(
+                  span ->
+                      span.hasName("process child")
+                          .hasParent(trace.getSpan(2))
+                          .hasTotalAttributeCount(0));
               trace.hasSpansSatisfyingExactly(spanAsserts);
             });
   }
 
-  private static void createQueueSpan(SpanDataAssert span) {
+  private void createQueueSpan(SpanDataAssert span) {
     span.hasName("SQS.CreateQueue")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+            equalTo(stringKey("aws.queue.name"), experimental("testSdkSqs")),
             satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "AmazonSQS"),
@@ -373,12 +342,12 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 
-  private static void publishSpan(SpanDataAssert span) {
-    span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
+  private void publishSpan(SpanDataAssert span) {
+    span.hasName("send testSdkSqs")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(AWS_SQS_QUEUE_URL, "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
             satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
             equalTo(RPC_SYSTEM, "aws-api"),
@@ -391,19 +360,18 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+            equalTo(MESSAGING_OPERATION_NAME, "send"),
+            equalTo(MESSAGING_OPERATION_TYPE, "send"),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 
-  private static void processSpan(SpanDataAssert span, SpanData parent, SpanData creationContext) {
-    span.hasName(emitStableMessagingSemconv() ? "process testSdkSqs" : "testSdkSqs process")
+  private void processSpan(SpanDataAssert span, SpanData parent, SpanData creationContext) {
+    span.hasName("process testSdkSqs")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(AWS_SQS_QUEUE_URL, "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
             satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
             equalTo(RPC_SYSTEM, "aws-api"),
@@ -416,33 +384,28 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
 
-    if (emitStableMessagingSemconv()) {
-      // the creation context is linked even when it is also this span's parent
-      span.hasLinksSatisfying(
-          links ->
-              assertThat(links)
-                  .singleElement()
-                  .satisfies(
-                      link ->
-                          assertThat(link.getSpanContext().getSpanId())
-                              .isEqualTo(creationContext.getSpanId())));
-    } else {
-      span.hasTotalRecordedLinks(0);
-    }
+    // the creation context is linked even when it is also this span's parent
+    span.hasLinksSatisfying(
+        links ->
+            assertThat(links)
+                .singleElement()
+                .satisfies(
+                    link ->
+                        assertThat(link.getSpanContext().getSpanId())
+                            .isEqualTo(creationContext.getSpanId())));
   }
 
-  private static void receiveMessageSdkSpan(SpanDataAssert span, SpanData parent) {
+  private void receiveMessageSdkSpan(SpanDataAssert span, SpanData parent) {
     span.hasName("SQS.ReceiveMessage")
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(AWS_SQS_QUEUE_URL, "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
             satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
             equalTo(RPC_SYSTEM, "aws-api"),

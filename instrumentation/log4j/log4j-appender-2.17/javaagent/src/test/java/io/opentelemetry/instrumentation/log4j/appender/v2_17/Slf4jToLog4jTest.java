@@ -6,11 +6,12 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -105,9 +106,10 @@ class Slf4jToLog4jTest {
 
             List<AttributeAssertion> attributeAsserts =
                 new ArrayList<>(threadAttributesAssertions());
-            attributeAsserts.addAll(
-                codeFunctionAssertions(Slf4jToLog4jTest.class, "performLogging"));
-            attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
+            attributeAsserts.add(
+                equalTo(CODE_FUNCTION_NAME, Slf4jToLog4jTest.class.getName() + ".performLogging"));
+            attributeAsserts.add(equalTo(CODE_FILE_PATH, "Slf4jToLog4jTest.java"));
+            attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
             if (logException) {
               attributeAsserts.addAll(
                   asList(
@@ -142,8 +144,10 @@ class Slf4jToLog4jTest {
     }
 
     List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
-    attributeAsserts.addAll(codeFunctionAssertions(Slf4jToLog4jTest.class, "testMdc"));
-    attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
+    attributeAsserts.add(
+        equalTo(CODE_FUNCTION_NAME, Slf4jToLog4jTest.class.getName() + ".testMdc"));
+    attributeAsserts.add(equalTo(CODE_FILE_PATH, "Slf4jToLog4jTest.java"));
+    attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
     attributeAsserts.add(equalTo(stringKey("key1"), "val1"));
     attributeAsserts.add(equalTo(stringKey("key2"), "val2"));
 
@@ -165,8 +169,10 @@ class Slf4jToLog4jTest {
     logger.info(marker, "Message");
 
     List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
-    attributeAsserts.addAll(codeFunctionAssertions(Slf4jToLog4jTest.class, "testMarker"));
-    attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
+    attributeAsserts.add(
+        equalTo(CODE_FUNCTION_NAME, Slf4jToLog4jTest.class.getName() + ".testMarker"));
+    attributeAsserts.add(equalTo(CODE_FILE_PATH, "Slf4jToLog4jTest.java"));
+    attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
     attributeAsserts.add(equalTo(stringKey("log4j.marker"), markerName));
 
     testing.waitAndAssertLogRecords(

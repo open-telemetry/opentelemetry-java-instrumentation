@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GwtInstrumentationModule extends InstrumentationModule {
 
   public GwtInstrumentationModule() {
-    super("gwt", "gwt-2.0");
+    super("gwt-2.0", "gwt");
   }
 
   @Override

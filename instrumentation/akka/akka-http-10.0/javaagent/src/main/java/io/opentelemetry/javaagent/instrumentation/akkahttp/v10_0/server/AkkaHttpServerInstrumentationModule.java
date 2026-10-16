@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
   public AkkaHttpServerInstrumentationModule() {
-    super("akka-http", "akka-http-10.0", "akka-http-server");
+    super("akka-http-10.0", "akka-http-server", "akka-http", "akka");
   }
 
   @Override

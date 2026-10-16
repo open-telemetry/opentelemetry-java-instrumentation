@@ -87,9 +87,6 @@ class Log4jMdcSelectorTest {
         // the deprecated setting matches keys literally, so "*" does not capture every key
         expectedKeys = singletonList("legacy");
         break;
-      case "precedence":
-        expectedKeys = singletonList("new");
-        break;
       case "exclude-only":
         expectedKeys = asList("exact", "prefix.value", "single1", "single22", "legacy", "new");
         break;

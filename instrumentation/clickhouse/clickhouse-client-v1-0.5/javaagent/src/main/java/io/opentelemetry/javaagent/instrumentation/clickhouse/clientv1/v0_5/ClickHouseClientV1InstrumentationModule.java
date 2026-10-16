@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ClickHouseClientV1InstrumentationModule extends InstrumentationModule {
 
   public ClickHouseClientV1InstrumentationModule() {
-    super("clickhouse-client-v1", "clickhouse-client-v1-0.5", "clickhouse", "clickhouse-client");
+    super("clickhouse-client-v1-0.5", "clickhouse-client-v1", "clickhouse-client");
   }
 
   @Override

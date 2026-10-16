@@ -1,6 +1,17 @@
 file_format: 1.1
 
 tracer_provider:
+  sampler:
+    composite/development:
+      rule_based:
+        rules:
+          - attribute_patterns:
+              key: url.path
+              included: ["/actuator*"]
+            sampler:
+              always_off:
+          - sampler:
+              always_on:
   processors:
     - batch:
         schedule_delay: 10

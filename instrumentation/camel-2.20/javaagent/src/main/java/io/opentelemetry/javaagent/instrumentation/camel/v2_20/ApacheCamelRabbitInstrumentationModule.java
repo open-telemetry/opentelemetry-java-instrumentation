@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ApacheCamelRabbitInstrumentationModule extends InstrumentationModule {
 
   public ApacheCamelRabbitInstrumentationModule() {
-    super("camel", "camel-2.20", "camel-rabbitmq");
+    super("camel-2.20", "camel-rabbitmq", "camel");
   }
 
   @Override

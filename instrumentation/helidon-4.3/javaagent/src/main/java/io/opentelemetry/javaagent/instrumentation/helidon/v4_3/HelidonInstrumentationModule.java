@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class HelidonInstrumentationModule extends InstrumentationModule {
   public HelidonInstrumentationModule() {
-    super("helidon", "helidon-4.3");
+    super("helidon-4.3", "helidon");
   }
 
   @Override

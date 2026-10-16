@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -45,9 +44,6 @@ final class RocketMqProducerAttributeGetter
     if (message == null) {
       return null;
     }
-    if (!emitStableMessagingSemconv()) {
-      return message.getTopic();
-    }
     return RocketMqNamespaceUtil.withoutNamespace(
         message.getTopic(), RocketMqNamespaceUtil.getNamespace(request));
   }
@@ -71,18 +67,6 @@ final class RocketMqProducerAttributeGetter
   @Nullable
   @Override
   public String getConversationId(SendMessageContext request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageBodySize(SendMessageContext request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SendMessageContext request) {
     return null;
   }
 
@@ -113,6 +97,9 @@ final class RocketMqProducerAttributeGetter
     if (!isBatch(request)) {
       return null;
     }
+    if (request instanceof RocketMqProducerWrapper.BatchSendContext) {
+      return ((RocketMqProducerWrapper.BatchSendContext) request).messageCount;
+    }
     if (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
       return RocketMqBatchSendSpanLinksExtractor.getBatchMessageCount(request);
     }
@@ -124,9 +111,9 @@ final class RocketMqProducerAttributeGetter
   }
 
   private static boolean isBatch(SendMessageContext request) {
-    return emitStableMessagingSemconv()
-        && (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)
-            || RocketMqMessageUtil.isBatch(request.getMessage()));
+    return RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)
+        || request instanceof RocketMqProducerWrapper.BatchSendContext
+        || RocketMqMessageUtil.isBatch(request.getMessage());
   }
 
   @Override

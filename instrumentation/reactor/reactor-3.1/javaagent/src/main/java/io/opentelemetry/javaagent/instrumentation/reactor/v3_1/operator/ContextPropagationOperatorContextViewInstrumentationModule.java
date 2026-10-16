@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,11 +19,7 @@ public class ContextPropagationOperatorContextViewInstrumentationModule
     extends InstrumentationModule {
 
   public ContextPropagationOperatorContextViewInstrumentationModule() {
-    super(
-        "reactor",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"reactor-3.1", "reactor-3.1-context-propagation-operator-context-view"}
-            : new String[] {"reactor-3.4", "reactor-context-propagation-operator"});
+    super("reactor-3.1", "reactor");
   }
 
   @Override

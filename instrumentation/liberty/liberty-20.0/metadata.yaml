@@ -53,3 +53,4 @@ configurations:
     default: ""
     deprecated: true
     replaced_by: otel.instrumentation.servlet.experimental.request-parameters.included
+  - ref: common.user.name.enabled
