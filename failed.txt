@@ -18,3 +18,4 @@ vertx-redis-client-4.0:javaagent-unit-tests	2026-09-24T15:36:13Z	agent_result=fa
 kafka-clients-0.11:javaagent-unit-tests	2026-09-29T01:51:23Z	agent artifact missing cleanup.patch/cleanup.noop
 mongo-3.1:javaagent-unit-tests	2026-09-30T18:43:11Z	agent_result=failure
 jaxrs-1.0-annotations:javaagent	2026-10-02T18:42:55Z	agent artifact missing cleanup.patch/cleanup.noop
+spring-ai-1.0:javaagent	2026-10-16T07:39:47Z	agent artifact missing cleanup.patch/cleanup.noop
