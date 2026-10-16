@@ -5,8 +5,5 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
-/**
- * Loaded only via {@link Class#forName} from {@link WiringTestAgentExtension}, never referenced
- * directly - see {@link TransformationTrackingWiringTest} for why.
- */
+/** First loaded by the application logger in {@link CircularityLockWiringTest}. */
 final class WiringTestProbeClass {}

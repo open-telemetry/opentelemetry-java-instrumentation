@@ -8,106 +8,105 @@ package io.opentelemetry.javaagent.logging.application;
 import static io.opentelemetry.javaagent.bootstrap.InternalLogger.Level.INFO;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
-import io.opentelemetry.javaagent.bootstrap.internal.InTransformation;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.AfterEach;
+import io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class TransformSafeApplicationLoggerFactoryTest {
 
-  @AfterEach
-  void leaveTransformation() {
-    while (InTransformation.get()) {
-      InTransformation.exit();
+  @Mock InternalLogger.Factory delegate;
+  @Mock InternalLogger applicationLogger;
+
+  @Test
+  void createsDelegateLazily() {
+    InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
+
+    assertThat(logger.name()).isEqualTo("test");
+    verifyNoInteractions(delegate);
+  }
+
+  @Test
+  void logsAndChecksLevelOutsideLock() {
+    when(delegate.create("test")).thenReturn(applicationLogger);
+    when(applicationLogger.isLoggable(INFO)).thenReturn(true);
+    InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
+    Throwable error = new IllegalStateException("test");
+
+    assertThat(logger.isLoggable(INFO)).isTrue();
+    logger.log(INFO, "message", error);
+
+    verify(delegate).create("test");
+    verify(applicationLogger).isLoggable(INFO);
+    verify(applicationLogger).log(INFO, "message", error);
+    verifyNoMoreInteractions(delegate, applicationLogger);
+  }
+
+  @Test
+  void doesNotCreateOrCallDelegateUnderLock() {
+    assertThat(AgentCircularityLock.INSTANCE.acquire()).isTrue();
+    try {
+      InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
+      assertThat(logger.name()).isEqualTo("test");
+      assertThat(logger.isLoggable(INFO)).isFalse();
+      logger.log(INFO, "suppressed", null);
+      verifyNoInteractions(delegate, applicationLogger);
+    } finally {
+      AgentCircularityLock.INSTANCE.release();
     }
   }
 
   @Test
-  void shouldLogDirectlyWhenNotInTransformation() throws Exception {
-    RecordingFactory delegate = new RecordingFactory();
+  void doesNotCallInitializedDelegateUnderLock() {
+    when(delegate.create("test")).thenReturn(applicationLogger);
     InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
+    logger.log(INFO, "before", null);
+    verify(delegate).create("test");
+    verify(applicationLogger).log(INFO, "before", null);
 
-    logger.log(INFO, "a", null);
-
-    assertThat(delegate.await()).isTrue();
-    assertThat(delegate.message.get()).isEqualTo("a");
-    assertThat(delegate.loggedOn.get()).isSameAs(Thread.currentThread());
-  }
-
-  @Test
-  void shouldNotCallApplicationLoggerOnAThreadInsideATransformation() {
-    RecordingFactory delegate = new RecordingFactory();
-    InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
-
-    InTransformation.enter();
-    logger.log(INFO, "a", null);
-
-    // the record is dropped, not queued - the delegate is never called at all
-    assertThat(delegate.logged.getCount()).isEqualTo(1);
-    assertThat(delegate.createdOn.get()).isNull();
-  }
-
-  @Test
-  void shouldNotCreateTheBridgedLoggerOnAThreadInsideATransformation() {
-    RecordingFactory delegate = new RecordingFactory();
-    InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
-
-    InTransformation.enter();
-    logger.log(INFO, "a", null);
-
-    // creating the bridged logger calls into the application logging system as well, so it must
-    // not happen on the transforming thread either
-    assertThat(delegate.createdOn.get()).isNull();
-  }
-
-  @Test
-  void shouldNotBeLoggableWhileInTransformation() {
-    RecordingFactory delegate = new RecordingFactory();
-    InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
-
-    InTransformation.enter();
-
-    // the application logging system can't be consulted here, so the caller should skip
-    // building the record entirely
-    assertThat(logger.isLoggable(INFO)).isFalse();
-    assertThat(delegate.createdOn.get()).isNull();
-  }
-
-  private static final class RecordingFactory implements InternalLogger.Factory {
-
-    final AtomicReference<Thread> createdOn = new AtomicReference<>();
-    final AtomicReference<Thread> loggedOn = new AtomicReference<>();
-    final AtomicReference<String> message = new AtomicReference<>();
-    final CountDownLatch logged = new CountDownLatch(1);
-
-    boolean await() throws InterruptedException {
-      return logged.await(10, SECONDS);
+    assertThat(AgentCircularityLock.INSTANCE.acquire()).isTrue();
+    try {
+      assertThat(logger.isLoggable(INFO)).isFalse();
+      logger.log(INFO, "suppressed", null);
+      verifyNoMoreInteractions(delegate, applicationLogger);
+    } finally {
+      AgentCircularityLock.INSTANCE.release();
     }
 
-    @Override
-    public InternalLogger create(String name) {
-      createdOn.set(Thread.currentThread());
-      return new InternalLogger() {
-        @Override
-        public boolean isLoggable(Level level) {
-          return true;
-        }
+    logger.log(INFO, "after", null);
+    verify(applicationLogger).log(INFO, "after", null);
+    verifyNoMoreInteractions(delegate, applicationLogger);
+  }
 
-        @Override
-        public void log(Level level, String message, Throwable error) {
-          loggedOn.set(Thread.currentThread());
-          RecordingFactory.this.message.set(message);
-          logged.countDown();
-        }
+  @Test
+  void doesNotSuppressOtherThreads() throws Exception {
+    when(delegate.create("test")).thenReturn(applicationLogger);
+    when(applicationLogger.isLoggable(INFO)).thenReturn(true);
+    InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
 
-        @Override
-        public String name() {
-          return name;
-        }
-      };
+    assertThat(AgentCircularityLock.INSTANCE.acquire()).isTrue();
+    try {
+      CompletableFuture.runAsync(
+              () -> {
+                assertThat(logger.isLoggable(INFO)).isTrue();
+                logger.log(INFO, "other thread", null);
+              })
+          .get(10, SECONDS);
+      verify(delegate).create("test");
+      verify(applicationLogger).isLoggable(INFO);
+      verify(applicationLogger).log(INFO, "other thread", null);
+      verifyNoMoreInteractions(delegate, applicationLogger);
+    } finally {
+      AgentCircularityLock.INSTANCE.release();
     }
   }
 }

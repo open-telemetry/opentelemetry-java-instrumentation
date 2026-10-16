@@ -5,8 +5,5 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
-/**
- * Loaded only via {@link Class#forName} from {@link TransformationTrackingWiringTest}, never
- * referenced directly - see that class for why.
- */
+/** Loaded on demand by {@link CircularityLockWiringTest}. */
 final class WiringTestTriggerClass {}

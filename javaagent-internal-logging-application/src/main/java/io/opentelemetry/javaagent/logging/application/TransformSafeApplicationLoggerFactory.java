@@ -6,17 +6,14 @@
 package io.opentelemetry.javaagent.logging.application;
 
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
-import io.opentelemetry.javaagent.bootstrap.internal.InTransformation;
+import io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock;
 import javax.annotation.Nullable;
 
 /**
- * Wraps the application logger factory so that the agent never calls into the application logging
- * system while a class file transformation is in progress on the current thread.
+ * Keeps application logger creation and calls outside Byte Buddy's circularity lock.
  *
- * <p>Writing a log record from inside a transformation makes the logging framework load classes,
- * and classes loaded in that window are defined without instrumentation - which silently disables
- * the instrumentation of the very framework the agent is logging through. Records raised in that
- * window are dropped instead.
+ * <p>Application logging can load classes that would miss instrumentation while the lock is held.
+ * Records raised in that window are dropped.
  */
 final class TransformSafeApplicationLoggerFactory implements InternalLogger.Factory {
 
@@ -42,9 +39,7 @@ final class TransformSafeApplicationLoggerFactory implements InternalLogger.Fact
 
     @Override
     public boolean isLoggable(InternalLogger.Level level) {
-      if (InTransformation.get()) {
-        // the application logging system can't be consulted here, so let the caller skip
-        // building the record entirely
+      if (AgentCircularityLock.INSTANCE.isHeldByCurrentThread()) {
         return false;
       }
       return actual().isLoggable(level);
@@ -52,9 +47,7 @@ final class TransformSafeApplicationLoggerFactory implements InternalLogger.Fact
 
     @Override
     public void log(InternalLogger.Level level, String message, @Nullable Throwable error) {
-      if (InTransformation.get()) {
-        // callers that don't check isLoggable() first still have to be safe here - drop the
-        // record rather than call into the application logging system
+      if (AgentCircularityLock.INSTANCE.isHeldByCurrentThread()) {
         return;
       }
       actual().log(level, message, error);
@@ -65,8 +58,7 @@ final class TransformSafeApplicationLoggerFactory implements InternalLogger.Fact
       return name;
     }
 
-    // created lazily - instantiating the bridged logger calls into the application logging system,
-    // which must not happen while a transformation is in progress
+    // Creating the bridged logger calls into the application's logging system.
     private InternalLogger actual() {
       InternalLogger logger = actual;
       if (logger == null) {
