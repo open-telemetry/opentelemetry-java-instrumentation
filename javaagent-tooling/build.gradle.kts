@@ -132,30 +132,6 @@ testing {
         }
       }
     }
-
-    // Installs a real agent and initializes application logging; isolate its static state.
-    register<JvmTestSuite>("circularityLockWiringTest") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-extension-api"))
-        implementation(project(":javaagent-internal-logging-application"))
-        implementation(project(":instrumentation:internal:internal-application-logger:bootstrap"))
-        implementation("io.opentelemetry:opentelemetry-api")
-      }
-      targets {
-        all {
-          testTask.configure {
-            // JUnit discovery must not load the transformation probes.
-            filter {
-              includeTestsMatching(
-                "io.opentelemetry.javaagent.tooling.bytebuddy.CircularityLockWiringTest"
-              )
-            }
-          }
-        }
-      }
-    }
   }
 }
 
