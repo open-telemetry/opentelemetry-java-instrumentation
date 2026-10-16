@@ -126,6 +126,9 @@ public abstract class HandlerData {
     if (baseMethod.getReturnType().equals(candidate.getReturnType())) {
       return true;
     }
+    // Allow covariant return types: baseMethod is the overriding method, so its return type
+    // may be a subtype of candidate's return type. This requires an accessible instance
+    // method that can be overridden.
     int baseModifiers = baseMethod.getModifiers();
     int candidateModifiers = candidate.getModifiers();
     return !Modifier.isStatic(baseModifiers)
