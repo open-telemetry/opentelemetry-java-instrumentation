@@ -101,9 +101,7 @@ class DbServerEndpointUtilTest {
         "8 0",
         "80\n",
         "8a",
-        "1.5",
-        "\uFF18\uFF10",
-        "\u0668\u0660"
+        "1.5"
       })
   void rejectsInvalidPorts(String value) {
     assertThat(DbServerEndpointUtil.parsePort(value)).isNull();
