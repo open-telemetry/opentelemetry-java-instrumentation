@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
@@ -48,10 +49,13 @@ import io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.app.TestChatMod
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
@@ -66,6 +70,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class ChatModelTest {
@@ -232,9 +237,8 @@ class ChatModelTest {
   void stream() {
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
-    SpanContext parentSpanContext = testing.waitForTraces(1).get(0).get(0).getSpanContext();
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    assertCurrentSpanContext(chatModel.getLastSpanContext(), parentSpanContext);
+    assertCurrentSpanContext(chatModel.getLastSpanContext(), spanContext);
     assertTraces("test", true);
     assertMessageEvents(spanContext);
   }
@@ -263,9 +267,25 @@ class ChatModelTest {
 
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
-    SpanContext parentSpanContext = testing.waitForTraces(1).get(0).get(0).getSpanContext();
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    assertCurrentSpanContext(delegate.getLastSpanContext(), parentSpanContext);
+    assertCurrentSpanContext(delegate.getLastSpanContext(), spanContext);
+    assertTraces("test", true);
+    assertMetrics();
+    assertMessageEvents(spanContext);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void streamSuppressesProviderCallDuringSubscription(boolean asynchronous) {
+    TestChatModel provider = new TestChatModel(defaultOptions());
+    Flux<ChatResponse> providerCall = Flux.defer(() -> Flux.just(provider.call(prompt())));
+    chatModel.setStreamPublisher(
+        asynchronous ? providerCall.subscribeOn(Schedulers.boundedElastic()) : providerCall);
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertCurrentSpanContext(provider.getLastSpanContext(), spanContext);
     assertTraces("test", true);
     assertMetrics();
     assertMessageEvents(spanContext);
@@ -285,6 +305,80 @@ class ChatModelTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void streamNestedInDownstreamCallbackWithoutParentIsInstrumented() {
+    chatModel.stream(prompt())
+        .flatMap(
+            response -> {
+              assertThat(Span.current().getSpanContext().isValid()).isFalse();
+              return chatModel.stream(new Prompt("Tell me more about traces"));
+            })
+        .blockLast();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasNoParent()));
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void streamTerminalCallbacksWithoutParentUseRoot(boolean fails) {
+    IllegalStateException failure = new IllegalStateException("stream failed");
+    chatModel.setStreamPublisher(fails ? Flux.error(failure) : Flux.empty());
+
+    chatModel.stream(prompt())
+        .doOnSubscribe(
+            subscription -> assertThat(Span.current().getSpanContext().isValid()).isFalse())
+        .doOnError(error -> assertThat(Span.current().getSpanContext().isValid()).isFalse())
+        .doOnComplete(() -> assertThat(Span.current().getSpanContext().isValid()).isFalse())
+        .onErrorComplete(failure::equals)
+        .blockLast();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("chat " + MODEL)
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasStatus(fails ? StatusData.error() : StatusData.unset())
+                        .hasException(fails ? failure : null)));
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+  }
+
+  @Test
+  void streamRequestAndCancellationUseChatContext() {
+    ChatResponse response = new ChatResponse(singletonList(generation(RESPONSE, "stop")));
+    List<SpanContext> requestContexts = new ArrayList<>();
+    List<SpanContext> cancellationContexts = new ArrayList<>();
+    chatModel.setStreamPublisher(
+        Flux.concat(Flux.just(response), Flux.<ChatResponse>never())
+            .doOnRequest(n -> requestContexts.add(Span.current().getSpanContext()))
+            .doOnCancel(() -> cancellationContexts.add(Span.current().getSpanContext())));
+
+    ChatResponse result =
+        testing.runWithSpan("parent", () -> chatModel.stream(prompt()).take(1).blockLast());
+
+    assertThat(result).isSameAs(response);
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertThat(requestContexts)
+        .singleElement()
+        .satisfies(current -> assertCurrentSpanContext(current, spanContext));
+    assertThat(cancellationContexts)
+        .singleElement()
+        .satisfies(current -> assertCurrentSpanContext(current, spanContext));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
