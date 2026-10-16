@@ -20,6 +20,11 @@ class Aws2ClientRecordHttpErrorTest extends AbstractAws2ClientRecordHttpErrorTes
   }
 
   @Override
+  public boolean isRecordIndividualHttpErrorEnabled() {
+    return Boolean.getBoolean("test.recordIndividualHttpError");
+  }
+
+  @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(

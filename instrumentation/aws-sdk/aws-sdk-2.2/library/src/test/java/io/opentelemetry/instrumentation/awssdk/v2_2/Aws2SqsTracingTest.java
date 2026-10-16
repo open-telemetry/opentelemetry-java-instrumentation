@@ -26,6 +26,11 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
     return testing;
   }
 
+  @Override
+  protected boolean receiveTelemetryEnabled() {
+    return Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
+  }
+
   @BeforeEach
   void setup() {
     AwsSdkTelemetryBuilder telemetryBuilder =

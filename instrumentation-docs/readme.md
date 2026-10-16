@@ -44,9 +44,13 @@ defaults, not the task name or settings on `test`; the shared synthetic header c
 exception for baseline javaagent suites. The generator merges telemetry with the same label.
 Include only non-default user-facing settings needed to describe this instrumentation's signals,
 span kinds, attributes, metrics, or events, including inherited, fixture, and library-builder settings,
-except for that shared capture. Split or filter collected tasks that would mix profiles under one label.
-Use comma-separated flat `key=value` conditions without `-D`, with consistent spelling and ordering
-for the same mode. Apply settings separately through JVM properties or library APIs.
+except for that shared capture. For settings applied through JVM properties, use flat `key=value`
+conditions without `-D`. For programmatically configured library profiles, use the actual builder
+calls as labels (for example, `AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`)
+instead of javaagent properties that do not configure the library builder. Separate multiple
+conditions or builder calls with commas, using consistent spelling and ordering for the same mode.
+Split or filter collected tasks that would mix profiles under one label. Apply settings separately
+through JVM properties or library APIs.
 Label non-default metric selectors, not Java source-set names; document runtime prerequisites separately.
 
 Omit test setup, such as ports, timeouts, JVM access flags, and unrelated instrumentation settings.

@@ -56,14 +56,15 @@ tasks {
     filter.excludeTestsMatching("SqsTracingTest.testProcessingOwnershipDisablesRawProcessSpansForResponse")
   }
 
-  val experimentalSpanAttributes = "otel.instrumentation.aws-sdk.experimental-span-attributes=true"
-
   val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("metadataConfig", experimentalSpanAttributes)
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
     filter {
       excludeTestsMatching("SqsSuppressReceiveSpansTest")
       excludeTestsMatching("SqsTracingTest.testProcessingOwnershipDisablesRawProcessSpansForResponse")
@@ -78,14 +79,15 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
     systemProperty(
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+      "test.messagingReceiveTelemetryEnabled",
       "true",
     )
     systemProperty(
       "metadataConfig",
-      "$experimentalSpanAttributes,otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+        "AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)",
     )
     filter {
       includeTestsMatching("SqsTracingTest")
@@ -100,10 +102,11 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
     systemProperty(
       "metadataConfig",
-      "$experimentalSpanAttributes,otel.semconv.exception.signal.preview=logs",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+        "otel.semconv.exception.signal.preview=logs",
     )
     filter.includeTestsMatching("S3ClientTest")
   }
@@ -112,8 +115,11 @@ tasks {
     testClassesDirs = sourceSets["testSecretsManager"].output.classesDirs
     classpath = sourceSets["testSecretsManager"].runtimeClasspath
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("metadataConfig", experimentalSpanAttributes)
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
   }
 
   check {

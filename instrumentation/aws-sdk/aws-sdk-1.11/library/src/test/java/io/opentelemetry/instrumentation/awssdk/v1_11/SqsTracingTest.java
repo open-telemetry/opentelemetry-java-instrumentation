@@ -46,6 +46,11 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   }
 
   @Override
+  protected boolean receiveTelemetryEnabled() {
+    return Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
+  }
+
+  @Override
   public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())

@@ -82,14 +82,15 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val experimentalSpanAttributes = "otel.instrumentation.aws-sdk.experimental-span-attributes=true"
-
   val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("metadataConfig", experimentalSpanAttributes)
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
       excludeTestsMatching("Aws2SqsW3cPropagatorTest")
@@ -109,14 +110,15 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
     systemProperty(
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+      "test.messagingReceiveTelemetryEnabled",
       "true",
     )
     systemProperty(
       "metadataConfig",
-      "$experimentalSpanAttributes,otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+        "AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)",
     )
     filter {
       includeTestsMatching("Aws2SqsDefaultPropagatorTest")
@@ -130,10 +132,10 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
+    systemProperty("test.recordIndividualHttpError", "true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.aws-sdk.experimental-record-individual-http-error=true",
+      "AwsSdkTelemetryBuilder.setRecordIndividualHttpError(true)",
     )
     filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
   }
@@ -143,10 +145,11 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
     systemProperty(
       "metadataConfig",
-      "$experimentalSpanAttributes,otel.semconv.exception.signal.preview=logs",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+        "otel.semconv.exception.signal.preview=logs",
     )
     filter.includeTestsMatching("Aws2ClientTest")
   }
@@ -155,16 +158,22 @@ tasks {
     testClassesDirs = sourceSets["testCoreOnly"].output.classesDirs
     classpath = sourceSets["testCoreOnly"].runtimeClasspath
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("metadataConfig", experimentalSpanAttributes)
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
   }
 
   val testRdsDataExperimentalAttributes = register<Test>("testRdsDataExperimentalAttributes") {
     testClassesDirs = sourceSets["testRdsData"].output.classesDirs
     classpath = sourceSets["testRdsData"].runtimeClasspath
 
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("metadataConfig", experimentalSpanAttributes)
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
   }
 
   check {
