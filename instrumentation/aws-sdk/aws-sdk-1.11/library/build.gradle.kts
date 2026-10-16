@@ -56,6 +56,16 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-span-attributes=true,otel.semconv.exception.signal.preview=logs",
+    )
+    if (otelProps.collectMetadata) {
+      // Other tests use different messaging configurations that do not match this profile.
+      filter {
+        includeTestsMatching("io.opentelemetry.instrumentation.awssdk.v1_11.S3ClientTest")
+      }
+    }
   }
 
   check {

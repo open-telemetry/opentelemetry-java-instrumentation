@@ -87,6 +87,16 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-span-attributes=true,otel.semconv.exception.signal.preview=logs",
+    )
+    if (otelProps.collectMetadata) {
+      // Collect a representative failure without mixing messaging and HTTP-error configurations.
+      filter {
+        includeTestsMatching("io.opentelemetry.instrumentation.awssdk.v2_2.Aws2ClientTest.testTimeoutAndRetryErrorsAreNotCaptured")
+      }
+    }
   }
 
   check {
