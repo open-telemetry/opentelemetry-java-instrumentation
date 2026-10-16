@@ -43,14 +43,18 @@ public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper
       return inputStream;
     }
 
-    if (getAttribute(REQUEST_BODY_ATTRIBUTE) != null) {
-      // Request body already read once. If there are multiple calls to getInputStream(), then
-      // only the body of the first call will be captured.
-      return inputStream;
+    ByteBuffer buffer;
+    Object bufferObject = getAttribute(REQUEST_BODY_ATTRIBUTE);
+    if (bufferObject instanceof ByteBuffer) {
+      // Request body already read once, this might happen the request is read more than once.
+      // we reset the position, so the effective value is the longest ever read by all reads.
+      buffer = (ByteBuffer) bufferObject;
+      buffer.position(0);
+    } else {
+      buffer = ByteBuffer.allocate(maxBufferSize);
+      setAttribute(REQUEST_BODY_ATTRIBUTE, buffer);
     }
 
-    ByteBuffer buffer = ByteBuffer.allocate(maxBufferSize);
-    setAttribute(REQUEST_BODY_ATTRIBUTE, buffer);
     return new Servlet5BodyCaptureInputStreamWrapper(inputStream, buffer);
   }
 
