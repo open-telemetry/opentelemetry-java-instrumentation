@@ -36,11 +36,47 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.graphql.data-fetcher.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.graphql.data-fetcher.enabled=true,otel.instrumentation.graphql.operation-name-in-span-name.enabled=true",
+    )
+  }
+
+  val testExceptionLogs = register<Test>("testExceptionLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs",
+    )
+    filter {
+      includeTestsMatching("*.GraphqlTest.parseError")
+      includeTestsMatching("*.GraphqlTest.validationError")
+      includeTestsMatching("*.GraphqlTest.dataFetcherException")
+      includeTestsMatching("*.GraphqlTest.dataFetcherError")
+    }
+  }
+
+  val testDataFetcherExceptionLogs = register<Test>("testDataFetcherExceptionLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs(
+      "-Dotel.instrumentation.graphql.data-fetcher.enabled=true",
+      "-Dotel.semconv.exception.signal.preview=logs",
+    )
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.graphql.data-fetcher.enabled=true,otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs",
+    )
+    filter {
+      includeTestsMatching("*.GraphqlTest.dataFetcherException")
+      includeTestsMatching("*.GraphqlTest.dataFetcherError")
+    }
   }
 
   check {
-    dependsOn(testDataFetcher)
+    dependsOn(testDataFetcher, testExceptionLogs, testDataFetcherExceptionLogs)
   }
 }
 
