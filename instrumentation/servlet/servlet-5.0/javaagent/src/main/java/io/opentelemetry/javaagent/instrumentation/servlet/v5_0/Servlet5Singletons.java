@@ -82,7 +82,8 @@ public class Servlet5Singletons {
     if (!helper().captureRequestBodyEnabled()) {
       return request;
     }
-    return new Servlet5BodyCaptureRequestWrapper(request, helper().captureRequestBodyMaxSize());
+    return Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(
+        request, helper().captureRequestBodyMaxSize());
   }
 
   private Servlet5Singletons() {}

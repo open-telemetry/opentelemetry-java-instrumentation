@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
-import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.REQUEST_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletConstants.REQUEST_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletConstants.WRAPPED_ATTRIBUTE;
 
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,5 +44,17 @@ public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper
     ByteBuffer buffer = ByteBuffer.allocate(maxBufferSize);
     setAttribute(REQUEST_BODY_ATTRIBUTE, buffer);
     return new Servlet5BodyCaptureInputStreamWrapper(inputStream, buffer);
+  }
+
+  public static HttpServletRequest wrapIfNeeded(HttpServletRequest request, int maxBufferSize) {
+    // The request body only needs to be captured once. The instanceof check is a cheap fast path,
+    // the attribute also detects our wrapper when it is hidden behind wrappers added by other
+    // filters or frameworks.
+    if (request instanceof Servlet5BodyCaptureRequestWrapper
+        || request.getAttribute(WRAPPED_ATTRIBUTE) != null) {
+      return request;
+    }
+    request.setAttribute(WRAPPED_ATTRIBUTE, true);
+    return new Servlet5BodyCaptureRequestWrapper(request, maxBufferSize);
   }
 }

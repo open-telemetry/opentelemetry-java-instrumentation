@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletConstants.REQUEST_BODY_ATTRIBUTE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -27,9 +28,6 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   // TODO: replace this when available in semconv 1.45.0
   public static final AttributeKey<?> SPAN_BODY_ATTRIBUTE =
       AttributeKey.valueKey("http.request.body.content");
-
-  /** Servlet attribute name used to store the request body. */
-  public static final String REQUEST_BODY_ATTRIBUTE = "otel.request.body";
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 

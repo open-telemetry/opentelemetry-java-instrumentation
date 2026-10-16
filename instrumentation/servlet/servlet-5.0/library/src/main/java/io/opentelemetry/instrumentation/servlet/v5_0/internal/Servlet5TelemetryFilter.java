@@ -68,10 +68,6 @@ public final class Servlet5TelemetryFilter implements Filter {
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-    if (captureRequestBodyMaxSize > 0) {
-      httpRequest = new Servlet5BodyCaptureRequestWrapper(httpRequest, captureRequestBodyMaxSize);
-    }
-
     Context parentContext = Context.current();
     ServletRequestContext<HttpServletRequest> requestContext =
         new ServletRequestContext<>(httpRequest);
@@ -79,8 +75,13 @@ public final class Servlet5TelemetryFilter implements Filter {
         new ServletResponseContext<>(httpResponse);
 
     if (!instrumenter.shouldStart(parentContext, requestContext)) {
-      filterChain.doFilter(request, response);
+      filterChain.doFilter(httpRequest, httpResponse);
       return;
+    }
+
+    if (captureRequestBodyMaxSize > 0) {
+      httpRequest =
+          Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(httpRequest, captureRequestBodyMaxSize);
     }
 
     Context context = instrumenter.start(parentContext, requestContext);
@@ -88,12 +89,8 @@ public final class Servlet5TelemetryFilter implements Filter {
     if (addTraceIdRequestAttribute) {
       SpanContext spanContext = Span.fromContext(context).getSpanContext();
       // we do this e.g. so that servlet containers can use these values in their access logs
-      request.setAttribute("trace_id", spanContext.getTraceId());
-      request.setAttribute("span_id", spanContext.getSpanId());
-    }
-
-    if (captureRequestBodyMaxSize > 0) {
-      httpRequest = new Servlet5BodyCaptureRequestWrapper(httpRequest, captureRequestBodyMaxSize);
+      httpRequest.setAttribute("trace_id", spanContext.getTraceId());
+      httpRequest.setAttribute("span_id", spanContext.getSpanId());
     }
 
     OtelHttpServletRequest otelRequest =
