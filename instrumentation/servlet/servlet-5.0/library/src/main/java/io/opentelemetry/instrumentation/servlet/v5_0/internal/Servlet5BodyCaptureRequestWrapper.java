@@ -36,17 +36,19 @@ public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper
   @Override
   public ServletInputStream getInputStream() throws IOException {
     ServletInputStream inputStream = super.getInputStream();
-    if (inputStream == null || inputStream.isFinished()) {
-      return inputStream;
-    }
-    if (getAttribute(REQUEST_BODY_ATTRIBUTE) != null) {
-      // request body already read once, in case the underlying input allows multiple reads
-      // we don't need to capture it again.
+    if (inputStream == null
+        || inputStream instanceof Servlet5BodyCaptureInputStreamWrapper
+        || inputStream.isFinished()) {
+      // nothing to capture or already captured
       return inputStream;
     }
 
-    // TODO: we might consider using request object identity to keep current buffer when available
-    // thus allowing to reduce allocation and overall memory usage
+    if (getAttribute(REQUEST_BODY_ATTRIBUTE) != null) {
+      // Request body already read once. If there are multiple calls to getInputStream(), then
+      // only the body of the first call will be captured.
+      return inputStream;
+    }
+
     ByteBuffer buffer = ByteBuffer.allocate(maxBufferSize);
     setAttribute(REQUEST_BODY_ATTRIBUTE, buffer);
     return new Servlet5BodyCaptureInputStreamWrapper(inputStream, buffer);
