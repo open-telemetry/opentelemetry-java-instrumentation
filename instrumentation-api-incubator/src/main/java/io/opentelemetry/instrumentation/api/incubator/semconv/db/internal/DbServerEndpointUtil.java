@@ -121,18 +121,18 @@ public final class DbServerEndpointUtil {
   /** Parses an ASCII decimal port in the range 1 to 65535, or returns {@code null} if invalid. */
   @Nullable
   public static Integer parsePort(String value) {
-    if (value.isEmpty()) {
+    if (value.isEmpty() || value.length() > 5) {
       return null;
     }
     int port = 0;
     for (int i = 0; i < value.length(); i++) {
       char c = value.charAt(i);
-      if (c < '0' || c > '9' || port > (65535 - (c - '0')) / 10) {
+      if (c < '0' || c > '9') {
         return null;
       }
       port = port * 10 + c - '0';
     }
-    return port == 0 ? null : port;
+    return port >= 1 && port <= 65535 ? port : null;
   }
 
   private DbServerEndpointUtil() {}
