@@ -28,8 +28,7 @@ final class HikariConfigInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("validate").and(takesArguments(0)), getClass().getName() + "$ValidateAdvice");
     transformer.applyAdviceToMethod(
-        named("setPoolName").and(takesArguments(1)).and(takesArgument(0, String.class)),
-        getClass().getName() + "$SetPoolNameAdvice");
+        named("setPoolName").and(takesArguments(1)), getClass().getName() + "$SetPoolNameAdvice");
     transformer.applyAdviceToMethod(
         named("copyStateTo")
             .and(takesArguments(1))

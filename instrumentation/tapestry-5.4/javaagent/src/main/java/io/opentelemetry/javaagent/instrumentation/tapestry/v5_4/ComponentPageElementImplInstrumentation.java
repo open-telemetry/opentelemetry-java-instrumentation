@@ -30,11 +30,7 @@ class ComponentPageElementImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("processEventTriggering")
-            .and(takesArguments(3))
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, named("org.apache.tapestry5.EventContext")))
-            .and(takesArgument(2, named("org.apache.tapestry5.ComponentEventCallback"))),
+        named("processEventTriggering").and(takesArguments(3)).and(takesArgument(0, String.class)),
         getClass().getName() + "$EventAdvice");
   }
 

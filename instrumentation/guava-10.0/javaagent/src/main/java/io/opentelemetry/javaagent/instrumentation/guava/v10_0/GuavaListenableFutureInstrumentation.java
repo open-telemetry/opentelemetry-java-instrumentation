@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 import static io.opentelemetry.javaagent.instrumentation.guava.v10_0.InstrumentationHelper.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -16,7 +17,6 @@ import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -33,7 +33,7 @@ class GuavaListenableFutureInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor(), getClass().getName() + "$AbstractFutureAdvice");
     transformer.applyAdviceToMethod(
-        named("addListener").and(takesArguments(Runnable.class, Executor.class)),
+        named("addListener").and(takesArguments(2)).and(takesArgument(0, Runnable.class)),
         getClass().getName() + "$AddListenerAdvice");
   }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -14,6 +15,7 @@ import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,12 +44,16 @@ class DefineClassInstrumentationTest {
         String name, byte[] b, int off, int len, ProtectionDomain protectionDomain) {
       return defineClass(name, b, off, len, protectionDomain);
     }
+
+    Class<?> doDefineClass(String name, ByteBuffer b, ProtectionDomain protectionDomain) {
+      return defineClass(name, b, protectionDomain);
+    }
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {3, 4, 5})
+  @ValueSource(strings = {"byteArray3", "byteArray4", "byteArray5", "byteBuffer3"})
   @SuppressWarnings("DirectInvocationOnMock")
-  void ensureDefineClassInstrumented(int argCount) throws IOException {
+  void ensureDefineClassInstrumented(String signature) throws IOException {
     String className = Dummy.class.getName();
     String resource = className.replace('.', '/') + ".class";
     ByteArrayOutputStream byteCodeStream = new ByteArrayOutputStream();
@@ -66,19 +72,27 @@ class DefineClassInstrumentationTest {
     DefineClassHelper.Handler originalHandler =
         DefineClassHelper.internalSetHandlerForTests(mockHandler);
     String expectedClassName;
+    Class<?> definedClass;
     try {
-      switch (argCount) {
-        case 3:
+      switch (signature) {
+        case "byteArray3":
           expectedClassName = null;
-          cl.doDefineClass(bytecode, 0, bytecode.length);
+          definedClass = cl.doDefineClass(bytecode, 0, bytecode.length);
           break;
-        case 4:
+        case "byteArray4":
           expectedClassName = className;
-          cl.doDefineClass(className, bytecode, 0, bytecode.length);
+          definedClass = cl.doDefineClass(className, bytecode, 0, bytecode.length);
           break;
-        case 5:
+        case "byteArray5":
           expectedClassName = className;
-          cl.doDefineClass(className, bytecode, 0, bytecode.length, null);
+          definedClass = cl.doDefineClass(className, bytecode, 0, bytecode.length, null);
+          break;
+        case "byteBuffer3":
+          expectedClassName = className;
+          ByteBuffer buffer = ByteBuffer.allocateDirect(bytecode.length);
+          buffer.put(bytecode);
+          buffer.flip();
+          definedClass = cl.doDefineClass(className, buffer, null);
           break;
         default:
           throw new IllegalStateException();
@@ -87,6 +101,8 @@ class DefineClassInstrumentationTest {
       DefineClassHelper.internalSetHandlerForTests(originalHandler);
     }
 
+    assertThat(definedClass.getName()).isEqualTo(className);
+    assertThat(definedClass.getClassLoader()).isSameAs(cl);
     verify(mockHandler)
         .beforeDefineClass(
             same(cl), eq(expectedClassName), eq(bytecode), eq(0), eq(bytecode.length));
