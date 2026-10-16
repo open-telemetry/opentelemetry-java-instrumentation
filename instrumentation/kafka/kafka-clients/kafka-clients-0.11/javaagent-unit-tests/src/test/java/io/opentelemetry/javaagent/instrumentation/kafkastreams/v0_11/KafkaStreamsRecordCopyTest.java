@@ -33,7 +33,7 @@ class KafkaStreamsRecordCopyTest {
     incoming.headers().add("correlation", "request".getBytes(UTF_8));
     Context context = Context.root();
     KafkaConsumerContextUtil.set(
-        incoming, KafkaConsumerContextUtil.create(context, "group", "client"));
+        incoming, KafkaConsumerContextUtil.create(context, "group", "client", null));
     BooleanSupplier rawProcessingEligibility = () -> false;
     KafkaConsumerContextUtil.setRawProcessingEligibility(incoming, rawProcessingEligibility);
     assertThat(KafkaConsumerContextUtil.markConsumedMessageCounted(incoming)).isTrue();

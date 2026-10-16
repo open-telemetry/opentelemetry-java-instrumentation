@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
-import static io.opentelemetry.instrumentation.oshi.v5_0.internal.SchemaUrls.V1_19_0;
 import static io.opentelemetry.semconv.SchemaUrls.V1_44_0;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -23,26 +21,12 @@ public final class SystemMetrics {
 
   /** Register observers for system metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    boolean preview = v3Preview(openTelemetry);
-    return SystemMetricsInternal.registerObservers(buildMeter(openTelemetry, preview), preview);
+    return SystemMetricsInternal.registerObservers(buildMeter(openTelemetry));
   }
 
-  /**
-   * Like {@link #registerObservers(OpenTelemetry)}, but accepts a pre-built {@link Meter} and
-   * retains the legacy metric conventions.
-   *
-   * @deprecated Use {@link #registerObservers(OpenTelemetry)} to select the metric conventions and
-   *     schema URL from the supplied OpenTelemetry configuration. This method will be removed in
-   *     3.0.
-   */
-  @Deprecated
-  public static List<AutoCloseable> registerObservers(Meter meter) {
-    return SystemMetricsInternal.registerObservers(meter, false);
-  }
-
-  private static Meter buildMeter(OpenTelemetry openTelemetry, boolean preview) {
+  private static Meter buildMeter(OpenTelemetry openTelemetry) {
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
-    meterBuilder.setSchemaUrl(preview ? V1_44_0 : V1_19_0);
+    meterBuilder.setSchemaUrl(V1_44_0);
     String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);

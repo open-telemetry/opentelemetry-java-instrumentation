@@ -31,7 +31,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
-  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
 
   testImplementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
@@ -56,13 +55,12 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-            jvmArgs("-Dotel.semconv-stability.preview=messaging")
           }
         }
       }
     }
 
-    register<JvmTestSuite>("legacyUnitTests") {
+    register<JvmTestSuite>("receiveTelemetryDisabledUnitTests") {
       sources {
         java {
           srcDir("src/unitTests/java")
@@ -123,14 +121,13 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    if (name != "unitTests" && name != "legacyUnitTests") {
+    if (!name.endsWith("unitTests", ignoreCase = true)) {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-      systemProperty("collectMetadata", otelProps.collectMetadata)
     }
   }
 
   val agentTestSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name != "unitTests" && it.name != "legacyUnitTests" }
+    .matching { !it.name.endsWith("unitTests", ignoreCase = true) }
 
   val experimentalSuites = agentTestSuites
     .map { suite ->
@@ -157,11 +154,16 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false",
+    )
   }
 
-  val messagingPreviewSuites = agentTestSuites
+  val receiveTelemetrySuites = agentTestSuites.matching { it.name != "test" }
     .map { suite ->
-      register<Test>("${suite.name}MessagingPreview") {
+      register<Test>("${suite.name}ReceiveTelemetry") {
         val sourceTask = named<Test>(suite.name).get()
         setJvmArgs(sourceTask.jvmArgs)
         setSystemProperties(sourceTask.systemProperties)
@@ -169,56 +171,15 @@ tasks {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        val semconvConfig = "otel.semconv-stability.preview=messaging"
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-        jvmArgs("-D$semconvConfig")
+        val receiveConfig = "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true"
+        jvmArgs("-D$receiveConfig")
         systemProperty(
           "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], receiveConfig).joinToString(","),
         )
         isEnabled = sourceTask.enabled
       }
     }
-
-  val bothSemconvSuites = agentTestSuites
-    .map { suite ->
-      register<Test>("${suite.name}BothSemconv") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val semconvConfig = "otel.semconv-stability.preview=messaging/dup"
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-        jvmArgs("-D$semconvConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], semconvConfig).joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
-  val messagingPreviewReceiveSpansDisabledSuites =
-    agentTestSuites
-      .map { suite ->
-        register<Test>("${suite.name}MessagingPreviewReceiveSpansDisabled") {
-          val sourceTask = named<Test>(suite.name).get()
-          setJvmArgs(sourceTask.jvmArgs)
-          setSystemProperties(sourceTask.systemProperties)
-
-          testClassesDirs = suite.sources.output.classesDirs
-          classpath = suite.sources.runtimeClasspath
-
-          val semconvConfig = "otel.semconv-stability.preview=messaging"
-          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-          jvmArgs("-D$semconvConfig")
-          systemProperty("metadataConfig", semconvConfig)
-          isEnabled = sourceTask.enabled
-        }
-      }
 
   test {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
@@ -234,9 +195,7 @@ tasks {
       testing.suites,
       experimentalSuites,
       testReceiveSpansDisabled,
-      messagingPreviewSuites,
-      bothSemconvSuites,
-      messagingPreviewReceiveSpansDisabledSuites,
+      receiveTelemetrySuites,
     )
   }
 }

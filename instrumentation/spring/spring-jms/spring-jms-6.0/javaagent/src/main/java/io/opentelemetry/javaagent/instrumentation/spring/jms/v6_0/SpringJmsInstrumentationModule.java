@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringJmsInstrumentationModule extends InstrumentationModule {
 
   public SpringJmsInstrumentationModule() {
-    super("spring-jms", "spring-jms-6.0");
+    super("spring-jms-6.0", "spring-jms");
   }
 
   @Override
@@ -33,7 +33,6 @@ public class SpringJmsInstrumentationModule extends InstrumentationModule {
     return asList(
         new SpringJmsMessageListenerInstrumentation(),
         new SpringJmsSubscriptionNameInstrumentation(),
-        new JmsDestinationAccessorInstrumentation(),
-        new AbstractPollingMessageListenerContainerInstrumentation());
+        new JmsDestinationAccessorInstrumentation());
   }
 }

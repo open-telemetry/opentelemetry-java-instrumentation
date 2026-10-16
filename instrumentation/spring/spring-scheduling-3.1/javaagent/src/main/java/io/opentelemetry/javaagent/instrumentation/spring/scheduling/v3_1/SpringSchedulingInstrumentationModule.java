@@ -16,7 +16,7 @@ import java.util.List;
 public class SpringSchedulingInstrumentationModule extends InstrumentationModule {
 
   public SpringSchedulingInstrumentationModule() {
-    super("spring-scheduling", "spring-scheduling-3.1");
+    super("spring-scheduling-3.1", "spring-scheduling");
   }
 
   @Override

@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class TomcatDbcpInstrumentationModule extends InstrumentationModule {
   public TomcatDbcpInstrumentationModule() {
-    super("tomcat-dbcp", "tomcat-dbcp-8.0");
+    super("tomcat-dbcp-8.0", "tomcat-dbcp");
   }
 
   @Override

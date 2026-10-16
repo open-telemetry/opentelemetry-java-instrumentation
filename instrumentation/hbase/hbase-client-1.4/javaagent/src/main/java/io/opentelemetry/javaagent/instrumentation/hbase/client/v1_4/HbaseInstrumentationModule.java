@@ -25,7 +25,7 @@ public class HbaseInstrumentationModule extends InstrumentationModule
   private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
 
   public HbaseInstrumentationModule() {
-    super("hbase-client", "hbase-client-1.4");
+    super("hbase-client-1.4", "hbase-client");
   }
 
   @Override

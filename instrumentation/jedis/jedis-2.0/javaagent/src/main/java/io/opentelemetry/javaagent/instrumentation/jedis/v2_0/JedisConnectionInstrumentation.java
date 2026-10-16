@@ -47,6 +47,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0,
+                    // Jedis 2.7.1 and 2.7.2 use ProtocolCommand in sendCommand signatures.
                     namedOneOf(
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand"))),
@@ -57,6 +58,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0,
+                    // Jedis 2.7.1 and 2.7.2 use ProtocolCommand in sendCommand signatures.
                     namedOneOf(
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand")))

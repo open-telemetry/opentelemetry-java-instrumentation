@@ -23,7 +23,7 @@ import java.util.List;
 public class PekkoRemoteInstrumentationModule extends InstrumentationModule {
 
   public PekkoRemoteInstrumentationModule() {
-    super("pekko-remote", "pekko-remote-1.0");
+    super("pekko-remote-1.0", "pekko-remote", "pekko");
   }
 
   @Override

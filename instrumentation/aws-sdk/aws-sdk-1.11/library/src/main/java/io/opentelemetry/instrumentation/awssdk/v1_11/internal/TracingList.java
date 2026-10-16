@@ -24,7 +24,6 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Request<?> request;
   private final transient Response<?> response;
   @Nullable private final transient Context processParentContext;
-  private final transient ProcessingOwnership processingOwnership = new ProcessingOwnership();
   private boolean firstIterator = true;
 
   static SdkInternalList<Message> wrap(
@@ -54,7 +53,7 @@ class TracingList extends SdkInternalList<Message> {
     Iterator<Message> iterator = super.iterator();
     if (firstIterator && !inAwsClient()) {
       firstIterator = false;
-      return TracingIterator.wrap(iterator, this, processingOwnership);
+      return TracingIterator.wrap(iterator, this);
     }
     return iterator;
   }
@@ -76,10 +75,13 @@ class TracingList extends SdkInternalList<Message> {
     return processParentContext;
   }
 
-  static void markProcessingOwnedOutsideSqsSdk(List<?> messages) {
-    if (messages instanceof TracingList) {
-      ((TracingList) messages).processingOwnership.ownedOutsideSqsSdk = true;
-    }
+  boolean isProcessingOwnedOutsideSqsSdk() {
+    return SqsProcessTracing.isProcessingOwnedOutsideSqsSdk(this);
+  }
+
+  @Nullable
+  static SdkInternalList<?> processingOwner(List<?> messages) {
+    return messages instanceof TracingList ? (TracingList) messages : null;
   }
 
   @Override
@@ -99,14 +101,6 @@ class TracingList extends SdkInternalList<Message> {
   private Object writeReplace() {
     // serialize this object to SdkInternalList
     return new SdkInternalList<>(this);
-  }
-
-  static final class ProcessingOwnership {
-    private volatile boolean ownedOutsideSqsSdk;
-
-    boolean isOwnedOutsideSqsSdk() {
-      return ownedOutsideSqsSdk;
-    }
   }
 
   private static class CallerClass extends SecurityManager {

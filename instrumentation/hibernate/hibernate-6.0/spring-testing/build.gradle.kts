@@ -28,6 +28,7 @@ otelJava {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
+    jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -37,14 +38,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testExperimental, testStableSemconv)
+    dependsOn(testExperimental)
   }
 }

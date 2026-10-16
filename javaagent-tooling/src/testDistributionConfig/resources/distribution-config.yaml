@@ -19,5 +19,6 @@ distribution:
         - tomcat
         - spring_webmvc
         - armeria
+        - reactor_3_1
       disabled:
         - armeria_grpc

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseSingletons.queryInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.VirtualFieldHelper.COUCHBASE_SERVER_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -57,6 +58,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @SuppressWarnings("deprecation") // Observable.create is required for RxJava 1.0 compatibility
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
@@ -87,6 +89,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @SuppressWarnings("deprecation") // Observable.create is required for RxJava 1.0 compatibility
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
@@ -105,7 +108,10 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
                   bucket, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName)
               : CouchbaseRequestInfo.create(bucket, COUCHBASE_SERVER_TARGET.get(core), query);
       return Observable.create(
-          TracedOnSubscribe.perSubscription(result, instrumenter(), request.copySupplier()));
+          TracedOnSubscribe.perSubscription(
+              result,
+              request.isSqlQuery() ? queryInstrumenter() : instrumenter(),
+              request.copySupplier()));
     }
   }
 }

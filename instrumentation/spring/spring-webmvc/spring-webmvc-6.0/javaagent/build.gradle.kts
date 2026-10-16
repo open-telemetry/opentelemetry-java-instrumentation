@@ -53,7 +53,6 @@ tasks {
       "otel.instrumentation.common.controller-telemetry.enabled=true," +
         "otel.instrumentation.common.view-telemetry.enabled=true"
     )
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 

@@ -5,7 +5,6 @@ import java.time.Duration
 
 plugins {
   `java-library`
-  groovy
   checkstyle
   idea
 
@@ -20,7 +19,7 @@ val otelProps = the<OtelPropsExtension>()
 
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
-  if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
+  if (extra.properties["mavenGroupId"] == "io.opentelemetry.javaagent.instrumentation") {
     base.archivesName.set("opentelemetry-javaagent-$previousBaseArchiveName")
   } else if (!previousBaseArchiveName.startsWith("opentelemetry-")) {
     base.archivesName.set("opentelemetry-$previousBaseArchiveName")
@@ -103,6 +102,17 @@ tasks.withType<JavaCompile>().configureEach {
   }
 }
 
+// Compile against project jars rather than class directories. Several projects add shaded classes
+// to their main output via sourceSets.main.output.dir(...), which is packaged into the jar but is
+// not part of the "classes" variant that java-library would otherwise select.
+sourceSets.configureEach {
+  configurations.named(compileClasspathConfigurationName) {
+    attributes {
+      attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+    }
+  }
+}
+
 // Groovy and Scala compilers don't actually understand --release option
 afterEvaluate {
   tasks.withType<GroovyCompile>().configureEach {
@@ -150,7 +160,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.138.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.139.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -321,6 +331,8 @@ val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk
 
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
+
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // work around jvm crash on openJ9 8 after updating armeria to 1.33.1
   val testJavaVersion = otelProps.testJavaVersion

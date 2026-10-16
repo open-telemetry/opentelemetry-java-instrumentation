@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -37,7 +36,7 @@ class CassandraClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(0) Cluster.Initializer initializer, @Advice.Return Cluster cluster) {
-      if (emitStableDatabaseSemconv() && initializer instanceof Cluster.Builder) {
+      if (initializer instanceof Cluster.Builder) {
         CassandraServerTarget.store(
             (Cluster.Builder) initializer,
             cluster,

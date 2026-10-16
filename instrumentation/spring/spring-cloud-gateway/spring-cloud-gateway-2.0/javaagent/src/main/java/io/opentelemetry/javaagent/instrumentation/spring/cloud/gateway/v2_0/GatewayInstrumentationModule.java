@@ -16,7 +16,7 @@ import java.util.List;
 public class GatewayInstrumentationModule extends InstrumentationModule {
 
   public GatewayInstrumentationModule() {
-    super("spring-cloud-gateway", "spring-cloud-gateway-2.0");
+    super("spring-cloud-gateway-2.0", "spring-cloud-gateway");
   }
 
   @Override

@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class MyFacesInstrumentationModule extends InstrumentationModule {
   public MyFacesInstrumentationModule() {
-    super("jsf-myfaces", "jsf-myfaces-3.0");
+    super("jsf-myfaces-3.0", "jsf-myfaces", "jsf");
   }
 
   @Override

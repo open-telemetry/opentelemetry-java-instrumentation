@@ -23,7 +23,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons.getSpanDecorator;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
@@ -49,8 +48,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     SpanKind spanKind = spanKind(activeSpan, sd);
     CamelRequest request =
         CamelRequest.create(sd, exchange, route.getEndpoint(), CamelDirection.INBOUND, spanKind);
-    if (!activeSpan.getSpanContext().isValid()
-        && !(request.isMessaging() && emitStableMessagingSemconv())) {
+    if (!activeSpan.getSpanContext().isValid() && !request.isMessaging()) {
       parentContext =
           CamelPropagationUtil.extractParent(exchange.getIn().getHeaders(), route.getEndpoint());
     }
@@ -58,7 +56,6 @@ final class CamelRoutePolicy extends RoutePolicySupport {
 
     if (!instrumenter(request).shouldStart(parentContext, request)) {
       if (request.isMessaging()
-          && emitStableMessagingSemconv()
           && !InstrumentationUtil.shouldSuppressInstrumentation(parentContext)) {
         CamelProcessMetrics.start(route, parentContext, request);
       }

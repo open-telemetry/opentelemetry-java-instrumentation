@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
@@ -35,12 +34,9 @@ final class ElasticsearchDbAttributesGetter
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String ELASTICSEARCH = "elasticsearch";
 
-  private final boolean captureSearchQuery;
   @Nullable private final UnaryOperator<String> sanitizer;
 
-  ElasticsearchDbAttributesGetter(
-      boolean captureSearchQuery, @Nullable UnaryOperator<String> sanitizer) {
-    this.captureSearchQuery = captureSearchQuery;
+  ElasticsearchDbAttributesGetter(@Nullable UnaryOperator<String> sanitizer) {
     this.sanitizer = sanitizer;
   }
 
@@ -60,12 +56,10 @@ final class ElasticsearchDbAttributesGetter
   public String getDbQueryText(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition epDefinition = request.getEndpointDefinition();
     HttpEntity httpEntity = request.getHttpEntity();
-    if (captureSearchQuery
-        && isSearchEndpoint(request.getEndpoint(), epDefinition)
+    if (isSearchEndpoint(request.getEndpoint(), epDefinition)
         && httpEntity != null
         && httpEntity.isRepeatable()) {
-      // Retrieve HTTP body for search-type Elasticsearch requests when captureSearchQuery is
-      // enabled.
+      // Retrieve HTTP body for search-type Elasticsearch requests.
       String body = readBody(httpEntity);
       if (body == null) {
         return null;
@@ -157,9 +151,6 @@ final class ElasticsearchDbAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ElasticsearchRestRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     DbServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
@@ -167,9 +158,6 @@ final class ElasticsearchDbAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(ElasticsearchRestRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     DbServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
   }

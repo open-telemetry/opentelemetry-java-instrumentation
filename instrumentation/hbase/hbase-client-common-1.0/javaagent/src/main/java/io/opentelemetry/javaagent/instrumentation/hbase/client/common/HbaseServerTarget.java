@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Field;
 import javax.annotation.Nullable;
@@ -35,9 +33,6 @@ public class HbaseServerTarget {
           || hasClassField(ASYNC_REGISTRY_FACTORY, "REGISTRY_IMPL_CONF_KEY");
 
   public static void store(AbstractRpcClient client, Configuration configuration) {
-    if (!emitStableDatabaseSemconv()) {
-      return;
-    }
     String serverTarget = from(configuration);
     if (serverTarget != null) {
       ServerTargetHolder.SERVER_TARGET.set(client, serverTarget);
@@ -46,7 +41,7 @@ public class HbaseServerTarget {
 
   @Nullable
   public static String get(AbstractRpcClient client) {
-    return emitStableDatabaseSemconv() ? ServerTargetHolder.SERVER_TARGET.get(client) : null;
+    return ServerTargetHolder.SERVER_TARGET.get(client);
   }
 
   @Nullable

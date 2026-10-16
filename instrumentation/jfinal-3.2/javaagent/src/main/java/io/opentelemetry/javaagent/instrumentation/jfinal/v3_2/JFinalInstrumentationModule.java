@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JFinalInstrumentationModule extends InstrumentationModule {
 
   public JFinalInstrumentationModule() {
-    super("jfinal", "jfinal-3.2");
+    super("jfinal-3.2", "jfinal");
   }
 
   @Override

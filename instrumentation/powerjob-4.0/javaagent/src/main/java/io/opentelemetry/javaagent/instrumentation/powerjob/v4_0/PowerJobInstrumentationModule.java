@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class PowerJobInstrumentationModule extends InstrumentationModule {
   public PowerJobInstrumentationModule() {
-    super("powerjob", "powerjob-4.0");
+    super("powerjob-4.0", "powerjob");
   }
 
   @Override

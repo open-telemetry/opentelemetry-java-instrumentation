@@ -16,7 +16,7 @@ import java.util.List;
 public class SpringAwsSqsInstrumentationModule extends InstrumentationModule {
 
   public SpringAwsSqsInstrumentationModule() {
-    super("spring-cloud-aws", "spring-cloud-aws-3.0");
+    super("spring-cloud-aws-3.0", "spring-cloud-aws");
   }
 
   @Override

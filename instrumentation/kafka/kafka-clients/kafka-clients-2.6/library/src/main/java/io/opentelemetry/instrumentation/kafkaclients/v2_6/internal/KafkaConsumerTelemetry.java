@@ -5,11 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -19,6 +17,9 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingList;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 
 /**
@@ -35,6 +37,30 @@ import org.apache.kafka.common.TopicPartition;
  * at any time.
  */
 public class KafkaConsumerTelemetry {
+  private static final MethodHandle NEXT_OFFSETS;
+  private static final MethodHandle NEW_CONSUMER_RECORDS;
+
+  static {
+    MethodHandle nextOffsets;
+    MethodHandle newConsumerRecords;
+
+    try {
+      MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+      nextOffsets =
+          lookup.findVirtual(
+              ConsumerRecords.class, "nextOffsets", MethodType.methodType(Map.class));
+      newConsumerRecords =
+          lookup.findConstructor(
+              ConsumerRecords.class, MethodType.methodType(void.class, Map.class, Map.class));
+    } catch (IllegalAccessException | NoSuchMethodException ignored) {
+      nextOffsets = null;
+      newConsumerRecords = null;
+    }
+
+    NEXT_OFFSETS = nextOffsets;
+    NEW_CONSUMER_RECORDS = newConsumerRecords;
+  }
+
   private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
 
@@ -59,20 +85,48 @@ public class KafkaConsumerTelemetry {
       }
       records.put(partition, list);
     }
+    return newConsumerRecords(records, consumerRecords);
+  }
+
+  @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
+  private static <K, V> ConsumerRecords<K, V> newConsumerRecords(
+      Map<TopicPartition, List<ConsumerRecord<K, V>>> records,
+      ConsumerRecords<K, V> consumerRecords) {
+    if (NEXT_OFFSETS != null && NEW_CONSUMER_RECORDS != null) {
+      try {
+        Map<TopicPartition, OffsetAndMetadata> nextOffsets =
+            (Map<TopicPartition, OffsetAndMetadata>) NEXT_OFFSETS.invoke(consumerRecords);
+        return (ConsumerRecords<K, V>) NEW_CONSUMER_RECORDS.invoke(records, nextOffsets);
+      } catch (Throwable t) {
+        sneakyThrow(t);
+      }
+    }
     return new ConsumerRecords<>(records);
+  }
+
+  @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"}) // fine
+  private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
+    throw (T) t;
   }
 
   @Nullable
   public <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
     return buildAndFinishSpan(
-        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
+        records,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getClusterId(consumer),
+        timer);
   }
 
   @Nullable
   <K, V> Context buildAndFinishSpan(
-      ConsumerRecords<K, V> records, @Nullable String consumerGroup, @Nullable String clientId) {
-    return buildAndFinishSpan(records, consumerGroup, clientId, null);
+      ConsumerRecords<K, V> records,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable String clusterId) {
+    return buildAndFinishSpan(records, consumerGroup, clientId, clusterId, null);
   }
 
   @Nullable
@@ -80,39 +134,34 @@ public class KafkaConsumerTelemetry {
       ConsumerRecords<K, V> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,
+      @Nullable String clusterId,
       @Nullable Timer timer) {
     if (records.isEmpty()) {
       return null;
     }
     Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
-    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
-    Context receiveContext = null;
+    KafkaReceiveRequest request =
+        KafkaReceiveRequest.create(records, consumerGroup, clientId, clusterId);
     boolean receiveOperationStarted = false;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      try (Scope ignored = KafkaConsumerContextUtil.withoutLeakedProcessSpanDuringExtraction()) {
-        if (timer == null) {
-          // The interceptor runs after poll, so let the SDK time an immediate span, not poll
-          // duration.
-          receiveContext = consumerReceiveInstrumenter.start(parentContext, request);
-          consumerReceiveInstrumenter.end(receiveContext, request, null, null);
-        } else {
-          receiveContext =
-              InstrumenterUtil.startAndEnd(
-                  consumerReceiveInstrumenter,
-                  parentContext,
-                  request,
-                  null,
-                  null,
-                  timer.startTime(),
-                  timer.now());
-        }
+      if (timer == null) {
+        // The interceptor runs after poll, so let the SDK time an immediate span, not poll
+        // duration.
+        Context receiveContext = consumerReceiveInstrumenter.start(parentContext, request);
+        consumerReceiveInstrumenter.end(receiveContext, request, null, null);
+      } else {
+        InstrumenterUtil.startAndEnd(
+            consumerReceiveInstrumenter,
+            parentContext,
+            request,
+            null,
+            null,
+            timer.startTime(),
+            timer.now());
       }
       receiveOperationStarted = true;
     }
 
-    if (!emitStableMessagingSemconv()) {
-      return receiveContext;
-    }
     return KafkaConsumerContextUtil.withReceiveOperation(parentContext, receiveOperationStarted);
   }
 
@@ -122,18 +171,19 @@ public class KafkaConsumerTelemetry {
     ConsumerRecords<K, V> records = new ConsumerRecords<>(emptyMap());
     KafkaReceiveRequest request =
         KafkaReceiveRequest.create(
-            records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+            records,
+            KafkaUtil.getConsumerGroup(consumer),
+            KafkaUtil.getClientId(consumer),
+            KafkaUtil.getClusterId(consumer));
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      try (Scope ignored = KafkaConsumerContextUtil.withoutLeakedProcessSpanDuringExtraction()) {
-        InstrumenterUtil.startAndEnd(
-            consumerReceiveInstrumenter,
-            parentContext,
-            request,
-            null,
-            error,
-            timer.startTime(),
-            timer.now());
-      }
+      InstrumenterUtil.startAndEnd(
+          consumerReceiveInstrumenter,
+          parentContext,
+          request,
+          null,
+          error,
+          timer.startTime(),
+          timer.now());
     }
   }
 }

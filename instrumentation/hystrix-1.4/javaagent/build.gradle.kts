@@ -26,7 +26,9 @@ tasks {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
+    }
 
     // Uncomment for debugging:
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
@@ -46,7 +48,6 @@ tasks {
     filter {
       includeTestsMatching("*DefaultEnablementTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
   }
 
   check {
