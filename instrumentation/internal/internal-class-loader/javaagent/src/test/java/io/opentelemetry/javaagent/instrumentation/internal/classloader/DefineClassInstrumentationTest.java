@@ -10,8 +10,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
+import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler.DefineClassContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,6 +58,7 @@ class DefineClassInstrumentationTest {
   void ensureDefineClassInstrumented(String signature) throws IOException {
     String className = Dummy.class.getName();
     String resource = className.replace('.', '/') + ".class";
+    String expectedClassName = signature.equals("byteArray3") ? null : className;
     ByteArrayOutputStream byteCodeStream = new ByteArrayOutputStream();
     try (InputStream classfile = getClass().getResourceAsStream("/" + resource)) {
       IOUtils.copy(classfile, byteCodeStream, 1024);
@@ -69,26 +72,27 @@ class DefineClassInstrumentationTest {
     mockHandler.beforeDefineClass(cl, className, bytecode, 0, bytecode.length);
     Mockito.reset(mockHandler);
 
+    DefineClassContext context = mock(DefineClassContext.class);
+    when(mockHandler.beforeDefineClass(cl, expectedClassName, bytecode, 0, bytecode.length))
+        .thenReturn(context);
+    mockHandler.beforeDefineClass(cl, expectedClassName, bytecode, 0, bytecode.length);
+    Mockito.clearInvocations(mockHandler);
+
     DefineClassHelper.Handler originalHandler =
         DefineClassHelper.internalSetHandlerForTests(mockHandler);
-    String expectedClassName;
     Class<?> definedClass;
     try {
       switch (signature) {
         case "byteArray3":
-          expectedClassName = null;
           definedClass = cl.doDefineClass(bytecode, 0, bytecode.length);
           break;
         case "byteArray4":
-          expectedClassName = className;
           definedClass = cl.doDefineClass(className, bytecode, 0, bytecode.length);
           break;
         case "byteArray5":
-          expectedClassName = className;
           definedClass = cl.doDefineClass(className, bytecode, 0, bytecode.length, null);
           break;
         case "byteBuffer3":
-          expectedClassName = className;
           ByteBuffer buffer = ByteBuffer.allocateDirect(bytecode.length);
           buffer.put(bytecode);
           buffer.flip();
@@ -106,6 +110,6 @@ class DefineClassInstrumentationTest {
     verify(mockHandler)
         .beforeDefineClass(
             same(cl), eq(expectedClassName), eq(bytecode), eq(0), eq(bytecode.length));
-    verify(mockHandler).afterDefineClass(eq(null));
+    verify(mockHandler).afterDefineClass(same(context));
   }
 }
