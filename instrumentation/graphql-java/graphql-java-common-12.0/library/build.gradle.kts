@@ -6,6 +6,12 @@ dependencies {
   library("com.graphql-java:graphql-java:12.0")
 }
 
+if (otelProps.testLatestDeps) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  }
+}
+
 tasks {
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
