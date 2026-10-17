@@ -36,7 +36,12 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
-    transformer.applyAdviceToMethod(named("doPoll"), getClass().getName() + "$PollAdvice");
+    // pollConsumer() (2.8+) returns the batch inside doPoll(), which may iterate it before
+    // returning, e.g. captureOffsets() when acks are async. Mark it there so that iteration doesn't
+    // create Kafka client process spans; doPoll() covers older versions and the sub-batches it
+    // creates.
+    transformer.applyAdviceToMethod(
+        named("doPoll").or(named("pollConsumer")), getClass().getName() + "$PollAdvice");
     transformer.applyAdviceToMethod(
         named("invokeIfHaveRecords")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
