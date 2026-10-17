@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.v1_19.
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
