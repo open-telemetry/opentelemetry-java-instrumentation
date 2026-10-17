@@ -369,6 +369,30 @@
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
+- The experimental Kafka broker JMX metrics now start with the JMX domain of their MBean, use
+  singular count units (for example `{message}` instead of `{messages}`), and report durations in
+  seconds. Update dashboards and alerts that use the old names:
+  - `kafka.message.count`, `kafka.request.count`, `kafka.request.failed`, `kafka.network.io`,
+    `kafka.purgatory.size`, `kafka.partition.count`, `kafka.isr.operation.count` and
+    `kafka.lag.max` are prefixed with `kafka.server.`.
+  - `kafka.partition.underReplicated` becomes `kafka.server.partition.under_replicated`.
+  - `kafka.partition.offline` becomes `kafka.controller.partition.offline`, and
+    `kafka.leaderElection.count` and `kafka.leaderElection.unclean.count` become
+    `kafka.controller.leader_election.count` and `kafka.controller.leader_election.unclean.count`.
+  - `kafka.request.queue` becomes `kafka.network.request.queue`.
+  - `kafka.request.time.total` becomes `kafka.network.request.count`: it reported a request count,
+    not a time. `kafka.request.time.50p` and `kafka.request.time.99p` become
+    `kafka.network.request.duration.p50` and `kafka.network.request.duration.p99`, in seconds
+    instead of milliseconds.
+  - `kafka.logs.flush.Count` becomes `kafka.log.flush.count`, and `kafka.logs.flush.time.50p` and
+    `kafka.logs.flush.time.99p` become `kafka.log.flush.duration.p50` and
+    `kafka.log.flush.duration.p99`, in seconds instead of milliseconds.
+  - The attributes `type`, `direction` and `operation` become `kafka.request.type`,
+    `network.io.direction` (`in` and `out` become `receive` and `transmit`) and
+    `kafka.isr.operation`. Request type values are now lowercase.
+  - `kafka.server.message.count`, `kafka.server.request.count`, `kafka.server.request.failed` and
+    `kafka.server.network.io` now have a `kafka.topic` attribute instead of a broker-wide value.
+  - `kafka.server.isr.operation.count` is now a counter instead of an updowncounter.
 
 ## Version 2.32.0 (2026-10-03)
 
