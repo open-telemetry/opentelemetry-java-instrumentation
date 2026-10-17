@@ -1,0 +1,10 @@
+Intentional EasyCLA failure reproducer. DO NOT MERGE.
+
+This investigation-only PR preserves this commit trailer:
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
+
+Expected result: EasyCLA reports Missing ID for renovate[bot].
+Its NoreplyIDPattern excludes [bot] from the login portion.
+No production code, workflows, or bot configuration are changed.
+
+https://github.com/linuxfoundation/easycla/blob/3cefb6013ca7f39b6ac26db0ad89d50a5a9c34e0/cla-backend-go/github/github_repository.go#L31-L36
