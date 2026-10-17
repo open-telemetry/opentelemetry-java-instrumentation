@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 
@@ -23,14 +24,14 @@ public final class RpcMetricsContextCustomizers {
   static final ContextKey<String> OLD_RPC_METHOD_CONTEXT_KEY =
       ContextKey.named("otel-rpc-old-method");
 
-  /**
-   * Returns a {@link ContextCustomizer} that captures the old {@code rpc.method} value in context
-   * so that RPC metrics can use it when both old and stable semantic conventions are active.
-   */
+  /** Creates the dual-emission customizer using the supplied instance's configuration. */
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public static <REQUEST> ContextCustomizer<REQUEST> dualEmitContextCustomizer(
-      RpcAttributesGetter<REQUEST, ?> getter) {
+      RpcAttributesGetter<REQUEST, ?> getter, OpenTelemetry openTelemetry) {
+    boolean dualEmit = emitOldRpcSemconv(openTelemetry) && emitPreviewRpcSemconv(openTelemetry);
     return (context, request, startAttributes) -> {
-      if (emitOldRpcSemconv() && emitPreviewRpcSemconv()) {
+      if (dualEmit) {
         String oldMethod = getter.getMethod(request);
         if (oldMethod != null) {
           return context.with(OLD_RPC_METHOD_CONTEXT_KEY, oldMethod);

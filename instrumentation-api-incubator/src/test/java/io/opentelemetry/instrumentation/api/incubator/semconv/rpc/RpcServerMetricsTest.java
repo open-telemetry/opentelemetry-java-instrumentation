@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -47,7 +48,8 @@ class RpcServerMetricsTest {
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
 
-    OperationListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
+    OperationListener listener =
+        RpcServerMetrics.get(OpenTelemetry.noop()).create(meterProvider.get("test"));
 
     Attributes requestAttributes1 =
         Attributes.builder()
@@ -292,7 +294,8 @@ class RpcServerMetricsTest {
               public String getMethod(String request) {
                 return request;
               }
-            })
+            },
+            OpenTelemetry.noop())
         .onStart(context, method, Attributes.empty());
   }
 }

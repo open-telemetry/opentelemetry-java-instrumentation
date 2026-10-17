@@ -21,29 +21,7 @@ import java.util.Map;
  */
 public final class SemconvStability {
 
-  private static final boolean v3Preview;
-
-  private static final boolean emitOldServicePeerSemconv;
-  private static final boolean emitPreviewServicePeerSemconv;
-
-  private static final boolean emitOldRpcSemconv;
-  private static final boolean emitPreviewRpcSemconv;
-
-  static {
-    OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
-    DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
-    v3Preview = v3Preview(openTelemetry);
-    SemconvSelectionResolver semconvSelection =
-        new SemconvSelectionResolver(openTelemetry, generalConfig);
-
-    SemconvMode servicePeerSelection = semconvSelection.servicePeer();
-    emitOldServicePeerSemconv = emitOld(servicePeerSelection);
-    emitPreviewServicePeerSemconv = emitStable(servicePeerSelection);
-
-    SemconvMode rpcSelection = semconvSelection.rpc();
-    emitOldRpcSemconv = emitOld(rpcSelection);
-    emitPreviewRpcSemconv = emitStable(rpcSelection);
-  }
+  private static final boolean v3Preview = v3Preview(GlobalOpenTelemetry.getOrNoop());
 
   public static boolean v3Preview(OpenTelemetry openTelemetry) {
     Boolean value = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview");
@@ -59,24 +37,39 @@ public final class SemconvStability {
     return v3Preview;
   }
 
-  public static boolean emitOldServicePeerSemconv() {
-    return emitOldServicePeerSemconv;
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  public static boolean emitOldServicePeerSemconv(OpenTelemetry openTelemetry) {
+    return emitOld(selectionResolver(openTelemetry).servicePeer());
   }
 
-  public static boolean emitPreviewServicePeerSemconv() {
-    return emitPreviewServicePeerSemconv;
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  public static boolean emitPreviewServicePeerSemconv(OpenTelemetry openTelemetry) {
+    return emitStable(selectionResolver(openTelemetry).servicePeer());
   }
 
-  public static boolean emitOldRpcSemconv() {
-    return emitOldRpcSemconv;
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  public static boolean emitOldRpcSemconv(OpenTelemetry openTelemetry) {
+    return emitOld(selectionResolver(openTelemetry).rpc());
   }
 
-  public static boolean emitPreviewRpcSemconv() {
-    return emitPreviewRpcSemconv;
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  public static boolean emitPreviewRpcSemconv(OpenTelemetry openTelemetry) {
+    return emitStable(selectionResolver(openTelemetry).rpc());
   }
 
-  public static String rpcSchemaUrl() {
-    return emitPreviewRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  public static String rpcSchemaUrl(OpenTelemetry openTelemetry) {
+    return emitPreviewRpcSemconv(openTelemetry) ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+  }
+
+  private static SemconvSelectionResolver selectionResolver(OpenTelemetry openTelemetry) {
+    return new SemconvSelectionResolver(
+        openTelemetry, getGeneralInstrumentationConfig(openTelemetry));
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();

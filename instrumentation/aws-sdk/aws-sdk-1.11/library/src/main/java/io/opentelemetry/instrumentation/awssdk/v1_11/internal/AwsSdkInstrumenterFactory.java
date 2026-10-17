@@ -68,12 +68,9 @@ public final class AwsSdkInstrumenterFactory {
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       stringKey("messaging.message.id");
 
-  private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors = createAttributesExtractors(false);
-  private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      extendedAttributesExtractors = createAttributesExtractors(true);
-
   private final OpenTelemetry openTelemetry;
+  private final List<AttributesExtractor<Request<?>, Response<?>>> defaultAttributesExtractors;
+  private final List<AttributesExtractor<Request<?>, Response<?>>> extendedAttributesExtractors;
   private final IncludeExclude headers;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
@@ -84,18 +81,22 @@ public final class AwsSdkInstrumenterFactory {
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled) {
     this.openTelemetry = openTelemetry;
+    defaultAttributesExtractors = createAttributesExtractors(false, openTelemetry);
+    extendedAttributesExtractors = createAttributesExtractors(true, openTelemetry);
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
   }
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
-      boolean includeExperimental) {
+      boolean includeExperimental, OpenTelemetry openTelemetry) {
     List<AttributesExtractor<Request<?>, Response<?>>> extractors =
         new ArrayList<>(
             asList(
                 HttpClientAttributesExtractor.create(new AwsSdkHttpAttributesGetter()),
-                RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter()),
+                RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter(), openTelemetry),
                 new SnsAttributesExtractor(),
                 new AwsSdkAttributesExtractor()));
     if (includeExperimental) {

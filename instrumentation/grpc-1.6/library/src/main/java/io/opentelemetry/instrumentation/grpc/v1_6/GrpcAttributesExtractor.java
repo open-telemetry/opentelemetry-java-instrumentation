@@ -16,6 +16,7 @@ import static java.util.Collections.emptyMap;
 
 import io.grpc.Metadata;
 import io.grpc.Status;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -33,6 +34,8 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       AttributeKey.longKey("rpc.grpc.status_code");
   private static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE =
       AttributeKey.stringKey("rpc.response.status_code");
+  private final boolean emitOldRpcSemconv;
+  private final boolean emitPreviewRpcSemconv;
   private final GrpcRpcAttributesGetter getter;
   @Nullable private final IncludeExclude requestMetadata;
 
@@ -44,8 +47,14 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
   private final Map<String, AttributeKey<List<String>>> literalRequestAttributeKeys;
   private final Map<String, AttributeKey<List<String>>> literalStableRequestAttributeKeys;
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   GrpcAttributesExtractor(
-      GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestMetadata) {
+      GrpcRpcAttributesGetter getter,
+      @Nullable IncludeExclude requestMetadata,
+      OpenTelemetry openTelemetry) {
+    emitOldRpcSemconv = emitOldRpcSemconv(openTelemetry);
+    emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
     this.getter = getter;
     if (requestMetadata == null || requestMetadata.isEmpty()) {
       this.requestMetadata = null;
@@ -72,10 +81,10 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       @Nullable Status status,
       @Nullable Throwable error) {
     if (status != null) {
-      if (emitOldRpcSemconv()) {
+      if (emitOldRpcSemconv) {
         attributes.put(RPC_GRPC_STATUS_CODE, status.getCode().value());
       }
-      if (emitPreviewRpcSemconv()) {
+      if (emitPreviewRpcSemconv) {
         attributes.put(RPC_RESPONSE_STATUS_CODE, status.getCode().name());
       }
     }
@@ -97,10 +106,10 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       }
       List<String> value = getter.metadataValue(request, metadataKey);
       if (!value.isEmpty()) {
-        if (emitOldRpcSemconv()) {
+        if (emitOldRpcSemconv) {
           attributes.put(requestAttributeKey(metadataKey, literalRequestAttributeKeys), value);
         }
-        if (emitPreviewRpcSemconv()) {
+        if (emitPreviewRpcSemconv) {
           attributes.put(
               stableRequestAttributeKey(metadataKey, literalStableRequestAttributeKeys), value);
         }
