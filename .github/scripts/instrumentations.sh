@@ -185,6 +185,8 @@ readonly INSTRUMENTATIONS=(
   "jsp-2.3:javaagent:testExperimental"
   "jfinal-3.2:javaagent:test"
   "kafka:kafka-clients:kafka-clients-2.6:library:test"
+  "kafka:kafka-clients:kafka-clients-2.6:library:testReceiveTelemetry"
+  "kafka:kafka-clients:kafka-clients-2.6:library:testExperimental"
   "kafka:kafka-clients:kafka-clients-2.6:library:testExceptionSignalLogs"
   "kafka:kafka-connect-2.6:testing:test"
   "kafka:kafka-connect-2.6:testing:testReceiveTelemetry"
