@@ -87,12 +87,8 @@ public class TestServlet3 {
               resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
               resp.setContentLength(endpoint.getBody().length());
-              byte[] prefix = "<head>".getBytes(UTF_8);
               byte[] body = endpoint.getBody().getBytes(UTF_8);
-              byte[] buffer = new byte[prefix.length + body.length];
-              System.arraycopy(prefix, 0, buffer, 0, prefix.length);
-              System.arraycopy(body, 0, buffer, prefix.length, body.length);
-              resp.getOutputStream().write(buffer, prefix.length, body.length);
+              resp.getOutputStream().write(body, 0, body.length);
             }
             return null;
           });
