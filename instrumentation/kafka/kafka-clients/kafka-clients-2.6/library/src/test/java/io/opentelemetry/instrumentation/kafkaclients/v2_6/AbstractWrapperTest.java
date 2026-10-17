@@ -32,6 +32,8 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
       Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
   protected static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+  private static final boolean CAPTURE_MESSAGING_HEADERS =
+      Boolean.getBoolean("test.captureMessagingHeaders");
 
   protected long consumedOffset;
 
@@ -70,17 +72,18 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
       testing.runWithSpan("process child", () -> {});
     }
 
-    assertTraces(true, CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES);
+    assertTraces(CAPTURE_MESSAGING_HEADERS, CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES);
   }
 
   protected KafkaTelemetryBuilder kafkaTelemetryBuilder() {
-    KafkaTelemetryBuilder telemetryBuilder =
-        KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setHeaders(
-                IncludeExclude.builder()
-                    .setIncluded("Test-Message-*")
-                    .setExcluded("*-Excluded-Header")
-                    .build());
+    KafkaTelemetryBuilder telemetryBuilder = KafkaTelemetry.builder(testing.getOpenTelemetry());
+    if (CAPTURE_MESSAGING_HEADERS) {
+      telemetryBuilder.setHeaders(
+          IncludeExclude.builder()
+              .setIncluded("Test-Message-*")
+              .setExcluded("*-Excluded-Header")
+              .build());
+    }
     if (MESSAGING_RECEIVE_TELEMETRY_ENABLED) {
       telemetryBuilder.setMessagingReceiveTelemetryEnabled(true);
     }

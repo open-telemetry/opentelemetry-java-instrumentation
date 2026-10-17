@@ -13,16 +13,19 @@ class InterceptorsTest extends AbstractInterceptorsTest {
       Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+  private static final boolean CAPTURE_MESSAGING_HEADERS =
+      Boolean.getBoolean("test.captureMessagingHeaders");
   private static final KafkaTelemetry kafkaTelemetry = createKafkaTelemetry();
 
   private static KafkaTelemetry createKafkaTelemetry() {
-    KafkaTelemetryBuilder builder =
-        KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setHeaders(
-                IncludeExclude.builder()
-                    .setIncluded("Test-Message-*")
-                    .setExcluded("*-Excluded-Header")
-                    .build());
+    KafkaTelemetryBuilder builder = KafkaTelemetry.builder(testing.getOpenTelemetry());
+    if (CAPTURE_MESSAGING_HEADERS) {
+      builder.setHeaders(
+          IncludeExclude.builder()
+              .setIncluded("Test-Message-*")
+              .setExcluded("*-Excluded-Header")
+              .build());
+    }
     if (MESSAGING_RECEIVE_TELEMETRY_ENABLED) {
       builder.setMessagingReceiveTelemetryEnabled(true);
     }
@@ -49,6 +52,6 @@ class InterceptorsTest extends AbstractInterceptorsTest {
 
   @Override
   protected boolean captureHeaders() {
-    return true;
+    return CAPTURE_MESSAGING_HEADERS;
   }
 }
