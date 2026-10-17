@@ -79,13 +79,16 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     String subtype = extractSubtype(jdbcUrl);
     int protoLoc = jdbcUrl.indexOf("://");
 
-    if (subtype != null || (protoLoc > 0 && jdbcUrl.startsWith("address=", protoLoc + 3))) {
-      // Has subprotocol (e.g., mysql:aurora://...), or uses the address=(host=...)(port=...) form,
-      // which java.net.URI can't parse
+    if (subtype != null) {
+      // Has subprotocol (e.g., mysql:aurora://...)
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser
       GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
+      if (jdbcUrl.startsWith("address=", protoLoc + 3)) {
+        // java.net.URI finds no host in the address=(host=...)(port=...) form
+        parseMariaAddress(jdbcUrl.substring(protoLoc + 3), ctx);
+      }
     } else {
       // Non-standard format: type/host:port/db?params
       parseNonStandardUrl(jdbcUrl, ctx);
