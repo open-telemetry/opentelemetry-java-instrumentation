@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -68,26 +70,28 @@ tasks {
     )
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-        "otel.semconv-stability.preview=service.peer"
-    )
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
-  }
-
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
+    }
+  }
+}
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("PreviewSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
+              "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
+              "otel.semconv-stability.preview=service.peer"
+          )
+        }
+      }
     }
   }
 }
