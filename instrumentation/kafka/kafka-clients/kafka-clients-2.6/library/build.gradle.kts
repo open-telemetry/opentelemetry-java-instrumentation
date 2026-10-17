@@ -41,12 +41,9 @@ tasks {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
     }
     systemProperty("test.messagingReceiveTelemetryEnabled", "true")
-    systemProperty("test.captureMessagingHeaders", "true")
     systemProperty(
       "metadataConfig",
-      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
-        "KafkaTelemetryBuilder.setHeaders(IncludeExclude.builder().setIncluded(\"Test-Message-*\")" +
-        ".setExcluded(\"*-Excluded-Header\").build())"
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)"
     )
   }
 
@@ -59,13 +56,10 @@ tasks {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
     }
     systemProperty("test.messagingReceiveTelemetryEnabled", "true")
-    systemProperty("test.captureMessagingHeaders", "true")
     systemProperty("test.captureExperimentalSpanAttributes", "true")
     systemProperty(
       "metadataConfig",
       "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
-        "KafkaTelemetryBuilder.setHeaders(IncludeExclude.builder().setIncluded(\"Test-Message-*\")" +
-        ".setExcluded(\"*-Excluded-Header\").build())," +
         "KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)"
     )
   }

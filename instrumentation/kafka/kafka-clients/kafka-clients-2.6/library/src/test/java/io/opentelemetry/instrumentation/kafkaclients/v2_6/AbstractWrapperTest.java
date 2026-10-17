@@ -30,8 +30,6 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
 
   protected static final boolean MESSAGING_RECEIVE_TELEMETRY_ENABLED =
       Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
-  protected static final boolean CAPTURE_MESSAGING_HEADERS =
-      Boolean.getBoolean("test.captureMessagingHeaders");
   protected static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Boolean.getBoolean("test.captureExperimentalSpanAttributes");
 
@@ -48,10 +46,8 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
         () -> {
           ProducerRecord<Integer, String> producerRecord =
               new ProducerRecord<>(SHARED_TOPIC, greeting);
-          if (CAPTURE_MESSAGING_HEADERS) {
-            producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
-            producerRecord.headers().add("Uncaptured-Header", "password".getBytes(UTF_8));
-          }
+          producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
+          producerRecord.headers().add("Uncaptured-Header", "password".getBytes(UTF_8));
           wrappedProducer.send(
               producerRecord,
               (meta, ex) -> {
@@ -74,20 +70,19 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
       testing.runWithSpan("process child", () -> {});
     }
 
-    assertTraces(CAPTURE_MESSAGING_HEADERS, CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES);
+    assertTraces(true, CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES);
   }
 
   protected KafkaTelemetryBuilder kafkaTelemetryBuilder() {
-    KafkaTelemetryBuilder telemetryBuilder = KafkaTelemetry.builder(testing.getOpenTelemetry());
+    KafkaTelemetryBuilder telemetryBuilder =
+        KafkaTelemetry.builder(testing.getOpenTelemetry())
+            .setHeaders(
+                IncludeExclude.builder()
+                    .setIncluded("Test-Message-*")
+                    .setExcluded("*-Excluded-Header")
+                    .build());
     if (MESSAGING_RECEIVE_TELEMETRY_ENABLED) {
       telemetryBuilder.setMessagingReceiveTelemetryEnabled(true);
-    }
-    if (CAPTURE_MESSAGING_HEADERS) {
-      telemetryBuilder.setHeaders(
-          IncludeExclude.builder()
-              .setIncluded("Test-Message-*")
-              .setExcluded("*-Excluded-Header")
-              .build());
     }
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       telemetryBuilder.setCaptureExperimentalSpanAttributes(true);
