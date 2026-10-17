@@ -285,6 +285,11 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- In `opentelemetry-reactor-3.1`, `Context.root()` explicitly stored in Reactor context or supplied
+  to `TracingSubscriber` now clears the active OpenTelemetry context during signals. Replace
+  `storeOpenTelemetryContext(reactorContext, Context.root())` with
+  `withoutSubscriptionContextCapture(reactorContext)` when using it to leave signal-time contexts
+  untouched without capturing the subscription context.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
   `create(Meter, String, Attributes)` overloads. Use the overloads accepting
   `OpenTelemetry`, the instrumentation name and the pool name instead.

@@ -43,19 +43,42 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final Context context;
   private final boolean hasContextToPropagate;
 
+  /**
+   * Uses an explicitly stored OpenTelemetry context, including root, or implicitly captures the
+   * current context unless subscription capture is disabled. An implicitly captured root context
+   * leaves the context active during signals unchanged.
+   */
   public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
-    this(subscriber, ctx, io.opentelemetry.context.Context.current());
+    this(subscriber, ctx, io.opentelemetry.context.Context.current(), false);
   }
 
+  /**
+   * Uses an explicitly stored OpenTelemetry context or {@code contextToPropagate} as an explicit
+   * fallback. Explicit contexts, including root, are authoritative during signals. Disabling
+   * subscription context capture does not suppress this explicit fallback.
+   */
   public TracingSubscriber(
       Subscriber<? super T> subscriber,
       Context ctx,
       io.opentelemetry.context.Context contextToPropagate) {
+    this(subscriber, ctx, contextToPropagate, true);
+  }
+
+  private TracingSubscriber(
+      Subscriber<? super T> subscriber,
+      Context ctx,
+      io.opentelemetry.context.Context contextToPropagate,
+      boolean explicitFallback) {
     this.subscriber = subscriber;
     this.context = ctx;
-    this.traceContext = ContextPropagationOperator.getOpenTelemetryContext(ctx, contextToPropagate);
+    io.opentelemetry.context.Context storedContext =
+        ContextPropagationOperator.getOpenTelemetryContext(ctx, null);
+    this.traceContext = storedContext != null ? storedContext : contextToPropagate;
     this.hasContextToPropagate =
-        traceContext != null && traceContext != io.opentelemetry.context.Context.root();
+        storedContext != null
+            || explicitFallback
+            || (!ContextPropagationOperator.isSubscriptionContextCaptureDisabled(ctx)
+                && traceContext != io.opentelemetry.context.Context.root());
   }
 
   @Override
