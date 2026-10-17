@@ -42,8 +42,7 @@ class ApiClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("execute"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("okhttp3.Call"))),
+            .and(takesArguments(2)),
         getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
         isPublic()

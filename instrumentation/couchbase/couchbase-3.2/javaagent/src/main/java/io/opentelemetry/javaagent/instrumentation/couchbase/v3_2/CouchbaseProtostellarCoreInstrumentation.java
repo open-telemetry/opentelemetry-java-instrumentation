@@ -36,7 +36,6 @@ class CouchbaseProtostellarCoreInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArguments(3))
-            .and(takesArgument(0, named("com.couchbase.client.core.env.CoreEnvironment")))
             .and(takesArgument(2, named("java.util.Set"))),
         getClass().getName() + "$CoreConstructorAdvice");
     transformer.applyAdviceToMethod(

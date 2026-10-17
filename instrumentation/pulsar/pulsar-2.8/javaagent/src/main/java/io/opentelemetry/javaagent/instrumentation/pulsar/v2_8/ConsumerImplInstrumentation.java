@@ -53,8 +53,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isProtected()
             .and(named("internalReceive"))
-            .and(takesArguments(2))
-            .and(takesArgument(1, TimeUnit.class)),
+            .and(takesArguments(2)),
         getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(

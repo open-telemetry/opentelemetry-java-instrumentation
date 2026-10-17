@@ -48,8 +48,6 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("connect")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("io.vertx.core.Context")))
             .and(takesArgument(1, named("io.vertx.core.Future")))
             .and(returns(named("io.vertx.core.Future"))),
         getClass().getName() + "$ConnectAdvice");

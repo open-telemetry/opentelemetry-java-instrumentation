@@ -9,7 +9,6 @@ import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -39,9 +38,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
         OpenTelemetryInstrumentation.class.getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
         isStatic()
-            .and(named("set"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("application.io.opentelemetry.api.OpenTelemetry"))),
+            .and(named("set")),
         OpenTelemetryInstrumentation.class.getName() + "$SetAdvice");
     transformer.applyAdviceToMethod(
         isStatic().and(named("resetForTest")).and(takesArguments(0)),

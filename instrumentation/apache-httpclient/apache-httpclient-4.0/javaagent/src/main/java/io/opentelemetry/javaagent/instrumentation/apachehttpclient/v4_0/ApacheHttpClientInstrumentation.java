@@ -76,8 +76,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(takesArguments(3))
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
-            .and(takesArgument(1, named("org.apache.http.client.ResponseHandler")))
-            .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
+            .and(takesArgument(1, named("org.apache.http.client.ResponseHandler"))),
         getClass().getName() + "$UriRequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
@@ -112,8 +111,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArguments(4))
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.http.HttpRequest")))
-            .and(takesArgument(2, named("org.apache.http.client.ResponseHandler")))
-            .and(takesArgument(3, named("org.apache.http.protocol.HttpContext"))),
+            .and(takesArgument(2, named("org.apache.http.client.ResponseHandler"))),
         getClass().getName() + "$RequestWithHandlerAdvice");
   }
 

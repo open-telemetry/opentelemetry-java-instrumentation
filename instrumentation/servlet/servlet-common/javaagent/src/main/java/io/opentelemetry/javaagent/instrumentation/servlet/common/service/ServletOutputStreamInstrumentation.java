@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -53,10 +54,16 @@ public class ServletOutputStreamInstrumentation implements TypeInstrumentation {
             .and(isPublic()),
         writeBytesAndOffsetAdviceClassName);
     transformer.applyAdviceToMethod(
-        named("write").and(takesArgument(0, byte[].class)).and(isPublic()),
+        named("write")
+            .and(takesArguments(1))
+            .and(takesArgument(0, byte[].class))
+            .and(isPublic()),
         writeBytesAdviceClassName);
     transformer.applyAdviceToMethod(
-        named("write").and(takesArgument(0, int.class)).and(isPublic()),
+        named("write")
+            .and(takesArguments(1))
+            .and(takesArgument(0, int.class))
+            .and(isPublic()),
         writeIntAdviceClassName);
   }
 }

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.rabbitmq.client.Channel;
 import io.opentelemetry.context.Context;
@@ -35,19 +34,13 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("executeListener")
-            .and(takesArguments(2))
             .and(takesArgument(0, named("com.rabbitmq.client.Channel")))
             .and(
                 takesArgument(1, Object.class)
                     .or(takesArgument(1, named("org.springframework.amqp.core.Message")))),
         getClass().getName() + "$ExecuteListenerAdvice");
     transformer.applyAdviceToMethod(
-        named("invokeListener")
-            .and(
-                takesArguments(2)
-                    .and(
-                        takesArgument(1, Object.class)
-                            .or(takesArgument(1, named("org.springframework.amqp.core.Message"))))),
+        named("invokeListener"),
         getClass().getName() + "$InvokeListenerAdvice");
   }
 

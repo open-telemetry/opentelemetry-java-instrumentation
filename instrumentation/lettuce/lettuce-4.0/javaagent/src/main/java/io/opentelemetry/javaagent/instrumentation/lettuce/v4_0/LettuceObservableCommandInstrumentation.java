@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSin
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
@@ -34,11 +33,7 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand")))
-            .and(takesArgument(1, named("rx.Subscriber")))
-            .and(takesArgument(2, boolean.class)),
+        isConstructor(),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "cancel")
