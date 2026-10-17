@@ -64,6 +64,11 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
   signature matchers may use accessible `java.base` types available at the minimum
   supported Java version; keep `named(...)` for instrumented-library types.
   With dynamic advice typing, match only signatures that guarantee assignability.
+- When advice binds a library argument as `Object` to support different known parameter types
+  across versions, prefer `takesArgument(index, namedOneOf(...))` with those type names over
+  `any()` or a custom argument-count check. The positional matcher already guarantees that the
+  argument exists. `takesArgument(index, Object.class)` matches a parameter declared exactly as
+  `Object`, not any reference type.
 - Omit return-type predicates unless needed to select supported methods or prevent a concrete
   incompatibility. A typed `@Advice.Return` alone does not justify a predicate; consider the supported
   API contract, covariant returns, and the actual transformation pipeline. If advice replaces the
