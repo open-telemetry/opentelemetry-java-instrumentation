@@ -69,7 +69,53 @@ tasks {
     }
   }
 
+  listOf("version3Test", "version41Test", "version5Test").forEach { suiteName ->
+    val suiteProvider = testing.suites.named<JvmTestSuite>(suiteName)
+    val testClassName =
+      when (suiteName) {
+        "version41Test" -> "*Vertx41HttpServerTest"
+        "version5Test" -> "*Vertx5HttpServerTest"
+        else -> "*VertxHttpServerTest"
+      }
+
+    register<Test>("${suiteName}ExceptionSignalLogs") {
+      val suite = suiteProvider.get()
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+      filter {
+        includeTestsMatching("$testClassName.requestWithException")
+      }
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+      if (suiteName == "version5Test" && !testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
+        enabled = false
+      }
+    }
+
+    register<Test>("${suiteName}ExceptionSignalLogsDup") {
+      val suite = suiteProvider.get()
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+      filter {
+        includeTestsMatching("$testClassName.requestWithException")
+      }
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs/dup")
+      if (suiteName == "version5Test" && !testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
+        enabled = false
+      }
+    }
+  }
+
   check {
     dependsOn(testing.suites)
+    dependsOn(
+      "version3TestExceptionSignalLogs",
+      "version3TestExceptionSignalLogsDup",
+      "version41TestExceptionSignalLogs",
+      "version41TestExceptionSignalLogsDup",
+      "version5TestExceptionSignalLogs",
+      "version5TestExceptionSignalLogsDup"
+    )
   }
 }

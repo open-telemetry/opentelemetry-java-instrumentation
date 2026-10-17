@@ -1075,10 +1075,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     testing.waitAndAssertTraces(assertions);
 
-    if (endpoint == EXCEPTION
-        && emitExceptionAsLogs()
-        && options.hasExceptionOnServerSpan.test(endpoint)) {
-      assertExceptionLogs(options.expectedException, "http.server.request.exception");
+    if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
+      if (emitExceptionAsLogs()) {
+        assertExceptionLogs(options.expectedException, "http.server.request.exception");
+      } else {
+        assertThat(testing.getExportedLogRecords())
+            .filteredOn(log -> "http.server.request.exception".equals(log.getEventName()))
+            .isEmpty();
+      }
     }
   }
 
@@ -1115,6 +1119,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             }
                           }),
                       satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+              assertThat(testing.getExportedSpans())
+                  .anySatisfy(
+                      span ->
+                          assertThat(span.getSpanContext())
+                              .isEqualTo(logs.get(0).getSpanContext()));
             });
   }
 
@@ -1185,7 +1194,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
-      span.hasException(emitExceptionAsSpanEvents() ? options.expectedException : null);
+      span.hasException(emitExceptionAsSpanEvents() ? options.expectedException : null)
+          .hasEventsSatisfying(
+              events ->
+                  assertThat(events)
+                      .filteredOn(event -> "exception".equals(event.getName()))
+                      .hasSize(emitExceptionAsSpanEvents() ? 1 : 0));
     }
 
     span.hasAttributesSatisfying(

@@ -10,12 +10,16 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import ratpack.handling.Context;
 
 public class RatpackSingletons {
+
+  private static final HttpServerExceptionRecorder serverExceptionRecorder =
+      HttpServerExceptionRecorder.create(GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4");
 
   private static final Instrumenter<String, Void> instrumenter =
       Instrumenter.<String, Void>builder(
@@ -53,7 +57,8 @@ public class RatpackSingletons {
   public static void onError(io.opentelemetry.context.Context context, Throwable error) {
     Span span = Span.fromContext(context);
     span.setStatus(StatusCode.ERROR);
-    span.recordException(ErrorCauseExtractor.getDefault().extract(error));
+    serverExceptionRecorder.recordException(
+        context, span, ErrorCauseExtractor.getDefault().extract(error));
   }
 
   private RatpackSingletons() {}

@@ -1,7 +1,6 @@
 display_name: Vert.x Web
 description: >
-  This instrumentation enriches HTTP server spans with route information for Vert.x Web, it does
-  not emit any telemetry on its own.
+  This instrumentation enriches HTTP server spans with route information for Vert.x Web.
 features:
   - HTTP_ROUTE
 library_link: https://vertx.io/docs/vertx-web/java/
