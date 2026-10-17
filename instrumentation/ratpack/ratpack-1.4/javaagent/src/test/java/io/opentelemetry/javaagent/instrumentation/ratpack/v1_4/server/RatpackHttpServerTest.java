@@ -38,12 +38,6 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
   @Override
   protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
     super.assertExceptionLogs(expectedException, expectedEventName);
-    testing.logRecords().stream()
-        .filter(log -> expectedEventName.equals(log.getEventName()))
-        .forEach(
-            log ->
-                assertThat(log.getInstrumentationScopeInfo().getName())
-                    .isEqualTo("io.opentelemetry.netty-4.1"));
     assertThat(testing.spans())
         .filteredOn(span -> span.getKind() == SpanKind.SERVER)
         .singleElement()
@@ -57,6 +51,8 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
                           assertThat(log.getSpanContext()).isEqualTo(serverSpan.getSpanContext());
                           assertThat(log.getInstrumentationScopeInfo())
                               .isEqualTo(serverSpan.getInstrumentationScopeInfo());
+                          assertThat(log.getInstrumentationScopeInfo().getName())
+                              .isEqualTo("io.opentelemetry.netty-4.1");
                         }));
   }
 }
