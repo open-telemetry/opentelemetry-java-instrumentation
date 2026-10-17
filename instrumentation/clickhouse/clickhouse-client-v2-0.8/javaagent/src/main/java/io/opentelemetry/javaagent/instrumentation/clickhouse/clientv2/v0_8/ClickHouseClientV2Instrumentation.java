@@ -43,7 +43,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         isPublic()
             .and(named("query"))
             .and(takesArgument(0, String.class))
-            .and(takesArgument(1, isSubTypeOf(Map.class)))
+            .and(takesArgument(1, Map.class))
             .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings")))
             .and(returns(isSubTypeOf(CompletableFuture.class))),
         getClass().getName() + "$QueryAdvice");

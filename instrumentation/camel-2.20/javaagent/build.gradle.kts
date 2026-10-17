@@ -147,7 +147,6 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jms.enabled=false")
-    systemProperty("metadataConfig", "otel.instrumentation.jms.enabled=false")
     systemProperty("testNoLowerMessaging", "true")
     filter {
       includeTestsMatching("*JmsCamelStandaloneTest")
@@ -174,7 +173,6 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.camel.enabled=false")
-    systemProperty("metadataConfig", "otel.instrumentation.camel.enabled=false")
     systemProperty("testCamelDisabled", "true")
     filter {
       includeTestsMatching("*SqsCamelTest.awsSdkSqsProducerToCamelSqsConsumer")
@@ -191,12 +189,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.camel-kafka.enabled=false")
     jvmArgs("-Dotel.instrumentation.camel-rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.camel-aws-sqs.enabled=false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.camel-kafka.enabled=false," +
-        "otel.instrumentation.camel-rabbitmq.enabled=false," +
-        "otel.instrumentation.camel-aws-sqs.enabled=false",
-    )
     systemProperty("testAdapterDisabled", "true")
     filter {
       includeTestsMatching("*KafkaCamelTest")

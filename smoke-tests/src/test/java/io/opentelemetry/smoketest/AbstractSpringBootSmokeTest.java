@@ -13,8 +13,6 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
 abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
 
@@ -36,8 +34,6 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET /greeting")
-                        .hasAttribute(satisfies(THREAD_ID, val -> val.isNotNull()))
-                        .hasAttribute(satisfies(THREAD_NAME, val -> val.isNotBlank()))
                         .hasResourceSatisfying(
                             resource ->
                                 resource

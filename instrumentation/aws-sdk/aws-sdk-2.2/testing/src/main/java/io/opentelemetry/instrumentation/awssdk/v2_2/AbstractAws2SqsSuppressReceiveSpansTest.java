@@ -93,7 +93,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                                 .hasKind(SpanKind.CLIENT)
                                 .hasTotalRecordedLinks(0)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                    equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                                     equalTo(AWS_SQS_QUEUE_URL, queueUrl),
                                     satisfies(
                                         AWS_REQUEST_ID,
@@ -257,7 +257,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                           .hasNoParent()
                           .hasTotalRecordedLinks(0)
                           .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                              equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                               equalTo(RPC_SYSTEM, "aws-api"),
                               equalTo(RPC_SERVICE, "Sqs"),
                               equalTo(RPC_METHOD, "ReceiveMessage"),

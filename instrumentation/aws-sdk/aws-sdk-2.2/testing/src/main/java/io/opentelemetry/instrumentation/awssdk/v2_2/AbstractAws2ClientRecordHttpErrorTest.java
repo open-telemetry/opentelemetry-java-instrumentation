@@ -26,7 +26,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -57,7 +56,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractAws2ClientRecordHttpErrorTest {
+public abstract class AbstractAws2ClientRecordHttpErrorTest extends AbstractAwsSdkTest {
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
@@ -76,8 +75,6 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
   }
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
-
-  protected abstract InstrumentationExtension getTesting();
 
   // Introducing a new ExecutionInterceptor that's registered with the AWS SDK.
   // It's positioned to execute after the TracingExecutionInterceptor used for SDK instrumentation.
@@ -186,7 +183,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, service),
                                   equalTo(RPC_METHOD, operation),
-                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                                   equalTo(AWS_REQUEST_ID, requestId),
                                   equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                                   equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
@@ -212,7 +209,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                                             stringKey("aws.http.error_message"),
                                             "DynamoDB is currently unavailable")));
                       } else {
-                        span.hasEventsSatisfying(events -> assertThat(events).isEmpty());
+                        span.hasEventsSatisfyingExactly();
                       }
                     }));
 
