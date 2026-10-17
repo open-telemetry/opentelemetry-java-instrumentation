@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -39,42 +41,31 @@ tasks {
     )
     systemProperty("testMdcConfiguration", "new")
   }
+}
 
-  val testCaptureTemplateAndArguments = register<Test>("testCaptureTemplateAndArguments") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("CaptureTemplateAndArguments") {
+          jvmArgs(
+            "-Dotel.instrumentation.jboss-logmanager.experimental.capture-template=true",
+            "-Dotel.instrumentation.jboss-logmanager.experimental.capture-arguments=true",
+          )
+        }
+        register("LegacyMdcAttributes") {
+          jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=legacy")
+          systemProperty("testMdcConfiguration", "legacy")
+        }
+        register("ExcludedOnlyMdcAttributes") {
+          filter {
+            includeTestsMatching("JbossLogmanagerTest.testMdc")
+          }
 
-    jvmArgs(
-      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-template=true",
-      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-arguments=true",
-    )
-  }
-
-  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=legacy")
-    systemProperty("testMdcConfiguration", "legacy")
-  }
-
-  val testExcludedOnlyMdcAttributes = register<Test>("testExcludedOnlyMdcAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("JbossLogmanagerTest.testMdc")
+          jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded=prefix.secret,excluded*")
+          systemProperty("testMdcConfiguration", "excludedOnly")
+        }
+      }
     }
-
-    jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded=prefix.secret,excluded*")
-    systemProperty("testMdcConfiguration", "excludedOnly")
-  }
-
-  check {
-    dependsOn(
-      testCaptureTemplateAndArguments,
-      testLegacyMdcAttributes,
-      testExcludedOnlyMdcAttributes,
-    )
   }
 }
