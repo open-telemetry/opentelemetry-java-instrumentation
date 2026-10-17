@@ -14,7 +14,6 @@ import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,27 +39,19 @@ class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallLogRawAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth methodEnter(
+    public static void methodEnter(
         @Advice.This Logger logger, @Advice.Argument(0) ExtLogRecord record) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        try {
-          LoggingEventMapper.INSTANCE.capture(logger, record);
-        } catch (Throwable t) {
-          callDepth.decrementAndGet();
-          throw t;
-        }
+        LoggingEventMapper.INSTANCE.capture(logger, record);
       }
-      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter @Nullable CallDepth callDepth) {
-      if (callDepth != null) {
-        callDepth.decrementAndGet();
-      }
+    public static void methodExit() {
+      CallDepth.forClass(LoggerProvider.class).decrementAndGet();
     }
   }
 }
