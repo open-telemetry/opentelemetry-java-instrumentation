@@ -385,8 +385,10 @@ readonly COLIMA_INSTRUMENTATIONS=(
 readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:test"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
+  "kafka:kafka-clients:kafka-clients-0.11:javaagent:testReceiveTelemetry"
   "kafka:kafka-streams-0.11:javaagent:test"
   "kafka:kafka-streams-0.11:javaagent:testExperimental"
+  "kafka:kafka-streams-0.11:javaagent:testReceiveTelemetry"
   "lettuce:lettuce-5.0:javaagent:lettuce51Test"
   "lettuce:lettuce-5.0:javaagent:lettuce60Test"
   "lettuce:lettuce-5.0:javaagent:lettuce65Test"
