@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
@@ -14,6 +13,7 @@ import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler.DefineClas
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.nio.ByteBuffer;
+import java.security.ProtectionDomain;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -29,16 +29,13 @@ class DefineClassInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("defineClass")
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, byte[].class))
-            .and(takesArgument(2, int.class))
-            .and(takesArgument(3, int.class))
-            .and(takesArguments(5)),
+            .and(
+                takesArguments(
+                    String.class, byte[].class, int.class, int.class, ProtectionDomain.class)),
         getClass().getName() + "$DefineClassAdvice");
     transformer.applyAdviceToMethod(
         named("defineClass")
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, ByteBuffer.class)),
+            .and(takesArguments(String.class, ByteBuffer.class, ProtectionDomain.class)),
         getClass().getName() + "$DefineClassWithThreeArgsAdvice");
   }
 
