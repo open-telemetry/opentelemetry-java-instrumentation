@@ -12,9 +12,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.resources.internal.ServiceResource;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.resources.internal.EntityUtil;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -34,15 +36,21 @@ class ManifestResourceProviderTest {
     Resource resource = provider.createResource(config);
     assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(expectedName);
     assertThat(resource.getAttribute(SERVICE_VERSION)).isEqualTo(expectedVersion);
+    assertThat(EntityUtil.getEntities(resource)).hasSize(expectedName == null ? 0 : 1);
   }
 
   private static Stream<Arguments> createResourceCases() {
-    Resource manifest =
-        Resource.create(Attributes.of(SERVICE_NAME, "demo", SERVICE_VERSION, "0.0.1-SNAPSHOT"));
+    Resource manifest = ServiceResource.create("demo", "0.0.1-SNAPSHOT");
     Resource existingWithName = Resource.create(Attributes.of(SERVICE_NAME, "old"));
     return Stream.of(
         argumentSet("name ok", "demo", "0.0.1-SNAPSHOT", manifest, Resource.getDefault()),
         argumentSet("name - empty resource", null, null, Resource.empty(), Resource.getDefault()),
-        argumentSet("name already detected", null, "0.0.1-SNAPSHOT", manifest, existingWithName));
+        argumentSet("name already detected", null, "0.0.1-SNAPSHOT", manifest, existingWithName),
+        argumentSet(
+            "version already detected",
+            "demo",
+            null,
+            manifest,
+            Resource.getDefault().merge(Resource.create(Attributes.of(SERVICE_VERSION, "old")))));
   }
 }
