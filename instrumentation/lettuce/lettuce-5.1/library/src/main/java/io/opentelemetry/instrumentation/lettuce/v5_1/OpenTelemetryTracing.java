@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
@@ -212,7 +213,15 @@ final class OpenTelemetryTracing implements Tracing {
         completeableCommand.onComplete(
             (o, throwable) -> {
               CommandOutput<?, ?, ?> output = command.getOutput();
-              String errorMsg = output != null ? output.getError() : null;
+              // Lettuce also copies the message of client-side failures, such as command
+              // timeouts, into the output, so only treat it as a Redis error reply when there is
+              // no other failure
+              String errorMsg =
+                  output != null
+                          && (throwable == null
+                              || throwable instanceof RedisCommandExecutionException)
+                      ? output.getError()
+                      : null;
               finishWithResponse(new LettuceResponse(errorMsg, throwable));
             });
       }

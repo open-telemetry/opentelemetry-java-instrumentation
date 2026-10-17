@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
@@ -24,8 +25,10 @@ import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisCommandExecutionException;
+import io.lettuce.core.RedisCommandTimeoutException;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -36,6 +39,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -205,6 +209,51 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
     assertCommandErrorMetric("WRONGTYPE");
+  }
+
+  @Test
+  void testCommandTimeoutDoesNotReportRedisErrorType() throws Exception {
+    RedisClient timeoutClient = createClient(embeddedDbUri);
+    cleanup.deferCleanup(timeoutClient::shutdown);
+    timeoutClient.setOptions(
+        LettuceTestUtil.CLIENT_OPTIONS
+            .mutate()
+            .timeoutOptions(TimeoutOptions.enabled(Duration.ofMillis(100)))
+            .build());
+    StatefulRedisConnection<String, String> timeoutConnection = timeoutClient.connect();
+    cleanup.deferCleanup(timeoutConnection);
+    if (testLatestDeps()) {
+      // ignore CLIENT SETINFO and MAINT_NOTIFICATIONS traces
+      testing().waitForTraces(3);
+      testing().clearData();
+    }
+
+    RedisFuture<?> redisFuture = timeoutConnection.async().blpop(1, "TIMEOUT_LIST");
+    Throwable thrown = catchThrowable(() -> redisFuture.get(3, SECONDS));
+
+    assertThat(thrown)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandTimeoutException.class);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("BLPOP"))
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(equalTo(DB_OPERATION_NAME, "BLPOP"))
+                            .satisfies(
+                                spanData -> {
+                                  // Lettuce 6+ starts the timeout message with the command type,
+                                  // e.g. "BLPOP. Command timed out", and passes the exception to
+                                  // the completion callback; 5.1 does neither
+                                  if (testLatestDeps()) {
+                                    assertThat(spanData.getAttributes().get(ERROR_TYPE))
+                                        .isEqualTo(RedisCommandTimeoutException.class.getName());
+                                  }
+                                })));
   }
 
   @Test
