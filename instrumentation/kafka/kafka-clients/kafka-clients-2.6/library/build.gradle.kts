@@ -27,7 +27,8 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("InterceptorsDefaultTest")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
     }
   }
 
@@ -36,13 +37,16 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("InterceptorsTest")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
     }
+    systemProperty("test.messagingReceiveTelemetryEnabled", "true")
+    systemProperty("test.captureMessagingHeaders", "true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
-        "otel.instrumentation.common.messaging.headers.excluded=*-Excluded-Header," +
-        "otel.instrumentation.common.messaging.headers.included=Test-Message-*"
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
+        "KafkaTelemetryBuilder.setHeaders(IncludeExclude.builder().setIncluded(\"Test-Message-*\")" +
+        ".setExcluded(\"*-Excluded-Header\").build())"
     )
   }
 
@@ -51,14 +55,18 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("InterceptorsWithExperimentalAttributesTest")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
     }
+    systemProperty("test.messagingReceiveTelemetryEnabled", "true")
+    systemProperty("test.captureMessagingHeaders", "true")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
-        "otel.instrumentation.common.messaging.headers.excluded=*-Excluded-Header," +
-        "otel.instrumentation.common.messaging.headers.included=Test-Message-*," +
-        "otel.instrumentation.kafka.experimental-span-attributes=true"
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
+        "KafkaTelemetryBuilder.setHeaders(IncludeExclude.builder().setIncluded(\"Test-Message-*\")" +
+        ".setExcluded(\"*-Excluded-Header\").build())," +
+        "KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)"
     )
   }
 
@@ -69,10 +77,11 @@ tasks {
     filter {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testConsumerError")
     }
+    systemProperty("test.messagingReceiveTelemetryEnabled", "true")
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
         "otel.semconv.exception.signal.preview=logs"
     )
   }
