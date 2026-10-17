@@ -8,6 +8,7 @@ plugins {
 }
 
 val ktorVersion = "3.0.0"
+val ktor343TestVersion = "3.4.3"
 
 dependencies {
   library("io.ktor:ktor-client-core:$ktorVersion")
@@ -22,7 +23,20 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
   testLibrary("io.ktor:ktor-server-netty:$ktorVersion")
+  testLibrary("io.ktor:ktor-server-call-id:$ktorVersion")
   testLibrary("io.ktor:ktor-client-cio:$ktorVersion")
+}
+
+// Keep the normal suite on Ktor 3.0.0 and run this regression separately on the first fixed release.
+val ktor343TestRuntimeClasspath = configurations.create("ktor343TestRuntimeClasspath") {
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  isCanBeConsumed = false
+  isCanBeResolved = true
+  resolutionStrategy.eachDependency {
+    if (requested.group == "io.ktor") {
+      useVersion(ktor343TestVersion)
+    }
+  }
 }
 
 kotlin {
@@ -49,7 +63,21 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
+  val testKtor343 = register<Test>("testKtor343") {
+    description = "Runs the Ktor context propagation regression test against Ktor $ktor343TestVersion."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.main.get().output + sourceSets.test.get().output + ktor343TestRuntimeClasspath
+    filter {
+      includeTestsMatching("io.opentelemetry.instrumentation.ktor.v3_0.KtorServerContextPropagationTest")
+    }
+  }
+
+  val contextPropagationTest = "**/KtorServerContextPropagationTest.class"
+  named<Test>("test") { exclude(contextPropagationTest) }
+  testExperimental.configure { exclude(contextPropagationTest) }
+  testPreviewSemconv.configure { exclude(contextPropagationTest) }
+
   check {
-    dependsOn(testExperimental, testPreviewSemconv)
+    dependsOn(testExperimental, testPreviewSemconv, testKtor343)
   }
 }
