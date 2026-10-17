@@ -246,8 +246,11 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       Pattern.compile("\\(\\s*port\\s*=\\s*([\\d]+)\\s*\\)");
 
   private static void parseMariaAddress(String jdbcUrl, ParseContext ctx) {
-    int addressEnd = jdbcUrl.indexOf(",address=");
-    String addressUrl = addressEnd > 0 ? jdbcUrl.substring(0, addressEnd) : jdbcUrl;
+    // only look at the address blocks, not at the database name or the query string
+    int authorityEnd = indexOf(jdbcUrl, 0, '/', '?');
+    String authority = authorityEnd != -1 ? jdbcUrl.substring(0, authorityEnd) : jdbcUrl;
+    int addressEnd = authority.indexOf(",address=");
+    String addressUrl = addressEnd > 0 ? authority.substring(0, addressEnd) : authority;
 
     Matcher hostMatcher = HOST_PATTERN.matcher(addressUrl);
     if (hostMatcher.find()) {
