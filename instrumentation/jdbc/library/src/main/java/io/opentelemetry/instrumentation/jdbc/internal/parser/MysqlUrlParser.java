@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
  *   <li>mysql:host:3306/db (non-standard format)
  *   <li>mariadb:replication://host1,host2/db
  *   <li>mariadb:sequential:address=(host=host1)(port=3306)(user=root)/db
+ *   <li>mysql://address=(host=host1)(port=3306)/db
  *   <li>mysql://[::1]:3306/db (IPv6)
  * </ul>
  *
@@ -78,8 +79,9 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     String subtype = extractSubtype(jdbcUrl);
     int protoLoc = jdbcUrl.indexOf("://");
 
-    if (subtype != null) {
-      // Has subprotocol (e.g., mysql:aurora://...)
+    if (subtype != null || (protoLoc > 0 && jdbcUrl.startsWith("address=", protoLoc + 3))) {
+      // Has subprotocol (e.g., mysql:aurora://...), or uses the address=(host=...)(port=...) form,
+      // which java.net.URI can't parse
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser

@@ -375,6 +375,19 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mydb")
             .build(),
+        arg("jdbc:mysql://address=(host=mdb.host)(port=33)/mdbdb")
+            .setSystem(MYSQL)
+            .setHost("mdb.host")
+            .setPort(33)
+            .setName("mdbdb")
+            .build(),
+        arg("jdbc:mysql://address=(host=mdb.host)(port=33),address=(host=mdb.host2)(port=3306)/mdbdb")
+            .setSystem(MYSQL)
+            .setHost("mdb.host")
+            .setPort(33)
+            .setName("mdbdb")
+            .setServerAddressGroup("mdb.host:33,mdb.host2:3306")
+            .build(),
         arg("jdbc:mysql:loadbalance://localhost")
             .setSystem(MYSQL)
             .setHost("localhost")
@@ -619,6 +632,12 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mdbdb")
             .setServerAddressGroup("[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host:3306")
+            .build(),
+        arg("jdbc:mariadb://address=(host=mdb.host)(port=33)/mdbdb")
+            .setSystem(MARIADB)
+            .setHost("mdb.host")
+            .setPort(33)
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:replication://localhost:33,anotherhost:3306/mdbdb")
             .setSystem(MARIADB)
