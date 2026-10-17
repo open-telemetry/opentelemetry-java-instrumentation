@@ -27,17 +27,14 @@ tasks {
       "metadataConfig",
       "otel.instrumentation.resilience4j-circuitbreaker.enabled=true"
     )
-    filter {
-      excludeTestsMatching("Resilience4jCircuitBreakerDisabledTest")
-    }
   }
 
-  val testDefaultDisabled = register<Test>("testDefaultDisabled") {
+  val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("Resilience4jCircuitBreakerDisabledTest")
+      includeTestsMatching("*DefaultEnablementTest")
     }
   }
 
@@ -53,12 +50,9 @@ tasks {
       "metadataConfig",
       "otel.instrumentation.resilience4j-circuitbreaker.enabled=true,otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
     )
-    filter {
-      excludeTestsMatching("Resilience4jCircuitBreakerDisabledTest")
-    }
   }
 
   check {
-    dependsOn(testDefaultDisabled, testExperimental)
+    dependsOn(testDisabled, testExperimental)
   }
 }

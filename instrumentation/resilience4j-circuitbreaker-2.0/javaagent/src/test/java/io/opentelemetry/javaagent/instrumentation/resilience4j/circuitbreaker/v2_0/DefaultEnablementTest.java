@@ -8,27 +8,35 @@ package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class Resilience4jCircuitBreakerDisabledTest {
+class DefaultEnablementTest {
+
+  private static final boolean INSTRUMENTATION_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.resilience4j-circuitbreaker.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void doesNotCreateCircuitBreakerSpanByDefault() {
+  void defaultEnablement() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
 
     String result = testing.runWithSpan("parent", () -> circuitBreaker.executeSupplier(() -> "ok"));
 
     assertThat(result).isEqualTo("ok");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    if (INSTRUMENTATION_ENABLED) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent"),
+                  span -> span.hasName("CircuitBreaker test-circuit-breaker")));
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
+    }
   }
 }

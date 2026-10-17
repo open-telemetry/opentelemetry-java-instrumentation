@@ -272,20 +272,13 @@ public class Resilience4jCircuitBreakerDecorators {
           pendingSpan.end("success", null);
         }
         return result;
-      } catch (Exception e) {
+      } catch (Throwable t) {
         Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
             Resilience4jCircuitBreakerSpans.endCapture(capture);
         if (pendingSpan != null) {
-          pendingSpan.end("failure", e);
+          pendingSpan.end("failure", t);
         }
-        throw e;
-      } catch (Error error) {
-        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
-            Resilience4jCircuitBreakerSpans.endCapture(capture);
-        if (pendingSpan != null) {
-          pendingSpan.end("failure", error);
-        }
-        throw error;
+        throw t;
       }
     }
   }
@@ -726,6 +719,10 @@ public class Resilience4jCircuitBreakerDecorators {
         return method.invoke(delegate, args);
       }
       Object[] invokedArgs = args;
+      // Resilience4j 2.x's decorateCompletionStage registers its completion callback via
+      // CompletionStage.whenComplete; intercepting that call is what ends the span. If a future
+      // version registers its callback through a different method (e.g. handle or
+      // whenCompleteAsync), this interception must be updated or spans will never end.
       if ("whenComplete".equals(method.getName())
           && args != null
           && args.length == 1
