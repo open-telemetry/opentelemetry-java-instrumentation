@@ -27,9 +27,4 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest {
     options.setHasResponseCustomizer(endpoint -> true);
     options.setTestHttpPipelining(false);
   }
-
-  @Override
-  protected boolean recordsExceptionOnServerSpan() {
-    return true;
-  }
 }

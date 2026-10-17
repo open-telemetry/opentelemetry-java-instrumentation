@@ -26,9 +26,4 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
 
     options.setHasResponseCustomizer(endpoint -> true);
   }
-
-  @Override
-  protected boolean recordsExceptionOnServerSpan() {
-    return true;
-  }
 }

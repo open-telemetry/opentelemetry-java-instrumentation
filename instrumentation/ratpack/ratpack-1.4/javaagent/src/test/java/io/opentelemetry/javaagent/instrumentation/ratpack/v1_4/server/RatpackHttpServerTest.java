@@ -31,11 +31,6 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
   }
 
   @Override
-  protected boolean recordsExceptionOnServerSpan() {
-    return true;
-  }
-
-  @Override
   protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
     super.assertExceptionLogs(expectedException, expectedEventName);
     assertThat(testing.spans())

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.ratpack.server;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -290,7 +288,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> true);
-    options.setHasExceptionOnServerSpan(endpoint -> recordsExceptionOnServerSpan());
+    options.setHasExceptionOnServerSpan(endpoint -> true);
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
@@ -307,10 +305,6 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
         });
   }
 
-  protected boolean recordsExceptionOnServerSpan() {
-    return false;
-  }
-
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
@@ -324,15 +318,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     }
     span.hasName(spanName).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
-      span.hasStatus(StatusData.error())
-          .hasException(
-              !recordsExceptionOnServerSpan() && emitExceptionAsSpanEvents()
-                  ? new IllegalStateException(EXCEPTION.getBody())
-                  : null);
-      if (!recordsExceptionOnServerSpan() && emitExceptionAsLogs()) {
-        assertExceptionLogs(
-            new IllegalStateException(EXCEPTION.getBody()), "http.server.request.exception");
-      }
+      span.hasStatus(StatusData.error()).hasException(null);
     }
     return span;
   }
