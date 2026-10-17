@@ -17,6 +17,8 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.resources.internal.Entity;
+import io.opentelemetry.sdk.resources.internal.EntityUtil;
 import java.io.ByteArrayInputStream;
 import java.util.Set;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -71,6 +73,9 @@ class ResourceDeclarativeConfigTest {
               // ProcessRuntimeResourceComponentProvider
               assertThat(attributeKeys).contains("process.runtime.description");
               assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");
+              assertThat(EntityUtil.getEntities(resource))
+                  .extracting(Entity::getType)
+                  .contains("process.runtime");
             });
   }
 }
