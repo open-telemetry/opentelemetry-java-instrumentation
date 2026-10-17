@@ -383,6 +383,8 @@ readonly COLIMA_INSTRUMENTATIONS=(
 # Some instrumentation test suites need to run with -PtestLatestDeps=true to collect
 # metrics telemetry or test against latest library versions.
 readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
+  "couchbase:couchbase-3.2:javaagent:test"
+  "couchbase:couchbase-3.2:javaagent:testExceptionSignalLogs"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:test"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testReceiveTelemetry"
