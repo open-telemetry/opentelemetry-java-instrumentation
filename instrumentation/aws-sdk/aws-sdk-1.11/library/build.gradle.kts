@@ -108,7 +108,10 @@ tasks {
       "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
         "otel.semconv.exception.signal.preview=logs",
     )
-    filter.includeTestsMatching("S3ClientTest")
+    filter {
+      includeTestsMatching("S3ClientTest")
+      includeTestsMatching("SqsTracingTest.testDeleteMessageError")
+    }
   }
 
   val testSecretsManagerExperimentalAttributes = register<Test>("testSecretsManagerExperimentalAttributes") {
