@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -33,7 +32,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(named("getMDC")).and(takesArguments(1)).and(takesArgument(0, String.class)),
+        isPublic().and(named("getMDC")).and(takesArgument(0, String.class)),
         getClass().getName() + "$GetMdcAdvice");
   }
 
