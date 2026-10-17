@@ -60,7 +60,7 @@ public final class FileDescriptor {
                     observableMeasurement -> {
                       long value =
                           ((UnixOperatingSystemMXBean) osBean).getOpenFileDescriptorCount();
-                      if (value >= 0) {
+                      if (value >= 0 && value < Long.MAX_VALUE) {
                         observableMeasurement.record(value);
                       }
                     }));
@@ -74,7 +74,7 @@ public final class FileDescriptor {
                 .buildWithCallback(
                     observableMeasurement -> {
                       long value = ((UnixOperatingSystemMXBean) osBean).getMaxFileDescriptorCount();
-                      if (value >= 0) {
+                      if (value >= 0 && value < Long.MAX_VALUE) {
                         observableMeasurement.record(value);
                       }
                     }));
