@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
 }
+import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import org.junit.jupiter.api.{AfterAll, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -76,17 +77,17 @@ class PekkoTypedActorTest {
     // the stashed messages are handled while the unlock message is being processed, they should
     // still run in the context that was current when they were sent, the message sent in the root
     // context should not become part of the unlock trace
-    val assertions = (1 to count)
-      .flatMap(_ =>
-        Seq(
-          traceAssertion("Hello, Pekko"),
-          singleSpanTraceAssertion("unlock"),
-          singleSpanTraceAssertion("Hello, Root")
-        )
-      )
-      .asJava
+    // the unlock and Hello, Root spans can share a start timestamp (e.g. millisecond clock on
+    // Java 8), so group the traces by root span name instead of relying on start time order
+    val assertions =
+      ((1 to count).map(_ => traceAssertion("Hello, Pekko")) ++
+        (1 to count).map(_ => singleSpanTraceAssertion("unlock")) ++
+        (1 to count).map(_ => singleSpanTraceAssertion("Hello, Root"))).asJava
 
-    testing.waitAndAssertTraces(assertions)
+    testing.waitAndAssertSortedTraces(
+      TelemetryDataUtil.orderByRootSpanName("parent", "unlock", "Hello, Root"),
+      assertions
+    )
   }
 
   private def assertTraces(count: Int, childName: String): Unit = {
