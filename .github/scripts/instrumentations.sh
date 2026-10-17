@@ -73,7 +73,6 @@ readonly INSTRUMENTATIONS=(
   "couchbase:couchbase-3.2:javaagent:test"
   "couchbase:couchbase-3.2:javaagent:testExperimental"
   "couchbase:couchbase-3.2:javaagent:testExceptionSignalLogs"
-  "couchbase:couchbase-3.2:javaagent:testExceptionSignalLogsDup"
   "couchbase:couchbase-3.2:javaagent:version343Test"
   "dropwizard:dropwizard-views-0.7:javaagent:test"
   "elasticsearch:elasticsearch-api-client-7.16:javaagent:test"
