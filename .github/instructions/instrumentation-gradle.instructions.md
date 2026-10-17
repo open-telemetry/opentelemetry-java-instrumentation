@@ -68,8 +68,12 @@ or test failure that CI will report.
   including inherited settings, except for the shared synthetic header capture described below.
   Inspect JVM properties, fixtures, and library builders; split or
   filter collected tasks that mix profiles under one label. Label non-default metric selectors,
-  not Java source-set names; document runtime prerequisites separately. Use comma-separated flat
-  `key=value` conditions without `-D`, with consistent spelling and ordering for the same mode.
+  not Java source-set names; document runtime prerequisites separately. For actual JVM-property
+  configuration, use flat `key=value` conditions without `-D`. For programmatically configured
+  library options, label the actual builder calls, such as
+  `AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`, not test-only flags or
+  equivalent javaagent properties that do not configure the library. Separate conditions and
+  builder calls with commas, using consistent spelling and ordering for the same mode.
   Omit test setup, unrelated instrumentation settings, and whole-module enablement for default-off
   instrumentation. Include span suppression settings only when they determine this instrumentation's
   telemetry. Missing labels merge optional telemetry into `when: default`.
