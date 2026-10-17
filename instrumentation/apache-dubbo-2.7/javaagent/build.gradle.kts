@@ -1,6 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -41,23 +38,40 @@ testing {
         }
       }
     }
-    withType<JvmTestSuite>().configureEach {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-          // to suppress non-fatal errors on jdk17
-          jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "rpc,service.peer")
-        }
-        register("BothSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "rpc/dup,service.peer")
-        }
-      }
-    }
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  // to suppress non-fatal errors on jdk17
+  jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+}
+
+val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}PreviewSemconv") {
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc,service.peer")
+  }
+}
+
+val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}BothSemconv") {
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup,service.peer")
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites, previewSemconvSuites, bothSemconvSuites)
   }
 }

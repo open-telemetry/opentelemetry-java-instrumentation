@@ -1,6 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.library-instrumentation")
 }
@@ -32,25 +29,43 @@ testing {
         implementation("org.apache.dubbo:dubbo:${baseVersion("2.7.14").orLatest()}")
       }
     }
-    withType<JvmTestSuite>().configureEach {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-          // to suppress non-fatal errors on jdk17
-          jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-        }
-        if (name == "test") {
-          register("PreviewSemconv") {
-            telemetryConfig("otel.semconv-stability.preview", "rpc")
-          }
-          register("BothSemconv") {
-            telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
-          }
-        }
-      }
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  // to suppress non-fatal errors on jdk17
+  jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+}
+
+tasks {
+  val testSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name == "test" }
+
+  val previewSemconvSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}PreviewSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.semconv-stability.preview=rpc")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
     }
+  }
+
+  val bothSemconvSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}BothSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
+    }
+  }
+
+  check {
+    dependsOn(testing.suites, previewSemconvSuites, bothSemconvSuites)
   }
 }
