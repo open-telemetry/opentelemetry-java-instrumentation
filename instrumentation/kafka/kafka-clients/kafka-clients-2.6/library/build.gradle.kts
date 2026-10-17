@@ -72,6 +72,18 @@ tasks {
     )
   }
 
+  val testExperimentalRegression = register<Test>("testExperimentalRegression") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperPropagationDisabledTest.testWrappers")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperSuppressReceiveSpansTest.testWrappers")
+    }
+    systemProperty("test.captureMessagingHeaders", "true")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+  }
+
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -93,6 +105,7 @@ tasks {
       testDefaultTelemetry,
       testReceiveTelemetry,
       testExperimental,
+      testExperimentalRegression,
       testExceptionSignalLogs,
     )
   }
