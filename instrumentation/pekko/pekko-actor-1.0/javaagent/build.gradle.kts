@@ -9,18 +9,42 @@ muzzle {
     module.set("pekko-actor_2.12")
     versions.set("[1.0,)")
     assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.typed.PekkoActorTypedInstrumentationModule")
   }
   pass {
     group.set("org.apache.pekko")
     module.set("pekko-actor_2.13")
     versions.set("[1.0,)")
     assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.typed.PekkoActorTypedInstrumentationModule")
   }
   pass {
     group.set("org.apache.pekko")
     module.set("pekko-actor_3")
     versions.set("[1.0,)")
     assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.typed.PekkoActorTypedInstrumentationModule")
+  }
+  pass {
+    group.set("org.apache.pekko")
+    module.set("pekko-actor-typed_2.12")
+    versions.set("[1.0,)")
+    assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.PekkoActorInstrumentationModule")
+  }
+  pass {
+    group.set("org.apache.pekko")
+    module.set("pekko-actor-typed_2.13")
+    versions.set("[1.0,)")
+    assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.PekkoActorInstrumentationModule")
+  }
+  pass {
+    group.set("org.apache.pekko")
+    module.set("pekko-actor-typed_3")
+    versions.set("[1.0,)")
+    assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.PekkoActorInstrumentationModule")
   }
 }
 
@@ -28,8 +52,7 @@ dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
   library("org.apache.pekko:pekko-actor_2.12:1.0.1")
-
-  testImplementation("org.apache.pekko:pekko-actor-typed_2.12:1.0.1")
+  library("org.apache.pekko:pekko-actor-typed_2.12:1.0.1")
 
   latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:latest.release")
   latestDepTestLibrary("org.apache.pekko:pekko-actor-typed_2.13:latest.release")

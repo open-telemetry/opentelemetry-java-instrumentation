@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
 }
+import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import org.junit.jupiter.api.{AfterAll, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -65,32 +66,72 @@ class PekkoTypedActorTest {
     assertTraces(count, "Hi, Pekko")
   }
 
+  @ParameterizedTest
+  @ValueSource(ints = Array(1, 150))
+  def stashAndUnstash(count: Int): Unit = {
+    val tester = new PekkoTypedActors
+    (1 to count).foreach { _ =>
+      tester.stashAndUnstash()
+    }
+
+    // the stashed messages are handled while the unlock message is being processed, they should
+    // still run in the context that was current when they were sent, the message sent in the root
+    // context should not become part of the unlock trace
+    // the unlock and Hello, Root spans can share a start timestamp (e.g. millisecond clock on
+    // Java 8), so group the traces by root span name instead of relying on start time order
+    val assertions =
+      ((1 to count).map(_ => traceAssertion("Hello, Pekko")) ++
+        (1 to count).map(_ => singleSpanTraceAssertion("unlock")) ++
+        (1 to count).map(_ => singleSpanTraceAssertion("Hello, Root"))).asJava
+
+    testing.waitAndAssertSortedTraces(
+      TelemetryDataUtil.orderByRootSpanName("parent", "unlock", "Hello, Root"),
+      assertions
+    )
+  }
+
   private def assertTraces(count: Int, childName: String): Unit = {
     val assertions = (1 to count)
-      .map(_ =>
-        new Consumer[TraceAssert] {
-          override def accept(trace: TraceAssert): Unit =
-            trace.hasSpansSatisfyingExactly(
-              new Consumer[SpanDataAssert] {
-                override def accept(span: SpanDataAssert): Unit = {
-                  span
-                    .hasName("parent")
-                    .hasTotalAttributeCount(0)
-                }
-              },
-              new Consumer[SpanDataAssert] {
-                override def accept(span: SpanDataAssert): Unit = {
-                  span
-                    .hasName(childName)
-                    .hasParent(trace.getSpan(0))
-                    .hasTotalAttributeCount(0)
-                }
-              }
-            )
-        }
-      )
+      .map(_ => traceAssertion(childName))
       .asJava
 
     testing.waitAndAssertTraces(assertions)
   }
+
+  private def singleSpanTraceAssertion(name: String): Consumer[TraceAssert] =
+    new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName(name)
+                .hasNoParent()
+                .hasTotalAttributeCount(0)
+            }
+          }
+        )
+    }
+
+  private def traceAssertion(childName: String): Consumer[TraceAssert] =
+    new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName("parent")
+                .hasTotalAttributeCount(0)
+            }
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName(childName)
+                .hasParent(trace.getSpan(0))
+                .hasTotalAttributeCount(0)
+            }
+          }
+        )
+    }
 }
