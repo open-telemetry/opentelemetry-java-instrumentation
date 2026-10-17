@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.guava.v10_0.Instrumenta
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -33,7 +32,7 @@ class GuavaListenableFutureInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor(), getClass().getName() + "$AbstractFutureAdvice");
     transformer.applyAdviceToMethod(
-        named("addListener").and(takesArguments(2)).and(takesArgument(0, Runnable.class)),
+        named("addListener").and(takesArgument(0, Runnable.class)),
         getClass().getName() + "$AddListenerAdvice");
   }
 

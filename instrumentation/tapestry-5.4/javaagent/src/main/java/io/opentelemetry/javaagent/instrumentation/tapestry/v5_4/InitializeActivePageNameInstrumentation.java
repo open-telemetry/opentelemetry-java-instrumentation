@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.tapestry.v5_4.TapestryS
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -34,7 +33,6 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handleComponentEvent"))
-            .and(takesArguments(2))
             .and(
                 takesArgument(
                     0, named("org.apache.tapestry5.services.ComponentEventRequestParameters"))),
@@ -42,7 +40,6 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handlePageRender"))
-            .and(takesArguments(2))
             .and(
                 takesArgument(
                     0, named("org.apache.tapestry5.services.PageRenderRequestParameters"))),

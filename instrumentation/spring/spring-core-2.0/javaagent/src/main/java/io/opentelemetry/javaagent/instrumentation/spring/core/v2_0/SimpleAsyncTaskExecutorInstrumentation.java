@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.core.v2_0;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -32,7 +31,6 @@ class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isProtected()
             .and(named("doExecute"))
-            .and(takesArguments(1))
             .and(takesArgument(0, Runnable.class)),
         getClass().getName() + "$ExecuteAdvice");
   }

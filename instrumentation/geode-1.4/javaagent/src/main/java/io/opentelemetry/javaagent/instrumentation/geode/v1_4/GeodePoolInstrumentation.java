@@ -36,28 +36,25 @@ class GeodePoolInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("addServer")
-            .and(takesArguments(2))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, int.class)),
         getClass().getName() + "$AddServerAdvice");
     transformer.applyAdviceToMethod(
         named("addLocator")
-            .and(takesArguments(2))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, int.class)),
         getClass().getName() + "$AddLocatorAdvice");
     transformer.applyAdviceToMethod(
-        named("setServerGroup").and(takesArguments(1)).and(takesArgument(0, String.class)),
+        named("setServerGroup").and(takesArgument(0, String.class)),
         getClass().getName() + "$SetServerGroupAdvice");
     transformer.applyAdviceToMethod(
         named("reset").and(takesArguments(0)), getClass().getName() + "$ResetAdvice");
     transformer.applyAdviceToMethod(
         named("init")
-            .and(takesArguments(1))
             .and(takesArgument(0, named("org.apache.geode.cache.client.Pool"))),
         getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
-        named("create").and(takesArguments(1)).and(takesArgument(0, String.class)),
+        named("create"),
         getClass().getName() + "$CreateAdvice");
   }
 

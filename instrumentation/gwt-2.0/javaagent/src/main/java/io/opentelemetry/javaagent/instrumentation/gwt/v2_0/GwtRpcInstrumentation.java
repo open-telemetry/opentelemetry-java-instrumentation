@@ -35,21 +35,14 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("invokeAndEncodeResponse")
             .and(takesArguments(5))
-            .and(takesArgument(0, Object.class))
-            .and(takesArgument(1, Method.class))
-            .and(takesArgument(2, Object[].class))
-            .and(takesArgument(3, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
-            .and(takesArgument(4, int.class)),
+            .and(takesArgument(1, Method.class)),
         getClass().getName() + "$InvokeAndEncodeResponseAdvice");
 
     // encodeResponseForFailure is called by invokeAndEncodeResponse in case of failure
     transformer.applyAdviceToMethod(
         named("encodeResponseForFailure")
             .and(takesArguments(4))
-            .and(takesArgument(0, Method.class))
-            .and(takesArgument(1, Throwable.class))
-            .and(takesArgument(2, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
-            .and(takesArgument(3, int.class)),
+            .and(takesArgument(1, Throwable.class)),
         getClass().getName() + "$EncodeResponseForFailureAdvice");
   }
 

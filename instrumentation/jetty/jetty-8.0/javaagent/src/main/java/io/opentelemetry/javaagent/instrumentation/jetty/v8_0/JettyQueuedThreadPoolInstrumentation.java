@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Singletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -31,7 +30,7 @@ class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
+        named("dispatch").and(takesArgument(0, Runnable.class)),
         getClass().getName() + "$DispatchAdvice");
   }
 

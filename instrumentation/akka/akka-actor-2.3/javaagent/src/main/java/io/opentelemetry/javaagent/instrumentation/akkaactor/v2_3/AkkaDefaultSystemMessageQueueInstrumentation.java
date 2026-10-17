@@ -37,7 +37,6 @@ class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrumentatio
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("systemEnqueue")
-            .and(takesArgument(0, named("akka.actor.ActorRef")))
             .and(takesArgument(1, named("akka.dispatch.sysmsg.SystemMessage"))),
         getClass().getName() + "$DispatchSystemAdvice");
   }

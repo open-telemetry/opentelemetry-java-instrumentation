@@ -37,7 +37,7 @@ class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("start").and(isPublic()), getClass().getName() + "$StartAdvice");
     transformer.applyAdviceToMethod(
-        named("setName").and(takesArguments(1)), getClass().getName() + "$SetNameAdvice");
+        named("setName"), getClass().getName() + "$SetNameAdvice");
     transformer.applyAdviceToMethod(
         named("stop").and(takesArguments(0)), getClass().getName() + "$StopAdvice");
   }

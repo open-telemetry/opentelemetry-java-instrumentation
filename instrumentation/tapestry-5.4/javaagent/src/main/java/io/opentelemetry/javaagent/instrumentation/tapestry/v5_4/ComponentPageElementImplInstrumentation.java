@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.tapestry.v5_4;
 import static io.opentelemetry.javaagent.instrumentation.tapestry.v5_4.TapestrySingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -30,7 +29,7 @@ class ComponentPageElementImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("processEventTriggering").and(takesArguments(3)).and(takesArgument(0, String.class)),
+        named("processEventTriggering").and(takesArgument(0, String.class)),
         getClass().getName() + "$EventAdvice");
   }
 
