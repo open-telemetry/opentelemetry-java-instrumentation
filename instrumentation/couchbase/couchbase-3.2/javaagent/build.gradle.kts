@@ -53,6 +53,18 @@ testing {
       }
     }
 
+    register<JvmTestSuite>("version343Test") {
+      // SDK 3.4.3 covers the legacy Core-based ProtostellarRequest constructor; newer SDKs use different constructors.
+      sources {
+        java {
+          setSrcDirs(listOf("src/version343Test/java"))
+        }
+      }
+      dependencies {
+        implementation("com.couchbase.client:java-client:3.4.3")
+      }
+    }
+
     register<JvmTestSuite>("version344Test") {
       sources {
         java {
