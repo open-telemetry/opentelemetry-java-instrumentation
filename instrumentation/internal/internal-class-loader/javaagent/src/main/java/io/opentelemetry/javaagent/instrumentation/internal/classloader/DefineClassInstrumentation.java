@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler.DefineClassContext;
@@ -31,7 +32,8 @@ class DefineClassInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, byte[].class))
             .and(takesArgument(2, int.class))
-            .and(takesArgument(3, int.class)),
+            .and(takesArgument(3, int.class))
+            .and(takesArguments(5)),
         getClass().getName() + "$DefineClassAdvice");
     transformer.applyAdviceToMethod(
         named("defineClass")
