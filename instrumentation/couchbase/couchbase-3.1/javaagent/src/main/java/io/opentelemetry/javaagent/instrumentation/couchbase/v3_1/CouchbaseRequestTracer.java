@@ -32,8 +32,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   private final CouchbaseTracer tracer;
 
   public static RequestTracer create(OpenTelemetry openTelemetry, boolean legacyBridge) {
-    String instrumentationName =
-        legacyBridge ? "io.opentelemetry.couchbase-3.1" : "com.couchbase.client.jvm";
+    String instrumentationName = "io.opentelemetry.couchbase-3.1";
     Tracer tracer =
         openTelemetry.tracerBuilder(instrumentationName).setSchemaUrl(SchemaUrls.V1_44_0).build();
     Logger exceptionLogger =

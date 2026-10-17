@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -78,6 +79,7 @@ class CouchbaseExceptionSignalTest {
                 span ->
                     span.hasName("get _default")
                         .hasKind(CLIENT)
+                        .satisfies(hasScopeName("io.opentelemetry.couchbase-3.2"))
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasException(emitExceptionAsSpanEvents() ? error : null)
@@ -103,7 +105,7 @@ class CouchbaseExceptionSignalTest {
                   .hasTotalAttributeCount(3)
                   .hasSpanContext(couchbaseSpan.getSpanContext())
                   .hasInstrumentationScope(
-                      InstrumentationScopeInfo.builder("com.couchbase.client.jvm")
+                      InstrumentationScopeInfo.builder("io.opentelemetry.couchbase-3.2")
                           .setSchemaUrl(SchemaUrls.V1_44_0)
                           .build()));
     } else {

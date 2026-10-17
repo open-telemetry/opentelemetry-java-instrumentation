@@ -35,7 +35,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   private final CouchbaseTracer tracer;
 
   public static RequestTracer create(OpenTelemetry openTelemetry) {
-    String instrumentationName = "com.couchbase.client.jvm";
+    String instrumentationName = "io.opentelemetry.couchbase-3.2";
     Tracer tracer =
         openTelemetry.tracerBuilder(instrumentationName).setSchemaUrl(SchemaUrls.V1_44_0).build();
     Logger exceptionLogger =

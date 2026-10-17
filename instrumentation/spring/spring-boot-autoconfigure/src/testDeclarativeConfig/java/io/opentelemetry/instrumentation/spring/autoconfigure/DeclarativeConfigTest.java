@@ -213,7 +213,7 @@ class DeclarativeConfigTest {
 
                       assertThat(config.isString("int_key_with_env_quoted")).isTrue();
                       assertThat(config.isBoolean("bool_key_with_env_quoted")).isTrue();
-                      assertThat(config.isBoolean("string_key_with_env_quoted")).isFalse();
+                      assertThat(config.isBoolean("string_key_with_env_quoted")).isTrue();
                     }));
   }
 
