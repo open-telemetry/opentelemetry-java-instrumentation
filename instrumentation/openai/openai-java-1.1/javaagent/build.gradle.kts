@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -21,22 +24,21 @@ dependencies {
   testImplementation(project(":instrumentation:openai:openai-java-1.1:testing"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    // TODO run tests both with and without genai message capture
+tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  // TODO run tests both with and without genai message capture
 
-    systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-  }
+  systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+}
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
-  check {
-    dependsOn(testExceptionSignalLogs)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+        }
+      }
+    }
   }
 }

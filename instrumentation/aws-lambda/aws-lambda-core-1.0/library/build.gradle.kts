@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -35,15 +37,14 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }
 
-tasks {
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-  }
-
-  check {
-    dependsOn(testExceptionSignalLogs)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+      }
+    }
   }
 }
