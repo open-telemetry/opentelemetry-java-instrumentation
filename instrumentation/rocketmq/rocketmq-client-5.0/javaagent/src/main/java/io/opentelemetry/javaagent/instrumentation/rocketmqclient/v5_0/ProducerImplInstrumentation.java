@@ -51,9 +51,7 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
             .and(takesArgument(4, List.class)),
         getClass().getName() + "$SendAdvice");
 
-    transformer.applyAdviceToMethod(
-        named("sendAsync"),
-        getClass().getName() + "$SendAsyncAdvice");
+    transformer.applyAdviceToMethod(named("sendAsync"), getClass().getName() + "$SendAsyncAdvice");
   }
 
   @SuppressWarnings("unused")

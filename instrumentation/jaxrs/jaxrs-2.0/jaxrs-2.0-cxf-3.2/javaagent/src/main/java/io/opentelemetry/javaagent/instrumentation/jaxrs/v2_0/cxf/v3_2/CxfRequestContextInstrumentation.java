@@ -46,8 +46,7 @@ class CxfRequestContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("abortWith"),
-        getClass().getName() + "$ContainerRequestContextAdvice");
+        named("abortWith"), getClass().getName() + "$ContainerRequestContextAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -29,9 +29,7 @@ class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isProtected()
-            .and(named("doExecute"))
-            .and(takesArgument(0, Runnable.class)),
+        isProtected().and(named("doExecute")).and(takesArgument(0, Runnable.class)),
         getClass().getName() + "$ExecuteAdvice");
   }
 

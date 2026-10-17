@@ -26,12 +26,10 @@ class AkkaScheduleInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("schedule")
-            .and(takesArgument(2, Runnable.class)),
+        named("schedule").and(takesArgument(2, Runnable.class)),
         getClass().getName() + "$ScheduleAdvice");
     transformer.applyAdviceToMethod(
-        named("scheduleOnce")
-            .and(takesArgument(1, Runnable.class)),
+        named("scheduleOnce").and(takesArgument(1, Runnable.class)),
         getClass().getName() + "$ScheduleOnceAdvice");
   }
 

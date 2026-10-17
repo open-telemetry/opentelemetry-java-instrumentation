@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -51,9 +50,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     // internalReceive will apply to Consumer#receive(long,TimeUnit)
     // and called before MessageListener#receive.
     transformer.applyAdviceToMethod(
-        isProtected()
-            .and(named("internalReceive"))
-            .and(takesArguments(2)),
+        isProtected().and(named("internalReceive")).and(takesArguments(2)),
         getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(

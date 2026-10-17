@@ -42,9 +42,7 @@ class RouterFunctionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("route")),
-        getClass().getName() + "$RouteAdvice");
+        isPublic().and(named("route")), getClass().getName() + "$RouteAdvice");
   }
 
   /**

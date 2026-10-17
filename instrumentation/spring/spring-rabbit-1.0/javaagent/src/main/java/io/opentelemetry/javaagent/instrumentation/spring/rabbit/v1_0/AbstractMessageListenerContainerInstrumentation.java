@@ -40,8 +40,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
                     .or(takesArgument(1, named("org.springframework.amqp.core.Message")))),
         getClass().getName() + "$ExecuteListenerAdvice");
     transformer.applyAdviceToMethod(
-        named("invokeListener"),
-        getClass().getName() + "$InvokeListenerAdvice");
+        named("invokeListener"), getClass().getName() + "$InvokeListenerAdvice");
   }
 
   @SuppressWarnings("unused")

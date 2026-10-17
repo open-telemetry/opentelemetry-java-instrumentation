@@ -33,8 +33,7 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("handleMatch"),
-        getClass().getName() + "$HandleMatchAdvice");
+        named("handleMatch"), getClass().getName() + "$HandleMatchAdvice");
     transformer.applyAdviceToMethod(
         named("copy").and(returns(named("com.twitter.finatra.http.internal.routing.Route"))),
         getClass().getName() + "$CopyAdvice");

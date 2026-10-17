@@ -26,8 +26,7 @@ class TransactionImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("registerProducedTopic")
-            .and(isPublic()),
+        named("registerProducedTopic").and(isPublic()),
         getClass().getName() + "$RegisterProducedTopicAdvice");
   }
 

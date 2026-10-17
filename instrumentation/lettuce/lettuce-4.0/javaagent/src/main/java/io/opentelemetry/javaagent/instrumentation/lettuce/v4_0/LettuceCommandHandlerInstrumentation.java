@@ -28,8 +28,7 @@ class LettuceCommandHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("write")
-            .and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext"))),
+        named("write").and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext"))),
         getClass().getName() + "$WriteAdvice");
   }
 

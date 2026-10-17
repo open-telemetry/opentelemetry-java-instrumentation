@@ -41,8 +41,7 @@ class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("serve")
-            .and(takesArgument(0, named("io.activej.http.HttpRequest"))),
+        named("serve").and(takesArgument(0, named("io.activej.http.HttpRequest"))),
         getClass().getName() + "$ServeAdvice");
   }
 

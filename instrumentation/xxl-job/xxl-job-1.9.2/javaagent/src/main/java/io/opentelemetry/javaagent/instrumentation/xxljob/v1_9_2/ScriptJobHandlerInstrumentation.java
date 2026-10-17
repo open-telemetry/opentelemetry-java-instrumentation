@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2;
 import static io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2.XxlJobSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.xxl.job.core.glue.GlueTypeEnum;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -31,8 +30,7 @@ class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(isPublic()).and(takesArguments(1)),
-        getClass().getName() + "$ScheduleAdvice");
+        named("execute").and(isPublic()), getClass().getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")

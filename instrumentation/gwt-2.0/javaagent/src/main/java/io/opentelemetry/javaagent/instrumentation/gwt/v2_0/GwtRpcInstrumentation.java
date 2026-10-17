@@ -33,9 +33,7 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("invokeAndEncodeResponse")
-            .and(takesArguments(5))
-            .and(takesArgument(1, Method.class)),
+        named("invokeAndEncodeResponse").and(takesArguments(5)).and(takesArgument(1, Method.class)),
         getClass().getName() + "$InvokeAndEncodeResponseAdvice");
 
     // encodeResponseForFailure is called by invokeAndEncodeResponse in case of failure

@@ -30,8 +30,7 @@ class AkkaDispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch")
-            .and(takesArgument(1, named("akka.dispatch.Envelope"))),
+        named("dispatch").and(takesArgument(1, named("akka.dispatch.Envelope"))),
         getClass().getName() + "$DispatchEnvelopeAdvice");
   }
 

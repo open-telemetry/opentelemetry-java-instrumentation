@@ -27,9 +27,7 @@ final class SimpleConsumerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("receive0"),
-        getClass().getName() + "$ReceiveAdvice");
+    transformer.applyAdviceToMethod(named("receive0"), getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")

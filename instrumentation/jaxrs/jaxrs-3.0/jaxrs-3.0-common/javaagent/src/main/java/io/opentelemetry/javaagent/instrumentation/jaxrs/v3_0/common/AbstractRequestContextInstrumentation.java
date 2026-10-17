@@ -27,9 +27,7 @@ public abstract class AbstractRequestContextInstrumentation implements TypeInstr
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("abortWith"),
-        abortAdviceName());
+    transformer.applyAdviceToMethod(named("abortWith"), abortAdviceName());
   }
 
   protected abstract String abortAdviceName();

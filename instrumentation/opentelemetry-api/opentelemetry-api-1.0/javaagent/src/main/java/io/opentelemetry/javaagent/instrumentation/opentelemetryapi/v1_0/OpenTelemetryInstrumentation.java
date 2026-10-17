@@ -37,9 +37,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
             .and(returns(named("application.io.opentelemetry.api.OpenTelemetry"))),
         OpenTelemetryInstrumentation.class.getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
-        isStatic()
-            .and(named("set")),
-        OpenTelemetryInstrumentation.class.getName() + "$SetAdvice");
+        isStatic().and(named("set")), OpenTelemetryInstrumentation.class.getName() + "$SetAdvice");
     transformer.applyAdviceToMethod(
         isStatic().and(named("resetForTest")).and(takesArguments(0)),
         OpenTelemetryInstrumentation.class.getName() + "$ResetForTestAdvice");

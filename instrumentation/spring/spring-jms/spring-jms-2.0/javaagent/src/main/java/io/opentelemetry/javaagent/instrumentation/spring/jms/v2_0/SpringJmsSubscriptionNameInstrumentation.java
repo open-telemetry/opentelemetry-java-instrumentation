@@ -34,8 +34,7 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
         named("setSubscriptionName").and(takesArgument(0, String.class)),
         getClass().getName() + "$SetSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
-        named("setDurableSubscriptionName")
-            .and(takesArgument(0, String.class)),
+        named("setDurableSubscriptionName").and(takesArgument(0, String.class)),
         getClass().getName() + "$SetDurableSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("getSubscriptionName", "getDurableSubscriptionName")
@@ -49,8 +48,7 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
         named("setSubscriptionShared").and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetSubscriptionSharedAdvice");
     transformer.applyAdviceToMethod(
-        named("invokeListener")
-            .and(takesArgument(1, named("javax.jms.Message"))),
+        named("invokeListener").and(takesArgument(1, named("javax.jms.Message"))),
         getClass().getName() + "$InvokeListenerAdvice");
   }
 

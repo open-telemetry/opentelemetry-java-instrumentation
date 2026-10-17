@@ -24,9 +24,7 @@ public class StepBuilderHelperInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("enhance")
-            .and(isProtected()),
-        getClass().getName() + "$EnhanceAdvice");
+        named("enhance").and(isProtected()), getClass().getName() + "$EnhanceAdvice");
   }
 
   @SuppressWarnings("unused")

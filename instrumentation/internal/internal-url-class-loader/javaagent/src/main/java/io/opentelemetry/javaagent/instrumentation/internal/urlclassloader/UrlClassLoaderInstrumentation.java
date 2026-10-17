@@ -28,9 +28,7 @@ class UrlClassLoaderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("addURL")
-            .and(isProtected())
-            .and(not(isStatic())),
+        named("addURL").and(isProtected()).and(not(isStatic())),
         getClass().getName() + "$AddUrlAdvice");
   }
 
