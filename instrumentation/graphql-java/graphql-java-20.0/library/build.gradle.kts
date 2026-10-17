@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.library-instrumentation")
@@ -27,8 +26,10 @@ testing {
     named<JvmTestSuite>("test") {
       executions {
         register("ExceptionLogs") {
-          telemetryConfig("otel.instrumentation.graphql.data-fetcher.enabled", "true")
-          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+          jvmArgs(
+            "-Dotel.instrumentation.graphql.data-fetcher.enabled=true",
+            "-Dotel.semconv.exception.signal.preview=logs",
+          )
           systemProperty(
             "metadataConfig",
             "otel.instrumentation.graphql.data-fetcher.enabled=true,otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs",
