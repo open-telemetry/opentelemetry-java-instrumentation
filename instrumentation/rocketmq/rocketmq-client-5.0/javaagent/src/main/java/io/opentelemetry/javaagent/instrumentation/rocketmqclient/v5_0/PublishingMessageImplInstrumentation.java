@@ -43,6 +43,8 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
             .and(
                 takesArgument(
                     1,
+                    // The constructor declares ProducerSettings in 5.0.0 and
+                    // PublishingSettings in 5.0.1+.
                     namedOneOf(
                         "org.apache.rocketmq.client.java.impl.producer.ProducerSettings",
                         "org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
