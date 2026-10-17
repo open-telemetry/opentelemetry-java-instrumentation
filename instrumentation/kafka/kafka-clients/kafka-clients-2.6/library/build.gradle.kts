@@ -29,6 +29,7 @@ tasks {
     filter {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperSendExceptionTest.producerSpanEndedWhenSendThrowsSynchronously")
     }
   }
 
@@ -39,6 +40,7 @@ tasks {
     filter {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testConsumerError")
     }
     systemProperty("test.messagingReceiveTelemetryEnabled", "true")
     systemProperty(
