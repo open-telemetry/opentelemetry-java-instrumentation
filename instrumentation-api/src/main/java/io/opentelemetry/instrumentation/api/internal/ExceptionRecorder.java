@@ -75,8 +75,8 @@ public final class ExceptionRecorder {
     }
   }
 
-  /** Used by Instrumenter after unwrapping its terminal error. */
-  public static boolean shouldRecord(Context context, Throwable error) {
+  /** Atomically checks and marks the unwrapped terminal error for the owning Instrumenter. */
+  public static boolean tryMarkExceptionRecorded(Context context, Throwable error) {
     ExceptionRecorder owner = findOwner(context);
     return owner == null || owner.getRecorder(error) != null;
   }

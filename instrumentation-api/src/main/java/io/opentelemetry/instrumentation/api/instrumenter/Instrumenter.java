@@ -303,7 +303,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       @Nullable Instant endTime) {
     if (error != null) {
       error = errorCauseExtractor.extract(error);
-      if (ExceptionRecorder.shouldRecord(context, error)) {
+      if (ExceptionRecorder.tryMarkExceptionRecorded(context, error)) {
         recordException(context, error, request, endTime);
       }
     }
