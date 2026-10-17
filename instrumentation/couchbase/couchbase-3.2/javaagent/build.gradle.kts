@@ -53,17 +53,6 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("version343Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version343Test/java"))
-        }
-      }
-      dependencies {
-        implementation("com.couchbase.client:java-client:3.4.3")
-      }
-    }
-
     register<JvmTestSuite>("version344Test") {
       sources {
         java {
@@ -96,8 +85,8 @@ tasks {
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets["version343Test"].output.classesDirs
-    classpath = sourceSets["version343Test"].runtimeClasspath
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*CouchbaseExceptionSignalTest")
     }

@@ -12,6 +12,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -20,6 +21,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.couchbase.client.core.error.UnambiguousTimeoutException;
 import com.couchbase.client.java.Cluster;
@@ -49,6 +51,8 @@ class CouchbaseExceptionSignalTest {
 
   @Test
   void recordsFailedOperationWithConfiguredExceptionSignal() {
+    assumeTrue(testLatestDeps());
+
     int port = PortUtils.findOpenPort();
     ClusterEnvironment environment = ClusterEnvironment.builder().build();
     cleanup.deferCleanup(environment::shutdown);
