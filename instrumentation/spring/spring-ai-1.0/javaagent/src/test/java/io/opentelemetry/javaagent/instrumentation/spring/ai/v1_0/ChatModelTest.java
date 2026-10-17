@@ -66,7 +66,7 @@ import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.DefaultUsage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
-import org.springframework.ai.chat.prompt.DefaultChatOptions;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
 import reactor.core.Disposable;
@@ -1034,17 +1034,17 @@ class ChatModelTest {
             toolResponseMessage(singletonList(toolResponse()))));
   }
 
-  private static DefaultChatOptions defaultOptions() {
-    DefaultChatOptions options = new DefaultChatOptions();
-    options.setModel(MODEL);
-    options.setFrequencyPenalty(0.1);
-    options.setMaxTokens(42);
-    options.setPresencePenalty(0.2);
-    options.setStopSequences(singletonList("stop-sequence"));
-    options.setTemperature(0.3);
-    options.setTopK(4);
-    options.setTopP(0.5);
-    return options;
+  private static ChatOptions defaultOptions() {
+    return ChatOptions.builder()
+        .model(MODEL)
+        .frequencyPenalty(0.1)
+        .maxTokens(42)
+        .presencePenalty(0.2)
+        .stopSequences(singletonList("stop-sequence"))
+        .temperature(0.3)
+        .topK(4)
+        .topP(0.5)
+        .build();
   }
 
   private static ChatResponse response(
