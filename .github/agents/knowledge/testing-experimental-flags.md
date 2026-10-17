@@ -91,8 +91,8 @@ to select the configuration source for both builder setup and assertions.
 Libraries that actually read production properties, including library-autoconfigure integrations,
 still use those properties. Test-only flags are not production configuration and do not belong in
 metadata labels. Follow the
-[telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
-for default and combined profiles.
+[canonical telemetry collection guidance](../../../instrumentation-docs/readme.md#telemetry-collection)
+for default and combined profiles, including synthetic header setup.
 
 ## Java Test Patterns
 

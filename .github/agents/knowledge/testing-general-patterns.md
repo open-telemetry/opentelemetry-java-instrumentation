@@ -394,7 +394,9 @@ setting. Preserve overrides that intentionally force a value for a regression sc
 This distinction applies to builder-controlled options, not shared production settings that
 libraries actually read. See the
 [library variant example](testing-experimental-flags.md#programmatically-configured-library-tests)
-for Gradle wiring and metadata labels.
+for Gradle wiring and metadata labels. For synthetic header capture in baseline fixtures and its
+metadata treatment, follow the
+[canonical collection guidance](../../../instrumentation-docs/readme.md#telemetry-collection).
 
 ### Mode-dependent expected values
 

@@ -77,13 +77,13 @@ or test failure that CI will report.
   Omit test setup, unrelated instrumentation settings, and whole-module enablement for default-off
   instrumentation. Include span suppression settings only when they determine this instrumentation's
   telemetry. Missing labels merge optional telemetry into `when: default`.
-- For javaagent tests, keep baseline suites on instrumentation defaults, apart from HTTP and
-  messaging header capture injected by `CapturedHttpHeadersTestConfigSupplier` and
-  `CapturedMessagingHeadersTestConfigSupplier`. Do not require empty overrides, separate capture
-  variants, or `metadataConfig` conditions solely for this inherited setup. Module-specific
-  capture overrides and other non-default telemetry settings remain subject to the normal profile
-  rules. Test opt-in telemetry in named variants wired into `check`. Preserve normal suite
-  coverage; filtered metadata-collection tests are not a substitute.
+- For javaagent, plain-library, and library-autoconfigure tests, baseline fixtures may capture
+  synthetic HTTP and messaging headers through test-exporter configuration, a library builder, or
+  production properties the integration actually reads. Do not require empty overrides,
+  capture-only flags or variants, or `metadataConfig` conditions solely for this fixture setup.
+  Follow the [canonical collection guidance](../../instrumentation-docs/readme.md#telemetry-collection)
+  for synthetic capture and profile labels. Test meaningful opt-in telemetry in named variants wired
+  into `check`; preserve normal suite coverage.
 - Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
   variants based on their purpose, not their names. A full-suite `testReceiveSpansDisabled` may
   document default telemetry; a suppression-only regression task does not. Keep regression tasks in
