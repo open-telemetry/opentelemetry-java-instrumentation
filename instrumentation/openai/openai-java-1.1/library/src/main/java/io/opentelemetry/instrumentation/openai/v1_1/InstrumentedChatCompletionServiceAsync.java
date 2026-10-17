@@ -136,7 +136,7 @@ final class InstrumentedChatCompletionServiceAsync
         context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     AsyncStreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
-    return new TracingAsyncStreamedResponse(
+    return new TracingAsyncStreamedResponse<>(
         result,
         new StreamListener(
             context, request, instrumenter, eventLogger, captureMessageContent, newSpan));
