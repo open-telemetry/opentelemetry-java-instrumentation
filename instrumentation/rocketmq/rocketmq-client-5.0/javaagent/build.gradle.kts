@@ -22,7 +22,7 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("client500Test") {
+    register<JvmTestSuite>("version5Test") {
       sources.java {
         srcDir("src/test/java")
         include("**/PublishingMessageContextTest.java")
