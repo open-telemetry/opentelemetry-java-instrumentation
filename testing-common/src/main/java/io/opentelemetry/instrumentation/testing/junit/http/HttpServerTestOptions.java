@@ -68,6 +68,8 @@ public class HttpServerTestOptions {
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
   boolean useHttp2 = false;
+  // request body capture disabled by default and opt-in as only a few servers/frameworks support it
+  boolean testRequestBodyCapture = false;
 
   HttpServerTestOptions() {}
 
@@ -228,6 +230,12 @@ public class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setTestHttpBodyPipelining(boolean testHttpBodyPipelining) {
     this.testHttpBodyPipelining = testHttpBodyPipelining;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestRequestBodyCapture(boolean testRequestBodyCapture) {
+    this.testRequestBodyCapture = testRequestBodyCapture;
     return this;
   }
 

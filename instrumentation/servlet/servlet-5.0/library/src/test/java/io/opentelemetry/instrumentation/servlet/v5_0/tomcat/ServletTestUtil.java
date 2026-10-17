@@ -28,6 +28,7 @@ class ServletTestUtil {
     Experimental.setRequestParameters(
         builder, IncludeExclude.builder().setIncluded(singletonList("test-parameter")).build());
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);
+    Experimental.setCaptureRequestBodyMaxSize(builder, 100);
     return builder.build().createFilter();
   }
 

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet.v5_0;
 import static io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -22,6 +23,7 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -70,6 +72,11 @@ public class TestServlet5 {
                     "request parameter does not have expected value " + value);
               }
 
+              resp.setStatus(endpoint.getStatus());
+              resp.getWriter().print(endpoint.getBody());
+            } else if (CAPTURE_BODY.equals(endpoint)) {
+              // read body to trigger body capture
+              consumeRequestBody(req);
               resp.setStatus(endpoint.getStatus());
               resp.getWriter().print(endpoint.getBody());
             } else if (ERROR.equals(endpoint)) {
@@ -145,6 +152,12 @@ public class TestServlet5 {
                             "request parameter does not have expected value " + value);
                       }
 
+                      resp.setStatus(endpoint.getStatus());
+                      resp.getWriter().print(endpoint.getBody());
+                      context.complete();
+                    } else if (CAPTURE_BODY.equals(endpoint)) {
+                      // read body to trigger body capture
+                      consumeRequestBody(req);
                       resp.setStatus(endpoint.getStatus());
                       resp.getWriter().print(endpoint.getBody());
                       context.complete();
@@ -233,6 +246,11 @@ public class TestServlet5 {
 
                 resp.setStatus(endpoint.getStatus());
                 resp.getWriter().print(endpoint.getBody());
+              } else if (CAPTURE_BODY.equals(endpoint)) {
+                // read body to trigger body capture
+                consumeRequestBody(req);
+                resp.setStatus(endpoint.getStatus());
+                resp.getWriter().print(endpoint.getBody());
               } else if (ERROR.equals(endpoint)) {
                 resp.sendError(endpoint.getStatus(), endpoint.getBody());
               } else if (EXCEPTION.equals(endpoint)) {
@@ -310,6 +328,13 @@ public class TestServlet5 {
       } else {
         req.startAsync().dispatch("/recursive");
       }
+    }
+  }
+
+  private static void consumeRequestBody(HttpServletRequest req) throws IOException {
+    ServletInputStream requestBody = req.getInputStream();
+    while (!requestBody.isFinished()) {
+      requestBody.read();
     }
   }
 
