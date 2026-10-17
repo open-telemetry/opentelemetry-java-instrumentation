@@ -22,14 +22,26 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testDefaultTelemetry = register<Test>("testDefaultTelemetry") {
+  test {
+    filter {
+      excludeTestsMatching("*.internal.*")
+      excludeTestsMatching("*.ExceptionHandlingTest")
+      excludeTestsMatching("*.WrapperPropagationDisabledTest")
+      excludeTestsMatching("*.WrapperSuppressReceiveSpansTest")
+      excludeTestsMatching("*.InterceptorsSuppressReceiveSpansTest")
+    }
+  }
+
+  val testRegression = register<Test>("testRegression") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")
-      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
-      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperSendExceptionTest.producerSpanEndedWhenSendThrowsSynchronously")
+      includeTestsMatching("*.internal.*")
+      includeTestsMatching("*.ExceptionHandlingTest")
+      includeTestsMatching("*.WrapperPropagationDisabledTest")
+      includeTestsMatching("*.WrapperSuppressReceiveSpansTest")
+      includeTestsMatching("*.InterceptorsSuppressReceiveSpansTest")
     }
   }
 
@@ -43,12 +55,9 @@ tasks {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testConsumerError")
     }
     systemProperty("test.messagingReceiveTelemetryEnabled", "true")
-    systemProperty("test.captureMessagingHeaders", "true")
     systemProperty(
       "metadataConfig",
-      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
-        "KafkaTelemetryBuilder.setHeaders(IncludeExclude.builder().setIncluded(\"Test-Message-*\")" +
-        ".setExcluded(\"*-Excluded-Header\").build())"
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)"
     )
   }
 
@@ -61,13 +70,10 @@ tasks {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
     }
     systemProperty("test.messagingReceiveTelemetryEnabled", "true")
-    systemProperty("test.captureMessagingHeaders", "true")
     systemProperty("test.captureExperimentalSpanAttributes", "true")
     systemProperty(
       "metadataConfig",
       "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
-        "KafkaTelemetryBuilder.setHeaders(IncludeExclude.builder().setIncluded(\"Test-Message-*\")" +
-        ".setExcluded(\"*-Excluded-Header\").build())," +
         "KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)"
     )
   }
@@ -80,7 +86,6 @@ tasks {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperPropagationDisabledTest.testWrappers")
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperSuppressReceiveSpansTest.testWrappers")
     }
-    systemProperty("test.captureMessagingHeaders", "true")
     systemProperty("test.captureExperimentalSpanAttributes", "true")
   }
 
@@ -102,7 +107,7 @@ tasks {
 
   check {
     dependsOn(
-      testDefaultTelemetry,
+      testRegression,
       testReceiveTelemetry,
       testExperimental,
       testExperimentalRegression,
