@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -41,31 +43,27 @@ tasks {
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
     )
   }
+}
 
-  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("LegacyMdcAttributes") {
+          filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
-    // the deprecated setting matches keys literally, so "*" alongside another entry does not
-    // capture every key
-    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
-    systemProperty("testMdcConfiguration", "legacy")
-  }
+          // the deprecated setting matches keys literally, so "*" alongside another entry does not
+          // capture every key
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
+          systemProperty("testMdcConfiguration", "legacy")
+        }
+        register("MdcAttributeExclusionsOnly") {
+          filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
-  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMdcSelectorTest")
-
-    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
-    systemProperty("testMdcConfiguration", "exclude-only")
-  }
-
-  check {
-    dependsOn(
-      testLegacyMdcAttributes,
-      testMdcAttributeExclusionsOnly,
-    )
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
+          systemProperty("testMdcConfiguration", "exclude-only")
+        }
+      }
+    }
   }
 }
