@@ -163,10 +163,6 @@ tasks {
     classpath = sourceSets["testCoreOnly"].runtimeClasspath
 
     systemProperty("test.captureExperimentalSpanAttributes", "true")
-    systemProperty(
-      "metadataConfig",
-      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
-    )
   }
 
   val testRdsDataExperimentalAttributes = register<Test>("testRdsDataExperimentalAttributes") {

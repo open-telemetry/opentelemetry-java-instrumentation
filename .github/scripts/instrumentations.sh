@@ -61,7 +61,6 @@ readonly INSTRUMENTATIONS=(
   "aws-sdk:aws-sdk-2.2:library:testIndividualHttpErrors"
   "aws-sdk:aws-sdk-2.2:library:testReceiveTelemetry"
   "aws-sdk:aws-sdk-2.2:library:testExceptionSignalLogs"
-  "aws-sdk:aws-sdk-2.2:library:testCoreOnlyExperimentalAttributes"
   "aws-sdk:aws-sdk-2.2:library:testRdsData"
   "aws-sdk:aws-sdk-2.2:library:testRdsDataExperimentalAttributes"
   "c3p0-0.9:javaagent:test"
