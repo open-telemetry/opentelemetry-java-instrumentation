@@ -13,7 +13,6 @@ import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -52,7 +51,7 @@ class ServerDecorator extends SimpleDecoratingHttpService {
     } catch (Throwable t) {
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      ExceptionRecorder.recordException(otelContext, ErrorCauseExtractor.getDefault().extract(t));
+      ExceptionRecorder.recordServerException(otelContext, t);
 
       throw t;
     }

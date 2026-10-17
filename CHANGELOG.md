@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Ratpack HTTP server exception events are now recorded on the server span instead of the
+  controller span when controller telemetry is enabled.
 - The Java agent no longer captures thread details by default. Set
   `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields

@@ -57,8 +57,8 @@ class ExceptionRecorderTest {
     Context context = owner.start(Context.root(), "original request");
     IllegalStateException error = new IllegalStateException("failure");
 
-    ExceptionRecorder.recordException(context, new CompletionException(error));
-    ExceptionRecorder.recordException(context, error);
+    ExceptionRecorder.recordServerException(context, new CompletionException(error));
+    ExceptionRecorder.recordServerException(context, error);
     owner.end(context, "original request", null, new CompletionException(error));
 
     InstrumentationScopeInfo scope =
@@ -91,22 +91,29 @@ class ExceptionRecorderTest {
 
   @ParameterizedTest
   @EnumSource(SpanKind.class)
-  void usesOwnerDefaultEventAndSeverity(SpanKind kind) {
+  void ordinaryExceptionsStayWithTheirOperation(SpanKind kind) {
+    Instrumenter<String, Void> server =
+        Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "server", unused -> "server")
+            .buildInstrumenter(SpanKindExtractor.alwaysServer());
+    Context serverContext = server.start(Context.root(), "request");
     Instrumenter<String, Void> owner =
         Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "owner", unused -> "request")
             .buildInstrumenter(unused -> kind);
-    Context context = owner.start(Context.root(), "request");
+    Context context = owner.start(serverContext, "request");
     IllegalArgumentException error = new IllegalArgumentException("failure");
 
-    ExceptionRecorder.recordException(context, error);
-    owner.end(context, "request", null, null);
+    owner.end(context, "request", null, error);
+    server.end(serverContext, "request", null, null);
 
-    assertThat(testing.getSpans())
-        .singleElement()
-        .satisfies(
-            span -> assertThat(span).hasException(emitExceptionAsSpanEvents() ? error : null));
+    assertThat(testing.getSpans()).hasSize(2);
+    assertThat(testing.getSpans().get(0))
+        .hasName("request")
+        .hasException(emitExceptionAsSpanEvents() ? error : null);
+    assertThat(testing.getSpans().get(1)).hasName("server").hasException(null);
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
     if (emitExceptionAsLogs()) {
+      assertThat(testing.getLogRecords().get(0).getInstrumentationScopeInfo())
+          .isEqualTo(InstrumentationScopeInfo.create("owner"));
       assertThat(testing.getLogRecords().get(0))
           .hasEventName("exception")
           .hasSeverity(
@@ -119,16 +126,16 @@ class ExceptionRecorderTest {
   void distinctErrorsAreNotDeduplicatedAndStateIsPerSpan() {
     Instrumenter<String, Void> owner =
         Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "owner", unused -> "request")
-            .buildInstrumenter();
+            .buildInstrumenter(SpanKindExtractor.alwaysServer());
     IllegalStateException first = new IllegalStateException("same message");
     IllegalStateException second = new IllegalStateException("same message");
     Context firstContext = owner.start(Context.root(), "first");
     Context secondContext = owner.start(Context.root(), "second");
 
-    ExceptionRecorder.recordException(firstContext, first);
-    ExceptionRecorder.recordException(firstContext, second);
-    ExceptionRecorder.recordException(firstContext, first);
-    ExceptionRecorder.recordException(secondContext, first);
+    ExceptionRecorder.recordServerException(firstContext, first);
+    ExceptionRecorder.recordServerException(firstContext, second);
+    ExceptionRecorder.recordServerException(firstContext, first);
+    ExceptionRecorder.recordServerException(secondContext, first);
     owner.end(firstContext, "first", null, first);
     owner.end(secondContext, "second", null, first);
 
@@ -155,8 +162,8 @@ class ExceptionRecorderTest {
       IllegalStateException error = new IllegalStateException("failure");
 
       assertThat(Span.fromContext(context).isRecording()).isFalse();
-      ExceptionRecorder.recordException(context, error);
-      ExceptionRecorder.recordException(context, error);
+      ExceptionRecorder.recordServerException(context, error);
+      ExceptionRecorder.recordServerException(context, error);
       owner.end(context, "request", null, error);
 
       assertThat(testing.getSpans()).isEmpty();
@@ -187,7 +194,7 @@ class ExceptionRecorderTest {
     IllegalStateException error = new IllegalStateException("failure");
 
     assertThat(suppressed.shouldStart(context, "request")).isFalse();
-    ExceptionRecorder.recordException(context, error);
+    ExceptionRecorder.recordServerException(context, error);
     owner.end(context, "request", null, error);
 
     assertThat(testing.getSpans()).hasSize(1);
@@ -199,11 +206,8 @@ class ExceptionRecorderTest {
   }
 
   @Test
-  void doesNotUseInheritedOwnerForAnUnrelatedCurrentSpan() {
-    Instrumenter<String, Void> owner =
-        Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "owner", unused -> "request")
-            .buildInstrumenter();
-    Context context = owner.start(Context.root(), "request");
+  void doesNotRecordWithoutLocalRoot() {
+    Context context = Context.root();
     Span child =
         testing
             .getOpenTelemetry()
@@ -213,17 +217,14 @@ class ExceptionRecorderTest {
             .startSpan();
     IllegalStateException error = new IllegalStateException("failure");
 
-    ExceptionRecorder.recordException(context.with(child), error);
-    ExceptionRecorder.recordException(context.with(Span.getInvalid()), error);
-    ExceptionRecorder.recordException(Context.root(), error);
+    ExceptionRecorder.recordServerException(context.with(child), error);
+    ExceptionRecorder.recordServerException(context.with(Span.getInvalid()), error);
+    ExceptionRecorder.recordServerException(Context.root(), error);
     child.end();
-    owner.end(context, "request", null, null);
 
-    assertThat(testing.getSpans()).hasSize(2);
-    assertThat(testing.getSpans().get(0))
-        .hasName("child")
-        .hasException(emitExceptionAsSpanEvents() ? error : null);
-    assertThat(testing.getSpans().get(1)).hasName("request").hasException(null);
+    assertThat(testing.getSpans())
+        .singleElement()
+        .satisfies(span -> assertThat(span).hasName("child").hasException(null));
     assertThat(testing.getLogRecords()).isEmpty();
   }
 
@@ -231,11 +232,11 @@ class ExceptionRecorderTest {
   void doesNotEmitAfterOwnerEnds() {
     Instrumenter<String, Void> owner =
         Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "owner", unused -> "request")
-            .buildInstrumenter();
+            .buildInstrumenter(SpanKindExtractor.alwaysServer());
     Context context = owner.start(Context.root(), "request");
     owner.end(context, "request", null, null);
 
-    ExceptionRecorder.recordException(context, new IllegalStateException("late failure"));
+    ExceptionRecorder.recordServerException(context, new IllegalStateException("late failure"));
 
     assertThat(testing.getSpans())
         .singleElement()
@@ -247,13 +248,13 @@ class ExceptionRecorderTest {
   void concurrentReportsRecordTheSameErrorOnlyOnce() {
     Instrumenter<String, Void> owner =
         Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "owner", unused -> "request")
-            .buildInstrumenter();
+            .buildInstrumenter(SpanKindExtractor.alwaysServer());
     Context context = owner.start(Context.root(), "request");
     IllegalStateException error = new IllegalStateException("failure");
 
     IntStream.range(0, 32)
         .parallel()
-        .forEach(unused -> ExceptionRecorder.recordException(context, error));
+        .forEach(unused -> ExceptionRecorder.recordServerException(context, error));
     owner.end(context, "request", null, error);
 
     assertThat(testing.getSpans())
@@ -265,9 +266,14 @@ class ExceptionRecorderTest {
 
   @Test
   void canTargetServerOwnerFromNestedInstrumenterContext() {
+    InstrumenterBuilder<String, Void> serverBuilder =
+        Instrumenter.builder(testing.getOpenTelemetry(), "server", unused -> "server");
+    Experimental.setExceptionEventExtractor(
+        serverBuilder,
+        (log, context, request) ->
+            log.setEventName("http.server.request.exception").setSeverity(Severity.ERROR));
     Instrumenter<String, Void> server =
-        Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "server", unused -> "server")
-            .buildInstrumenter(SpanKindExtractor.alwaysServer());
+        serverBuilder.buildInstrumenter(SpanKindExtractor.alwaysServer());
     Instrumenter<String, Void> controller =
         Instrumenter.<String, Void>builder(
                 testing.getOpenTelemetry(), "controller", unused -> "controller")
@@ -276,9 +282,8 @@ class ExceptionRecorderTest {
     Context controllerContext = controller.start(serverContext, "request");
     IllegalStateException error = new IllegalStateException("failure");
 
-    Context targetContext = controllerContext.with(Span.fromContext(serverContext));
-    ExceptionRecorder.recordException(targetContext, error);
-    ExceptionRecorder.recordException(targetContext, error);
+    ExceptionRecorder.recordServerException(controllerContext, error);
+    ExceptionRecorder.recordServerException(controllerContext, error);
     controller.end(controllerContext, "request", null, null);
     server.end(serverContext, "request", null, error);
 
@@ -286,19 +291,23 @@ class ExceptionRecorderTest {
     assertThat(testing.getSpans().get(0)).hasName("controller").hasException(null);
     assertThat(testing.getSpans().get(1))
         .hasName("server")
-        .hasException(emitExceptionAsSpanEvents() ? error : null);
+        .hasException(emitExceptionAsSpanEvents() ? error : null)
+        .satisfies(
+            spanData ->
+                assertThat(spanData.getEvents()).hasSize(emitExceptionAsSpanEvents() ? 1 : 0));
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
     if (emitExceptionAsLogs()) {
       assertThat(testing.getLogRecords().get(0).getInstrumentationScopeInfo())
           .isEqualTo(InstrumentationScopeInfo.create("server"));
       assertThat(testing.getLogRecords().get(0))
           .hasSpanContext(Span.fromContext(serverContext).getSpanContext())
+          .hasEventName("http.server.request.exception")
           .hasSeverity(Severity.ERROR);
     }
   }
 
   @Test
-  void preservesControllerEventTargetButUsesServerLogOwner() {
+  void handoffDoesNotRequireTerminalError() {
     Instrumenter<String, Void> server =
         Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "server", unused -> "server")
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
@@ -308,23 +317,18 @@ class ExceptionRecorderTest {
             .buildInstrumenter();
     Context serverContext = server.start(Context.root(), "request");
     Context controllerContext = controller.start(serverContext, "request");
-    Span controllerSpan = Span.fromContext(controllerContext);
     IllegalStateException error = new IllegalStateException("failure");
 
-    Context ownerContext = controllerContext.with(Span.fromContext(serverContext));
-    ExceptionRecorder.recordException(ownerContext, controllerSpan, error);
-    ExceptionRecorder.recordException(ownerContext, controllerSpan, error);
+    ExceptionRecorder.recordServerException(controllerContext, error);
+    ExceptionRecorder.recordServerException(controllerContext, error);
     controller.end(controllerContext, "request", null, null);
-    server.end(serverContext, "request", null, error);
+    server.end(serverContext, "request", null, null);
 
     assertThat(testing.getSpans()).hasSize(2);
-    assertThat(testing.getSpans().get(0))
-        .hasName("controller")
-        .hasException(emitExceptionAsSpanEvents() ? error : null);
+    assertThat(testing.getSpans().get(0)).hasName("controller").hasException(null);
     assertThat(testing.getSpans().get(1))
         .hasName("server")
-        .hasException(null)
-        .hasStatus(StatusData.error());
+        .hasException(emitExceptionAsSpanEvents() ? error : null);
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
     if (emitExceptionAsLogs()) {
       assertThat(testing.getLogRecords().get(0).getInstrumentationScopeInfo())

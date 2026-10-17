@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -52,28 +53,25 @@ public final class ExceptionRecorder {
   }
 
   /**
-   * Records an exception using the current span's owner, including its exception log configuration.
+   * Records an HTTP server exception using the local root span's owner and exception configuration.
    * Without an owner only span events can be recorded; a log's instrumentation scope cannot be
    * recovered from an arbitrary span.
    */
-  public static void recordException(Context context, Throwable error) {
-    recordException(context, Span.fromContext(context), error);
-  }
-
-  /**
-   * Preserves an integration's event target when its exception log belongs to another span's owner.
-   * The context identifies the owning span; the event span need not be current in that context.
-   */
-  public static void recordException(Context context, Span eventSpan, Throwable error) {
+  public static void recordServerException(Context context, Throwable error) {
+    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
+    if (serverSpan == null) {
+      return;
+    }
+    context = context.with(serverSpan);
     ExceptionRecorder owner = findOwner(context);
     if (owner != null) {
       error = owner.errorCauseExtractor.extract(error);
       Recorder recorder = owner.getRecorder(error);
       if (recorder != null) {
-        recorder.record(context, eventSpan, error);
+        recorder.record(context, error);
       }
     } else if (emitExceptionAsSpanEvents()) {
-      eventSpan.recordException(error);
+      serverSpan.recordException(ErrorCauseExtractor.getDefault().extract(error));
     }
   }
 
@@ -126,6 +124,6 @@ public final class ExceptionRecorder {
    */
   @FunctionalInterface
   public interface Recorder {
-    void record(Context context, Span eventSpan, Throwable error);
+    void record(Context context, Throwable error);
   }
 }

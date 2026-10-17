@@ -26,4 +26,9 @@ class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest {
 
     options.setHasResponseCustomizer(endpoint -> true);
   }
+
+  @Override
+  protected boolean recordsExceptionOnServerSpan() {
+    return true;
+  }
 }

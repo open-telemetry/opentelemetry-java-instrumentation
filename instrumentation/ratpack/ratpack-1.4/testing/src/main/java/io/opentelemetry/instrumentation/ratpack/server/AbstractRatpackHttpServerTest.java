@@ -290,6 +290,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> true);
+    options.setHasExceptionOnServerSpan(endpoint -> recordsExceptionOnServerSpan());
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
@@ -304,6 +305,10 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
             return endpoint.getPath();
           }
         });
+  }
+
+  protected boolean recordsExceptionOnServerSpan() {
+    return false;
   }
 
   @Override
@@ -321,8 +326,10 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error())
           .hasException(
-              emitExceptionAsSpanEvents() ? new IllegalStateException(EXCEPTION.getBody()) : null);
-      if (emitExceptionAsLogs()) {
+              !recordsExceptionOnServerSpan() && emitExceptionAsSpanEvents()
+                  ? new IllegalStateException(EXCEPTION.getBody())
+                  : null);
+      if (!recordsExceptionOnServerSpan() && emitExceptionAsLogs()) {
         assertExceptionLogs(
             new IllegalStateException(EXCEPTION.getBody()), "http.server.request.exception");
       }

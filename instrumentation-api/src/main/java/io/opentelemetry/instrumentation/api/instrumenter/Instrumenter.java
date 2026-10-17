@@ -235,8 +235,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
         ExceptionRecorder.storeInContext(
             context,
             errorCauseExtractor,
-            (exceptionContext, eventSpan, error) ->
-                recordException(exceptionContext, eventSpan, error, request, null));
+            (exceptionContext, error) -> recordException(exceptionContext, error, request, null));
 
     if (operationListeners.length != 0) {
       if (operationListenerAttributesExtractors.length != 0) {
@@ -305,7 +304,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     if (error != null) {
       error = errorCauseExtractor.extract(error);
       if (ExceptionRecorder.shouldRecord(context, error)) {
-        recordException(context, span, error, request, endTime);
+        recordException(context, error, request, endTime);
       }
     }
 
@@ -342,13 +341,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   private void recordException(
-      Context context,
-      Span eventSpan,
-      Throwable throwable,
-      REQUEST request,
-      @Nullable Instant endTime) {
+      Context context, Throwable throwable, REQUEST request, @Nullable Instant endTime) {
     if (emitExceptionAsSpanEvents()) {
-      eventSpan.recordException(throwable);
+      Span.fromContext(context).recordException(throwable);
     }
     // Exception logs are intentionally emitted even when the span is not recording.
     if (logger == null || exceptionEventExtractor == null) {
