@@ -52,13 +52,86 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
+  test {
+    filter.excludeTestsMatching("SqsTracingTest.testProcessingOwnershipDisablesRawProcessSpansForResponse")
+  }
+
+  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
+    filter {
+      excludeTestsMatching("SqsSuppressReceiveSpansTest")
+      excludeTestsMatching("SqsTracingTest.testProcessingOwnershipDisablesRawProcessSpansForResponse")
+      excludeTestsMatching("SqsTracingTest.testDisableSqsMessageCreateSpans*")
+      excludeTestsMatching("SqsTracingTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+      excludeTestsMatching("SqsTracingTest.testDisableSqsMessageCreateSpansPreservesCustomContext")
+      excludeTestsMatching("SqsTracingTest.testBatchLinksSurviveLaterRequestClone")
+    }
+  }
+
+  val testSqsReceiveTelemetry = register<Test>("testSqsReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "test.messagingReceiveTelemetryEnabled",
+      "true",
+    )
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+        "AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)",
+    )
+    filter {
+      includeTestsMatching("SqsTracingTest")
+      excludeTestsMatching("SqsTracingTest.testDisableSqsMessageCreateSpans*")
+      excludeTestsMatching("SqsTracingTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+      excludeTestsMatching("SqsTracingTest.testDisableSqsMessageCreateSpansPreservesCustomContext")
+      excludeTestsMatching("SqsTracingTest.testBatchLinksSurviveLaterRequestClone")
+    }
+  }
+
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+        "otel.semconv.exception.signal.preview=logs",
+    )
+    filter {
+      includeTestsMatching("S3ClientTest")
+      includeTestsMatching("SqsTracingTest.testDeleteMessageError")
+    }
+  }
+
+  val testSecretsManagerExperimentalAttributes = register<Test>("testSecretsManagerExperimentalAttributes") {
+    testClassesDirs = sourceSets["testSecretsManager"].output.classesDirs
+    classpath = sourceSets["testSecretsManager"].runtimeClasspath
+
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
   }
 
   check {
-    dependsOn(testing.suites, testExceptionSignalLogs)
+    dependsOn(
+      testing.suites,
+      testExperimentalAttributes,
+      testSqsReceiveTelemetry,
+      testExceptionSignalLogs,
+      testSecretsManagerExperimentalAttributes,
+    )
   }
 }

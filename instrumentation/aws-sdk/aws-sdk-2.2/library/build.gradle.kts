@@ -82,17 +82,109 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
+  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+      excludeTestsMatching("Aws2SqsW3cPropagatorTest")
+      excludeTestsMatching("Aws2SqsW3cPropagatorAndXrayPropagatorTest")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansDefaultPropagatorTest")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorAndXrayPropagatorTest")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+      excludeTestsMatching("Aws2ClientNotRecordHttpErrorTest")
+      excludeTestsMatching("Aws2ClientRecordHttpErrorTest")
+      excludeTestsMatching("SqsProcessMetricsIsolationTest")
+    }
+  }
+
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "test.messagingReceiveTelemetryEnabled",
+      "true",
+    )
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+        "AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)",
+    )
+    filter {
+      includeTestsMatching("Aws2SqsDefaultPropagatorTest")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
+      excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+    }
+  }
+
+  val testIndividualHttpErrors = register<Test>("testIndividualHttpErrors") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("test.recordIndividualHttpError", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setRecordIndividualHttpError(true)",
+    )
+    filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
+  }
+
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+        "otel.semconv.exception.signal.preview=logs",
+    )
+    filter {
+      includeTestsMatching("Aws2ClientTest")
+      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testDeleteMessageError")
+    }
+  }
+
+  val testCoreOnlyExperimentalAttributes = register<Test>("testCoreOnlyExperimentalAttributes") {
+    testClassesDirs = sourceSets["testCoreOnly"].output.classesDirs
+    classpath = sourceSets["testCoreOnly"].runtimeClasspath
+
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+  }
+
+  val testRdsDataExperimentalAttributes = register<Test>("testRdsDataExperimentalAttributes") {
+    testClassesDirs = sourceSets["testRdsData"].output.classesDirs
+    classpath = sourceSets["testRdsData"].runtimeClasspath
+
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+    )
   }
 
   check {
     dependsOn(
       testing.suites,
+      testExperimentalAttributes,
+      testReceiveTelemetry,
+      testIndividualHttpErrors,
       testExceptionSignalLogs,
+      testCoreOnlyExperimentalAttributes,
+      testRdsDataExperimentalAttributes,
     )
   }
 }
