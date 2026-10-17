@@ -25,6 +25,11 @@ convention not caught by CI.
   Test shared flat-to-declarative conversion centrally. Single-source declarative unit tests are not duplicates.
 - Test shared-helper defaults, fallback, and precedence centrally, not in every caller.
   Keep caller-specific logic covered and add missing central coverage before removing a module test.
+- For exception signal selection, test the full default, `logs`, and `logs/dup` matrix in
+  shared emission implementation unit tests using separate JVMs. Agent and library integration
+  tests retain default coverage plus focused `logs` coverage for caller-specific behavior;
+  do not repeat `logs/dup` policy checks in integrations. This does not change RPC
+  semantic-convention `/dup` coverage.
 - Do not add or request historical-absence assertions merely because telemetry
   or functionality was removed or made opt-in. An absence assertion must verify
   a supported contract that would merit testing even if the previous behavior

@@ -21,3 +21,19 @@ if (otelProps.testLatestDeps) {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }
+
+tasks {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+    filter {
+      includeTestsMatching("*WicketTest.testException")
+    }
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
+}

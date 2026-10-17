@@ -288,6 +288,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> true);
+    options.setHasExceptionOnServerSpan(endpoint -> true);
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
@@ -317,8 +318,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     }
     span.hasName(spanName).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
-      span.hasStatus(StatusData.error())
-          .hasException(new IllegalStateException(EXCEPTION.getBody()));
+      span.hasStatus(StatusData.error()).hasException(null);
     }
     return span;
   }

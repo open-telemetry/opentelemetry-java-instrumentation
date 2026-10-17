@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -49,11 +49,10 @@ public class RatpackSingletons {
     return matchedRoute;
   }
 
-  // copied from BaseTracer#onException()
   public static void onError(io.opentelemetry.context.Context context, Throwable error) {
     Span span = Span.fromContext(context);
     span.setStatus(StatusCode.ERROR);
-    span.recordException(ErrorCauseExtractor.getDefault().extract(error));
+    ExceptionRecorder.recordServerException(context, error);
   }
 
   private RatpackSingletons() {}

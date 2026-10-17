@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
+import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.vertx.core.Handler;
@@ -43,10 +42,7 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     try (Scope ignored = RouteHolder.init(otelContext, route).makeCurrent()) {
       handler.handle(context);
     } catch (Throwable t) {
-      Span serverSpan = LocalRootSpan.fromContextOrNull(otelContext);
-      if (serverSpan != null) {
-        serverSpan.recordException(unwrapThrowable(t));
-      }
+      ExceptionRecorder.recordServerException(otelContext, unwrapThrowable(t));
       throw t;
     }
   }

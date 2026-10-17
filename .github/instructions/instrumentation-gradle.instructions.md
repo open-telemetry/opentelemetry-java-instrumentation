@@ -61,6 +61,10 @@ or test failure that CI will report.
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
   instrumentation scope and telemetry shape; equivalent suites need not all collect. Shared test
   conventions forward `-PcollectMetadata=true` to test JVMs.
+- For exception signal selection, collect default telemetry and representative `logs` profiles,
+  not `logs/dup`. Wire focused integration `logs` variants into `check`; keep the full
+  default / `logs` / `logs/dup` matrix in shared emission unit-test JVMs. RPC
+  semantic-convention `/dup` variants remain required independently.
 - `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
   instrumentation defaults, regardless of task name or settings on `test`.
   Otherwise include only non-default user-facing settings

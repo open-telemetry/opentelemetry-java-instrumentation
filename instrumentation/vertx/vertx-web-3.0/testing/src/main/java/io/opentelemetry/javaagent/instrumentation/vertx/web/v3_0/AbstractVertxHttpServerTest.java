@@ -5,15 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
@@ -68,6 +71,37 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
     assertThat(response.contentUtf8()).isEqualTo(SUB_ROUTER_PATH_PARAM.getBody());
 
     assertTheTraces(1, null, null, null, method, SUB_ROUTER_PATH_PARAM);
+  }
+
+  @Override
+  protected SpanDataAssert assertServerSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint, int statusCode) {
+    super.assertServerSpan(span, method, endpoint, statusCode);
+    if (endpoint == ServerEndpoint.EXCEPTION) {
+      span.satisfies(
+          spanData ->
+              assertThat(spanData.getEvents()).hasSize(emitExceptionAsSpanEvents() ? 1 : 0));
+    }
+    return span;
+  }
+
+  @Override
+  protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+    super.assertExceptionLogs(expectedException, expectedEventName);
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getKind() == SpanKind.SERVER)
+        .singleElement()
+        .satisfies(
+            serverSpan ->
+                assertThat(testing.logRecords())
+                    .filteredOn(log -> expectedEventName.equals(log.getEventName()))
+                    .singleElement()
+                    .satisfies(
+                        log -> {
+                          assertThat(log.getSpanContext()).isEqualTo(serverSpan.getSpanContext());
+                          assertThat(log.getInstrumentationScopeInfo())
+                              .isEqualTo(serverSpan.getInstrumentationScopeInfo());
+                        }));
   }
 
   @Override
