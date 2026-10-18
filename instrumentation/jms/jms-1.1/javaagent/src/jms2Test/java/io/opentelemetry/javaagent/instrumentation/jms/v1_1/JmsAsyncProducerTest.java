@@ -12,8 +12,10 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,13 +24,21 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import javax.jms.CompletionListener;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -37,7 +47,9 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class JmsAsyncProducerTest {
@@ -46,6 +58,8 @@ class JmsAsyncProducerTest {
 
   private static final ContextKey<String> KEY = ContextKey.named("jms-test");
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @ParameterizedTest
   @CsvSource({"0,false", "1,false", "2,false", "3,false", "0,true", "1,true", "2,true", "3,true"})
@@ -104,6 +118,116 @@ class JmsAsyncProducerTest {
         .isEqualTo(Span.fromContext(original).getSpanContext().getTraceId());
     assertThat(callbackContext.get().getSpanId())
         .isEqualTo(Span.fromContext(original).getSpanContext().getSpanId());
+  }
+
+  @ParameterizedTest
+  @MethodSource("crossThreadCompletionCases")
+  void crossThreadCompletion(boolean failed, boolean overlapping) throws Exception {
+    CountDownLatch sendStarted = new CountDownLatch(1);
+    CountDownLatch callbackCompleted = new CountDownLatch(1);
+    TestProducer producer =
+        new TestProducer() {
+          @Override
+          public void send(Message message, CompletionListener completionListener)
+              throws JMSException {
+            super.send(message, completionListener);
+            if (overlapping) {
+              Context sendingContext = Context.current();
+              assertThat(Span.fromContext(sendingContext).getSpanContext().isValid()).isTrue();
+              sendStarted.countDown();
+              try {
+                assertThat(callbackCompleted.await(10, SECONDS)).isTrue();
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(e);
+              }
+              assertContext(sendingContext);
+            }
+          }
+        };
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    cleanup.deferCleanup(executor::shutdownNow);
+    Message message = mock(Message.class);
+    JMSException failure = new JMSException("send failed");
+    AtomicInteger callbacks = new AtomicInteger();
+    Thread sender = Thread.currentThread();
+    Context original = Context.current();
+    try (Scope ignored = original.with(KEY, "sending").makeCurrent()) {
+      Context callingContext = Context.current();
+      CompletionListener listener =
+          new CompletionListener() {
+            @Override
+            public void onCompletion(Message completed) {
+              assertThat(completed).isSameAs(message);
+              assertContext(callingContext);
+              callbacks.incrementAndGet();
+            }
+
+            @Override
+            public void onException(Message completed, Exception exception) {
+              assertThat(exception).isSameAs(failure);
+              onCompletion(completed);
+            }
+          };
+      Future<?> callback =
+          executor.submit(
+              () -> {
+                try {
+                  Context workerOriginal = Context.current();
+                  Context workerContext =
+                      Context.root()
+                          .with(KEY, "callback-thread")
+                          .with(
+                              Span.wrap(
+                                  SpanContext.create(
+                                      "12345678123456781234567812345678",
+                                      "1234567812345678",
+                                      TraceFlags.getSampled(),
+                                      TraceState.getDefault())));
+                  try (Scope workerScope = workerContext.makeCurrent()) {
+                    assertThat(Thread.currentThread()).isNotSameAs(sender);
+                    assertThat(sendStarted.await(10, SECONDS)).isTrue();
+                    if (failed) {
+                      producer.listener.onException(message, failure);
+                    } else {
+                      producer.listener.onCompletion(message);
+                    }
+                    assertContext(workerContext);
+                    if (failed) {
+                      producer.listener.onCompletion(message);
+                    } else {
+                      producer.listener.onException(message, failure);
+                    }
+                    assertContext(workerContext);
+                  }
+                  assertContext(workerOriginal);
+                  return null;
+                } finally {
+                  callbackCompleted.countDown();
+                }
+              });
+      producer.send(message, listener);
+      assertContext(callingContext);
+      if (!overlapping) {
+        assertThat(testing.spans()).isEmpty();
+        assertThat(testing.metrics())
+            .noneMatch(metric -> metric.getName().startsWith("messaging."));
+      }
+      sendStarted.countDown();
+      callback.get(10, SECONDS);
+      assertContext(callingContext);
+    }
+    assertContext(original);
+    assertThat(callbacks.get()).isEqualTo(2);
+    assertSend(failed ? failure : null);
+  }
+
+  private static Stream<Arguments> crossThreadCompletionCases() {
+    return Stream.of(
+        argumentSet("success after send returns", false, false),
+        argumentSet("failure after send returns", true, false),
+        argumentSet("success while send scope is open", false, true),
+        argumentSet("failure while send scope is open", true, true));
   }
 
   @ParameterizedTest
