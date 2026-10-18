@@ -24,17 +24,16 @@ dependencies {
   testImplementation(project(":instrumentation:openai:openai-java-1.1:testing"))
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  // TODO run tests both with and without genai message capture
-
-  systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+          // TODO run tests both with and without genai message capture
+
+          systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+        }
         register("ExceptionSignalLogs") {
           telemetryConfig("otel.semconv.exception.signal.preview", "logs")
         }

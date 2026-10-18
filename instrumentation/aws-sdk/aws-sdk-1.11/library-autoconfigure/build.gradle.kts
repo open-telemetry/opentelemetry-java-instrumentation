@@ -23,12 +23,6 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
   test {
     filter {
       excludeTestsMatching("SqsSuppressReceiveSpansTest")
@@ -41,6 +35,11 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+          systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
         register("ReceiveSpansDisabled") {
           filter {
             includeTestsMatching("SqsSuppressReceiveSpansTest")

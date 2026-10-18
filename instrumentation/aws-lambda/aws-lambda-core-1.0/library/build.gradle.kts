@@ -30,17 +30,16 @@ dependencies {
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+        }
         register("ExceptionSignalLogs") {
           jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
         }

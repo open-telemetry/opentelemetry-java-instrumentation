@@ -23,17 +23,16 @@ dependencies {
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing"))
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+        }
         register("ExceptionSignalLogs") {
           telemetryConfig("otel.semconv.exception.signal.preview", "logs")
         }
