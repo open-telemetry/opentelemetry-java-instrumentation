@@ -53,10 +53,11 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
       handler.handle(context);
     } catch (Throwable t) {
       Throwable error = unwrapThrowable(t);
-      if (RouteHolder.recordException(routeContext, error)) {
-        ExceptionRecorder.recordServerException(
-            otelContext, LocalRootSpan.fromContextOrNull(otelContext), error, logger);
-      }
+      ExceptionRecorder.recordServerException(
+          otelContext,
+          LocalRootSpan.fromContextOrNull(otelContext),
+          error,
+          RouteHolder.recordException(routeContext, error) ? logger : null);
       throw t;
     } finally {
       RouteHolder.exitHandler(routeContext);

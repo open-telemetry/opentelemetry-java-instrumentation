@@ -23,6 +23,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import java.util.concurrent.CompletionException;
 
 public abstract class AbstractVertxWebServer extends AbstractVerticle {
   static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
@@ -143,6 +144,35 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                 end(
                     ctx.response().setStatusCode(RECOVERED_EXCEPTION.getStatus()),
                     RECOVERED_EXCEPTION.getBody()));
+    router
+        .route("/nested-exceptions")
+        .handler(
+            ctx -> {
+              IllegalStateException error = new IllegalStateException("shared failure");
+              ctx.put("nested-error", error);
+              ctx.next();
+              if ("distinct".equals(ctx.request().getParam("error"))) {
+                throw new IllegalArgumentException("different failure");
+              }
+              throw error;
+            })
+        .handler(
+            ctx -> {
+              IllegalStateException error = ctx.get("nested-error");
+              if ("same".equals(ctx.request().getParam("error"))) {
+                throw error;
+              }
+              throw new CompletionException(error);
+            })
+        .failureHandler(
+            ctx ->
+                // Complete after both synchronous handlers have reported their errors.
+                vertx.runOnContext(
+                    ignored -> {
+                      if (!ctx.response().ended()) {
+                        end(ctx.response().setStatusCode(500));
+                      }
+                    }));
     router
         .route("/path/:id/param")
         .handler(

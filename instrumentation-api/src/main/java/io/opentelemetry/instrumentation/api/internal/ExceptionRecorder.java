@@ -44,7 +44,7 @@ public final class ExceptionRecorder {
   }
 
   public static void recordServerException(
-      Context context, @Nullable Span eventSpan, Throwable error, Logger logger) {
+      Context context, @Nullable Span eventSpan, Throwable error, @Nullable Logger logger) {
     recordException(
         context,
         eventSpan,

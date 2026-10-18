@@ -14,6 +14,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
@@ -247,6 +248,41 @@ class ExceptionRecorderTest {
   }
 
   @Test
+  void duplicateLogsDoNotSuppressLegacySpanEvents() {
+    Instrumenter<String, Void> instrumenter =
+        Instrumenter.<String, Void>builder(
+                testing.getOpenTelemetry(), "server", unused -> "request")
+            .buildInstrumenter(SpanKindExtractor.alwaysServer());
+    Context context = instrumenter.start(Context.root(), "request");
+    Span span = Span.fromContext(context);
+    Logger logger = ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null);
+    RecordedExceptions recorded = new RecordedExceptions();
+    IllegalStateException first = new IllegalStateException("first");
+    IllegalStateException second = new IllegalStateException("second");
+
+    for (Throwable reported : asList(new CompletionException(first), first, second)) {
+      Throwable error = ErrorCauseExtractor.getDefault().extract(reported);
+      ExceptionRecorder.recordServerException(
+          context, span, error, recorded.add(error) ? logger : null);
+    }
+    instrumenter.end(context, "request", null, null);
+    recorded.close();
+
+    assertThat(testing.getSpans())
+        .singleElement()
+        .satisfies(
+            spanData ->
+                assertThat(spanData.getEvents()).hasSize(emitExceptionAsSpanEvents() ? 3 : 0));
+    assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 2 : 0);
+    if (emitExceptionAsLogs()) {
+      assertThat(testing.getLogRecords().get(0).getAttributes().get(EXCEPTION_MESSAGE))
+          .isEqualTo("first");
+      assertThat(testing.getLogRecords().get(1).getAttributes().get(EXCEPTION_MESSAGE))
+          .isEqualTo("second");
+    }
+  }
+
+  @Test
   void concurrentReportsDeduplicateTheSameIdentity() {
     RecordedExceptions recorded = new RecordedExceptions();
     IllegalStateException error = new IllegalStateException();
@@ -255,6 +291,18 @@ class ExceptionRecorderTest {
         IntStream.range(0, 32).parallel().filter(unused -> recorded.add(error)).count();
 
     assertThat(recordedCount).isEqualTo(1);
+  }
+
+  @Test
+  void equalButDistinctExceptionsAreNotDeduplicated() {
+    RecordedExceptions recorded = new RecordedExceptions();
+    EqualException first = new EqualException();
+    EqualException second = new EqualException();
+
+    assertThat(first).isEqualTo(second);
+    assertThat(recorded.add(first)).isTrue();
+    assertThat(recorded.add(second)).isTrue();
+    assertThat(recorded.add(first)).isFalse();
   }
 
   @Test
@@ -271,5 +319,18 @@ class ExceptionRecorderTest {
 
   private static long epochNanos(Instant instant) {
     return instant.getEpochSecond() * 1_000_000_000L + instant.getNano();
+  }
+
+  @SuppressWarnings("ThrowableEqualsHashCode") // Verify that deduplication never invokes equality.
+  private static final class EqualException extends RuntimeException {
+    @Override
+    public boolean equals(Object other) {
+      return other instanceof EqualException;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
   }
 }

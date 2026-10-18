@@ -72,6 +72,7 @@ tasks {
       filter {
         includeTestsMatching("*HttpServerTest.requestWithException")
         includeTestsMatching("*HttpServerTest.recoveredException")
+        includeTestsMatching("*HttpServerTest.nestedHandlerExceptions")
       }
     }
   }

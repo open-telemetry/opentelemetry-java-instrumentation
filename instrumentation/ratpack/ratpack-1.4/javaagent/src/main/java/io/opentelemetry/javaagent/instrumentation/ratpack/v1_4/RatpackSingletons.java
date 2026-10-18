@@ -79,10 +79,8 @@ public class RatpackSingletons {
             RECORDED_EXCEPTIONS.set(outcome.getRequest(), null);
           });
     }
-    if (!recorded.add(error)) {
-      return;
-    }
-    ExceptionRecorder.recordServerException(context, span, error, logger);
+    ExceptionRecorder.recordServerException(
+        context, span, error, recorded.add(error) ? logger : null);
   }
 
   private RatpackSingletons() {}

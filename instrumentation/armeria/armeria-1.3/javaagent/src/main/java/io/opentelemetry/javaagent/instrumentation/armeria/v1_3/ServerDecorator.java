@@ -86,9 +86,8 @@ class ServerDecorator extends SimpleDecoratingHttpService {
                   RECORDED_EXCEPTIONS.set(ctx, null);
                 });
       }
-      if (recorded.add(error)) {
-        ExceptionRecorder.recordServerException(otelContext, span, error, logger);
-      }
+      ExceptionRecorder.recordServerException(
+          otelContext, span, error, recorded.add(error) ? logger : null);
 
       throw t;
     }

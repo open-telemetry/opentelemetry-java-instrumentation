@@ -26,6 +26,7 @@ public final class WicketExceptionRecorder {
 
   public static void record(Context context, Exception exception) {
     Throwable error = WicketErrorUnwrapper.unwrap(exception);
+    Logger exceptionLogger = logger;
     RequestCycle cycle = RequestCycle.get();
     if (cycle != null) {
       RecordedExceptions recorded = RECORDED_EXCEPTIONS.get(cycle);
@@ -45,11 +46,11 @@ public final class WicketExceptionRecorder {
                 });
       }
       if (!recorded.add(error)) {
-        return;
+        exceptionLogger = null;
       }
     }
     ExceptionRecorder.recordServerException(
-        context, LocalRootSpan.fromContextOrNull(context), error, logger);
+        context, LocalRootSpan.fromContextOrNull(context), error, exceptionLogger);
   }
 
   private WicketExceptionRecorder() {}
