@@ -1286,7 +1286,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  private SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
+  private static SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
@@ -1303,7 +1303,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  private SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
+  private static SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         // The request id belongs on the nested body-consumer span only, not on the controller.
@@ -1315,7 +1315,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  private SpanDataAssert assertIndexedBodyConsumerSpan(SpanDataAssert span, int requestId) {
+  private static SpanDataAssert assertIndexedBodyConsumerSpan(SpanDataAssert span, int requestId) {
     span.hasName("body-consumer")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
