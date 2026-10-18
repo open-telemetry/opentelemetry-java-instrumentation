@@ -155,7 +155,9 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                 throw new IllegalArgumentException("different failure");
               }
               throw error;
-            })
+            });
+    router
+        .route("/nested-exceptions")
         .handler(
             ctx -> {
               IllegalStateException error = ctx.get("nested-error");

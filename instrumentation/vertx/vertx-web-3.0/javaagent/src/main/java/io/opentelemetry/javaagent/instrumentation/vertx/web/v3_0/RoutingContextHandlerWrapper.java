@@ -48,19 +48,13 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     HttpServerRoute.update(otelContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
 
     Context routeContext = RouteHolder.init(otelContext, route);
-    RouteHolder.enterHandler(routeContext);
     try (Scope ignored = routeContext.makeCurrent()) {
       handler.handle(context);
     } catch (Throwable t) {
       Throwable error = unwrapThrowable(t);
       ExceptionRecorder.recordServerException(
-          otelContext,
-          LocalRootSpan.fromContextOrNull(otelContext),
-          error,
-          RouteHolder.recordException(routeContext, error) ? logger : null);
+          otelContext, LocalRootSpan.fromContextOrNull(otelContext), error, logger);
       throw t;
-    } finally {
-      RouteHolder.exitHandler(routeContext);
     }
   }
 

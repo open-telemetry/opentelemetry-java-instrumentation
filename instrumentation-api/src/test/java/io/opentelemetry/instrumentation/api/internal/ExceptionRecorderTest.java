@@ -34,7 +34,6 @@ import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Instant;
 import java.util.concurrent.CompletionException;
-import java.util.stream.IntStream;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -232,23 +231,7 @@ class ExceptionRecorderTest {
   }
 
   @Test
-  void deduplicatesExtractedIdentityWithinFrameworkLifecycle() {
-    RecordedExceptions recorded = new RecordedExceptions();
-    IllegalStateException error = new IllegalStateException("same message");
-    IllegalStateException differentError = new IllegalStateException("same message");
-    ErrorCauseExtractor extractor = ErrorCauseExtractor.getDefault();
-
-    assertThat(recorded.add(extractor.extract(new CompletionException(error)))).isTrue();
-    assertThat(recorded.add(extractor.extract(error))).isFalse();
-    assertThat(recorded.add(extractor.extract(differentError))).isTrue();
-    assertThat(new RecordedExceptions().add(error)).isTrue();
-
-    recorded.clear();
-    assertThat(recorded.add(error)).isTrue();
-  }
-
-  @Test
-  void duplicateLogsDoNotSuppressLegacySpanEvents() {
+  void repeatedReportsEmitEachSelectedSignal() {
     Instrumenter<String, Void> instrumenter =
         Instrumenter.<String, Void>builder(
                 testing.getOpenTelemetry(), "server", unused -> "request")
@@ -256,81 +239,32 @@ class ExceptionRecorderTest {
     Context context = instrumenter.start(Context.root(), "request");
     Span span = Span.fromContext(context);
     Logger logger = ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null);
-    RecordedExceptions recorded = new RecordedExceptions();
     IllegalStateException first = new IllegalStateException("first");
     IllegalStateException second = new IllegalStateException("second");
 
     for (Throwable reported : asList(new CompletionException(first), first, second)) {
       Throwable error = ErrorCauseExtractor.getDefault().extract(reported);
-      ExceptionRecorder.recordServerException(
-          context, span, error, recorded.add(error) ? logger : null);
+      ExceptionRecorder.recordServerException(context, span, error, logger);
     }
     instrumenter.end(context, "request", null, null);
-    recorded.close();
 
     assertThat(testing.getSpans())
         .singleElement()
         .satisfies(
             spanData ->
                 assertThat(spanData.getEvents()).hasSize(emitExceptionAsSpanEvents() ? 3 : 0));
-    assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 2 : 0);
+    assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 3 : 0);
     if (emitExceptionAsLogs()) {
       assertThat(testing.getLogRecords().get(0).getAttributes().get(EXCEPTION_MESSAGE))
           .isEqualTo("first");
       assertThat(testing.getLogRecords().get(1).getAttributes().get(EXCEPTION_MESSAGE))
+          .isEqualTo("first");
+      assertThat(testing.getLogRecords().get(2).getAttributes().get(EXCEPTION_MESSAGE))
           .isEqualTo("second");
     }
   }
 
-  @Test
-  void concurrentReportsDeduplicateTheSameIdentity() {
-    RecordedExceptions recorded = new RecordedExceptions();
-    IllegalStateException error = new IllegalStateException();
-
-    long recordedCount =
-        IntStream.range(0, 32).parallel().filter(unused -> recorded.add(error)).count();
-
-    assertThat(recordedCount).isEqualTo(1);
-  }
-
-  @Test
-  void equalButDistinctExceptionsAreNotDeduplicated() {
-    RecordedExceptions recorded = new RecordedExceptions();
-    EqualException first = new EqualException();
-    EqualException second = new EqualException();
-
-    assertThat(first).isEqualTo(second);
-    assertThat(recorded.add(first)).isTrue();
-    assertThat(recorded.add(second)).isTrue();
-    assertThat(recorded.add(first)).isFalse();
-  }
-
-  @Test
-  void completionReleasesIdentitiesEvenForLateReports() {
-    RecordedExceptions recorded = new RecordedExceptions();
-    IllegalStateException error = new IllegalStateException();
-    assertThat(recorded.add(error)).isTrue();
-
-    recorded.close();
-
-    assertThat(recorded.add(error)).isTrue();
-    assertThat(recorded.add(error)).isTrue();
-  }
-
   private static long epochNanos(Instant instant) {
     return instant.getEpochSecond() * 1_000_000_000L + instant.getNano();
-  }
-
-  @SuppressWarnings("ThrowableEqualsHashCode") // Verify that deduplication never invokes equality.
-  private static final class EqualException extends RuntimeException {
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof EqualException;
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
   }
 }

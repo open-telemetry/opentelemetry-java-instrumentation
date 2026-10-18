@@ -124,20 +124,20 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
                             data ->
                                 assertThat(data.getEvents())
                                     .filteredOn(event -> event.getName().equals("exception"))
-                                    .hasSize(
-                                        emitExceptionAsSpanEvents() ? (distinct ? 2 : 1) : 0))));
+                                    .hasSize(emitExceptionAsSpanEvents() ? 2 : 0))));
 
     if (!emitExceptionAsLogs()) {
       assertThat(testing.logRecords()).isEmpty();
       return;
     }
-    List<LogRecordData> logs = testing.waitForLogRecords(distinct ? 2 : 1);
+    List<LogRecordData> logs = testing.waitForLogRecords(2);
+    assertThat(logs).hasSize(2);
     assertThat(logs)
         .extracting(log -> log.getAttributes().get(EXCEPTION_MESSAGE))
         .containsExactly(
             distinct
                 ? new String[] {"shared failure", "different failure"}
-                : new String[] {"shared failure"});
+                : new String[] {"shared failure", "shared failure"});
     assertThat(logs)
         .extracting(log -> log.getAttributes().get(EXCEPTION_TYPE))
         .containsExactly(
@@ -145,7 +145,9 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
                 ? new String[] {
                   IllegalStateException.class.getName(), IllegalArgumentException.class.getName()
                 }
-                : new String[] {IllegalStateException.class.getName()});
+                : new String[] {
+                  IllegalStateException.class.getName(), IllegalStateException.class.getName()
+                });
     assertThat(logs)
         .allSatisfy(
             log -> {

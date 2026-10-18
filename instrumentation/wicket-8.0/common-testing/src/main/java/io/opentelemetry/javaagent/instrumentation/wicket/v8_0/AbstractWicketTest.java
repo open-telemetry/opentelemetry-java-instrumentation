@@ -26,8 +26,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
 
@@ -68,14 +66,10 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
                         .hasKind(SpanKind.SERVER)));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void testException(boolean retryErrorPage) {
+  @Test
+  void testException() {
     AggregatedHttpResponse response =
-        client
-            .get(h1Address.resolve("wicket-test/exception?retry=" + retryErrorPage).toString())
-            .aggregate()
-            .join();
+        client.get(h1Address.resolve("wicket-test/exception").toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(500);
 
