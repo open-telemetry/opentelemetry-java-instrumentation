@@ -36,8 +36,7 @@ public class GwtSingletons {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(
-                RpcServerAttributesExtractor.create(rpcAttributesGetter));
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(builder);
 
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysServer());

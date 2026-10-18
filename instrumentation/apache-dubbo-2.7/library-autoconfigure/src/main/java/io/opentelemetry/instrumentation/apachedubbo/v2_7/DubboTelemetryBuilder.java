@@ -100,28 +100,24 @@ public final class DubboTelemetryBuilder {
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
-            .addAttributesExtractor(
-                RpcServerAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(attributesExtractors)
             .addOperationMetrics(RpcServerMetrics.get())
             .addContextCustomizer(
-                RpcMetricsContextCustomizers.dualEmitContextCustomizer(
-                    rpcAttributesGetter));
+                RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
 
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor)
-            .addAttributesExtractor(
-                RpcClientAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractors(attributesExtractors)
             .addOperationMetrics(RpcClientMetrics.get())
             .addContextCustomizer(
-                RpcMetricsContextCustomizers.dualEmitContextCustomizer(
-                    rpcAttributesGetter));
+                RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return new DubboTelemetry(

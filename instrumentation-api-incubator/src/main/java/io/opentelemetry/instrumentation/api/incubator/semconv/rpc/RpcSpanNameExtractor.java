@@ -14,7 +14,8 @@ public final class RpcSpanNameExtractor<REQUEST>
     implements SpanNameExtractor<REQUEST>, OpenTelemetryConfigurable {
 
   /** Creates the RPC span name extractor. */
-  public static <REQUEST> SpanNameExtractor<REQUEST> create(RpcAttributesGetter<REQUEST, ?> getter) {
+  public static <REQUEST> SpanNameExtractor<REQUEST> create(
+      RpcAttributesGetter<REQUEST, ?> getter) {
     return new RpcSpanNameExtractor<>(getter);
   }
 

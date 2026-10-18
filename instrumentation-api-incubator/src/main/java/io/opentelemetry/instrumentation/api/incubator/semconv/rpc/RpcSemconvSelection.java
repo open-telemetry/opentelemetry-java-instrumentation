@@ -15,7 +15,8 @@ import javax.annotation.Nullable;
 final class RpcSemconvSelection {
 
   @Nullable private OpenTelemetry initializedWith;
-  private volatile Selection selection = Selection.forOpenTelemetry(GlobalOpenTelemetry.getOrNoop());
+  private volatile Selection selection =
+      Selection.forOpenTelemetry(GlobalOpenTelemetry.getOrNoop());
 
   synchronized void initialize(OpenTelemetry openTelemetry) {
     if (initializedWith == openTelemetry) {
@@ -44,8 +45,7 @@ final class RpcSemconvSelection {
     }
 
     static Selection forOpenTelemetry(OpenTelemetry openTelemetry) {
-      return new Selection(
-          emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
+      return new Selection(emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
     }
 
     boolean emitOld() {

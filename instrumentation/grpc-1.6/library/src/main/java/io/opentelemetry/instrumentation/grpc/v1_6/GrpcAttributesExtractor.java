@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralStableRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.lowercase;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.stableRequestAttributeKey;
 import static java.util.Collections.emptyMap;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 
 import io.grpc.Metadata;
 import io.grpc.Status;
@@ -37,11 +37,6 @@ final class GrpcAttributesExtractor
       AttributeKey.longKey("rpc.grpc.status_code");
   private static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE =
       AttributeKey.stringKey("rpc.response.status_code");
-  private volatile boolean emitOldRpcSemconv =
-      emitOldRpcSemconv(GlobalOpenTelemetry.getOrNoop());
-  private volatile boolean emitPreviewRpcSemconv =
-      emitPreviewRpcSemconv(GlobalOpenTelemetry.getOrNoop());
-  @Nullable private OpenTelemetry initializedWith;
   private final GrpcRpcAttributesGetter getter;
   @Nullable private final IncludeExclude requestMetadata;
 
@@ -52,10 +47,13 @@ final class GrpcAttributesExtractor
   // configured keys remain allocation-free.
   private final Map<String, AttributeKey<List<String>>> literalRequestAttributeKeys;
   private final Map<String, AttributeKey<List<String>>> literalStableRequestAttributeKeys;
+  @Nullable private OpenTelemetry initializedWith;
+  private volatile boolean emitOldRpcSemconv = emitOldRpcSemconv(GlobalOpenTelemetry.getOrNoop());
+  private volatile boolean emitPreviewRpcSemconv =
+      emitPreviewRpcSemconv(GlobalOpenTelemetry.getOrNoop());
 
   GrpcAttributesExtractor(
-      GrpcRpcAttributesGetter getter,
-      @Nullable IncludeExclude requestMetadata) {
+      GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestMetadata) {
     this.getter = getter;
     if (requestMetadata == null || requestMetadata.isEmpty()) {
       this.requestMetadata = null;

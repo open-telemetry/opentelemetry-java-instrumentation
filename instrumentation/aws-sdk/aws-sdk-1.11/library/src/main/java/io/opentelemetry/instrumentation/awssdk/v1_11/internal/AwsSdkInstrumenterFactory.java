@@ -81,17 +81,15 @@ public final class AwsSdkInstrumenterFactory {
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled) {
     this.openTelemetry = openTelemetry;
-    defaultAttributesExtractors = createAttributesExtractors(false, openTelemetry);
-    extendedAttributesExtractors = createAttributesExtractors(true, openTelemetry);
+    defaultAttributesExtractors = createAttributesExtractors(false);
+    extendedAttributesExtractors = createAttributesExtractors(true);
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
   }
 
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
   private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
-      boolean includeExperimental, OpenTelemetry openTelemetry) {
+      boolean includeExperimental) {
     List<AttributesExtractor<Request<?>, Response<?>>> extractors =
         new ArrayList<>(
             asList(

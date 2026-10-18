@@ -47,8 +47,7 @@ class RpcServerMetricsTest {
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
 
-    OperationListener listener =
-        RpcServerMetrics.get().create(meterProvider.get("test"));
+    OperationListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes1 =
         Attributes.builder()

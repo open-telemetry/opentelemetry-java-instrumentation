@@ -72,15 +72,13 @@ public final class ThriftInstrumenterFactory {
     clientInstrumenterBuilder
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(
-            RpcClientAttributesExtractor.create(rpcAttributesGetter))
+        .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addOperationMetrics(RpcClientMetrics.get())
         .addContextCustomizer(
-            RpcMetricsContextCustomizers.dualEmitContextCustomizer(
-                rpcAttributesGetter));
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -107,15 +105,13 @@ public final class ThriftInstrumenterFactory {
     serverInstrumenterBuilder
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(
-            RpcServerAttributesExtractor.create(rpcAttributesGetter))
+        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get())
         .addContextCustomizer(
-            RpcMetricsContextCustomizers.dualEmitContextCustomizer(
-                rpcAttributesGetter));
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));

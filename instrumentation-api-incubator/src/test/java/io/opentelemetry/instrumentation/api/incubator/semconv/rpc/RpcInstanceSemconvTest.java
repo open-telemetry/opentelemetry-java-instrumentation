@@ -15,16 +15,16 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAMESPACE;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
@@ -47,8 +47,8 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -276,10 +276,8 @@ class RpcInstanceSemconvTest {
         Instrumenter.<String, Void>builder(openTelemetry, "test", spanNameExtractor);
     builder
         .addAttributesExtractor(rpcAttributesExtractor)
-        .addContextCustomizer(
-            RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter))
-        .addOperationMetrics(
-            client ? RpcClientMetrics.get() : RpcServerMetrics.get());
+        .addContextCustomizer(RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter))
+        .addOperationMetrics(client ? RpcClientMetrics.get() : RpcServerMetrics.get());
     builder.addAttributesExtractor(
         ServicePeerAttributesExtractor.create(
             new ServerAttributesGetter<String>() {

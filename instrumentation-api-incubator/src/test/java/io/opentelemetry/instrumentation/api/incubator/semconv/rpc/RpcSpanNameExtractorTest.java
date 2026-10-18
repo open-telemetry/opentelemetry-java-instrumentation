@@ -33,8 +33,7 @@ class RpcSpanNameExtractorTest {
       when(getter.getMethod(request)).thenReturn("Method");
     }
 
-    SpanNameExtractor<RpcRequest> extractor =
-        RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
   }
 
@@ -47,8 +46,7 @@ class RpcSpanNameExtractorTest {
 
     when(getter.getMethod(request)).thenReturn("Method");
 
-    SpanNameExtractor<RpcRequest> extractor =
-        RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
   }
 
@@ -60,8 +58,7 @@ class RpcSpanNameExtractorTest {
 
     when(getter.getService(request)).thenReturn("my.Service");
 
-    SpanNameExtractor<RpcRequest> extractor =
-        RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
   }
 
@@ -73,8 +70,7 @@ class RpcSpanNameExtractorTest {
 
     when(getter.getRpcSystemName(request)).thenReturn("grpc");
 
-    SpanNameExtractor<RpcRequest> extractor =
-        RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("grpc");
   }
 
@@ -88,8 +84,7 @@ class RpcSpanNameExtractorTest {
     when(getter.getRpcSystemName(request)).thenCallRealMethod();
     when(getter.getSystem(request)).thenReturn("grpc");
 
-    SpanNameExtractor<RpcRequest> extractor =
-        RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("grpc");
   }
 

@@ -30,8 +30,7 @@ class DubboTelemetryBuilderTest {
     DubboTelemetry.builder(openTelemetry)
         .setClientSpanNameExtractorCustomizer(
             extractor -> {
-              SpanNameExtractor<DubboRequest> wrapper =
-                  request -> extractor.extract(request);
+              SpanNameExtractor<DubboRequest> wrapper = request -> extractor.extract(request);
               wrappedExtractor.set(wrapper);
               return wrapper;
             })

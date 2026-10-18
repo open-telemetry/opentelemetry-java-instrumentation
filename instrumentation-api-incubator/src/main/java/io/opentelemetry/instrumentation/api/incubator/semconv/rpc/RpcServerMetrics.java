@@ -183,8 +183,7 @@ public final class RpcServerMetrics implements OperationListener {
       RpcSemconvSelection.Selection current = selection.get();
       return OperationMetricsUtil.create(
               "rpc server",
-              ignored ->
-                  new RpcServerMetrics(meter, current.emitOld(), current.emitPreview()))
+              ignored -> new RpcServerMetrics(meter, current.emitOld(), current.emitPreview()))
           .create(meter);
     }
   }
