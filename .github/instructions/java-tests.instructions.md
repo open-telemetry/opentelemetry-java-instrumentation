@@ -12,6 +12,19 @@ convention not caught by CI.
 
 ## Behavior coverage
 
+- Prefer integration tests for instrumentation behavior: exercise the library through its normal
+  API, use a real service when relevant, and assert emitted telemetry. Use the existing baseline and
+  latest-dependency suites for version-dependent behavior. For javaagent changes supporting multiple
+  runtime library versions, use the installed agent against the required versions so tests cover
+  class transformation and runtime compatibility; direct helper tests and `javaagent-unit-tests`
+  are not integration coverage.
+- Tests that manually invoke instrumentation callbacks, populate library response objects, or mock
+  the library behavior being verified do not substitute for integration coverage. Running them
+  against multiple dependency versions still bypasses the library behavior that may change.
+- Focused unit tests remain appropriate for nontrivial standalone logic and shared infrastructure
+  when they provide distinct coverage. Avoid unit-test matrices that duplicate integration coverage
+  or merely restate the implementation; mocks and fakes remain appropriate in tests that are not
+  verifying library behavior.
 - Test supported behavior. Do not add or request tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted
@@ -32,11 +45,6 @@ convention not caught by CI.
   absence assertions in unrelated integration or smoke tests. Keep focused
   coverage for supported settings, changed defaults, explicit opt-in/opt-out,
   and default enablement, as well as exact assertions of supported telemetry.
-- For a javaagent change supporting multiple runtime library versions,
-  look for tests with the installed agent against the required versions.
-  Direct helper tests and `javaagent-unit-tests` do not exercise class
-  transformation or the actual library; do not count them as integration
-  coverage.
 - For a module whose default enablement changes, the same representative
   operation must emit instrumentation telemetry in an enabled JVM and no
   instrumentation telemetry in a disabled JVM. A `DefaultEnablementTest`
