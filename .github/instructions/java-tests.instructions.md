@@ -12,12 +12,14 @@ convention not caught by CI.
 
 ## Behavior coverage
 
-- Prefer integration tests for instrumentation behavior: exercise the library through its normal
-  API, use a real service when relevant, and assert emitted telemetry.
-- Focused unit tests remain appropriate for nontrivial standalone logic and shared infrastructure
-  when they provide distinct coverage. Avoid unit-test matrices that duplicate integration coverage
-  or merely restate the implementation; mocks and fakes remain appropriate in tests that are not
-  verifying library behavior.
+- Prefer integration tests for instrumentation behavior. Exercise the library through its normal
+  API, use a real service when relevant, and assert emitted telemetry. For javaagent changes, use
+  the installed agent against the required library versions to exercise class transformation and
+  library compatibility.
+- Use focused unit tests for standalone logic and shared infrastructure when they add coverage
+  beyond integration tests. Avoid unit-test matrices that repeat integration scenarios or merely
+  restate the implementation. Mocks and fakes can isolate the logic under test, but cannot verify
+  how the real library interacts with instrumentation.
 - Test supported behavior. Do not add or request tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted
