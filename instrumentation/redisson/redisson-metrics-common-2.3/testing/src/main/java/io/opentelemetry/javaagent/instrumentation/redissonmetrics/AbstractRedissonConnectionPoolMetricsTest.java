@@ -104,6 +104,11 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                                 .getName()
                                 .equals(instrumentationName()))
                     .isEmpty());
+
+    Redisson replacement = createRedissonClient();
+    cleanup.deferCleanup(replacement::shutdown);
+    replacement.getBucket("pool-metrics").set("replacement");
+    assertConnectionPoolMetrics(regularPool, subscriptionPool);
   }
 
   private Redisson createRedissonClient() throws ReflectiveOperationException {
