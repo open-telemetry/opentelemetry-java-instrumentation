@@ -6,18 +6,37 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import java.io.BufferedReader;
+import java.io.EOFException;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
@@ -111,6 +130,78 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
           requestResult.complete(result.getResponse().getStatus());
         });
+  }
+
+  @Test
+  void responseBodyTruncatedAfterSuccessfulHeaders() throws Exception {
+    URI uri;
+    Result result;
+    try (ServerSocket server =
+        new ServerSocket(PortUtils.findOpenPort(), 1, InetAddress.getByName("127.0.0.1"))) {
+      server.setSoTimeout(10_000);
+      uri = URI.create("http://127.0.0.1:" + server.getLocalPort() + "/truncated");
+      CompletableFuture<Result> responseFuture = new CompletableFuture<>();
+      client.newRequest(uri).timeout(10, SECONDS).send(responseFuture::complete);
+
+      try (Socket socket = server.accept()) {
+        socket.setSoTimeout(10_000);
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
+        String line;
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {}
+        // Close before the declared body is complete, after sending valid successful headers.
+        socket
+            .getOutputStream()
+            .write(
+                ("HTTP/1.1 200 OK\r\nContent-Length: 100\r\nConnection: close\r\n\r\npartial")
+                    .getBytes(US_ASCII));
+        socket.getOutputStream().flush();
+      }
+      result = responseFuture.get(10, SECONDS);
+    }
+
+    assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    assertThat(result.getResponseFailure()).isInstanceOf(EOFException.class);
+    String errorType = result.getResponseFailure().getClass().getName();
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("GET")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasNoParent()
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "GET"),
+                          equalTo(URL_FULL, uri.toString()),
+                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                          equalTo(SERVER_PORT, uri.getPort()),
+                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(ERROR_TYPE, errorType)));
+        });
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metric ->
+            metric
+                .hasName("http.client.request.duration")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                        equalTo(SERVER_PORT, uri.getPort()),
+                                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                        equalTo(ERROR_TYPE, errorType)))));
   }
 
   @Test
