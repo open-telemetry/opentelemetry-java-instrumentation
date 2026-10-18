@@ -37,10 +37,36 @@ testing {
         implementation("org.springframework.ai:spring-ai-model:1.0.0")
       }
     }
+    register<JvmTestSuite>("version2Test") {
+      dependencies {
+        val springAiVersion = if (otelProps.testLatestDeps) "2.+" else "2.0.0"
+        implementation("org.springframework.ai:spring-ai-model:$springAiVersion")
+        implementation("org.springframework.ai:spring-ai-openai:$springAiVersion")
+      }
+    }
   }
 }
 
+// version2Test also runs the shared test sources, excluding 1.x-only files
+sourceSets.named("version2Test") {
+  java.srcDir("src/test/java")
+  // ChatModelTest uses ContextPropagationOperator and TestChatModel.getDefaultOptions() (removed in 2.x)
+  // OpenAiChatModelTest and TestChatModel use APIs removed in spring-ai 2.x
+  java.exclude(
+    "**/ChatModelTest.java",
+    "**/OpenAiChatModelTest.java",
+    "**/app/TestChatModel.java",
+  )
+  resources.srcDir("src/test/resources")
+}
+
 tasks {
+  named<Test>("version2Test") {
+    filter {
+      excludeTestsMatching("OpenAiChatModelTest")
+    }
+  }
+
   val testCaptureMessageContent = register<Test>("testCaptureMessageContent") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
