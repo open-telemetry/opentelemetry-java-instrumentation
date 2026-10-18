@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-testing")
 }
@@ -17,18 +20,17 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks {
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-    filter {
-      includeTestsMatching("*WicketTest.testException")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+          filter {
+            includeTestsMatching("*WicketTest.testException")
+          }
+        }
+      }
     }
-  }
-
-  check {
-    dependsOn(testExceptionSignalLogs)
   }
 }
