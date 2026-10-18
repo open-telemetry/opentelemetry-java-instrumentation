@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -21,6 +22,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.net.InetAddress;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -31,6 +33,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -39,6 +43,7 @@ import ratpack.exec.Blocking;
 import ratpack.exec.Execution;
 import ratpack.exec.Promise;
 import ratpack.handling.Context;
+import ratpack.http.client.HttpClient;
 import ratpack.server.RatpackServer;
 
 class RatpackErrorContextTest {
@@ -48,6 +53,8 @@ class RatpackErrorContextTest {
 
   private static final boolean CONTROLLER_TELEMETRY_ENABLED =
       Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private RatpackServer server;
   private final ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -119,6 +126,61 @@ class RatpackErrorContextTest {
         Comparator.comparing(trace -> trace.get(0).getAttributes().get(URL_PATH)),
         trace -> assertRequestTrace(trace, "first"),
         trace -> assertRequestTrace(trace, "second"));
+  }
+
+  @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.common.controller-telemetry.enabled",
+      matches = "false")
+  void outboundRequestUsesApplicationSpan() throws Exception {
+    HttpClient httpClient = HttpClient.of(spec -> {});
+    cleanup.deferCleanup(httpClient);
+    server =
+        RatpackServer.start(
+            spec ->
+                spec.serverConfig(
+                        config ->
+                            config
+                                .port(PortUtils.findOpenPort())
+                                .address(InetAddress.getByName("localhost")))
+                    .handlers(
+                        chain -> {
+                          chain.get(
+                              "outbound",
+                              ctx ->
+                                  testing.runWithSpan(
+                                      "application",
+                                      () ->
+                                          httpClient
+                                              .get(
+                                                  new URI(
+                                                      "http://localhost:"
+                                                          + ctx.getServerConfig().getPort()
+                                                          + "/downstream"))
+                                              .then(
+                                                  response ->
+                                                      ctx.render(response.getBody().getText()))));
+                          chain.get("downstream", ctx -> ctx.render("success"));
+                        }));
+
+    AggregatedHttpResponse response =
+        WebClient.of("h1c://localhost:" + server.getBindPort())
+            .get("/outbound")
+            .aggregate()
+            .get(10, SECONDS);
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.contentUtf8()).isEqualTo("success");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /outbound").hasKind(SpanKind.SERVER).hasNoParent(),
+                span -> span.hasName("application").hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)),
+                span ->
+                    span.hasName("GET /downstream")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(2))));
   }
 
   private Promise<String> suspend(

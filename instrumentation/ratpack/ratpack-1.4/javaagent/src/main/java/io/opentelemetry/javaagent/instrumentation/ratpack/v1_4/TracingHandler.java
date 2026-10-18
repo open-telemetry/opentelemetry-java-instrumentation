@@ -43,12 +43,14 @@ public class TracingHandler implements Handler {
               });
       callbackContext = otelContext;
     } else {
-      ctx.getExecution().add(parentOtelContext);
       // just update the server span name
       ctx.getResponse()
           .beforeSend(response -> RatpackSingletons.updateServerSpanName(parentOtelContext, ctx));
       callbackContext = parentOtelContext;
     }
+
+    // Keep the error target separate from the Context entry used for HTTP client parenting.
+    ctx.getExecution().add(new ErrorContext(callbackContext));
 
     try (Scope ignored = callbackContext.makeCurrent()) {
       ctx.next();
