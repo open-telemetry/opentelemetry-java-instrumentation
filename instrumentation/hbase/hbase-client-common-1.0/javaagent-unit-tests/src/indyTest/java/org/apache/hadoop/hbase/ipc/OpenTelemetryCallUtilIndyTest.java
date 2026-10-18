@@ -6,7 +6,6 @@
 package org.apache.hadoop.hbase.ipc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -15,6 +14,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.MetricsConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -25,7 +25,9 @@ class OpenTelemetryCallUtilIndyTest {
 
   @Test
   void exchangesIsolatedStateWithApplicationLoadedHelper() throws Exception {
-    Call call = mock(Call.class);
+    Call call =
+        new Call(
+            1, null, null, null, null, 0, 0, ignored -> {}, new MetricsConnection.CallStats());
     ClassLoader applicationLoader = Call.class.getClassLoader();
     Class<?> callUtil =
         Class.forName("org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil", true, applicationLoader);
