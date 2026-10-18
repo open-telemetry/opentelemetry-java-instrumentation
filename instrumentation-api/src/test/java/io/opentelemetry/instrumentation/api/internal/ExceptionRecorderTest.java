@@ -16,15 +16,18 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -34,6 +37,7 @@ import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Instant;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -66,7 +70,11 @@ class ExceptionRecorderTest {
 
     try (Scope ignored = controllerContext.makeCurrent()) {
       ExceptionRecorder.recordServerException(
-          Context.current(), Span.fromContext(serverContext), error, logger);
+          Context.current(),
+          Span.fromContext(serverContext),
+          error,
+          ErrorCauseExtractor.getDefault(),
+          logger);
     }
 
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
@@ -193,9 +201,14 @@ class ExceptionRecorderTest {
                 TraceState.getDefault()));
     IllegalStateException error = new IllegalStateException("failure");
 
-    ExceptionRecorder.recordServerException(Context.root(), null, error, logger);
     ExceptionRecorder.recordServerException(
-        Context.root().with(nonRecording), nonRecording, error, logger);
+        Context.root(), null, error, ErrorCauseExtractor.getDefault(), logger);
+    ExceptionRecorder.recordServerException(
+        Context.root().with(nonRecording),
+        nonRecording,
+        error,
+        ErrorCauseExtractor.getDefault(),
+        logger);
 
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 2 : 0);
     if (emitExceptionAsLogs()) {
@@ -212,13 +225,14 @@ class ExceptionRecorderTest {
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
     Context context = instrumenter.start(Context.root(), "request");
     Logger logger = ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null);
+    IllegalStateException error = new IllegalStateException("failure");
     long before = epochNanos(Instant.now());
 
     ExceptionRecorder.recordServerException(
         context,
         Span.fromContext(context),
-        ErrorCauseExtractor.getDefault()
-            .extract(new CompletionException(new IllegalStateException())),
+        new CompletionException(error),
+        ErrorCauseExtractor.getDefault(),
         logger);
 
     long after = epochNanos(Instant.now());
@@ -226,8 +240,13 @@ class ExceptionRecorderTest {
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
     if (emitExceptionAsLogs()) {
       assertThat(testing.getLogRecords().get(0).getTimestampEpochNanos()).isBetween(before, after);
+      assertThat(testing.getLogRecords().get(0)).hasException(error);
     }
     instrumenter.end(context, "request", null, null);
+    assertThat(testing.getSpans())
+        .singleElement()
+        .satisfies(
+            span -> assertThat(span).hasException(emitExceptionAsSpanEvents() ? error : null));
   }
 
   @Test
@@ -243,8 +262,8 @@ class ExceptionRecorderTest {
     IllegalStateException second = new IllegalStateException("second");
 
     for (Throwable reported : asList(new CompletionException(first), first, second)) {
-      Throwable error = ErrorCauseExtractor.getDefault().extract(reported);
-      ExceptionRecorder.recordServerException(context, span, error, logger);
+      ExceptionRecorder.recordServerException(
+          context, span, reported, ErrorCauseExtractor.getDefault(), logger);
     }
     instrumenter.end(context, "request", null, null);
 
@@ -261,6 +280,94 @@ class ExceptionRecorderTest {
           .isEqualTo("first");
       assertThat(testing.getLogRecords().get(2).getAttributes().get(EXCEPTION_MESSAGE))
           .isEqualTo("second");
+    }
+  }
+
+  @Test
+  void serverCustomExtractorReplacesDefaultExtraction() {
+    Instrumenter<String, Void> instrumenter =
+        Instrumenter.<String, Void>builder(
+                testing.getOpenTelemetry(), "server", unused -> "request")
+            .buildInstrumenter(SpanKindExtractor.alwaysServer());
+    Context context = instrumenter.start(Context.root(), "request");
+    CompletionException extracted = new CompletionException(new IllegalStateException("cause"));
+    IllegalArgumentException observed = new IllegalArgumentException("observed");
+    AtomicInteger calls = new AtomicInteger();
+
+    ExceptionRecorder.recordServerException(
+        context,
+        Span.fromContext(context),
+        observed,
+        error -> {
+          assertThat(error).isSameAs(observed);
+          calls.incrementAndGet();
+          return extracted;
+        },
+        ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null));
+    instrumenter.end(context, "request", null, null);
+
+    assertThat(calls.get()).isEqualTo(1);
+    assertThat(testing.getSpans())
+        .singleElement()
+        .satisfies(
+            span -> assertThat(span).hasException(emitExceptionAsSpanEvents() ? extracted : null));
+    assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
+    if (emitExceptionAsLogs()) {
+      assertThat(testing.getLogRecords().get(0)).hasException(extracted);
+    }
+  }
+
+  @Test
+  void instrumenterCustomExtractorResultIsUsedForEmissionAttributesAndStatus() {
+    CompletionException extracted = new CompletionException(new IllegalStateException("cause"));
+    IllegalArgumentException observed = new IllegalArgumentException("observed");
+    AtomicInteger calls = new AtomicInteger();
+    Instrumenter<String, Void> instrumenter =
+        Instrumenter.<String, Void>builder(
+                testing.getOpenTelemetry(), "operation", unused -> "request")
+            .setErrorCauseExtractor(
+                error -> {
+                  assertThat(error).isSameAs(observed);
+                  calls.incrementAndGet();
+                  return extracted;
+                })
+            .addAttributesExtractor(
+                new AttributesExtractor<String, Void>() {
+                  @Override
+                  public void onStart(
+                      AttributesBuilder attributes, Context parentContext, String request) {}
+
+                  @Override
+                  public void onEnd(
+                      AttributesBuilder attributes,
+                      Context context,
+                      String request,
+                      Void response,
+                      Throwable error) {
+                    assertThat(error).isSameAs(extracted);
+                  }
+                })
+            .setSpanStatusExtractor(
+                (status, request, response, error) -> {
+                  assertThat(error).isSameAs(extracted);
+                  status.setStatus(StatusCode.ERROR);
+                })
+            .buildInstrumenter();
+    Context context = instrumenter.start(Context.root(), "request");
+
+    instrumenter.end(context, "request", null, observed);
+
+    assertThat(calls.get()).isEqualTo(1);
+    assertThat(testing.getSpans())
+        .singleElement()
+        .satisfies(
+            span ->
+                assertThat(span)
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? extracted : null));
+    assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
+    if (emitExceptionAsLogs()) {
+      assertThat(testing.getLogRecords().get(0)).hasException(extracted);
     }
   }
 

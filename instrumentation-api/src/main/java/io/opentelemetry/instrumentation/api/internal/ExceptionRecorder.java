@@ -15,12 +15,14 @@ import io.opentelemetry.api.logs.LoggerBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import java.time.Instant;
 import javax.annotation.Nullable;
 
 /**
- * Shared exception signal emission mechanics. Callers select the span-event target and extract the
- * exception before recording it.
+ * Shared exception signal emission mechanics. Callers select the span-event target. The HTTP server
+ * entry point applies the supplied cause extractor; the generic entry point emits the supplied
+ * exception without extraction.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -43,18 +45,33 @@ public final class ExceptionRecorder {
     return builder.build();
   }
 
+  /**
+   * Records an HTTP server exception using the selected signals.
+   *
+   * @param context the reporting context for the exception log
+   * @param eventSpan the span receiving exception events, or {@code null} if unavailable
+   * @param error the observed exception
+   * @param causeExtractor extracts the exception once before either signal is emitted; replaces,
+   *     rather than supplements, default extraction
+   * @param logger the framework logger, or {@code null} if log emission is unavailable
+   */
   public static void recordServerException(
-      Context context, @Nullable Span eventSpan, Throwable error, @Nullable Logger logger) {
+      Context context,
+      @Nullable Span eventSpan,
+      Throwable error,
+      ErrorCauseExtractor causeExtractor,
+      @Nullable Logger logger) {
+    Instant timestamp = emitExceptionAsLogs() ? Instant.now() : null;
+    error = causeExtractor.extract(error);
     recordException(
-        context,
-        eventSpan,
-        error,
-        logger,
-        serverExceptionEventExtractor,
-        error,
-        emitExceptionAsLogs() ? Instant.now() : null);
+        context, eventSpan, error, logger, serverExceptionEventExtractor, error, timestamp);
   }
 
+  /**
+   * Emits the already-extracted {@code error} without further cause extraction. The log uses {@code
+   * context}, {@code logger}, {@code eventExtractor}, {@code request}, and the explicit {@code
+   * timestamp} when present; exception span events target {@code eventSpan} when available.
+   */
   public static <REQUEST> void recordException(
       Context context,
       @Nullable Span eventSpan,

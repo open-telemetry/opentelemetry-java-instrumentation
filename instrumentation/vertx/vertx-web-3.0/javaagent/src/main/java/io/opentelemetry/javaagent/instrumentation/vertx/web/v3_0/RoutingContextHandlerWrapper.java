@@ -9,18 +9,14 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
@@ -51,9 +47,12 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     try (Scope ignored = routeContext.makeCurrent()) {
       handler.handle(context);
     } catch (Throwable t) {
-      Throwable error = unwrapThrowable(t);
       ExceptionRecorder.recordServerException(
-          otelContext, LocalRootSpan.fromContextOrNull(otelContext), error, logger);
+          otelContext,
+          LocalRootSpan.fromContextOrNull(otelContext),
+          t,
+          ErrorCauseExtractor.getDefault(),
+          logger);
       throw t;
     }
   }
@@ -72,16 +71,5 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     }
     String existingRoute = RouteHolder.get(otelContext);
     return existingRoute != null ? existingRoute + route : route;
-  }
-
-  private static Throwable unwrapThrowable(Throwable throwable) {
-    return CauseUnwrapper.unwrap(throwable, RoutingContextHandlerWrapper::isUnwrappableWrapper);
-  }
-
-  private static boolean isUnwrappableWrapper(Throwable throwable) {
-    return throwable instanceof ExecutionException
-        || throwable instanceof CompletionException
-        || throwable instanceof InvocationTargetException
-        || throwable instanceof UndeclaredThrowableException;
   }
 }

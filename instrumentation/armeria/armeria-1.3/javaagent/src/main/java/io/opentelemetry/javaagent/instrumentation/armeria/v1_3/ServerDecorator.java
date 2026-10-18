@@ -68,7 +68,7 @@ class ServerDecorator extends SimpleDecoratingHttpService {
       }
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      ExceptionRecorder.recordServerException(otelContext, span, error, logger);
+      ExceptionRecorder.recordServerException(otelContext, span, error, cause -> cause, logger);
 
       throw t;
     }

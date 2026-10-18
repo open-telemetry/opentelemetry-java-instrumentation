@@ -18,9 +18,12 @@ public final class WicketExceptionRecorder {
           GlobalOpenTelemetry.get(), "io.opentelemetry.wicket-8.0", SchemaUrls.V1_41_0);
 
   public static void record(Context context, Exception exception) {
-    Throwable error = WicketErrorUnwrapper.unwrap(exception);
     ExceptionRecorder.recordServerException(
-        context, LocalRootSpan.fromContextOrNull(context), error, logger);
+        context,
+        LocalRootSpan.fromContextOrNull(context),
+        exception,
+        WicketErrorUnwrapper::unwrap,
+        logger);
   }
 
   private WicketExceptionRecorder() {}
