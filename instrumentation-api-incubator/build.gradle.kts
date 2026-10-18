@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.java-conventions")
   id("otel.animalsniffer-conventions")
@@ -78,10 +80,6 @@ tasks {
     }
   }
 
-  test {
-    inputs.dir(jflexOutputDir)
-  }
-
   sourcesJar {
     dependsOn(generateJflex)
     // Avoid configuration cache issue by not capturing task reference
@@ -89,41 +87,28 @@ tasks {
       include("**/*.java")
     }
   }
+}
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
-    inputs.dir(jflexOutputDir)
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer/dup")
-    inputs.dir(jflexOutputDir)
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    inputs.dir(jflexOutputDir)
-  }
-
-  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
-    inputs.dir(jflexOutputDir)
-  }
-
-  check {
-    dependsOn(
-      testPreviewSemconv,
-      testBothSemconv,
-      testExceptionSignalLogs,
-      testExceptionSignalLogsDup,
-    )
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          inputs.dir(jflexOutputDir)
+        }
+        register("PreviewSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
+        }
+        register("BothSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer/dup")
+        }
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+        register("ExceptionSignalLogsDup") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+        }
+      }
+    }
   }
 }

@@ -140,44 +140,74 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   void assertTraces() {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
 
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "poll " + SHARED_TOPIC, "producer callback"),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName("send " + SHARED_TOPIC)
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          publishAttributes(captureExperimentalSpanAttributes())),
-              span ->
-                  span.hasName("process " + SHARED_TOPIC)
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
-                      .hasAttributesSatisfyingExactly(
-                          processAttributes(captureExperimentalSpanAttributes())),
-              span ->
-                  span.hasName("process child")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(2)));
-          producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
-        },
-        trace ->
+    if (receiveTelemetryEnabled()) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("parent", "poll " + SHARED_TOPIC, "producer callback"),
+          trace -> {
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("poll " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
-                        .hasAttributesSatisfyingExactly(receiveAttributes())),
-        // ideally we'd want producer callback to be part of the main trace,
-        // we just aren't able to instrument that
-        trace ->
-            trace.hasSpansSatisfyingExactly(
+                    span.hasName("send " + SHARED_TOPIC)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            publishAttributes(captureExperimentalSpanAttributes())),
                 span ->
-                    span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+                    span.hasName("process " + SHARED_TOPIC)
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(captureExperimentalSpanAttributes())),
+                span ->
+                    span.hasName("process child")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2)));
+            producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
+          },
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
+                          .hasAttributesSatisfyingExactly(interceptorReceiveAttributes())),
+          // ideally we'd want producer callback to be part of the main trace,
+          // we just aren't able to instrument that
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    } else {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("parent", "producer callback"),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      span.hasName("send " + SHARED_TOPIC)
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              publishAttributes(captureExperimentalSpanAttributes())),
+                  span ->
+                      span.hasName("process " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes(captureExperimentalSpanAttributes())),
+                  span ->
+                      span.hasName("process child")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(2))),
+          // ideally we'd want producer callback to be part of the main trace,
+          // we just aren't able to instrument that
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    }
   }
 
   private static SpanContext asRemote(SpanContext spanContext) {
@@ -213,7 +243,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     return assertions;
   }
 
-  private static List<AttributeAssertion> receiveAttributes() {
+  private static List<AttributeAssertion> interceptorReceiveAttributes() {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(

@@ -57,22 +57,25 @@ val testExperimental = register<Test>("testExperimental") {
 ### Programmatically configured library tests
 
 Use an explicitly test-only property to select a builder option in a plain-library fixture.
-Do not reuse a javaagent property name for a switch that only the test code reads:
+Do not reuse a javaagent property name for a switch that only the test code reads. Suite-owned
+executions bind the variant to its source suite and wire it into `check`. Import
+`io.opentelemetry.instrumentation.gradle.executions` in the build script:
 
 ```kotlin
-val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
-  testClassesDirs = sourceSets.test.get().output.classesDirs
-  classpath = sourceSets.test.get().runtimeClasspath
-
-  systemProperty("test.captureExperimentalSpanAttributes", "true")
-  systemProperty(
-    "metadataConfig",
-    "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
-  )
-}
-
-check {
-  dependsOn(testExperimentalAttributes)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExperimentalAttributes") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+          )
+        }
+      }
+    }
+  }
 }
 ```
 

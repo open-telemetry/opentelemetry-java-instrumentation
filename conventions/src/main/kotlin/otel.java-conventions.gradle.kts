@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+import io.opentelemetry.instrumentation.gradle.TestSuiteExecutionsPlugin
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.time.Duration
 
@@ -16,6 +17,8 @@ plugins {
 
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 val otelProps = the<OtelPropsExtension>()
+
+apply<TestSuiteExecutionsPlugin>()
 
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
