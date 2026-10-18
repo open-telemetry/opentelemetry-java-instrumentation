@@ -26,8 +26,7 @@ class OpenTelemetryCallUtilIndyTest {
   @Test
   void exchangesIsolatedStateWithApplicationLoadedHelper() throws Exception {
     Call call =
-        new Call(
-            1, null, null, null, null, 0, 0, ignored -> {}, new MetricsConnection.CallStats());
+        new Call(1, null, null, null, null, 0, 0, ignored -> {}, new MetricsConnection.CallStats());
     ClassLoader applicationLoader = Call.class.getClassLoader();
     Class<?> callUtil =
         Class.forName("org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil", true, applicationLoader);
