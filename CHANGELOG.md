@@ -278,9 +278,6 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Remove the global-backed factories in `RpcClientAttributesExtractor`,
-  `RpcServerAttributesExtractor`, `RpcSpanNameExtractor`, `RpcClientMetrics`, `RpcServerMetrics`,
-  and `RpcMetricsContextCustomizers`; pass the instrumentation's `OpenTelemetry` instance instead.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
   `create(Meter, String, Attributes)` overloads. Use the overloads accepting
   `OpenTelemetry`, the instrumentation name and the pool name instead.

@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_METHOD;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers.OLD_RPC_METHOD_CONTEXT_KEY;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
@@ -25,6 +23,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -102,15 +101,9 @@ public final class RpcServerMetrics implements OperationListener {
     }
   }
 
-  /** Returns RPC server metrics using the supplied instance's configuration. */
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
-  public static OperationMetrics get(OpenTelemetry openTelemetry) {
-    boolean emitOldRpcSemconv = emitOldRpcSemconv(openTelemetry);
-    boolean emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
-    return OperationMetricsUtil.create(
-        "rpc server",
-        meter -> new RpcServerMetrics(meter, emitOldRpcSemconv, emitPreviewRpcSemconv));
+  /** Returns an {@link OperationMetrics} factory for RPC server metrics. */
+  public static OperationMetrics get() {
+    return new Factory();
   }
 
   @Override
@@ -175,5 +168,24 @@ public final class RpcServerMetrics implements OperationListener {
 
     @Nullable
     abstract String oldRpcMethod();
+  }
+
+  private static final class Factory implements OperationMetrics, OpenTelemetryConfigurable {
+    private final RpcSemconvSelection selection = new RpcSemconvSelection();
+
+    @Override
+    public void internalInitialize(OpenTelemetry openTelemetry) {
+      selection.initialize(openTelemetry);
+    }
+
+    @Override
+    public OperationListener create(Meter meter) {
+      RpcSemconvSelection.Selection current = selection.get();
+      return OperationMetricsUtil.create(
+              "rpc server",
+              ignored ->
+                  new RpcServerMetrics(meter, current.emitOld(), current.emitPreview()))
+          .create(meter);
+    }
   }
 }

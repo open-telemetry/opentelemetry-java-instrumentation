@@ -5,35 +5,35 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 
 /** A {@link SpanNameExtractor} for RPC requests. */
-public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
+public final class RpcSpanNameExtractor<REQUEST>
+    implements SpanNameExtractor<REQUEST>, OpenTelemetryConfigurable {
 
-  /** Creates the RPC span name extractor using the supplied instance's configuration. */
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
-  public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      RpcAttributesGetter<REQUEST, ?> getter, OpenTelemetry openTelemetry) {
-    return new RpcSpanNameExtractor<>(getter, openTelemetry);
+  /** Creates the RPC span name extractor. */
+  public static <REQUEST> SpanNameExtractor<REQUEST> create(RpcAttributesGetter<REQUEST, ?> getter) {
+    return new RpcSpanNameExtractor<>(getter);
   }
 
   private final RpcAttributesGetter<REQUEST, ?> getter;
-  private final boolean emitPreviewRpcSemconv;
+  private final RpcSemconvSelection selection = new RpcSemconvSelection();
 
-  private RpcSpanNameExtractor(
-      RpcAttributesGetter<REQUEST, ?> getter, OpenTelemetry openTelemetry) {
+  private RpcSpanNameExtractor(RpcAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
-    this.emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
+  }
+
+  @Override
+  public void internalInitialize(OpenTelemetry openTelemetry) {
+    selection.initialize(openTelemetry);
   }
 
   @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public String extract(REQUEST request) {
-    if (emitPreviewRpcSemconv) {
+    if (selection.get().emitPreview()) {
       String method = getter.getRpcMethod(request);
       if (method != null) {
         return method;

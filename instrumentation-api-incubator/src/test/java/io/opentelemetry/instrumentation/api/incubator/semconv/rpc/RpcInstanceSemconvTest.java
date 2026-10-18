@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAMESPACE;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -23,13 +24,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -44,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -158,6 +163,39 @@ class RpcInstanceSemconvTest {
                                         equalTo(RPC_METHOD, "Method")))));
   }
 
+  @Test
+  void componentInitializationIsIdempotentAndRejectsRebinding() {
+    ConfiguredInstrumenter first = createInstrumenter(true, true, false);
+    InstrumenterBuilder<String, Void> sameInstanceBuilder =
+        Instrumenter.<String, Void>builder(
+                first.openTelemetry, "same-instance", first.spanNameExtractor)
+            .addAttributesExtractor(first.rpcAttributesExtractor);
+    sameInstanceBuilder.buildInstrumenter();
+
+    InstrumenterBuilder<String, Void> differentInstanceBuilder =
+        Instrumenter.<String, Void>builder(
+            OpenTelemetry.noop(), "different-instance", RpcSpanNameExtractor.create(first.getter));
+    assertThatThrownBy(
+            () -> differentInstanceBuilder.addAttributesExtractor(first.rpcAttributesExtractor))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("different OpenTelemetry instance");
+
+    Context context = first.instrumenter.start(Context.root(), "request");
+    first.instrumenter.end(context, "request", null, null);
+    assertThat(first.spanExporter.getFinishedSpanItems())
+        .singleElement()
+        .satisfies(
+            span ->
+                assertThat(span)
+                    .hasName("Service/Method")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "test"),
+                        equalTo(RPC_METHOD, "Service/Method"),
+                        equalTo(PEER_SERVICE, null),
+                        equalTo(SERVICE_PEER_NAME, "peer"),
+                        equalTo(SERVICE_PEER_NAMESPACE, "namespace")));
+  }
+
   private ConfiguredInstrumenter createInstrumenter(
       boolean client, boolean preview, boolean dualEmit) {
     InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
@@ -229,18 +267,19 @@ class RpcInstanceSemconvTest {
             return "Service/" + getMethod(request);
           }
         };
+    SpanNameExtractor<String> spanNameExtractor = RpcSpanNameExtractor.create(getter);
+    AttributesExtractor<String, Void> rpcAttributesExtractor =
+        client
+            ? RpcClientAttributesExtractor.create(getter)
+            : RpcServerAttributesExtractor.create(getter);
     InstrumenterBuilder<String, Void> builder =
-        Instrumenter.<String, Void>builder(
-            openTelemetry, "test", RpcSpanNameExtractor.create(getter, openTelemetry));
+        Instrumenter.<String, Void>builder(openTelemetry, "test", spanNameExtractor);
     builder
-        .addAttributesExtractor(
-            client
-                ? RpcClientAttributesExtractor.create(getter, openTelemetry)
-                : RpcServerAttributesExtractor.create(getter, openTelemetry))
+        .addAttributesExtractor(rpcAttributesExtractor)
         .addContextCustomizer(
-            RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter, openTelemetry))
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter))
         .addOperationMetrics(
-            client ? RpcClientMetrics.get(openTelemetry) : RpcServerMetrics.get(openTelemetry));
+            client ? RpcClientMetrics.get() : RpcServerMetrics.get());
     builder.addAttributesExtractor(
         ServicePeerAttributesExtractor.create(
             new ServerAttributesGetter<String>() {
@@ -253,20 +292,36 @@ class RpcInstanceSemconvTest {
     return new ConfiguredInstrumenter(
         builder.buildInstrumenter(
             client ? SpanKindExtractor.alwaysClient() : SpanKindExtractor.alwaysServer()),
+        openTelemetry,
+        getter,
+        spanNameExtractor,
+        rpcAttributesExtractor,
         spanExporter,
         metricReader);
   }
 
   private static final class ConfiguredInstrumenter {
     final Instrumenter<String, Void> instrumenter;
+    final OpenTelemetry openTelemetry;
+    final RpcAttributesGetter<String, Void> getter;
+    final SpanNameExtractor<String> spanNameExtractor;
+    final AttributesExtractor<String, Void> rpcAttributesExtractor;
     final InMemorySpanExporter spanExporter;
     final InMemoryMetricReader metricReader;
 
     ConfiguredInstrumenter(
         Instrumenter<String, Void> instrumenter,
+        OpenTelemetry openTelemetry,
+        RpcAttributesGetter<String, Void> getter,
+        SpanNameExtractor<String> spanNameExtractor,
+        AttributesExtractor<String, Void> rpcAttributesExtractor,
         InMemorySpanExporter spanExporter,
         InMemoryMetricReader metricReader) {
       this.instrumenter = instrumenter;
+      this.openTelemetry = openTelemetry;
+      this.getter = getter;
+      this.spanNameExtractor = spanNameExtractor;
+      this.rpcAttributesExtractor = rpcAttributesExtractor;
       this.spanExporter = spanExporter;
       this.metricReader = metricReader;
     }

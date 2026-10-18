@@ -96,7 +96,7 @@ public final class AwsSdkInstrumenterFactory {
         new ArrayList<>(
             asList(
                 HttpClientAttributesExtractor.create(new AwsSdkHttpAttributesGetter()),
-                RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter(), openTelemetry),
+                RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter()),
                 new SnsAttributesExtractor(),
                 new AwsSdkAttributesExtractor()));
     if (includeExperimental) {

@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
@@ -57,7 +58,8 @@ public final class ThriftInstrumenterFactory {
       List<AttributesExtractor<ThriftRequest, ThriftResponse>> additionalClientExtractors) {
 
     SpanNameExtractor<ThriftRequest> originalSpanNameExtractor =
-        RpcSpanNameExtractor.create(rpcAttributesGetter, openTelemetry);
+        RpcSpanNameExtractor.create(rpcAttributesGetter);
+    ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> clientSpanNameExtractor =
         clientSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
 
@@ -71,14 +73,14 @@ public final class ThriftInstrumenterFactory {
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(
-            RpcClientAttributesExtractor.create(rpcAttributesGetter, openTelemetry))
+            RpcClientAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
-        .addOperationMetrics(RpcClientMetrics.get(openTelemetry))
+        .addOperationMetrics(RpcClientMetrics.get())
         .addContextCustomizer(
             RpcMetricsContextCustomizers.dualEmitContextCustomizer(
-                rpcAttributesGetter, openTelemetry));
+                rpcAttributesGetter));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -91,7 +93,8 @@ public final class ThriftInstrumenterFactory {
       List<AttributesExtractor<ThriftRequest, ThriftResponse>> additionalExtractors,
       List<AttributesExtractor<ThriftRequest, ThriftResponse>> additionalServerExtractors) {
     SpanNameExtractor<ThriftRequest> originalSpanNameExtractor =
-        RpcSpanNameExtractor.create(rpcAttributesGetter, openTelemetry);
+        RpcSpanNameExtractor.create(rpcAttributesGetter);
+    ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> serverSpanNameExtractor =
         serverSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
 
@@ -105,14 +108,14 @@ public final class ThriftInstrumenterFactory {
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(
-            RpcServerAttributesExtractor.create(rpcAttributesGetter, openTelemetry))
+            RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractors(additionalServerExtractors)
-        .addOperationMetrics(RpcServerMetrics.get(openTelemetry))
+        .addOperationMetrics(RpcServerMetrics.get())
         .addContextCustomizer(
             RpcMetricsContextCustomizers.dualEmitContextCustomizer(
-                rpcAttributesGetter, openTelemetry));
+                rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));

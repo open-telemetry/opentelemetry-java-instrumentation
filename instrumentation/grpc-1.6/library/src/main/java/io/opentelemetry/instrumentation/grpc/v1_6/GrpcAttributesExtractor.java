@@ -5,37 +5,43 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralStableRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.lowercase;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.stableRequestAttributeKey;
 import static java.util.Collections.emptyMap;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 
 import io.grpc.Metadata;
 import io.grpc.Status;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, Status> {
+final class GrpcAttributesExtractor
+    implements AttributesExtractor<GrpcRequest, Status>, OpenTelemetryConfigurable {
 
   // copied from RpcIncubatingAttributes
   private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
       AttributeKey.longKey("rpc.grpc.status_code");
   private static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE =
       AttributeKey.stringKey("rpc.response.status_code");
-  private final boolean emitOldRpcSemconv;
-  private final boolean emitPreviewRpcSemconv;
+  private volatile boolean emitOldRpcSemconv =
+      emitOldRpcSemconv(GlobalOpenTelemetry.getOrNoop());
+  private volatile boolean emitPreviewRpcSemconv =
+      emitPreviewRpcSemconv(GlobalOpenTelemetry.getOrNoop());
+  @Nullable private OpenTelemetry initializedWith;
   private final GrpcRpcAttributesGetter getter;
   @Nullable private final IncludeExclude requestMetadata;
 
@@ -47,14 +53,9 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
   private final Map<String, AttributeKey<List<String>>> literalRequestAttributeKeys;
   private final Map<String, AttributeKey<List<String>>> literalStableRequestAttributeKeys;
 
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
   GrpcAttributesExtractor(
       GrpcRpcAttributesGetter getter,
-      @Nullable IncludeExclude requestMetadata,
-      OpenTelemetry openTelemetry) {
-    emitOldRpcSemconv = emitOldRpcSemconv(openTelemetry);
-    emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
+      @Nullable IncludeExclude requestMetadata) {
     this.getter = getter;
     if (requestMetadata == null || requestMetadata.isEmpty()) {
       this.requestMetadata = null;
@@ -66,6 +67,21 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       literalStableRequestAttributeKeys =
           createLiteralStableRequestAttributeKeys(this.requestMetadata);
     }
+  }
+
+  @Override
+  public synchronized void internalInitialize(OpenTelemetry openTelemetry) {
+    if (initializedWith == openTelemetry) {
+      return;
+    }
+    if (initializedWith != null) {
+      throw new IllegalStateException(
+          "RPC semantic convention component is already initialized with a different"
+              + " OpenTelemetry instance");
+    }
+    emitOldRpcSemconv = emitOldRpcSemconv(openTelemetry);
+    emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
+    initializedWith = openTelemetry;
   }
 
   @Override
