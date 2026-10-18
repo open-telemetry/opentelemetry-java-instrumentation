@@ -47,6 +47,14 @@ public class HbaseInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public List<String> exposedClassNames() {
+    // The application-loaded Call utility exchanges state with isolated instrumentation helpers.
+    return asList(
+        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext",
+        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new RpcConnectionInstrumentation(),

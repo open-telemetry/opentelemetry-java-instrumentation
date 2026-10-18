@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
@@ -58,7 +57,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This AbstractRpcClient<?> client, @Advice.Argument(0) Configuration configuration) {
       HbaseServerTarget.store(client, configuration);
@@ -67,7 +66,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CallMethodAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static RequestAndContext onEnter(
         @Advice.This AbstractRpcClient<?> client,
         @Advice.Argument(0) Descriptors.MethodDescriptor md,
@@ -82,7 +81,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       }
       HbaseRequest request =
           HbaseRequest.create(operation, getTableName(), HbaseServerTarget.get(client), batchSize);
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -93,7 +92,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       return requestAndContext;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable RequestAndContext requestAndContext) {

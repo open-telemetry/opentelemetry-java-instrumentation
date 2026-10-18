@@ -32,6 +32,10 @@ dependencies {
   latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
 }
 
+sourceSets.test {
+  java.srcDir(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent-unit-tests").file("src/indyTest/java"))
+}
+
 testing {
   suites {
     register<JvmTestSuite>("shadedClientTest") {
