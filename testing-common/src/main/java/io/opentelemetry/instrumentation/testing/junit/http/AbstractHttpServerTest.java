@@ -1102,6 +1102,16 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                       .collect(toList());
 
               assertThat(logs).hasSize(1);
+              assertThat(testing.getExportedSpans())
+                  .filteredOn(
+                      span ->
+                          span.getKind() == SpanKind.SERVER
+                              && span.getSpanContext().equals(logs.get(0).getSpanContext()))
+                  .singleElement()
+                  .satisfies(
+                      serverSpan ->
+                          assertThat(logs.get(0).getInstrumentationScopeInfo())
+                              .isEqualTo(serverSpan.getInstrumentationScopeInfo()));
               assertThat(logs.get(0))
                   .hasSeverity(Severity.ERROR)
                   .hasEventName(expectedEventName)
@@ -1185,7 +1195,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
-      span.hasException(emitExceptionAsSpanEvents() ? options.expectedException : null);
+      span.hasException(emitExceptionAsSpanEvents() ? options.expectedException : null)
+          .satisfies(
+              spanData ->
+                  assertThat(spanData.getEvents())
+                      .filteredOn(event -> event.getName().equals("exception"))
+                      .hasSize(emitExceptionAsSpanEvents() ? 1 : 0));
     }
 
     span.hasAttributesSatisfying(
