@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.rxjava.v2_0.Experimenta
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -107,6 +108,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.completable")))));
@@ -137,6 +139,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.completable")))));
@@ -257,6 +260,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.maybe")))));
@@ -288,6 +292,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.maybe")))));
@@ -388,6 +393,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.single")))));
@@ -419,6 +425,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.single")))));
@@ -525,6 +532,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.observable")))));
@@ -564,6 +572,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.observable")))));
@@ -678,6 +687,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.flowable")))));
@@ -717,6 +727,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.flowable")))));
@@ -832,6 +843,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
@@ -871,6 +883,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
@@ -965,6 +978,7 @@ abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, error.getClass().getName()),
                                 satisfies(
                                     CODE_FUNCTION_NAME,
                                     val -> val.endsWith("TracedWithSpan.publisher")))));

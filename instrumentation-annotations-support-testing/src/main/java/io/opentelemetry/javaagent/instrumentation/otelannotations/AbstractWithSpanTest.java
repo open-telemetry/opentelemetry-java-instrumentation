@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.otelannotations;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -85,6 +86,7 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasStatus(StatusData.error())
                         .hasException(AbstractTraced.FAILURE)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, AbstractTraced.FAILURE.getClass().getName()),
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 traced.getClass().getName() + ".completable"))));
@@ -145,6 +147,7 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasStatus(StatusData.error())
                         .hasException(AbstractTraced.FAILURE)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, AbstractTraced.FAILURE.getClass().getName()),
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 traced.getClass().getName() + ".alreadyFailed"))));
