@@ -212,7 +212,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   }
 
   @Test
-  void testCommandTimeoutDoesNotReportRedisErrorType() throws Exception {
+  void testCommandTimeoutDoesNotReportRedisErrorType() {
     RedisClient timeoutClient = createClient(embeddedDbUri);
     cleanup.deferCleanup(timeoutClient::shutdown);
     timeoutClient.setOptions(
@@ -242,18 +242,27 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                     span ->
                         span.hasName(spanName("BLPOP"))
                             .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
                             .hasStatus(StatusData.error())
-                            .hasAttributesSatisfying(equalTo(DB_OPERATION_NAME, "BLPOP"))
-                            .satisfies(
-                                spanData -> {
-                                  // Lettuce 6+ starts the timeout message with the command type,
-                                  // e.g. "BLPOP. Command timed out", and passes the exception to
-                                  // the completion callback; 5.1 does neither
-                                  if (testLatestDeps()) {
-                                    assertThat(spanData.getAttributes().get(ERROR_TYPE))
-                                        .isEqualTo(RedisCommandTimeoutException.class.getName());
-                                  }
-                                })));
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(DB_SYSTEM_NAME, REDIS),
+                                    equalTo(DB_QUERY_TEXT, "BLPOP TIMEOUT_LIST 1"),
+                                    equalTo(DB_OPERATION_NAME, "BLPOP"),
+                                    // Lettuce 5.1 tags the timeout without the throwable.
+                                    // Command-aware tracing exposes the throwable in 6.0+.
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        testLatestDeps()
+                                            ? RedisCommandTimeoutException.class.getName()
+                                            : null)))));
+
+    assertCommandErrorMetric(
+        testLatestDeps() ? RedisCommandTimeoutException.class.getName() : null);
   }
 
   @Test

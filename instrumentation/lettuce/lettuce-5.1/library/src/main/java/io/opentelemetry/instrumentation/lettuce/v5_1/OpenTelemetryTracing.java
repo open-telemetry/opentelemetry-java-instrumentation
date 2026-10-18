@@ -153,8 +153,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
-    @Nullable private String errorMessage;
-    @Nullable private LettuceResponse response;
+    @Nullable private String taggedErrorMessage;
     @Nullable private Context context;
 
     OpenTelemetrySpan(
@@ -213,16 +212,8 @@ final class OpenTelemetryTracing implements Tracing {
         completeableCommand.onComplete(
             (o, throwable) -> {
               CommandOutput<?, ?, ?> output = command.getOutput();
-              // Lettuce also copies the message of client-side failures, such as command
-              // timeouts, into the output, so only treat it as a Redis error reply when there is
-              // no other failure
-              String errorMsg =
-                  output != null
-                          && (throwable == null
-                              || throwable instanceof RedisCommandExecutionException)
-                      ? output.getError()
-                      : null;
-              finishWithResponse(new LettuceResponse(errorMsg, throwable));
+              Throwable error = this.error != null ? this.error : throwable;
+              finishFromOutput(output != null ? output.getError() : null, error);
             });
       }
 
@@ -276,7 +267,7 @@ final class OpenTelemetryTracing implements Tracing {
         return this;
       }
       if (key.equals("error")) {
-        errorMessage = value;
+        taggedErrorMessage = value;
       }
       if (key.equals("redis.args")) {
         request.setArgsString(value);
@@ -300,23 +291,27 @@ final class OpenTelemetryTracing implements Tracing {
       return this;
     }
 
-    private void finishWithResponse(LettuceResponse resp) {
-      this.response = resp;
-      if (this.error == null && resp.getThrowable() != null) {
-        this.error = resp.getThrowable();
-      }
-      finish();
-    }
-
     @Override
     public void finish() {
+      finishFromOutput(taggedErrorMessage, error);
+    }
+
+    private void finishFromOutput(@Nullable String errorMessage, @Nullable Throwable error) {
+      // Lettuce also copies the message of client-side failures, such as command
+      // timeouts, into the output, so only treat it as a Redis error reply when there is
+      // no client-side failure
+      if (error instanceof RedisCommandExecutionException) {
+        end(LettuceResponse.fromErrorMessage(errorMessage), error);
+      } else if (error != null) {
+        end(null, error);
+      } else {
+        end(LettuceResponse.fromErrorMessage(errorMessage), null);
+      }
+    }
+
+    private void end(@Nullable LettuceResponse response, @Nullable Throwable error) {
       Context context = this.context;
       if (context != null) {
-        LettuceResponse response = this.response;
-        if (response == null && errorMessage != null) {
-          response = new LettuceResponse(errorMessage, null);
-        }
-
         this.context = null;
         instrumenter.end(context, request, response, error);
       }
