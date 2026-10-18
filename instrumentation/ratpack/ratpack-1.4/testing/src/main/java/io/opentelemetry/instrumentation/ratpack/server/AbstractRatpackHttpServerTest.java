@@ -271,16 +271,6 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
   // we don't actually have test coverage ensuring our instrumentation correctly delegates to this
   // user registered handler.
   private static class TestErrorHandler implements ServerErrorHandler {
-    private final ServerErrorHandler delegate = new ResponseErrorHandler();
-
-    @Override
-    public void error(Context context, Throwable throwable) throws Exception {
-      // Both instrumented handlers observe the same failure.
-      delegate.error(context, throwable);
-    }
-  }
-
-  private static class ResponseErrorHandler implements ServerErrorHandler {
     @Override
     public void error(Context context, Throwable throwable) {
       context.getResponse().status(500).send(throwable.getMessage());
