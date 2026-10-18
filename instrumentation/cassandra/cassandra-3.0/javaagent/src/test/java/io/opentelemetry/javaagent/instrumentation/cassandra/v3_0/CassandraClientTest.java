@@ -264,11 +264,24 @@ class CassandraClientTest {
     assertConfiguredTarget(configuredCluster, null, null);
   }
 
+  @Test
+  void exceptionalContactPointMutationDoesNotSuppressAnotherBuilder() {
+    assertThatThrownBy(() -> Cluster.builder().addContactPoints("127.0.0.2", null))
+        .isInstanceOf(NullPointerException.class);
+
+    Cluster configuredCluster =
+        Cluster.builder().addContactPoint("LOCALHOST").withPort(cassandraPort).build();
+
+    assertConfiguredTarget(configuredCluster, "LOCALHOST", cassandraPort);
+  }
+
   private static void assertConfiguredTarget(
       Cluster configuredCluster, String expectedAddress, Integer expectedPort) {
     cleanup.deferCleanup(configuredCluster);
     Session session = configuredCluster.connect();
     cleanup.deferCleanup(session);
+    assertThat(session.getClass().getClassLoader().getClass().getName())
+        .endsWith("InstrumentationModuleClassLoader");
 
     ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
     InetSocketAddress coordinatorAddress =
@@ -737,7 +750,7 @@ class CassandraClientTest {
   }
 
   @Test
-  void failureWithoutCoordinatorUsesConfiguredTarget() {
+  void failureWithoutCoordinatorUsesConfiguredTarget() throws ReflectiveOperationException {
     Cluster configuredCluster =
         Cluster.builder().addContactPoint("LOCALHOST").withPort(4242).build();
     cleanup.deferCleanup(configuredCluster);
@@ -745,7 +758,11 @@ class CassandraClientTest {
     when(delegate.getCluster()).thenReturn(configuredCluster);
     RuntimeException failure = new RuntimeException("failed before execution");
     when(delegate.execute("invalid")).thenThrow(failure);
-    Session session = new TracingSession(delegate);
+    Session instrumentedSession = cluster.connect();
+    cleanup.deferCleanup(instrumentedSession);
+    Session session =
+        (Session)
+            instrumentedSession.getClass().getConstructor(Session.class).newInstance(delegate);
 
     assertThatThrownBy(() -> session.execute("invalid")).isSameAs(failure);
 
