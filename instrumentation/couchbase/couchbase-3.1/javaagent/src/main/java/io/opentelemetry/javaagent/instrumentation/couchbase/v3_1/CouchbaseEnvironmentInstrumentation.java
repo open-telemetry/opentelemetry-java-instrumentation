@@ -37,16 +37,10 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This CoreEnvironment.Builder<?> builder) {
       OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
       boolean legacyBridge = isLegacyBridge(builder.getClass().getClassLoader());
-      String instrumentationName;
-      if (legacyBridge) {
-        instrumentationName = "io.opentelemetry.couchbase-3.1";
-      } else {
-        instrumentationName = "com.couchbase.client.jvm";
-      }
       builder.requestTracer(
           CouchbaseRequestTracer.create(
               openTelemetry
-                  .tracerBuilder(instrumentationName)
+                  .tracerBuilder("io.opentelemetry.couchbase-3.1")
                   .setSchemaUrl(SchemaUrls.V1_44_0)
                   .build(),
               legacyBridge));
