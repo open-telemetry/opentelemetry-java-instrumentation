@@ -13,6 +13,7 @@ import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.completions.CompletionUsage;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 final class ChatAttributesGetter
@@ -114,7 +115,9 @@ final class ChatAttributesGetter
       return emptyList();
     }
     return response.choices().stream()
-        .map(choice -> choice.finishReason().asString())
+        .map(choice -> choice._finishReason().asKnown().orElse(null))
+        .filter(Objects::nonNull)
+        .map(ChatCompletion.Choice.FinishReason::asString)
         .collect(toList());
   }
 

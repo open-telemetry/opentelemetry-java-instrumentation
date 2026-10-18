@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static java.util.Objects.requireNonNull;
+
 import com.openai.core.http.StreamResponse;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import java.util.Comparator;
@@ -38,6 +40,7 @@ final class TracingStreamedResponse implements StreamResponse<ChatCompletionChun
   private class TracingSpliterator implements Spliterator<ChatCompletionChunk> {
 
     private final Spliterator<ChatCompletionChunk> delegateSpliterator;
+    @Nullable private ChatCompletionChunk nextChunk;
 
     private TracingSpliterator(Spliterator<ChatCompletionChunk> delegateSpliterator) {
       this.delegateSpliterator = delegateSpliterator;
@@ -45,13 +48,20 @@ final class TracingStreamedResponse implements StreamResponse<ChatCompletionChun
 
     @Override
     public boolean tryAdvance(Consumer<? super ChatCompletionChunk> action) {
-      boolean chunkReceived =
-          delegateSpliterator.tryAdvance(
-              chunk -> {
-                listener.onChunk(chunk);
-                action.accept(chunk);
-              });
-      if (!chunkReceived) {
+      boolean chunkReceived;
+      try {
+        // Fetch separately so exceptions from the consumer are not stream failures.
+        chunkReceived = delegateSpliterator.tryAdvance(chunk -> nextChunk = chunk);
+      } catch (Throwable t) {
+        listener.endSpan(t);
+        throw t;
+      }
+      if (chunkReceived) {
+        ChatCompletionChunk chunk = requireNonNull(nextChunk);
+        nextChunk = null;
+        listener.onChunk(chunk);
+        action.accept(chunk);
+      } else {
         listener.endSpan(null);
       }
       return chunkReceived;
