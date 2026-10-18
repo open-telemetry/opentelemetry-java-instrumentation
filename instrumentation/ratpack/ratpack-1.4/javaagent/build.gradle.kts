@@ -59,7 +59,12 @@ listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
   }
 }
 
+sourceSets.test {
+  java.srcDir("src/errorContextTest/java")
+}
+
 val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
+  sources.java.srcDir("src/errorContextTest/java")
   dependencies {
     implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
     implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
@@ -72,7 +77,7 @@ val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("otel.instrumentation.common.controller-telemetry.enabled", true)
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
@@ -95,8 +100,22 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
+  val controllerTelemetryDisabledTests =
+    listOf("test", "version17Test").map { suiteName ->
+      register<Test>("${suiteName}ControllerTelemetryDisabled") {
+        val sourceSet = sourceSets.named(suiteName).get()
+        testClassesDirs = sourceSet.output.classesDirs
+        classpath = sourceSet.runtimeClasspath
+        filter {
+          includeTestsMatching("*RatpackErrorContextTest")
+        }
+        systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
+        systemProperties.remove("metadataConfig")
+      }
+    }
+
   check {
-    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv)
+    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv, controllerTelemetryDisabledTests)
   }
 
   if (otelProps.denyUnsafe) {

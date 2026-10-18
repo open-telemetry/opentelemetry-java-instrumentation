@@ -43,6 +43,7 @@ public class TracingHandler implements Handler {
               });
       callbackContext = otelContext;
     } else {
+      ctx.getExecution().add(parentOtelContext);
       // just update the server span name
       ctx.getResponse()
           .beforeSend(response -> RatpackSingletons.updateServerSpanName(parentOtelContext, ctx));
