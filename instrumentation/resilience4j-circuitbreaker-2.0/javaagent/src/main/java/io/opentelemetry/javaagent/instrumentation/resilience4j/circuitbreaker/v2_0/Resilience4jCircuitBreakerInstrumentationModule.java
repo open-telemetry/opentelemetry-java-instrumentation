@@ -16,7 +16,7 @@ import java.util.List;
 public class Resilience4jCircuitBreakerInstrumentationModule extends InstrumentationModule {
 
   public Resilience4jCircuitBreakerInstrumentationModule() {
-    super("resilience4j-circuitbreaker", "resilience4j-circuitbreaker-2.0");
+    super("resilience4j-circuitbreaker-2.0", "resilience4j-circuitbreaker");
   }
 
   @Override

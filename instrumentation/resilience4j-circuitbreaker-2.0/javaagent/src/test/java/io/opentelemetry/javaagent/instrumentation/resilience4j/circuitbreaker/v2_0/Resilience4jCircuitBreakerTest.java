@@ -438,6 +438,67 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void rawOnResultInsideDecoratedFutureSupplierDoesNotChangeDecoratedOutcome() throws Exception {
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    Supplier<Future<Integer>> decorated =
+        CircuitBreaker.decorateFuture(
+            circuitBreaker,
+            () -> {
+              circuitBreaker.onResult(1L, MILLISECONDS, 500);
+              return CompletableFuture.completedFuture(200);
+            });
+
+    assertThat(testing.runWithSpan("parent", () -> decorated.get().get())).isEqualTo(200);
+
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void completingDecoratedStageInsideDecoratedSupplierKeepsStageClassification() {
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker stageCircuitBreaker =
+        CircuitBreaker.of("stage-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future = new CompletableFuture<>();
+    Supplier<CompletionStage<Integer>> decoratedStage =
+        CircuitBreaker.decorateCompletionStage(stageCircuitBreaker, () -> future);
+
+    CircuitBreaker supplierCircuitBreaker = CircuitBreaker.ofDefaults("supplier-circuit-breaker");
+    Supplier<Integer> decoratedSupplier =
+        CircuitBreaker.decorateSupplier(
+            supplierCircuitBreaker,
+            () -> {
+              future.complete(500);
+              return 200;
+            });
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          CompletionStage<Integer> stage = decoratedStage.get();
+          assertThat(decoratedSupplier.get()).isEqualTo(200);
+          assertThat(stage.toCompletableFuture().join()).isEqualTo(500);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker stage-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error()),
+                span ->
+                    span.hasName("CircuitBreaker supplier-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.unset())));
+  }
+
+  @Test
   void rawCallbackInDecoratedOnResultDoesNotCreateAnotherSpan() {
     CircuitBreaker innerCircuitBreaker = CircuitBreaker.ofDefaults("inner-circuit-breaker");
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
@@ -496,6 +557,24 @@ class Resilience4jCircuitBreakerTest {
     Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", decoratedSupplier::get));
 
     assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedCompletionStageSupplierThrows() {
+    IllegalStateException exception = new IllegalStateException("boom");
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Supplier<CompletionStage<Integer>> decorated =
+        CircuitBreaker.decorateCompletionStage(
+            circuitBreaker,
+            () -> {
+              throw exception;
+            });
+
+    CompletionStage<Integer> stage = testing.runWithSpan("parent", decorated::get);
+
+    Throwable thrown = catchThrowable(() -> stage.toCompletableFuture().join());
+    assertThat(thrown).isInstanceOf(CompletionException.class).hasCause(exception);
     assertCircuitBreakerSpan("closed", "failure", exception);
   }
 

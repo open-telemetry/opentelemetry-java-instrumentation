@@ -333,10 +333,14 @@ public class Resilience4jCircuitBreakerDecorators {
           Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         CompletionStage<T> result = delegate.get();
-        // The inner CompletionStageSupplierWrapper owns normal async completion. This outer
-        // capture only covers failures after permission acquisition but before that inner wrapper
-        // runs, for example a throwing timestamp function.
-        Resilience4jCircuitBreakerSpans.cancelCapture(capture);
+        // The inner CompletionStageSupplierWrapper owns normal async completion. An attempt whose
+        // span was never handed off to async completion was abandoned by Resilience4j's internal
+        // exception handling (the supplier threw and a failed stage was returned); end it here.
+        Resilience4jCircuitBreakerSpans.PendingSpan abandoned =
+            Resilience4jCircuitBreakerSpans.endCaptureIfAbandoned(capture);
+        if (abandoned != null) {
+          abandoned.endAbandoned();
+        }
         return result;
       } catch (Throwable t) {
         Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
@@ -378,6 +382,16 @@ public class Resilience4jCircuitBreakerDecorators {
             result = delegate.get();
           }
         }
+      } catch (Throwable t) {
+        // Resilience4j catches exceptions thrown by the supplier and returns a failed stage. If
+        // its failure bookkeeping completes normally, the outer decorated supplier wrapper sees a
+        // normal return; record the failure so it can end this abandoned attempt. If the
+        // bookkeeping itself throws, the outer wrapper's failure handling ends the span with the
+        // escaping exception instead.
+        if (pendingSpan != null) {
+          pendingSpan.recordSupplierFailure(t);
+        }
+        throw t;
       } finally {
         Resilience4jCircuitBreakerSpans.endUserCode(capture);
       }
@@ -385,6 +399,7 @@ public class Resilience4jCircuitBreakerDecorators {
         return result;
       }
       CompletionStage<T> wrapped = wrapCompletionStage(result, pendingSpan);
+      pendingSpan.markHandedOff();
       pendingSpan.closeOperationScope();
       return wrapped;
     }

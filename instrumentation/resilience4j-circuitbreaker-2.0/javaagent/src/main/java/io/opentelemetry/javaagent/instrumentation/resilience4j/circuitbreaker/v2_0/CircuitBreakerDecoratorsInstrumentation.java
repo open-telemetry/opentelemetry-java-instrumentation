@@ -138,6 +138,14 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FutureSupplierAdvice {
 
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @AssignReturned.ToArguments(@ToArgument(1))
+    public static <T> Supplier<Future<T>> onEnter(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker,
+        @Advice.Argument(1) Supplier<Future<T>> supplier) {
+      return Resilience4jCircuitBreakerDecorators.wrapSupplierDelegate(circuitBreaker, supplier);
+    }
+
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T> Supplier<Future<T>> onExit(

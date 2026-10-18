@@ -96,6 +96,19 @@ public class Resilience4jCircuitBreakerSpans {
     removeCapture(capture);
   }
 
+  // Returns the pending span of an attempt that was started and claimed but never handed off to
+  // async completion, i.e. abandoned. Inner and outer completion stage wrappers run on the same
+  // thread, so the hand-off state is safely visible here.
+  @Nullable
+  static PendingSpan endCaptureIfAbandoned(Capture capture) {
+    removeCapture(capture);
+    AttemptToken token = capture.token;
+    if (token == null || token.pendingSpan == null || token.pendingSpan.handedOff) {
+      return null;
+    }
+    return token.pendingSpan;
+  }
+
   private static void removeCapture(Capture capture) {
     Deque<Capture> captureStack = captures.get();
     if (captureStack != null) {
@@ -259,6 +272,16 @@ public class Resilience4jCircuitBreakerSpans {
     if (results != null && !results.isEmpty() && results.peek().circuitBreaker == circuitBreaker) {
       return null;
     }
+    // An explicit completion attachment is the strongest ownership signal: a decorated stage or
+    // future completing inside another decorated call must classify against its own span instead
+    // of being suppressed by the enclosing capture's user-code guard.
+    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
+    if (spans != null) {
+      PendingSpan attached = spans.peek().pendingSpan;
+      if (attached.isFor(circuitBreaker)) {
+        return attached;
+      }
+    }
     Deque<Capture> captureStack = captures.get();
     Capture capture = captureStack == null ? null : captureStack.peek();
     if (capture != null && capture.userCodeDepth > 0) {
@@ -267,12 +290,7 @@ public class Resilience4jCircuitBreakerSpans {
     if (capture != null && capture.circuitBreaker == circuitBreaker && capture.token != null) {
       return capture.token.pendingSpan;
     }
-    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
-    if (spans == null) {
-      return null;
-    }
-    PendingSpan pendingSpan = spans.peek().pendingSpan;
-    return pendingSpan.isFor(circuitBreaker) ? pendingSpan : null;
+    return null;
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
@@ -324,6 +342,10 @@ public class Resilience4jCircuitBreakerSpans {
     @Nullable private Scope operationScope;
     private boolean ended;
     private boolean resultRecordedAsFailure;
+    // Written and read on the decorating thread only, between the inner and outer completion
+    // stage supplier wrappers.
+    private boolean handedOff;
+    @Nullable private Throwable supplierFailure;
 
     private PendingSpan(
         CircuitBreaker circuitBreaker,
@@ -342,6 +364,18 @@ public class Resilience4jCircuitBreakerSpans {
 
     Scope makeCurrent() {
       return context.makeCurrent();
+    }
+
+    void markHandedOff() {
+      handedOff = true;
+    }
+
+    void recordSupplierFailure(Throwable throwable) {
+      supplierFailure = throwable;
+    }
+
+    void endAbandoned() {
+      end("failure", supplierFailure);
     }
 
     void closeOperationScope() {
