@@ -18,6 +18,9 @@ applicable repository review rules; use their stated conditions and exceptions. 
 - Check changes for lifecycle leaks, reentrancy, concurrency under supported library usage,
   unsafe error handling, changed telemetry, incorrect comments, and copy/paste mistakes.
   Identify a supported failure path rather than requesting defenses against hypothetical ones.
+- Before reporting a defect that depends on library or framework behavior, verify the premise
+  against the dependency versions and concrete implementations used by the PR, including relevant
+  initialization and registration.
 - For a changed public Java API, identify the *publishing artifact* before claiming a break.
   Javaagent modules bundled into the agent are not published Java APIs. In stable artifacts
   (`otel.stable=true` in that module's `gradle.properties`), deprecate before removal and keep

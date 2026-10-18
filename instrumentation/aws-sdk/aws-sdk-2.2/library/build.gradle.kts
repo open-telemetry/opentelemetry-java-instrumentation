@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -34,6 +36,20 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+        listOf("v0", "new", "dual").forEach { mode ->
+          register("DynamoDbErrors${mode.replaceFirstChar { it.uppercase() }}") {
+            filter.includeTestsMatching("*DynamoDbErrorsTest")
+            systemProperty("test.dynamodb.rpc-semconv", mode)
+          }
+        }
+      }
+    }
+
     register<JvmTestSuite>("testCoreOnly") {
       dependencies {
         implementation(project())
@@ -78,31 +94,11 @@ testing {
 }
 
 tasks {
-  val dynamoDbErrorModes = listOf("v0", "new", "dual").map { mode ->
-    register<Test>("testDynamoDbErrors${mode.replaceFirstChar { it.uppercase() }}") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter.includeTestsMatching("*DynamoDbErrorsTest")
-      systemProperty("test.dynamodb.rpc-semconv", mode)
-    }
-  }
-
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      testExceptionSignalLogs,
-      dynamoDbErrorModes,
-    )
+    dependsOn(testing.suites)
   }
 }
