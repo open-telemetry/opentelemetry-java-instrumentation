@@ -851,6 +851,7 @@ public abstract class AbstractGrpcTest {
   }
 
   private static boolean isServerErrorCode(Status.Code code) {
+    // See https://opentelemetry.io/docs/specs/semconv/rpc/grpc/#server for error.type conventions.
     return code == Status.Code.UNKNOWN
         || code == Status.Code.DEADLINE_EXCEEDED
         || code == Status.Code.UNIMPLEMENTED
