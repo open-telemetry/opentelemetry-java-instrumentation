@@ -28,12 +28,6 @@ if (otelProps.testLatestDeps) {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    // TODO run tests both with and without experimental log attributes
-    jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
-    jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
-  }
-
   test {
     jvmArgs(
       "-Dotel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included=exact,prefix.*,single?,excluded*,otel.event.name",
@@ -47,6 +41,11 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          // TODO run tests both with and without experimental log attributes
+          jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
+          jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
+        }
         register("CaptureTemplateAndArguments") {
           jvmArgs(
             "-Dotel.instrumentation.jboss-logmanager.experimental.capture-template=true",

@@ -42,10 +42,6 @@ dependencies {
   testLibrary("com.lmax:disruptor:3.4.2")
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
-}
-
 tasks {
   test {
     jvmArgs(
@@ -55,18 +51,23 @@ tasks {
       "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
     )
   }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
-  }
 }
 
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+          // TODO run tests both with and without experimental log attributes
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
+
+          if (otelProps.denyUnsafe) {
+            enabled = false
+          }
+        }
         register("Async") {
           jvmArgs(
             "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
@@ -105,13 +106,6 @@ testing {
       }
     }
   }
-}
-
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 }
 
 configurations {

@@ -30,12 +30,6 @@ configurations {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
-}
-
 tasks {
   test {
     jvmArgs(
@@ -49,6 +43,11 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          // TODO run tests both with and without experimental log attributes
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+        }
         register("LegacyMdcAttributes") {
           filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
