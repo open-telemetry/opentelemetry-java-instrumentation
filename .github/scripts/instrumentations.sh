@@ -93,8 +93,11 @@ readonly INSTRUMENTATIONS=(
   "google-http-client-1.19:javaagent:testPreviewSemconv"
   "grails-3.0:javaagent:test"
   "graphql-java:graphql-java-12.0:javaagent:test"
+  "graphql-java:graphql-java-12.0:javaagent:testExceptionLogs"
   "graphql-java:graphql-java-20.0:javaagent:test"
   "graphql-java:graphql-java-20.0:javaagent:testDataFetcher"
+  "graphql-java:graphql-java-20.0:javaagent:testDataFetcherExceptionLogs"
+  "graphql-java:graphql-java-20.0:javaagent:testExceptionLogs"
   "grizzly-2.3:javaagent:test"
   "grpc-1.6:javaagent:test"
   "grpc-1.6:javaagent:testPreviewSemconv"
@@ -380,10 +383,14 @@ readonly COLIMA_INSTRUMENTATIONS=(
 # Some instrumentation test suites need to run with -PtestLatestDeps=true to collect
 # metrics telemetry or test against latest library versions.
 readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
+  "couchbase:couchbase-3.2:javaagent:test"
+  "couchbase:couchbase-3.2:javaagent:testExceptionSignalLogs"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:test"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
+  "kafka:kafka-clients:kafka-clients-0.11:javaagent:testReceiveTelemetry"
   "kafka:kafka-streams-0.11:javaagent:test"
   "kafka:kafka-streams-0.11:javaagent:testExperimental"
+  "kafka:kafka-streams-0.11:javaagent:testReceiveTelemetry"
   "lettuce:lettuce-5.0:javaagent:lettuce51Test"
   "lettuce:lettuce-5.0:javaagent:lettuce60Test"
   "lettuce:lettuce-5.0:javaagent:lettuce65Test"

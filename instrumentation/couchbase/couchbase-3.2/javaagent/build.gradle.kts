@@ -54,6 +54,7 @@ testing {
     }
 
     register<JvmTestSuite>("version343Test") {
+      // SDK 3.4.3 covers the legacy Core-based ProtostellarRequest constructor; newer SDKs use different constructors.
       sources {
         java {
           setSrcDirs(listOf("src/version343Test/java"))
@@ -95,8 +96,18 @@ tasks {
     )
   }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*CouchbaseExceptionSignalTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testExceptionSignalLogs)
   }
 
   if (otelProps.denyUnsafe) {

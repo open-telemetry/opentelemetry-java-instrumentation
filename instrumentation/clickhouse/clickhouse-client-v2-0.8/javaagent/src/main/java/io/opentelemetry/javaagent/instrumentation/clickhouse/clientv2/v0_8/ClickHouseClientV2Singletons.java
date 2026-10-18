@@ -207,7 +207,9 @@ public class ClickHouseClientV2Singletons {
         }
         String rest = authority.substring(bracketEnd + 1);
         Integer port =
-            rest.isEmpty() ? null : parsePort(rest.startsWith(":") ? rest.substring(1) : "");
+            rest.isEmpty()
+                ? null
+                : DbServerEndpointUtil.parsePort(rest.startsWith(":") ? rest.substring(1) : "");
         return !rest.isEmpty() && port == null
             ? null
             : new EndpointTarget(scheme, authority.substring(0, bracketEnd + 1), port);
@@ -219,12 +221,12 @@ public class ClickHouseClientV2Singletons {
       int lastColon = authority.lastIndexOf(':');
       if (firstColon >= 0) {
         if (firstColon == lastColon) {
-          Integer port = parsePort(authority.substring(firstColon + 1));
+          Integer port = DbServerEndpointUtil.parsePort(authority.substring(firstColon + 1));
           return firstColon == 0 || port == null
               ? null
               : new EndpointTarget(scheme, authority.substring(0, firstColon), port);
         }
-        Integer port = parsePort(authority.substring(lastColon + 1));
+        Integer port = DbServerEndpointUtil.parsePort(authority.substring(lastColon + 1));
         String address = authority.substring(0, lastColon);
         if (port != null && DbServerEndpointUtil.isIpv6Literal(address)) {
           return new EndpointTarget(scheme, address, port);
@@ -262,22 +264,6 @@ public class ClickHouseClientV2Singletons {
         return 8443;
       }
       return -1;
-    }
-
-    @Nullable
-    private static Integer parsePort(String value) {
-      if (value.isEmpty()) {
-        return null;
-      }
-      int port = 0;
-      for (int i = 0; i < value.length(); i++) {
-        char c = value.charAt(i);
-        if (c < '0' || c > '9' || port > (65535 - (c - '0')) / 10) {
-          return null;
-        }
-        port = port * 10 + c - '0';
-      }
-      return port;
     }
 
     private static boolean hasUnsafePercentEscape(String authority) {
