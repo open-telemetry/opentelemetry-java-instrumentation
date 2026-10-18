@@ -12,18 +12,20 @@ import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.AbstractElasticsearchTransportClientTest;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTargets;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.FilterClient;
+import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -37,6 +39,8 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,13 +149,9 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void sharedDefaultPortIsOmitted() {
+  void sharedDefaultPortIsOmitted() throws ReflectiveOperationException {
     TransportClient addressListClient = connectedClient();
-    ElasticsearchTransportServerTargets.update(
-        addressListClient,
-        asList(
-            new ElasticsearchTransportServerTarget.Endpoint(getAddress(), 9300),
-            new ElasticsearchTransportServerTarget.Endpoint(DOWN_HOST, 9300)));
+    updateServerTarget(addressListClient, 9300);
 
     clusterHealth(addressListClient);
 
@@ -159,13 +159,9 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void sharedNonDefaultPortIsIncludedWithEachAddress() {
+  void sharedNonDefaultPortIsIncludedWithEachAddress() throws ReflectiveOperationException {
     TransportClient addressListClient = connectedClient();
-    ElasticsearchTransportServerTargets.update(
-        addressListClient,
-        asList(
-            new ElasticsearchTransportServerTarget.Endpoint(getAddress(), 9400),
-            new ElasticsearchTransportServerTarget.Endpoint(DOWN_HOST, 9400)));
+    updateServerTarget(addressListClient, 9400);
 
     clusterHealth(addressListClient);
 
@@ -200,10 +196,13 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     assertConfiguredTarget(hasDownAddress ? configuredAddressListWithMixedPorts() : null, null);
   }
 
-  @Test
-  void threeArgumentFilterClientTracksExplicitAddressChanges() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void threeArgumentFilterClientTracksExplicitAddressChanges(boolean nested) {
     TransportClient singleAddressClient = newClient();
-    Client filteredClient = new TestFilterClient(singleAddressClient);
+    Client filteredClient =
+        new TestFilterClient(
+            nested ? new TestFilterClient(singleAddressClient) : singleAddressClient);
     testing.runWithSpan(
         "setup",
         () -> {
@@ -236,6 +235,36 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
   private static void clusterHealth(Client client) {
     client.admin().cluster().prepareHealth().execute().actionGet(TIMEOUT);
+  }
+
+  private void updateServerTarget(TransportClient client, int port)
+      throws ReflectiveOperationException {
+    Class<?> registry =
+        AgentClassLoaderAccess.loadClass(
+            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+    ClassLoader helperLoader =
+        (ClassLoader)
+            registry
+                .getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class)
+                .invoke(
+                    null,
+                    "io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0."
+                        + "Elasticsearch5TransportClientInstrumentationModule",
+                    TransportClient.class.getClassLoader());
+    String commonPackage =
+        "io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.";
+    Constructor<?> endpoint =
+        helperLoader
+            .loadClass(commonPackage + "ElasticsearchTransportServerTarget$Endpoint")
+            .getConstructor(String.class, int.class);
+    helperLoader
+        .loadClass(commonPackage + "ElasticsearchTransportServerTargets")
+        .getMethod("update", AbstractClient.class, List.class)
+        .invoke(
+            null,
+            client,
+            asList(
+                endpoint.newInstance(getAddress(), port), endpoint.newInstance(DOWN_HOST, port)));
   }
 
   private void assertConfiguredTarget(String addressList, Long sharedPort) {
@@ -294,7 +323,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
   private static class TestFilterClient extends FilterClient {
 
-    TestFilterClient(TransportClient delegate) {
+    TestFilterClient(Client delegate) {
       super(Settings.EMPTY, delegate.threadPool(), delegate);
     }
   }
