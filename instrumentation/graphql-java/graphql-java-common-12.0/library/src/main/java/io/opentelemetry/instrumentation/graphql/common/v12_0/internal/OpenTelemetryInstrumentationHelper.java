@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.graphql.common.v12_0.internal;
 
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
 import graphql.execution.instrumentation.InstrumentationContext;
@@ -29,8 +26,6 @@ import graphql.util.TraversalControl;
 import graphql.util.TraverserContext;
 import graphql.util.TreeTransformerUtil;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
@@ -50,6 +45,7 @@ public class OpenTelemetryInstrumentationHelper {
   private static final AstTransformer astTransformer = new AstTransformer();
 
   private final Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter;
+  private final GraphqlErrorRecorder errorRecorder;
   private final boolean captureQuery;
   private final boolean sanitizeQuery;
   private final boolean addOperationNameToSpanName;
@@ -82,15 +78,21 @@ public class OpenTelemetryInstrumentationHelper {
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
     builder.setSchemaUrl(SchemaUrls.V1_44_0);
     return new OpenTelemetryInstrumentationHelper(
-        builder.buildInstrumenter(), captureQuery, sanitizeQuery, addOperationNameToSpanName);
+        builder.buildInstrumenter(),
+        new GraphqlErrorRecorder(openTelemetry, instrumentationName, SchemaUrls.V1_44_0),
+        captureQuery,
+        sanitizeQuery,
+        addOperationNameToSpanName);
   }
 
   private OpenTelemetryInstrumentationHelper(
       Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter,
+      GraphqlErrorRecorder errorRecorder,
       boolean captureQuery,
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName) {
     this.instrumenter = instrumenter;
+    this.errorRecorder = errorRecorder;
     this.captureQuery = captureQuery;
     this.sanitizeQuery = sanitizeQuery;
     this.addOperationNameToSpanName = addOperationNameToSpanName;
@@ -110,13 +112,8 @@ public class OpenTelemetryInstrumentationHelper {
     return SimpleInstrumentationContext.whenCompleted(
         (result, throwable) -> {
           if (result != null) {
-            Span span = Span.fromContext(context);
             for (GraphQLError error : result.getErrors()) {
-              AttributesBuilder attributes = Attributes.builder();
-              attributes.put(EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
-              attributes.put(EXCEPTION_MESSAGE, error.getMessage());
-
-              span.addEvent("exception", attributes.build());
+              errorRecorder.record(context, error);
             }
           }
 

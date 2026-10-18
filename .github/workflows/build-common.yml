@@ -507,7 +507,7 @@ jobs:
             smoke-tests/jitdump.*.dmp
           if-no-files-found: ignore
 
-  gradle-plugins:
+  gradle-plugins-and-conventions:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -532,6 +532,9 @@ jobs:
       - name: Build
         run: ./gradlew build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
         working-directory: gradle-plugins
+
+      - name: Test conventions
+        run: ./gradlew -p conventions test -Pkotlin.daemon.jvmargs=-Xmx2g ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
   examples:
     runs-on: ubuntu-latest
