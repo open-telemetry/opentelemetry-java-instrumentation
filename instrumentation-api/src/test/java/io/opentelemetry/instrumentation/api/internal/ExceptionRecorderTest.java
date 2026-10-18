@@ -28,7 +28,6 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -69,12 +68,8 @@ class ExceptionRecorderTest {
     IllegalStateException error = new IllegalStateException("failure");
 
     try (Scope ignored = controllerContext.makeCurrent()) {
-      ExceptionRecorder.recordServerException(
-          Context.current(),
-          Span.fromContext(serverContext),
-          error,
-          ErrorCauseExtractor.getDefault(),
-          logger);
+      HttpServerExceptionRecorder.recordException(
+          Context.current(), Span.fromContext(serverContext), error, logger);
     }
 
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
@@ -201,14 +196,9 @@ class ExceptionRecorderTest {
                 TraceState.getDefault()));
     IllegalStateException error = new IllegalStateException("failure");
 
-    ExceptionRecorder.recordServerException(
-        Context.root(), null, error, ErrorCauseExtractor.getDefault(), logger);
-    ExceptionRecorder.recordServerException(
-        Context.root().with(nonRecording),
-        nonRecording,
-        error,
-        ErrorCauseExtractor.getDefault(),
-        logger);
+    HttpServerExceptionRecorder.recordException(Context.root(), null, error, logger);
+    HttpServerExceptionRecorder.recordException(
+        Context.root().with(nonRecording), nonRecording, error, logger);
 
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 2 : 0);
     if (emitExceptionAsLogs()) {
@@ -228,12 +218,8 @@ class ExceptionRecorderTest {
     IllegalStateException error = new IllegalStateException("failure");
     long before = epochNanos(Instant.now());
 
-    ExceptionRecorder.recordServerException(
-        context,
-        Span.fromContext(context),
-        new CompletionException(error),
-        ErrorCauseExtractor.getDefault(),
-        logger);
+    HttpServerExceptionRecorder.recordException(
+        context, Span.fromContext(context), new CompletionException(error), logger);
 
     long after = epochNanos(Instant.now());
     assertThat(testing.getSpans()).isEmpty();
@@ -262,8 +248,7 @@ class ExceptionRecorderTest {
     IllegalStateException second = new IllegalStateException("second");
 
     for (Throwable reported : asList(new CompletionException(first), first, second)) {
-      ExceptionRecorder.recordServerException(
-          context, span, reported, ErrorCauseExtractor.getDefault(), logger);
+      HttpServerExceptionRecorder.recordException(context, span, reported, logger);
     }
     instrumenter.end(context, "request", null, null);
 
@@ -294,7 +279,7 @@ class ExceptionRecorderTest {
     IllegalArgumentException observed = new IllegalArgumentException("observed");
     AtomicInteger calls = new AtomicInteger();
 
-    ExceptionRecorder.recordServerException(
+    HttpServerExceptionRecorder.recordException(
         context,
         Span.fromContext(context),
         observed,

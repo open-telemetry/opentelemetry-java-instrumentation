@@ -10,6 +10,7 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
+import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
 import io.opentelemetry.semconv.SchemaUrls;
 
 public final class WicketExceptionRecorder {
@@ -18,7 +19,7 @@ public final class WicketExceptionRecorder {
           GlobalOpenTelemetry.get(), "io.opentelemetry.wicket-8.0", SchemaUrls.V1_41_0);
 
   public static void record(Context context, Exception exception) {
-    ExceptionRecorder.recordServerException(
+    HttpServerExceptionRecorder.recordException(
         context,
         LocalRootSpan.fromContextOrNull(context),
         exception,

@@ -19,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
+import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -68,7 +69,7 @@ class ServerDecorator extends SimpleDecoratingHttpService {
       }
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      ExceptionRecorder.recordServerException(otelContext, span, error, cause -> cause, logger);
+      HttpServerExceptionRecorder.recordException(otelContext, span, error, cause -> cause, logger);
 
       throw t;
     }

@@ -12,26 +12,19 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.LoggerBuilder;
-import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import java.time.Instant;
 import javax.annotation.Nullable;
 
 /**
- * Shared exception signal emission mechanics. Callers select the span-event target. The HTTP server
- * entry point applies the supplied cause extractor; the generic entry point emits the supplied
- * exception without extraction.
+ * Shared exception signal emission mechanics. Callers select the span-event target and supply the
+ * already-extracted exception.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
 public final class ExceptionRecorder {
-  private static final InternalExceptionEventExtractor<Throwable> serverExceptionEventExtractor =
-      (log, context, unused) ->
-          log.setEventName("http.server.request.exception").setSeverity(Severity.ERROR);
-
   public static Logger createLogger(
       OpenTelemetry openTelemetry, String instrumentationName, @Nullable String schemaUrl) {
     LoggerBuilder builder = openTelemetry.getLogsBridge().loggerBuilder(instrumentationName);
@@ -43,28 +36,6 @@ public final class ExceptionRecorder {
       builder.setSchemaUrl(schemaUrl);
     }
     return builder.build();
-  }
-
-  /**
-   * Records an HTTP server exception using the selected signals.
-   *
-   * @param context the reporting context for the exception log
-   * @param eventSpan the span receiving exception events, or {@code null} if unavailable
-   * @param error the observed exception
-   * @param causeExtractor extracts the exception once before either signal is emitted; replaces,
-   *     rather than supplements, default extraction
-   * @param logger the framework logger, or {@code null} if log emission is unavailable
-   */
-  public static void recordServerException(
-      Context context,
-      @Nullable Span eventSpan,
-      Throwable error,
-      ErrorCauseExtractor causeExtractor,
-      @Nullable Logger logger) {
-    Instant timestamp = emitExceptionAsLogs() ? Instant.now() : null;
-    error = causeExtractor.extract(error);
-    recordException(
-        context, eventSpan, error, logger, serverExceptionEventExtractor, error, timestamp);
   }
 
   /**

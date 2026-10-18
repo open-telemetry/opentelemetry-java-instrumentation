@@ -9,9 +9,9 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
+import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -47,12 +47,8 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     try (Scope ignored = routeContext.makeCurrent()) {
       handler.handle(context);
     } catch (Throwable t) {
-      ExceptionRecorder.recordServerException(
-          otelContext,
-          LocalRootSpan.fromContextOrNull(otelContext),
-          t,
-          ErrorCauseExtractor.getDefault(),
-          logger);
+      HttpServerExceptionRecorder.recordException(
+          otelContext, LocalRootSpan.fromContextOrNull(otelContext), t, logger);
       throw t;
     }
   }
