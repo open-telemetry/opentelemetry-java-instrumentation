@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-testing")
 }
@@ -13,29 +16,24 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
 }
 
-tasks {
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*WicketTest.testException")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          filter {
+            includeTestsMatching("*WicketTest.testException")
+          }
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+        }
+        register("ExceptionSignalLogsDup") {
+          filter {
+            includeTestsMatching("*WicketTest.testException")
+          }
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs/dup")
+        }
+      }
     }
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
-  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*WicketTest.testException")
-    }
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs/dup")
-  }
-
-  check {
-    dependsOn(testExceptionSignalLogs, testExceptionSignalLogsDup)
   }
 }
 
