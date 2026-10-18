@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -27,6 +28,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.BufferedReader;
 import java.io.EOFException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -133,11 +135,12 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   }
 
   @Test
-  void responseBodyTruncatedAfterSuccessfulHeaders() throws Exception {
+  void responseBodyTruncatedAfterSuccessfulHeaders()
+      throws ExecutionException, IOException, InterruptedException, TimeoutException {
     URI uri;
     Result result;
     try (ServerSocket server =
-        new ServerSocket(PortUtils.findOpenPort(), 1, InetAddress.getByName("127.0.0.1"))) {
+        new ServerSocket(PortUtils.findOpenPort(), 1, InetAddress.getAllByName("127.0.0.1")[0])) {
       server.setSoTimeout(10_000);
       uri = URI.create("http://127.0.0.1:" + server.getLocalPort() + "/truncated");
       CompletableFuture<Result> responseFuture = new CompletableFuture<>();
@@ -153,7 +156,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
         socket
             .getOutputStream()
             .write(
-                ("HTTP/1.1 200 OK\r\nContent-Length: 100\r\nConnection: close\r\n\r\npartial")
+                "HTTP/1.1 200 OK\r\nContent-Length: 100\r\nConnection: close\r\n\r\npartial"
                     .getBytes(US_ASCII));
         socket.getOutputStream().flush();
       }
@@ -180,6 +183,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                           equalTo(SERVER_PORT, uri.getPort()),
                           equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                           equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                           equalTo(ERROR_TYPE, errorType)));
         });
     testing.waitAndAssertMetrics(
