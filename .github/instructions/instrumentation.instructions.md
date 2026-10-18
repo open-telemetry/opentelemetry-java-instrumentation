@@ -7,10 +7,15 @@ applyTo: "instrumentation/**/*,instrumentation-api/**/*,instrumentation-api-incu
 Apply a check only if the changed code affects that contract. Inspect unchanged neighboring
 files when necessary, but comment on a changed line and only for a supported issue.
 
+## Module boundaries
+
+- Instrumentation Gradle modules can support multiple library versions, including major versions.
+- Separate modules are needed when compatibility or build constraints prevent sharing.
+
 ## Package naming
 
-- New or renamed library packages use `io.opentelemetry.instrumentation.<library>...`; javaagent
-  packages use `io.opentelemetry.javaagent.instrumentation.<library>...`.
+- Library packages use `io.opentelemetry.instrumentation.<library>...`; javaagent packages use
+  `io.opentelemetry.javaagent.instrumentation.<library>...`.
 - Encode version segments as one identifier such as `v4_0`, not dotted package segments such as
   `v4.0`.
 - In versioned common modules, put `common` before the version in both javaagent and library
