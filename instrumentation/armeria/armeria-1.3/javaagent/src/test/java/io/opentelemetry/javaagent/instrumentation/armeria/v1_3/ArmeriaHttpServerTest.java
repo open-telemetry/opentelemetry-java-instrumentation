@@ -39,6 +39,9 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
+  private final HttpResponseException wrappedResponseException =
+      HttpResponseException.of(HttpResponse.of(HttpStatus.OK));
+
   @Override
   protected ServerBuilder configureServer(ServerBuilder sb) {
     sb.service(
@@ -56,7 +59,7 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
     sb.service(
         WRAPPED_RESPONSE_EXCEPTION.getPath(),
         (ctx, req) -> {
-          throw new CompletionException(HttpResponseException.of(HttpResponse.of(HttpStatus.OK)));
+          throw new CompletionException(wrappedResponseException);
         });
     return sb;
   }
@@ -113,7 +116,7 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
                     span.hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(HttpResponseException.of(HttpResponse.of(HttpStatus.OK)))));
+                        .hasException(wrappedResponseException)));
   }
 
   @Override
