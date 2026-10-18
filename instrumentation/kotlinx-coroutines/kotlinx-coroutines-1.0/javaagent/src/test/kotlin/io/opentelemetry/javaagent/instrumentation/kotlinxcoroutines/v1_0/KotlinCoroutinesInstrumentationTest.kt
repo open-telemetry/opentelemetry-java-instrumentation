@@ -20,6 +20,7 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME
+import io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
@@ -52,6 +53,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -527,14 +529,15 @@ class KotlinCoroutinesInstrumentationTest {
     }
   }
 
-  @Test
-  fun `WithSpan ends span on failed completion`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [false, true])
+  fun `WithSpan ends span on failed completion`(suspendBeforeFailure: Boolean) {
     Assumptions.assumeFalse(v3Preview())
 
     val exception = IllegalStateException("expected")
     val result = runCatching {
       runBlocking {
-        annotatedFailure(exception)
+        annotatedFailure(exception, suspendBeforeFailure)
       }
     }
 
@@ -547,6 +550,10 @@ class KotlinCoroutinesInstrumentationTest {
               .hasNoParent()
               .hasStatus(StatusData.error())
               .hasException(exception)
+              .hasAttributesSatisfyingExactly(
+                equalTo(CODE_FUNCTION_NAME, this.javaClass.name + ".annotatedFailure"),
+                equalTo(ERROR_TYPE, IllegalStateException::class.java.name)
+              )
           },
         )
       },
@@ -554,12 +561,14 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   @WithSpan("failing")
-  private suspend fun annotatedFailure(exception: RuntimeException) {
-    unannotatedFailure(exception)
+  private suspend fun annotatedFailure(exception: RuntimeException, suspendBeforeFailure: Boolean) {
+    unannotatedFailure(exception, suspendBeforeFailure)
   }
 
-  private suspend fun unannotatedFailure(exception: RuntimeException) {
-    delay(10)
+  private suspend fun unannotatedFailure(exception: RuntimeException, suspendBeforeFailure: Boolean) {
+    if (suspendBeforeFailure) {
+      delay(10)
+    }
     throw exception
   }
 

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -15,9 +16,11 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.naming.NamingException;
 import javax.naming.NoInitialContextException;
@@ -70,8 +73,8 @@ class MethodTest {
                         .hasException(throwableReference.get())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CODE_FUNCTION_NAME,
-                                InitialDirContext.class.getName() + ".search"))));
+                                CODE_FUNCTION_NAME, InitialDirContext.class.getName() + ".search"),
+                            equalTo(ERROR_TYPE, NoInitialContextException.class.getName()))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {
@@ -85,7 +88,7 @@ class MethodTest {
   @Test
   void methodTracedWithAsyncStop() throws Exception {
     ConfigTracedCompletableFuture traced = new ConfigTracedCompletableFuture();
-    CompletableFuture<String> future = traced.getResult();
+    CompletableFuture<String> future = traced.getResult(null);
 
     // span is ended when CompletableFuture is completed
     // verify that span has not been ended yet
@@ -106,11 +109,39 @@ class MethodTest {
                                 ConfigTracedCompletableFuture.class.getName() + ".getResult"))));
   }
 
+  @Test
+  void methodTracedWithAsyncFailure() {
+    ConfigTracedCompletableFuture traced = new ConfigTracedCompletableFuture();
+    IllegalStateException exception = new IllegalStateException("Boom");
+    CompletableFuture<String> future = traced.getResult(exception);
+
+    assertThat(traced.span).isNotNull().satisfies(span -> assertThat(span.isRecording()).isTrue());
+
+    traced.countDownLatch.countDown();
+    assertThatThrownBy(() -> future.get(10, SECONDS))
+        .isInstanceOf(ExecutionException.class)
+        .hasCause(exception);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("ConfigTracedCompletableFuture.getResult")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.error())
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ConfigTracedCompletableFuture.class.getName() + ".getResult"),
+                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
+  }
+
   static class ConfigTracedCompletableFuture {
     final CountDownLatch countDownLatch = new CountDownLatch(1);
     Span span;
 
-    CompletableFuture<String> getResult() {
+    CompletableFuture<String> getResult(Throwable error) {
       CompletableFuture<String> completableFuture = new CompletableFuture<>();
       span = Span.current();
       new Thread(
@@ -120,7 +151,11 @@ class MethodTest {
                 } catch (InterruptedException ignored) {
                   // ignore
                 }
-                completableFuture.complete("Hello!");
+                if (error == null) {
+                  completableFuture.complete("Hello!");
+                } else {
+                  completableFuture.completeExceptionally(error);
+                }
               })
           .start();
       return completableFuture;

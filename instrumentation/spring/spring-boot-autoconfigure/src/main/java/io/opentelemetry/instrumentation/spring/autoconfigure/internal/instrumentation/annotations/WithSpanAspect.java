@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor;
 import javax.annotation.Nullable;
@@ -48,6 +49,7 @@ abstract class WithSpanAspect {
 
     instrumenter =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, JoinPointRequest::spanName)
+            .addAttributesExtractor(AttributesExtractor.errorType())
             .addAttributesExtractor(
                 CodeAttributesExtractor.create(new JoinPointCodeAttributesExtractor()))
             .addAttributesExtractor(

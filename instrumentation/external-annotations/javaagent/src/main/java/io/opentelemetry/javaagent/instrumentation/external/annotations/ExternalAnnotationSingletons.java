@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.external.annotations;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
@@ -25,6 +26,7 @@ class ExternalAnnotationSingletons {
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.external-annotations",
                 CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(AttributesExtractor.errorType())
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .buildInstrumenter();
   }

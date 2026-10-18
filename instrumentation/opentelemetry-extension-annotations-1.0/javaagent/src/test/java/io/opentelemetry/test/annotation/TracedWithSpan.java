@@ -44,6 +44,25 @@ public class TracedWithSpan {
   }
 
   @io.opentelemetry.extension.annotations.WithSpan
+  public void fail(RuntimeException exception) {
+    throw exception;
+  }
+
+  @io.opentelemetry.extension.annotations.WithSpan
+  public void failWithSpanAttributes(
+      @io.opentelemetry.extension.annotations.SpanAttribute("parameter") String parameter,
+      RuntimeException exception) {
+    throw exception;
+  }
+
+  @io.opentelemetry.extension.annotations.WithSpan
+  public CompletionStage<String> completionStageWithAttributes(
+      @io.opentelemetry.extension.annotations.SpanAttribute("parameter") String parameter,
+      CompletableFuture<String> future) {
+    return future;
+  }
+
+  @io.opentelemetry.extension.annotations.WithSpan
   public String withSpanAttributes(
       @io.opentelemetry.extension.annotations.SpanAttribute String implicitName,
       @io.opentelemetry.extension.annotations.SpanAttribute("explicitName") String parameter,

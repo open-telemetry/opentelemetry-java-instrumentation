@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.methods;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
@@ -36,6 +37,7 @@ class MethodSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(AttributesExtractor.errorType())
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .buildInstrumenter(MethodAndType::getSpanKind);
   }

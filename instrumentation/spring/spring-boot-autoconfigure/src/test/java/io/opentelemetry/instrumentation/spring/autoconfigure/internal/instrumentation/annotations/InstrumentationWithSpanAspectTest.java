@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -130,7 +131,8 @@ class InstrumentationWithSpanAspectTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CODE_FUNCTION_NAME,
-                                unproxiedTesterClassName + ".testWithSpanWithException"))));
+                                unproxiedTesterClassName + ".testWithSpanWithException"),
+                             equalTo(ERROR_TYPE, Exception.class.getName()))));
   }
 
   @Test
@@ -318,7 +320,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasAttributesSatisfyingExactly(
                               equalTo(
                                   CODE_FUNCTION_NAME,
-                                  unproxiedTesterClassName + ".testAsyncCompletionStage"))));
+                                  unproxiedTesterClassName + ".testAsyncCompletionStage"),
+                              equalTo(ERROR_TYPE, Exception.class.getName()))));
     }
 
     @Test
@@ -411,7 +414,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasAttributesSatisfyingExactly(
                               equalTo(
                                   CODE_FUNCTION_NAME,
-                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
+                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"),
+                              equalTo(ERROR_TYPE, Exception.class.getName()))));
     }
 
     @Test
@@ -459,7 +463,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasAttributesSatisfyingExactly(
                               equalTo(
                                   CODE_FUNCTION_NAME,
-                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
+                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"),
+                             equalTo(ERROR_TYPE, Exception.class.getName()))));
     }
 
     @Test

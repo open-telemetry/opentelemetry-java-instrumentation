@@ -45,6 +45,23 @@ class TracedWithSpan {
   }
 
   @WithSpan
+  void fail(RuntimeException exception) {
+    throw exception;
+  }
+
+  @WithSpan
+  void failWithSpanAttributes(
+      @SpanAttribute("parameter") String parameter, RuntimeException exception) {
+    throw exception;
+  }
+
+  @WithSpan
+  CompletionStage<String> completionStageWithAttributes(
+      @SpanAttribute("parameter") String parameter, CompletableFuture<String> future) {
+    return future;
+  }
+
+  @WithSpan
   String withSpanAttributes(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,

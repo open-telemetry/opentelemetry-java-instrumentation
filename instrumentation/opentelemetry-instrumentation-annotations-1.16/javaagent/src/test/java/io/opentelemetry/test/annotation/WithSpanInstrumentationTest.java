@@ -11,8 +11,10 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,6 +32,8 @@ import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.This;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class WithSpanInstrumentationTest {
 
@@ -186,6 +190,7 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()),
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 TracedWithSpan.class.getName() + ".completionStage"))));
@@ -250,6 +255,7 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()),
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 TracedWithSpan.class.getName() + ".completionStage"))));
@@ -288,6 +294,7 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()),
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 TracedWithSpan.class.getName() + ".completableFuture"))));
@@ -352,9 +359,71 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()),
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 TracedWithSpan.class.getName() + ".completableFuture"))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void synchronousFailure(boolean captureAttributes) {
+    IllegalStateException exception = new IllegalStateException("Boom");
+    TracedWithSpan traced = new TracedWithSpan();
+    assertThatThrownBy(
+            () -> {
+              if (captureAttributes) {
+                traced.failWithSpanAttributes("value", exception);
+              } else {
+                traced.fail(exception);
+              }
+            })
+        .isSameAs(exception);
+
+    String method = captureAttributes ? "failWithSpanAttributes" : "fail";
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan." + method)
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, TracedWithSpan.class.getName() + "." + method),
+                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
+                            equalTo(stringKey("parameter"), captureAttributes ? "value" : null))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void completingCompletionStageWithAttributes(boolean fail) {
+    CompletableFuture<String> future = new CompletableFuture<>();
+    new TracedWithSpan().completionStageWithAttributes("value", future);
+
+    if (fail) {
+      future.completeExceptionally(new IllegalArgumentException("Boom"));
+    } else {
+      future.complete("Done");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completionStageWithAttributes")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(fail ? StatusData.error() : StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completionStageWithAttributes"),
+                            equalTo(stringKey("parameter"), "value"),
+                            equalTo(
+                                ERROR_TYPE,
+                                fail ? IllegalArgumentException.class.getName() : null))));
   }
 
   @Test

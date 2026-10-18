@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.SpanAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
@@ -70,6 +71,7 @@ public class AnnotationSingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             AnnotationSingletons::spanNameFromMethod)
+        .addAttributesExtractor(AttributesExtractor.errorType())
         .addAttributesExtractor(CodeAttributesExtractor.create(new MethodCodeAttributesGetter()))
         .buildInstrumenter(AnnotationSingletons::spanKindFromMethod);
   }
@@ -79,6 +81,7 @@ public class AnnotationSingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             AnnotationSingletons::spanNameFromMethodRequest)
+        .addAttributesExtractor(AttributesExtractor.errorType())
         .addAttributesExtractor(
             CodeAttributesExtractor.create(new MethodRequestCodeAttributesGetter()))
         .addAttributesExtractor(

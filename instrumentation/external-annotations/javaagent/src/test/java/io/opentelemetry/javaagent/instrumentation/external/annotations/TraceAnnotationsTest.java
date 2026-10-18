@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.external.annotations;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -84,8 +85,8 @@ class TraceAnnotationsTest {
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CODE_FUNCTION_NAME,
-                                SayTracedHello.class.getName() + ".sayError"))));
+                                CODE_FUNCTION_NAME, SayTracedHello.class.getName() + ".sayError"),
+                            equalTo(ERROR_TYPE, thrown.getClass().getName()))));
   }
 
   @Test
