@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.java-conventions")
 }
@@ -9,20 +11,17 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
-tasks {
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-  }
-
-  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
-  }
-
-  check {
-    dependsOn(testExceptionSignalLogs, testExceptionSignalLogsDup)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+        register("ExceptionSignalLogsDup") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+        }
+      }
+    }
   }
 }
