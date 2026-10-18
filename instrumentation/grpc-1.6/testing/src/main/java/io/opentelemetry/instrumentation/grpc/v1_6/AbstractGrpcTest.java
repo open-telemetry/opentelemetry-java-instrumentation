@@ -725,8 +725,7 @@ public abstract class AbstractGrpcTest {
                         // NB: Exceptions thrown on the server don't appear to be propagated to the
                         // client, at
                         // least for the version we test against, so the client gets an UNKNOWN
-                        // status and the server
-                        // doesn't record one at all.
+                        // status, which is also recorded by the server instrumentation.
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
@@ -760,6 +759,11 @@ public abstract class AbstractGrpcTest {
                                         emitPreviewRpcSemconv()
                                             ? Status.UNKNOWN.getCode().name()
                                             : null),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        emitPreviewRpcSemconv()
+                                            ? Status.Code.UNKNOWN.name()
+                                            : null),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
@@ -786,9 +790,7 @@ public abstract class AbstractGrpcTest {
                                         : "SayHello"),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? StatusRuntimeException.class.getName()
-                                        : null),
+                                    emitPreviewRpcSemconv() ? Status.Code.UNKNOWN.name() : null),
                                 equalTo(
                                     RPC_GRPC_STATUS_CODE,
                                     emitOldRpcSemconv()
