@@ -765,8 +765,14 @@ public abstract class AbstractThriftTest {
                             .hasStatus(StatusData.error()),
                     span ->
                         (hasAsyncServerNetworkAttributes()
-                                ? assertServerSpan(span, "withError", port)
-                                : assertServerSpan(span, "withError"))
+                                ? assertServerSpan(
+                                    span,
+                                    CustomHandler.class.getName(),
+                                    "withError",
+                                    port,
+                                    "_OTHER")
+                                : assertServerSpan(
+                                    span, CustomHandler.class.getName(), "withError", "_OTHER"))
                             .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")
