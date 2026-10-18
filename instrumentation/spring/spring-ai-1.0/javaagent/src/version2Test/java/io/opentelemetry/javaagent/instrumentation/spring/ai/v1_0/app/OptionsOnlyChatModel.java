@@ -38,6 +38,6 @@ public class OptionsOnlyChatModel implements ChatModel {
   @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")
   @Override
   public Flux<ChatResponse> stream(Prompt prompt) {
-    return Flux.just(call(prompt));
+    return Flux.defer(() -> Flux.just(call(prompt)));
   }
 }

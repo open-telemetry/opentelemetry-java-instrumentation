@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_ID;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_MODEL;
@@ -40,6 +41,72 @@ class OptionsOnlyChatModelTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private final OptionsOnlyChatModel chatModel = new OptionsOnlyChatModel();
+
+  @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")
+  @Test
+  void streamRecordsSpan() {
+    Prompt prompt = new Prompt("Tell me about traces", ChatOptions.builder().model(MODEL).build());
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt).blockLast());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("chat " + MODEL)
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, "optionsonly"),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("stop")),
+                            equalTo(GEN_AI_RESPONSE_ID, "response-id"),
+                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3L),
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("gen_ai.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSumGreaterThan(0.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, "optionsonly"),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
+        metric ->
+            metric
+                .hasName("gen_ai.client.token.usage")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(3.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, "optionsonly"),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+                            point ->
+                                point
+                                    .hasSum(2.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, "optionsonly"),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
+  }
 
   @Test
   void callWithPromptOptionsUsesPromptModel() {

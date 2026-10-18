@@ -75,7 +75,15 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.genai.capture-message-content=true")
   }
 
+  val version2TestCaptureMessageContent = register<Test>("version2TestCaptureMessageContent") {
+    testClassesDirs = sourceSets.named("version2Test").get().output.classesDirs
+    classpath = sourceSets.named("version2Test").get().runtimeClasspath
+
+    systemProperty("otel.instrumentation.genai.capture-message-content", true)
+    systemProperty("metadataConfig", "otel.instrumentation.genai.capture-message-content=true")
+  }
+
   check {
-    dependsOn(testing.suites, testCaptureMessageContent)
+    dependsOn(testing.suites, testCaptureMessageContent, version2TestCaptureMessageContent)
   }
 }
