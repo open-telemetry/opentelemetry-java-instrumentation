@@ -10,8 +10,8 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
+import io.opentelemetry.instrumentation.api.internal.LoggerUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -21,7 +21,7 @@ import ratpack.handling.Context;
 public class RatpackSingletons {
 
   private static final Logger logger =
-      ExceptionRecorder.createLogger(
+      LoggerUtil.createLogger(
           GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4", SchemaUrls.V1_41_0);
 
   private static final Instrumenter<String, Void> instrumenter =

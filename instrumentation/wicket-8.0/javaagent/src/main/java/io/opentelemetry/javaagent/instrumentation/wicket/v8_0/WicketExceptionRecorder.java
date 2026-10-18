@@ -9,13 +9,13 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
+import io.opentelemetry.instrumentation.api.internal.LoggerUtil;
 import io.opentelemetry.semconv.SchemaUrls;
 
 public final class WicketExceptionRecorder {
   private static final Logger logger =
-      ExceptionRecorder.createLogger(
+      LoggerUtil.createLogger(
           GlobalOpenTelemetry.get(), "io.opentelemetry.wicket-8.0", SchemaUrls.V1_41_0);
 
   public static void record(Context context, Exception exception) {

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
-import com.linecorp.armeria.server.HttpResponseException;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
@@ -17,15 +16,15 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
+import io.opentelemetry.instrumentation.api.internal.LoggerUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.semconv.SchemaUrls;
 
 class ServerDecorator extends SimpleDecoratingHttpService {
   private static final Logger logger =
-      ExceptionRecorder.createLogger(
+      LoggerUtil.createLogger(
           GlobalOpenTelemetry.get(), "io.opentelemetry.armeria-1.3", SchemaUrls.V1_41_0);
 
   private final HttpService libraryDelegate;
@@ -58,17 +57,9 @@ class ServerDecorator extends SimpleDecoratingHttpService {
     try {
       return unwrap().serve(ctx, req);
     } catch (Throwable t) {
-      Throwable error = t;
-      // Armeria uses this exception to return a response, including successful responses.
-      if (t instanceof HttpResponseException) {
-        if (t.getCause() == null) {
-          throw t;
-        }
-        error = t.getCause();
-      }
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      HttpServerExceptionRecorder.recordException(otelContext, span, error, logger);
+      HttpServerExceptionRecorder.recordException(otelContext, span, t, logger);
 
       throw t;
     }

@@ -58,13 +58,10 @@ class ExceptionRecorderTest {
     Context serverContext = server.start(Context.root(), "request");
     Context controllerContext = controller.start(serverContext, "request");
     Logger logger =
-        testing
-            .getOpenTelemetry()
-            .getLogsBridge()
-            .loggerBuilder("framework")
-            .setInstrumentationVersion("1.2.3")
-            .setSchemaUrl("https://opentelemetry.io/schemas/1.30.0")
-            .build();
+        LoggerUtil.createLogger(
+            testing.getOpenTelemetry(),
+            "test-instrumentation",
+            "https://opentelemetry.io/schemas/1.30.0");
     IllegalStateException error = new IllegalStateException("failure");
 
     try (Scope ignored = controllerContext.makeCurrent()) {
@@ -76,7 +73,7 @@ class ExceptionRecorderTest {
     if (emitExceptionAsLogs()) {
       assertThat(testing.getLogRecords().get(0).getInstrumentationScopeInfo())
           .isEqualTo(
-              InstrumentationScopeInfo.builder("framework")
+              InstrumentationScopeInfo.builder("test-instrumentation")
                   .setVersion("1.2.3")
                   .setSchemaUrl("https://opentelemetry.io/schemas/1.30.0")
                   .build());
@@ -186,7 +183,7 @@ class ExceptionRecorderTest {
 
   @Test
   void frameworkLogsDoNotRequireLocalRootOrRecordingSpan() {
-    Logger logger = ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null);
+    Logger logger = LoggerUtil.createLogger(testing.getOpenTelemetry(), "framework", null);
     Span nonRecording =
         Span.wrap(
             SpanContext.create(
@@ -214,7 +211,7 @@ class ExceptionRecorderTest {
                 testing.getOpenTelemetry(), "server", unused -> "request")
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
     Context context = instrumenter.start(Context.root(), "request");
-    Logger logger = ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null);
+    Logger logger = LoggerUtil.createLogger(testing.getOpenTelemetry(), "framework", null);
     IllegalStateException error = new IllegalStateException("failure");
 
     HttpServerExceptionRecorder.recordException(
@@ -240,7 +237,7 @@ class ExceptionRecorderTest {
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
     Context context = instrumenter.start(Context.root(), "request");
     Span span = Span.fromContext(context);
-    Logger logger = ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null);
+    Logger logger = LoggerUtil.createLogger(testing.getOpenTelemetry(), "framework", null);
     IllegalStateException first = new IllegalStateException("first");
     IllegalStateException second = new IllegalStateException("second");
 
@@ -285,7 +282,7 @@ class ExceptionRecorderTest {
           calls.incrementAndGet();
           return extracted;
         },
-        ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null));
+        LoggerUtil.createLogger(testing.getOpenTelemetry(), "framework", null));
     instrumenter.end(context, "request", null, null);
 
     assertThat(calls.get()).isEqualTo(1);

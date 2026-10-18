@@ -10,8 +10,8 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
+import io.opentelemetry.instrumentation.api.internal.LoggerUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
   private static final Logger logger =
-      ExceptionRecorder.createLogger(
+      LoggerUtil.createLogger(
           GlobalOpenTelemetry.get(), "io.opentelemetry.vertx-web-3.0", SchemaUrls.V1_41_0);
 
   private final Handler<RoutingContext> handler;
