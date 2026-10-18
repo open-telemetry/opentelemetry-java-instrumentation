@@ -7,14 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
 import static com.couchbase.client.java.ClusterOptions.clusterOptions;
 import static com.couchbase.client.java.kv.GetOptions.getOptions;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.ExperimentalTestHelper.EXPERIMENTAL_TELEMETRY;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -92,6 +97,18 @@ class CouchbaseExceptionSignalTest {
                             equalTo(DB_NAMESPACE, "test"),
                             equalTo(DB_COLLECTION_NAME, "_default"),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(stringKey("db.couchbase.document_id"), experimental("id")),
+                            equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
+                            satisfies(
+                                longKey("db.couchbase.retries"),
+                                val -> {
+                                  if (EXPERIMENTAL_TELEMETRY) {
+                                    val.isNotNegative();
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }),
+                            equalTo(stringKey("db.couchbase.service"), experimental("kv")),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, port))));
 
