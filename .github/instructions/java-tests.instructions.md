@@ -13,11 +13,7 @@ convention not caught by CI.
 ## Behavior coverage
 
 - Prefer integration tests for instrumentation behavior: exercise the library through its normal
-  API, use a real service when relevant, and assert emitted telemetry. Use the existing baseline and
-  latest-dependency suites for version-dependent behavior. For javaagent changes supporting multiple
-  runtime library versions, use the installed agent against the required versions so tests cover
-  class transformation and runtime compatibility; direct helper tests and `javaagent-unit-tests`
-  are not integration coverage.
+  API, use a real service when relevant, and assert emitted telemetry.
 - Focused unit tests remain appropriate for nontrivial standalone logic and shared infrastructure
   when they provide distinct coverage. Avoid unit-test matrices that duplicate integration coverage
   or merely restate the implementation; mocks and fakes remain appropriate in tests that are not
