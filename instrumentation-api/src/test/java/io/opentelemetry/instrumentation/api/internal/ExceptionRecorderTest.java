@@ -208,7 +208,7 @@ class ExceptionRecorderTest {
   }
 
   @Test
-  void frameworkEmitsImmediatelyWithReportTimeTimestamp() {
+  void frameworkEmitsImmediately() {
     Instrumenter<String, Void> instrumenter =
         Instrumenter.<String, Void>builder(
                 testing.getOpenTelemetry(), "server", unused -> "request")
@@ -216,16 +216,13 @@ class ExceptionRecorderTest {
     Context context = instrumenter.start(Context.root(), "request");
     Logger logger = ExceptionRecorder.createLogger(testing.getOpenTelemetry(), "framework", null);
     IllegalStateException error = new IllegalStateException("failure");
-    long before = epochNanos(Instant.now());
 
     HttpServerExceptionRecorder.recordException(
         context, Span.fromContext(context), new CompletionException(error), logger);
 
-    long after = epochNanos(Instant.now());
     assertThat(testing.getSpans()).isEmpty();
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
     if (emitExceptionAsLogs()) {
-      assertThat(testing.getLogRecords().get(0).getTimestampEpochNanos()).isBetween(before, after);
       assertThat(testing.getLogRecords().get(0)).hasException(error);
     }
     instrumenter.end(context, "request", null, null);
@@ -354,9 +351,5 @@ class ExceptionRecorderTest {
     if (emitExceptionAsLogs()) {
       assertThat(testing.getLogRecords().get(0)).hasException(extracted);
     }
-  }
-
-  private static long epochNanos(Instant instant) {
-    return instant.getEpochSecond() * 1_000_000_000L + instant.getNano();
   }
 }

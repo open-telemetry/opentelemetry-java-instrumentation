@@ -5,14 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
-
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
-import java.time.Instant;
 import javax.annotation.Nullable;
 
 /**
@@ -26,14 +23,14 @@ public final class HttpServerExceptionRecorder {
       (log, context, unused) ->
           log.setEventName("http.server.request.exception").setSeverity(Severity.ERROR);
 
-  /** Records the observed exception using default cause extraction and the reporting timestamp. */
+  /** Immediately records the observed exception using default cause extraction. */
   public static void recordException(
       Context context, @Nullable Span eventSpan, Throwable error, @Nullable Logger logger) {
     recordException(context, eventSpan, error, ErrorCauseExtractor.getDefault(), logger);
   }
 
   /**
-   * Records an HTTP server exception using the selected signals and the reporting timestamp.
+   * Immediately records an HTTP server exception using the selected signals.
    *
    * @param context the reporting context for the exception log
    * @param eventSpan the span receiving exception events, or {@code null} if unavailable
@@ -48,10 +45,9 @@ public final class HttpServerExceptionRecorder {
       Throwable error,
       ErrorCauseExtractor causeExtractor,
       @Nullable Logger logger) {
-    Instant timestamp = emitExceptionAsLogs() ? Instant.now() : null;
     error = causeExtractor.extract(error);
     ExceptionRecorder.recordException(
-        context, eventSpan, error, logger, serverExceptionEventExtractor, error, timestamp);
+        context, eventSpan, error, logger, serverExceptionEventExtractor, error, null);
   }
 
   private HttpServerExceptionRecorder() {}
