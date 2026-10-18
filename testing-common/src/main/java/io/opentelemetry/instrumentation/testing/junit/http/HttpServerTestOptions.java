@@ -14,6 +14,7 @@ import static java.util.Collections.singleton;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -52,6 +53,9 @@ public class HttpServerTestOptions {
   Predicate<ServerEndpoint> hasResponseCustomizer = unused -> false;
 
   Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
+  Predicate<ServerEndpoint> hasExceptionLog = endpoint -> hasExceptionOnServerSpan.test(endpoint);
+  @Nullable String exceptionLogInstrumentationName;
+  Predicate<SpanData> exceptionLogSpan = span -> true;
 
   boolean testRedirect = true;
   boolean testError = true;
@@ -107,6 +111,24 @@ public class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setExpectedException(Throwable expectedException) {
     this.expectedException = expectedException;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasExceptionLog(Predicate<ServerEndpoint> hasExceptionLog) {
+    this.hasExceptionLog = hasExceptionLog;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setExceptionLogInstrumentationName(String instrumentationName) {
+    this.exceptionLogInstrumentationName = instrumentationName;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setExceptionLogSpan(Predicate<SpanData> exceptionLogSpan) {
+    this.exceptionLogSpan = exceptionLogSpan;
     return this;
   }
 

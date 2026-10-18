@@ -5,12 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import java.lang.reflect.InvocationTargetException;
@@ -21,6 +25,10 @@ import javax.annotation.Nullable;
 
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
 public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
+
+  private static final Logger logger =
+      ExceptionRecorder.createLogger(
+          GlobalOpenTelemetry.get(), "io.opentelemetry.vertx-web-3.0", SchemaUrls.V1_41_0);
 
   private final Handler<RoutingContext> handler;
 
@@ -39,11 +47,19 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     }
     HttpServerRoute.update(otelContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
 
-    try (Scope ignored = RouteHolder.init(otelContext, route).makeCurrent()) {
+    Context routeContext = RouteHolder.init(otelContext, route);
+    RouteHolder.enterHandler(routeContext);
+    try (Scope ignored = routeContext.makeCurrent()) {
       handler.handle(context);
     } catch (Throwable t) {
-      ExceptionRecorder.recordServerException(otelContext, unwrapThrowable(t));
+      Throwable error = unwrapThrowable(t);
+      if (RouteHolder.recordException(routeContext, error)) {
+        ExceptionRecorder.recordServerException(
+            otelContext, LocalRootSpan.fromContextOrNull(otelContext), error, logger);
+      }
       throw t;
+    } finally {
+      RouteHolder.exitHandler(routeContext);
     }
   }
 

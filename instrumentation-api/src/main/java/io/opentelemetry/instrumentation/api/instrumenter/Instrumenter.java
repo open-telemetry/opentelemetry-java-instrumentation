@@ -6,11 +6,9 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
@@ -231,11 +229,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.setParent(context).startSpan();
     context = context.with(span);
-    context =
-        ExceptionRecorder.storeInContext(
-            context,
-            errorCauseExtractor,
-            (exceptionContext, error) -> recordException(exceptionContext, error, request, null));
 
     if (operationListeners.length != 0) {
       if (operationListenerAttributesExtractors.length != 0) {
@@ -285,7 +278,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
     try {
       doEndImpl(span, context, request, response, error, endTime);
     } finally {
-      ExceptionRecorder.end(context);
       if (endTime != null) {
         span.end(endTime);
       } else {
@@ -303,9 +295,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
       @Nullable Instant endTime) {
     if (error != null) {
       error = errorCauseExtractor.extract(error);
-      if (ExceptionRecorder.tryMarkExceptionRecorded(context, error)) {
-        recordException(context, error, request, endTime);
-      }
+      ExceptionRecorder.recordException(
+          context, span, error, logger, exceptionEventExtractor, request, endTime);
     }
 
     UnsafeAttributes attributes = new UnsafeAttributes();
@@ -338,25 +329,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
         operationListeners[i].onEnd(context, attributes, endNanos);
       }
     }
-  }
-
-  private void recordException(
-      Context context, Throwable throwable, REQUEST request, @Nullable Instant endTime) {
-    if (emitExceptionAsSpanEvents()) {
-      Span.fromContext(context).recordException(throwable);
-    }
-    // Exception logs are intentionally emitted even when the span is not recording.
-    if (logger == null || exceptionEventExtractor == null) {
-      return;
-    }
-    LogRecordBuilder logRecordBuilder = logger.logRecordBuilder();
-    logRecordBuilder.setContext(context);
-    if (endTime != null) {
-      logRecordBuilder.setTimestamp(endTime);
-    }
-    exceptionEventExtractor.extract(logRecordBuilder, context, request);
-    logRecordBuilder.setException(throwable);
-    logRecordBuilder.emit();
   }
 
   // Per semconv

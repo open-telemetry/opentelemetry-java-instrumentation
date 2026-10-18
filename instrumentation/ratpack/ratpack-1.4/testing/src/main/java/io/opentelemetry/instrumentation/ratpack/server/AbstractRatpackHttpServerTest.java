@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack.server;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -270,6 +271,16 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
   // we don't actually have test coverage ensuring our instrumentation correctly delegates to this
   // user registered handler.
   private static class TestErrorHandler implements ServerErrorHandler {
+    private final ServerErrorHandler delegate = new ResponseErrorHandler();
+
+    @Override
+    public void error(Context context, Throwable throwable) throws Exception {
+      // Both instrumented handlers observe the same failure.
+      delegate.error(context, throwable);
+    }
+  }
+
+  private static class ResponseErrorHandler implements ServerErrorHandler {
     @Override
     public void error(Context context, Throwable throwable) {
       context.getResponse().status(500).send(throwable.getMessage());
@@ -288,7 +299,9 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> true);
-    options.setHasExceptionOnServerSpan(endpoint -> true);
+    options.setHasExceptionLog(endpoint -> true);
+    options.setExceptionLogInstrumentationName("io.opentelemetry.ratpack-1.4");
+    options.setExceptionLogSpan(span -> span.getName().equals(EXCEPTION.getPath()));
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
@@ -318,7 +331,9 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     }
     span.hasName(spanName).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
-      span.hasStatus(StatusData.error()).hasException(null);
+      span.hasStatus(StatusData.error())
+          .hasException(
+              emitExceptionAsSpanEvents() ? new IllegalStateException(EXCEPTION.getBody()) : null);
     }
     return span;
   }

@@ -10,12 +10,15 @@ import static io.opentelemetry.context.ContextKey.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
+import io.opentelemetry.instrumentation.api.internal.RecordedExceptions;
 import javax.annotation.Nullable;
 
 public class RouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<RouteHolder> KEY = named("opentelemetry-vertx-route");
 
   @Nullable private String route;
+  @Nullable private RecordedExceptions recordedExceptions;
+  private int handlerDepth;
 
   private RouteHolder(@Nullable String route) {
     this.route = route;
@@ -38,6 +41,32 @@ public class RouteHolder implements ImplicitContextKeyed {
     RouteHolder holder = context.get(KEY);
     if (holder != null) {
       holder.route = route;
+    }
+  }
+
+  static void enterHandler(Context context) {
+    RouteHolder holder = context.get(KEY);
+    if (holder != null) {
+      holder.handlerDepth++;
+    }
+  }
+
+  static boolean recordException(Context context, Throwable error) {
+    RouteHolder holder = context.get(KEY);
+    if (holder == null) {
+      return true;
+    }
+    if (holder.recordedExceptions == null) {
+      holder.recordedExceptions = new RecordedExceptions();
+    }
+    return holder.recordedExceptions.add(error);
+  }
+
+  static void exitHandler(Context context) {
+    RouteHolder holder = context.get(KEY);
+    if (holder != null && --holder.handlerDepth == 0 && holder.recordedExceptions != null) {
+      holder.recordedExceptions.clear();
+      holder.recordedExceptions = null;
     }
   }
 

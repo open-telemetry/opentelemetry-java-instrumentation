@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.wicket.v8_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -36,8 +34,7 @@ class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Exception exception) {
-      Context context = Java8BytecodeBridge.currentContext();
-      ExceptionRecorder.recordServerException(context, WicketErrorUnwrapper.unwrap(exception));
+      WicketExceptionRecorder.record(Java8BytecodeBridge.currentContext(), exception);
     }
   }
 }

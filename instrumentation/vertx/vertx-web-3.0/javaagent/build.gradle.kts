@@ -71,6 +71,7 @@ tasks {
       systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
       filter {
         includeTestsMatching("*HttpServerTest.requestWithException")
+        includeTestsMatching("*HttpServerTest.recoveredException")
       }
     }
   }

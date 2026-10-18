@@ -1075,9 +1075,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     testing.waitAndAssertTraces(assertions);
 
-    if (endpoint == EXCEPTION
-        && emitExceptionAsLogs()
-        && options.hasExceptionOnServerSpan.test(endpoint)) {
+    if (endpoint == EXCEPTION && emitExceptionAsLogs() && options.hasExceptionLog.test(endpoint)) {
       assertExceptionLogs(options.expectedException, "http.server.request.exception");
     }
   }
@@ -1105,13 +1103,16 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               assertThat(testing.getExportedSpans())
                   .filteredOn(
                       span ->
-                          span.getKind() == SpanKind.SERVER
+                          options.exceptionLogSpan.test(span)
                               && span.getSpanContext().equals(logs.get(0).getSpanContext()))
-                  .singleElement()
-                  .satisfies(
-                      serverSpan ->
-                          assertThat(logs.get(0).getInstrumentationScopeInfo())
-                              .isEqualTo(serverSpan.getInstrumentationScopeInfo()));
+                  .hasSize(1);
+              if (options.exceptionLogInstrumentationName != null) {
+                assertThat(logs.get(0).getInstrumentationScopeInfo().getName())
+                    .isEqualTo(options.exceptionLogInstrumentationName);
+                assertThat(logs.get(0).getInstrumentationScopeInfo().getVersion()).isNotEmpty();
+                assertThat(logs.get(0).getInstrumentationScopeInfo().getSchemaUrl())
+                    .isEqualTo(SchemaUrls.V1_41_0);
+              }
               assertThat(logs.get(0))
                   .hasSeverity(Severity.ERROR)
                   .hasEventName(expectedEventName)

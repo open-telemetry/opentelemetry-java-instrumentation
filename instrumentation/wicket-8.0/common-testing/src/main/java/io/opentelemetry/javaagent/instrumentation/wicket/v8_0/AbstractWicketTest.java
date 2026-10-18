@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.awaitility.Awaitility;
 import org.jsoup.Jsoup;
@@ -25,6 +26,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
 
@@ -65,10 +68,14 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
                         .hasKind(SpanKind.SERVER)));
   }
 
-  @Test
-  void testException() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testException(boolean retryErrorPage) {
     AggregatedHttpResponse response =
-        client.get(h1Address.resolve("wicket-test/exception").toString()).aggregate().join();
+        client
+            .get(h1Address.resolve("wicket-test/exception?retry=" + retryErrorPage).toString())
+            .aggregate()
+            .join();
 
     assertThat(response.status().code()).isEqualTo(500);
 
@@ -106,9 +113,12 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
                                     serverSpan -> {
                                       assertThat(log.getSpanContext())
                                           .isEqualTo(serverSpan.getSpanContext());
-                                      assertThat(log.getInstrumentationScopeInfo())
-                                          .isEqualTo(serverSpan.getInstrumentationScopeInfo());
                                     });
+                            assertThat(log.getInstrumentationScopeInfo().getName())
+                                .isEqualTo("io.opentelemetry.wicket-8.0");
+                            assertThat(log.getInstrumentationScopeInfo().getVersion()).isNotEmpty();
+                            assertThat(log.getInstrumentationScopeInfo().getSchemaUrl())
+                                .isEqualTo(SchemaUrls.V1_41_0);
                           }));
     }
   }

@@ -5,15 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0.AbstractVertxWebServer.RECOVERED_EXCEPTION;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
@@ -38,6 +43,8 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
+    options.setExceptionLogInstrumentationName("io.opentelemetry.vertx-web-3.0");
+    options.setExceptionLogSpan(span -> span.getKind() == SpanKind.SERVER);
     options.setTestPathParam(true);
     options.setTestHttpBodyPipelining(true);
     // server spans are ended inside of the controller spans
@@ -56,6 +63,27 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
           }
           return super.expectedHttpRoute(endpoint, method);
         });
+  }
+
+  @Test
+  void recoveredException() {
+    AggregatedHttpResponse response =
+        client.execute(request(RECOVERED_EXCEPTION, "GET")).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(200);
+    IllegalStateException error = new IllegalStateException(RECOVERED_EXCEPTION.getBody());
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + getContextPath() + RECOVERED_EXCEPTION.getPath())
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasException(emitExceptionAsSpanEvents() ? error : null)));
+    if (emitExceptionAsLogs()) {
+      assertExceptionLogs(error, "http.server.request.exception");
+    }
   }
 
   @Test

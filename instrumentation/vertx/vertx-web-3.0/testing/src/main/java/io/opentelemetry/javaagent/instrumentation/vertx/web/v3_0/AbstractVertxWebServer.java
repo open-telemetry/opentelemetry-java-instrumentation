@@ -17,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
@@ -25,6 +26,8 @@ import io.vertx.ext.web.RoutingContext;
 
 public abstract class AbstractVertxWebServer extends AbstractVerticle {
   static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
+  static final ServerEndpoint RECOVERED_EXCEPTION =
+      new ServerEndpoint("RECOVERED_EXCEPTION", "recovered-exception", 200, "recovered", false);
 
   abstract void end(HttpServerResponse response, String message);
 
@@ -129,6 +132,17 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                     () -> {
                       throw new IllegalStateException(EXCEPTION.getBody());
                     }));
+    router
+        .route(RECOVERED_EXCEPTION.getPath())
+        .handler(
+            ctx -> {
+              throw new IllegalStateException(RECOVERED_EXCEPTION.getBody());
+            })
+        .failureHandler(
+            ctx ->
+                end(
+                    ctx.response().setStatusCode(RECOVERED_EXCEPTION.getStatus()),
+                    RECOVERED_EXCEPTION.getBody()));
     router
         .route("/path/:id/param")
         .handler(

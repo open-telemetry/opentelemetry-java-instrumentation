@@ -6,16 +6,29 @@
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
+import io.opentelemetry.instrumentation.api.internal.RecordedExceptions;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import io.opentelemetry.semconv.SchemaUrls;
 import ratpack.handling.Context;
+import ratpack.http.Request;
 
 public class RatpackSingletons {
+
+  private static final Logger logger =
+      ExceptionRecorder.createLogger(
+          GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4", SchemaUrls.V1_41_0);
+
+  private static final VirtualField<Request, RecordedExceptions> RECORDED_EXCEPTIONS =
+      VirtualField.find(Request.class, RecordedExceptions.class);
 
   private static final Instrumenter<String, Void> instrumenter =
       Instrumenter.<String, Void>builder(
@@ -49,10 +62,27 @@ public class RatpackSingletons {
     return matchedRoute;
   }
 
-  public static void onError(io.opentelemetry.context.Context context, Throwable error) {
+  public static void onError(
+      Context ctx, io.opentelemetry.context.Context context, Throwable error) {
+    error = ErrorCauseExtractor.getDefault().extract(error);
     Span span = Span.fromContext(context);
     span.setStatus(StatusCode.ERROR);
-    ExceptionRecorder.recordServerException(context, error);
+    Request request = ctx.getRequest();
+    RecordedExceptions recorded = RECORDED_EXCEPTIONS.get(request);
+    if (recorded == null) {
+      recorded = new RecordedExceptions();
+      RECORDED_EXCEPTIONS.set(request, recorded);
+      RecordedExceptions toClear = recorded;
+      ctx.onClose(
+          outcome -> {
+            toClear.close();
+            RECORDED_EXCEPTIONS.set(outcome.getRequest(), null);
+          });
+    }
+    if (!recorded.add(error)) {
+      return;
+    }
+    ExceptionRecorder.recordServerException(context, span, error, logger);
   }
 
   private RatpackSingletons() {}
