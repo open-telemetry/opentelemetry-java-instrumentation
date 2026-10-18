@@ -43,6 +43,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
@@ -88,13 +89,16 @@ public final class AwsSdkInstrumenterFactory {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
   }
 
-  private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
+  private List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
       boolean includeExperimental) {
+    AttributesExtractor<Request<?>, Response<?>> rpcAttributesExtractor =
+        RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
+    ((OpenTelemetryConfigurable) rpcAttributesExtractor).internalInitialize(openTelemetry);
     List<AttributesExtractor<Request<?>, Response<?>>> extractors =
         new ArrayList<>(
             asList(
                 HttpClientAttributesExtractor.create(new AwsSdkHttpAttributesGetter()),
-                RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter()),
+                rpcAttributesExtractor,
                 new SnsAttributesExtractor(),
                 new AwsSdkAttributesExtractor()));
     if (includeExperimental) {

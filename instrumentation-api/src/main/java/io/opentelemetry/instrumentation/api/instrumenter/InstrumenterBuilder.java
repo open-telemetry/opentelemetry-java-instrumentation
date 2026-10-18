@@ -32,7 +32,6 @@ import io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtra
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
-import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -106,7 +105,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.openTelemetry = openTelemetry;
     this.instrumentationName = instrumentationName;
     this.spanNameExtractor = spanNameExtractor;
-    initializeOpenTelemetry(spanNameExtractor);
   }
 
   /**
@@ -149,10 +147,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
-    AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor =
-        requireNonNull(attributesExtractor, "attributesExtractor");
-    initializeOpenTelemetry(extractor);
-    this.attributesExtractors.add(extractor);
+    this.attributesExtractors.add(requireNonNull(attributesExtractor, "attributesExtractor"));
     return this;
   }
 
@@ -180,10 +175,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super REQUEST> contextCustomizer) {
-    ContextCustomizer<? super REQUEST> customizer =
-        requireNonNull(contextCustomizer, "contextCustomizer");
-    initializeOpenTelemetry(customizer);
-    contextCustomizers.add(customizer);
+    contextCustomizers.add(requireNonNull(contextCustomizer, "contextCustomizer"));
     return this;
   }
 
@@ -203,9 +195,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addOperationMetrics(OperationMetrics factory) {
-    OperationMetrics metrics = requireNonNull(factory, "operationMetrics");
-    initializeOpenTelemetry(metrics);
-    operationMetrics.add(metrics);
+    operationMetrics.add(requireNonNull(factory, "operationMetrics"));
     return this;
   }
 
@@ -320,7 +310,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
 
     applyCustomizers(this);
-    initializeOpenTelemetry(spanNameExtractor);
 
     if (instrumentationVersion == null) {
       instrumentationVersion = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
@@ -466,12 +455,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         .collect(toSet());
   }
 
-  private void initializeOpenTelemetry(Object component) {
-    if (component instanceof OpenTelemetryConfigurable) {
-      ((OpenTelemetryConfigurable) component).internalInitialize(openTelemetry);
-    }
-  }
-
   private void propagateOperationListenersToOnEnd() {
     propagateOperationListenersToOnEnd = true;
   }
@@ -524,7 +507,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
                 UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer) {
               builder.spanNameExtractor =
                   spanNameExtractorCustomizer.apply(builder.spanNameExtractor);
-              builder.initializeOpenTelemetry(builder.spanNameExtractor);
             }
 
             @Override

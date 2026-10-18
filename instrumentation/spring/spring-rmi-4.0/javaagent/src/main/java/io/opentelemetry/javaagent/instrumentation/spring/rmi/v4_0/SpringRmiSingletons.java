@@ -14,9 +14,12 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.client.ClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server.ServerAttributesGetter;
 import java.lang.reflect.Method;
@@ -31,13 +34,15 @@ public class SpringRmiSingletons {
   private static Instrumenter<Method, Void> buildClientInstrumenter() {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     ClientAttributesGetter rpcAttributesGetter = new ClientAttributesGetter();
+    SpanNameExtractor<Method> spanNameExtractor = RpcSpanNameExtractor.create(rpcAttributesGetter);
+    ((OpenTelemetryConfigurable) spanNameExtractor).internalInitialize(openTelemetry);
+    AttributesExtractor<Method, Void> rpcAttributesExtractor =
+        RpcClientAttributesExtractor.create(rpcAttributesGetter);
+    ((OpenTelemetryConfigurable) rpcAttributesExtractor).internalInitialize(openTelemetry);
 
     InstrumenterBuilder<Method, Void> builder =
-        Instrumenter.<Method, Void>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter));
+        Instrumenter.<Method, Void>builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractor(rpcAttributesExtractor);
     setRpcClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
@@ -45,13 +50,17 @@ public class SpringRmiSingletons {
   private static Instrumenter<ClassAndMethod, Void> buildServerInstrumenter() {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     ServerAttributesGetter rpcAttributesGetter = new ServerAttributesGetter();
+    SpanNameExtractor<ClassAndMethod> spanNameExtractor =
+        RpcSpanNameExtractor.create(rpcAttributesGetter);
+    ((OpenTelemetryConfigurable) spanNameExtractor).internalInitialize(openTelemetry);
+    AttributesExtractor<ClassAndMethod, Void> rpcAttributesExtractor =
+        RpcServerAttributesExtractor.create(rpcAttributesGetter);
+    ((OpenTelemetryConfigurable) rpcAttributesExtractor).internalInitialize(openTelemetry);
 
     InstrumenterBuilder<ClassAndMethod, Void> builder =
         Instrumenter.<ClassAndMethod, Void>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractor(rpcAttributesExtractor);
     setRpcServerExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }

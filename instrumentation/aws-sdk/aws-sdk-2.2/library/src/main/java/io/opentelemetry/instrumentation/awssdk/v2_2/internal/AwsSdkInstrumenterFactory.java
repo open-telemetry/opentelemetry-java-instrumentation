@@ -52,6 +52,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -185,6 +186,7 @@ public final class AwsSdkInstrumenterFactory {
     this.openTelemetry = openTelemetry;
     AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
         RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
+    ((OpenTelemetryConfigurable) rpcAttributesExtractor).internalInitialize(openTelemetry);
     defaultAttributesExtractors =
         asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
     extendedAttributesExtractors =
