@@ -132,7 +132,7 @@ class InstrumentationWithSpanAspectTest {
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 unproxiedTesterClassName + ".testWithSpanWithException"),
-                             equalTo(ERROR_TYPE, Exception.class.getName()))));
+                            equalTo(ERROR_TYPE, Exception.class.getName()))));
   }
 
   @Test
@@ -464,7 +464,7 @@ class InstrumentationWithSpanAspectTest {
                               equalTo(
                                   CODE_FUNCTION_NAME,
                                   unproxiedTesterClassName + ".testAsyncCompletableFuture"),
-                             equalTo(ERROR_TYPE, Exception.class.getName()))));
+                              equalTo(ERROR_TYPE, Exception.class.getName()))));
     }
 
     @Test
