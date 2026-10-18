@@ -27,20 +27,17 @@ dependencies {
   latestDepTestLibrary("com.ning:async-http-client:1.8.+") // see async-http-client-1.9 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
         register("PreviewSemconv") {
           telemetryConfig("otel.semconv-stability.preview", "service.peer")
         }

@@ -39,16 +39,13 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-docgen:3.+") // see vertx-http-client-4.0 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
         register("PreviewSemconv") {
           telemetryConfig("otel.semconv-stability.preview", "service.peer")
         }

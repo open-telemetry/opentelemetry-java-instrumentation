@@ -28,20 +28,17 @@ dependencies {
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-2.0:javaagent"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
         register("PreviewSemconv") {
           telemetryConfig("otel.semconv-stability.preview", "service.peer")
         }
