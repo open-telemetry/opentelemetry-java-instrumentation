@@ -29,7 +29,7 @@ import org.bson.codecs.EncoderContext;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
-class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent, Void> {
+class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent, Integer> {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String MONGODB = "mongodb";
@@ -140,14 +140,14 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   @Override
-  public String getNetworkPeerAddress(CommandStartedEvent event, @Nullable Void response) {
+  public String getNetworkPeerAddress(CommandStartedEvent event, @Nullable Integer response) {
     MongoNetworkPeer peer = getNetworkPeer(event);
     return peer == null ? null : peer.getAddress();
   }
 
   @Nullable
   @Override
-  public Integer getNetworkPeerPort(CommandStartedEvent event, @Nullable Void response) {
+  public Integer getNetworkPeerPort(CommandStartedEvent event, @Nullable Integer response) {
     MongoNetworkPeer peer = getNetworkPeer(event);
     return peer == null ? null : peer.getPort();
   }
@@ -155,7 +155,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      CommandStartedEvent event, @Nullable Void unused) {
+      CommandStartedEvent event, @Nullable Integer unused) {
     MongoNetworkPeer peer = getNetworkPeer(event);
     return peer == null ? null : peer.getInetSocketAddress();
   }
@@ -172,7 +172,10 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getErrorType(
-      CommandStartedEvent request, @Nullable Void response, @Nullable Throwable error) {
+      CommandStartedEvent request, @Nullable Integer response, @Nullable Throwable error) {
+    if (response != null) {
+      return response.toString();
+    }
     if (error instanceof MongoException) {
       // MongoException.getCode() only returns a real server error code (a positive value) when the
       // exception came from a server command error. For client-side exceptions the driver uses

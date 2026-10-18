@@ -78,6 +78,15 @@ testing {
 }
 
 tasks {
+  val dynamoDbErrorModes = listOf("v0", "new", "dual").map { mode ->
+    register<Test>("testDynamoDbErrors${mode.replaceFirstChar { it.uppercase() }}") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter.includeTestsMatching("*DynamoDbErrorsTest")
+      systemProperty("test.dynamodb.rpc-semconv", mode)
+    }
+  }
+
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
@@ -93,6 +102,7 @@ tasks {
     dependsOn(
       testing.suites,
       testExceptionSignalLogs,
+      dynamoDbErrorModes,
     )
   }
 }

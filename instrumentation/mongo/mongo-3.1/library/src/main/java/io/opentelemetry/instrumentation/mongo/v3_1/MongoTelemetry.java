@@ -18,7 +18,7 @@ import java.util.List;
 // TODO this class is used for all Mongo versions. Extract to mongo-common module
 /** Entrypoint to OpenTelemetry instrumentation of the MongoDB client. */
 public final class MongoTelemetry {
-  private final Instrumenter<CommandStartedEvent, Void> instrumenter;
+  private final Instrumenter<CommandStartedEvent, Integer> instrumenter;
 
   /** Returns a new {@link MongoTelemetry} configured with the given {@link OpenTelemetry}. */
   public static MongoTelemetry create(OpenTelemetry openTelemetry) {

@@ -11,6 +11,11 @@ muzzle {
   }
 }
 
+val protocolStatusTestRuntimeClasspath by configurations.creating {
+  isCanBeConsumed = false
+  extendsFrom(configurations.testRuntimeClasspath.get())
+}
+
 dependencies {
   library("net.spy:spymemcached:2.12.0")
 
@@ -18,6 +23,7 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation("com.google.guava:guava")
+  add(protocolStatusTestRuntimeClasspath.name, "net.spy:spymemcached:2.12.3")
 }
 
 tasks {
@@ -33,7 +39,22 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
   }
 
+  val testProtocolStatus = register<Test>("testProtocolStatus") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath =
+      files(sourceSets.main.get().output, sourceSets.test.get().output, protocolStatusTestRuntimeClasspath)
+    systemProperty("testLatestDeps", true)
+    filter {
+      includeTestsMatching("*SpymemcachedTest.storeRejectedAsTooLarge")
+      includeTestsMatching("*SpymemcachedTest.conditionalOutcomesAreSuccessful")
+      includeTestsMatching("*SpymemcachedTest.set")
+      includeTestsMatching("*SpymemcachedTest.setCancel")
+      includeTestsMatching("*SpymemcachedTest.casNotFound")
+      includeTestsMatching("*SpymemcachedTest.getMiss")
+    }
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testProtocolStatus)
   }
 }

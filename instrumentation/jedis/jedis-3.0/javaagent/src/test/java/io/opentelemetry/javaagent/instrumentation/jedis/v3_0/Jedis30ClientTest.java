@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -23,11 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractLongAssert;
@@ -37,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.HostAndPort;
@@ -44,6 +48,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis30ClientTest {
@@ -80,6 +85,94 @@ class Jedis30ClientTest {
     jedis.select(0);
     jedis.flushAll();
     testing.clearData();
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "sync, 1, true",
+    "sync, 2, true",
+    "syncAndReturnAll, 1, true",
+    "syncAndReturnAll, 2, true",
+    "exec, 1, true",
+    "exec, 2, true",
+    "sync, 2, false",
+    "syncAndReturnAll, 2, false",
+    "exec, 2, false"
+  })
+  void aggregateErrors(String terminal, int count, boolean failed) {
+    jedis.set("aggregate", "value");
+    testing.clearData();
+    String key = failed ? "aggregate" : "missing";
+    if (terminal.equals("exec")) {
+      Transaction transaction = jedis.multi();
+      for (int i = 0; i < count; i++) {
+        transaction.llen(key);
+      }
+      assertAggregateReplies(transaction.exec(), failed, count);
+    } else {
+      Pipeline pipeline = jedis.pipelined();
+      for (int i = 0; i < count; i++) {
+        pipeline.llen(key);
+      }
+      if (terminal.equals("sync")) {
+        pipeline.sync();
+      } else {
+        assertAggregateReplies(pipeline.syncAndReturnAll(), failed, count);
+      }
+    }
+    String operation =
+        count == 1 ? "LLEN" : (terminal.equals("exec") ? "MULTI" : "PIPELINE") + " LLEN";
+    String query = "LLEN " + key + (count == 1 ? "" : "; LLEN " + key);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(operation + " " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatusSatisfying(
+                            status -> status.hasCode(failed ? StatusCode.ERROR : StatusCode.UNSET))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, query),
+                            equalTo(DB_OPERATION_NAME, operation),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, count == 1 ? null : (long) count),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(ERROR_TYPE, failed ? "WRONGTYPE" : null))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-3.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(DB_SYSTEM_NAME, REDIS),
+                                        equalTo(DB_OPERATION_NAME, operation),
+                                        equalTo(DB_NAMESPACE, "0"),
+                                        equalTo(SERVER_ADDRESS, host),
+                                        equalTo(SERVER_PORT, port),
+                                        equalTo(NETWORK_PEER_PORT, port),
+                                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                                        equalTo(ERROR_TYPE, failed ? "WRONGTYPE" : null)))));
+  }
+
+  private static void assertAggregateReplies(List<Object> replies, boolean failed, int count) {
+    assertThat(replies).hasSize(count);
+    if (failed) {
+      assertThat(replies)
+          .allSatisfy(reply -> assertThat(reply).isInstanceOf(JedisDataException.class));
+    } else {
+      assertThat(replies).containsOnly(0L);
+    }
   }
 
   @Test

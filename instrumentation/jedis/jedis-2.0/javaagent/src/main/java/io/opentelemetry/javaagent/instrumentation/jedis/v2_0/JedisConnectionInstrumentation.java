@@ -19,7 +19,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
+import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -36,6 +38,9 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        namedOneOf("getAll", "getObjectMultiBulkReply"),
+        getClass().getName() + "$BatchResponseAdvice");
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$CaptureTargetAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("setHost", "setPort").and(takesArguments(1)),
@@ -64,6 +69,15 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
                         "redis.clients.jedis.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         getClass().getName() + "$SendCommandWithArgsAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class BatchResponseAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Connection connection, @Advice.Return @Nullable List<?> replies) {
+      JedisBatchResponse.capture(connection, replies);
+    }
   }
 
   @SuppressWarnings("unused")

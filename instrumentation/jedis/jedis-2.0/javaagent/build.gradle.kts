@@ -45,6 +45,7 @@ testing {
         implementation(project())
         implementation(project(":javaagent-extension-api"))
         implementation(project(":instrumentation-api-incubator"))
+        implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
         implementation("redis.clients:jedis:2.0.0")
       }
     }

@@ -1,0 +1,4 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Parallel Configuration Cache is an incubating feature.
+Calculating task graph as no cached configuration is available for tasks: :instrumentation:jedis:jedis-2.0:javaagent:test --tests *JedisClientTest :instrumentation:jedis:jedis-3.0:javaagent:test --tests *Jedis30ClientTest :instrumentation:jedis:jedis-4.0:javaagent:test --tests *Jedis40ClientTest

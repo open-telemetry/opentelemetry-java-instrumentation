@@ -9,14 +9,18 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import org.influxdb.dto.QueryResult;
 
 public class InfluxDbObjectWrapper {
 
   @SuppressWarnings("unchecked") // we check types before casting
-  public static Object wrap(Object object, Context parentContext) {
+  public static Object wrap(Object object, Context parentContext, InfluxDbQueryState state) {
     if (object instanceof Consumer) {
       return (Consumer<Object>)
           o -> {
+            if (o instanceof QueryResult) {
+              state.observe((QueryResult) o);
+            }
             try (Scope ignore = parentContext.makeCurrent()) {
               ((Consumer<Object>) object).accept(o);
             }
@@ -24,6 +28,9 @@ public class InfluxDbObjectWrapper {
     } else if (object instanceof BiConsumer) {
       return (BiConsumer<Object, Object>)
           (o1, o2) -> {
+            if (o2 instanceof QueryResult) {
+              state.observe((QueryResult) o2);
+            }
             try (Scope ignore = parentContext.makeCurrent()) {
               ((BiConsumer<Object, Object>) object).accept(o1, o2);
             }
