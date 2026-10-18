@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -33,6 +34,9 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   private static final ServerEndpoint RESPONSE_EXCEPTION_WITH_CAUSE =
       new ServerEndpoint(
           "RESPONSE_EXCEPTION_WITH_CAUSE", "response-exception-with-cause", 200, "", false);
+  private static final ServerEndpoint WRAPPED_RESPONSE_EXCEPTION =
+      new ServerEndpoint(
+          "WRAPPED_RESPONSE_EXCEPTION", "wrapped-response-exception", 500, "", false);
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -45,6 +49,11 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
           throw HttpResponseException.of(HttpResponse.of(HttpStatus.OK));
         });
     sb.service(
+        WRAPPED_RESPONSE_EXCEPTION.getPath(),
+        (ctx, req) -> {
+          throw new CompletionException(HttpResponseException.of(HttpResponse.of(HttpStatus.OK)));
+        });
+    sb.service(
         RESPONSE_EXCEPTION_WITH_CAUSE.getPath(),
         (ctx, req) -> {
           HttpResponseException response = HttpResponseException.of(HttpResponse.of(HttpStatus.OK));
@@ -52,6 +61,29 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
           throw response;
         });
     return sb;
+  }
+
+  @Test
+  void wrappedResponseExceptionIsReported() {
+    Assumptions.assumeTrue(
+        getClass() == ArmeriaHttpServerTest.class,
+        "The HTTP/2 fallback uses the library instrumenter instead of ServerDecorator");
+    AggregatedHttpResponse response =
+        client.execute(request(WRAPPED_RESPONSE_EXCEPTION, "GET")).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(500);
+    HttpResponseException error = HttpResponseException.of(HttpResponse.of(HttpStatus.OK));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(emitExceptionAsSpanEvents() ? error : null)));
+    if (emitExceptionAsLogs()) {
+      assertExceptionLogs(error, "http.server.request.exception");
+    }
   }
 
   @Test

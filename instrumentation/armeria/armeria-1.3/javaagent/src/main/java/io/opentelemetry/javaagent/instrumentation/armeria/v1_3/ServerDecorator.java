@@ -16,7 +16,6 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
@@ -59,17 +58,17 @@ class ServerDecorator extends SimpleDecoratingHttpService {
     try {
       return unwrap().serve(ctx, req);
     } catch (Throwable t) {
-      Throwable error = ErrorCauseExtractor.getDefault().extract(t);
+      Throwable error = t;
       // Armeria uses this exception to return a response, including successful responses.
-      if (error instanceof HttpResponseException) {
-        if (error.getCause() == null) {
+      if (t instanceof HttpResponseException) {
+        if (t.getCause() == null) {
           throw t;
         }
-        error = ErrorCauseExtractor.getDefault().extract(error.getCause());
+        error = t.getCause();
       }
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      HttpServerExceptionRecorder.recordException(otelContext, span, error, cause -> cause, logger);
+      HttpServerExceptionRecorder.recordException(otelContext, span, error, logger);
 
       throw t;
     }
