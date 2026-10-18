@@ -290,6 +290,8 @@
   `storeOpenTelemetryContext(reactorContext, Context.root())` with
   `withoutSubscriptionContextCapture(reactorContext)` when using it to leave signal-time contexts
   untouched without capturing the subscription context.
+- In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency
+  helpers are private.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
   `create(Meter, String, Attributes)` overloads. Use the overloads accepting
   `OpenTelemetry`, the instrumentation name and the pool name instead.

@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -36,6 +38,14 @@ if (!otelProps.testLatestDeps) {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+      }
+    }
+
     register<JvmTestSuite>("testSecretsManager") {
       dependencies {
         implementation(project())
@@ -52,13 +62,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-  }
-
   check {
-    dependsOn(testing.suites, testExceptionSignalLogs)
+    dependsOn(testing.suites)
   }
 }
