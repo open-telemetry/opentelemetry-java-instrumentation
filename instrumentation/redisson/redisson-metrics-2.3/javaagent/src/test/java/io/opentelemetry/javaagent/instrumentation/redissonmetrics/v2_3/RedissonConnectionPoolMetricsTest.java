@@ -10,7 +10,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.javaagent.instrumentation.redissonmetrics.AbstractRedissonConnectionPoolMetricsTest;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -80,7 +82,7 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
   void shouldReadPendingRequestsAfterListenerRemoval() throws ReflectiveOperationException {
     AsyncSemaphore semaphore = new AsyncSemaphore(0);
     Supplier<Integer> pendingRequests =
-        requireNonNull(RedissonConnectionPoolAccessor.pendingRequestsSupplier(semaphore));
+        requireNonNull(connectionPoolSupplier("pendingRequestsSupplier", semaphore));
     Runnable listener = () -> {};
 
     assertThat(pendingRequests.get()).isZero();
@@ -97,7 +99,7 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
       AsyncSemaphore semaphore, String regularPool, String subscriptionPool)
       throws ReflectiveOperationException {
     Supplier<Integer> available =
-        requireNonNull(RedissonConnectionPoolAccessor.availableConnectionsSupplier(semaphore));
+        requireNonNull(connectionPoolSupplier("availableConnectionsSupplier", semaphore));
     int permits = requireNonNull(available.get());
 
     for (int i = 0; i < permits; i++) {
@@ -124,6 +126,28 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
     Field field = ClientConnectionsEntry.class.getDeclaredField("freeConnectionsCounter");
     field.setAccessible(true);
     return field.get(entry);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Supplier<Integer> connectionPoolSupplier(String methodName, Object counter)
+      throws ReflectiveOperationException {
+    Class<?> registry =
+        AgentClassLoaderAccess.loadClass(
+            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+    ClassLoader moduleClassLoader =
+        (ClassLoader)
+            registry
+                .getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class)
+                .invoke(
+                    null,
+                    "io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3.RedissonMetricsInstrumentationModule",
+                    ClientConnectionsEntry.class.getClassLoader());
+    Class<?> accessor =
+        moduleClassLoader.loadClass(
+            "io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3.RedissonConnectionPoolAccessor");
+    Method method = accessor.getDeclaredMethod(methodName, Object.class);
+    method.setAccessible(true);
+    return (Supplier<Integer>) method.invoke(null, counter);
   }
 
   private static void acquire(AsyncSemaphore semaphore) {
