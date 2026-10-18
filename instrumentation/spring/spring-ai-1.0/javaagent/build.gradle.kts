@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -24,13 +27,20 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 
-  // current tests don't build with spring-ai 2
+  // The default suite uses the Spring AI 1.x OpenAI client API.
   latestDepTestLibrary("org.springframework.ai:spring-ai-model:1.+") // documented limitation
   latestDepTestLibrary("org.springframework.ai:spring-ai-openai:1.+") // documented limitation
 }
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("CaptureMessageContent") {
+          telemetryConfig("otel.instrumentation.genai.capture-message-content", "true")
+        }
+      }
+    }
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())
@@ -39,51 +49,29 @@ testing {
     }
     register<JvmTestSuite>("version2Test") {
       dependencies {
-        val springAiVersion = if (otelProps.testLatestDeps) "2.+" else "2.0.0"
+        val springAiVersion = baseVersion("2.0.0").orLatest("2.+")
         implementation("org.springframework.ai:spring-ai-model:$springAiVersion")
         implementation("org.springframework.ai:spring-ai-openai:$springAiVersion")
+        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+      }
+      executions {
+        register("CaptureMessageContent") {
+          telemetryConfig("otel.instrumentation.genai.capture-message-content", "true")
+        }
       }
     }
   }
 }
 
-// version2Test also runs the shared test sources, excluding 1.x-only files
 sourceSets.named("version2Test") {
   java.srcDir("src/test/java")
-  // ChatModelTest uses ContextPropagationOperator and TestChatModel.getDefaultOptions() (removed in 2.x)
-  // OpenAiChatModelTest and TestChatModel use APIs removed in spring-ai 2.x
-  java.exclude(
-    "**/ChatModelTest.java",
-    "**/OpenAiChatModelTest.java",
-    "**/app/TestChatModel.java",
-  )
+  // OpenAI client construction uses different APIs in Spring AI 1.x and 2.x.
+  java.exclude("**/OpenAiChatModelTest.java")
   resources.srcDir("src/test/resources")
 }
 
 tasks {
-  named<Test>("version2Test") {
-    filter {
-      excludeTestsMatching("OpenAiChatModelTest")
-    }
-  }
-
-  val testCaptureMessageContent = register<Test>("testCaptureMessageContent") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    systemProperty("otel.instrumentation.genai.capture-message-content", true)
-    systemProperty("metadataConfig", "otel.instrumentation.genai.capture-message-content=true")
-  }
-
-  val version2TestCaptureMessageContent = register<Test>("version2TestCaptureMessageContent") {
-    testClassesDirs = sourceSets.named("version2Test").get().output.classesDirs
-    classpath = sourceSets.named("version2Test").get().runtimeClasspath
-
-    systemProperty("otel.instrumentation.genai.capture-message-content", true)
-    systemProperty("metadataConfig", "otel.instrumentation.genai.capture-message-content=true")
-  }
-
   check {
-    dependsOn(testing.suites, testCaptureMessageContent, version2TestCaptureMessageContent)
+    dependsOn(testing.suites)
   }
 }

@@ -107,6 +107,29 @@ class ChatModelTest {
     assertMessageEvents(spanContext);
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void usesPromptOptionsWhenDefaultOptionsAreAbsent(boolean streaming) {
+    TestChatModel modelWithoutDefaults = new TestChatModel();
+    Prompt prompt = new Prompt(PROMPT, defaultOptions());
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          if (streaming) {
+            modelWithoutDefaults.stream(prompt).blockLast();
+          } else {
+            modelWithoutDefaults.call(prompt);
+          }
+        });
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertCurrentSpanContext(modelWithoutDefaults.getLastSpanContext(), spanContext);
+    assertTraces("test", streaming);
+    assertMetrics();
+    assertMessageEvents(spanContext);
+  }
+
   @Test
   void nestedCallEndsOneSpan() {
     chatModel.setCallDelegate(new TestChatModel(defaultOptions()));
