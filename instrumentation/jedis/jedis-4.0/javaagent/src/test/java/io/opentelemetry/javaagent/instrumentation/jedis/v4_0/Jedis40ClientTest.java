@@ -601,6 +601,7 @@ class Jedis40ClientTest {
                             })));
   }
 
+  // Verify that instrumentation does not consume or alter application-visible batch results.
   private static void assertAggregateReplies(List<Object> replies, int failedCount, int count) {
     assertThat(replies).hasSize(count);
     assertThat(replies.subList(0, failedCount))
