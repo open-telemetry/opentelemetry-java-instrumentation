@@ -9,7 +9,10 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.ExperimentalTestHelper.EXPERIMENTAL_TELEMETRY;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -63,9 +66,6 @@ import org.testcontainers.couchbase.CouchbaseService;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient32Test {
-  private static final boolean EXPERIMENTAL_TELEMETRY =
-      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
-
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -241,6 +241,7 @@ class CouchbaseClient32Test {
       SpanDataAssert span, String operation, String documentId, StatusData status) {
     span.hasKind(CLIENT)
         .hasName(operation + " _default")
+        .satisfies(hasScopeName("io.opentelemetry.couchbase-3.2"))
         .hasStatus(status)
         .hasAttributesSatisfyingExactly(
             equalTo(DB_SYSTEM_NAME, "couchbase"),
@@ -253,9 +254,5 @@ class CouchbaseClient32Test {
             equalTo(stringKey("db.couchbase.service"), experimental("kv")),
             equalTo(SERVER_ADDRESS, seedAddress),
             equalTo(SERVER_PORT, (long) seedPort));
-  }
-
-  private static <T> T experimental(T value) {
-    return EXPERIMENTAL_TELEMETRY ? value : null;
   }
 }

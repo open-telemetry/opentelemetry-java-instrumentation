@@ -120,6 +120,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
               "http://localhost:" + port + "/api/firstModule/unit/unitOne",
               "localhost",
               port,
+              testing.expectedPeerService(),
               trace.getSpan(1));
           assertions.add(
               span ->

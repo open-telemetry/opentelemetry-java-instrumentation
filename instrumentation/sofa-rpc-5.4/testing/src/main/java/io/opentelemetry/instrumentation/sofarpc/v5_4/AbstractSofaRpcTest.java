@@ -66,8 +66,6 @@ public abstract class AbstractSofaRpcTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract boolean hasPeerService();
-
   protected List<Filter> clientFilters() {
     return emptyList();
   }
@@ -194,9 +192,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -370,9 +366,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -576,9 +570,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"
                                         : "throwException"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -765,9 +757,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"
                                         : "throwBusinessException"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -857,9 +847,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"
                                         : "timeout"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
