@@ -17,13 +17,16 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUER
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -227,30 +230,22 @@ class InfluxDbQueryLifecycleTest {
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
-                            point -> {
-                              point.hasCount(1);
-                              point.satisfies(
-                                  pointData -> {
-                                    if (errorType == null) {
-                                      assertThat(pointData.getAttributes().asMap())
-                                          .containsOnlyKeys(
-                                              DB_SYSTEM_NAME,
-                                              DB_NAMESPACE,
-                                              DB_QUERY_SUMMARY,
-                                              SERVER_ADDRESS,
-                                              SERVER_PORT);
-                                    } else {
-                                      assertThat(pointData.getAttributes().asMap())
-                                          .containsOnlyKeys(
-                                              DB_SYSTEM_NAME,
-                                              DB_NAMESPACE,
-                                              DB_QUERY_SUMMARY,
-                                              SERVER_ADDRESS,
-                                              SERVER_PORT,
-                                              ERROR_TYPE);
-                                    }
-                                  });
-                            })));
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertThat(attributes.asMap())
+                                                .containsOnlyKeys(
+                                                    Stream.of(
+                                                            DB_SYSTEM_NAME,
+                                                            DB_NAMESPACE,
+                                                            DB_QUERY_SUMMARY,
+                                                            SERVER_ADDRESS,
+                                                            SERVER_PORT,
+                                                            errorType == null ? null : ERROR_TYPE)
+                                                        .filter(Objects::nonNull)
+                                                        .toArray(AttributeKey<?>[]::new))))));
   }
 
   private static void assertNoDuration() {
