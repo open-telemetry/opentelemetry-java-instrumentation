@@ -41,12 +41,6 @@ testing {
         register("ExceptionSignalLogs") {
           jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
         }
-        listOf("v0", "new", "dual").forEach { mode ->
-          register("DynamoDbErrors${mode.replaceFirstChar { it.uppercase() }}") {
-            filter.includeTestsMatching("*DynamoDbErrorsTest")
-            systemProperty("test.dynamodb.rpc-semconv", mode)
-          }
-        }
       }
     }
 

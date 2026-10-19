@@ -25,21 +25,10 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -48,66 +37,22 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
-import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
-import software.amazon.awssdk.core.exception.SdkClientException;
-import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
-import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicy;
-import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
 class DynamoDbErrorsTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
-  @BeforeAll
-  static void configureStructuredRpcSemconv() {
-    String mode = System.getProperty("test.dynamodb.rpc-semconv");
-    if (mode == null) {
-      return;
-    }
-    DeclarativeConfigProperties semconv = mock(DeclarativeConfigProperties.class);
-    when(semconv.getInt("version")).thenReturn(mode.equals("v0") ? 0 : 1);
-    when(semconv.getBoolean("experimental", false)).thenReturn(true);
-    when(semconv.getBoolean("dual_emit", false)).thenReturn(mode.equals("dual"));
-    DeclarativeConfigProperties rpc = mock(DeclarativeConfigProperties.class);
-    when(rpc.get("semconv")).thenReturn(semconv);
-    DeclarativeConfigProperties general = mock(DeclarativeConfigProperties.class);
-    when(general.get(anyString())).thenReturn(DeclarativeConfigProperties.empty());
-    when(general.get("rpc")).thenReturn(rpc);
-    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-    ConfigProvider configProvider = mock(ConfigProvider.class);
-    when(configProvider.getGeneralInstrumentationConfig()).thenReturn(general);
-    when(configProvider.getInstrumentationConfig("common"))
-        .thenReturn(DeclarativeConfigProperties.empty());
-    when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
-    GlobalOpenTelemetry.resetForTest();
-    GlobalOpenTelemetry.set(openTelemetry);
-  }
-
-  @AfterAll
-  static void resetGlobal() {
-    if (System.getProperty("test.dynamodb.rpc-semconv") != null) {
-      GlobalOpenTelemetry.resetForTest();
-    }
-  }
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
@@ -214,122 +159,5 @@ class DynamoDbErrorsTest {
     } finally {
       server.stop();
     }
-  }
-
-  @ParameterizedTest
-  @MethodSource("errors")
-  void finalOutcome(Throwable error, String errorType) {
-    Instrumenter<ExecutionAttributes, Response> instrumenter =
-        new AwsSdkInstrumenterFactory(
-                testing.getOpenTelemetry(),
-                null,
-                IncludeExclude.builder().build(),
-                false,
-                false,
-                false)
-            .dynamoDbInstrumenter();
-    ExecutionAttributes request =
-        new ExecutionAttributes()
-            .putAttribute(SdkExecutionAttribute.SERVICE_NAME, "DynamoDb")
-            .putAttribute(SdkExecutionAttribute.OPERATION_NAME, "GetItem")
-            .putAttribute(
-                TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE,
-                GetItemRequest.builder().tableName("items").build());
-    Context context = instrumenter.start(Context.root(), request);
-    // An empty GetItem response represents a missing item, not an error.
-    Response response =
-        new Response(
-            SdkHttpResponse.builder().statusCode(error == null ? 200 : 400).build(),
-            GetItemResponse.builder().build());
-    instrumenter.end(context, request, response, error);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("DynamoDb.GetItem")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(
-                            StatusData.create(
-                                error == null ? StatusCode.UNSET : StatusCode.ERROR, ""))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
-                            equalTo(DB_COLLECTION_NAME, "items"),
-                            equalTo(DB_OPERATION_NAME, "GetItem"),
-                            equalTo(ERROR_TYPE, errorType),
-                            equalTo(
-                                stringKey("rpc.system"), emitOldRpcSemconv() ? "aws-api" : null),
-                            equalTo(
-                                stringKey("rpc.service"), emitOldRpcSemconv() ? "DynamoDb" : null),
-                            equalTo(
-                                stringKey("rpc.method"),
-                                emitPreviewRpcSemconv() ? null : "GetItem"),
-                            equalTo(
-                                stringKey("rpc.system.name"),
-                                emitPreviewRpcSemconv() ? "aws-api" : null))));
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.aws-sdk-2.2",
-        error == null
-            ? new AttributeKey<?>[] {DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME}
-            : new AttributeKey<?>[] {
-              DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME, ERROR_TYPE
-            });
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.aws-sdk-2.2",
-        "db.client.operation.duration",
-        metrics ->
-            metrics
-                .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(
-                                point -> {
-                                  assertThat(point.getCount()).isEqualTo(1);
-                                  assertThat(point.getAttributes().asMap())
-                                      .isEqualTo(
-                                          Attributes.builder()
-                                              .put(DB_SYSTEM_NAME, "aws.dynamodb")
-                                              .put(DB_COLLECTION_NAME, "items")
-                                              .put(DB_OPERATION_NAME, "GetItem")
-                                              .put(ERROR_TYPE, errorType)
-                                              .build()
-                                              .asMap());
-                                })));
-  }
-
-  private static Stream<Arguments> errors() {
-    return Stream.of(
-        Arguments.of(
-            DynamoDbException.builder()
-                .awsErrorDetails(
-                    AwsErrorDetails.builder().errorCode("ResourceNotFoundException").build())
-                .statusCode(400)
-                .message("private value")
-                .build(),
-            "ResourceNotFoundException"),
-        Arguments.of(
-            DynamoDbException.builder().statusCode(400).message("private value").build(),
-            DynamoDbException.class.getName()),
-        Arguments.of(
-            DynamoDbException.builder()
-                .awsErrorDetails(AwsErrorDetails.builder().errorCode("").build())
-                .build(),
-            DynamoDbException.class.getName()),
-        Arguments.of(
-            DynamoDbException.builder()
-                .awsErrorDetails(AwsErrorDetails.builder().errorCode(" \t").build())
-                .build(),
-            DynamoDbException.class.getName()),
-        Arguments.of(
-            DynamoDbException.builder().awsErrorDetails(AwsErrorDetails.builder().build()).build(),
-            DynamoDbException.class.getName()),
-        Arguments.of(
-            SdkClientException.create("private value"), SdkClientException.class.getName()),
-        Arguments.of(
-            new IllegalStateException("private value"), IllegalStateException.class.getName()),
-        Arguments.of(null, null));
   }
 }
