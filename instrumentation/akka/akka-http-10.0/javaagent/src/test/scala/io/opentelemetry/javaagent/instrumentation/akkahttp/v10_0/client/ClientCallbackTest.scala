@@ -6,19 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.client
 
 import akka.actor.ActorSystem
-import akka.dispatch.{
-  Dispatcher,
-  DispatcherPrerequisites,
-  MessageDispatcher,
-  MessageDispatcherConfigurator
-}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.stream.ActorMaterializer
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.testing.internal.armeria.common.{
@@ -31,16 +26,21 @@ import io.opentelemetry.testing.internal.armeria.server.{
   ServiceRequestContext
 }
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
 
-import java.util.concurrent.{CompletableFuture, RejectedExecutionException}
-import java.util.concurrent.TimeUnit.{NANOSECONDS, SECONDS}
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{
+  CompletableFuture,
+  CountDownLatch,
+  RejectedExecutionException
+}
+import java.util.concurrent.TimeUnit.SECONDS
 import java.util.function.Consumer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ClientCallbackTest {
   @RegisterExtension private val testing =
     AgentInstrumentationExtension.create()
@@ -48,7 +48,10 @@ class ClientCallbackTest {
   @RegisterExtension private val cleanup = AutoCleanupExtension.create()
 
   @Test
-  def completesPendingResponseWhenDispatcherRejectsCallbacks(): Unit = {
+  def completesPendingResponseWhenAffinityDispatcherIsFull(): Unit = {
+    // The baseline Akka 2.4 release has no affinity-pool executor.
+    assumeTrue(testLatestDeps())
+
     val requestReceived = new CompletableFuture[Void]()
     val serverResponse = new CompletableFuture[ServerHttpResponse]()
     val server = Server
@@ -76,15 +79,30 @@ class ClientCallbackTest {
       "client-callback",
       ConfigFactory
         .parseString(
-          "akka.actor.default-dispatcher.type = \"" +
-            classOf[RejectingDispatcherConfigurator].getName + "\""
+          """
+          akka.actor.default-dispatcher {
+            executor = "affinity-pool-executor"
+            affinity-pool-executor {
+              parallelism-min = 1
+              parallelism-max = 1
+              task-queue-size = 64
+            }
+          }
+          # Keep HTTP streams and logging runnable during default-dispatcher overload.
+          http-dispatcher {
+            type = Dispatcher
+            executor = "fork-join-executor"
+          }
+          akka.stream.materializer.dispatcher = http-dispatcher
+          akka.loggers-dispatcher = http-dispatcher
+          """
         )
         .withFallback(ConfigFactory.load())
     )
     cleanup.deferCleanup(new AutoCloseable {
       override def close(): Unit = Await.result(system.terminate(), 10.seconds)
     })
-    val dispatcher = system.dispatcher.asInstanceOf[RejectingDispatcher]
+    val dispatcher = system.dispatcher
     implicit val materializer: ActorMaterializer =
       ActorMaterializer.create(system)
 
@@ -99,8 +117,26 @@ class ClientCallbackTest {
     requestReceived.get(10, SECONDS)
     assertThat(response.isCompleted).isFalse()
 
-    dispatcher.reject = true
+    val workerStarted = new CountDownLatch(1)
+    val releaseWorker = new CountDownLatch(1)
+    dispatcher.execute(new Runnable {
+      override def run(): Unit = {
+        workerStarted.countDown()
+        releaseWorker.await()
+      }
+    })
     try {
+      assertThat(workerStarted.await(10, SECONDS)).isTrue()
+      var saturated = false
+      while (!saturated) {
+        try {
+          dispatcher.execute(new Runnable {
+            override def run(): Unit = ()
+          })
+        } catch {
+          case _: RejectedExecutionException => saturated = true
+        }
+      }
       serverResponse.complete(ServerHttpResponse.of("response body"))
       val result = Await.result(response, 10.seconds)
       assertThat(result.status.intValue()).isEqualTo(200)
@@ -110,7 +146,6 @@ class ClientCallbackTest {
           .data
           .utf8String
       ).isEqualTo("response body")
-      assertThat(dispatcher.rejections).isGreaterThan(0)
 
       testing.waitAndAssertTraces(new Consumer[TraceAssert] {
         override def accept(trace: TraceAssert): Unit =
@@ -124,48 +159,7 @@ class ClientCallbackTest {
           })
       })
     } finally {
-      dispatcher.reject = false
+      releaseWorker.countDown()
     }
-  }
-}
-
-class RejectingDispatcherConfigurator(
-    config: Config,
-    prerequisites: DispatcherPrerequisites
-) extends MessageDispatcherConfigurator(config, prerequisites) {
-  private val instance = new RejectingDispatcher(this)
-
-  override def dispatcher(): MessageDispatcher = instance
-}
-
-private[client] class RejectingDispatcher(
-    dispatcherConfigurator: MessageDispatcherConfigurator
-) extends Dispatcher(
-      dispatcherConfigurator,
-      dispatcherConfigurator.config.getString("id"),
-      dispatcherConfigurator.config.getInt("throughput"),
-      Duration(
-        dispatcherConfigurator.config
-          .getDuration("throughput-deadline-time", NANOSECONDS),
-        NANOSECONDS
-      ),
-      dispatcherConfigurator.configureExecutor(),
-      Duration(
-        dispatcherConfigurator.config
-          .getDuration("shutdown-timeout", NANOSECONDS),
-        NANOSECONDS
-      )
-    ) {
-  private val rejectionCount = new AtomicInteger()
-  @volatile var reject = false
-
-  def rejections: Int = rejectionCount.get()
-
-  override def execute(runnable: Runnable): Unit = {
-    if (reject) {
-      rejectionCount.incrementAndGet()
-      throw new RejectedExecutionException("test rejection")
-    }
-    super.execute(runnable)
   }
 }
