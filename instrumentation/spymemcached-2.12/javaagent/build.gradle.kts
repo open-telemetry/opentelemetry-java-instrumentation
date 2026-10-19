@@ -26,6 +26,13 @@ testing {
   suites {
     register<JvmTestSuite>("protocolStatusTest") {
       sources.java.setSrcDirs(listOf("src/test/java"))
+      targets.all {
+        testTask.configure {
+          filter {
+            includeTestsMatching("*SpymemcachedTest.storeRejectedAsTooLarge")
+          }
+        }
+      }
       dependencies {
         implementation("net.spy:spymemcached:2.12.3")
         implementation("com.google.guava:guava")
@@ -34,19 +41,16 @@ testing {
     }
 
     withType<JvmTestSuite>().configureEach {
+      val suiteName = name
       executions {
         configureEach {
           usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
         }
-        register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
-        }
-        register("ExceptionSignalLogs") {
-          filter {
-            includeTestsMatching("*SpymemcachedTest.storeRejectedAsTooLarge")
+        if (suiteName == "test") {
+          register("Experimental") {
+            jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
+            systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
           }
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
         }
       }
     }

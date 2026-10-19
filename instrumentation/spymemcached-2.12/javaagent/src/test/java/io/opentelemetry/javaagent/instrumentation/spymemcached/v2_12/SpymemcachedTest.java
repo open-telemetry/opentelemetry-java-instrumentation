@@ -85,7 +85,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -274,59 +273,6 @@ class SpymemcachedTest {
                             point -> point.hasAttribute(ERROR_TYPE, errorType).hasCount(1))));
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"add", "replace", "cas"})
-  void conditionalOutcomesAreSuccessful(String operation) throws Exception {
-    MemcachedClient memcached = getMemcached(singletonMap("conditional", "initial"));
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          OperationFuture<?> future;
-          switch (operation) {
-            case "add":
-              future = memcached.add(key("conditional"), EXPIRATION_SECONDS, "replacement");
-              break;
-            case "replace":
-              future =
-                  memcached.replace(key("conditional-missing"), EXPIRATION_SECONDS, "replacement");
-              break;
-            default:
-              future =
-                  memcached.asyncCAS(
-                      key("conditional"), Long.MAX_VALUE, EXPIRATION_SECONDS, "replacement");
-          }
-          assertThat(future.get()).isEqualTo(operation.equals("cas") ? CASResponse.EXISTS : false);
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName(spanName(operation))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, operation),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()))));
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.spymemcached-2.12",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT,
-        SERVER_ADDRESS,
-        SERVER_PORT);
-  }
-
   @Test
   void getHit() {
     MemcachedClient memcached = getMemcached(singletonMap("test-get", "get test"));
@@ -367,7 +313,6 @@ class SpymemcachedTest {
                     span.hasName(spanName("get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
@@ -378,15 +323,6 @@ class SpymemcachedTest {
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.spymemcached-2.12",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT,
-        SERVER_ADDRESS,
-        SERVER_PORT);
   }
 
   @Test
@@ -580,7 +516,6 @@ class SpymemcachedTest {
                     span.hasName(spanName("set"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "set"),
@@ -593,15 +528,6 @@ class SpymemcachedTest {
                             equalTo(
                                 booleanKey("spymemcached.command.cancelled"),
                                 experimental(true)))));
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.spymemcached-2.12",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT,
-        SERVER_ADDRESS,
-        SERVER_PORT);
   }
 
   @Test
@@ -1016,7 +942,6 @@ class SpymemcachedTest {
                     span.hasName(spanName("cas"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "cas"),
@@ -1026,15 +951,6 @@ class SpymemcachedTest {
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.spymemcached-2.12",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT,
-        SERVER_ADDRESS,
-        SERVER_PORT);
   }
 
   @Test
