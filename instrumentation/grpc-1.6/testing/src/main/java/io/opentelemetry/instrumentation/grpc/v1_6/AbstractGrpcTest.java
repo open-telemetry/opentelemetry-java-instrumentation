@@ -75,6 +75,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -1930,21 +1931,6 @@ public abstract class AbstractGrpcTest {
       }
     }
     if (emitPreviewRpcSemconv()) {
-      List<AttributeKey<?>> serverKeys =
-          new ArrayList<>(
-              asList(
-                  RPC_SYSTEM_NAME,
-                  SERVER_ADDRESS,
-                  SERVER_PORT,
-                  RPC_METHOD,
-                  RPC_RESPONSE_STATUS_CODE));
-      List<AttributeKey<?>> clientKeys = new ArrayList<>(serverKeys);
-      if (isServerErrorCode(statusCode) || status.getCause() != null) {
-        serverKeys.add(ERROR_TYPE);
-      }
-      if (!status.isOk()) {
-        clientKeys.add(ERROR_TYPE);
-      }
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",
@@ -1956,10 +1942,22 @@ public abstract class AbstractGrpcTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.satisfies(
-                                          pointData ->
-                                              assertThat(pointData.getAttributes().asMap())
-                                                  .containsOnlyKeys(serverKeys)))));
+                                      point.hasAttributesSatisfying(
+                                          attributes ->
+                                              assertThat(attributes.asMap())
+                                                  .containsOnlyKeys(
+                                                      Stream.of(
+                                                              RPC_SYSTEM_NAME,
+                                                              SERVER_ADDRESS,
+                                                              SERVER_PORT,
+                                                              RPC_METHOD,
+                                                              RPC_RESPONSE_STATUS_CODE,
+                                                              isServerErrorCode(statusCode)
+                                                                      || status.getCause() != null
+                                                                  ? ERROR_TYPE
+                                                                  : null)
+                                                          .filter(Objects::nonNull)
+                                                          .toArray(AttributeKey<?>[]::new))))));
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",
@@ -1971,10 +1969,19 @@ public abstract class AbstractGrpcTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.satisfies(
-                                          pointData ->
-                                              assertThat(pointData.getAttributes().asMap())
-                                                  .containsOnlyKeys(clientKeys)))));
+                                      point.hasAttributesSatisfying(
+                                          attributes ->
+                                              assertThat(attributes.asMap())
+                                                  .containsOnlyKeys(
+                                                      Stream.of(
+                                                              RPC_SYSTEM_NAME,
+                                                              SERVER_ADDRESS,
+                                                              SERVER_PORT,
+                                                              RPC_METHOD,
+                                                              RPC_RESPONSE_STATUS_CODE,
+                                                              !status.isOk() ? ERROR_TYPE : null)
+                                                          .filter(Objects::nonNull)
+                                                          .toArray(AttributeKey<?>[]::new))))));
     }
   }
 }
