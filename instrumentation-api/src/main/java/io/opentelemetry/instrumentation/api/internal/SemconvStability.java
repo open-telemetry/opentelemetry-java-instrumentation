@@ -43,26 +43,18 @@ public final class SemconvStability {
     return emitOld(selectionResolver(openTelemetry).servicePeer());
   }
 
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
   public static boolean emitPreviewServicePeerSemconv(OpenTelemetry openTelemetry) {
     return emitStable(selectionResolver(openTelemetry).servicePeer());
   }
 
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
   public static boolean emitOldRpcSemconv(OpenTelemetry openTelemetry) {
     return emitOld(selectionResolver(openTelemetry).rpc());
   }
 
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
   public static boolean emitPreviewRpcSemconv(OpenTelemetry openTelemetry) {
     return emitStable(selectionResolver(openTelemetry).rpc());
   }
 
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
   public static String rpcSchemaUrl(OpenTelemetry openTelemetry) {
     return emitPreviewRpcSemconv(openTelemetry) ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
   }

@@ -53,7 +53,6 @@ class DubboTelemetryBuilderTest {
     DeclarativeConfigProperties common =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     ConfigProvider configProvider = mock(ConfigProvider.class);
-    when(configProvider.getGeneralInstrumentationConfig()).thenReturn(general);
     when(configProvider.getInstrumentationConfig("common")).thenReturn(common);
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     OpenTelemetry noop = OpenTelemetry.noop();

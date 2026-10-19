@@ -149,10 +149,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
-    AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor =
-        requireNonNull(attributesExtractor, "attributesExtractor");
-    initializeOpenTelemetry(extractor);
-    this.attributesExtractors.add(extractor);
+    initializeOpenTelemetry(attributesExtractor);
+    this.attributesExtractors.add(requireNonNull(attributesExtractor, "attributesExtractor"));
     return this;
   }
 
@@ -180,10 +178,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super REQUEST> contextCustomizer) {
-    ContextCustomizer<? super REQUEST> customizer =
-        requireNonNull(contextCustomizer, "contextCustomizer");
-    initializeOpenTelemetry(customizer);
-    contextCustomizers.add(customizer);
+    initializeOpenTelemetry(contextCustomizer);
+    contextCustomizers.add(requireNonNull(contextCustomizer, "contextCustomizer"));
     return this;
   }
 
@@ -203,9 +199,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addOperationMetrics(OperationMetrics factory) {
-    OperationMetrics metrics = requireNonNull(factory, "operationMetrics");
-    initializeOpenTelemetry(metrics);
-    operationMetrics.add(metrics);
+    initializeOpenTelemetry(factory);
+    operationMetrics.add(requireNonNull(factory, "operationMetrics"));
     return this;
   }
 

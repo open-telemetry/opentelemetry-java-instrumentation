@@ -13,7 +13,10 @@ import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 public final class RpcSpanNameExtractor<REQUEST>
     implements SpanNameExtractor<REQUEST>, OpenTelemetryConfigurable {
 
-  /** Creates the RPC span name extractor. */
+  /**
+   * Returns a {@link SpanNameExtractor} that constructs the span name according to RPC semantic
+   * conventions.
+   */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       RpcAttributesGetter<REQUEST, ?> attributesExtractor) {
     return new RpcSpanNameExtractor<>(attributesExtractor);

@@ -242,7 +242,6 @@ class RpcInstanceSemconvTest {
       when(common.getStructuredList("service_peer_mapping", emptyList()))
           .thenReturn(singletonList(mapping));
       ConfigProvider configProvider = mock(ConfigProvider.class);
-      when(configProvider.getGeneralInstrumentationConfig()).thenReturn(general);
       when(configProvider.getInstrumentationConfig("common")).thenReturn(common);
       ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
       when(openTelemetry.getTracerProvider()).thenReturn(sdk.getTracerProvider());
