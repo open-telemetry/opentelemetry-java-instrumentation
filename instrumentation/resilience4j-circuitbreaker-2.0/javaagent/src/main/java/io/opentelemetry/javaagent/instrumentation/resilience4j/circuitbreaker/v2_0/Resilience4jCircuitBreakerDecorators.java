@@ -6,6 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.functions.CheckedConsumer;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -174,6 +178,8 @@ public class Resilience4jCircuitBreakerDecorators {
       collectInterfaces(current, interfaces);
       current = current.getSuperclass();
     }
+    interfaces.removeIf(
+        iface -> !isCheckedFunctionType(iface) && !isFunctionalInterfaceType(iface));
     return interfaces.toArray(new Class<?>[0]);
   }
 
@@ -197,8 +203,10 @@ public class Resilience4jCircuitBreakerDecorators {
   }
 
   private static boolean isCheckedFunctionType(Class<?> type) {
-    return type.isInterface()
-        && type.getName().startsWith("io.github.resilience4j.core.functions.Checked");
+    return type == CheckedSupplier.class
+        || type == CheckedRunnable.class
+        || type == CheckedFunction.class
+        || type == CheckedConsumer.class;
   }
 
   @SuppressWarnings("unchecked") // Dynamic proxy implements CompletionStage<T> at runtime.

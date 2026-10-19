@@ -1033,6 +1033,30 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void checkedSupplierWithNonPublicSubinterfaceSucceeds() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    LocalCheckedSupplier supplier = () -> "ok";
+    CheckedSupplier<String> decorated =
+        CircuitBreaker.decorateCheckedSupplier(circuitBreaker, supplier);
+
+    assertThat(testing.runWithSpan("parent", decorated::get)).isEqualTo("ok");
+
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void checkedSupplierWithNonPublicSubinterfaceSucceedsWithoutParent() throws Throwable {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    LocalCheckedSupplier supplier = () -> "ok";
+    CheckedSupplier<String> decorated =
+        CircuitBreaker.decorateCheckedSupplier(circuitBreaker, supplier);
+
+    assertThat(decorated.get()).isEqualTo("ok");
+
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
   void createsCircuitBreakerSpanWhenUncheckedCheckedSupplierThrowsError() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     AssertionError error = new AssertionError("boom");
@@ -1178,6 +1202,11 @@ class Resilience4jCircuitBreakerTest {
     Supplier<Future<T>> supplier = () -> future;
     Supplier<Future<T>> decoratedSupplier = CircuitBreaker.decorateFuture(circuitBreaker, supplier);
     return testing.runWithSpan("parent", decoratedSupplier::get);
+  }
+
+  private interface LocalCheckedSupplier extends CheckedSupplier<String> {
+    @Override
+    String get() throws Throwable;
   }
 
   private static final class ThrowingFuture<T> implements Future<T> {
