@@ -75,7 +75,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -1801,6 +1800,13 @@ public abstract class AbstractGrpcTest {
   private void assertMetrics(Server server, Status status) {
     Status.Code statusCode = status.getCode();
     boolean hasSizeMetric = statusCode == Status.Code.OK;
+    String clientErrorType = emitPreviewRpcSemconv() && !status.isOk() ? statusCode.name() : null;
+    String serverErrorType =
+        emitPreviewRpcSemconv() && isServerErrorCode(statusCode)
+            ? statusCode.name()
+            : emitPreviewRpcSemconv() && status.getCause() != null
+                ? status.getCause().getClass().getName()
+                : null;
     if (emitOldRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
@@ -1942,22 +1948,13 @@ public abstract class AbstractGrpcTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
-                                          attributes ->
-                                              assertThat(attributes.asMap())
-                                                  .containsOnlyKeys(
-                                                      Stream.of(
-                                                              RPC_SYSTEM_NAME,
-                                                              SERVER_ADDRESS,
-                                                              SERVER_PORT,
-                                                              RPC_METHOD,
-                                                              RPC_RESPONSE_STATUS_CODE,
-                                                              isServerErrorCode(statusCode)
-                                                                      || status.getCause() != null
-                                                                  ? ERROR_TYPE
-                                                                  : null)
-                                                          .filter(Objects::nonNull)
-                                                          .toArray(AttributeKey<?>[]::new))))));
+                                      point.hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                          equalTo(SERVER_ADDRESS, "localhost"),
+                                          equalTo(SERVER_PORT, server.getPort()),
+                                          equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                                          equalTo(RPC_RESPONSE_STATUS_CODE, statusCode.name()),
+                                          equalTo(ERROR_TYPE, serverErrorType)))));
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",
@@ -1969,19 +1966,13 @@ public abstract class AbstractGrpcTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
-                                          attributes ->
-                                              assertThat(attributes.asMap())
-                                                  .containsOnlyKeys(
-                                                      Stream.of(
-                                                              RPC_SYSTEM_NAME,
-                                                              SERVER_ADDRESS,
-                                                              SERVER_PORT,
-                                                              RPC_METHOD,
-                                                              RPC_RESPONSE_STATUS_CODE,
-                                                              !status.isOk() ? ERROR_TYPE : null)
-                                                          .filter(Objects::nonNull)
-                                                          .toArray(AttributeKey<?>[]::new))))));
+                                      point.hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                          equalTo(SERVER_ADDRESS, "localhost"),
+                                          equalTo(SERVER_PORT, server.getPort()),
+                                          equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                                          equalTo(RPC_RESPONSE_STATUS_CODE, statusCode.name()),
+                                          equalTo(ERROR_TYPE, clientErrorType)))));
     }
   }
 }
