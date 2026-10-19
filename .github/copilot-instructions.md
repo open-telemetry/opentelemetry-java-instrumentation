@@ -22,14 +22,18 @@ applicable repository review rules; use their stated conditions and exceptions. 
   against the dependency versions and concrete implementations used by the PR, including relevant
   initialization and registration.
 - For a changed public Java API, identify the *publishing artifact* before claiming a break.
-  Javaagent modules bundled into the agent are not published Java APIs. In stable artifacts
-  (`otel.stable=true` in that module's `gradle.properties`), deprecate before removal and keep
-  deprecated symbols until the next major version. Published alpha artifacts may remove
-  deprecated symbols in a later minor release. Do not mistake a 3.0 behavior migration for an
-  alpha API that should be removed immediately. A replacement must be at least as stable as
-  the old API; deprecated methods delegate to their replacements, not vice versa. Include
-  replacement and removal timing in `@deprecated` Javadoc and a deprecation CHANGELOG entry.
-  Document a breaking change to a published alpha API under the appropriate CHANGELOG heading.
+  Symbols explicitly documented as internal, unsupported, and subject to change are not supported
+  public APIs merely because their artifact is published; implementation-only changes to them need
+  no public-API deprecation cycle or CHANGELOG entry. This does not exempt `.internal` packages or
+  `Experimental` helpers generally. Javaagent modules bundled into the agent are not published
+  Java APIs. In stable artifacts (`otel.stable=true` in that module's `gradle.properties`),
+  deprecate before removal and keep deprecated symbols until the next major version. Published
+  alpha artifacts may remove deprecated symbols in a later minor release. Do not mistake a 3.0
+  behavior migration for an alpha API that should be removed immediately. A replacement must be
+  at least as stable as the old API; deprecated methods delegate to their replacements, not vice
+  versa. Include replacement and removal timing in `@deprecated` Javadoc and a deprecation
+  CHANGELOG entry. Document a breaking change to a published alpha API under the appropriate
+  CHANGELOG heading.
 - User-facing configuration names and outgoing telemetry identities also have compatibility
   contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
   alias and emitted `otel.scope.name`, including v3-preview behavior and scope-version lookup.
