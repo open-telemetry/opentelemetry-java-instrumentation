@@ -44,7 +44,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) RedisClient redisClient,
         @Advice.Argument(1) int poolMinSize,
