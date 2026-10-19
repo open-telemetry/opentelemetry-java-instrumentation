@@ -41,48 +41,54 @@ dependencies {
 testing {
   suites {
     named<JvmTestSuite>("test") {
+      targets.all {
+        testTask.configure {
+          filter {
+            excludeTestsMatching("Netty40ConnectionSpanTest")
+            excludeTestsMatching("Netty40ClientSslTest")
+          }
+        }
+      }
       executions {
-        configureEach {
-          if (name in listOf("test", "testWithPeerServiceMapping", "testPreviewSemconvWithPeerServiceMapping")) {
+        group {
+          configureEach {
             filter {
               excludeTestsMatching("Netty40ConnectionSpanTest")
               excludeTestsMatching("Netty40ClientSslTest")
             }
           }
+          register("WithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("PreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
         }
-        register("WithPeerServiceMapping") {
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-        }
-        register("ConnectionSpan") {
-          connectionTelemetry()
-        }
-        register("ConnectionSpanWithPeerServiceMapping") {
-          connectionTelemetry()
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-        }
-        register("ConnectionSpanPreviewSemconvWithPeerServiceMapping") {
-          connectionTelemetry()
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-        }
-        register("PreviewSemconvWithPeerServiceMapping") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        group {
+          configureEach {
+            filter {
+              includeTestsMatching("Netty40ConnectionSpanTest")
+              includeTestsMatching("Netty40ClientSslTest")
+            }
+            include("**/Netty40ConnectionSpanTest.*")
+            include("**/Netty40ClientSslTest.*")
+
+            telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
+            telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+          }
+          register("ConnectionSpan") {}
+          register("ConnectionSpanWithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("ConnectionSpanPreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
         }
       }
     }
   }
-}
-
-fun Test.connectionTelemetry() {
-  filter {
-    includeTestsMatching("Netty40ConnectionSpanTest")
-    includeTestsMatching("Netty40ClientSslTest")
-  }
-  include("**/Netty40ConnectionSpanTest.*")
-  telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
-  include("**/Netty40ClientSslTest.*")
-  telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.

@@ -48,46 +48,52 @@ dependencies {
 testing {
   suites {
     named<JvmTestSuite>("test") {
+      targets.all {
+        testTask.configure {
+          filter {
+            excludeTestsMatching("ReactorNettyConnectionSpanTest")
+            excludeTestsMatching("ReactorNettyClientSslTest")
+          }
+        }
+      }
       executions {
-        configureEach {
-          if (name in listOf("test", "testWithPeerServiceMapping", "testPreviewSemconvWithPeerServiceMapping")) {
+        group {
+          configureEach {
             filter {
               excludeTestsMatching("ReactorNettyConnectionSpanTest")
               excludeTestsMatching("ReactorNettyClientSslTest")
             }
           }
+          register("WithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("PreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
         }
-        register("WithPeerServiceMapping") {
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-        }
-        register("ConnectionSpan") {
-          connectionTelemetry()
-        }
-        register("ConnectionSpanWithPeerServiceMapping") {
-          connectionTelemetry()
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-        }
-        register("ConnectionSpanPreviewSemconvWithPeerServiceMapping") {
-          connectionTelemetry()
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-        }
-        register("PreviewSemconvWithPeerServiceMapping") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        group {
+          configureEach {
+            filter {
+              includeTestsMatching("ReactorNettyConnectionSpanTest")
+              includeTestsMatching("ReactorNettyClientSslTest")
+            }
+            include("**/ReactorNettyConnectionSpanTest.*")
+            include("**/ReactorNettyClientSslTest.*")
+
+            telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+            telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
+          }
+          register("ConnectionSpan") {}
+          register("ConnectionSpanWithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("ConnectionSpanPreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
         }
       }
     }
   }
-}
-
-fun Test.connectionTelemetry() {
-  filter {
-    includeTestsMatching("ReactorNettyConnectionSpanTest")
-    includeTestsMatching("ReactorNettyClientSslTest")
-  }
-  include("**/ReactorNettyConnectionSpanTest.*")
-  include("**/ReactorNettyClientSslTest.*")
-  telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-  telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
 }
