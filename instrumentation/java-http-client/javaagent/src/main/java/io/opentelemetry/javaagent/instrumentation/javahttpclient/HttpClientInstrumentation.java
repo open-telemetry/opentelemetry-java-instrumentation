@@ -19,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.javahttpclient.internal.CompletableFutureWrapper;
 import io.opentelemetry.instrumentation.javahttpclient.internal.ResponseConsumer;
+import io.opentelemetry.instrumentation.javahttpclient.internal.ResponseInfoCapture;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -70,11 +71,17 @@ class HttpClientInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
       private final HttpRequest request;
+      private final ResponseInfoCapture responseInfoCapture;
 
-      private AdviceScope(Context context, Scope scope, HttpRequest request) {
+      private AdviceScope(
+          Context context,
+          Scope scope,
+          HttpRequest request,
+          ResponseInfoCapture responseInfoCapture) {
         this.context = context;
         this.scope = scope;
         this.request = request;
+        this.responseInfoCapture = responseInfoCapture;
       }
 
       @Nullable
@@ -85,19 +92,33 @@ class HttpClientInstrumentation implements TypeInstrumentation {
         }
 
         Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(context, context.makeCurrent(), request);
+        return new AdviceScope(context, context.makeCurrent(), request, new ResponseInfoCapture());
+      }
+
+      public <T> HttpResponse.BodyHandler<T> wrap(HttpResponse.BodyHandler<T> bodyHandler) {
+        return responseInfoCapture.wrap(bodyHandler);
       }
 
       public void end(@Nullable HttpResponse<?> response, @Nullable Throwable throwable) {
         scope.close();
+        if (response == null && throwable != null) {
+          response = responseInfoCapture.response(request, throwable);
+        }
         instrumenter().end(context, request, response, throwable);
       }
     }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
-      return AdviceScope.start(httpRequest);
+    public static AdviceScope methodEnter(
+        @Advice.Argument(value = 0) HttpRequest httpRequest,
+        @Advice.Argument(value = 1, readOnly = false)
+            HttpResponse.BodyHandler<?> responseBodyHandler) {
+      AdviceScope adviceScope = AdviceScope.start(httpRequest);
+      if (adviceScope != null) {
+        responseBodyHandler = adviceScope.wrap(responseBodyHandler);
+      }
+      return adviceScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -121,25 +142,35 @@ class HttpClientInstrumentation implements TypeInstrumentation {
       @Nullable private final Scope scope;
       private final CallDepth callDepth;
       private final HttpRequest request;
+      @Nullable private final ResponseInfoCapture responseInfoCapture;
 
       private AsyncAdviceScope(
           @Nullable Context parentContext,
           @Nullable Context context,
           @Nullable Scope scope,
           CallDepth callDepth,
-          HttpRequest request) {
+          HttpRequest request,
+          @Nullable ResponseInfoCapture responseInfoCapture) {
         this.parentContext = parentContext;
         this.context = context;
         this.scope = scope;
         this.callDepth = callDepth;
         this.request = request;
+        this.responseInfoCapture = responseInfoCapture;
+      }
+
+      public <T> HttpResponse.BodyHandler<T> wrap(HttpResponse.BodyHandler<T> bodyHandler) {
+        if (responseInfoCapture == null) {
+          return bodyHandler;
+        }
+        return responseInfoCapture.wrap(bodyHandler);
       }
 
       @Nullable
       public static AsyncAdviceScope start(HttpRequest request) {
         CallDepth callDepth = CallDepth.forClass(HttpClient.class);
         if (callDepth.getAndIncrement() > 0) {
-          return new AsyncAdviceScope(null, null, null, callDepth, request);
+          return new AsyncAdviceScope(null, null, null, callDepth, request, null);
         }
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
@@ -147,8 +178,9 @@ class HttpClientInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter().start(parentContext, request);
+        ResponseInfoCapture responseInfoCapture = new ResponseInfoCapture();
         return new AsyncAdviceScope(
-            parentContext, context, context.makeCurrent(), callDepth, request);
+            parentContext, context, context.makeCurrent(), callDepth, request, responseInfoCapture);
       }
 
       public CompletableFuture<HttpResponse<?>> end(
@@ -164,15 +196,22 @@ class HttpClientInstrumentation implements TypeInstrumentation {
           return future;
         }
         return CompletableFutureWrapper.wrap(future, parentContext)
-            .whenComplete(new ResponseConsumer(instrumenter(), context, request));
+            .whenComplete(
+                new ResponseConsumer(instrumenter(), context, request, responseInfoCapture));
       }
     }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AsyncAdviceScope methodEnter(
-        @Advice.Argument(value = 0) HttpRequest httpRequest) {
-      return AsyncAdviceScope.start(httpRequest);
+        @Advice.Argument(value = 0) HttpRequest httpRequest,
+        @Advice.Argument(value = 1, readOnly = false)
+            HttpResponse.BodyHandler<?> responseBodyHandler) {
+      AsyncAdviceScope adviceScope = AsyncAdviceScope.start(httpRequest);
+      if (adviceScope != null) {
+        responseBodyHandler = adviceScope.wrap(responseBodyHandler);
+      }
+      return adviceScope;
     }
 
     @AssignReturned.ToReturned

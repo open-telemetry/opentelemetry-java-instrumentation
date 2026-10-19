@@ -20,18 +20,24 @@ public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> 
   private final Instrumenter<HttpRequest, HttpResponse<?>> instrumenter;
   private final Context context;
   private final HttpRequest httpRequest;
+  private final ResponseInfoCapture responseInfoCapture;
 
   public ResponseConsumer(
       Instrumenter<HttpRequest, HttpResponse<?>> instrumenter,
       Context context,
-      HttpRequest httpRequest) {
+      HttpRequest httpRequest,
+      ResponseInfoCapture responseInfoCapture) {
     this.instrumenter = instrumenter;
     this.context = context;
     this.httpRequest = httpRequest;
+    this.responseInfoCapture = responseInfoCapture;
   }
 
   @Override
   public void accept(@Nullable HttpResponse<?> httpResponse, @Nullable Throwable throwable) {
+    if (httpResponse == null && throwable != null) {
+      httpResponse = responseInfoCapture.response(httpRequest, throwable);
+    }
     instrumenter.end(context, httpRequest, httpResponse, throwable);
   }
 }

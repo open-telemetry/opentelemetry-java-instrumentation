@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.TEST_REQUEST_HEADER;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.TEST_RESPONSE_HEADER;
 import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -19,6 +20,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponseWriter;
@@ -28,12 +30,23 @@ import io.opentelemetry.testing.internal.armeria.common.ResponseHeadersBuilder;
 import io.opentelemetry.testing.internal.armeria.server.ServerBuilder;
 import io.opentelemetry.testing.internal.armeria.server.logging.LoggingService;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import javax.net.ssl.KeyManagerFactory;
 
 public class HttpClientTestServer extends ServerExtension {
@@ -186,5 +199,74 @@ public class HttpClientTestServer extends ServerExtension {
 
   public URI resolveHttpsAddress(String path) {
     return URI.create("https://localhost:" + httpsPort() + path);
+  }
+
+  TruncatedResponseServer startTruncatedResponseServer() throws IOException {
+    return new TruncatedResponseServer();
+  }
+
+  static final class TruncatedResponseServer implements AutoCloseable {
+
+    private static final int TIMEOUT_SECONDS = 10;
+
+    private final ServerSocket serverSocket;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Future<?> response;
+
+    private TruncatedResponseServer() throws IOException {
+      serverSocket = new ServerSocket(PortUtils.findOpenPort());
+      serverSocket.setSoTimeout((int) SECONDS.toMillis(TIMEOUT_SECONDS));
+      response =
+          executor.submit(
+              () -> {
+                respond();
+                return null;
+              });
+    }
+
+    URI resolveAddress() {
+      return URI.create("http://localhost:" + serverSocket.getLocalPort() + "/truncated-response");
+    }
+
+    void awaitResponse() throws InterruptedException {
+      try {
+        response.get(TIMEOUT_SECONDS, SECONDS);
+      } catch (ExecutionException e) {
+        throw new AssertionError(e.getCause());
+      } catch (TimeoutException e) {
+        throw new AssertionError(e);
+      }
+    }
+
+    @Override
+    public void close() throws IOException, InterruptedException {
+      serverSocket.close();
+      executor.shutdownNow();
+      if (!executor.awaitTermination(TIMEOUT_SECONDS, SECONDS)) {
+        throw new IllegalStateException("Truncated response server did not stop");
+      }
+    }
+
+    private void respond() throws IOException {
+      try (Socket socket = serverSocket.accept()) {
+        socket.setSoTimeout((int) SECONDS.toMillis(TIMEOUT_SECONDS));
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
+        String line;
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {
+          // Read request headers before sending the response.
+        }
+        OutputStream output = socket.getOutputStream();
+        output.write(
+            ("HTTP/1.1 200 OK\r\n"
+                    + "Content-Length: 100\r\n"
+                    + "Connection: close\r\n"
+                    + "\r\n"
+                    + "partial")
+                .getBytes(US_ASCII));
+        output.flush();
+        socket.shutdownOutput();
+      }
+    }
   }
 }

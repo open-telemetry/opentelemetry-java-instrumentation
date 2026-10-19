@@ -19,7 +19,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 
@@ -98,11 +98,12 @@ public final class OpenTelemetryHttpClient extends HttpClient {
     Context context = instrumenter.start(parentContext, request);
     HttpRequestWrapper requestWrapper =
         new HttpRequestWrapper(request, headersSetter.inject(request.headers(), context));
+    ResponseInfoCapture responseInfoCapture = new ResponseInfoCapture();
     HttpResponse<T> response;
     try (Scope ignore = context.makeCurrent()) {
-      response = client.send(requestWrapper, responseBodyHandler);
+      response = client.send(requestWrapper, responseInfoCapture.wrap(responseBodyHandler));
     } catch (Throwable t) {
-      instrumenter.end(context, request, null, t);
+      instrumenter.end(context, request, responseInfoCapture.response(request, t), t);
       throw t;
     }
     instrumenter.end(context, request, response, null);
@@ -112,7 +113,8 @@ public final class OpenTelemetryHttpClient extends HttpClient {
   @Override
   public <T> CompletableFuture<HttpResponse<T>> sendAsync(
       HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler) {
-    return traceAsync(request, req -> client.sendAsync(req, responseBodyHandler));
+    return traceAsync(
+        request, responseBodyHandler, (req, bodyHandler) -> client.sendAsync(req, bodyHandler));
   }
 
   @Override
@@ -121,30 +123,37 @@ public final class OpenTelemetryHttpClient extends HttpClient {
       HttpResponse.BodyHandler<T> responseBodyHandler,
       HttpResponse.PushPromiseHandler<T> pushPromiseHandler) {
     return traceAsync(
-        request, req -> client.sendAsync(req, responseBodyHandler, pushPromiseHandler));
+        request,
+        responseBodyHandler,
+        (req, bodyHandler) -> client.sendAsync(req, bodyHandler, pushPromiseHandler));
   }
 
   private <T> CompletableFuture<HttpResponse<T>> traceAsync(
-      HttpRequest request, Function<HttpRequest, CompletableFuture<HttpResponse<T>>> action) {
+      HttpRequest request,
+      HttpResponse.BodyHandler<T> responseBodyHandler,
+      BiFunction<HttpRequest, HttpResponse.BodyHandler<T>, CompletableFuture<HttpResponse<T>>>
+          action) {
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
-      return action.apply(request);
+      return action.apply(request, responseBodyHandler);
     }
 
     Context context = instrumenter.start(parentContext, request);
     HttpRequestWrapper requestWrapper =
         new HttpRequestWrapper(request, headersSetter.inject(request.headers(), context));
+    ResponseInfoCapture responseInfoCapture = new ResponseInfoCapture();
 
     CompletableFuture<HttpResponse<T>> future;
     try (Scope ignored = context.makeCurrent()) {
-      future = action.apply(requestWrapper);
+      future = action.apply(requestWrapper, responseInfoCapture.wrap(responseBodyHandler));
     } catch (Throwable t) {
       instrumenter.end(context, request, null, t);
       throw t;
     }
     future =
         CompletableFutureWrapper.wrap(future, parentContext)
-            .whenComplete(new ResponseConsumer(instrumenter, context, request));
+            .whenComplete(
+                new ResponseConsumer(instrumenter, context, request, responseInfoCapture));
     return future;
   }
 }

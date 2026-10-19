@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.javahttpclient;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -16,6 +17,12 @@ import java.util.List;
 public class HttpClientInstrumentationModule extends InstrumentationModule {
   public HttpClientInstrumentationModule() {
     super("java-http-client");
+  }
+
+  @Override
+  public List<String> getAdditionalHelperClassNames() {
+    return singletonList(
+        "io.opentelemetry.instrumentation.javahttpclient.internal.ResponseInfoCapture");
   }
 
   @Override

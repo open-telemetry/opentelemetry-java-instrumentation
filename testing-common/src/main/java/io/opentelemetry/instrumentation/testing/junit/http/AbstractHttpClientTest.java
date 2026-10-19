@@ -39,6 +39,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -58,6 +59,7 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SchemaUrls;
+import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -70,6 +72,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -1063,6 +1066,69 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               .describedAs("Span duration should be at least 1s")
               .isTrue();
         });
+  }
+
+  @Test
+  void truncatedResponseBody() throws IOException, InterruptedException {
+    assumeTrue(options.isSpanEndsAfterBody());
+    assumeTrue(options.getHasSendRequest());
+
+    String method = "GET";
+    try (HttpClientTestServer.TruncatedResponseServer truncatedResponseServer =
+        server.startTruncatedResponseServer()) {
+      URI uri = truncatedResponseServer.resolveAddress();
+
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      Throwable thrown;
+      try {
+        Future<Integer> request = executor.submit(() -> doRequest(method, uri));
+        thrown = catchThrowable(() -> request.get(10, SECONDS));
+      } finally {
+        executor.shutdownNow();
+        assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+      }
+      truncatedResponseServer.awaitResponse();
+
+      assertThat(thrown).isInstanceOf(ExecutionException.class);
+      Throwable error = requireNonNull(thrown).getCause();
+      if (error instanceof ExecutionException) {
+        error = error.getCause();
+      }
+      Throwable clientError = options.getClientSpanErrorMapper().apply(uri, error);
+      String errorType = exceptionType(clientError);
+
+      AtomicReference<String> instrumentationName = new AtomicReference<>();
+      testing.waitAndAssertTraces(
+          trace -> {
+            instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(
+                            attrs ->
+                                assertThat(attrs)
+                                    .containsEntry(HTTP_RESPONSE_STATUS_CODE, 200L)
+                                    .containsEntry(ERROR_TYPE, errorType)));
+          });
+
+      testing.waitAndAssertMetrics(
+          instrumentationName.get(),
+          metric ->
+              metric
+                  .hasName("http.client.request.duration")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point.hasAttributesSatisfying(
+                                      attrs ->
+                                          assertThat(attrs.asMap())
+                                              .containsEntry(HTTP_RESPONSE_STATUS_CODE, 200L)
+                                              .containsEntry(ERROR_TYPE, errorType)))));
+    }
   }
 
   @Test
