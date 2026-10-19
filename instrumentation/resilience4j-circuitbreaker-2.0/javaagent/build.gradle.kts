@@ -23,10 +23,6 @@ dependencies {
 tasks {
   test {
     jvmArgs("-Dotel.instrumentation.resilience4j-circuitbreaker.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.resilience4j-circuitbreaker.enabled=true"
-    )
   }
 
   val testDisabled = register<Test>("testDisabled") {
@@ -48,7 +44,7 @@ tasks {
     )
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.resilience4j-circuitbreaker.enabled=true,otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
+      "otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
     )
   }
 
