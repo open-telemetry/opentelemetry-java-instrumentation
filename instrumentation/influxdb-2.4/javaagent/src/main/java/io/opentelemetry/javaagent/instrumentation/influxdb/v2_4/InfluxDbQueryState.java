@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbS
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.influxdb.dto.QueryResult;
@@ -23,6 +24,7 @@ public final class InfluxDbQueryState {
   private final Context context;
   private final AtomicBoolean ended = new AtomicBoolean();
   @Nullable private Call<?> call;
+  @Nullable private Throwable callbackError;
   @Nullable private volatile String errorType;
 
   public InfluxDbQueryState(Context parentContext, InfluxDbQuery request) {
@@ -45,6 +47,20 @@ public final class InfluxDbQueryState {
     }
   }
 
+  void onCallbackError(Throwable error) {
+    // Newer clients catch callback exceptions and cancel the call before onResponse returns.
+    if (call == null || !call.isCanceled()) {
+      callbackError = error;
+    }
+  }
+
+  void onFailure(Throwable error) {
+    // The client cancels after decoding failures too; only canceled reads are non-failures.
+    if (!(error instanceof IOException) || call == null || !call.isCanceled()) {
+      callbackError = error;
+    }
+  }
+
   public void endResponse(Response<?> response, @Nullable Throwable error, boolean canceled) {
     if (!response.isSuccessful()) {
       errorType = Integer.toString(response.code());
@@ -59,7 +75,12 @@ public final class InfluxDbQueryState {
   public void end(@Nullable Throwable error) {
     if (ended.compareAndSet(false, true)) {
       call = null;
-      queryInstrumenter().end(context, request, new InfluxDbResponse(errorType), error);
+      queryInstrumenter()
+          .end(
+              context,
+              request,
+              new InfluxDbResponse(errorType),
+              error != null ? error : callbackError);
     }
   }
 }

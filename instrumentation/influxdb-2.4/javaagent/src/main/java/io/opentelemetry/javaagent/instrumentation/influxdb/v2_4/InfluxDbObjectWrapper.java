@@ -20,9 +20,14 @@ public class InfluxDbObjectWrapper {
           o -> {
             if (o instanceof QueryResult) {
               state.observe((QueryResult) o);
+            } else if (o instanceof Throwable) {
+              state.onFailure((Throwable) o);
             }
             try (Scope ignore = parentContext.makeCurrent()) {
               ((Consumer<Object>) object).accept(o);
+            } catch (Throwable t) {
+              state.onCallbackError(t);
+              throw t;
             }
           };
     } else if (object instanceof BiConsumer) {
@@ -33,6 +38,9 @@ public class InfluxDbObjectWrapper {
             }
             try (Scope ignore = parentContext.makeCurrent()) {
               ((BiConsumer<Object, Object>) object).accept(o1, o2);
+            } catch (Throwable t) {
+              state.onCallbackError(t);
+              throw t;
             }
           };
     } else if (object instanceof Runnable) {
@@ -40,6 +48,9 @@ public class InfluxDbObjectWrapper {
           () -> {
             try (Scope ignore = parentContext.makeCurrent()) {
               ((Runnable) object).run();
+            } catch (Throwable t) {
+              state.onCallbackError(t);
+              throw t;
             }
           };
     }

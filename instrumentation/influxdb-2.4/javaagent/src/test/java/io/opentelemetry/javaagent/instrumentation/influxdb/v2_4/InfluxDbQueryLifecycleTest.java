@@ -431,6 +431,14 @@ class InfluxDbQueryLifecycleTest {
     }
   }
 
+  @Test
+  void chunkDecodingFailure() {
+    try (InfluxDB client = client(chain -> response(chain, "{\"results\":\"invalid\"}\n"))) {
+      client.query(QUERY, 1, (cancellable, result) -> {}, () -> {}, error -> {});
+      assertQuery("com.squareup.moshi.JsonDataException");
+    }
+  }
+
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void chunkReadFailureFinishesOnce(boolean failureCallback) throws InterruptedException {
