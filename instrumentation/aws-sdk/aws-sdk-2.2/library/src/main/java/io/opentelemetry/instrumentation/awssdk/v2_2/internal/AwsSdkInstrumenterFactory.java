@@ -160,15 +160,28 @@ public final class AwsSdkInstrumenterFactory {
       httpClientSuppressionAttributesExtractor =
           new AwsSdkHttpClientSuppressionAttributesExtractor();
 
+  private final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
+      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
+
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
+      defaultAttributesExtractors =
+          asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
+
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
+      extendedAttributesExtractors =
+          asList(
+              rpcAttributesExtractor,
+              experimentalAttributesExtractor,
+              httpClientSuppressionAttributesExtractor);
+
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
+      defaultConsumerAttributesExtractors = asList(rpcAttributesExtractor, httpAttributesExtractor);
+
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
+      extendedConsumerAttributesExtractors =
+          asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
+
   private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<ExecutionAttributes, Response>>
-      defaultAttributesExtractors;
-  private final List<AttributesExtractor<ExecutionAttributes, Response>>
-      extendedAttributesExtractors;
-  private final List<AttributesExtractor<ExecutionAttributes, Response>>
-      defaultConsumerAttributesExtractors;
-  private final List<AttributesExtractor<ExecutionAttributes, Response>>
-      extendedConsumerAttributesExtractors;
   @Nullable private final TextMapPropagator messagingPropagator;
   private final IncludeExclude headers;
   private final boolean captureExperimentalSpanAttributes;
@@ -183,18 +196,6 @@ public final class AwsSdkInstrumenterFactory {
       boolean messagingReceiveInstrumentationEnabled,
       boolean useXrayPropagator) {
     this.openTelemetry = openTelemetry;
-    AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-        RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
-    defaultAttributesExtractors =
-        asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
-    extendedAttributesExtractors =
-        asList(
-            rpcAttributesExtractor,
-            experimentalAttributesExtractor,
-            httpClientSuppressionAttributesExtractor);
-    defaultConsumerAttributesExtractors = asList(rpcAttributesExtractor, httpAttributesExtractor);
-    extendedConsumerAttributesExtractors =
-        asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
     this.messagingPropagator = messagingPropagator;
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
