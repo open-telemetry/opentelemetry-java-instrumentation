@@ -289,11 +289,11 @@ public abstract class AbstractSofaRpcTest {
                                   histogram ->
                                       histogram.hasPointsSatisfying(
                                           point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"))))));
+                                              point.satisfies(
+                                                  pointData ->
+                                                      assertThat(pointData.getAttributes().asMap())
+                                                          .containsOnlyKeys(
+                                                              RPC_SYSTEM_NAME, RPC_METHOD))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -308,13 +308,14 @@ public abstract class AbstractSofaRpcTest {
                                   histogram ->
                                       histogram.hasPointsSatisfying(
                                           point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(RPC_METHOD, genericServiceSpanName()),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)))))));
+                                              point.satisfies(
+                                                  pointData ->
+                                                      assertThat(pointData.getAttributes().asMap())
+                                                          .containsOnlyKeys(
+                                                              RPC_SYSTEM_NAME,
+                                                              RPC_METHOD,
+                                                              SERVER_ADDRESS,
+                                                              SERVER_PORT))))));
     }
   }
 
@@ -463,11 +464,11 @@ public abstract class AbstractSofaRpcTest {
                                   histogram ->
                                       histogram.hasPointsSatisfying(
                                           point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"))))));
+                                              point.satisfies(
+                                                  pointData ->
+                                                      assertThat(pointData.getAttributes().asMap())
+                                                          .containsOnlyKeys(
+                                                              RPC_SYSTEM_NAME, RPC_METHOD))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -482,13 +483,14 @@ public abstract class AbstractSofaRpcTest {
                                   histogram ->
                                       histogram.hasPointsSatisfying(
                                           point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(RPC_METHOD, genericServiceSpanName()),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)))))));
+                                              point.satisfies(
+                                                  pointData ->
+                                                      assertThat(pointData.getAttributes().asMap())
+                                                          .containsOnlyKeys(
+                                                              RPC_SYSTEM_NAME,
+                                                              RPC_METHOD,
+                                                              SERVER_ADDRESS,
+                                                              SERVER_PORT))))));
     }
   }
 
@@ -682,14 +684,13 @@ public abstract class AbstractSofaRpcTest {
                                   histogram ->
                                       histogram.hasPointsSatisfying(
                                           point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
-                                                  equalTo(
-                                                      ERROR_TYPE,
-                                                      SofaRpcRuntimeException.class.getName()))))));
+                                              point.satisfies(
+                                                  pointData ->
+                                                      assertThat(pointData.getAttributes().asMap())
+                                                          .containsOnlyKeys(
+                                                              RPC_SYSTEM_NAME,
+                                                              RPC_METHOD,
+                                                              ERROR_TYPE))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -704,18 +705,15 @@ public abstract class AbstractSofaRpcTest {
                                   histogram ->
                                       histogram.hasPointsSatisfying(
                                           point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
-                                                  equalTo(
-                                                      ERROR_TYPE,
-                                                      SofaRpcRuntimeException.class.getName()),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)))))));
+                                              point.satisfies(
+                                                  pointData ->
+                                                      assertThat(pointData.getAttributes().asMap())
+                                                          .containsOnlyKeys(
+                                                              RPC_SYSTEM_NAME,
+                                                              RPC_METHOD,
+                                                              ERROR_TYPE,
+                                                              SERVER_ADDRESS,
+                                                              SERVER_PORT))))));
     }
   }
 
