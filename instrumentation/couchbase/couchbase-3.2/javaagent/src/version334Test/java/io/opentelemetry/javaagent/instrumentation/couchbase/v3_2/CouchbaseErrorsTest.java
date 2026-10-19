@@ -16,6 +16,8 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.couchbase.client.core.cnc.RequestSpan;
+import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.error.ValueTooLargeException;
 import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
@@ -92,6 +94,43 @@ class CouchbaseErrorsTest {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> trace.hasSpansSatisfyingExactly(span -> assertUpsertSpan(span, oversized)));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void recoveredExceptionDoesNotReportErrorType(boolean errorThenOk)
+      throws ReflectiveOperationException {
+    RequestTracer tracer;
+    try {
+      Object resources =
+          cluster.core().getClass().getMethod("coreResources").invoke(cluster.core());
+      tracer = (RequestTracer) resources.getClass().getMethod("requestTracer").invoke(resources);
+    } catch (NoSuchMethodException ignored) {
+      // SDK 3.3.4 stores the tracer on the environment instead of core resources.
+      tracer = cluster.environment().requestTracer();
+    }
+    RequestSpan span = tracer.requestSpan("upsert", null);
+    span.attribute("db.system", "couchbase");
+    IllegalStateException error = new IllegalStateException("recovered");
+    span.recordException(error);
+    if (errorThenOk) {
+      span.status(RequestSpan.StatusCode.ERROR);
+      span.status(RequestSpan.StatusCode.OK);
+    }
+    span.end();
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                operation ->
+                    operation
+                        .hasName("upsert")
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasStatus(errorThenOk ? StatusData.ok() : StatusData.unset())
+                        .hasException(error)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "couchbase"), equalTo(ERROR_TYPE, null))));
   }
 
   private static void assertUpsertSpan(SpanDataAssert span, boolean oversized) {
