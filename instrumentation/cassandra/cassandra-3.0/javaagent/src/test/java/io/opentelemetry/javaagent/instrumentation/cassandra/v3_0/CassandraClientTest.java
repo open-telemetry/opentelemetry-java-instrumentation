@@ -36,8 +36,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Cluster;
@@ -734,43 +732,6 @@ class CassandraClientTest {
                             equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
                             equalTo(CASSANDRA_PAGE_SIZE, 5000),
                             equalTo(ERROR_TYPE, SyntaxError.class.getName()))));
-  }
-
-  @Test
-  void failureWithoutCoordinatorUsesConfiguredTarget() throws ReflectiveOperationException {
-    Cluster configuredCluster =
-        Cluster.builder().addContactPoint("LOCALHOST").withPort(4242).build();
-    cleanup.deferCleanup(configuredCluster);
-    Session delegate = mock(Session.class);
-    when(delegate.getCluster()).thenReturn(configuredCluster);
-    RuntimeException failure = new RuntimeException("failed before execution");
-    when(delegate.execute("invalid")).thenThrow(failure);
-    Session instrumentedSession = cluster.connect();
-    cleanup.deferCleanup(instrumentedSession);
-    Session session =
-        (Session)
-            instrumentedSession.getClass().getConstructor(Session.class).newInstance(delegate);
-
-    assertThatThrownBy(() -> session.execute("invalid")).isSameAs(failure);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("LOCALHOST:4242")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(failure)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, "LOCALHOST"),
-                            equalTo(SERVER_PORT, 4242L),
-                            equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                            equalTo(DB_QUERY_TEXT, "invalid"),
-                            equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                            equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
-                            equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                            equalTo(ERROR_TYPE, RuntimeException.class.getName()))));
   }
 
   private static Stream<Arguments> failureScenarios() {

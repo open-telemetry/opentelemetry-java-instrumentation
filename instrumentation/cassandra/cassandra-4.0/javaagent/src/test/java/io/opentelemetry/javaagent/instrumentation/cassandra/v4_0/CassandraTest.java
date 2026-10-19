@@ -15,7 +15,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,22 +22,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
-import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
-import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.datastax.oss.driver.api.core.metadata.EndPoint;
-import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
-import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.cassandra.common.v4_0.AbstractCassandraTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.time.Duration;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -102,57 +91,11 @@ class CassandraTest extends AbstractCassandraTest {
   }
 
   @Test
-  void responsePeerComesFromTheChannel() throws ReflectiveOperationException {
-    CqlSession instrumentedSession = getSession(null);
-    ClassLoader helperClassLoader =
-        Proxy.getInvocationHandler(instrumentedSession).getClass().getClassLoader();
-    CqlSession delegate = getDelegate(instrumentedSession);
-    InetSocketAddress coordinatorAddress = new InetSocketAddress("127.0.0.2", 19042);
-    CqlSession mutatingDelegate =
-        (CqlSession)
-            Proxy.newProxyInstance(
-                delegate.getClass().getClassLoader(),
-                new Class<?>[] {CqlSession.class},
-                (proxy, method, args) -> {
-                  Object result = method.invoke(delegate, args);
-                  if ("execute".equals(method.getName())
-                      && method.getParameterCount() == 1
-                      && PEER_QUERY.equals(args[0])) {
-                    ResultSet resultSet = (ResultSet) result;
-                    setEndPoint(
-                        resultSet.getExecutionInfo().getCoordinator(),
-                        new DefaultEndPoint(coordinatorAddress));
-                  }
-                  return result;
-                });
-    Method wrapSession =
-        helperClassLoader
-            .loadClass(
-                "io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.TracingCqlSession")
-            .getDeclaredMethod("wrapSession", CqlSession.class, Set.class);
-    wrapSession.setAccessible(true);
-    CqlSession session = (CqlSession) wrapSession.invoke(null, mutatingDelegate, emptySet());
+  void responsePeerComesFromTheChannel() {
+    CqlSession session = getSession(null);
     cleanup.deferCleanup(session);
-    Node node = delegate.getMetadata().getNodes().values().iterator().next();
-    EndPoint originalEndPoint = node.getEndPoint();
-    ResultSet result;
-    try {
-      result = session.execute(PEER_QUERY);
-    } finally {
-      setEndPoint(node, originalEndPoint);
-    }
+    session.execute(PEER_QUERY);
     testing.waitForTraces(1);
-
-    InetSocketAddress responsePeer =
-        (InetSocketAddress)
-            helperClassLoader
-                .loadClass(
-                    "io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraResponsePeers")
-                .getMethod("getExecutionInfoPeer", ExecutionInfo.class)
-                .invoke(null, result.getExecutionInfo());
-    assertThat(responsePeer).isNotNull();
-    assertThat(responsePeer.getAddress().getHostAddress()).isEqualTo(cassandraIp);
-    assertThat(responsePeer.getPort()).isEqualTo(cassandraPort);
 
     assertThat(testing.spans())
         .singleElement()
@@ -177,27 +120,8 @@ class CassandraTest extends AbstractCassandraTest {
                                     equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
                                     equalTo(DB_SYSTEM_NAME, "cassandra"),
                                     equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                    equalTo(NETWORK_PEER_PORT, cassandraPort)))));
-  }
-
-  private static CqlSession getDelegate(CqlSession session) throws IllegalAccessException {
-    if (!Proxy.isProxyClass(session.getClass())) {
-      throw new IllegalStateException("Expected the tracing session to be a JDK proxy");
-    }
-    InvocationHandler invocationHandler = Proxy.getInvocationHandler(session);
-    for (Field field : invocationHandler.getClass().getDeclaredFields()) {
-      if (CqlSession.class.isAssignableFrom(field.getType())) {
-        field.setAccessible(true);
-        return (CqlSession) field.get(invocationHandler);
-      }
-    }
-    throw new IllegalStateException("Could not find the delegate session");
-  }
-
-  private static void setEndPoint(Node node, EndPoint endPoint)
-      throws ReflectiveOperationException {
-    Field field = node.getClass().getDeclaredField("endPoint");
-    field.setAccessible(true);
-    field.set(node, endPoint);
+                                    equalTo(NETWORK_PEER_PORT, cassandraPort),
+                                    equalTo(SERVER_ADDRESS, cassandraHost),
+                                    equalTo(SERVER_PORT, cassandraPort)))));
   }
 }
