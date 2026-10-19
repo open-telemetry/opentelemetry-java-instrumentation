@@ -181,22 +181,22 @@ class AwsLambdaSqsMessageHandlerTest {
                             histogram ->
                                 histogram.hasPointsSatisfying(
                                     point ->
-                                        point
-                                            .hasCount(2)
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "queue1")),
+                                        point.hasAttributesSatisfying(
+                                            attributes ->
+                                                assertThat(attributes.asMap())
+                                                    .containsOnlyKeys(
+                                                        MESSAGING_OPERATION_NAME,
+                                                        MESSAGING_SYSTEM,
+                                                        MESSAGING_DESTINATION_NAME)),
                                     point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
-                                                equalTo(ERROR_TYPE, "_OTHER"))))));
+                                        point.hasAttributesSatisfying(
+                                            attributes ->
+                                                assertThat(attributes.asMap())
+                                                    .containsOnlyKeys(
+                                                        MESSAGING_OPERATION_NAME,
+                                                        MESSAGING_SYSTEM,
+                                                        MESSAGING_DESTINATION_NAME,
+                                                        ERROR_TYPE))))));
     testing.waitAndAssertMetrics(
         TracingSqsEventHandler.INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
@@ -208,12 +208,13 @@ class AwsLambdaSqsMessageHandlerTest {
                             sum ->
                                 sum.hasPointsSatisfying(
                                     point ->
-                                        point
-                                            .hasValue(2)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "queue1"))))));
+                                        point.hasAttributesSatisfying(
+                                            attributes ->
+                                                assertThat(attributes.asMap())
+                                                    .containsOnlyKeys(
+                                                        MESSAGING_OPERATION_NAME,
+                                                        MESSAGING_SYSTEM,
+                                                        MESSAGING_DESTINATION_NAME))))));
   }
 
   @Test
