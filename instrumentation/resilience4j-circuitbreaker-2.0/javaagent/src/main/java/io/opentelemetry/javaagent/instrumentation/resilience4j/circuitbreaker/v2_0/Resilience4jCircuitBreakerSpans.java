@@ -268,29 +268,37 @@ public class Resilience4jCircuitBreakerSpans {
 
   @Nullable
   private static PendingSpan currentPendingSpan(CircuitBreaker circuitBreaker) {
-    Deque<OnResult> results = onResults.get();
-    if (results != null && !results.isEmpty() && results.peek().circuitBreaker == circuitBreaker) {
-      return null;
+    Deque<Capture> captureStack = captures.get();
+    Capture capture = captureStack == null ? null : captureStack.peek();
+    PendingSpan captured = null;
+    if (capture != null
+        && capture.userCodeDepth == 0
+        && capture.circuitBreaker == circuitBreaker
+        && capture.token != null) {
+      captured = capture.token.pendingSpan;
     }
     // An explicit completion attachment is the strongest ownership signal: a decorated stage or
     // future completing inside another decorated call must classify against its own span instead
     // of being suppressed by the enclosing capture's user-code guard.
     Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
-    if (spans != null) {
-      PendingSpan attached = spans.peek().pendingSpan;
-      if (attached.isFor(circuitBreaker)) {
-        return attached;
+    PendingSpan attached = spans == null ? null : spans.peek().pendingSpan;
+    if (attached != null && !attached.isFor(circuitBreaker)) {
+      attached = null;
+    }
+    // Active classifications own their spans. Raw reentrant callbacks cannot reuse them, but
+    // a nested decorated attempt can supply a different span.
+    Deque<OnResult> results = onResults.get();
+    if (results != null) {
+      for (OnResult result : results) {
+        if (captured == result.pendingSpan) {
+          captured = null;
+        }
+        if (attached == result.pendingSpan) {
+          attached = null;
+        }
       }
     }
-    Deque<Capture> captureStack = captures.get();
-    Capture capture = captureStack == null ? null : captureStack.peek();
-    if (capture != null && capture.userCodeDepth > 0) {
-      return null;
-    }
-    if (capture != null && capture.circuitBreaker == circuitBreaker && capture.token != null) {
-      return capture.token.pendingSpan;
-    }
-    return null;
+    return attached != null ? attached : captured;
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
