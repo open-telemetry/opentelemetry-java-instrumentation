@@ -90,8 +90,6 @@ instrumentation. They use independent feature names, such as `kafka-clients-metr
 `jdbc-datasource`, or `kotlinx-coroutines-annotations`. A group whose
 members are all default-off can share an umbrella: `hibernate` selects default-off telemetry,
 including procedure calls, but not default-on Hibernate Reactive context propagation.
-The deprecated Jedis 1.x and superseded Lettuce 5.1 implementations slated for removal in 3.0
-do not define long-term group membership.
 
 Ordinary defaults assume global enablement on and optional feature settings absent. The native
 Javaagent review instructions contain the naming and default-isolation rules.
@@ -555,6 +553,11 @@ instead permits otherwise-incompatible assignment by inserting a runtime cast. U
 explicit type constraint only when every matched signature has a separate runtime contract that
 guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
 prevent `ClassCastException`.
+
+Argument matchers check declared parameter types, not runtime value types. Match supported
+declarations compatible with the advice binding. These may be subtypes of the advice parameter's type
+or differ across supported library versions. A short matcher comment is useful to explain the
+supported signatures or concrete-type assumption when the choice is not obvious.
 
 ### Rules
 

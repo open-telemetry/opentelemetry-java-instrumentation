@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -178,6 +179,45 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public Double getDouble(String name) {
     return configProperties.getDouble(resolvePropertyKey(name));
+  }
+
+  @Override
+  public boolean isString(String name) {
+    // Flat configuration stores strings, so no parsing can fail.
+    return getString(name) != null;
+  }
+
+  @Override
+  public boolean isBoolean(String name) {
+    // Boolean.parseBoolean() returns false for unrecognized values instead of throwing.
+    return getBoolean(name) != null;
+  }
+
+  @Override
+  public boolean isInt(String name) {
+    try {
+      return getInt(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean isLong(String name) {
+    try {
+      return getLong(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean isDouble(String name) {
+    try {
+      return getDouble(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
   }
 
   /**

@@ -70,20 +70,9 @@ val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
 }
 
 tasks {
-  processResources {
-    // Preserve the legacy HTTP client scope version outside v3-preview.
-    // TODO: Remove in 3.0 when the HTTP client always uses the ratpack-1.4 scope.
-    from(named("generateInstrumentationVersionFile")) {
-      include("io.opentelemetry.ratpack-1.4.properties")
-      rename { "io.opentelemetry.ratpack-1.7.properties" }
-      into("META-INF/io/opentelemetry/instrumentation")
-    }
-  }
-
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
@@ -106,18 +95,8 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val version17TestV3Preview = register<Test>("version17TestV3Preview") {
-    testClassesDirs = version17Test.get().sources.output.classesDirs
-    classpath = version17Test.get().sources.runtimeClasspath
-    filter {
-      includeTestsMatching("*RatpackHttpClientTest.durationMetricHasProtocolVersion")
-    }
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true,otel.instrumentation.common.controller-telemetry.enabled=true")
-  }
-
   check {
-    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv, version17TestV3Preview)
+    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv)
   }
 
   if (otelProps.denyUnsafe) {

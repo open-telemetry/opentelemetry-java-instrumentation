@@ -76,6 +76,9 @@ tasks {
       excludeTestsMatching("SlickTest")
       excludeTestsMatching("SqlCommenterTest")
       excludeTestsMatching("PreparedStatementParametersTest")
+      excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
+      excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
+      excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=service.peer")
@@ -90,6 +93,10 @@ tasks {
       includeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.jdbc.experimental.capture-query-parameters=true",
+    )
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
@@ -100,10 +107,29 @@ tasks {
       excludeTestsMatching("SlickTest")
       excludeTestsMatching("SqlCommenterTest")
       excludeTestsMatching("PreparedStatementParametersTest")
+      excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
+      excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
+      excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
+  val testTransactions = register<Test>("testTransactions") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
+      includeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
+      includeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.jdbc.experimental.transaction.enabled=true",
+    )
   }
 
   test {
@@ -111,6 +137,9 @@ tasks {
       excludeTestsMatching("SlickTest")
       excludeTestsMatching("SqlCommenterTest")
       excludeTestsMatching("PreparedStatementParametersTest")
+      excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
+      excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
+      excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
   }
@@ -121,13 +150,12 @@ tasks {
     dependsOn(testPreviewSemconv)
     dependsOn(testCaptureParameters)
     dependsOn(testExceptionSignalLogs)
+    dependsOn(testTransactions)
   }
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

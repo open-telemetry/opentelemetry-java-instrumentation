@@ -12,16 +12,26 @@ convention not caught by CI.
 
 ## Behavior coverage
 
+- Prefer integration tests for instrumentation behavior. Exercise the library through its normal
+  API, use a real service when relevant, and assert emitted telemetry. For javaagent changes, use
+  the installed agent against the required library versions to exercise class transformation and
+  library compatibility.
+- Use focused unit tests for nontrivial standalone logic and shared infrastructure when they add
+  coverage beyond integration tests. Choose cases for distinct behavior and important edge cases,
+  not to enumerate every implementation branch or combination of mocked responses.
 - Test supported behavior. Do not add or request tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted
   telemetry, not just helpers.
-- Do not add or request duplicate behavior tests for equivalent flat properties
-  and declarative YAML that use shared configuration logic. Add declarative-mode
+- For ordinary settings available in both forms, prefer default-behavior and
+  module-specific flat-property tests. Do not add or request duplicate behavior tests for
+  equivalent flat properties and declarative YAML that use shared configuration logic. Add declarative-mode
   coverage only for different behavior, new or changed mode-specific wiring or
-  migration paths, or settings unavailable through flat properties. Keep
-  mode-specific wiring tests focused rather than repeating the full behavior
-  matrix. Test shared flat-to-declarative conversion centrally.
+  migration paths, structured configuration, or settings unavailable through flat properties.
+  Keep mode-specific wiring tests focused rather than repeating the full behavior matrix.
+  Test shared flat-to-declarative conversion centrally. Single-source declarative unit tests are not duplicates.
+- Test shared-helper defaults, fallback, and precedence centrally, not in every caller.
+  Keep caller-specific logic covered and add missing central coverage before removing a module test.
 - Do not add or request historical-absence assertions merely because telemetry
   or functionality was removed or made opt-in. An absence assertion must verify
   a supported contract that would merit testing even if the previous behavior
@@ -29,11 +39,6 @@ convention not caught by CI.
   absence assertions in unrelated integration or smoke tests. Keep focused
   coverage for supported settings, changed defaults, explicit opt-in/opt-out,
   and default enablement, as well as exact assertions of supported telemetry.
-- For a javaagent change supporting multiple runtime library versions,
-  look for tests with the installed agent against the required versions.
-  Direct helper tests and `javaagent-unit-tests` do not exercise class
-  transformation or the actual library; do not count them as integration
-  coverage.
 - For a module whose default enablement changes, the same representative
   operation must emit instrumentation telemetry in an enabled JVM and no
   instrumentation telemetry in a disabled JVM. A `DefaultEnablementTest`

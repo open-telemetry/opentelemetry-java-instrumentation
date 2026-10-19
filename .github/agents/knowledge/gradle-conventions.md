@@ -247,14 +247,12 @@ The `otel.javaagent-instrumentation` convention plugin already provides
 
 ## Custom Test Tasks
 
-Register custom test tasks lazily with `register<Test>("testFoo")`.
-
-Every explicitly registered custom `Test` task **must** include
+Every custom `Test` task registered with `val foo by registering(Test::class)` **must** include
 `testClassesDirs` and `classpath`. Without them the task discovers no test classes and passes
 vacuously — a silent false-negative.
 
 ```kotlin
-val testFoo = register<Test>("testFoo") {
+val testFoo by registering(Test::class) {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   // ... other config
@@ -343,8 +341,8 @@ Preserve mixed variants for selectable domains, along with experimental and libr
 
 When source suite tasks have different JVM arguments or system properties, copy those values into
 the variant before adding its own configuration. This avoids rebuilding source settings with
-suite-name checks. When metadata collection is already active, append the variant setting to the
-inherited `metadataConfig`:
+suite-name checks. For a collected telemetry mode, preserve the inherited telemetry conditions and
+append the variant's telemetry setting to `metadataConfig`, not every copied JVM setting:
 
 ```kotlin
 val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
@@ -439,25 +437,25 @@ form is only justified when the same `build.gradle.kts` actually registers addit
 **`latestDepTest` does not count as a second test task for this rule.** It is registered
 implicitly by the convention plugin when `testLatestDeps` is set, and it inherits the
 configuration of `tasks.test`. A module with only a `tasks.test { ... }` block and no
-explicitly registered additional `Test` tasks is a single-test-task module — leave it alone
+`by registering(Test::class)` declarations is a single-test-task module — leave it alone
 (use the simple form) even if `testLatestDeps = true`.
 
 Only consider converting to `withType<Test>().configureEach` when the **same
-`build.gradle.kts`** explicitly registers one or more additional `Test` tasks.
+`build.gradle.kts`** explicitly registers one or more additional `Test` tasks via
+`val foo by registering(Test::class)`.
 
 **How to spot violations:** If `build.gradle.kts` has both a `test { ... }` block and an
-explicitly registered custom `Test` task (e.g., `testStableSemconv`), check
+explicit `by registering(Test::class)` custom test task (e.g., `testStableSemconv`), check
 whether any `systemProperty(...)` or `jvmArgs(...)` calls appear inside the `test { }` block
 that should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
 
 ```kotlin
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    // ... other properties common to all test tasks
+    // ... properties common to all test tasks
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val testPreviewSemconv by registering(Test::class) {
     // only task-specific config here
     jvmArgs("-Dotel.semconv-stability.preview=<domain>")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
@@ -467,31 +465,6 @@ tasks {
 
 ## `collectMetadata` and `metadataConfig`
 
-These system properties support the metadata collection pipeline. They are not required for
-test correctness and are being added as a separate migration. Do not add them
-as unrelated cleanup; check their wiring when already present.
-
-Do not add `collectMetadata` or `metadataConfig` to `unitTests` suites or legacy
-`javaagent-unit-tests` projects. These are unit tests, and metadata collection should not run there.
-
-| Property          | Type            | Value                                                                                            |
-| ----------------- | --------------- | ------------------------------------------------------------------------------------------------ |
-| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false`                                 |
-| `metadataConfig`  | System property | A single `key=value` string describing the non-default configuration active during this test run |
-
-When already present, verify:
-
-- `metadataConfig` is only used in files that also configure `collectMetadata`. A lone
-  `metadataConfig` does not enable collection and should be removed, not added as a partial
-  metadata migration.
-- `collectMetadata` is in `tasks.test` for single-test-task modules, or in
-  `withType<Test>().configureEach` for modules that explicitly register additional `Test`
-  tasks (`latestDepTest` does not count) — never on
-  individual tasks. Do not use
-  `withType<Test>().configureEach { ... }` in single-test-task modules.
-- `metadataConfig` is on each non-default task that participates in metadata collection. It may
-  also appear on the default `test` task when that task participates in metadata collection and
-  itself runs with non-default `jvmArgs` (e.g., an experimental flag enabled module-wide via
-  `withType<Test>().configureEach { jvmArgs(...) }`); in that case the `metadataConfig` value
-  should describe those non-default jvmArgs.
-- The `metadataConfig` value matches at least one of the jvmArgs configured in the task
+Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
+for task selection and labels. Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
+Keep `metadataConfig` labels local.

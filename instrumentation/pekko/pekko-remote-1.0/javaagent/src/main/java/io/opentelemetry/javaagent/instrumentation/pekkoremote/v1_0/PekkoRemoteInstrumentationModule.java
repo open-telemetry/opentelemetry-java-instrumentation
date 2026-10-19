@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery.ArteryInstrumentations;
@@ -24,11 +23,7 @@ import java.util.List;
 public class PekkoRemoteInstrumentationModule extends InstrumentationModule {
 
   public PekkoRemoteInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "pekko-remote-1.0" : "pekko-remote",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"pekko-remote", "pekko"}
-            : new String[] {"pekko-remote-1.0"});
+    super("pekko-remote-1.0", "pekko-remote", "pekko");
   }
 
   @Override

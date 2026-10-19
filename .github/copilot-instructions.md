@@ -18,6 +18,9 @@ applicable repository review rules; use their stated conditions and exceptions. 
 - Check changes for lifecycle leaks, reentrancy, concurrency under supported library usage,
   unsafe error handling, changed telemetry, incorrect comments, and copy/paste mistakes.
   Identify a supported failure path rather than requesting defenses against hypothetical ones.
+- Before reporting a defect that depends on library or framework behavior, verify the premise
+  against the dependency versions and concrete implementations used by the PR, including relevant
+  initialization and registration.
 - For a changed public Java API, identify the *publishing artifact* before claiming a break.
   Javaagent modules bundled into the agent are not published Java APIs. In stable artifacts
   (`otel.stable=true` in that module's `gradle.properties`), deprecate before removal and keep
@@ -79,8 +82,10 @@ of where its implementation lives.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
 - Add hand-written changelog entries only for deprecations or breaking changes, as specified in
-  CONTRIBUTING.md; normal changes rely on the generated changelog. Write these entries around the
-  user-visible change and any required migration. Describe the released behavior directly, without
+  CONTRIBUTING.md; normal changes rely on the generated changelog. Keep entries short and focused on
+  the user-visible change. Include migration guidance only when the required action is not obvious
+  from the change description; omit generic advice to handle the new behavior.
+  Describe the released behavior directly, without
   referring to preview flags used to stage the change. Omit statements about behavior that is
   unchanged unless they are necessary to clarify the change's scope.
 - Add or request README and usage documentation for a concrete reader need: setup,

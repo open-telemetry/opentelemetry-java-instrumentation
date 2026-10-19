@@ -95,9 +95,9 @@ instrumentation/development:
           # adverse impact on database performance.
           enabled: false
       gen_ai:
-        # Determines whether Generative AI events include full content of user and assistant
-        # messages. Note that full content can have data privacy and size concerns and care should
-        # be taken when enabling this
+        # Enables including the full content of system, user, assistant, and tool messages in
+        # emitted log events. Note that full content can have data privacy and size concerns, and
+        # care should be taken when enabling this.
         capture_message_content: false
       http:
         client:
@@ -224,8 +224,8 @@ instrumentation/development:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
-      # Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
-      # Different operation types receive different experimental attributes.
+      # Enables experimental span attributes for Couchbase 2.x. For Couchbase 3.x, also enables the
+      # request_encoding and dispatch_to_server internal spans emitted by the SDK.
       emit_experimental_telemetry/development: false
     elasticsearch:
       # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
@@ -365,9 +365,6 @@ instrumentation/development:
       discovery:
         # Time in milliseconds between JMX MBean detection attempts.
         delay: 60000
-
-      # Enables collection of JMX metrics.
-      enabled: true
       metrics:
         # Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*"
         # matches any number of characters and "?" matches one character. Excluded patterns take
@@ -404,9 +401,6 @@ instrumentation/development:
       # `kubernetes-client.name` for Kubernetes API requests.
       experimental_span_attributes/development: false
     lettuce:
-      command_encoding_events/development:
-        # Enables capturing `redis.encode.start` and `redis.encode.end` span events.
-        enabled: false
       connection_telemetry:
         # Enables connection telemetry spans for Redis connections.
         enabled: false
@@ -582,8 +576,8 @@ instrumentation/development:
       jfr_metrics/development:
         # Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with
         # * and ?. Excluded patterns take precedence over included patterns, including over
-        # shorthand and legacy selections. Configuring this property without included selects all
-        # metrics except those excluded.
+        # experimental JFR shorthand selections. Configuring this property without included selects
+        # all metrics except those excluded.
         excluded: []
 
         # Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
