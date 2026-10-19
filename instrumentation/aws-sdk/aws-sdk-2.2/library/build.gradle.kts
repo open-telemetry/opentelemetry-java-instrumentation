@@ -51,6 +51,7 @@ testing {
             excludeTestsMatching("Aws2SqsSuppressReceiveSpansDefaultPropagatorTest")
             excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest")
             excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorAndXrayPropagatorTest")
+            // Keep inherited SQS coverage by excluding only subclass-specific regression tests.
             excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
             excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
             excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
