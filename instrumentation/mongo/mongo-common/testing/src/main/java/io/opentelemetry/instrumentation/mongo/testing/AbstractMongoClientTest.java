@@ -206,11 +206,7 @@ public abstract class AbstractMongoClientTest<T> {
                     .singleElement()
                     .satisfies(
                         metric ->
-                            io.opentelemetry
-                                .sdk
-                                .testing
-                                .assertj
-                                .assertThat(metric)
+                            assertThat(metric)
                                 .hasName("db.client.operation.duration")
                                 .hasHistogramSatisfying(
                                     histogram ->
