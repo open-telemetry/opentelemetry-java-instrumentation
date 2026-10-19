@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -53,8 +52,6 @@ class RatpackErrorContextTest {
 
   private static final boolean CONTROLLER_TELEMETRY_ENABLED =
       Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
-
-  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private RatpackServer server;
   private final ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -133,8 +130,6 @@ class RatpackErrorContextTest {
       named = "otel.instrumentation.common.controller-telemetry.enabled",
       matches = "false")
   void outboundRequestUsesApplicationSpan() throws Exception {
-    HttpClient httpClient = HttpClient.of(spec -> {});
-    cleanup.deferCleanup(httpClient);
     server =
         RatpackServer.start(
             spec ->
@@ -151,7 +146,7 @@ class RatpackErrorContextTest {
                                   testing.runWithSpan(
                                       "application",
                                       () ->
-                                          httpClient
+                                          ctx.get(HttpClient.class)
                                               .get(
                                                   new URI(
                                                       "http://localhost:"
