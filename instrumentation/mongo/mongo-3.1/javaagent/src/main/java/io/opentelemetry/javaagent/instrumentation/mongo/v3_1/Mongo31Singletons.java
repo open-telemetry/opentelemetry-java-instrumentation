@@ -21,7 +21,7 @@ public class Mongo31Singletons {
   private static final VirtualField<ConnectionDescription, MongoNetworkPeer> CONNECTION_PEER =
       VirtualField.find(ConnectionDescription.class, MongoNetworkPeer.class);
 
-  private static final Instrumenter<CommandStartedEvent, Void> instrumenter =
+  private static final Instrumenter<CommandStartedEvent, Integer> instrumenter =
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-3.1",

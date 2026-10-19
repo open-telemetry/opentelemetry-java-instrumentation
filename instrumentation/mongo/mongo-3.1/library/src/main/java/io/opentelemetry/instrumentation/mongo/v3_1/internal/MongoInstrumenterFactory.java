@@ -9,12 +9,14 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -25,7 +27,7 @@ public final class MongoInstrumenterFactory {
 
   static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
-  public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, Integer> createInstrumenter(
       OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
     return createInstrumenter(
         openTelemetry,
@@ -35,7 +37,7 @@ public final class MongoInstrumenterFactory {
         null);
   }
 
-  public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, Integer> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -48,7 +50,7 @@ public final class MongoInstrumenterFactory {
         connectionPeerResolver);
   }
 
-  public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, Integer> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -61,7 +63,7 @@ public final class MongoInstrumenterFactory {
         null);
   }
 
-  private static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  private static Instrumenter<CommandStartedEvent, Integer> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -71,12 +73,20 @@ public final class MongoInstrumenterFactory {
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(
             querySanitizationEnabled, maxNormalizedQueryLength, connectionPeerResolver);
-    InstrumenterBuilder<CommandStartedEvent, Void> builder =
-        Instrumenter.<CommandStartedEvent, Void>builder(
+    InstrumenterBuilder<CommandStartedEvent, Integer> builder =
+        Instrumenter.<CommandStartedEvent, Integer>builder(
                 openTelemetry,
                 instrumentationName,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSpanStatusExtractor(
+                (status, request, response, error) -> {
+                  if (response != null) {
+                    status.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault().extract(status, request, response, error);
+                  }
+                })
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -21,14 +22,17 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
+import com.mongodb.MongoWriteException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -41,6 +45,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -126,6 +132,101 @@ public abstract class AbstractMongoClientTest<T> {
   protected abstract void getMore(T collection);
 
   protected abstract void error(String dbName, String collectionName) throws Throwable;
+
+  protected abstract T setupValidatedCollection(String dbName, String collectionName)
+      throws Exception;
+
+  protected abstract void insertInvalid(T collection) throws Throwable;
+
+  protected abstract long writeWithZeroMatches(T collection, String operation) throws Exception;
+
+  @Test
+  void schemaValidationFailure() throws Exception {
+    String collectionName = createCollectionName();
+    T collection = setupValidatedCollection("test_db", collectionName);
+    ignoreTracesAndClear(1);
+
+    assertThatExceptionOfType(MongoWriteException.class)
+        .isThrownBy(() -> insertInvalid(collection))
+        .satisfies(error -> assertThat(error.getError().getCode()).isEqualTo(121));
+
+    assertWriteResult(collectionName, "insert", "121");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"update", "delete"})
+  void zeroMatchesAreSuccessful(String operation) throws Exception {
+    String collectionName = createCollectionName();
+    T collection = setupInsert("test_db", collectionName);
+    assertThat(writeWithZeroMatches(collection, operation)).isZero();
+    assertWriteResult(collectionName, operation, null);
+  }
+
+  private void assertWriteResult(String collectionName, String operation, String errorType) {
+    AtomicReference<String> scopeName = new AtomicReference<>();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      scopeName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+                      span.hasName(operation + " " + collectionName)
+                          .hasKind(CLIENT)
+                          .hasNoParent()
+                          .hasStatus(errorType == null ? StatusData.unset() : StatusData.error())
+                          .hasEventsSatisfyingExactly()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(DB_SYSTEM_NAME, MONGODB),
+                              equalTo(DB_NAMESPACE, "test_db"),
+                              equalTo(DB_COLLECTION_NAME, collectionName),
+                              equalTo(DB_OPERATION_NAME, operation),
+                              satisfies(DB_QUERY_TEXT, val -> val.isNotNull()),
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(
+                                  NETWORK_PEER_ADDRESS,
+                                  supportsNetworkPeer() ? networkPeerAddress : null),
+                              equalTo(
+                                  NETWORK_PEER_PORT,
+                                  supportsNetworkPeer() ? Long.valueOf(port) : null),
+                              equalTo(ERROR_TYPE, errorType));
+                    }));
+    List<AttributeKey<?>> expectedMetricKeys =
+        new ArrayList<>(
+            asList(
+                DB_SYSTEM_NAME,
+                DB_NAMESPACE,
+                DB_COLLECTION_NAME,
+                DB_OPERATION_NAME,
+                SERVER_ADDRESS,
+                SERVER_PORT));
+    if (supportsNetworkPeer()) {
+      expectedMetricKeys.add(NETWORK_PEER_ADDRESS);
+      expectedMetricKeys.add(NETWORK_PEER_PORT);
+    }
+    if (errorType != null) {
+      expectedMetricKeys.add(ERROR_TYPE);
+    }
+    assertDurationMetric(
+        testing(), scopeName.get(), expectedMetricKeys.toArray(new AttributeKey<?>[0]));
+    testing()
+        .waitAndAssertMetrics(
+            scopeName.get(),
+            "db.client.operation.duration",
+            metrics ->
+                metrics
+                    .singleElement()
+                    .satisfies(
+                        metric ->
+                            assertThat(metric.getHistogramData().getPoints())
+                                .singleElement()
+                                .satisfies(
+                                    point -> {
+                                      assertThat(point.getCount()).isEqualTo(1);
+                                      assertThat(point.getAttributes().get(ERROR_TYPE))
+                                          .isEqualTo(errorType);
+                                    })));
+  }
 
   protected void ignoreTracesAndClear(int numberOfTraces) {
     testing().waitForTraces(numberOfTraces);

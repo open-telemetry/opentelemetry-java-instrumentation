@@ -14,6 +14,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
+import org.bson.BsonDocument;
+import org.bson.BsonValue;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -21,16 +23,16 @@ import javax.annotation.Nullable;
  */
 public final class TracingCommandListener implements CommandListener {
 
-  private final Instrumenter<CommandStartedEvent, Void> instrumenter;
+  private final Instrumenter<CommandStartedEvent, Integer> instrumenter;
   private final Map<Integer, ContextAndRequest> requestMap;
   @Nullable private final MongoServerTarget configuredTarget;
 
-  public TracingCommandListener(Instrumenter<CommandStartedEvent, Void> instrumenter) {
+  public TracingCommandListener(Instrumenter<CommandStartedEvent, Integer> instrumenter) {
     this(instrumenter, null);
   }
 
   public TracingCommandListener(
-      Instrumenter<CommandStartedEvent, Void> instrumenter,
+      Instrumenter<CommandStartedEvent, Integer> instrumenter,
       @Nullable MongoServerTarget configuredTarget) {
     this.instrumenter = instrumenter;
     this.requestMap = new ConcurrentHashMap<>();
@@ -51,8 +53,39 @@ public final class TracingCommandListener implements CommandListener {
   public void commandSucceeded(CommandSucceededEvent event) {
     ContextAndRequest contextAndRequest = requestMap.remove(event.getRequestId());
     if (contextAndRequest != null) {
-      instrumenter.end(contextAndRequest.getContext(), contextAndRequest.getRequest(), null, null);
+      instrumenter.end(
+          contextAndRequest.getContext(),
+          contextAndRequest.getRequest(),
+          writeErrorCode(event.getResponse()),
+          null);
     }
+  }
+
+  @Nullable
+  private static Integer writeErrorCode(BsonDocument response) {
+    BsonValue writeErrors = response.get("writeErrors");
+    if (writeErrors != null && writeErrors.isArray()) {
+      for (BsonValue writeError : writeErrors.asArray()) {
+        Integer code = errorCode(writeError);
+        if (code != null) {
+          return code;
+        }
+      }
+    }
+    return errorCode(response.get("writeConcernError"));
+  }
+
+  @Nullable
+  private static Integer errorCode(@Nullable BsonValue error) {
+    if (error == null || !error.isDocument()) {
+      return null;
+    }
+    BsonValue code = error.asDocument().get("code");
+    if (code == null || !(code.isInt32() || code.isInt64())) {
+      return null;
+    }
+    long value = code.asNumber().longValue();
+    return value > 0 && value <= Integer.MAX_VALUE ? (int) value : null;
   }
 
   @Override

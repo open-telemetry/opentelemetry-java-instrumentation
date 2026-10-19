@@ -121,6 +121,33 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
+  protected MongoCollection<Document> setupValidatedCollection(
+      String dbName, String collectionName) {
+    MongoDatabase db = client.getDatabase(dbName);
+    db.runCommand(
+        new Document("create", collectionName)
+            .append("validator", new Document("required", new Document("$exists", true))));
+    return db.getCollection(collectionName);
+  }
+
+  @Override
+  protected void insertInvalid(MongoCollection<Document> collection) {
+    collection.insertOne(new Document("password", "SECRET"));
+  }
+
+  @Override
+  protected long writeWithZeroMatches(MongoCollection<Document> collection, String operation) {
+    if (operation.equals("update")) {
+      return collection
+          .updateOne(
+              new Document("missing", true),
+              new Document("$set", new Document("password", "SECRET")))
+          .getMatchedCount();
+    }
+    return collection.deleteOne(new Document("missing", true)).getDeletedCount();
+  }
+
+  @Override
   protected MongoCollection<Document> setupInsert(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()

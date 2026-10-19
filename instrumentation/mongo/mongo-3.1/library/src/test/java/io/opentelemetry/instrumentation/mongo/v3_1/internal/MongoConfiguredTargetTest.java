@@ -196,7 +196,7 @@ class MongoConfiguredTargetTest {
 
   private Attributes extractAttributes(CommandStartedEvent event) {
     AttributesBuilder attributes = Attributes.builder();
-    AttributesExtractor<CommandStartedEvent, Void> extractor =
+    AttributesExtractor<CommandStartedEvent, Integer> extractor =
         DbClientAttributesExtractor.create(getter);
     extractor.onStart(attributes, Context.root(), event);
     extractor.onEnd(attributes, Context.root(), event, null, null);
