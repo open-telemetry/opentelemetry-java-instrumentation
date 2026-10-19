@@ -105,6 +105,41 @@ class RpcInstanceSemconvTest {
               mode == 2
                   ? asList(prefix + ".duration", prefix + ".call.duration")
                   : singletonList(prefix + (preview ? ".call.duration" : ".duration")));
+      if (old) {
+        assertThat(metrics)
+            .anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasName(prefix + ".duration")
+                        .hasUnit("ms")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasCount(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(RPC_SYSTEM, "test"),
+                                                equalTo(RPC_SERVICE, "package.Service"),
+                                                equalTo(RPC_METHOD, "Method")))));
+      }
+      if (preview) {
+        assertThat(metrics)
+            .anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasName(prefix + ".call.duration")
+                        .hasUnit("s")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasCount(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(RPC_SYSTEM_NAME, "test"),
+                                                equalTo(RPC_METHOD, "Service/Method")))));
+      }
       assertThat(metrics)
           .allSatisfy(
               metric ->
