@@ -79,10 +79,10 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
 
   @Test
   void responseExceptionWithCauseIsReported() {
-    // HTTP/2 uses our Armeria library instrumentation rather than Netty-created server spans.
-    // It reads errors from Armeria's request log, where older Armeria drops response-control
-    // causes.
-    boolean causeIsDropped = getClass() == ArmeriaHttp2ServerTest.class && !testLatestDeps();
+    boolean usesHttp2 = getClass() == ArmeriaHttp2ServerTest.class;
+    boolean usesOlderArmeria = !testLatestDeps();
+    // HTTP/2 gets errors from Armeria's request log, which older versions omit the cause from.
+    boolean causeIsDropped = usesHttp2 && usesOlderArmeria;
     AggregatedHttpResponse response =
         client.execute(request(RESPONSE_EXCEPTION_WITH_CAUSE, "GET")).aggregate().join();
 
