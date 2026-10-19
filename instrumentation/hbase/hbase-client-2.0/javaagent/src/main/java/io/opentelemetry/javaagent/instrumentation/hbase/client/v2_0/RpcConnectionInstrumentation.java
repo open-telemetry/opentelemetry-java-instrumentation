@@ -40,7 +40,7 @@ class RpcConnectionInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SendRequestAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Object call) {
       RequestAndContext requestAndContext = getRequestAndContext();
       OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
