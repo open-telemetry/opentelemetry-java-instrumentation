@@ -15,10 +15,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -27,6 +30,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.HttpUrl;
 import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
@@ -95,25 +99,36 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
       }
 
       // wrap callbacks so they'd run in the context of the parent span
+      InfluxDbQueryState state = new InfluxDbQueryState(parentContext, influxDbQuery);
       Object[] newArguments = new Object[arguments.length];
       for (int i = 0; i < arguments.length; i++) {
-        newArguments[i] = InfluxDbObjectWrapper.wrap(arguments[i], parentContext);
+        newArguments[i] = InfluxDbObjectWrapper.wrap(arguments[i], parentContext, state);
       }
 
-      return new Object[] {
-        newArguments, InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery)
-      };
+      boolean asynchronous =
+          arguments.length > 2
+              && (arguments[2] instanceof Consumer || arguments[2] instanceof BiConsumer);
+      return new Object[] {newArguments, state, state.getContext().makeCurrent(), asynchronous};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
+        @Advice.Enter @Nullable Object[] enterArgs) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.decrementAndGet() > 0 || enterArgs == null) {
         return;
       }
 
-      ((InfluxDbScope<?>) enterArgs[1]).end(throwable);
+      ((Scope) enterArgs[2]).close();
+      InfluxDbQueryState state = (InfluxDbQueryState) enterArgs[1];
+      if (throwable != null || !((Boolean) enterArgs[3])) {
+        if (result instanceof QueryResult) {
+          state.observe((QueryResult) result);
+        }
+        state.end(throwable);
+      }
     }
   }
 

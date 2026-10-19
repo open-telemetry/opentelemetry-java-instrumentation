@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -25,11 +27,28 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          filter {
+            excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+          }
+        }
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+      }
+    }
     register<JvmTestSuite>("test24") {
       dependencies {
         implementation(project())
         implementation("org.influxdb:influxdb-java:2.4")
         implementation("org.testcontainers:testcontainers")
+      }
+      executions {
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
       }
     }
   }
@@ -46,12 +65,6 @@ tasks {
   if (!otelProps.testLatestDeps) {
     check {
       dependsOn(testing.suites)
-    }
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
     }
   }
 

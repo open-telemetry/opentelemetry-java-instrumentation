@@ -15,7 +15,14 @@ import java.util.Collection;
 import javax.annotation.Nullable;
 
 final class InfluxDbQueryAttributesGetter
-    implements SqlClientAttributesGetter<InfluxDbQuery, Void> {
+    implements SqlClientAttributesGetter<InfluxDbQuery, InfluxDbResponse> {
+
+  @Nullable
+  @Override
+  public String getErrorType(
+      InfluxDbQuery request, @Nullable InfluxDbResponse response, @Nullable Throwable error) {
+    return response == null ? null : response.getErrorType();
+  }
 
   @Override
   public Collection<String> getRawQueryTexts(InfluxDbQuery request) {
