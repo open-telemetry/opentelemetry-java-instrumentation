@@ -27,6 +27,8 @@ public final class RpcSemconvSelection {
   public RpcSemconvSelection() {}
 
   public synchronized void initialize(OpenTelemetry openTelemetry) {
+    // Span-name customizers may return the original extractor, and components may be reused by
+    // instrumenters that share the same OpenTelemetry instance.
     if (initializedWith == openTelemetry) {
       return;
     }

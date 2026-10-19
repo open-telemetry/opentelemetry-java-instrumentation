@@ -158,6 +158,8 @@ class RpcInstanceSemconvTest {
         .addAttributesExtractor(attributesExtractor)
         .buildInstrumenter();
 
+    assertCustomizerCanReturnOriginalSpanNameExtractor(openTelemetry, spanNameExtractor);
+
     assertThatThrownBy(
             () ->
                 Instrumenter.<String, Void>builder(
@@ -179,6 +181,24 @@ class RpcInstanceSemconvTest {
         .addContextCustomizer(contextCustomizer)
         .addOperationMetrics(operationMetrics)
         .buildInstrumenter();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void assertCustomizerCanReturnOriginalSpanNameExtractor(
+      OpenTelemetry openTelemetry, SpanNameExtractor<String> spanNameExtractor) {
+    List<InternalInstrumenterCustomizerProvider> originalProviders =
+        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders();
+    InternalInstrumenterCustomizerProvider provider =
+        customizer ->
+            ((InternalInstrumenterCustomizer<String, Void>) customizer)
+                .setSpanNameExtractorCustomizer(unused -> spanNameExtractor);
+    InternalInstrumenterCustomizerUtil.setInstrumenterCustomizerProviders(singletonList(provider));
+    try {
+      Instrumenter.<String, Void>builder(openTelemetry, "customizer-test", spanNameExtractor)
+          .buildInstrumenter();
+    } finally {
+      InternalInstrumenterCustomizerUtil.setInstrumenterCustomizerProviders(originalProviders);
+    }
   }
 
   @SuppressWarnings("unchecked")
