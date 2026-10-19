@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -22,41 +20,21 @@ dependencies {
   testImplementation("com.google.guava:guava")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("protocolStatusTest") {
-      sources.java.setSrcDirs(listOf("src/test/java"))
-      targets.all {
-        testTask.configure {
-          filter {
-            includeTestsMatching("*SpymemcachedTest.storeRejectedAsTooLarge")
-          }
-        }
-      }
-      dependencies {
-        implementation("net.spy:spymemcached:2.12.3")
-        implementation("com.google.guava:guava")
-        implementation("org.testcontainers:testcontainers")
-      }
-    }
-
-    withType<JvmTestSuite>().configureEach {
-      val suiteName = name
-      executions {
-        configureEach {
-          usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-        }
-        if (suiteName == "test") {
-          register("Experimental") {
-            jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
-            systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
-          }
-        }
-      }
-    }
+tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
-}
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", otelProps.testLatestDeps || name.startsWith("protocolStatusTest"))
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }
