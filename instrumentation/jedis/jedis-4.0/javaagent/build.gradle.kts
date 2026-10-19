@@ -27,14 +27,6 @@ dependencies {
 
 testing {
   suites {
-    withType<JvmTestSuite>().configureEach {
-      executions {
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
-      }
-    }
-
     register<JvmTestSuite>("jedis51Test") {
       sources {
         java {

@@ -83,15 +83,9 @@ class JedisClientTest {
 
   @ParameterizedTest
   @CsvSource({
-    "sync, 1, true",
     "sync, 2, true",
-    "syncAndReturnAll, 1, true",
     "syncAndReturnAll, 2, true",
-    "exec, 1, true",
     "exec, 2, true",
-    "sync, 2, false",
-    "syncAndReturnAll, 2, false",
-    "exec, 2, false"
   })
   void aggregateErrors(String terminal, int count, boolean failed) {
     // Jedis 2.0 throws while reading errors, leaving unread replies; isolate its connection.

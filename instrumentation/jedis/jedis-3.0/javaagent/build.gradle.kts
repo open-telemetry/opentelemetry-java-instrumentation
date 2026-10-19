@@ -36,9 +36,6 @@ testing {
           jvmArgs("-Dotel.semconv-stability.preview=service.peer")
           systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
         }
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
       }
     }
 

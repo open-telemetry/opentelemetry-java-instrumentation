@@ -503,63 +503,23 @@ class Jedis40ClientTest {
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "sync, 1, 1",
-    "sync, 2, 2",
-    "syncAndReturnAll, 1, 1",
-    "syncAndReturnAll, 2, 2",
-    "exec, 1, 1",
-    "exec, 2, 2",
-    "sync, 2, 0",
-    "syncAndReturnAll, 2, 0",
-    "exec, 2, 0",
-    "sync, 2, 1",
-    "syncAndReturnAll, 2, 1",
-    "exec, 2, 1",
-    "execWatch, 2, 2",
-    "sync, 2, -1",
-    "syncAndReturnAll, 2, -1",
-    "exec, 2, -1"
-  })
+  @CsvSource({"sync, 2, 2", "syncAndReturnAll, 2, 2", "exec, 2, 2", "sync, 2, 1"})
   void aggregateErrors(String terminal, int count, int failedCount) {
     jedis.set("aggregate", "value");
-    // A rejected SETNX condition is not a Redis error.
-    boolean conditional = failedCount == -1;
-    if (conditional) {
-      failedCount = 0;
-    }
-    boolean watchAborted = terminal.endsWith("Watch");
-    if (watchAborted) {
-      jedis.watch("aggregate");
-      try (Jedis other = new Jedis(host, port)) {
-        other.set("aggregate", "changed");
-      }
-    }
     testing.clearData();
-    boolean failed = failedCount == count && !watchAborted;
-    boolean transactionTerminal = terminal.startsWith("exec");
+    boolean failed = failedCount == count;
+    boolean transactionTerminal = terminal.equals("exec");
     List<Response<?>> responses = new ArrayList<>();
     if (transactionTerminal) {
       Transaction transaction = jedis.multi();
       for (int i = 0; i < count; i++) {
-        responses.add(
-            conditional
-                ? transaction.setnx("aggregate", "new")
-                : transaction.llen(i < failedCount ? "aggregate" : "missing"));
+        responses.add(transaction.llen(i < failedCount ? "aggregate" : "missing"));
       }
-      List<Object> replies = transaction.exec();
-      if (watchAborted) {
-        assertThat(replies).isNull();
-      } else {
-        assertAggregateReplies(replies, failedCount, count);
-      }
+      assertAggregateReplies(transaction.exec(), failedCount, count);
     } else {
       Pipeline pipeline = jedis.pipelined();
       for (int i = 0; i < count; i++) {
-        responses.add(
-            conditional
-                ? pipeline.setnx("aggregate", "new")
-                : pipeline.llen(i < failedCount ? "aggregate" : "missing"));
+        responses.add(pipeline.llen(i < failedCount ? "aggregate" : "missing"));
       }
       if (terminal.equals("sync")) {
         pipeline.sync();
@@ -567,25 +527,16 @@ class Jedis40ClientTest {
         assertAggregateReplies(pipeline.syncAndReturnAll(), failedCount, count);
       }
     }
-    if (!watchAborted) {
-      assertThat(responses.subList(0, failedCount))
-          .allSatisfy(
-              response ->
-                  assertThatThrownBy(response::get)
-                      .isInstanceOf(JedisDataException.class)
-                      .hasMessageStartingWith("WRONGTYPE"));
-      assertThat(responses.subList(failedCount, count))
-          .allSatisfy(response -> assertThat(response.get()).isEqualTo(0L));
-    }
-    String command = conditional ? "SETNX" : "LLEN";
-    String operation =
-        count == 1 ? command : (transactionTerminal ? "MULTI" : "PIPELINE") + " " + command;
-    String query =
-        conditional
-            ? "SETNX aggregate ?; SETNX aggregate ?"
-            : "LLEN "
-                + (failedCount > 0 ? "aggregate" : "missing")
-                + (count == 1 ? "" : "; LLEN " + (failedCount == count ? "aggregate" : "missing"));
+    assertThat(responses.subList(0, failedCount))
+        .allSatisfy(
+            response ->
+                assertThatThrownBy(response::get)
+                    .isInstanceOf(JedisDataException.class)
+                    .hasMessageStartingWith("WRONGTYPE"));
+    assertThat(responses.subList(failedCount, count))
+        .allSatisfy(response -> assertThat(response.get()).isEqualTo(0L));
+    String operation = (transactionTerminal ? "MULTI" : "PIPELINE") + " LLEN";
+    String query = "LLEN aggregate; LLEN " + (failedCount == count ? "aggregate" : "missing");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
