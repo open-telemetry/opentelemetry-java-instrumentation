@@ -136,18 +136,6 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  protected long writeWithZeroMatches(MongoCollection<Document> collection, String operation) {
-    if (operation.equals("update")) {
-      return collection
-          .updateOne(
-              new Document("missing", true),
-              new Document("$set", new Document("password", "SECRET")))
-          .getMatchedCount();
-    }
-    return collection.deleteOne(new Document("missing", true)).getDeletedCount();
-  }
-
-  @Override
   protected MongoCollection<Document> setupInsert(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()

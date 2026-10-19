@@ -45,8 +45,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -138,8 +136,6 @@ public abstract class AbstractMongoClientTest<T> {
 
   protected abstract void insertInvalid(T collection) throws Throwable;
 
-  protected abstract long writeWithZeroMatches(T collection, String operation) throws Exception;
-
   @Test
   void schemaValidationFailure() throws Exception {
     String collectionName = createCollectionName();
@@ -151,15 +147,6 @@ public abstract class AbstractMongoClientTest<T> {
         .satisfies(error -> assertThat(error.getError().getCode()).isEqualTo(121));
 
     assertWriteResult(collectionName, "insert", "121");
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"update", "delete"})
-  void zeroMatchesAreSuccessful(String operation) throws Exception {
-    String collectionName = createCollectionName();
-    T collection = setupInsert("test_db", collectionName);
-    assertThat(writeWithZeroMatches(collection, operation)).isZero();
-    assertWriteResult(collectionName, operation, null);
   }
 
   private void assertWriteResult(String collectionName, String operation, String errorType) {

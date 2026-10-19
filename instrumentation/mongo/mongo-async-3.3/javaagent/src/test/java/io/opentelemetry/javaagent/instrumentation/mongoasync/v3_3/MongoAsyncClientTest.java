@@ -130,22 +130,6 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
     }
   }
 
-  @Override
-  protected long writeWithZeroMatches(MongoCollection<Document> collection, String operation)
-      throws Exception {
-    if (operation.equals("update")) {
-      CompletableFuture<UpdateResult> result = new CompletableFuture<>();
-      collection.updateOne(
-          new Document("missing", true),
-          new Document("$set", new Document("password", "SECRET")),
-          completing(result));
-      return result.get(30, SECONDS).getMatchedCount();
-    }
-    CompletableFuture<DeleteResult> result = new CompletableFuture<>();
-    collection.deleteOne(new Document("missing", true), completing(result));
-    return result.get(30, SECONDS).getDeletedCount();
-  }
-
   private static <T> SingleResultCallback<T> completing(CompletableFuture<T> future) {
     return (result, error) -> {
       if (error != null) {

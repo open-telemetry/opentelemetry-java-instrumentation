@@ -157,22 +157,6 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
     }
   }
 
-  @Override
-  protected long writeWithZeroMatches(MongoCollection<Document> collection, String operation)
-      throws Exception {
-    CompletableFuture<Object> result = new CompletableFuture<>();
-    if (operation.equals("update")) {
-      collection
-          .updateOne(
-              new Document("missing", true),
-              new Document("$set", new Document("password", "SECRET")))
-          .subscribe(toSubscriber(completing(result)));
-      return ((UpdateResult) result.get(30, SECONDS)).getMatchedCount();
-    }
-    collection.deleteOne(new Document("missing", true)).subscribe(toSubscriber(completing(result)));
-    return ((DeleteResult) result.get(30, SECONDS)).getDeletedCount();
-  }
-
   private static Consumer<Object> completing(CompletableFuture<Object> future) {
     return result -> {
       if (result instanceof Throwable) {

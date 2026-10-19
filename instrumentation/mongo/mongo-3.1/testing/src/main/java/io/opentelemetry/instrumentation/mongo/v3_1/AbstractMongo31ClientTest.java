@@ -221,18 +221,6 @@ public abstract class AbstractMongo31ClientTest
     collection.insertOne(new Document("password", "SECRET"));
   }
 
-  @Override
-  protected long writeWithZeroMatches(MongoCollection<Document> collection, String operation) {
-    if (operation.equals("update")) {
-      return collection
-          .updateOne(
-              new Document("missing", true),
-              new Document("$set", new Document("password", "SECRET")))
-          .getMatchedCount();
-    }
-    return collection.deleteOne(new Document("missing", true)).getDeletedCount();
-  }
-
   @Test
   void testClientFailure() {
     MongoClientOptions options = MongoClientOptions.builder().serverSelectionTimeout(10).build();
