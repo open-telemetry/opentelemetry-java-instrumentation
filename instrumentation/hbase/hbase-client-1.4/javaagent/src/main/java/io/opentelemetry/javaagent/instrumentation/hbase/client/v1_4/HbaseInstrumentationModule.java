@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RetryingCallableInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -21,6 +21,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class HbaseInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
+
+  private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
 
   public HbaseInstrumentationModule() {
     super("hbase-client-1.4", "hbase-client");
@@ -35,8 +37,21 @@ public class HbaseInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public void registerVirtualFields(VirtualFieldRegistration registration) {
-    registration.register("org.apache.hadoop.hbase.ipc.Call", RequestAndContext.class.getName());
+  public boolean isHelperClass(String className) {
+    return CALL_UTIL.equals(className);
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    return singletonList(CALL_UTIL);
+  }
+
+  @Override
+  public List<String> exposedClassNames() {
+    // The application-loaded Call utility exchanges state with isolated instrumentation helpers.
+    return asList(
+        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext",
+        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest");
   }
 
   @Override

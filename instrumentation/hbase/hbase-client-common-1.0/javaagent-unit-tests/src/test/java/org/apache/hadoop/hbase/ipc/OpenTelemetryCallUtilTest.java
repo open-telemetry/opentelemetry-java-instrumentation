@@ -10,7 +10,6 @@ import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseCallUtil;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import java.net.InetAddress;
@@ -19,19 +18,19 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
-class HbaseCallUtilTest {
+class OpenTelemetryCallUtilTest {
 
   @Test
   void setsResolvedInetSocketAddress() throws UnknownHostException {
     Call call = mock(Call.class);
     RequestAndContext requestAndContext = requestAndContext();
-    HbaseCallUtil.setRequestAndContext(call, requestAndContext);
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
     InetSocketAddress networkPeer =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234);
-    HbaseCallUtil.setNetworkPeer(call, networkPeer);
+    OpenTelemetryCallUtil.setNetworkPeer(call, networkPeer);
 
-    RequestAndContext updated = HbaseCallUtil.getAndClearRequestAndContext(call);
+    RequestAndContext updated = OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
     assertThat(updated).isSameAs(requestAndContext);
     assertThat(updated.getRequest()).isSameAs(requestAndContext.getRequest());
     assertThat(updated.getRequest().getNetworkPeerInetSocketAddress()).isSameAs(networkPeer);
@@ -44,12 +43,13 @@ class HbaseCallUtilTest {
   void ignoresUnresolvedInetSocketAddress() {
     Call call = mock(Call.class);
     RequestAndContext requestAndContext = requestAndContext();
-    HbaseCallUtil.setRequestAndContext(call, requestAndContext);
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
-    HbaseCallUtil.setNetworkPeer(
+    OpenTelemetryCallUtil.setNetworkPeer(
         call, InetSocketAddress.createUnresolved("unresolved.example", 1234));
 
-    assertThat(HbaseCallUtil.getAndClearRequestAndContext(call)).isSameAs(requestAndContext);
+    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
+        .isSameAs(requestAndContext);
     assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress()).isNull();
   }
 
@@ -57,14 +57,15 @@ class HbaseCallUtilTest {
   void ignoresNonInetSocketAddressAndNonCallMessages() {
     Call call = mock(Call.class);
     RequestAndContext requestAndContext = requestAndContext();
-    HbaseCallUtil.setRequestAndContext(call, requestAndContext);
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
     SocketAddress nonInetAddress = new SocketAddress() {};
 
-    HbaseCallUtil.setNetworkPeer(call, nonInetAddress);
-    HbaseCallUtil.setNetworkPeer(
+    OpenTelemetryCallUtil.setNetworkPeer(call, nonInetAddress);
+    OpenTelemetryCallUtil.setNetworkPeer(
         new Object(), new InetSocketAddress(InetAddress.getLoopbackAddress(), 1234));
 
-    assertThat(HbaseCallUtil.getAndClearRequestAndContext(call)).isSameAs(requestAndContext);
+    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
+        .isSameAs(requestAndContext);
     assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress()).isNull();
   }
 
@@ -72,16 +73,16 @@ class HbaseCallUtilTest {
   void updatesPeerWhenBufferedCallIsWrittenAgain() throws UnknownHostException {
     Call call = mock(Call.class);
     RequestAndContext requestAndContext = requestAndContext();
-    HbaseCallUtil.setRequestAndContext(call, requestAndContext);
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
     InetSocketAddress firstPeer =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234);
     InetSocketAddress secondPeer =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 5678);
-    HbaseCallUtil.setNetworkPeer(call, firstPeer);
-    HbaseCallUtil.setNetworkPeer(call, secondPeer);
+    OpenTelemetryCallUtil.setNetworkPeer(call, firstPeer);
+    OpenTelemetryCallUtil.setNetworkPeer(call, secondPeer);
 
-    RequestAndContext updated = HbaseCallUtil.getAndClearRequestAndContext(call);
+    RequestAndContext updated = OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
     assertThat(updated).isSameAs(requestAndContext);
     HbaseRequest request = updated.getRequest();
     assertThat(request).isSameAs(requestAndContext.getRequest());
@@ -91,32 +92,33 @@ class HbaseCallUtilTest {
   @Test
   void ignoresCallAfterStateIsCleared() {
     Call call = mock(Call.class);
-    HbaseCallUtil.setRequestAndContext(call, requestAndContext());
-    HbaseCallUtil.getAndClearRequestAndContext(call);
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext());
+    OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
 
-    HbaseCallUtil.setNetworkPeer(
+    OpenTelemetryCallUtil.setNetworkPeer(
         call, new InetSocketAddress(InetAddress.getLoopbackAddress(), 1234));
 
-    assertThat(HbaseCallUtil.getAndClearRequestAndContext(call)).isNull();
+    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call)).isNull();
   }
 
   @Test
   void ignoresPeerUpdatesAfterCompletion() throws UnknownHostException {
     Call call = mock(Call.class);
     RequestAndContext requestAndContext = requestAndContext();
-    HbaseCallUtil.setRequestAndContext(call, requestAndContext);
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
     InetSocketAddress firstPeer =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234);
-    HbaseCallUtil.setNetworkPeer(call, firstPeer);
-    assertThat(HbaseCallUtil.getAndClearRequestAndContext(call)).isSameAs(requestAndContext);
+    OpenTelemetryCallUtil.setNetworkPeer(call, firstPeer);
+    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
+        .isSameAs(requestAndContext);
 
-    HbaseCallUtil.setNetworkPeer(
+    OpenTelemetryCallUtil.setNetworkPeer(
         call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 5678));
 
     assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress())
         .isSameAs(firstPeer);
-    assertThat(HbaseCallUtil.getAndClearRequestAndContext(call)).isNull();
+    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call)).isNull();
   }
 
   private static RequestAndContext requestAndContext() {

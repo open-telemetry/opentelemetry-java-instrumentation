@@ -13,11 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseCallUtil;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil;
 
 class RpcConnectionInstrumentation implements TypeInstrumentation {
 
@@ -43,7 +43,7 @@ class RpcConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Object call) {
       RequestAndContext requestAndContext = getRequestAndContext();
-      HbaseCallUtil.setRequestAndContext(call, requestAndContext);
+      OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
     }
   }
 }
