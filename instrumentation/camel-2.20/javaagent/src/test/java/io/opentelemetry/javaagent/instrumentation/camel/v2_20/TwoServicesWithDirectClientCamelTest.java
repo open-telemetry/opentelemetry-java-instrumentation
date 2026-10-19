@@ -138,7 +138,6 @@ class TwoServicesWithDirectClientCamelTest
               "http://localhost:" + portOne + "/serviceOne",
               "localhost",
               portOne,
-              testing.expectedPeerService(),
               trace.getSpan(1));
           assertions.add(
               span ->
@@ -170,7 +169,6 @@ class TwoServicesWithDirectClientCamelTest
               "http://127.0.0.1:" + portTwo + "/serviceTwo",
               "127.0.0.1",
               portTwo,
-              testing.expectedPeerService(),
               trace.getSpan(3 + nested));
           assertions.add(
               span ->

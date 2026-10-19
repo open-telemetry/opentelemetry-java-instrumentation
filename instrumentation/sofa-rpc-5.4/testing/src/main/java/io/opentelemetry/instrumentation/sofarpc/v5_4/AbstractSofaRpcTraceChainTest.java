@@ -46,8 +46,6 @@ public abstract class AbstractSofaRpcTraceChainTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract boolean hasPeerService();
-
   protected String genericMethodName() {
     return "hello";
   }
@@ -177,9 +175,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? testing().expectedPeerService() : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -231,9 +227,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"
                                         : "hello"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? testing().expectedPeerService() : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -455,9 +449,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? testing().expectedPeerService() : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
