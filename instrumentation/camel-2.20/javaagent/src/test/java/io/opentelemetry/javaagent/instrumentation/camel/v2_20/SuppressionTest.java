@@ -19,7 +19,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 
 /**
  * Camel http producer spans do not use the http semantic attributes extractor, so they do not claim
@@ -44,7 +43,7 @@ class SuppressionTest {
       String url,
       String serverAddress,
       long serverPort,
-      @Nullable String expectedPeerService,
+      String expectedPeerService,
       SpanData parent) {
     if (!NESTED_HTTP_CLIENT_SPAN) {
       return;
