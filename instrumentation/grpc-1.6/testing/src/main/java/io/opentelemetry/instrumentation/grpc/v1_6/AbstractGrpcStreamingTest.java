@@ -442,19 +442,78 @@ public abstract class AbstractGrpcStreamingTest {
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null)),
+                            .hasAttributesSatisfyingExactly(
+                                addExtraClientAttributes(
+                                    experimentalSatisfies(
+                                        GRPC_RECEIVED_MESSAGE_COUNT,
+                                        v -> assertThat(v).isEqualTo(0)),
+                                    experimentalSatisfies(
+                                        GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
+                                    equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
+                                    equalTo(
+                                        RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
+                                    equalTo(
+                                        RPC_SERVICE,
+                                        emitOldRpcSemconv() ? "example.Greeter" : null),
+                                    equalTo(
+                                        RPC_METHOD,
+                                        emitPreviewRpcSemconv()
+                                            ? "example.Greeter/Conversation"
+                                            : "Conversation"),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        emitPreviewRpcSemconv()
+                                            ? Status.Code.INTERNAL.name()
+                                            : null),
+                                    equalTo(
+                                        RPC_GRPC_STATUS_CODE,
+                                        emitOldRpcSemconv()
+                                            ? (long) Status.Code.INTERNAL.value()
+                                            : null),
+                                    equalTo(
+                                        RPC_RESPONSE_STATUS_CODE,
+                                        emitPreviewRpcSemconv()
+                                            ? Status.Code.INTERNAL.name()
+                                            : null),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort()))),
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.SERVER)
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
+                                experimentalSatisfies(
+                                    GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
+                                experimentalSatisfies(
+                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
+                                equalTo(
+                                    RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
+                                equalTo(
+                                    RPC_METHOD,
+                                    emitPreviewRpcSemconv()
+                                        ? "example.Greeter/Conversation"
+                                        : "Conversation"),
                                 equalTo(
                                     ERROR_TYPE,
                                     emitPreviewRpcSemconv()
                                         ? Status.Code.INTERNAL.name()
-                                        : null))));
+                                        : null),
+                                equalTo(
+                                    RPC_GRPC_STATUS_CODE,
+                                    emitOldRpcSemconv()
+                                        ? (long) Status.Code.INTERNAL.value()
+                                        : null),
+                                equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitPreviewRpcSemconv()
+                                        ? Status.Code.INTERNAL.name()
+                                        : null),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))));
   }
 
   @Test
