@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0.Resilience4jCircuitBreakerSingletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException;
@@ -20,9 +21,13 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
+
+  private static final Logger logger =
+      Logger.getLogger(Resilience4jCircuitBreakerSpans.class.getName());
 
   private static final ThreadLocal<Deque<AttachedPendingSpan>> attachedPendingSpans =
       new ThreadLocal<>();
@@ -473,7 +478,11 @@ public class Resilience4jCircuitBreakerSpans {
       }
       detachPendingSpanOnEnd(this);
       closeOperationScope();
-      instrumenter().end(context, request, outcome, throwable);
+      try {
+        instrumenter().end(context, request, outcome, throwable);
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to end resilience4j circuit breaker span", t);
+      }
     }
   }
 

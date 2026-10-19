@@ -21,6 +21,13 @@ dependencies {
 }
 
 tasks {
+  shadowJar {
+    from(sourceSets.test.get().output) {
+      include("io/opentelemetry/javaagent/instrumentation/resilience4j/circuitbreaker/v2_0/ThrowingAttributesExtractorProvider*.class")
+      include("META-INF/services/io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizerProvider")
+    }
+  }
+
   test {
     jvmArgs("-Dotel.instrumentation.resilience4j-circuitbreaker.enabled=true")
   }
