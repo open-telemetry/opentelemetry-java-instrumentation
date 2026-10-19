@@ -29,7 +29,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
@@ -415,7 +414,6 @@ public final class AwsSdkInstrumenterFactory {
   }
 
   public Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter() {
-    DynamoDbAttributesGetter getter = new DynamoDbAttributesGetter();
     return createInstrumenter(
         openTelemetry,
         AwsSdkInstrumenterFactory::spanName,
@@ -423,7 +421,7 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractors(),
         builder -> {
           builder
-              .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
+              .addAttributesExtractor(new DynamoDbAttributesExtractor())
               .addOperationMetrics(DbClientMetrics.get())
               .setSchemaUrl(SchemaUrls.V1_44_0);
           setDbClientExceptionEventExtractor(builder);

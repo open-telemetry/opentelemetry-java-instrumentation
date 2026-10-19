@@ -5,7 +5,15 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -16,83 +24,33 @@ import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
-class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttributes, Response> {
+class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttributes, Response> {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String AWS_DYNAMODB = "aws.dynamodb";
 
   private final MethodHandleFactory methodHandleFactory = new MethodHandleFactory();
-  private final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
 
   @Override
-  @Nullable
-  public String getDbQueryText(ExecutionAttributes executionAttributes) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getDbOperationName(ExecutionAttributes executionAttributes) {
+  public void onStart(
+      AttributesBuilder attributes,
+      Context parentContext,
+      ExecutionAttributes executionAttributes) {
+    attributes.put(DB_SYSTEM_NAME, AWS_DYNAMODB);
     String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
     Long batchSize = extractBatchSize(operation, executionAttributes);
     WriteOperationType writeOpType =
         "BatchWriteItem".equals(operation)
             ? extractWriteOperationType(executionAttributes)
             : WriteOperationType.NONE;
-    return getStableOperationName(operation, batchSize, writeOpType);
-  }
-
-  @Override
-  public String getDbSystemName(ExecutionAttributes executionAttributes) {
-    return AWS_DYNAMODB;
-  }
-
-  @Override
-  @Nullable
-  public String getDbNamespace(ExecutionAttributes executionAttributes) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getDbCollectionName(ExecutionAttributes executionAttributes) {
-    return extractTableName(executionAttributes);
-  }
-
-  @Override
-  @Nullable
-  public Long getDbOperationBatchSize(ExecutionAttributes executionAttributes) {
-    String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-    return extractBatchSize(operation, executionAttributes);
-  }
-
-  @Override
-  @Nullable
-  public String getErrorType(
-      ExecutionAttributes executionAttributes,
-      @Nullable Response response,
-      @Nullable Throwable error) {
-    if (!(error instanceof AwsServiceException)) {
-      return null;
+    attributes.put(DB_OPERATION_NAME, getStableOperationName(operation, batchSize, writeOpType));
+    if (shouldEmitBatchSize(batchSize)) {
+      attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
     }
-    AwsErrorDetails details = ((AwsServiceException) error).awsErrorDetails();
-    if (details == null) {
-      return null;
+    String tableName = extractTableName(executionAttributes);
+    if (tableName != null) {
+      attributes.put(DB_COLLECTION_NAME, tableName);
     }
-    String errorCode = details.errorCode();
-    return errorCode == null || errorCode.trim().isEmpty() ? null : errorCode;
-  }
-
-  @Override
-  @Nullable
-  public String getServerAddress(ExecutionAttributes executionAttributes) {
-    return httpAttributesGetter.getServerAddress(executionAttributes);
-  }
-
-  @Override
-  @Nullable
-  public Integer getServerPort(ExecutionAttributes executionAttributes) {
-    return httpAttributesGetter.getServerPort(executionAttributes);
   }
 
   @Nullable
@@ -199,6 +157,12 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
     return WriteOperationType.NONE;
   }
 
+  // db.operation.batch.size is captured for every batch request (including an empty batch with
+  // size 0); it is only omitted for a single-item batch, which is reported as a non-batch operation
+  private static boolean shouldEmitBatchSize(@Nullable Long batchSize) {
+    return batchSize != null && batchSize != 1;
+  }
+
   @Nullable
   private Object next(Object current, String fieldName) {
     try {
@@ -243,6 +207,30 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
       collectionName = (String) candidate;
     }
     return collectionName;
+  }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      ExecutionAttributes executionAttributes,
+      @Nullable Response response,
+      @Nullable Throwable error) {
+    if (error == null) {
+      return;
+    }
+    String errorType = null;
+    if (error instanceof AwsServiceException) {
+      AwsErrorDetails details = ((AwsServiceException) error).awsErrorDetails();
+      if (details != null) {
+        errorType = details.errorCode();
+      }
+    }
+    if (errorType == null || errorType.trim().isEmpty()) {
+      errorType = error.getClass().getName();
+    }
+    // The final SDK error takes precedence over an individual HTTP attempt or RPC mode.
+    attributes.put(ERROR_TYPE, errorType);
   }
 
   private enum WriteOperationType {
