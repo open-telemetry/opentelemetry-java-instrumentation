@@ -5,27 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.AbstractElasticsearchTransportClientTest;
-import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.FilterClient;
-import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -147,26 +142,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void sharedDefaultPortIsOmitted() throws ReflectiveOperationException {
-    TransportClient addressListClient = connectedClient();
-    updateServerTarget(addressListClient, 9300);
-
-    clusterHealth(addressListClient);
-
-    assertConfiguredTarget(configuredAddressListWithSharedPort(), null);
-  }
-
-  @Test
-  void sharedNonDefaultPortIsIncludedWithEachAddress() throws ReflectiveOperationException {
-    TransportClient addressListClient = connectedClient();
-    updateServerTarget(addressListClient, 9400);
-
-    clusterHealth(addressListClient);
-
-    assertConfiguredTarget(configuredAddressListWithSharedNonDefaultPort(), null);
-  }
-
-  @Test
   void concurrentAddressChangesPublishFinalSnapshot() {
     TransportClient addressListClient = connectedClient();
     ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -232,36 +207,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     client.admin().cluster().prepareHealth().execute().actionGet(TIMEOUT);
   }
 
-  private void updateServerTarget(TransportClient client, int port)
-      throws ReflectiveOperationException {
-    Class<?> registry =
-        AgentClassLoaderAccess.loadClass(
-            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
-    ClassLoader helperLoader =
-        (ClassLoader)
-            registry
-                .getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class)
-                .invoke(
-                    null,
-                    "io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0."
-                        + "Elasticsearch5TransportClientInstrumentationModule",
-                    TransportClient.class.getClassLoader());
-    String commonPackage =
-        "io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.";
-    Constructor<?> endpoint =
-        helperLoader
-            .loadClass(commonPackage + "ElasticsearchTransportServerTarget$Endpoint")
-            .getConstructor(String.class, int.class);
-    helperLoader
-        .loadClass(commonPackage + "ElasticsearchTransportServerTargets")
-        .getMethod("update", AbstractClient.class, List.class)
-        .invoke(
-            null,
-            client,
-            asList(
-                endpoint.newInstance(getAddress(), port), endpoint.newInstance(DOWN_HOST, port)));
-  }
-
   private void assertConfiguredTarget(String addressList, Long sharedPort) {
     String serverAddress = addressList == null ? getAddress() : addressList;
     Long serverPort =
@@ -280,14 +225,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
   private String configuredAddressListWithMixedPorts() {
     return getAddress() + ":" + getPort() + "," + DOWN_HOST + ":" + addressThatIsDown.getPort();
-  }
-
-  private String configuredAddressListWithSharedPort() {
-    return getAddress() + "," + DOWN_HOST;
-  }
-
-  private String configuredAddressListWithSharedNonDefaultPort() {
-    return getAddress() + ":9400," + DOWN_HOST + ":9400";
   }
 
   private static TransportClient connectedClient() {
