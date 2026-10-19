@@ -92,7 +92,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -128,7 +128,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -160,7 +160,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "SET pooled ?"),
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -188,7 +188,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -204,7 +204,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "GET foo"),
                             equalTo(DB_OPERATION_NAME, "GET"),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -231,7 +231,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -247,7 +247,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
                             equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -278,7 +278,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -311,7 +311,7 @@ class JedisClientTest {
                             equalTo(DB_OPERATION_NAME, scenario.operationName),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -347,7 +347,7 @@ class JedisClientTest {
                             equalTo(DB_OPERATION_NAME, scenario.operationName),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -389,7 +389,7 @@ class JedisClientTest {
                             equalTo(DB_QUERY_TEXT, "SET tx1 ?"),
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(

@@ -26,11 +26,6 @@ class SofaRpcTest extends AbstractSofaRpcTest {
   }
 
   @Override
-  protected boolean hasPeerService() {
-    return false;
-  }
-
-  @Override
   protected List<Filter> clientFilters() {
     return singletonList(telemetry.newClientFilter());
   }
