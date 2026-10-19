@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -29,13 +30,12 @@ public class DbClientMetricsTestUtil {
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
                 .hasDescription("Duration of database client operations.")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsOnlyKeys(expectedKeys)))));
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point.hasAttributesSatisfying(
+                                attributes ->
+                                    assertThat(attributes.asMap())
+                                        .containsOnlyKeys(expectedKeys)))));
   }
 }

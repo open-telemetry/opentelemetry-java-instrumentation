@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,6 +48,6 @@ class JfrVirtualThreadPinnedTest {
             metric
                 .hasName("jvm.thread.virtual.pinned")
                 .hasUnit(Constants.SECONDS)
-                .hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(point -> {})));
+                .satisfies(hasHistogramPointsSatisfyingExactly(point -> {})));
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.avaje.jex.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -125,9 +126,8 @@ class JexTest {
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}"))));
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}"))));
   }
 }

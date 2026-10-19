@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.javalin;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -166,9 +167,8 @@ public abstract class AbstractJavalinTest {
             metric ->
                 metric
                     .hasName("http.server.request.duration")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}"))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}"))));
   }
 }

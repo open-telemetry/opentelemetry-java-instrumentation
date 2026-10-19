@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -90,12 +91,11 @@ public abstract class AbstractNamingConventionTest {
             metric ->
                 metric
                     .hasName("test.renamedSummary")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -247,11 +247,10 @@ public abstract class AbstractNamingConventionTest {
             metric ->
                 metric
                     .hasName("test.renamedTimer")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("test.tag"), "test.value")))));
   }
 }

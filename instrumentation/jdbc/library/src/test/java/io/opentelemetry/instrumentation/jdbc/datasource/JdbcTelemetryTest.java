@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -174,10 +175,9 @@ class JdbcTelemetryTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(ERROR_TYPE, expectedErrorType))));
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point -> point.hasAttribute(ERROR_TYPE, expectedErrorType))));
   }
 
   private static Stream<Arguments> errorCodes() {

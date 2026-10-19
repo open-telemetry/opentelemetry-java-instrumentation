@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -91,15 +92,14 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusSummary.items")
                     .hasDescription("This is a test summary")
                     .hasUnit("items")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(54)
-                                        .hasCount(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasSum(54)
+                                    .hasCount(2)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -322,15 +322,14 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusTimer.seconds")
                     .hasDescription("This is a test timer")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(16.789)
-                                        .hasCount(3)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasSum(16.789)
+                                    .hasCount(3)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -394,22 +393,20 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusTimerBoundary.seconds")
                     .hasDescription("This is a test timer")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.1)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value"))
-                                        .satisfies(
-                                            pointData -> {
-                                              assertThat(pointData.getBoundaries()).hasSize(1);
-                                              assertThat(
-                                                      Double.toString(
-                                                          pointData.getBoundaries().get(0)))
-                                                  .isEqualTo("0.3");
-                                            }))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasSum(0.1)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value"))
+                                    .satisfies(
+                                        pointData -> {
+                                          assertThat(pointData.getBoundaries()).hasSize(1);
+                                          assertThat(
+                                                  Double.toString(pointData.getBoundaries().get(0)))
+                                              .isEqualTo("0.3");
+                                        }))));
   }
 }

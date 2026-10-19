@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -301,20 +302,18 @@ public abstract class AbstractGrpcStreamingTest {
                   metric
                       .hasName("rpc.server.duration")
                       .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "Conversation"),
-                                          equalTo(RPC_SERVICE, "example.Greeter"),
-                                          equalTo(RPC_SYSTEM, "grpc"),
-                                          equalTo(NETWORK_TYPE, "ipv4"),
-                                          equalTo(
-                                              RPC_GRPC_STATUS_CODE,
-                                              (long) Status.Code.OK.value())))));
+                      .satisfies(
+                          hasHistogramPointsSatisfyingExactly(
+                              point ->
+                                  point.hasAttributesSatisfyingExactly(
+                                      equalTo(SERVER_ADDRESS, "localhost"),
+                                      equalTo(SERVER_PORT, server.getPort()),
+                                      equalTo(RPC_METHOD, "Conversation"),
+                                      equalTo(RPC_SERVICE, "example.Greeter"),
+                                      equalTo(RPC_SYSTEM, "grpc"),
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(
+                                          RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value())))));
     }
     if (emitPreviewRpcSemconv()) {
       testing()
@@ -324,17 +323,15 @@ public abstract class AbstractGrpcStreamingTest {
                   metric
                       .hasName("rpc.server.call.duration")
                       .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "example.Greeter/Conversation"),
-                                          equalTo(
-                                              RPC_RESPONSE_STATUS_CODE, Status.Code.OK.name())))));
+                      .satisfies(
+                          hasHistogramPointsSatisfyingExactly(
+                              point ->
+                                  point.hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                      equalTo(SERVER_ADDRESS, "localhost"),
+                                      equalTo(SERVER_PORT, server.getPort()),
+                                      equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                      equalTo(RPC_RESPONSE_STATUS_CODE, Status.Code.OK.name())))));
     }
     if (emitOldRpcSemconv()) {
       testing()
@@ -344,20 +341,17 @@ public abstract class AbstractGrpcStreamingTest {
                   metric
                       .hasName("rpc.client.duration")
                       .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "Conversation"),
-                                          equalTo(RPC_SERVICE, "example.Greeter"),
-                                          equalTo(RPC_SYSTEM, "grpc"),
-                                          equalTo(
-                                              RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                          equalTo(
-                                              NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)))));
+                      .satisfies(
+                          hasHistogramPointsSatisfyingExactly(
+                              point ->
+                                  point.hasAttributesSatisfyingExactly(
+                                      equalTo(SERVER_ADDRESS, "localhost"),
+                                      equalTo(SERVER_PORT, server.getPort()),
+                                      equalTo(RPC_METHOD, "Conversation"),
+                                      equalTo(RPC_SERVICE, "example.Greeter"),
+                                      equalTo(RPC_SYSTEM, "grpc"),
+                                      equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                      equalTo(NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)))));
     }
     if (emitPreviewRpcSemconv()) {
       testing()
@@ -367,17 +361,15 @@ public abstract class AbstractGrpcStreamingTest {
                   metric
                       .hasName("rpc.client.call.duration")
                       .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "example.Greeter/Conversation"),
-                                          equalTo(
-                                              RPC_RESPONSE_STATUS_CODE, Status.Code.OK.name())))));
+                      .satisfies(
+                          hasHistogramPointsSatisfyingExactly(
+                              point ->
+                                  point.hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                      equalTo(SERVER_ADDRESS, "localhost"),
+                                      equalTo(SERVER_PORT, server.getPort()),
+                                      equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                      equalTo(RPC_RESPONSE_STATUS_CODE, Status.Code.OK.name())))));
     }
   }
 

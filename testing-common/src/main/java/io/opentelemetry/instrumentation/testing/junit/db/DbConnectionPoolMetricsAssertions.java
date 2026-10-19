@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CLIENT_CONNECTION_POOL_NAME;
@@ -267,8 +268,7 @@ public class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit("s")
         .hasDescription("The time it took to create a new connection.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+        .satisfies(hasHistogramPointsSatisfyingExactly(this::verifyPointAttributes));
   }
 
   private void verifyWaitTime() {
@@ -282,8 +282,7 @@ public class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit("s")
         .hasDescription("The time it took to obtain an open connection from the pool.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+        .satisfies(hasHistogramPointsSatisfyingExactly(this::verifyPointAttributes));
   }
 
   private void verifyUseTime() {
@@ -297,7 +296,6 @@ public class DbConnectionPoolMetricsAssertions {
     return assertThat(metric)
         .hasUnit("s")
         .hasDescription("The time between borrowing a connection and returning it to the pool.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+        .satisfies(hasHistogramPointsSatisfyingExactly(this::verifyPointAttributes));
   }
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -860,41 +861,39 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
         metric ->
             metric
                 .hasName("gen_ai.client.token.usage")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(3.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
-                            point ->
-                                point
-                                    .hasSum(2.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasSum(3.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                    equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+                        point ->
+                            point
+                                .hasSum(2.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                    equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
   }
 
   private static void assertMetricsWithoutTokenUsage() {
@@ -903,17 +902,16 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))));
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "gen_ai.client.token.usage", metrics -> metrics.isEmpty());
   }

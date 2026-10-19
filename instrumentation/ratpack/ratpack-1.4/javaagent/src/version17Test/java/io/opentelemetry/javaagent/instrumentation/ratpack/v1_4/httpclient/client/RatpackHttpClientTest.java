@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.client;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -73,15 +74,14 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
                     metricData ->
                         assertThat(metricData.getInstrumentationScopeInfo().getVersion())
                             .isNotEmpty())
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                    equalTo(SERVER_ADDRESS, uri.getHost()),
-                                    equalTo(SERVER_PORT, uri.getPort())))));
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point.hasAttributesSatisfyingExactly(
+                                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, uri.getHost()),
+                                equalTo(SERVER_PORT, uri.getPort())))));
   }
 }

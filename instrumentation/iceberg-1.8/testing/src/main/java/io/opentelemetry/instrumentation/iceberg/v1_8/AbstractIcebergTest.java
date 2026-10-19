@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.iceberg.v1_8;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -116,20 +117,19 @@ abstract class AbstractIcebergTest {
                 metricAssert
                     .hasName("iceberg.scan.planning.duration")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasSumGreaterThan(0.0)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            longKey("iceberg.schema.id"),
+                                            expectedReport.schemaId()),
+                                        equalTo(
+                                            stringKey("iceberg.table.name"),
+                                            expectedReport.tableName())))));
   }
 
   private void assertDataFilesCountMetrics(ScanReport expectedReport) {

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.DistributionSummary;
@@ -51,15 +52,14 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
                     .hasName("testSummary")
                     .hasDescription("This is a test distribution summary")
                     .hasUnit("things")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                points ->
-                                    points
-                                        .hasSum(555.5)
-                                        .hasCount(4)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            points ->
+                                points
+                                    .hasSum(555.5)
+                                    .hasCount(4)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -119,15 +119,14 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
                     .hasName("testSummary")
                     .hasDescription("This is a test distribution summary")
                     .hasUnit("things")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(150)
-                                        .hasCount(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasSum(150)
+                                    .hasCount(2)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,

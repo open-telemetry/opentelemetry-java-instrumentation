@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -110,18 +111,17 @@ class CassandraTest extends AbstractCassandraTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(DB_COLLECTION_NAME, "system.local"),
-                                    equalTo(DB_OPERATION_NAME, "SELECT"),
-                                    equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
-                                    equalTo(DB_SYSTEM_NAME, "cassandra"),
-                                    equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                    equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                    equalTo(SERVER_ADDRESS, cassandraHost),
-                                    equalTo(SERVER_PORT, cassandraPort)))));
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point.hasAttributesSatisfyingExactly(
+                                equalTo(DB_COLLECTION_NAME, "system.local"),
+                                equalTo(DB_OPERATION_NAME, "SELECT"),
+                                equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
+                                equalTo(DB_SYSTEM_NAME, "cassandra"),
+                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                                equalTo(NETWORK_PEER_PORT, cassandraPort),
+                                equalTo(SERVER_ADDRESS, cassandraHost),
+                                equalTo(SERVER_PORT, cassandraPort)))));
   }
 }
