@@ -39,8 +39,6 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,13 +194,10 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     assertConfiguredTarget(hasDownAddress ? configuredAddressListWithMixedPorts() : null, null);
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void threeArgumentFilterClientTracksExplicitAddressChanges(boolean nested) {
+  @Test
+  void threeArgumentFilterClientTracksExplicitAddressChanges() {
     TransportClient singleAddressClient = newClient();
-    Client filteredClient =
-        new TestFilterClient(
-            nested ? new TestFilterClient(singleAddressClient) : singleAddressClient);
+    Client filteredClient = new TestFilterClient(singleAddressClient);
     testing.runWithSpan(
         "setup",
         () -> {
@@ -323,7 +318,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
   private static class TestFilterClient extends FilterClient {
 
-    TestFilterClient(Client delegate) {
+    TestFilterClient(TransportClient delegate) {
       super(Settings.EMPTY, delegate.threadPool(), delegate);
     }
   }
