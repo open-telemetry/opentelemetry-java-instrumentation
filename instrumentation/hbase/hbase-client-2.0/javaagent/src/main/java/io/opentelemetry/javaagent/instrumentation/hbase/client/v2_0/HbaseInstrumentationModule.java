@@ -47,7 +47,8 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<String> exposedClassNames() {
-    // The application-loaded Call utility exchanges state with isolated instrumentation helpers.
+    // OpenTelemetryCallUtil must share HBase's class loader to access package-private Call.
+    // Expose these types so it uses the same state classes as the isolated advice.
     return asList(
         "io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext",
         "io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest");
