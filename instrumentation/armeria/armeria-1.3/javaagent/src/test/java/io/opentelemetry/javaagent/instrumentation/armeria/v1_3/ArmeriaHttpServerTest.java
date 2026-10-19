@@ -79,8 +79,10 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
 
   @Test
   void responseExceptionWithCauseIsReported() {
-    boolean libraryFallback = getClass() == ArmeriaHttp2ServerTest.class;
-    boolean causeIsReported = !libraryFallback || testLatestDeps();
+    // HTTP/2 uses our Armeria library instrumentation rather than Netty-created server spans.
+    // It reads errors from Armeria's request log, where older Armeria drops response-control
+    // causes.
+    boolean causeIsDropped = getClass() == ArmeriaHttp2ServerTest.class && !testLatestDeps();
     AggregatedHttpResponse response =
         client.execute(request(RESPONSE_EXCEPTION_WITH_CAUSE, "GET")).aggregate().join();
 
@@ -91,11 +93,11 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
                 span ->
                     span.hasKind(SpanKind.SERVER)
                         .hasNoParent()
-                        .hasStatus(causeIsReported ? StatusData.error() : StatusData.unset())
+                        .hasStatus(causeIsDropped ? StatusData.unset() : StatusData.error())
                         .hasException(
-                            causeIsReported
-                                ? new IllegalStateException("recovered failure")
-                                : null)));
+                            causeIsDropped
+                                ? null
+                                : new IllegalStateException("recovered failure"))));
   }
 
   @Test
