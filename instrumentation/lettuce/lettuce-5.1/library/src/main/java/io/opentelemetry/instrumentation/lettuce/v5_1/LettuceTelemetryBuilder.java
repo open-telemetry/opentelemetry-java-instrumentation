@@ -57,7 +57,7 @@ public final class LettuceTelemetryBuilder {
             .addOperationMetrics(DbClientMetrics.get())
             .setSpanStatusExtractor(
                 (spanStatusBuilder, request, response, error) -> {
-                  if (response != null && response.getErrorMessage() != null) {
+                  if (response != null && response.isFailed()) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   } else {
                     SpanStatusExtractor.getDefault()
