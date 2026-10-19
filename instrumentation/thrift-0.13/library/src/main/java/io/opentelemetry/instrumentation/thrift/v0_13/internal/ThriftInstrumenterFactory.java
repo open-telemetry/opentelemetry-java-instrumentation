@@ -18,10 +18,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSizeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
@@ -64,14 +62,6 @@ public final class ThriftInstrumenterFactory {
     ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> clientSpanNameExtractor =
         clientSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
-    AttributesExtractor<ThriftRequest, ThriftResponse> rpcAttributesExtractor =
-        RpcClientAttributesExtractor.create(rpcAttributesGetter);
-    ((OpenTelemetryConfigurable) rpcAttributesExtractor).internalInitialize(openTelemetry);
-    OperationMetrics rpcMetrics = RpcClientMetrics.get();
-    ((OpenTelemetryConfigurable) rpcMetrics).internalInitialize(openTelemetry);
-    ContextCustomizer<ThriftRequest> rpcContextCustomizer =
-        RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter);
-    ((OpenTelemetryConfigurable) rpcContextCustomizer).internalInitialize(openTelemetry);
 
     InstrumenterBuilder<ThriftRequest, ThriftResponse> clientInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor);
@@ -82,12 +72,13 @@ public final class ThriftInstrumenterFactory {
     clientInstrumenterBuilder
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(rpcAttributesExtractor)
+        .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
-        .addOperationMetrics(rpcMetrics)
-        .addContextCustomizer(rpcContextCustomizer);
+        .addOperationMetrics(RpcClientMetrics.get())
+        .addContextCustomizer(
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -104,14 +95,6 @@ public final class ThriftInstrumenterFactory {
     ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> serverSpanNameExtractor =
         serverSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
-    AttributesExtractor<ThriftRequest, ThriftResponse> rpcAttributesExtractor =
-        RpcServerAttributesExtractor.create(rpcAttributesGetter);
-    ((OpenTelemetryConfigurable) rpcAttributesExtractor).internalInitialize(openTelemetry);
-    OperationMetrics rpcMetrics = RpcServerMetrics.get();
-    ((OpenTelemetryConfigurable) rpcMetrics).internalInitialize(openTelemetry);
-    ContextCustomizer<ThriftRequest> rpcContextCustomizer =
-        RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter);
-    ((OpenTelemetryConfigurable) rpcContextCustomizer).internalInitialize(openTelemetry);
 
     InstrumenterBuilder<ThriftRequest, ThriftResponse> serverInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor);
@@ -122,12 +105,13 @@ public final class ThriftInstrumenterFactory {
     serverInstrumenterBuilder
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(rpcAttributesExtractor)
+        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractors(additionalServerExtractors)
-        .addOperationMetrics(rpcMetrics)
-        .addContextCustomizer(rpcContextCustomizer);
+        .addOperationMetrics(RpcServerMetrics.get())
+        .addContextCustomizer(
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));

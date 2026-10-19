@@ -12,12 +12,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,14 +31,12 @@ public class GwtSingletons {
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     GwtRpcAttributesGetter rpcAttributesGetter = new GwtRpcAttributesGetter();
-    SpanNameExtractor<Method> spanNameExtractor = RpcSpanNameExtractor.create(rpcAttributesGetter);
-    ((OpenTelemetryConfigurable) spanNameExtractor).internalInitialize(openTelemetry);
-    AttributesExtractor<Method, Void> rpcAttributesExtractor =
-        RpcServerAttributesExtractor.create(rpcAttributesGetter);
-    ((OpenTelemetryConfigurable) rpcAttributesExtractor).internalInitialize(openTelemetry);
     InstrumenterBuilder<Method, Void> builder =
-        Instrumenter.<Method, Void>builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(rpcAttributesExtractor);
+        Instrumenter.<Method, Void>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                RpcSpanNameExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(builder);
 
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
