@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -40,11 +42,28 @@ dependencies {
 
 testing {
   suites {
+    withType<JvmTestSuite>().configureEach {
+      if (name != "unitTests") {
+        executions {
+          register("PreviewSemconv") {
+            jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+            if (this@configureEach.name != "version23Test") {
+              systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+            }
+          }
+          register("ExceptionSignalLogs") {
+            jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+          }
+        }
+      }
+    }
+
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())
         implementation(project(":javaagent-extension-api"))
         implementation(project(":instrumentation-api-incubator"))
+        implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
         implementation("redis.clients:jedis:2.0.0")
       }
     }
@@ -63,21 +82,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name != "unitTests" }
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        if (suite.name != "version23Test") {
-          systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-        }
-      }
-    }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

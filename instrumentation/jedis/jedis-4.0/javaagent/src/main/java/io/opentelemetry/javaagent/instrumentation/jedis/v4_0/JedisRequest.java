@@ -32,6 +32,7 @@ public abstract class JedisRequest {
   private static final int LIMIT = 32 * 1024;
 
   @Nullable private SocketAddress remoteSocketAddress;
+  @Nullable private Object connection;
 
   public static JedisRequest create(ProtocolCommand command, List<byte[]> args) {
     return create(null, command, args);
@@ -41,12 +42,15 @@ public abstract class JedisRequest {
       @Nullable Object connection, ProtocolCommand command, List<byte[]> args) {
     JedisConnectionInfo connectionInfo = getConnectionInfo(connection);
     String operationName = operationName(command);
-    return new AutoValue_JedisRequest(
-        connectionInfo != null ? connectionInfo.getServerTarget() : null,
-        connectionInfo != null ? connectionInfo.getDatabaseIndex() : null,
-        operationName,
-        sanitizer.sanitize(operationName, args),
-        null);
+    JedisRequest request =
+        new AutoValue_JedisRequest(
+            connectionInfo != null ? connectionInfo.getServerTarget() : null,
+            connectionInfo != null ? connectionInfo.getDatabaseIndex() : null,
+            operationName,
+            sanitizer.sanitize(operationName, args),
+            null);
+    request.connection = connection;
+    return request;
   }
 
   public static JedisRequest create(CommandArguments commandArguments) {
@@ -86,6 +90,7 @@ public abstract class JedisRequest {
             pipelineQueryText(requests),
             requests.size() != 1 ? (long) requests.size() : null);
     request.remoteSocketAddress = first.getRemoteSocketAddress();
+    request.connection = first.connection;
     return request;
   }
 
@@ -98,6 +103,11 @@ public abstract class JedisRequest {
 
   @Nullable
   public abstract RedisServerTarget getServerTarget();
+
+  @Nullable
+  public Object getConnection() {
+    return connection;
+  }
 
   @Nullable
   public abstract Long getDatabaseIndex();

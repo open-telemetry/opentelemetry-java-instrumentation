@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -67,7 +68,11 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         if (!instrumenter().shouldStart(parentContext, request)) {
           return new AdviceScope(null, null, null);
         }
-        Context context = instrumenter().start(parentContext, request);
+        Context context =
+            JedisBatchResponse.store(
+                instrumenter().start(parentContext, request),
+                request.getConnection(),
+                requests.size());
         return new AdviceScope(context, context.makeCurrent(), request);
       }
 
@@ -75,7 +80,8 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         JedisPipelineContext.exitTransactionFraming();
         if (scope != null) {
           scope.close();
-          instrumenter().end(context, request, null, throwable);
+          instrumenter()
+              .end(context, request, null, JedisBatchResponse.getError(context, throwable));
         }
       }
     }

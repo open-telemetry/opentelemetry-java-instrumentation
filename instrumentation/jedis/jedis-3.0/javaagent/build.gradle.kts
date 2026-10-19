@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -28,7 +30,21 @@ dependencies {
 
 testing {
   suites {
+    withType<JvmTestSuite>().configureEach {
+      executions {
+        register("PreviewSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+          systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+        }
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+      }
+    }
+
     register<JvmTestSuite>("jedis36Test") {
+      sources.java.srcDir("src/test/java")
+
       dependencies {
         implementation("redis.clients:jedis:3.6.1")
         implementation("org.testcontainers:testcontainers")
@@ -42,15 +58,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
   check {
-    dependsOn(testing.suites, testPreviewSemconv)
+    dependsOn(testing.suites)
   }
 }
