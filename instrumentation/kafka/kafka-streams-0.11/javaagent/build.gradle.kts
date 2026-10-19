@@ -60,6 +60,20 @@ tasks {
     include("**/KafkaStreamsSuppressReceiveSpansTest.*")
   }
 
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -70,19 +84,23 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
 
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
+        "otel.instrumentation.kafka.experimental-span-attributes=true",
+    )
   }
 
   test {
     filter {
       excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   check {
     dependsOn(testing.suites)
     dependsOn(testReceiveSpansDisabled)
+    dependsOn(testReceiveTelemetry)
     dependsOn(testExperimental)
   }
 }

@@ -32,7 +32,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
@@ -64,7 +63,7 @@ import software.amazon.awssdk.services.rdsdata.model.Field;
 import software.amazon.awssdk.services.rdsdata.model.SqlParameter;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractAws2RdsDataTest {
+public abstract class AbstractAws2RdsDataTest extends AbstractAwsSdkTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
   private static final String AWS_SERVICE = "RdsData";
   private static final String DATABASE = "customers_db";
@@ -85,8 +84,6 @@ public abstract class AbstractAws2RdsDataTest {
 
   private RdsDataClient client;
   private RdsDataAsyncClient asyncClient;
-
-  protected abstract InstrumentationExtension getTesting();
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
@@ -276,7 +273,7 @@ public abstract class AbstractAws2RdsDataTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static List<AttributeAssertion> commonAttributes(
+  private List<AttributeAssertion> commonAttributes(
       String operation, String path, Integer statusCode, String requestId) {
     return new ArrayList<>(
         asList(
@@ -287,7 +284,7 @@ public abstract class AbstractAws2RdsDataTest {
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, AWS_SERVICE),
             equalTo(RPC_METHOD, operation),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode != null ? statusCode.longValue() : null),
             equalTo(AWS_REQUEST_ID, requestId)));
   }

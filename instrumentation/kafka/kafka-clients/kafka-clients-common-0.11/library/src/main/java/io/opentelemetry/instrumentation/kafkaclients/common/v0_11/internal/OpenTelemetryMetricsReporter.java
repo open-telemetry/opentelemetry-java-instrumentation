@@ -14,7 +14,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +54,7 @@ public final class OpenTelemetryMetricsReporter
   private final Object lock = new Object();
 
   @GuardedBy("lock")
-  private final List<RegisteredObservable> registeredObservables = new ArrayList<>();
+  private final Set<RegisteredObservable> registeredObservables = new LinkedHashSet<>();
 
   /**
    * Reset for test by resetting the {@link #meter} to {@code null} and closing all registered
@@ -98,29 +98,36 @@ public final class OpenTelemetryMetricsReporter
     }
 
     Set<AttributeKey<?>> attributeKeys = registeredObservable.getAttributes().asMap().keySet();
+    List<RegisteredObservable> observablesToClose = new ArrayList<>();
     synchronized (lock) {
-      for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
-        RegisteredObservable curRegisteredObservable = it.next();
+      for (RegisteredObservable curRegisteredObservable : registeredObservables) {
         Set<AttributeKey<?>> curAttributeKeys =
             curRegisteredObservable.getAttributes().asMap().keySet();
         if (curRegisteredObservable.getKafkaMetricName().equals(metric.metricName())) {
-          logger.log(FINEST, "Replacing instrument: {0}", curRegisteredObservable);
-          closeInstrument(curRegisteredObservable.getObservable());
-          it.remove();
+          observablesToClose.add(curRegisteredObservable);
         } else if (curRegisteredObservable
                 .getInstrumentDescriptor()
                 .equals(registeredObservable.getInstrumentDescriptor())
             && attributeKeys.size() > curAttributeKeys.size()
             && attributeKeys.containsAll(curAttributeKeys)) {
-          logger.log(
-              FINEST,
-              "Replacing instrument with higher dimension version: {0}",
-              curRegisteredObservable);
-          closeInstrument(curRegisteredObservable.getObservable());
-          it.remove();
+          observablesToClose.add(curRegisteredObservable);
         }
       }
+    }
 
+    for (RegisteredObservable curRegisteredObservable : observablesToClose) {
+      if (curRegisteredObservable.getKafkaMetricName().equals(metric.metricName())) {
+        logger.log(FINEST, "Replacing instrument: {0}", curRegisteredObservable);
+      } else {
+        logger.log(
+            FINEST,
+            "Replacing instrument with higher dimension version: {0}",
+            curRegisteredObservable);
+      }
+      closeInstrumentAndRemove(curRegisteredObservable);
+    }
+
+    synchronized (lock) {
       registeredObservables.add(registeredObservable);
     }
   }
@@ -128,14 +135,17 @@ public final class OpenTelemetryMetricsReporter
   @Override
   public void metricRemoval(KafkaMetric metric) {
     logger.log(FINEST, "Metric removed: {0}", metric.metricName());
+    List<RegisteredObservable> observablesToClose = new ArrayList<>();
     synchronized (lock) {
-      for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
-        RegisteredObservable current = it.next();
+      for (RegisteredObservable current : registeredObservables) {
         if (current.getKafkaMetricName().equals(metric.metricName())) {
-          closeInstrument(current.getObservable());
-          it.remove();
+          observablesToClose.add(current);
         }
       }
+    }
+
+    for (RegisteredObservable current : observablesToClose) {
+      closeInstrumentAndRemove(current);
     }
   }
 
@@ -163,11 +173,20 @@ public final class OpenTelemetryMetricsReporter
   }
 
   private void closeAllInstruments() {
+    List<RegisteredObservable> observablesToClose;
     synchronized (lock) {
-      for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
-        closeInstrument(it.next().getObservable());
-        it.remove();
-      }
+      observablesToClose = new ArrayList<>(registeredObservables);
+    }
+
+    for (RegisteredObservable registeredObservable : observablesToClose) {
+      closeInstrumentAndRemove(registeredObservable);
+    }
+  }
+
+  private void closeInstrumentAndRemove(RegisteredObservable registeredObservable) {
+    closeInstrument(registeredObservable.getObservable());
+    synchronized (lock) {
+      registeredObservables.remove(registeredObservable);
     }
   }
 

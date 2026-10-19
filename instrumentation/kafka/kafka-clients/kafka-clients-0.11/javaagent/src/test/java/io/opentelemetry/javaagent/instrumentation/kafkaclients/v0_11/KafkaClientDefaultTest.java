@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
@@ -13,6 +14,8 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -22,12 +25,14 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -38,6 +43,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
+
+  private static final boolean RECEIVE_TELEMETRY =
+      Boolean.getBoolean(
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -83,8 +92,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           });
     }
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
+    waitAndAssertTraces(
+        SpanKind.INTERNAL,
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -121,11 +130,13 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
     String group = testLatestDeps() ? "test" : null;
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
-    // every test task that runs this class enables receive telemetry, so the receive operation
-    // always owns the consumed messages count here; KafkaClientSuppressReceiveSpansTest covers the
-    // case where it is disabled and the process operation owns the count instead
-    assertReceiveMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, 1, null);
-    assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
+    if (RECEIVE_TELEMETRY) {
+      assertReceiveMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, 1, null);
+      assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
+    } else {
+      assertProcessMetricsWithConsumedMessages(
+          testing, instrumentationName, SHARED_TOPIC, group, "0", 1, 1, null);
+    }
     assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
@@ -142,8 +153,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.PRODUCER, SpanKind.CLIENT),
+    waitAndAssertTraces(
+        SpanKind.PRODUCER,
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
@@ -189,13 +200,21 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("send " + SHARED_TOPIC).hasNoParent()),
-        trace ->
+        trace -> {
+          if (RECEIVE_TELEMETRY) {
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasNoParent(),
                 span -> span.hasName("poll " + SHARED_TOPIC).hasParent(trace.getSpan(0)),
                 span -> span.hasName("process " + SHARED_TOPIC).hasParent(trace.getSpan(0)),
                 span -> span.hasName("poll " + SHARED_TOPIC).hasParent(trace.getSpan(0)),
-                span -> span.hasName("process " + SHARED_TOPIC).hasParent(trace.getSpan(0))),
+                span -> span.hasName("process " + SHARED_TOPIC).hasParent(trace.getSpan(0)));
+          } else {
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("process " + SHARED_TOPIC).hasParent(trace.getSpan(0)),
+                span -> span.hasName("process " + SHARED_TOPIC).hasParent(trace.getSpan(0)));
+          }
+        },
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("send " + SHARED_TOPIC).hasNoParent()));
@@ -221,8 +240,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.PRODUCER, SpanKind.CLIENT),
+    waitAndAssertTraces(
+        SpanKind.PRODUCER,
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
@@ -278,8 +297,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
       }
     }
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.PRODUCER, SpanKind.CLIENT),
+    waitAndAssertTraces(
+        SpanKind.PRODUCER,
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
@@ -341,8 +360,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           });
     }
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
+    waitAndAssertTraces(
+        SpanKind.INTERNAL,
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -371,5 +390,14 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false))));
+  }
+
+  private static void waitAndAssertTraces(
+      SpanKind producerRootKind,
+      Consumer<TraceAssert> producerTrace,
+      Consumer<TraceAssert> receiveTrace) {
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanKind(producerRootKind, SpanKind.CLIENT),
+        RECEIVE_TELEMETRY ? asList(producerTrace, receiveTrace) : singletonList(producerTrace));
   }
 }

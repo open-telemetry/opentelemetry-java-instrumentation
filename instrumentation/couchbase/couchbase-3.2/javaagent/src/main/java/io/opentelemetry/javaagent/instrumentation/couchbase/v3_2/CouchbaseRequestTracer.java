@@ -15,6 +15,8 @@ import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.cnc.TracingIdentifiers;
 import com.couchbase.client.core.msg.RequestContext;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseTracer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConfiguredTarget;
@@ -33,15 +35,17 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   private final CouchbaseTracer tracer;
 
   public static RequestTracer create(OpenTelemetry openTelemetry) {
+    String instrumentationName = "io.opentelemetry.couchbase-3.2";
+    Tracer tracer =
+        openTelemetry.tracerBuilder(instrumentationName).setSchemaUrl(SchemaUrls.V1_44_0).build();
+    Logger exceptionLogger =
+        openTelemetry
+            .getLogsBridge()
+            .loggerBuilder(instrumentationName)
+            .setSchemaUrl(SchemaUrls.V1_44_0)
+            .build();
     return new CouchbaseRequestTracer(
-        new CouchbaseTracer(
-            openTelemetry
-                .tracerBuilder("com.couchbase.client.jvm")
-                .setSchemaUrl(SchemaUrls.V1_44_0)
-                .build(),
-            true,
-            false,
-            false));
+        new CouchbaseTracer(tracer, exceptionLogger, true, false, false));
   }
 
   public static void captureServerTarget(

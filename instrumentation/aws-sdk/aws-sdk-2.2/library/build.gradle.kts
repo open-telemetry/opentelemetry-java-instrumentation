@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -34,6 +36,14 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+      }
+    }
+
     register<JvmTestSuite>("testCoreOnly") {
       dependencies {
         implementation(project())
@@ -79,23 +89,10 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    // NB: If you'd like to change these, there is some cleanup work to be done, as most tests ignore this and
-    // set the value directly (the "library" does not normally query it, only library-autoconfigure)
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      testExceptionSignalLogs,
-    )
+    dependsOn(testing.suites)
   }
 }

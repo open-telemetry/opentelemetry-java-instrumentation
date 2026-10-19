@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
+
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractEc2ClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -18,6 +20,11 @@ class Ec2ClientTest extends AbstractEc2ClientTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 
   @Override

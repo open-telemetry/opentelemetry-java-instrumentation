@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- The Java agent no longer captures thread details by default. Set
+  `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
+- GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
+  remain, instead of emitting an empty object.
 - Process command resource attributes are now disabled by default. Set
   `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
@@ -22,6 +26,9 @@
   | `io.opentelemetry.ratpack-1.7` | `io.opentelemetry.ratpack-1.4` |
   | `io.opentelemetry.tomcat-jdbc` | `io.opentelemetry.tomcat-jdbc-8.5` |
 
+- Couchbase Java SDK 3.1 and 3.2+ spans now use the agent-owned scope names instead of
+  `com.couchbase.client.jvm`. SDK 3.1 uses `io.opentelemetry.couchbase-3.1`; SDK 3.2+ uses
+  `io.opentelemetry.couchbase-3.2`.
 - Java agent instrumentation selectors now always use the versioned component name first,
   followed by supported role, versionless and umbrella selectors. When several selectors are
   configured, the first matching selector determines enablement. For example,
@@ -278,6 +285,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency
+  helpers are private.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
   `create(Meter, String, Attributes)` overloads. Use the overloads accepting
   `OpenTelemetry`, the instrumentation name and the pool name instead.
