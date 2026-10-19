@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -82,11 +80,6 @@ testing {
       dependencies {
         implementation("com.couchbase.client:java-client:${baseVersion("3.3.4").orLatest()}")
         implementation("org.testcontainers:testcontainers-couchbase")
-      }
-      executions {
-        register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
-        }
       }
     }
   }

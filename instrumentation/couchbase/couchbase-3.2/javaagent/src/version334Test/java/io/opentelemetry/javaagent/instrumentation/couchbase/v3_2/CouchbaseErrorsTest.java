@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -41,9 +38,6 @@ import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
 class CouchbaseErrorsTest {
-  private static final boolean EXPERIMENTAL_TELEMETRY =
-      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
-
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -97,20 +91,7 @@ class CouchbaseErrorsTest {
     }
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> assertUpsertSpan(span, oversized),
-                span ->
-                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0)));
-          } else {
-            trace.hasSpansSatisfyingExactly(span -> assertUpsertSpan(span, oversized));
-          }
-        });
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertUpsertSpan(span, oversized)));
   }
 
   private static void assertUpsertSpan(SpanDataAssert span, boolean oversized) {
@@ -124,11 +105,6 @@ class CouchbaseErrorsTest {
             equalTo(DB_OPERATION_NAME, "upsert"),
             equalTo(DB_COLLECTION_NAME, "_default"),
             equalTo(ERROR_TYPE, oversized ? ValueTooLargeException.class.getName() : null),
-            equalTo(
-                stringKey("db.couchbase.document_id"), EXPERIMENTAL_TELEMETRY ? "upsert-id" : null),
-            equalTo(stringKey("db.couchbase.scope"), EXPERIMENTAL_TELEMETRY ? "_default" : null),
-            equalTo(longKey("db.couchbase.retries"), EXPERIMENTAL_TELEMETRY ? 0L : null),
-            equalTo(stringKey("db.couchbase.service"), EXPERIMENTAL_TELEMETRY ? "kv" : null),
             equalTo(SERVER_ADDRESS, seedAddress),
             equalTo(SERVER_PORT, seedPort));
   }
