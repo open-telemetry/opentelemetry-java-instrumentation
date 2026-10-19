@@ -37,10 +37,6 @@ configurations
     resolutionStrategy.force("com.google.guava:guava:19.0")
   }
 
-sourceSets.test {
-  java.srcDir(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent-unit-tests").file("src/indyTest/java"))
-}
-
 testing {
   suites {
     register<JvmTestSuite>("shadedClientTest") {
