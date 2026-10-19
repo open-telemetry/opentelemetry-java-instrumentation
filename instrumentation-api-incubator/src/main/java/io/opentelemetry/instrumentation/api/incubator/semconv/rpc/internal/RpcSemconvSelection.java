@@ -21,12 +21,11 @@ import javax.annotation.Nullable;
 public final class RpcSemconvSelection {
 
   @Nullable private OpenTelemetry initializedWith;
-  private volatile Selection selection =
-      Selection.forOpenTelemetry(GlobalOpenTelemetry.getOrNoop());
+  private Selection selection = Selection.forOpenTelemetry(GlobalOpenTelemetry.getOrNoop());
 
   public RpcSemconvSelection() {}
 
-  public synchronized void initialize(OpenTelemetry openTelemetry) {
+  public void initialize(OpenTelemetry openTelemetry) {
     // Span-name customizers may return the original extractor, and components may be reused by
     // instrumenters that share the same OpenTelemetry instance.
     if (initializedWith == openTelemetry) {
