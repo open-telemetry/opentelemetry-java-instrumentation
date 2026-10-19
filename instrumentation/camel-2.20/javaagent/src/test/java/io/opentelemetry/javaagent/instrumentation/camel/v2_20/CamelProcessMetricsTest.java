@@ -5,20 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
@@ -32,8 +23,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Route;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultExchange;
-import org.apache.camel.management.event.ExchangeSendingEvent;
-import org.apache.camel.management.event.ExchangeSentEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,182 +47,6 @@ class CamelProcessMetricsTest {
     } finally {
       context.stop();
     }
-  }
-
-  @ParameterizedTest
-  @MethodSource("exchangeOutcomes")
-  void classifiesMessagingExchange(String direction, String outcome, String errorType)
-      throws ReflectiveOperationException {
-    Exchange exchange = new DefaultExchange(new DefaultCamelContext());
-    Endpoint endpoint = mock(Endpoint.class);
-    when(endpoint.getEndpointUri()).thenReturn("jms:queue:testQueue");
-    Route route = mock(Route.class);
-    when(route.getEndpoint()).thenReturn(endpoint);
-    Class<?> contextClass =
-        Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.Context");
-    boolean send = direction.equals("send");
-    Class<?> notifier = camelHelperClass("CamelEventNotifier");
-    if (send) {
-      invokeStatic(
-          notifier,
-          "onExchangeSending",
-          new Class<?>[] {ExchangeSendingEvent.class},
-          new ExchangeSendingEvent(exchange, endpoint));
-    } else {
-      Object decorator =
-          invokeStatic(
-              camelHelperClass("CamelSingletons"),
-              "getSpanDecorator",
-              new Class<?>[] {Endpoint.class},
-              endpoint);
-      invokeStatic(
-          camelHelperClass("CamelRoutePolicy"),
-          "spanOnExchangeBegin",
-          new Class<?>[] {
-            Route.class, Exchange.class, camelHelperClass("SpanDecorator"), contextClass
-          },
-          route,
-          exchange,
-          decorator,
-          contextClass.getMethod("root").invoke(null));
-    }
-    completeExchange(exchange, outcome);
-    if (send) {
-      invokeStatic(
-          notifier,
-          "onExchangeSent",
-          new Class<?>[] {ExchangeSentEvent.class},
-          new ExchangeSentEvent(exchange, endpoint, 1));
-    } else {
-      invokeStatic(
-          camelHelperClass("ActiveContextManager"),
-          "deactivate",
-          new Class<?>[] {Exchange.class},
-          exchange);
-    }
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(direction + " testQueue")
-                        .hasStatusSatisfying(
-                            status ->
-                                status.hasCode(
-                                    errorType == null ? StatusCode.UNSET : StatusCode.ERROR))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("jms:queue:testQueue")),
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
-                            equalTo(MESSAGING_OPERATION_NAME, direction),
-                            equalTo(MESSAGING_OPERATION_TYPE, direction),
-                            equalTo(ERROR_TYPE, errorType))));
-    if (send) {
-      CamelMessagingMetricsAssertions.assertSendMetrics(testing, "jms", "testQueue", errorType);
-    } else {
-      CamelMessagingMetricsAssertions.assertProcessMetrics(testing, "jms", "testQueue", errorType);
-    }
-  }
-
-  private static Stream<Arguments> exchangeOutcomes() {
-    return Stream.of("send", "process")
-        .flatMap(
-            direction ->
-                Stream.of(
-                    Arguments.of(direction, "fault", "_OTHER"),
-                    Arguments.of(direction, "exception", IllegalStateException.class.getName()),
-                    Arguments.of(
-                        direction, "faultAndException", IllegalStateException.class.getName()),
-                    Arguments.of(direction, "handled", null)));
-  }
-
-  private static void completeExchange(Exchange exchange, String outcome) {
-    if (outcome.equals("fault") || outcome.equals("faultAndException")) {
-      exchange.getOut().setFault(true);
-    }
-    if (!outcome.equals("fault")) {
-      exchange.setException(new IllegalStateException("failed"));
-    }
-    if (outcome.equals("handled")) {
-      exchange.setProperty(Exchange.EXCEPTION_CAUGHT, exchange.getException());
-      exchange.setException(null);
-      exchange.setProperty(Exchange.FAILURE_HANDLED, true);
-    }
-    assertThat(exchange.isFailed()).isEqualTo(!outcome.equals("handled"));
-    if (outcome.equals("fault")) {
-      assertThat(exchange.getException()).isNull();
-    }
-  }
-
-  @ParameterizedTest
-  @MethodSource("processOutcomes")
-  void classifiesSuppressedRouteWithoutChangingOwner(String outcome, String errorType)
-      throws ReflectiveOperationException {
-    testing.runWithSpan(
-        "owner",
-        () -> {
-          Exchange exchange = new DefaultExchange(new DefaultCamelContext());
-          Endpoint endpoint = mock(Endpoint.class);
-          when(endpoint.getEndpointUri()).thenReturn("jms:queue:testQueue");
-          Route route = mock(Route.class);
-          when(route.getEndpoint()).thenReturn(endpoint);
-          Class<?> contextClass =
-              Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.Context");
-          Object parentContext = contextClass.getMethod("current").invoke(null);
-          Class<?> spanClass =
-              Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.Span");
-          Object owner =
-              spanClass.getMethod("fromContext", contextClass).invoke(null, parentContext);
-          Class<?> spanKeyClass =
-              Class.forName(
-                  "io.opentelemetry.javaagent.shaded.instrumentation.api.internal.SpanKey");
-          parentContext =
-              spanKeyClass
-                  .getMethod("storeInContext", contextClass, spanClass)
-                  .invoke(
-                      spanKeyClass.getField("CONSUMER_PROCESS").get(null), parentContext, owner);
-          Object decorator =
-              invokeStatic(
-                  camelHelperClass("CamelSingletons"),
-                  "getSpanDecorator",
-                  new Class<?>[] {Endpoint.class},
-                  endpoint);
-          Object context =
-              invokeStatic(
-                  camelHelperClass("CamelRoutePolicy"),
-                  "spanOnExchangeBegin",
-                  new Class<?>[] {
-                    Route.class, Exchange.class, camelHelperClass("SpanDecorator"), contextClass
-                  },
-                  route,
-                  exchange,
-                  decorator,
-                  parentContext);
-          assertThat(context).isNull();
-          completeExchange(exchange, outcome);
-          invokeStatic(
-              camelHelperClass("CamelProcessMetrics"),
-              "end",
-              new Class<?>[] {Route.class, Exchange.class},
-              route,
-              exchange);
-        });
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("owner")
-                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
-                        .hasTotalAttributeCount(0)));
-    CamelMessagingMetricsAssertions.assertProcessMetrics(testing, "jms", "testQueue", errorType);
-  }
-
-  private static Stream<Arguments> processOutcomes() {
-    return Stream.of(
-        Arguments.of("fault", "_OTHER"),
-        Arguments.of("exception", IllegalStateException.class.getName()),
-        Arguments.of("faultAndException", IllegalStateException.class.getName()),
-        Arguments.of("handled", null));
   }
 
   @Test

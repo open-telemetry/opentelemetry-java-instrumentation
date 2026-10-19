@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessag
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
@@ -53,6 +54,7 @@ class JmsCamelTest {
   private static BrokerService broker;
   private static CamelContext camelContext;
   private static final CountDownLatch errorProcessed = new CountDownLatch(1);
+  private static final CountDownLatch faultProcessed = new CountDownLatch(1);
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -79,6 +81,13 @@ class JmsCamelTest {
                     exchange -> {
                       errorProcessed.countDown();
                       throw new IllegalStateException("test");
+                    });
+            from("direct:faultInput").to("jms:queue:faultQueue");
+            from("jms:queue:faultQueue")
+                .process(
+                    exchange -> {
+                      exchange.getOut().setFault(true);
+                      faultProcessed.countDown();
                     });
           }
         });
@@ -109,6 +118,20 @@ class JmsCamelTest {
     testing.waitForTraces(2);
     assertSendAndProcessMetrics(
         testing, "jms", "errorQueue", IllegalStateException.class.getName());
+  }
+
+  @Test
+  void faultedCamelProcessCountsDeliveredMessage() throws Exception {
+    ProducerTemplate template = camelContext.createProducerTemplate();
+    template.sendBody("direct:faultInput", "test message");
+
+    assertThat(faultProcessed.await(1, MINUTES)).isTrue();
+    testing.waitForTraces(2);
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("process faultQueue"))
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("_OTHER"));
+    assertSendAndProcessMetrics(testing, "jms", "faultQueue", "_OTHER");
   }
 
   private static void assertJmsReceiveTrace(TraceAssert trace) {
