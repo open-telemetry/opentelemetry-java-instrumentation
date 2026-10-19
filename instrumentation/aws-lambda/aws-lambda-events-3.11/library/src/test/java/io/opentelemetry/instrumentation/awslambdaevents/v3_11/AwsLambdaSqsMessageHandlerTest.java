@@ -30,7 +30,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -42,6 +41,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Constructor;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
@@ -104,12 +104,12 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
-                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
+                        .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("process queue1")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
+                        .hasStatus(StatusData.unset())
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
@@ -135,7 +135,7 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("process queue1")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
+                        .hasStatus(StatusData.unset())
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
@@ -153,7 +153,7 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("process queue1")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
+                        .hasStatus(StatusData.error())
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),

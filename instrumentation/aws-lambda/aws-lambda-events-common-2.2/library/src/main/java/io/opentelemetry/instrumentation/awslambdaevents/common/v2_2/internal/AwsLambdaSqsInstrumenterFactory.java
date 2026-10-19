@@ -12,10 +12,8 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -27,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -35,8 +34,6 @@ import javax.annotation.Nullable;
  */
 public final class AwsLambdaSqsInstrumenterFactory {
   private static final String PROCESS_OPERATION_NAME = "process";
-  private static final ContextKey<Boolean> MESSAGE_PROCESSING_SUCCESSFUL =
-      ContextKey.named("aws-lambda-sqs-message-processing-successful");
 
   public static Instrumenter<SQSEvent, Void> forEvent(
       OpenTelemetry openTelemetry, String instrumentationName) {
@@ -58,11 +55,11 @@ public final class AwsLambdaSqsInstrumenterFactory {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public static Instrumenter<SQSMessage, Void> forSelectedMessageProcessing(
+  public static Instrumenter<SQSMessage, Boolean> forSelectedMessageProcessing(
       OpenTelemetry openTelemetry, String instrumentationName) {
     SqsMessageAttributesGetter getter = new SqsMessageAttributesGetter();
-    InstrumenterBuilder<SQSMessage, Void> builder =
-        Instrumenter.<SQSMessage, Void>builder(
+    InstrumenterBuilder<SQSMessage, Boolean> builder =
+        Instrumenter.<SQSMessage, Boolean>builder(
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(
@@ -70,26 +67,25 @@ public final class AwsLambdaSqsInstrumenterFactory {
             .addAttributesExtractor(
                 MessagingAttributesExtractor.create(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
-            .addAttributesExtractor(new MessageProcessingOutcomeExtractor())
+            .addAttributesExtractor(new MessageProcessingAttributesExtractor())
             .addOperationMetrics(MessagingProcessMetrics.get());
+    builder.setSpanStatusExtractor(
+        (spanStatusBuilder, request, response, error) -> {
+          if (error == null && Boolean.FALSE.equals(response)) {
+            spanStatusBuilder.setStatus(StatusCode.ERROR);
+          } else {
+            SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
+          }
+        });
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder, AwsXrayPropagator.getInstance(), SqsMessageTextMapGetter.INSTANCE);
   }
 
-  public static Context withMessageProcessingOutcome(Context context, boolean successful) {
-    if (successful) {
-      return context;
-    }
-    // The protected handler API uses a Void response, so carry the outcome in the end context.
-    Span.fromContext(context).setStatus(StatusCode.ERROR);
-    return context.with(MESSAGE_PROCESSING_SUCCESSFUL, false);
-  }
-
   private AwsLambdaSqsInstrumenterFactory() {}
 
-  private static final class MessageProcessingOutcomeExtractor
-      implements AttributesExtractor<SQSMessage, Void> {
+  private static final class MessageProcessingAttributesExtractor
+      implements AttributesExtractor<SQSMessage, Boolean> {
 
     @Override
     public void onStart(AttributesBuilder attributes, Context parentContext, SQSMessage message) {}
@@ -99,9 +95,9 @@ public final class AwsLambdaSqsInstrumenterFactory {
         AttributesBuilder attributes,
         Context context,
         SQSMessage message,
-        @Nullable Void response,
+        @Nullable Boolean response,
         @Nullable Throwable error) {
-      if (error == null && Boolean.FALSE.equals(context.get(MESSAGE_PROCESSING_SUCCESSFUL))) {
+      if (error == null && Boolean.FALSE.equals(response)) {
         attributes.put(ERROR_TYPE, "_OTHER");
       }
     }

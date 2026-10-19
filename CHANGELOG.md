@@ -285,6 +285,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- The `TracingSqsMessageHandler` customization constructor now accepts an
+  `Instrumenter<SQSMessage, Boolean>`; update custom message instrumenters to use the
+  processing result as their response.
 - In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency
   helpers are private.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and

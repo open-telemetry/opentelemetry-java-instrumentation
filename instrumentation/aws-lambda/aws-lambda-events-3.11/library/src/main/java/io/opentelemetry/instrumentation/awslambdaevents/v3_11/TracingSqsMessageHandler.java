@@ -19,7 +19,7 @@ import java.util.List;
 
 public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
 
-  private final Instrumenter<SQSMessage, Void> messageInstrumenter;
+  private final Instrumenter<SQSMessage, Boolean> messageInstrumenter;
 
   /**
    * Creates a new {@link TracingSqsMessageHandler} which traces using the provided {@link
@@ -63,13 +63,13 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
    * Creates a new {@link TracingSqsMessageHandler} which flushes the provided {@link
    * OpenTelemetrySdk}, has a timeout of {@code flushTimeout} when flushing at the end of an
    * invocation, and traces using the provided {@code Instrumenter<SQSEvent, Void>} and {@code
-   * Instrumenter<SQSMessage, Void>}.
+   * Instrumenter<SQSMessage, Boolean>}.
    */
   protected TracingSqsMessageHandler(
       OpenTelemetrySdk openTelemetrySdk,
       Duration flushTimeout,
       Instrumenter<SQSEvent, Void> eventInstrumenter,
-      Instrumenter<SQSMessage, Void> messageInstrumenter) {
+      Instrumenter<SQSMessage, Boolean> messageInstrumenter) {
     super(openTelemetrySdk, flushTimeout, eventInstrumenter);
     this.messageInstrumenter = messageInstrumenter;
   }
@@ -90,11 +90,7 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
           error = t;
           throw t;
         } finally {
-          messageInstrumenter.end(
-              AwsLambdaSqsInstrumenterFactory.withMessageProcessingOutcome(otelContext, successful),
-              message,
-              null,
-              error);
+          messageInstrumenter.end(otelContext, message, successful, error);
         }
       } else {
         handleMessage(message, context, batchItemFailures);

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import javax.annotation.Nullable;
 
-final class SqsMessageAttributesGetter extends SqsAttributesGetter<SQSMessage> {
+final class SqsMessageAttributesGetter extends SqsAttributesGetter<SQSMessage, Boolean> {
 
   @Nullable
   @Override
@@ -18,7 +18,7 @@ final class SqsMessageAttributesGetter extends SqsAttributesGetter<SQSMessage> {
 
   @Nullable
   @Override
-  public String getMessageId(SQSMessage message, @Nullable Void unused) {
+  public String getMessageId(SQSMessage message, @Nullable Boolean unused) {
     return message.getMessageId();
   }
 }
