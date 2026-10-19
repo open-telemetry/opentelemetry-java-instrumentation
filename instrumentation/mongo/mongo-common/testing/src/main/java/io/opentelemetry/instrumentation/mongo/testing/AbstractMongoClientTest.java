@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.mongo.testing;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -205,14 +206,22 @@ public abstract class AbstractMongoClientTest<T> {
                     .singleElement()
                     .satisfies(
                         metric ->
-                            assertThat(metric.getHistogramData().getPoints())
-                                .singleElement()
-                                .satisfies(
-                                    point -> {
-                                      assertThat(point.getCount()).isEqualTo(1);
-                                      assertThat(point.getAttributes().get(ERROR_TYPE))
-                                          .isEqualTo(errorType);
-                                    })));
+                            io.opentelemetry
+                                .sdk
+                                .testing
+                                .assertj
+                                .assertThat(metric)
+                                .hasName("db.client.operation.duration")
+                                .hasHistogramSatisfying(
+                                    histogram ->
+                                        histogram.hasPointsSatisfying(
+                                            point ->
+                                                point
+                                                    .hasCount(1)
+                                                    .hasAttributesSatisfying(
+                                                        attributes ->
+                                                            assertThat(attributes.get(ERROR_TYPE))
+                                                                .isEqualTo(errorType))))));
   }
 
   protected void ignoreTracesAndClear(int numberOfTraces) {
