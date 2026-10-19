@@ -57,9 +57,34 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      if (!otelProps.testLatestDeps) {
+        executions {
+          register("WithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("PreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+        }
+      }
+    }
+
     register<JvmTestSuite>("latestDepTest") {
       dependencies {
         implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
+      }
+      if (otelProps.testLatestDeps) {
+        executions {
+          register("WithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("PreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+        }
       }
     }
 
@@ -67,18 +92,6 @@ testing {
       dependencies {
         val version = baseVersion("3.0.0").orLatest()
         implementation("org.playframework:play-ahc-ws-standalone_3:$version")
-      }
-    }
-
-    named<JvmTestSuite>(if (otelProps.testLatestDeps) "latestDepTest" else "test") {
-      executions {
-        register("WithPeerServiceMapping") {
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-        }
-        register("PreviewSemconvWithPeerServiceMapping") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-        }
       }
     }
   }

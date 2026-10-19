@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -31,25 +34,25 @@ dependencies {
   latestDepTestLibrary("io.projectreactor.netty:reactor-netty:0.+") // see reactor-netty-1.0 modules
 }
 
-tasks {
-  val testConnectionSpan = register<Test>("testConnectionSpan") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("ReactorNettyConnectionSpanTest")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      targets.all {
+        testTask.configure {
+          filter {
+            excludeTestsMatching("ReactorNettyConnectionSpanTest")
+          }
+        }
+      }
+      executions {
+        register("ConnectionSpan") {
+          filter {
+            includeTestsMatching("ReactorNettyConnectionSpanTest")
+          }
+          include("**/ReactorNettyConnectionSpanTest.*")
+          telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
+        }
+      }
     }
-    include("**/ReactorNettyConnectionSpanTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("ReactorNettyConnectionSpanTest")
-    }
-  }
-
-  check {
-    dependsOn(testConnectionSpan)
   }
 }

@@ -50,12 +50,26 @@ testing {
     named<JvmTestSuite>("test") {
       executions {
         configureEach {
-          filter {
-            excludeTestsMatching("ReactorNettyConnectionSpanTest")
-            excludeTestsMatching("ReactorNettyClientSslTest")
+          if (name in listOf("test", "testWithPeerServiceMapping", "testPreviewSemconvWithPeerServiceMapping")) {
+            filter {
+              excludeTestsMatching("ReactorNettyConnectionSpanTest")
+              excludeTestsMatching("ReactorNettyClientSslTest")
+            }
           }
         }
         register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("ConnectionSpan") {
+          connectionTelemetry()
+        }
+        register("ConnectionSpanWithPeerServiceMapping") {
+          connectionTelemetry()
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("ConnectionSpanPreviewSemconvWithPeerServiceMapping") {
+          connectionTelemetry()
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
           telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
         }
         register("PreviewSemconvWithPeerServiceMapping") {
@@ -76,28 +90,4 @@ fun Test.connectionTelemetry() {
   include("**/ReactorNettyClientSslTest.*")
   telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
   telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
-}
-
-tasks {
-  val testConnectionSpan = register<Test>("testConnectionSpan") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    connectionTelemetry()
-  }
-
-  val mappedConnectionTests = listOf("WithPeerServiceMapping", "PreviewSemconvWithPeerServiceMapping").map { suffix ->
-    register<Test>("testConnectionSpan$suffix") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      connectionTelemetry()
-      if (suffix == "PreviewSemconvWithPeerServiceMapping") {
-        telemetryConfig("otel.semconv-stability.preview", "service.peer")
-      }
-      telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-    }
-  }
-
-  check {
-    dependsOn(testConnectionSpan, mappedConnectionTests)
-  }
 }
