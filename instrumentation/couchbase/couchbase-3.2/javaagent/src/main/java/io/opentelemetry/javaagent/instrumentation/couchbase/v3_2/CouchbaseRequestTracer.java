@@ -165,7 +165,8 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       if (spanName.isDatabaseRequest()) {
         delegate.updateName(spanName.spanName());
       }
-      // An exception can be recovered; the SDK reports the logical outcome separately.
+      // A recorded exception does not necessarily mean the operation failed.
+      // Only set error.type if the SDK reports a failed operation.
       if (statusCode == RequestSpan.StatusCode.ERROR) {
         delegate.setRawAttribute(ERROR_TYPE.getKey(), errorType);
       }
