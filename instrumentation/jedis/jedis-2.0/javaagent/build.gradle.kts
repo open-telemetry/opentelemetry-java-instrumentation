@@ -43,13 +43,24 @@ dependencies {
 testing {
   suites {
     withType<JvmTestSuite>().configureEach {
-      executions {
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-          if (this@configureEach.name != "version23Test") {
-            systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+      if (name != "unitTests") {
+        executions {
+          register("PreviewSemconv") {
+            jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+            if (this@configureEach.name != "version23Test") {
+              systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+            }
           }
         }
+      }
+    }
+
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("redis.clients:jedis:2.0.0")
       }
     }
 
