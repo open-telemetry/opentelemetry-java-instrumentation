@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
@@ -21,6 +20,10 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,6 +59,7 @@ class DynamoDbErrorsTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void sdkProtocolOutcome(boolean missingItem) {
     MockWebServerExtension server = new MockWebServerExtension();
     server.start();
@@ -114,17 +118,11 @@ class DynamoDbErrorsTest {
                               equalTo(URL_FULL, server.httpUri() + "/"),
                               equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("items")),
                               equalTo(AWS_REQUEST_ID, missingItem ? "UNKNOWN" : null),
+                              equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "aws-api" : null),
+                              equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "DynamoDb" : null),
+                              equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? null : "GetItem"),
                               equalTo(
-                                  stringKey("rpc.system"), emitOldRpcSemconv() ? "aws-api" : null),
-                              equalTo(
-                                  stringKey("rpc.service"),
-                                  emitOldRpcSemconv() ? "DynamoDb" : null),
-                              equalTo(
-                                  stringKey("rpc.method"),
-                                  emitPreviewRpcSemconv() ? null : "GetItem"),
-                              equalTo(
-                                  stringKey("rpc.system.name"),
-                                  emitPreviewRpcSemconv() ? "aws-api" : null))));
+                                  RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "aws-api" : null))));
       assertDurationMetric(
           testing,
           "io.opentelemetry.aws-sdk-2.2",
