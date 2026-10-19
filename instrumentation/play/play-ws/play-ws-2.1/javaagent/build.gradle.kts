@@ -57,8 +57,15 @@ dependencies {
 
 testing {
   suites {
-    named<JvmTestSuite>("test") {
-      if (!otelProps.testLatestDeps) {
+    if (otelProps.testLatestDeps) {
+      tasks.named("test") {
+        // Gradle creates this task automatically; skipping suite configuration does not disable it.
+        enabled = false
+      }
+    }
+
+    if (!otelProps.testLatestDeps) {
+      named<JvmTestSuite>("test") {
         executions {
           register("WithPeerServiceMapping") {
             telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
@@ -98,13 +105,6 @@ testing {
 }
 
 tasks {
-  if (otelProps.testLatestDeps) {
-    // disable regular test running and compiling tasks when latest dep test task is run
-    named("test") {
-      enabled = false
-    }
-  }
-
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (testJavaVersion.isJava8) {
     named("play3Test") {
