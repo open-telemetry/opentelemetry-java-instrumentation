@@ -157,6 +157,30 @@ class Jedis30ClientTest {
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(ERROR_TYPE, failed ? "WRONGTYPE" : null))));
+    if (failed) {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jedis-3.0",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          SERVER_ADDRESS,
+          SERVER_PORT,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT,
+          ERROR_TYPE);
+    } else {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jedis-3.0",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          SERVER_ADDRESS,
+          SERVER_PORT,
+          NETWORK_PEER_ADDRESS,
+          NETWORK_PEER_PORT);
+    }
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-3.0",
         metric ->
@@ -165,18 +189,17 @@ class Jedis30ClientTest {
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(DB_SYSTEM_NAME, REDIS),
-                                        equalTo(DB_OPERATION_NAME, operation),
-                                        equalTo(DB_NAMESPACE, "0"),
-                                        equalTo(SERVER_ADDRESS, host),
-                                        equalTo(SERVER_PORT, port),
-                                        equalTo(NETWORK_PEER_PORT, port),
-                                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                                        equalTo(ERROR_TYPE, failed ? "WRONGTYPE" : null)))));
+                            point -> {
+                              point.hasCount(1);
+                              if (failed) {
+                                point.hasAttribute(ERROR_TYPE, "WRONGTYPE");
+                              } else {
+                                point.satisfies(
+                                    pointData ->
+                                        assertThat(pointData.getAttributes().asMap())
+                                            .doesNotContainKey(ERROR_TYPE));
+                              }
+                            })));
   }
 
   private static void assertAggregateReplies(List<Object> replies, int failedCount, int count) {
