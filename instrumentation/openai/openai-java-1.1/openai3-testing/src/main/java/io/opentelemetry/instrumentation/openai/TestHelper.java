@@ -55,6 +55,9 @@ public interface TestHelper {
   AsyncStreamResponse<ResponseStreamEvent> createStructuredStreaming(
       ResponseServiceAsync service, ResponseCreateParams params, boolean explicitOptions);
 
+  /** Adds a custom tool, which SDK 3.x added, to {@code params}. */
+  ResponseCreateParams withCustomTool(ResponseCreateParams params, String name);
+
   /** Calls {@code create()} without params. */
   Response createWithoutParams(ResponseService service, boolean explicitOptions);
 

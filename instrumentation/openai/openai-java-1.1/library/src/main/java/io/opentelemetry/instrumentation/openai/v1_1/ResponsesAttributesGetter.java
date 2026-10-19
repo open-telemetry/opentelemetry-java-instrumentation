@@ -5,15 +5,26 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static java.lang.invoke.MethodType.methodType;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import com.openai.core.JsonValue;
 import com.openai.models.ResponsesModel;
 import com.openai.models.responses.Response;
+import com.openai.models.responses.ResponseOutputItem;
 import com.openai.models.responses.ResponseUsage;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 // Fields are read through their JsonField accessors: the typed accessors throw when a required
@@ -21,6 +32,50 @@ import javax.annotation.Nullable;
 // ResponseCreateParams.model() became Optional).
 final class ResponsesAttributesGetter
     implements GenAiAttributesGetter<ResponseCreateRequest, Response> {
+
+  private static final Set<String> NON_ITEM_STATUSES =
+      new HashSet<>(asList("failed", "cancelled", "incomplete", "queued", "in_progress"));
+  private static final Set<String> FINISHED_TOOL_CALL_STATUSES =
+      new HashSet<>(asList("completed", "incomplete"));
+
+  // Custom tool calls were added in SDK 3.x. Their status isn't a declared field, so it's read from
+  // the call's additional properties.
+  @Nullable private static final MethodHandle IS_CUSTOM_TOOL_CALL_HANDLE;
+  @Nullable private static final MethodHandle CUSTOM_TOOL_CALL_STATUS_HANDLE;
+
+  static {
+    MethodHandle isCustomToolCall;
+    MethodHandle customToolCallStatus;
+    try {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      Class<?> customToolCallClass =
+          Class.forName(
+              "com.openai.models.responses.ResponseCustomToolCall",
+              false,
+              ResponsesAttributesGetter.class.getClassLoader());
+      isCustomToolCall =
+          lookup.findVirtual(
+              ResponseOutputItem.class, "isCustomToolCall", methodType(boolean.class));
+      MethodHandle asCustomToolCall =
+          lookup.findVirtual(
+              ResponseOutputItem.class, "asCustomToolCall", methodType(customToolCallClass));
+      MethodHandle additionalProperties =
+          lookup.findVirtual(customToolCallClass, "_additionalProperties", methodType(Map.class));
+      MethodHandle getStatus =
+          MethodHandles.insertArguments(
+              lookup.findVirtual(Map.class, "get", methodType(Object.class, Object.class)),
+              1,
+              "status");
+      customToolCallStatus =
+          MethodHandles.filterReturnValue(
+              MethodHandles.filterReturnValue(asCustomToolCall, additionalProperties), getStatus);
+    } catch (Exception ignored) {
+      isCustomToolCall = null;
+      customToolCallStatus = null;
+    }
+    IS_CUSTOM_TOOL_CALL_HANDLE = isCustomToolCall;
+    CUSTOM_TOOL_CALL_STATUS_HANDLE = customToolCallStatus;
+  }
 
   ResponsesAttributesGetter() {}
 
@@ -110,8 +165,53 @@ final class ResponsesAttributesGetter
     if (response == null) {
       return emptyList();
     }
-    String finishReason = finishReason(response);
+    String status = status(response);
+    // Like the Python OpenAI instrumentation, a response that hasn't failed, been cancelled, cut
+    // short or left pending reports the distinct finish reasons of its output items in order, so
+    // a response that ends in tool calls reports tool_calls.
+    if (status == null || !NON_ITEM_STATUSES.contains(status)) {
+      Set<String> finishReasons = new LinkedHashSet<>();
+      for (ResponseOutputItem item : response._output().asKnown().orElse(emptyList())) {
+        if (isFinishedToolCall(item)) {
+          finishReasons.add("tool_calls");
+        } else if (item.isMessage()) {
+          String reason =
+              finishReason(
+                  item.asMessage()._status().asKnown().map(s -> s.asString()).orElse(null), null);
+          if (reason != null) {
+            finishReasons.add(reason);
+          }
+        }
+      }
+      if (!finishReasons.isEmpty()) {
+        return new ArrayList<>(finishReasons);
+      }
+    }
+    String finishReason = finishReason(status, incompleteReason(response));
     return finishReason == null ? emptyList() : singletonList(finishReason);
+  }
+
+  // A tool call without a status counts as finished, since custom tool calls don't declare one.
+  private static boolean isFinishedToolCall(ResponseOutputItem item) {
+    if (item.isFunctionCall()) {
+      String status = item.asFunctionCall()._status().asKnown().map(s -> s.asString()).orElse(null);
+      return status == null || FINISHED_TOOL_CALL_STATUSES.contains(status);
+    }
+    if (IS_CUSTOM_TOOL_CALL_HANDLE == null || CUSTOM_TOOL_CALL_STATUS_HANDLE == null) {
+      return false;
+    }
+    try {
+      if (!(boolean) IS_CUSTOM_TOOL_CALL_HANDLE.invoke(item)) {
+        return false;
+      }
+      JsonValue status = (JsonValue) CUSTOM_TOOL_CALL_STATUS_HANDLE.invoke(item);
+      return status == null
+          || status.equals(JsonValue.from(null))
+          || status.equals(JsonValue.from("completed"))
+          || status.equals(JsonValue.from("incomplete"));
+    } catch (Throwable t) {
+      return false;
+    }
   }
 
   @Override
@@ -185,16 +285,37 @@ final class ResponsesAttributesGetter
     return null;
   }
 
+  // A failed response and a typed error stream event arrive as normal results, without an
+  // exception for the error type to fall back to, so report the error code they carry, like the
+  // Python OpenAI instrumentation does.
+  @Nullable
+  @Override
+  public String getErrorType(
+      ResponseCreateRequest request, @Nullable Response response, @Nullable Throwable error) {
+    if (response != null) {
+      String code =
+          response
+              ._error()
+              .asKnown()
+              .flatMap(responseError -> responseError._code().asKnown())
+              .map(c -> c.asString())
+              .orElse(null);
+      if (code != null) {
+        return code;
+      }
+    }
+    return request.getStreamErrorCode();
+  }
+
   static boolean isFailed(Response response) {
     return "failed".equals(status(response));
   }
 
-  // The Responses API reports a status instead of per-choice finish reasons. This maps it the
-  // same way as the Python OpenAI instrumentation: a completed response stopped, a failed or
-  // cancelled one errored, and an incomplete one reports why it stopped early.
+  // Maps a response or output item status the same way as the Python OpenAI instrumentation: a
+  // completed one stopped, a failed or cancelled one errored, and an incomplete one reports why it
+  // stopped early.
   @Nullable
-  private static String finishReason(Response response) {
-    String status = status(response);
+  private static String finishReason(@Nullable String status, @Nullable String incompleteReason) {
     if (status == null) {
       return null;
     }
@@ -205,23 +326,26 @@ final class ResponsesAttributesGetter
       case "cancelled":
         return "error";
       case "incomplete":
-        String reason =
-            response
-                ._incompleteDetails()
-                .asKnown()
-                .flatMap(details -> details._reason().asKnown())
-                .map(r -> r.asString())
-                .orElse(null);
-        if (reason == null) {
+        if (incompleteReason == null) {
           return status;
         }
-        if (reason.equals("max_output_tokens")) {
+        if (incompleteReason.equals("max_output_tokens")) {
           return "length";
         }
-        return reason;
+        return incompleteReason;
       default:
         return null;
     }
+  }
+
+  @Nullable
+  private static String incompleteReason(Response response) {
+    return response
+        ._incompleteDetails()
+        .asKnown()
+        .flatMap(details -> details._reason().asKnown())
+        .map(r -> r.asString())
+        .orElse(null);
   }
 
   @Nullable

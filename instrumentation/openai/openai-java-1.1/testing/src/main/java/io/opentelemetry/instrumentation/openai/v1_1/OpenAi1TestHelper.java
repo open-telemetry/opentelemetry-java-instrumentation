@@ -115,6 +115,11 @@ class OpenAi1TestHelper implements TestHelper {
   }
 
   @Override
+  public ResponseCreateParams withCustomTool(ResponseCreateParams params, String name) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public Response createWithoutParams(ResponseService service, boolean explicitOptions) {
     throw new UnsupportedOperationException();
   }

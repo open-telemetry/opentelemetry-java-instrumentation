@@ -17,6 +17,7 @@ import com.openai.models.chat.completions.ChatCompletionFunctionTool;
 import com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall;
 import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
 import com.openai.models.chat.completions.ChatCompletionTool;
+import com.openai.models.responses.CustomTool;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseStreamEvent;
@@ -132,6 +133,11 @@ public class OpenAi3TestHelper implements TestHelper {
     return explicitOptions
         ? service.createStreaming(structured(params), RequestOptions.none())
         : service.createStreaming(structured(params));
+  }
+
+  @Override
+  public ResponseCreateParams withCustomTool(ResponseCreateParams params, String name) {
+    return params.toBuilder().addTool(CustomTool.builder().name(name).build()).build();
   }
 
   @Override
