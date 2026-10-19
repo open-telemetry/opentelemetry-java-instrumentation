@@ -12,13 +12,14 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class HbaseInstrumentationModule extends InstrumentationModule {
-
-  private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
+public final class HbaseInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public HbaseInstrumentationModule() {
     super("hbase-client-2.0", "hbase-client");
@@ -36,21 +37,8 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return CALL_UTIL.equals(className);
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return asList(CALL_UTIL);
-  }
-
-  @Override
-  public List<String> exposedClassNames() {
-    // The application-loaded Call utility exchanges state with isolated instrumentation helpers.
-    return asList(
-        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext",
-        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest");
+  public void registerVirtualFields(VirtualFieldRegistration registration) {
+    registration.register("org.apache.hadoop.hbase.ipc.Call", RequestAndContext.class.getName());
   }
 
   @Override

@@ -11,13 +11,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseCallUtil;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import java.io.IOException;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil;
 
 class IpcCallInstrumentation implements TypeInstrumentation {
 
@@ -41,8 +41,7 @@ class IpcCallInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This Object call,
         @Advice.FieldValue(value = "error") @Nullable IOException callError) {
-      RequestAndContext requestAndContext =
-          OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
+      RequestAndContext requestAndContext = HbaseCallUtil.getAndClearRequestAndContext(call);
       if (requestAndContext == null) {
         return;
       }
@@ -60,7 +59,7 @@ class IpcCallInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) IOException timeoutError,
         @Advice.FieldValue(value = "error") @Nullable IOException callError) {
       RequestAndContext requestAndContext =
-          OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(call, callError, timeoutError);
+          HbaseCallUtil.getAndClearRequestAndContextIfError(call, callError, timeoutError);
       if (requestAndContext == null) {
         return;
       }
