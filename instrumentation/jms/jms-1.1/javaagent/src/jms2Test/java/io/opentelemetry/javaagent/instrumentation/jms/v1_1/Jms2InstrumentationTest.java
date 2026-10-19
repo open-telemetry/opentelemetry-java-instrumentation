@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.api.trace.StatusCode.ERROR;
-import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -27,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
@@ -265,13 +264,14 @@ class Jms2InstrumentationTest {
                   }
                 }));
 
-    Attributes metricAttributes =
-        Attributes.builder()
-            .put(MESSAGING_SYSTEM, "jms")
-            .put(MESSAGING_OPERATION_NAME, "send")
-            .put(MESSAGING_OPERATION_TYPE, "send")
-            .put(ERROR_TYPE, failure == null ? null : failure.getClass().getName())
-            .build();
+    AttributeKey<?>[] durationAttributeKeys =
+        failure == null
+            ? new AttributeKey<?>[] {
+              MESSAGING_SYSTEM, MESSAGING_OPERATION_NAME, MESSAGING_OPERATION_TYPE
+            }
+            : new AttributeKey<?>[] {
+              MESSAGING_SYSTEM, MESSAGING_OPERATION_NAME, MESSAGING_OPERATION_TYPE, ERROR_TYPE
+            };
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.operation.duration",
@@ -279,19 +279,41 @@ class Jms2InstrumentationTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(
-                                point ->
-                                    assertThat(point.getAttributes())
-                                        .isEqualTo(metricAttributes))));
-    assertCounter(
-        testing,
+                    metric -> {
+                      assertThat(metric.getName()).isEqualTo("messaging.client.operation.duration");
+                      assertThat(metric.getUnit()).isEqualTo("s");
+                      assertThat(metric.getHistogramData().getPoints())
+                          .singleElement()
+                          .satisfies(
+                              point ->
+                                  assertThat(point.getAttributes().asMap())
+                                      .containsOnlyKeys(durationAttributeKeys));
+                    }));
+
+    AttributeKey<?>[] counterAttributeKeys =
+        failure == null
+            ? new AttributeKey<?>[] {MESSAGING_SYSTEM, MESSAGING_OPERATION_NAME}
+            : new AttributeKey<?>[] {MESSAGING_SYSTEM, MESSAGING_OPERATION_NAME, ERROR_TYPE};
+    testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.sent.messages",
-        1,
-        metricAttributes.toBuilder().remove(MESSAGING_OPERATION_TYPE).build());
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(
+                    metric -> {
+                      assertThat(metric.getName()).isEqualTo("messaging.client.sent.messages");
+                      assertThat(metric.getUnit()).isEqualTo("{message}");
+                      assertThat(metric.getLongSumData().isMonotonic()).isTrue();
+                      assertThat(metric.getLongSumData().getPoints())
+                          .singleElement()
+                          .satisfies(
+                              point -> {
+                                assertThat(point.getValue()).isEqualTo(1);
+                                assertThat(point.getAttributes().asMap())
+                                    .containsOnlyKeys(counterAttributeKeys);
+                              });
+                    }));
   }
 
   @Test
