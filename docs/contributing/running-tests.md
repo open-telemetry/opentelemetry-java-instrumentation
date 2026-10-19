@@ -40,18 +40,6 @@ To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradle
 
 Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <TEST FILE NAME>` will run only the selected test.
 
-### Declaring test-suite executions
-
-Within a `JvmTestSuite`, `executions { register("Suffix") { ... } }` creates a test task named
-`<suite name>Suffix`, reusing the suite's compiled sources and runtime classpath and wiring it into
-`check`. Suite-level `configureEach` applies to the default task and all registered executions.
-Use `group { configureEach { ... }; register("Suffix") { ... } }` inside `executions` to share
-configuration only among that group's registrations, not the default task, sibling registrations,
-or other groups. Configuration is applied in suite-common, group-common, then execution-specific
-order, even when common configuration is declared after registrations. Groups add no tasks or
-name prefixes of their own. Configure the default task separately when settings must not apply
-to all executions.
-
 ### How to prevent linting and formatting warnings from failing tests
 
 During local development, you may want to ignore lint warnings when running tests.

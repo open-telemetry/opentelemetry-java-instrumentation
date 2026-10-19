@@ -454,6 +454,50 @@ If the common module does not have a direct dependency on the instrumented libra
 suffix is required. Examples of such cases include modules named `lettuce-common` and
 `netty-common`.
 
+## Configuring test suites
+
+### Declaring test-suite executions
+
+Within a `JvmTestSuite`, `executions { register("Suffix") { ... } }` creates a test task named
+`<suite name>Suffix`, reusing the suite's compiled sources and runtime classpath and wiring it into
+`check`. Suite-level `configureEach` applies to the default task and all registered executions.
+Use `group { configureEach { ... }; register("Suffix") { ... } }` inside `executions` to share
+configuration only among that group's registrations, not the default task, sibling registrations,
+or other groups. Configuration is applied in suite-common, group-common, then execution-specific
+order, even when common configuration is declared after registrations. Groups add no tasks or
+name prefixes of their own. Configure the default task separately when settings must not apply
+to all executions.
+
+For example, this creates `testWithLogging`, `testClient`, and `testClientWithLogging`. Only the
+two client executions share the group's filter:
+
+```kotlin
+import io.opentelemetry.instrumentation.gradle.executions
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("WithLogging") {
+          testLogging.showStandardStreams = true
+        }
+        group {
+          configureEach {
+            filter {
+              includeTestsMatching("*ClientTest")
+            }
+          }
+          register("Client") {}
+          register("ClientWithLogging") {
+            testLogging.showStandardStreams = true
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ## Writing Java agent unit tests
 
 As mentioned before, tests in the `javaagent` module cannot access the javaagent instrumentation
