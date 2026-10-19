@@ -203,6 +203,47 @@ class Jms2InstrumentationTest {
     assertSendTelemetry(sendFailure, null, "send");
   }
 
+  @Test
+  void asyncSendDelayedFailureIsRecorded() throws Exception {
+    String destinationName = "someQueue";
+    Message message = session.createMessage();
+    TestProducer controlledProducer = new TestProducer(session.createQueue(destinationName));
+    MessageProducer producer = controlledProducer;
+    JMSException failure = new JMSException("send failed");
+    CompletionListener listener =
+        new CompletionListener() {
+          @Override
+          public void onCompletion(Message completed) {
+            throw new AssertionError();
+          }
+
+          @Override
+          public void onException(Message completed, Exception exception) {
+            assertThat(completed).isSameAs(message);
+            assertThat(exception).isSameAs(failure);
+          }
+        };
+
+    producer.send(message, listener);
+    assertThat(controlledProducer.sendReturned).isTrue();
+    controlledProducer.listener.onException(message, failure);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("send " + destinationName)
+                        .hasKind(PRODUCER)
+                        .hasNoParent()
+                        .hasStatusSatisfying(status -> status.hasCode(ERROR))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(ERROR_TYPE, failure.getClass().getName()))));
+  }
+
   private static void assertSendTelemetry(
       Exception failure, String destinationName, String spanName) {
     testing.waitAndAssertTraces(
@@ -619,6 +660,113 @@ class Jms2InstrumentationTest {
 
   private static Stream<Arguments> sharedListenerConsumerArguments() {
     return sharedConsumerArguments("listener");
+  }
+
+  public static class TestProducer implements MessageProducer {
+    private final Destination destination;
+    CompletionListener listener;
+    boolean sendReturned;
+
+    TestProducer(Destination destination) {
+      this.destination = destination;
+    }
+
+    @Override
+    public void send(Message message, CompletionListener completionListener) {
+      listener = completionListener;
+      sendReturned = true;
+    }
+
+    @Override
+    public void send(
+        Message message, int mode, int priority, long ttl, CompletionListener completionListener) {
+      send(message, completionListener);
+    }
+
+    @Override
+    public void send(
+        Destination destination, Message message, CompletionListener completionListener) {
+      send(message, completionListener);
+    }
+
+    @Override
+    public void send(
+        Destination destination,
+        Message message,
+        int mode,
+        int priority,
+        long ttl,
+        CompletionListener completionListener) {
+      send(message, completionListener);
+    }
+
+    @Override
+    public void send(Message message) {}
+
+    @Override
+    public void send(Message message, int mode, int priority, long ttl) {}
+
+    @Override
+    public void send(Destination destination, Message message) {}
+
+    @Override
+    public void send(Destination destination, Message message, int mode, int priority, long ttl) {}
+
+    @Override
+    public Destination getDestination() {
+      return destination;
+    }
+
+    @Override
+    public void close() {}
+
+    @Override
+    public void setDisableMessageID(boolean value) {}
+
+    @Override
+    public boolean getDisableMessageID() {
+      return false;
+    }
+
+    @Override
+    public void setDisableMessageTimestamp(boolean value) {}
+
+    @Override
+    public boolean getDisableMessageTimestamp() {
+      return false;
+    }
+
+    @Override
+    public void setDeliveryMode(int value) {}
+
+    @Override
+    public int getDeliveryMode() {
+      return 2;
+    }
+
+    @Override
+    public void setPriority(int value) {}
+
+    @Override
+    public int getPriority() {
+      return 4;
+    }
+
+    @Override
+    public void setTimeToLive(long value) {}
+
+    @Override
+    public long getTimeToLive() {
+      return 0;
+    }
+
+    @Override
+    public void setDeliveryDelay(long value) {}
+
+    @Override
+    public long getDeliveryDelay() {
+      return 0;
+    }
   }
 
   // durable subscriptions outlive the consumer that created them, so each test needs its own
