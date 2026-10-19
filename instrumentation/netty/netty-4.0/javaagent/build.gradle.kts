@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -35,32 +38,66 @@ dependencies {
   latestDepTestLibrary("io.netty:netty-codec-http:4.0.+") // see netty-4.1 module
 }
 
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          filter {
+            excludeTestsMatching("Netty40ConnectionSpanTest")
+            excludeTestsMatching("Netty40ClientSslTest")
+          }
+        }
+        register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+      }
+    }
+  }
+}
+
+fun Test.connectionTelemetry(includeSsl: Boolean = true) {
+  filter {
+    includeTestsMatching("Netty40ConnectionSpanTest")
+    if (includeSsl) {
+      includeTestsMatching("Netty40ClientSslTest")
+    }
+  }
+  include("**/Netty40ConnectionSpanTest.*")
+  telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
+  if (includeSsl) {
+    include("**/Netty40ClientSslTest.*")
+    telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+  }
+}
+
 tasks {
   val testConnectionSpan = register<Test>("testConnectionSpan") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("Netty40ConnectionSpanTest")
-      includeTestsMatching("Netty40ClientSslTest")
-    }
-    include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true,otel.instrumentation.netty.ssl-telemetry.enabled=true")
+    connectionTelemetry()
   }
 
-  test {
-    filter {
-      excludeTestsMatching("Netty40ConnectionSpanTest")
-      excludeTestsMatching("Netty40ClientSslTest")
+  val mappedConnectionTests = listOf("WithPeerServiceMapping", "PreviewSemconvWithPeerServiceMapping").map { suffix ->
+    register<Test>("testConnectionSpan$suffix") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      connectionTelemetry(includeSsl = false)
+      if (suffix == "PreviewSemconvWithPeerServiceMapping") {
+        telemetryConfig("otel.semconv-stability.preview", "service.peer")
+      }
+      telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
     }
   }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+    telemetryConfig("otel.semconv-stability.preview", "service.peer")
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
       excludeTestsMatching("Netty40ClientSslTest")
@@ -68,7 +105,7 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionSpan, testPreviewSemconv)
+    dependsOn(testConnectionSpan, testPreviewSemconv, mappedConnectionTests)
   }
 }
 

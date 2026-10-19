@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -27,6 +30,39 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("WithPeerServiceMapping") {
+          telemetryConfig(
+            "otel.instrumentation.common.peer-service-mapping",
+            "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service",
+          )
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig(
+            "otel.instrumentation.common.peer-service-mapping",
+            "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service",
+          )
+        }
+        register("ConnectionTelemetryEnabledWithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
+          telemetryConfig(
+            "otel.instrumentation.common.peer-service-mapping",
+            "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service",
+          )
+        }
+        register("ConnectionTelemetryEnabledPreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig(
+            "otel.instrumentation.common.peer-service-mapping",
+            "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service",
+          )
+        }
+      }
+    }
+
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())

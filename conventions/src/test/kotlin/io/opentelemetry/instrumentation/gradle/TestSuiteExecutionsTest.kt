@@ -135,6 +135,51 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
+  fun `mapped executions keep default profiles separate and retain source suite settings`() {
+    val source = suites().register("clientTest", JvmTestSuite::class.java).get()
+    val mappingKey = "otel.instrumentation.common.peer-service-mapping"
+    val mapping = "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service"
+    source.executions {
+      configureEach {
+        systemProperty("testLatestDeps", true)
+        jvmArgs("-Djava.net.preferIPv4Stack=true")
+        filter.includeTestsMatching("*ClientTest")
+        exclude("**/server/**")
+      }
+      register("WithPeerServiceMapping") {
+        telemetryConfig(mappingKey, mapping)
+      }
+      register("PreviewSemconvWithPeerServiceMapping") {
+        telemetryConfig("otel.semconv-stability.preview", "service.peer")
+        telemetryConfig(mappingKey, mapping)
+      }
+    }
+
+    assertThat(test(source.name).systemProperties)
+      .doesNotContainKeys(mappingKey, "otel.semconv-stability.preview", "metadataConfig")
+    assertThat(test(source.name + "WithPeerServiceMapping").systemProperties)
+      .containsEntry(mappingKey, mapping)
+      .containsEntry("metadataConfig", "$mappingKey=$mapping")
+      .doesNotContainKey("otel.semconv-stability.preview")
+    val preview = test(source.name + "PreviewSemconvWithPeerServiceMapping")
+    assertThat(preview.systemProperties)
+      .containsEntry(mappingKey, mapping)
+      .containsEntry("otel.semconv-stability.preview", "service.peer")
+      .containsEntry("metadataConfig", "otel.semconv-stability.preview=service.peer,$mappingKey=$mapping")
+    for (name in listOf(source.name, source.name + "WithPeerServiceMapping", preview.name)) {
+      val execution = test(name)
+      assertBinding(execution, source)
+      assertThat(execution.systemProperties).containsEntry("testLatestDeps", true)
+      assertThat(execution.allJvmArgs).containsOnlyOnce("-Djava.net.preferIPv4Stack=true")
+      assertThat(execution.filter.includePatterns).containsExactly("*ClientTest")
+      assertThat(execution.excludes).containsExactly("**/server/**")
+    }
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains(source.name, source.name + "WithPeerServiceMapping", preview.name)
+    assertThat(project.tasks.names).doesNotContain("testWithPeerServiceMapping")
+  }
+
+  @JunitTest
   fun `variants stay lazy and receive shared providers independently without flattening`() {
     var configuredTasks = 0
     var providerReads = 0

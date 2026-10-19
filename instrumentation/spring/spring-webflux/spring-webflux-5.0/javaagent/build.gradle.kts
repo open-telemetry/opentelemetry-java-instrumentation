@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -65,6 +68,27 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:3.+") // see testing-webflux7 module
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // see testing-webflux7 module
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      exclude("**/server/**")
+    }
+    register("WithPeerServiceMapping") {
+      telemetryConfig(
+        "otel.instrumentation.common.peer-service-mapping",
+        "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service"
+      )
+    }
+    register("PreviewSemconvWithPeerServiceMapping") {
+      telemetryConfig("otel.semconv-stability.preview", "service.peer")
+      telemetryConfig(
+        "otel.instrumentation.common.peer-service-mapping",
+        "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service"
+      )
+    }
+  }
 }
 
 tasks {

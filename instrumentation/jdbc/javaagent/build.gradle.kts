@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -41,6 +44,32 @@ dependencies {
   // these dependencies are for SlickTest
   testImplementation("org.scala-lang:scala-library:2.11.12")
   testImplementation("com.typesafe.slick:slick_2.11:3.2.0")
+}
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        listOf("WithPeerServiceMapping", "PreviewSemconvWithPeerServiceMapping").forEach { suffix ->
+          register(suffix) {
+            filter {
+              includeTestsMatching("*JdbcInstrumentationTest.testGetClientInfoException")
+              includeTestsMatching("*JdbcInstrumentationTest.testProduceProperSpanName")
+              includeTestsMatching("*JdbcInstrumentationTest.testHandleRecursiveStatements")
+            }
+            jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+            if (suffix == "PreviewSemconvWithPeerServiceMapping") {
+              telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            }
+            telemetryConfig(
+              "otel.instrumentation.common.peer-service-mapping",
+              "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service",
+            )
+          }
+        }
+      }
+    }
+  }
 }
 
 tasks {
