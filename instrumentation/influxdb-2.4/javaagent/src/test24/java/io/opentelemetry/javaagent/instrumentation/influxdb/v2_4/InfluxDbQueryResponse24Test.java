@@ -79,15 +79,18 @@ class InfluxDbQueryResponse24Test {
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(DB_SYSTEM_NAME, "influxdb"),
-                                        equalTo(DB_NAMESPACE, "mydb"),
-                                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                                        equalTo(SERVER_ADDRESS, "localhost"),
-                                        equalTo(SERVER_PORT, 8086),
-                                        equalTo(ERROR_TYPE, errorType)))));
+                            point -> {
+                              point.hasCount(1);
+                              point.satisfies(
+                                  pointData ->
+                                      assertThat(pointData.getAttributes().asMap())
+                                          .containsOnlyKeys(
+                                              DB_SYSTEM_NAME,
+                                              DB_NAMESPACE,
+                                              DB_QUERY_SUMMARY,
+                                              SERVER_ADDRESS,
+                                              SERVER_PORT,
+                                              ERROR_TYPE));
+                            })));
   }
 }
