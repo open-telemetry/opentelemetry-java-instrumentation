@@ -262,15 +262,6 @@ class SpymemcachedTest {
         SERVER_ADDRESS,
         SERVER_PORT,
         ERROR_TYPE);
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.spymemcached-2.12",
-        metric ->
-            metric
-                .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(ERROR_TYPE, errorType).hasCount(1))));
   }
 
   @Test
