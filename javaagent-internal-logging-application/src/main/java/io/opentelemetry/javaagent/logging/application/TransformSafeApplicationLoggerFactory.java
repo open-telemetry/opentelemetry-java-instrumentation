@@ -58,7 +58,9 @@ final class TransformSafeApplicationLoggerFactory implements InternalLogger.Fact
       return name;
     }
 
-    // Creating the bridged logger calls into the application's logging system.
+    // The factory's create() may run while the circularity lock is held.
+    // Defer application logger creation until log() or isLoggable() passes the lock
+    // check, since creation itself can load classes that would miss instrumentation.
     private InternalLogger actual() {
       InternalLogger logger = actual;
       if (logger == null) {
