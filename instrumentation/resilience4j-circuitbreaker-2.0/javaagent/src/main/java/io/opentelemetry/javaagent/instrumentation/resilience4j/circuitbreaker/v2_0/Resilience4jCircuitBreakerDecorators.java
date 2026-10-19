@@ -495,18 +495,21 @@ public class Resilience4jCircuitBreakerDecorators {
     @Override
     public T get() throws InterruptedException, ExecutionException {
       Resilience4jCircuitBreakerSpans.AttachedPendingSpan attachment =
-          Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
+          Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan, delegate);
       try {
         T result = delegate.get();
-        pendingSpan.end("success", null);
+        attachment.endFuture("success", null);
         return result;
       } catch (CancellationException | InterruptedException e) {
-        pendingSpan.end("cancelled", null);
+        attachment.endFuture("cancelled", null);
         throw e;
       } catch (ExecutionException e) {
-        pendingSpan.end("failure", e.getCause() == null ? e : e.getCause());
+        attachment.endFuture("failure", e.getCause() == null ? e : e.getCause());
         throw e;
-      } catch (RuntimeException | Error e) {
+      } catch (RuntimeException e) {
+        attachment.endFuture("failure", e);
+        throw e;
+      } catch (Error e) {
         pendingSpan.end("failure", e);
         throw e;
       } finally {
@@ -518,21 +521,24 @@ public class Resilience4jCircuitBreakerDecorators {
     public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
       Resilience4jCircuitBreakerSpans.AttachedPendingSpan attachment =
-          Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
+          Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan, delegate);
       try {
         T result = delegate.get(timeout, unit);
-        pendingSpan.end("success", null);
+        attachment.endFuture("success", null);
         return result;
       } catch (CancellationException | InterruptedException e) {
-        pendingSpan.end("cancelled", null);
+        attachment.endFuture("cancelled", null);
         throw e;
       } catch (ExecutionException e) {
-        pendingSpan.end("failure", e.getCause() == null ? e : e.getCause());
+        attachment.endFuture("failure", e.getCause() == null ? e : e.getCause());
         throw e;
       } catch (TimeoutException e) {
-        pendingSpan.end("failure", e);
+        attachment.endFuture("failure", e);
         throw e;
-      } catch (RuntimeException | Error e) {
+      } catch (RuntimeException e) {
+        attachment.endFuture("failure", e);
+        throw e;
+      } catch (Error e) {
         pendingSpan.end("failure", e);
         throw e;
       } finally {

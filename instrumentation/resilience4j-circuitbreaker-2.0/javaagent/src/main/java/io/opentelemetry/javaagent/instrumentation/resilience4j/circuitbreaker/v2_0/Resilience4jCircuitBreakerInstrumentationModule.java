@@ -28,6 +28,7 @@ public class Resilience4jCircuitBreakerInstrumentationModule extends Instrumenta
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new CircuitBreakerDecoratorsInstrumentation(),
+        new CircuitBreakerFutureInstrumentation(),
         new CircuitBreakerStateMachineInstrumentation());
   }
 }

@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -21,6 +22,7 @@ import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.core.functions.OnceConsumer;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -30,12 +32,14 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -1020,6 +1024,78 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @ParameterizedTest
+  @CsvSource({
+    "false,false,false",
+    "false,true,false",
+    "true,false,false",
+    "true,true,false",
+    "false,false,true",
+    "false,true,true",
+    "true,false,true",
+    "true,true,true"
+  })
+  void concurrentFutureReadersDoNotEndSpanBeforeClassification(
+      boolean ownerTimed, boolean followerTimed, boolean failure) throws Exception {
+    CountDownLatch classificationStarted = new CountDownLatch(1);
+    CountDownLatch releaseClassification = new CountDownLatch(1);
+    AtomicInteger classifications = new AtomicInteger();
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    builder.recordResult(
+        result -> {
+          classifications.incrementAndGet();
+          classificationStarted.countDown();
+          try {
+            assertThat(releaseClassification.await(10, SECONDS)).isTrue();
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+          }
+          return failure;
+        });
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future =
+        new CompletableFuture<>() {
+          @Override
+          public Integer get() throws InterruptedException, ExecutionException {
+            // An unrelated OnceConsumer must not grant this reader completion ownership.
+            OnceConsumer.of(0).applyOnce(ignored -> {});
+            return super.get();
+          }
+
+          @Override
+          public Integer get(long timeout, TimeUnit unit)
+              throws InterruptedException, ExecutionException, TimeoutException {
+            OnceConsumer.of(0).applyOnce(ignored -> {});
+            return super.get(timeout, unit);
+          }
+        };
+    future.complete(500);
+    Supplier<Future<Integer>> decorated =
+        CircuitBreaker.decorateFuture(circuitBreaker, () -> future);
+    Future<Integer> decoratedFuture = testing.runWithSpan("parent", decorated::get);
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    try {
+      Future<Integer> owner =
+          executor.submit(
+              () -> ownerTimed ? decoratedFuture.get(10, SECONDS) : decoratedFuture.get());
+      assertThat(classificationStarted.await(10, SECONDS)).isTrue();
+      Future<Integer> follower =
+          executor.submit(
+              () -> followerTimed ? decoratedFuture.get(10, SECONDS) : decoratedFuture.get());
+      assertThat(follower.get(10, SECONDS)).isEqualTo(500);
+      releaseClassification.countDown();
+      assertThat(owner.get(10, SECONDS)).isEqualTo(500);
+    } finally {
+      releaseClassification.countDown();
+      executor.shutdownNow();
+    }
+
+    assertThat(classifications.get()).isEqualTo(1);
+    assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(failure ? 1 : 0);
+    assertCircuitBreakerSpan("closed", failure ? "failure" : "success");
+  }
+
+  @ParameterizedTest
   @MethodSource("futureGetFailures")
   void decoratedFutureGetEndsSpan(Throwable exception, String outcome, Throwable expectedException)
       throws Exception {
@@ -1039,7 +1115,8 @@ class Resilience4jCircuitBreakerTest {
         argumentSet("cancellation", new CancellationException("boom"), "cancelled", null),
         argumentSet("interruption", new InterruptedException("boom"), "cancelled", null),
         argumentSet("execution failure", executionException, "failure", cause),
-        argumentSet("runtime failure", runtimeException, "failure", runtimeException));
+        argumentSet("runtime failure", runtimeException, "failure", runtimeException),
+        argumentSet("error", new AssertionError("boom"), "failure", null));
   }
 
   @ParameterizedTest
@@ -1056,7 +1133,8 @@ class Resilience4jCircuitBreakerTest {
   private static Stream<Arguments> futureTimedGetFailures() {
     return Stream.of(
         argumentSet("timeout", new TimeoutException("boom")),
-        argumentSet("runtime failure", new IllegalStateException("boom")));
+        argumentSet("runtime failure", new IllegalStateException("boom")),
+        argumentSet("error", new AssertionError("boom")));
   }
 
   @Test

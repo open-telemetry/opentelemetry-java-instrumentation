@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbre
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException;
 import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.core.functions.OnceConsumer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -17,6 +18,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
@@ -225,15 +228,51 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   static AttachedPendingSpan attachPendingSpan(PendingSpan pendingSpan) {
+    return attachPendingSpan(pendingSpan, null);
+  }
+
+  static AttachedPendingSpan attachPendingSpan(
+      PendingSpan pendingSpan, @Nullable Future<?> future) {
     Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
     if (spans == null) {
       spans = new ArrayDeque<>();
       attachedPendingSpans.set(spans);
     }
     AttachedPendingSpan attachment =
-        new AttachedPendingSpan(pendingSpan, pendingSpan.makeCurrent());
+        new AttachedPendingSpan(pendingSpan, pendingSpan.makeCurrent(), future);
     spans.push(attachment);
     return attachment;
+  }
+
+  @Nullable
+  public static AttachedPendingSpan enterFutureGet(Future<?> future, OnceConsumer<?> onceConsumer) {
+    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
+    AttachedPendingSpan attachment = spans == null ? null : spans.peek();
+    if (attachment == null || attachment.future != future) {
+      return null;
+    }
+    attachment.onceConsumer = onceConsumer;
+    return attachment;
+  }
+
+  public static void exitFutureGet(@Nullable AttachedPendingSpan attachment) {
+    if (attachment != null) {
+      attachment.onceConsumer = null;
+    }
+  }
+
+  public static <T> Consumer<T> wrapFutureConsumer(
+      OnceConsumer<T> onceConsumer, Consumer<T> consumer) {
+    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
+    AttachedPendingSpan attachment = spans == null ? null : spans.peek();
+    if (attachment == null || attachment.onceConsumer != onceConsumer) {
+      return consumer;
+    }
+    return value -> {
+      // Only the reader that wins OnceConsumer's CAS executes this callback.
+      attachment.completionOwner = true;
+      consumer.accept(value);
+    };
   }
 
   static void detachPendingSpan(AttachedPendingSpan attachment) {
@@ -336,10 +375,20 @@ public class Resilience4jCircuitBreakerSpans {
   static class AttachedPendingSpan {
     private final PendingSpan pendingSpan;
     private final Scope scope;
+    @Nullable private final Future<?> future;
+    @Nullable private OnceConsumer<?> onceConsumer;
+    private boolean completionOwner;
 
-    private AttachedPendingSpan(PendingSpan pendingSpan, Scope scope) {
+    private AttachedPendingSpan(PendingSpan pendingSpan, Scope scope, @Nullable Future<?> future) {
       this.pendingSpan = pendingSpan;
       this.scope = scope;
+      this.future = future;
+    }
+
+    void endFuture(String outcome, @Nullable Throwable throwable) {
+      if (completionOwner) {
+        pendingSpan.end(outcome, throwable);
+      }
     }
   }
 
