@@ -5,18 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -26,11 +29,66 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.StatusCode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class SpymemcachedAttributesGetterTest {
 
   private final SpymemcachedAttributesGetter getter = new SpymemcachedAttributesGetter();
+
+  @Test
+  void terminalProtocolFailure() {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "item too large", StatusCode.ERR_2BIG));
+
+    assertThat(
+            getter.getErrorType(request(singletonList(node("one.example", 11211))), future, null))
+        .isEqualTo("ERR_2BIG");
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = StatusCode.class,
+      names = {"SUCCESS", "ERR_NOT_FOUND", "ERR_EXISTS", "ERR_NOT_STORED", "CANCELLED"})
+  void ordinaryOutcomesAreNotFailures(StatusCode code) {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(code == StatusCode.SUCCESS, "result", code));
+
+    assertThat(
+            getter.getErrorType(request(singletonList(node("one.example", 11211))), future, null))
+        .isNull();
+  }
+
+  @Test
+  void cancellationDoesNotReadStatus() {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.isCancelled()).thenReturn(true);
+
+    assertThat(
+            getter.getErrorType(request(singletonList(node("one.example", 11211))), future, null))
+        .isNull();
+    verify(future, never()).getStatus();
+  }
+
+  @Test
+  void terminalFailureDoesNotReadStatus() {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+    IllegalStateException error = new IllegalStateException("connection closed");
+
+    assertThat(getter.getErrorType(request, future, error)).isNull();
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(getter)
+        .onEnd(attributes, Context.root(), request, future, error);
+    assertThat(attributes.build().get(ERROR_TYPE)).isEqualTo(IllegalStateException.class.getName());
+    verify(future, never()).getStatus();
+  }
 
   @Test
   void singleDefaultPortIsOmitted() {
