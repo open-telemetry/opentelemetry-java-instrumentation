@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -21,30 +24,22 @@ configurations.testRuntimeClasspath {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-}
-
-tasks {
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
-  }
-
-  check {
-    dependsOn(testStableSemconv, testBothSemconv)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+        }
+        register("PreviewSemconv") {
+          telemetryConfig("otel.semconv-stability.preview", "rpc")
+        }
+        register("BothSemconv") {
+          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
+        }
+      }
+    }
   }
 }

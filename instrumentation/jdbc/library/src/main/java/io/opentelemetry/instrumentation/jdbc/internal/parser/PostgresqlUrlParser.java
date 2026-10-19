@@ -28,7 +28,6 @@ import java.util.Properties;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class PostgresqlUrlParser implements JdbcUrlParser {
 
   // copied from DbAttributes.DbSystemNameValues
@@ -44,13 +43,13 @@ public final class PostgresqlUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(POSTGRESQL);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyUserProperty();
 
     // Delegate to generic parser for standard URL parsing
-    GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);
+    GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
 
     String schema = extractCurrentSchema(jdbcUrl);
     if (schema == null) {

@@ -12,6 +12,10 @@ The changelog is generated from merged pull requests. Do not add a changelog ent
 changes. Add an entry only for a deprecation or breaking change, where the hand-written entry is
 useful for double-checking the generated changelog.
 
+Keep entries short and focused on what changed for users. Include migration guidance only when the
+required action is not obvious from the change description. Omit generic advice such as telling users
+to handle the new behavior.
+
 ## Breaking Changes
 
 When your PR introduces a breaking change:
@@ -46,7 +50,8 @@ When your PR deprecates functionality:
 
 ## Building
 
-This project requires Java 21 to build and run tests. Newer JDK's may work, but this version is used in CI.
+This project requires Java 25 to build and run tests. Newer JDK's may work, but
+this version is used in CI.
 
 Some instrumentations and tests may put constraints on which java versions they support.
 See [Running the tests](./docs/contributing/running-tests.md) for more details.
@@ -78,7 +83,7 @@ https://central.sonatype.com/repository/maven-snapshots/io/opentelemetry/javaage
 
 ### Building from source
 
-Build using Java 21:
+Build using Java 25:
 
 ```bash
 java -version

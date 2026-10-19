@@ -1,11 +1,8 @@
 # [Testing] Spring Boot Starter Test Locations
 
-## Quick Reference
-
-- Use when: locating or adding tests for `opentelemetry-spring-boot-starter` /
-  `OpenTelemetryAutoConfiguration` behavior, or judging whether smoke-test coverage exists for it
-- Review focus: don't conclude "no smoke tests exist" from `smoke-tests/` alone — the
-  library-mode starter has its own top-level module
+Use this article when locating or adding Spring Boot starter tests. It
+distinguishes starter coverage from javaagent smoke tests and maps the
+unit, full-stack, and declarative test locations.
 
 ## Two Separate Spring Smoke-Test Layers
 
@@ -21,9 +18,6 @@ This repo has two unrelated things that both look like "the Spring smoke test":
   suites), `spring-boot-common` (shared abstract test base classes and app), `spring-boot-reactive-*`
   (WebFlux variant), and `spring-smoke-testing` (shared runner/assertion infra used across all of
   the above).
-
-Before reporting a smoke-test gap for the starter, check `smoke-tests-otel-starter/` — not just
-`smoke-tests/`.
 
 ## Where Starter Tests Live, By Layer
 

@@ -11,6 +11,14 @@ dependencies {
   testImplementation(project(":instrumentation:apache-dubbo-2.7:testing"))
 
   testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
+  if (otelProps.testLatestDeps) {
+    // these dependencies should be optional but when running on jdk25 more classes are loaded than
+    // on earlier jdk versions and DubboRegistryTest fails with NoClassDefFoundError
+    testImplementation("com.alibaba:fastjson:2.0.65")
+    testImplementation("com.google.code.gson:gson:2.14.0")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+  }
 }
 
 testing {
@@ -37,13 +45,13 @@ tasks {
   val testSuites = testing.suites.withType(JvmTestSuite::class)
     .matching { it.name == "test" }
 
-  val stableSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
+  val previewSemconvSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}PreviewSemconv") {
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
+      jvmArgs("-Dotel.semconv-stability.preview=rpc")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
     }
   }
 
@@ -52,12 +60,12 @@ tasks {
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+      jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
     }
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
+    dependsOn(testing.suites, previewSemconvSuites, bothSemconvSuites)
   }
 }

@@ -27,24 +27,9 @@ class VertxSqlClientAttributesGetter
     return request.getDbSystemName();
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getDbSystem(VertxSqlClientRequest request) {
-    // preserving old behavior: db.system was never set for vertx sql client
-    return null;
-  }
-
   @Override
   public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
     return fromDbSystemName(request.getDbSystemName());
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getUser(VertxSqlClientRequest request) {
-    return request.getUser();
   }
 
   @Override
@@ -56,13 +41,13 @@ class VertxSqlClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(VertxSqlClientRequest request) {
-    return request.getHost();
+    return request.getConfiguredServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(VertxSqlClientRequest request) {
-    return request.getPort();
+    return request.getConfiguredServerPort();
   }
 
   @Override

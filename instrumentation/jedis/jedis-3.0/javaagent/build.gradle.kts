@@ -20,28 +20,37 @@ dependencies {
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
   latestDepTestLibrary("redis.clients:jedis:3.+") // see jedis-4.0 module
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("jedis36Test") {
+      dependencies {
+        implementation("redis.clients:jedis:3.6.1")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testPreviewSemconv)
   }
 }

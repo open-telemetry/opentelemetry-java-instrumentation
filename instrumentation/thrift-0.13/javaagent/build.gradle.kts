@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -17,29 +20,20 @@ dependencies {
   testImplementation(project(":instrumentation:thrift-0.13:testing"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
-  }
-
-  check {
-    dependsOn(testStableSemconv, testBothSemconv)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
+        register("PreviewSemconv") {
+          telemetryConfig("otel.semconv-stability.preview", "rpc")
+        }
+        register("BothSemconv") {
+          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
+        }
+      }
+    }
   }
 }

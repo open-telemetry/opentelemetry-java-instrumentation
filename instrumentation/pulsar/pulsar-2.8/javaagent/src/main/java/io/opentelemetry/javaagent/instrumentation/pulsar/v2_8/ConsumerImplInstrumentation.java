@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.internalReceiveSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.startAndEndConsumerReceive;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrapBatch;
@@ -19,7 +20,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -30,7 +30,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
-import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 
 class ConsumerImplInstrumentation implements TypeInstrumentation {
@@ -45,7 +44,9 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), getClass().getName() + "$ConsumerConstructorAdvice");
+        isConstructor()
+            .and(takesArgument(0, named("org.apache.pulsar.client.impl.PulsarClientImpl"))),
+        getClass().getName() + "$ConsumerConstructorAdvice");
 
     // internalReceive will apply to Consumer#receive(long,TimeUnit)
     // and called before MessageListener#receive.
@@ -80,10 +81,9 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void after(
-        @Advice.This Consumer<?> consumer, @Advice.Argument(value = 0) PulsarClient client) {
+        @Advice.This Consumer<?> consumer, @Advice.Argument(value = 0) PulsarClientImpl client) {
 
-      PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
-      String url = pulsarClient.getLookup().getServiceUrl();
+      String url = client.getLookup().getServiceUrl();
       VirtualFieldStore.inject(consumer, url);
     }
   }
@@ -103,12 +103,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Message<?> message,
         @Advice.Thrown @Nullable Throwable throwable) {
       Context parent = Context.current();
-      Context current = startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
-      if (current != null && throwable == null) {
-        // ConsumerBase#internalReceive(long,TimeUnit) will be called before
-        // ConsumerListener#receive(Consumer,Message), so, need to inject Context into Message.
-        VirtualFieldStore.inject(message, current);
-      }
+      startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
     }
   }
 
@@ -172,15 +167,17 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   public static class SuppressInstrumentationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void before() {
+    public static boolean before() {
       // MultiTopicsConsumerImpl#receiveMessageFromConsumer is called from a background thread, we
       // don't want to create a span for it.
-      PulsarSingletons.startSuppressingReceive();
+      return internalReceiveSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void after() {
-      PulsarSingletons.endSuppressingReceive();
+    public static void after(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        internalReceiveSpanSuppression().release();
+      }
     }
   }
 }

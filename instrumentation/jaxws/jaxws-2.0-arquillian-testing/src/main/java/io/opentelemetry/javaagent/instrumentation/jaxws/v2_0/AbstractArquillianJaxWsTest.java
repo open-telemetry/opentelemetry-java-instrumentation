@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -124,7 +125,6 @@ abstract class AbstractArquillianJaxWsTest {
     return span.hasName(service + "Impl." + methodName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            SemconvCodeStabilityUtil.codeFunctionAssertions(
-                "test." + service + "Impl", methodName));
+            equalTo(CODE_FUNCTION_NAME, "test." + service + "Impl." + methodName));
   }
 }

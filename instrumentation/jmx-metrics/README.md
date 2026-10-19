@@ -8,37 +8,73 @@ available within the instrumented application. The required MBeans and correspon
 The selected JMX metrics are reported using the Java Agent internal SDK. This means that they share the configuration and metric exporter with other metrics collected by the agent and are controlled by the same properties, for example `otel.metric.export.interval` or `otel.metrics.exporter`.
 The OpenTelemetry resource description for the metrics reported by JMX Metric Insight will be the same as for other metrics exported by the SDK, while the instrumentation scope will be `io.opentelemetry.jmx`.
 
+JMX metric collection is controlled by the `otel.instrumentation.jmx.enabled` instrumentation selector
+and the common instrumentation enablement settings.
+
 To control the time interval between MBean detection attempts, one can use the `otel.jmx.discovery.delay` property, which defines the number of milliseconds to elapse between the first and the next detection cycle. JMX Metric Insight may dynamically adjust the time interval between further attempts, but it guarantees that the MBean discovery will run perpetually.
 
 ## Predefined metrics
 
 JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../runtime-telemetry/library/README.md)), application servers, third-party libraries, and applications.
 JMX Metric Insight comes with a number of predefined configurations containing curated sets of JMX metrics for frequently used application servers or frameworks.
-To enable collection of the predefined metrics, specify a list of targets as the value for the `otel.jmx.target.system` property. For example
+
+Stable predefined metrics are enabled by default, except for the JMX-based `jvm` definitions, which overlap with `runtime-telemetry`. Unstable bundled metrics require opt-in by name using `otel.jmx.metrics.experimental.included`. For example:
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.target.system=jetty,experimental-kafka-broker \
+     -Dotel.jmx.metrics.experimental.included=jetty.*,kafka.* \
      ... \
      -jar myapp.jar
 ```
 
-No targets are enabled by default. The supported target environments are listed below.
+This example will enable all stable metrics except the JMX-based `jvm` definitions (which are provided by `runtime-telemetry`) and all the non-stable metrics matching the `jetty.*` and `kafka.*` patterns.
+
+Normal metric include/exclude filters also apply to experimental metrics.
+
+Metrics from custom YAML files do not require experimental opt-in, even if their names match unstable bundled metrics. They are controlled by the normal metric include/exclude filters.
+
+The supported target systems are listed below.
 
 - [activemq](library/activemq.md)
 - [camel](library/camel.md)
 - [jetty](library/jetty.md)
-- [experimental-kafka-broker](library/kafka-broker.md)
-- [experimental-kafka-connect](library/kafka-connect.md)
+- [kafka-broker](library/kafka-broker.md)
+- [kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)
-- [experimental-cassandra](library/cassandra.md)
+- [cassandra](library/cassandra.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
 to allow reusing them without instrumentation. When using instrumentation, the [runtime-telemetry](../runtime-telemetry)
 instrumentation is used and recommended as it provides more metrics attributes that can't be captured
 through the YAML-based metric definitions.
+
+Metric filters apply to all loaded metric definitions, including predefined targets, custom YAML
+rules, and metric handlers:
+
+```properties
+otel.jmx.metrics.included=jvm.memory.*,jvm.thread.coun?
+otel.jmx.metrics.excluded=jvm.memory.limit
+```
+
+Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
+Excluded patterns take precedence over included patterns. If included is not configured, all
+non-excluded metrics are collected. With neither property configured, all metrics are collected.
+
+The equivalent declarative configuration is:
+
+```yaml
+instrumentation/development:
+  java:
+    jmx:
+      metrics:
+        included:
+          - jvm.memory.*
+          - jvm.thread.coun?
+        excluded:
+          - jvm.memory.limit
+```
 
 ## Configuration Files
 
@@ -526,3 +562,8 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - when a metric represents a percentile, use the `.pXX` suffix where `XX` is the percentile value, for example:
   - `request.duration.p50` for the 50th percentile (median)
   - `request.duration.p99` for the 99th percentile
+- metrics definitions should have a semantic-convention compliant registry definition in the `model` subfolder, those definitions should be verified with weaver live-check when testing with real target systems.
+- metrics definitions must be split between stable and unstable metrics with the following convention:
+  - `xxx.yaml` : stable metrics for `xxx` target system, where `xxx` is identifier for system
+  - `xxx_unstable.yaml` : non-stable (experimental, development, ...) metrics for `xxx` target system, where `xxx` is identifier for system
+  - metric promotion to stable should be done by moving definitions from `xxx_unstable.yaml` to `xxx.yaml` and updating the stability of the metrics definitions in the `model` subfolder.

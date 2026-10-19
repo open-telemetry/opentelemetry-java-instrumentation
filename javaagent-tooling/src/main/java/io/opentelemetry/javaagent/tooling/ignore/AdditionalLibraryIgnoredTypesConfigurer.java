@@ -213,7 +213,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass(
             "org.springframework.web.context.support.AbstractRefreshableWebApplicationContext")
         .allowClass("org.springframework.web.context.support.GenericWebApplicationContext")
-        .allowClass("org.springframework.web.context.support.XmlWebApplicationContext");
+        .allowClass("org.springframework.web.context.support.XmlWebApplicationContext")
+        .allowClass("org.springframework.web.client.DefaultRestClient$DefaultResponseSpec$$Lambda");
 
     // xml-apis, xerces, xalan, but not xml web-services
     builder
@@ -284,7 +285,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.h2.store.FileLock")
         .allowClass("org.h2.engine.DatabaseCloser")
         .allowClass("org.h2.engine.OnExitDatabaseCloser")
-        .allowClass("org.h2.server.web.WebServlet");
+        .allowClass("org.h2.server.web.WebServlet")
+        .allowClass("org.h2.command.dml.Update$$Lambda");
 
     builder
         .ignoreClass("com.carrotsearch.hppc.")

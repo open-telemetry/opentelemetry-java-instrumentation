@@ -23,11 +23,6 @@ class AgentDistributionConfigTest {
   }
 
   @Test
-  void testIndyDevelopmentProperty() {
-    assertThat(AgentDistributionConfig.get().isIndyEnabled()).isTrue();
-  }
-
-  @Test
   void testForceSynchronousAgentListeners() {
     assertThat(AgentDistributionConfig.get().isForceSynchronousAgentListeners()).isFalse();
   }
@@ -64,6 +59,7 @@ class AgentDistributionConfigTest {
     AgentDistributionConfig config = AgentDistributionConfig.get();
     assertThat(config.isInstrumentationEnabled("tomcat", false)).isTrue();
     assertThat(config.isInstrumentationEnabled("spring_webmvc", false)).isTrue();
+    assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isTrue();
     assertThat(config.isInstrumentationEnabled("unknown", false)).isFalse();
   }
 

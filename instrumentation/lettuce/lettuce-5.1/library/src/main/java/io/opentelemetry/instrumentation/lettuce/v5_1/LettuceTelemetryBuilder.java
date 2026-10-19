@@ -13,12 +13,11 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import javax.annotation.Nullable;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
@@ -26,31 +25,19 @@ public final class LettuceTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   private boolean querySanitizationEnabled = true;
-  private boolean encodingEventsEnabled = false;
 
   LettuceTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 
   /**
-   * Sets whether the {@code db.statement}/{@code db.query.text} attribute on the spans emitted by
-   * the constructed {@link LettuceTelemetry} should be sanitized. If set to {@code true}, all
-   * parameters that can potentially contain sensitive information will be masked. Enabled by
-   * default.
+   * Sets whether the {@code db.query.text} attribute on the spans emitted by the constructed {@link
+   * LettuceTelemetry} should be sanitized. If set to {@code true}, all parameters that can
+   * potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
   public LettuceTelemetryBuilder setQuerySanitizationEnabled(boolean querySanitizationEnabled) {
     this.querySanitizationEnabled = querySanitizationEnabled;
-    return this;
-  }
-
-  /**
-   * Sets whether the {@code redis.encode.start} and {@code redis.encode.end} span events should be
-   * emitted by the constructed {@link LettuceTelemetry}. Disabled by default.
-   */
-  @CanIgnoreReturnValue
-  public LettuceTelemetryBuilder setEncodingSpanEventsEnabled(boolean encodingEventsEnabled) {
-    this.encodingEventsEnabled = encodingEventsEnabled;
     return this;
   }
 
@@ -60,27 +47,17 @@ public final class LettuceTelemetryBuilder {
    */
   public LettuceTelemetry build() {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
-    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
-    // span name.
-    LettuceDbAttributesGetter spanNameAttributesGetter =
-        new LettuceDbAttributesGetter() {
-          @Override
-          @Nullable
-          public String getDbNamespace(LettuceRequest request) {
-            return null;
-          }
-        };
 
     InstrumenterBuilder<LettuceRequest, LettuceResponse> builder =
         Instrumenter.<LettuceRequest, LettuceResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
+                RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get())
             .setSpanStatusExtractor(
                 (spanStatusBuilder, request, response, error) -> {
-                  if (response != null && response.getErrorMessage() != null) {
+                  if (response != null && response.isFailed()) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   } else {
                     SpanStatusExtractor.getDefault()
@@ -92,6 +69,6 @@ public final class LettuceTelemetryBuilder {
     Instrumenter<LettuceRequest, LettuceResponse> instrumenter =
         builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
-    return new LettuceTelemetry(instrumenter, querySanitizationEnabled, encodingEventsEnabled);
+    return new LettuceTelemetry(instrumenter, querySanitizationEnabled);
   }
 }

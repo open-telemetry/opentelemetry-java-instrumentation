@@ -38,25 +38,37 @@ abstract class AbstractHttpServerInstrumentationTest
   override protected def configure(
       options: HttpServerTestOptions
   ): Unit = {
+    configure(options, hasRoute = false)
+  }
+
+  protected def configure(
+      options: HttpServerTestOptions,
+      hasRoute: Boolean
+  ): Unit = {
     options.setTestCaptureHttpHeaders(false)
-    options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
-          val set = new util.HashSet[AttributeKey[_]](
-            HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
-          )
-          set.remove(HttpAttributes.HTTP_ROUTE)
-          set
+    if (!hasRoute) {
+      options.setHttpAttributes(
+        new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
+          override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
+            val set = new util.HashSet[AttributeKey[_]](
+              HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
+            )
+            set.remove(HttpAttributes.HTTP_ROUTE)
+            set
+          }
         }
-      }
-    )
+      )
+    }
     options.setHasResponseCustomizer(
       new Predicate[ServerEndpoint] {
         override def test(t: ServerEndpoint): Boolean =
           t != ServerEndpoint.EXCEPTION
       }
     )
-    // instrumentation does not create a span at all
+    // pekko-http rejects an unknown method while parsing the request, so it is answered by the
+    // sparse parsing error span, which reports the 501 and no request attributes, while this test
+    // also asserts server.address and http.request.method_original, PekkoHttpServerParsingErrorTest
+    // covers that span instead
     options.disableTestNonStandardHttpMethod
   }
 

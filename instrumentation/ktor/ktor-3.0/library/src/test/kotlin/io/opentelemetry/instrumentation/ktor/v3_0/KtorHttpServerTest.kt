@@ -28,7 +28,7 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
   override fun installOpenTelemetry(application: Application) {
     application.apply {
       install(KtorServerTelemetry) {
-        setOpenTelemetry(testing.openTelemetry)
+        openTelemetry(testing.openTelemetry)
         requestHeaders(AbstractHttpServerTest.TEST_HEADERS)
         responseHeaders(AbstractHttpServerTest.TEST_HEADERS)
       }

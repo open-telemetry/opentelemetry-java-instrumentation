@@ -38,34 +38,11 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   String getDbOperationName(REQUEST request);
 
-  /**
-   * Returns the old db.operation value. This is only used for old semantic conventions.
-   *
-   * @deprecated Use {@link #getDbOperationName(Object)} instead.
-   */
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  default String getDbOperation(REQUEST request) {
-    return getDbOperationName(request);
-  }
-
   // TODO: make this required to implement
-  String getDbSystemName(REQUEST request);
-
   /**
-   * Returns the old semconv {@code db.system} value. Defaults to {@link #getDbSystemName} for
-   * instrumentations where the old and new values are the same.
-   *
-   * <p>Implementors whose old {@code db.system} value differs from the new {@code db.system.name}
-   * value <b>must override</b> this method; otherwise old-semconv spans will silently emit the new
-   * value for {@code db.system}.
-   *
-   * @deprecated Use {@link #getDbSystemName} instead.
+   * Returns the database system name as defined by the {@code db.system.name} semantic convention.
    */
-  @Deprecated // to be removed in 3.0
-  default String getDbSystem(REQUEST request) {
-    return getDbSystemName(request);
-  }
+  String getDbSystemName(REQUEST request);
 
   @Nullable
   String getDbNamespace(REQUEST request);
@@ -73,39 +50,6 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   // TODO: make this required to implement?
   @Nullable
   default String getDbCollectionName(REQUEST request) {
-    return null;
-  }
-
-  /**
-   * Returns the old db.name value. This is only used for old semantic conventions.
-   *
-   * @deprecated Use {@link #getDbNamespace(Object)} instead.
-   */
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  default String getDbName(REQUEST request) {
-    return getDbNamespace(request);
-  }
-
-  /**
-   * Returns the database user name. This is only used for old semantic conventions.
-   *
-   * @deprecated There is no replacement at this time.
-   */
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  default String getUser(REQUEST request) {
-    return null;
-  }
-
-  /**
-   * Returns the database connection string. This is only used for old semantic conventions.
-   *
-   * @deprecated There is no replacement at this time.
-   */
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  default String getConnectionString(REQUEST request) {
     return null;
   }
 

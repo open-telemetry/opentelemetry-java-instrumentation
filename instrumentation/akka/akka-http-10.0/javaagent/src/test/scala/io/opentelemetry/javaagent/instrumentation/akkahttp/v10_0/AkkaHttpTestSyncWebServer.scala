@@ -34,7 +34,7 @@ object AkkaHttpTestSyncWebServer {
           def get(): HttpResponse = {
             val resp = HttpResponse(status = endpoint.getStatus)
             endpoint match {
-              case SUCCESS => resp.withEntity(endpoint.getBody)
+              case SUCCESS       => resp.withEntity(endpoint.getBody)
               case INDEXED_CHILD =>
                 INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
                   override def getParameter(name: String): String =
@@ -42,9 +42,9 @@ object AkkaHttpTestSyncWebServer {
                 })
                 resp.withEntity(endpoint.getBody)
               case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
-              case REDIRECT =>
+              case REDIRECT    =>
                 resp.withHeaders(headers.Location(endpoint.getBody))
-              case ERROR => resp.withEntity(endpoint.getBody)
+              case ERROR     => resp.withEntity(endpoint.getBody)
               case EXCEPTION =>
                 throw new IllegalStateException(endpoint.getBody)
               case _ =>

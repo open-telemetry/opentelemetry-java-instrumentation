@@ -1,6 +1,6 @@
 otel:
   # "file_format" serves as opt-in to the new file format
-  file_format: "1.1"
+  file_format: "1.2"
   resource:
     detection/development:
       detectors:
@@ -10,13 +10,21 @@ otel:
         value: declarative-config-spring-boot-2
 
   tracer_provider:
+    sampler:
+      composite/development:
+        rule_based:
+          rules:
+            - attribute_patterns:
+                key: url.path
+                included: ["/actuator*"]
+              sampler:
+                always_off:
+            - sampler:
+                always_on:
     processors:
       - simple:
           exporter:
             test:
-      - simple:
-          exporter:
-            console:
 
   logger_provider:
     processors:
@@ -44,6 +52,8 @@ otel:
 
   instrumentation/development:
     java:
+      spring_starter:
+        debug: true
       common:
         http:
           client:

@@ -55,7 +55,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SevenArgumentConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) RedisClient redisClient,
         @Advice.Argument(1) int regularMinIdle,
@@ -82,7 +82,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SixArgumentConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) RedisClient redisClient,
         @Advice.Argument(1) int regularMinIdle,

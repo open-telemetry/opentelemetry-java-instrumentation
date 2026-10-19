@@ -17,4 +17,21 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseSpringTemplateTest {
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
     return CouchbaseUtil.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
+
+  @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
+  }
+
+  @Override
+  protected boolean includesExperimentalLocalAddressAttribute() {
+    // The core-io versions before 1.6.0 have no localSocket field to capture it from.
+    return false;
+  }
+
+  @Override
+  protected boolean includesExperimentalOperationIdAttribute() {
+    // The core-io versions before 1.6.0 have no CouchbaseRequest.operationId() to correlate with.
+    return false;
+  }
 }

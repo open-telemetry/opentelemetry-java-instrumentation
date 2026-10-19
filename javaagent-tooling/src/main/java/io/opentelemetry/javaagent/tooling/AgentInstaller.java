@@ -554,18 +554,22 @@ public class AgentInstaller {
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {
+      List<Runnable> callbacks;
       synchronized (classLoadCallbacks) {
-        List<Runnable> callbacks = classLoadCallbacks.get(typeName);
-        if (callbacks != null) {
-          for (Runnable callback : callbacks) {
-            callback.run();
-          }
+        List<Runnable> registeredCallbacks = classLoadCallbacks.get(typeName);
+        if (registeredCallbacks == null) {
+          return;
         }
+        callbacks = new ArrayList<>(registeredCallbacks);
+      }
+      for (Runnable callback : callbacks) {
+        callback.run();
       }
     }
   }
 
-  private static class RedefinitionDiscoveryStrategy
+  // visible for testing
+  static class RedefinitionDiscoveryStrategy
       implements AgentBuilder.RedefinitionStrategy.DiscoveryStrategy {
     private static final AgentBuilder.RedefinitionStrategy.DiscoveryStrategy delegate =
         AgentBuilder.RedefinitionStrategy.DiscoveryStrategy.Reiterating.INSTANCE;
@@ -575,12 +579,26 @@ public class AgentInstaller {
       // filter out our agent classes and injected helper classes
       return () ->
           streamOf(delegate.resolve(instrumentation))
-              .map(RedefinitionDiscoveryStrategy::filterClasses)
+              .flatMap(RedefinitionDiscoveryStrategy::filterClasses)
               .iterator();
     }
 
-    private static Iterable<Class<?>> filterClasses(Iterable<Class<?>> classes) {
-      return () -> streamOf(classes).filter(c -> !isIgnored(c)).iterator();
+    private static Stream<Iterable<Class<?>>> filterClasses(Iterable<Class<?>> classes) {
+      List<Class<?>> classLoaders = new ArrayList<>();
+      List<Class<?>> otherClasses = new ArrayList<>();
+      for (Class<?> c : classes) {
+        if (isIgnored(c)) {
+          continue;
+        }
+        if (ClassLoader.class.isAssignableFrom(c)) {
+          classLoaders.add(c);
+        } else {
+          otherClasses.add(c);
+        }
+      }
+      // Initializing non-inline advice may load injected helpers during retransformation.
+      // Instrument class loaders in an earlier batch so those helpers can be defined.
+      return Stream.of(classLoaders, otherClasses);
     }
 
     private static <T> Stream<T> streamOf(Iterable<T> iterable) {

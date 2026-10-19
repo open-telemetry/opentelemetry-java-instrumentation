@@ -21,8 +21,9 @@ final class FieldAccessorInterfaces {
     this.fieldAccessorInterfaces = fieldAccessorInterfaces;
   }
 
-  TypeDescription find(String typeName, String fieldTypeName) {
-    String accessorInterfaceName = getFieldAccessorInterfaceName(typeName, fieldTypeName);
+  TypeDescription find(String typeName, String fieldTypeName, String fieldName) {
+    String accessorInterfaceName =
+        getFieldAccessorInterfaceName(typeName, fieldTypeName, fieldName);
     DynamicType.Unloaded<?> type = fieldAccessorInterfaces.get(accessorInterfaceName);
     if (type == null) {
       throw new IllegalStateException(

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.hikaricp.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.zaxxer.hikari.metrics.IMetricsTracker;
@@ -17,7 +15,6 @@ import io.opentelemetry.api.metrics.LongCounter;
 
 final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
-  private static final double NANOS_PER_MS = MILLISECONDS.toNanos(1);
   private static final double NANOS_PER_S = SECONDS.toNanos(1);
   private static final double MILLIS_PER_S = SECONDS.toMillis(1);
 
@@ -49,25 +46,21 @@ final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   @Override
   public void recordConnectionCreatedMillis(long connectionCreatedMillis) {
-    double time =
-        emitStableDatabaseSemconv()
-            ? connectionCreatedMillis / MILLIS_PER_S
-            : connectionCreatedMillis;
+    double time = connectionCreatedMillis / MILLIS_PER_S;
     createTime.record(time, attributes);
     userMetricsTracker.recordConnectionCreatedMillis(connectionCreatedMillis);
   }
 
   @Override
   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos) {
-    double time = elapsedAcquiredNanos / (emitStableDatabaseSemconv() ? NANOS_PER_S : NANOS_PER_MS);
+    double time = elapsedAcquiredNanos / NANOS_PER_S;
     waitTime.record(time, attributes);
     userMetricsTracker.recordConnectionAcquiredNanos(elapsedAcquiredNanos);
   }
 
   @Override
   public void recordConnectionUsageMillis(long elapsedBorrowedMillis) {
-    double time =
-        emitStableDatabaseSemconv() ? elapsedBorrowedMillis / MILLIS_PER_S : elapsedBorrowedMillis;
+    double time = elapsedBorrowedMillis / MILLIS_PER_S;
     useTime.record(time, attributes);
     userMetricsTracker.recordConnectionUsageMillis(elapsedBorrowedMillis);
   }

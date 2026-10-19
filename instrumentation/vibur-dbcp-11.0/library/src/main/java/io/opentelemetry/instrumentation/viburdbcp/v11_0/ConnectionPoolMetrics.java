@@ -29,14 +29,27 @@ final class ConnectionPoolMetrics {
 
   static void registerMetrics(
       OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource, String poolName) {
+    registerMetrics(openTelemetry, dataSource, poolName, Attributes.empty());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry,
+      ViburDBCPDataSource dataSource,
+      String poolName,
+      Attributes databaseAttributes) {
     dataSourceMetrics.computeIfAbsent(
-        dataSource, (unused) -> createMeters(openTelemetry, dataSource, poolName));
+        dataSource,
+        (unused) -> createMeters(openTelemetry, dataSource, poolName, databaseAttributes));
   }
 
   private static BatchCallback createMeters(
-      OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource, String poolName) {
+      OpenTelemetry openTelemetry,
+      ViburDBCPDataSource dataSource,
+      String poolName,
+      Attributes databaseAttributes) {
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
+        DbConnectionPoolMetrics.create(
+            openTelemetry, INSTRUMENTATION_NAME, poolName, databaseAttributes);
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement maxConnections = metrics.maxConnections();

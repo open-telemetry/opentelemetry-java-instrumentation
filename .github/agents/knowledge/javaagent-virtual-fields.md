@@ -1,11 +1,8 @@
 # [Javaagent] Virtual Fields
 
-## Quick Reference
-
-- Use when: javaagent code associates instrumentation state with third-party object instances, or
-  introduces a weak reference, weak-key cache/map, identity-keyed registry, or per-object side table
-- Review focus: choosing `VirtualField`, carrier and value types, shared-helper boundaries, cleanup,
-  reuse, concurrency, and fallback-map retention
+Use this article when choosing storage for state associated with a
+third-party object. It distinguishes attached state from caches and weak
+links, then covers carrier selection, lookup placement, and cleanup.
 
 ## Prefer `VirtualField` for State Attached to Library Objects
 
@@ -76,6 +73,16 @@ This pattern is already used by the executors instrumentation, whose bootstrap h
 `VirtualField<T, PropagatedContext>` chosen by the javaagent module. When passing the handle would
 expose too much storage behavior, pass a small typed accessor with `get`, `set`, and any required
 domain operations instead.
+
+Prefer the narrowest stable carrier type that owns the state. Avoid using a broad interface when
+the state applies only to a narrower subset of its implementations. This matters especially for
+ubiquitous JDK interfaces and collection interfaces, because field injection may apply to many
+unrelated concrete classes.
+
+Broad interfaces are appropriate when the state semantically belongs to every instance in the
+abstraction and broad instrumentation is intentional. For example, `Runnable` is a suitable
+carrier for propagated task context. If no narrower stable carrier exists, document why the broad
+type is necessary and verify its fallback and lifecycle behavior.
 
 Avoid `Object` as the carrier class. It discards the type that determines where field-backed storage
 can be installed and makes the mapping apply far more broadly than intended. Generic helper methods
@@ -154,27 +161,7 @@ State state = STATE.get(carrier);
 STATE.set(carrier, update(state));
 ```
 
-If multiple threads can update the same carrier, make the attached state provide the required
-atomicity or synchronization, or redesign the ownership transition. Do not choose `Cache` solely
-for `computeIfAbsent` without first deciding whether concurrent updates and duplicate construction
-are actually valid for the instrumentation.
-
-## Review Guidance
-
-Flag a new weak or identity-keyed registry when all of the following are true:
-
-1. The code is javaagent instrumentation or shared code used by javaagent instrumentation.
-2. The key is a third-party object instance rather than a lookup key such as `Class` or
-   `ClassLoader`.
-3. The value is instrumentation state associated with that exact instance, not a derived value being
-   memoized.
-4. The instrumentation-specific caller can identify a suitable carrier class or interface.
-5. `VirtualField` can preserve the required lifecycle and concurrency semantics.
-
-Recommend moving storage selection to the typed caller when a shared helper currently accepts
-`Object`. Do not demand one global `VirtualField<Object, F>`.
-
-Do not flag legitimate metadata caches, bounded caches, value-equality interning pools, weak
-callback/delegate links, or non-javaagent library code merely because they use weak storage. When
-the carrier type, lifecycle, or concurrency requirement is unclear, investigate callers before
-commenting and prefer silence over a speculative replacement.
+When supported concurrent updates require a compound invariant, synchronize the attached state or
+redesign ownership. See [Lock Ownership and Critical Sections](javaagent-locking.md) for choosing the
+required guarantees. Do not choose `Cache` solely for `computeIfAbsent` without establishing whether
+concurrent updates and duplicate construction are valid.

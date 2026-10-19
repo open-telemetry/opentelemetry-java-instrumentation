@@ -508,6 +508,21 @@ class HttpServerAttributesExtractorTest {
   }
 
   @Test
+  void shouldExtractIpv6ServerAddressAndPortFromHostHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "[2001:db8::1]:8080");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(entry(SERVER_ADDRESS, "2001:db8::1"), entry(SERVER_PORT, 8080L));
+  }
+
+  @Test
   void shouldExtractPeerAddressEvenIfItDuplicatesClientAddress() {
     Map<String, String> request = new HashMap<>();
     request.put("networkPeerAddress", "1.2.3.4");
@@ -561,6 +576,8 @@ class HttpServerAttributesExtractorTest {
   @ParameterizedTest
   @CsvSource({
     "paramA=valA&paramB=valB, paramA=valA&paramB=valB",
+    // Default sensitive query parameters from semantic conventions:
+    // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-query
     "AWSAccessKeyId=AKIAIOSFODNN7, AWSAccessKeyId=REDACTED",
     "Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, Signature=REDACTED",
     "X-Amz-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, X-Amz-Signature=REDACTED",

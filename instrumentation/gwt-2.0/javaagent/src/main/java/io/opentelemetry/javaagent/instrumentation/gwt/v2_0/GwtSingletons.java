@@ -15,13 +15,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GwtSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.gwt-2.0";
 
-  public static final ContextKey<Boolean> RPC_CONTEXT_KEY =
-      ContextKey.named("opentelemetry-gwt-rpc-context-key");
+  // holds the failure that GWT encodes into the rpc response instead of throwing it
+  public static final ContextKey<AtomicReference<Throwable>> RPC_FAILURE_KEY =
+      ContextKey.named("opentelemetry-gwt-rpc-failure-key");
 
   private static final Instrumenter<Method, Void> instrumenter;
 

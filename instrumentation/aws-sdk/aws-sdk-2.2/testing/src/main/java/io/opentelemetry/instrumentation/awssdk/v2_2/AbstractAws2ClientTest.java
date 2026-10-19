@@ -8,8 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -29,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_ST
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -333,7 +330,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 equalTo(RPC_SYSTEM, "aws-api"),
                 equalTo(RPC_SERVICE, service),
                 equalTo(RPC_METHOD, operation),
-                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                 equalTo(AWS_REQUEST_ID, requestId)));
 
     if (service.equals("S3")) {
@@ -388,7 +385,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     }
 
     if (service.equals("Sqs") && operation.equals("CreateQueue")) {
-      attributes.add(equalTo(stringKey("aws.queue.name"), "somequeue"));
+      attributes.add(equalTo(stringKey("aws.queue.name"), experimental("somequeue")));
     }
 
     if (service.equals("Sqs") && operation.equals("SendMessage")) {
@@ -399,13 +396,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                   equalTo(MESSAGING_DESTINATION_NAME, "somequeue"),
                   satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                   equalTo(MESSAGING_SYSTEM, AWS_SQS))));
-      if (emitStableMessagingSemconv()) {
-        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
-        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
-      }
-      if (emitOldMessagingSemconv()) {
-        attributes.add(equalTo(MESSAGING_OPERATION, "publish"));
-      }
+      attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
+      attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
     }
 
     if (service.equals("Sfn")) {
@@ -427,14 +419,17 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       switch (operation) {
         case "GetFunction":
           attributes.add(
-              equalTo(stringKey("aws.lambda.function.name"), "lambda-function-name-foo"));
+              equalTo(
+                  stringKey("aws.lambda.function.name"), experimental("lambda-function-name-foo")));
           attributes.add(
               equalTo(
                   stringKey("aws.lambda.function.arn"),
-                  "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo"));
+                  experimental(
+                      "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo")));
           break;
         case "CreateEventSourceMapping":
-          attributes.add(equalTo(stringKey("aws.lambda.function.name"), "myFn01-Temp"));
+          attributes.add(
+              equalTo(stringKey("aws.lambda.function.name"), experimental("myFn01-Temp")));
           attributes.add(
               equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "e31def54-5e5d-4c1b-8e0f-bf1b11c137b7"));
           break;
@@ -451,7 +446,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     String evaluatedOperation;
     SpanKind operationKind;
     if (operation.equals("SendMessage")) {
-      evaluatedOperation = emitStableMessagingSemconv() ? "send somequeue" : "somequeue publish";
+      evaluatedOperation = "send somequeue";
       operationKind = SpanKind.PRODUCER;
     } else {
       operationKind = SpanKind.CLIENT;
@@ -931,7 +926,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                                 equalTo(AWS_S3_BUCKET, "somebucket"))));
 
     if (emitExceptionAsLogs()) {

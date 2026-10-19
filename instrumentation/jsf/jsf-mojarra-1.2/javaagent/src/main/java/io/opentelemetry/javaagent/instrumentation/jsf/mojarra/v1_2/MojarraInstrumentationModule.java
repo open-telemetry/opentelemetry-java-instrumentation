@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class MojarraInstrumentationModule extends InstrumentationModule {
   public MojarraInstrumentationModule() {
-    super("jsf-mojarra", "jsf-mojarra-1.2");
+    super("jsf-mojarra-1.2", "jsf-mojarra", "jsf");
   }
 
   @Override

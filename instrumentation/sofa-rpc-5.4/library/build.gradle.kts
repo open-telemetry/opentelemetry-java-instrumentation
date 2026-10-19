@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -20,8 +22,19 @@ configurations.testRuntimeClasspath {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+        }
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+      }
+    }
+  }
 }
