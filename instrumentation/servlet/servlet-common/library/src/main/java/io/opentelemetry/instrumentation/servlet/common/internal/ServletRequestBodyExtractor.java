@@ -56,30 +56,44 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   }
 
   @Nullable
-  @SuppressWarnings(
-      "ByteBufferBackingArray") // we know the buffer is array-backed and check it at runtime
   public static <REQUEST, RESPONSE> String getRequestBodyValue(
       ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
     Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE);
-    if (bodyAttribute instanceof ByteBuffer) {
-      ByteBuffer buffer = (ByteBuffer) bodyAttribute;
-      if (buffer.position() == 0) {
-        // buffer is empty or has been already flipped and read
-        return null;
-      }
-      String encoding = accessor.getRequestContentEncoding(request);
-      Charset charset = UTF_8;
-      if (encoding != null && Charset.isSupported(encoding)) {
-        charset = Charset.forName(encoding);
-      }
-      if (!buffer.hasArray()) {
-        return null;
-      }
-      buffer.flip();
-      String result = new String(buffer.array(), buffer.position(), buffer.limit(), charset);
-      buffer.clear();
-      return result;
+    if (!(bodyAttribute instanceof ByteBuffer)) {
+      return null;
     }
-    return null;
+    return decode(bodyAttribute, accessor.getRequestContentEncoding(request));
+  }
+
+  /**
+   * Decodes the request body captured in the {@link
+   * io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper#REQUEST_BODY_ATTRIBUTE}
+   * attribute. This does not depend on the servlet API, so it can also be used from app server
+   * instrumentations. The buffer is left untouched, the body can be decoded several times.
+   *
+   * @param bodyAttribute value of the request attribute, anything but a {@link ByteBuffer} is
+   *     ignored
+   * @param charsetName charset of the request body, UTF-8 is used when {@code null} or not
+   *     supported
+   * @return the captured body, or {@code null} when nothing has been captured
+   */
+  @Nullable
+  @SuppressWarnings(
+      "ByteBufferBackingArray") // we know the buffer is array-backed and check it at runtime
+  public static String decode(@Nullable Object bodyAttribute, @Nullable String charsetName) {
+    if (!(bodyAttribute instanceof ByteBuffer)) {
+      return null;
+    }
+    ByteBuffer buffer = (ByteBuffer) bodyAttribute;
+    // the buffer is in write mode, the position is the number of bytes captured
+    int length = buffer.position();
+    if (length == 0 || !buffer.hasArray()) {
+      return null;
+    }
+    Charset charset = UTF_8;
+    if (charsetName != null && Charset.isSupported(charsetName)) {
+      charset = Charset.forName(charsetName);
+    }
+    return new String(buffer.array(), buffer.arrayOffset(), length, charset);
   }
 }

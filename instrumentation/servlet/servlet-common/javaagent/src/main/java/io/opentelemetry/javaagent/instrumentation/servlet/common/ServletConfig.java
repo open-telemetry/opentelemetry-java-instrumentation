@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import javax.annotation.Nullable;
 
-class ServletConfig {
+public class ServletConfig {
 
   @Nullable private final IncludeExclude requestParameters;
   private final boolean captureExperimentalAttributes;
@@ -22,7 +22,7 @@ class ServletConfig {
   private final boolean captureRequestBody;
   private final int captureRequestBodyMaxSize;
 
-  static ServletConfig get() {
+  public static ServletConfig get() {
     return SingletonHolder.INSTANCE;
   }
 
@@ -54,7 +54,7 @@ class ServletConfig {
     return traceIdRequestAttributeEnabled;
   }
 
-  boolean getCaptureRequestBodyEnabled() {
+  public boolean getCaptureRequestBodyEnabled() {
     return captureRequestBody && captureRequestBodyMaxSize > 0;
   }
 
