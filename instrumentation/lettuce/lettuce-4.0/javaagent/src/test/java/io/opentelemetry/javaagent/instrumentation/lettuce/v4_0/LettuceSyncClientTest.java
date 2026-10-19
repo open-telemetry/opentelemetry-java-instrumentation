@@ -151,7 +151,7 @@ class LettuceSyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"))));
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   @Test
@@ -179,7 +179,7 @@ class LettuceSyncClientTest {
                             equalTo(SERVER_PORT, incorrectPort),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"))));
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   @Test
@@ -283,7 +283,7 @@ class LettuceSyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), "test-peer-service")));
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())));
           }
           trace.hasSpansSatisfyingExactly(spanAsserts);
         });

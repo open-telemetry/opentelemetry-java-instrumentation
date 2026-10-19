@@ -29,6 +29,11 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
     return testing;
   }
 
+  @Override
+  protected String expectedPeerService() {
+    return "test-peer-service";
+  }
+
   @BeforeAll
   void setup() {
     tracingOperator.registerOnEachOperator();

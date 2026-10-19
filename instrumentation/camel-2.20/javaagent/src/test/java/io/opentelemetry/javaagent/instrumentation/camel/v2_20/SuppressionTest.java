@@ -43,6 +43,7 @@ class SuppressionTest {
       String url,
       String serverAddress,
       long serverPort,
+      String expectedPeerService,
       SpanData parent) {
     if (!NESTED_HTTP_CLIENT_SPAN) {
       return;
@@ -56,7 +57,7 @@ class SuppressionTest {
                     equalTo(HTTP_REQUEST_METHOD, method),
                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                     equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                    equalTo(maybeStablePeerService(), "test-peer-service"),
+                    equalTo(maybeStablePeerService(), expectedPeerService),
                     equalTo(SERVER_ADDRESS, serverAddress),
                     equalTo(SERVER_PORT, serverPort),
                     equalTo(URL_FULL, url)));

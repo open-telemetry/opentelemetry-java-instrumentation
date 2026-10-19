@@ -179,7 +179,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                         : genericMethodName()),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasPeerService() ? testing().expectedPeerService() : null),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -233,7 +233,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasPeerService() ? testing().expectedPeerService() : null),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -457,7 +457,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                         : genericMethodName()),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasPeerService() ? testing().expectedPeerService() : null),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

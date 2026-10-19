@@ -196,7 +196,7 @@ public abstract class AbstractSofaRpcTest {
                                         : genericMethodName()),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasPeerService() ? testing().expectedPeerService() : null),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -372,7 +372,7 @@ public abstract class AbstractSofaRpcTest {
                                         : genericMethodName()),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasPeerService() ? testing().expectedPeerService() : null),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -578,7 +578,7 @@ public abstract class AbstractSofaRpcTest {
                                         : "throwException"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasPeerService() ? testing().expectedPeerService() : null),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -767,7 +767,7 @@ public abstract class AbstractSofaRpcTest {
                                         : "throwBusinessException"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasPeerService() ? testing().expectedPeerService() : null),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -859,7 +859,7 @@ public abstract class AbstractSofaRpcTest {
                                         : "timeout"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasPeerService() ? testing().expectedPeerService() : null),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
