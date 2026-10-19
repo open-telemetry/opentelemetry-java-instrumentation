@@ -169,52 +169,8 @@ class AwsLambdaSqsMessageHandlerTest {
                                     "53995c3f42cd8ad9",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))));
-    testing.waitAndAssertMetrics(
-        TracingSqsEventHandler.INSTRUMENTATION_NAME,
-        "messaging.process.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point.hasAttributesSatisfying(
-                                            attributes ->
-                                                assertThat(attributes.asMap())
-                                                    .containsOnlyKeys(
-                                                        MESSAGING_OPERATION_NAME,
-                                                        MESSAGING_SYSTEM,
-                                                        MESSAGING_DESTINATION_NAME)),
-                                    point ->
-                                        point.hasAttributesSatisfying(
-                                            attributes ->
-                                                assertThat(attributes.asMap())
-                                                    .containsOnlyKeys(
-                                                        MESSAGING_OPERATION_NAME,
-                                                        MESSAGING_SYSTEM,
-                                                        MESSAGING_DESTINATION_NAME,
-                                                        ERROR_TYPE))))));
-    testing.waitAndAssertMetrics(
-        TracingSqsEventHandler.INSTRUMENTATION_NAME,
-        "messaging.client.consumed.messages",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point.hasAttributesSatisfying(
-                                            attributes ->
-                                                assertThat(attributes.asMap())
-                                                    .containsOnlyKeys(
-                                                        MESSAGING_OPERATION_NAME,
-                                                        MESSAGING_SYSTEM,
-                                                        MESSAGING_DESTINATION_NAME))))));
+    assertMetrics(
+        testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 2, null, 1, "_OTHER");
   }
 
   @Test
