@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.batchProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -41,7 +42,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
     // create Kafka client process spans; doPoll() covers older versions and the sub-batches it
     // creates.
     transformer.applyAdviceToMethod(
-        named("doPoll").or(named("pollConsumer")), getClass().getName() + "$PollAdvice");
+        namedOneOf("doPoll", "pollConsumer"), getClass().getName() + "$PollAdvice");
     transformer.applyAdviceToMethod(
         named("invokeIfHaveRecords")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
