@@ -71,11 +71,11 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("latestDepTest") {
-      dependencies {
-        implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
-      }
-      if (otelProps.testLatestDeps) {
+    if (otelProps.testLatestDeps) {
+      register<JvmTestSuite>("latestDepTest") {
+        dependencies {
+          implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
+        }
         executions {
           register("WithPeerServiceMapping") {
             telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
@@ -103,10 +103,6 @@ tasks {
     named("test") {
       enabled = false
     }
-  }
-
-  named("latestDepTest") {
-    enabled = otelProps.testLatestDeps
   }
 
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
