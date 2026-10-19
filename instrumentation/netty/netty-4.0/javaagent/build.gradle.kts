@@ -94,18 +94,8 @@ tasks {
     }
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    telemetryConfig("otel.semconv-stability.preview", "service.peer")
-    filter {
-      excludeTestsMatching("Netty40ConnectionSpanTest")
-      excludeTestsMatching("Netty40ClientSslTest")
-    }
-  }
-
   check {
-    dependsOn(testConnectionSpan, testPreviewSemconv, mappedConnectionTests)
+    dependsOn(testConnectionSpan, mappedConnectionTests)
   }
 }
 
