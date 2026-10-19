@@ -26,7 +26,7 @@ final class ResponseStreamListener implements ChunkListener<ResponseStreamEvent>
   @Nullable private volatile Response response;
 
   // Set by a typed error event, which the SDK delivers as an ordinary event rather than throwing.
-  @Nullable private volatile ErrorEvent errorEvent;
+  private volatile boolean errorEvent;
 
   ResponseStreamListener(
       Context context,
@@ -50,7 +50,7 @@ final class ResponseStreamListener implements ChunkListener<ResponseStreamEvent>
     } else if (event.isFailed()) {
       event.asFailed()._response().asKnown().ifPresent(r -> response = r);
     } else if (event.isError()) {
-      errorEvent = new ErrorEvent(event.asError()._code().asKnown().orElse(null));
+      errorEvent = true;
     }
   }
 
@@ -61,22 +61,9 @@ final class ResponseStreamListener implements ChunkListener<ResponseStreamEvent>
     if (!hasEnded.compareAndSet(false, true)) {
       return;
     }
-    ErrorEvent errorEvent = this.errorEvent;
-    if (errorEvent != null) {
-      // The event's code stays the error type even if reading the stream fails afterwards.
-      request.setStreamErrorCode(errorEvent.code);
-      if (error == null) {
-        Span.fromContext(context).setStatus(StatusCode.ERROR);
-      }
+    if (errorEvent && error == null) {
+      Span.fromContext(context).setStatus(StatusCode.ERROR);
     }
     instrumenter.end(context, request, response, error);
-  }
-
-  private static final class ErrorEvent {
-    @Nullable private final String code;
-
-    private ErrorEvent(@Nullable String code) {
-      this.code = code;
-    }
   }
 }

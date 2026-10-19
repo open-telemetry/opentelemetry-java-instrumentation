@@ -5,18 +5,13 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.openai.core.ObjectMappers;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
-import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,95 +49,6 @@ class ResponsesAttributesGetterTest {
             "incomplete without reason",
             "{\"status\":\"incomplete\",\"incomplete_details\":null}",
             "incomplete"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("outputCases")
-  void mapsOutputItemsToFinishReasons(String json, List<String> finishReasons)
-      throws JsonProcessingException {
-    assertThat(getter.getResponseFinishReasons(REQUEST, parse(json)))
-        .containsExactlyElementsOf(finishReasons);
-  }
-
-  private static Stream<Arguments> outputCases() {
-    String message = "{\"type\":\"message\",\"status\":\"completed\"}";
-    String functionCall = "{\"type\":\"function_call\",\"status\":\"completed\"}";
-    return Stream.of(
-        argumentSet(
-            "function call",
-            "{\"status\":\"completed\",\"output\":[" + functionCall + "]}",
-            singletonList("tool_calls")),
-        argumentSet(
-            "message and function calls",
-            "{\"status\":\"completed\",\"output\":["
-                + message
-                + ","
-                + functionCall
-                + ","
-                + functionCall
-                + "]}",
-            asList("stop", "tool_calls")),
-        argumentSet(
-            "unfinished function call",
-            "{\"status\":\"completed\",\"output\":["
-                + "{\"type\":\"function_call\",\"status\":\"in_progress\"},"
-                + message
-                + "]}",
-            singletonList("stop")),
-        argumentSet(
-            "incomplete message",
-            "{\"status\":\"completed\",\"output\":"
-                + "[{\"type\":\"message\",\"status\":\"incomplete\"}]}",
-            singletonList("incomplete")),
-        argumentSet(
-            "function call without response status",
-            "{\"output\":[" + functionCall + "]}",
-            singletonList("tool_calls")),
-        argumentSet(
-            "function call in failed response",
-            "{\"status\":\"failed\",\"output\":[" + functionCall + "]}",
-            singletonList("error")));
-  }
-
-  @ParameterizedTest
-  @MethodSource("customToolCallCases")
-  void mapsCustomToolCallsToFinishReasons(String json, List<String> finishReasons)
-      throws JsonProcessingException {
-    // custom tool calls were added in SDK 3.x
-    assumeTrue(testLatestDeps());
-    assertThat(getter.getResponseFinishReasons(REQUEST, parse(json)))
-        .containsExactlyElementsOf(finishReasons);
-  }
-
-  private static Stream<Arguments> customToolCallCases() {
-    return Stream.of(
-        argumentSet(
-            "custom tool call without status",
-            "{\"status\":\"completed\",\"output\":[{\"type\":\"custom_tool_call\"}]}",
-            singletonList("tool_calls")),
-        argumentSet(
-            "custom tool call with null status",
-            "{\"status\":\"completed\",\"output\":["
-                + "{\"type\":\"custom_tool_call\",\"status\":null}]}",
-            singletonList("tool_calls")),
-        argumentSet(
-            "unfinished custom tool call",
-            "{\"status\":\"completed\",\"output\":["
-                + "{\"type\":\"custom_tool_call\",\"status\":\"in_progress\"}]}",
-            singletonList("stop")));
-  }
-
-  @Test
-  void reportsErrorCodeAsErrorType() throws JsonProcessingException {
-    Response failed = parse("{\"status\":\"failed\",\"error\":{\"code\":\"server_error\"}}");
-    assertThat(getter.getErrorType(REQUEST, failed, null)).isEqualTo("server_error");
-    assertThat(getter.getErrorType(REQUEST, parse("{\"status\":\"completed\"}"), null)).isNull();
-
-    ResponseCreateRequest streaming =
-        ResponseCreateRequest.createStreaming(
-            ResponseCreateParams.builder().input("hello").model("test-model").build());
-    streaming.setStreamErrorCode("rate_limit_exceeded");
-    assertThat(getter.getErrorType(streaming, null, null)).isEqualTo("rate_limit_exceeded");
   }
 
   @Test

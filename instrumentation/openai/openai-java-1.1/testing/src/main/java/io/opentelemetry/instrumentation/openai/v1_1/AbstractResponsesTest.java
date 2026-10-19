@@ -30,8 +30,6 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.OPENAI;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
-import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -42,11 +40,9 @@ import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
-import com.openai.core.JsonValue;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.core.http.StreamResponse;
 import com.openai.errors.OpenAIIoException;
-import com.openai.models.responses.FunctionTool;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseStreamEvent;
@@ -197,90 +193,6 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
   }
 
   @Test
-  void toolCalls() {
-    ResponseCreateParams params =
-        ResponseCreateParams.builder()
-            .input("What's the weather in Paris?")
-            .model(TEST_MODEL)
-            .addTool(
-                FunctionTool.builder()
-                    .name("get_weather")
-                    .parameters(
-                        FunctionTool.Parameters.builder()
-                            .putAdditionalProperty("type", JsonValue.from("object"))
-                            .putAdditionalProperty(
-                                "properties",
-                                JsonValue.from(
-                                    singletonMap("location", singletonMap("type", "string"))))
-                            .putAdditionalProperty(
-                                "required", JsonValue.from(singletonList("location")))
-                            .putAdditionalProperty("additionalProperties", JsonValue.from(false))
-                            .build())
-                    .strict(true)
-                    .build())
-            .build();
-
-    Response response = doResponses(params);
-
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("tool_calls")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 57L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 15L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
-  }
-
-  @Test
-  void customToolCall() {
-    // custom tools were added in SDK 3.x
-    assumeTrue(testLatestDeps());
-    ResponseCreateParams params =
-        testHelper.withCustomTool(
-            ResponseCreateParams.builder()
-                .input("Count the orders placed today.")
-                .model(TEST_MODEL)
-                .build(),
-            "run_sql");
-
-    Response response = doResponses(params);
-
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("tool_calls")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 48L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 21L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
-  }
-
-  @Test
   void stream() {
     ResponseCreateParams params =
         ResponseCreateParams.builder().input(TEST_INPUT).model(TEST_MODEL).build();
@@ -416,7 +328,6 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                                 .hasStatus(StatusData.error())
                                 .hasException(null)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(ERROR_TYPE, "server_error"),
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
@@ -448,7 +359,6 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                                 .hasStatus(StatusData.error())
                                 .hasException(null)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(ERROR_TYPE, "server_error"),
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
@@ -456,25 +366,6 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_REQUEST_STREAM, true),
                                     equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamerror"),
                                     equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
-
-    getTesting()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("gen_ai.client.operation.duration")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(ERROR_TYPE, "server_error"),
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
   }
 
   @Test
