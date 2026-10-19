@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -27,6 +28,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -130,7 +132,11 @@ class JmsCamelTest {
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("process faultQueue"))
         .singleElement()
-        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("_OTHER"));
+        .satisfies(
+            span -> {
+              assertThat(span).hasStatus(StatusData.error());
+              assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("_OTHER");
+            });
     assertSendAndProcessMetrics(testing, "jms", "faultQueue", "_OTHER");
   }
 
