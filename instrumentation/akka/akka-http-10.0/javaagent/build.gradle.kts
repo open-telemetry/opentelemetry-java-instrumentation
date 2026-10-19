@@ -43,16 +43,6 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-extension-api"))
-        val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.11"
-        implementation("com.typesafe.akka:akka-http_$scalaVersion:${baseVersion("10.0.0").orLatest()}")
-        implementation("com.typesafe.akka:akka-stream_$scalaVersion:${baseVersion("2.4.14").orLatest()}")
-      }
-    }
-
     register<JvmTestSuite>("javaRouteTest") {
       dependencies {
         val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
