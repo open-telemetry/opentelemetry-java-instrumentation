@@ -6,9 +6,17 @@
 package io.opentelemetry.instrumentation.openai;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.openai.core.http.AsyncStreamResponse;
+import com.openai.core.http.StreamResponse;
 import com.openai.models.FunctionDefinition;
 import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
 import com.openai.models.chat.completions.ChatCompletionTool;
+import com.openai.models.responses.Response;
+import com.openai.models.responses.ResponseCreateParams;
+import com.openai.models.responses.ResponseStreamEvent;
+import com.openai.services.async.ResponseServiceAsync;
+import com.openai.services.blocking.ResponseService;
+import java.util.concurrent.CompletableFuture;
 
 public interface TestHelper {
 
@@ -21,6 +29,41 @@ public interface TestHelper {
   MessageToolCallBuilder messageToolCallBuilder();
 
   MessageToolCallBuilder.FunctionBuilder messageToolCallFunctionBuilder();
+
+  // The methods below call ResponseService overloads that SDK 2.x added, so they are only
+  // supported when testing latest deps. With explicitOptions, they call the overload that also
+  // takes RequestOptions.
+
+  /** Calls {@code create} with structured-output params and returns the raw response. */
+  Response createStructured(
+      ResponseService service, ResponseCreateParams params, boolean explicitOptions);
+
+  CompletableFuture<Response> createStructured(
+      ResponseServiceAsync service, ResponseCreateParams params, boolean explicitOptions);
+
+  StreamResponse<ResponseStreamEvent> createStructuredStreaming(
+      ResponseService service, ResponseCreateParams params, boolean explicitOptions);
+
+  AsyncStreamResponse<ResponseStreamEvent> createStructuredStreaming(
+      ResponseServiceAsync service, ResponseCreateParams params, boolean explicitOptions);
+
+  /** Calls {@code create()} without params. */
+  Response createWithoutParams(ResponseService service, boolean explicitOptions);
+
+  CompletableFuture<Response> createWithoutParams(
+      ResponseServiceAsync service, boolean explicitOptions);
+
+  /** Calls {@code createStreaming()} without params. */
+  StreamResponse<ResponseStreamEvent> createStreamingWithoutParams(
+      ResponseService service, boolean explicitOptions);
+
+  AsyncStreamResponse<ResponseStreamEvent> createStreamingWithoutParams(
+      ResponseServiceAsync service, boolean explicitOptions);
+
+  /** Returns {@code service.withOptions(...)} with retries disabled. */
+  ResponseService withoutRetries(ResponseService service);
+
+  ResponseServiceAsync withoutRetries(ResponseServiceAsync service);
 
   interface MessageToolCallBuilder {
     @CanIgnoreReturnValue

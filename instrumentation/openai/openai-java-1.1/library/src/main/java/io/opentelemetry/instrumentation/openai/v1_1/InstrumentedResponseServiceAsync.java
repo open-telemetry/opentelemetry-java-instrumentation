@@ -40,21 +40,59 @@ final class InstrumentedResponseServiceAsync
 
     switch (methodName) {
       case "create":
-        if (parameterTypes.length >= 1 && parameterTypes[0] == ResponseCreateParams.class) {
+        if (parameterTypes.length == 0
+            || (parameterTypes.length == 1 && parameterTypes[0] == RequestOptions.class)) {
+          ResponseCreateParams emptyParams = ResponseServiceOverloads.emptyParams();
+          if (emptyParams != null) {
+            return create(
+                emptyParams,
+                parameterTypes.length == 0 ? RequestOptions.none() : (RequestOptions) args[0]);
+          }
+        } else if (parameterTypes[0] == ResponseCreateParams.class) {
           if (parameterTypes.length == 1) {
             return create((ResponseCreateParams) args[0], RequestOptions.none());
           } else if (parameterTypes.length == 2 && parameterTypes[1] == RequestOptions.class) {
             return create((ResponseCreateParams) args[0], (RequestOptions) args[1]);
           }
+        } else if (ResponseServiceOverloads.isStructuredParams(parameterTypes[0])) {
+          if (parameterTypes.length == 1) {
+            return createStructured(args[0], RequestOptions.none());
+          } else if (parameterTypes.length == 2 && parameterTypes[1] == RequestOptions.class) {
+            return createStructured(args[0], (RequestOptions) args[1]);
+          }
         }
         break;
       case "createStreaming":
-        if (parameterTypes.length >= 1 && parameterTypes[0] == ResponseCreateParams.class) {
+        if (parameterTypes.length == 0
+            || (parameterTypes.length == 1 && parameterTypes[0] == RequestOptions.class)) {
+          ResponseCreateParams emptyParams = ResponseServiceOverloads.emptyParams();
+          if (emptyParams != null) {
+            return createStreaming(
+                emptyParams,
+                parameterTypes.length == 0 ? RequestOptions.none() : (RequestOptions) args[0]);
+          }
+        } else if (parameterTypes[0] == ResponseCreateParams.class) {
           if (parameterTypes.length == 1) {
             return createStreaming((ResponseCreateParams) args[0], RequestOptions.none());
           } else if (parameterTypes.length == 2 && parameterTypes[1] == RequestOptions.class) {
             return createStreaming((ResponseCreateParams) args[0], (RequestOptions) args[1]);
           }
+        } else if (ResponseServiceOverloads.isStructuredParams(parameterTypes[0])) {
+          if (parameterTypes.length == 1) {
+            return createStreaming(
+                ResponseServiceOverloads.rawParams(args[0]), RequestOptions.none());
+          } else if (parameterTypes.length == 2 && parameterTypes[1] == RequestOptions.class) {
+            return createStreaming(
+                ResponseServiceOverloads.rawParams(args[0]), (RequestOptions) args[1]);
+          }
+        }
+        break;
+      case "withOptions":
+        // Added in SDK 2.x. The returned service is a new delegate view that must stay
+        // instrumented.
+        if (method.getReturnType() == ResponseServiceAsync.class) {
+          ResponseServiceAsync service = (ResponseServiceAsync) super.invoke(proxy, method, args);
+          return new InstrumentedResponseServiceAsync(service, instrumenter).createProxy();
         }
         break;
       default:
@@ -62,6 +100,22 @@ final class InstrumentedResponseServiceAsync
     }
 
     return super.invoke(proxy, method, args);
+  }
+
+  private CompletableFuture<Object> createStructured(
+      Object structuredParams, RequestOptions requestOptions) throws Throwable {
+    CompletableFuture<Response> future =
+        create(ResponseServiceOverloads.rawParams(structuredParams), requestOptions);
+    return future.thenApply(
+        response -> {
+          try {
+            return ResponseServiceOverloads.toStructuredResponse(structuredParams, response);
+          } catch (RuntimeException | Error e) {
+            throw e;
+          } catch (Throwable t) {
+            throw new IllegalStateException(t);
+          }
+        });
   }
 
   private CompletableFuture<Response> create(
