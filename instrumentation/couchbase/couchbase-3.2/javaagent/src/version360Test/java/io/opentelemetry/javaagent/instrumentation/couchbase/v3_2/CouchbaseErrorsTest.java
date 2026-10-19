@@ -68,7 +68,7 @@ class CouchbaseErrorsTest {
     String connectionString = couchbase.getConnectionString();
     ConnectionString.UnresolvedSocket seed =
         ConnectionString.create(connectionString).hosts().get(0);
-    seedAddress = seed.host();
+    seedAddress = seed.hostname();
     seedPort = seed.port();
     cluster = Cluster.connect(connectionString, couchbase.getUsername(), couchbase.getPassword());
     cleanup.deferAfterAll(cluster::disconnect);
