@@ -22,14 +22,25 @@ abstract class DelegatingInvocationHandler<T> implements InvocationHandler {
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    Object result;
     try {
-      return method.invoke(delegate, args);
+      result = method.invoke(delegate, args);
     } catch (InvocationTargetException e) {
       throw e.getCause();
     }
+    // withOptions(...), added in SDK 2.x, returns a new view of the delegate that has to stay
+    // instrumented
+    Class<T> proxyType = getProxyType();
+    if (method.getName().equals("withOptions") && method.getReturnType() == proxyType) {
+      return wrap(proxyType.cast(result));
+    }
+    return result;
   }
 
   protected abstract Class<T> getProxyType();
+
+  /** Returns a proxy that instruments {@code delegate} the same way this handler does. */
+  protected abstract T wrap(T delegate);
 
   T createProxy() {
     Class<T> proxyType = getProxyType();

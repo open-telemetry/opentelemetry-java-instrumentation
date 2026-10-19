@@ -32,6 +32,11 @@ final class InstrumentedResponseService extends DelegatingInvocationHandler<Resp
   }
 
   @Override
+  protected ResponseService wrap(ResponseService delegate) {
+    return new InstrumentedResponseService(delegate, instrumenter).createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -83,14 +88,6 @@ final class InstrumentedResponseService extends DelegatingInvocationHandler<Resp
             return createStreaming(
                 ResponseServiceOverloads.rawParams(args[0]), (RequestOptions) args[1]);
           }
-        }
-        break;
-      case "withOptions":
-        // Added in SDK 2.x. The returned service is a new delegate view that must stay
-        // instrumented.
-        if (method.getReturnType() == ResponseService.class) {
-          ResponseService service = (ResponseService) super.invoke(proxy, method, args);
-          return new InstrumentedResponseService(service, instrumenter).createProxy();
         }
         break;
       default:

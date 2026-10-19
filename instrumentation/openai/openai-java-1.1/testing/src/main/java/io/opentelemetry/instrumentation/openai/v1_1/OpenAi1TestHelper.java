@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.core.http.StreamResponse;
 import com.openai.models.FunctionDefinition;
@@ -13,8 +15,14 @@ import com.openai.models.chat.completions.ChatCompletionTool;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseStreamEvent;
+import com.openai.services.async.ChatServiceAsync;
+import com.openai.services.async.EmbeddingServiceAsync;
 import com.openai.services.async.ResponseServiceAsync;
+import com.openai.services.async.chat.ChatCompletionServiceAsync;
+import com.openai.services.blocking.ChatService;
+import com.openai.services.blocking.EmbeddingService;
 import com.openai.services.blocking.ResponseService;
+import com.openai.services.blocking.chat.ChatCompletionService;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.openai.TestHelper.MessageToolCallBuilder.FunctionBuilder;
 import java.util.concurrent.CompletableFuture;
@@ -126,6 +134,46 @@ class OpenAi1TestHelper implements TestHelper {
   @Override
   public AsyncStreamResponse<ResponseStreamEvent> createStreamingWithoutParams(
       ResponseServiceAsync service, boolean explicitOptions) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public OpenAIClient withoutRetries(OpenAIClient client) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public OpenAIClientAsync withoutRetries(OpenAIClientAsync client) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ChatService withoutRetries(ChatService service) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ChatServiceAsync withoutRetries(ChatServiceAsync service) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ChatCompletionService withoutRetries(ChatCompletionService service) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ChatCompletionServiceAsync withoutRetries(ChatCompletionServiceAsync service) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public EmbeddingService withoutRetries(EmbeddingService service) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public EmbeddingServiceAsync withoutRetries(EmbeddingServiceAsync service) {
     throw new UnsupportedOperationException();
   }
 

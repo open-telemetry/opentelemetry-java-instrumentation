@@ -8,12 +8,15 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.openai.v3_0.OpenAi3TestHelper;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -22,7 +25,9 @@ import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedClass;
@@ -123,6 +128,33 @@ abstract class AbstractOpenAiTest {
    */
   protected List<Consumer<LogRecordDataAssert>> transportExceptionLogs() {
     return emptyList();
+  }
+
+  /**
+   * Runs {@code sync} or {@code async} against the client the current {@link TestType} uses. The
+   * async result must complete outside the client span's context.
+   */
+  protected <T> T call(
+      Function<OpenAIClient, T> sync, Function<OpenAIClientAsync, CompletableFuture<T>> async) {
+    switch (testType) {
+      case SYNC:
+        return sync.apply(getClient());
+      case SYNC_FROM_ASYNC:
+        return sync.apply(getClientAsync().sync());
+      case ASYNC:
+      case ASYNC_FROM_SYNC:
+        OpenAIClientAsync client =
+            testType == TestType.ASYNC ? getClientAsync() : getClient().async();
+        return async
+            .apply(client)
+            .thenApply(
+                res -> {
+                  assertThat(Span.fromContextOrNull(Context.current())).isNull();
+                  return res;
+                })
+            .join();
+    }
+    throw new AssertionError();
   }
 
   @Parameter protected TestType testType;

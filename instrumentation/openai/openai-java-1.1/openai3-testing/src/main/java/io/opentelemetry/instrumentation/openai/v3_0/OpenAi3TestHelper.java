@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.openai.v3_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.core.RequestOptions;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.core.http.StreamResponse;
@@ -20,8 +22,14 @@ import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseStreamEvent;
 import com.openai.models.responses.StructuredResponse;
 import com.openai.models.responses.StructuredResponseCreateParams;
+import com.openai.services.async.ChatServiceAsync;
+import com.openai.services.async.EmbeddingServiceAsync;
 import com.openai.services.async.ResponseServiceAsync;
+import com.openai.services.async.chat.ChatCompletionServiceAsync;
+import com.openai.services.blocking.ChatService;
+import com.openai.services.blocking.EmbeddingService;
 import com.openai.services.blocking.ResponseService;
+import com.openai.services.blocking.chat.ChatCompletionService;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.openai.TestHelper.MessageToolCallBuilder.FunctionBuilder;
 import java.util.concurrent.CompletableFuture;
@@ -151,6 +159,46 @@ public class OpenAi3TestHelper implements TestHelper {
     return explicitOptions
         ? service.createStreaming(RequestOptions.none())
         : service.createStreaming();
+  }
+
+  @Override
+  public OpenAIClient withoutRetries(OpenAIClient client) {
+    return client.withOptions(options -> options.maxRetries(0));
+  }
+
+  @Override
+  public OpenAIClientAsync withoutRetries(OpenAIClientAsync client) {
+    return client.withOptions(options -> options.maxRetries(0));
+  }
+
+  @Override
+  public ChatService withoutRetries(ChatService service) {
+    return service.withOptions(options -> options.maxRetries(0));
+  }
+
+  @Override
+  public ChatServiceAsync withoutRetries(ChatServiceAsync service) {
+    return service.withOptions(options -> options.maxRetries(0));
+  }
+
+  @Override
+  public ChatCompletionService withoutRetries(ChatCompletionService service) {
+    return service.withOptions(options -> options.maxRetries(0));
+  }
+
+  @Override
+  public ChatCompletionServiceAsync withoutRetries(ChatCompletionServiceAsync service) {
+    return service.withOptions(options -> options.maxRetries(0));
+  }
+
+  @Override
+  public EmbeddingService withoutRetries(EmbeddingService service) {
+    return service.withOptions(options -> options.maxRetries(0));
+  }
+
+  @Override
+  public EmbeddingServiceAsync withoutRetries(EmbeddingServiceAsync service) {
+    return service.withOptions(options -> options.maxRetries(0));
   }
 
   @Override

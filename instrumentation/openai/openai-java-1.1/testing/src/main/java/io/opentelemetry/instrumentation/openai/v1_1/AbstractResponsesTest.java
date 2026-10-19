@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -537,20 +538,20 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
   }
 
-  @Test
-  void withOptions() {
-    // ResponseService.withOptions was added in SDK 2.x
+  @ParameterizedTest
+  @MethodSource("withOptionsCases")
+  void withOptions(
+      Function<OpenAIClient, ResponseService> sync,
+      Function<OpenAIClientAsync, ResponseServiceAsync> async) {
+    // withOptions was added in SDK 2.x
     assumeTrue(testLatestDeps());
     ResponseCreateParams params =
         ResponseCreateParams.builder().input(TEST_INPUT).model(TEST_MODEL).build();
 
     Response response =
-        doResponses(
-            (service, p) -> testHelper.withoutRetries(service).create(p),
-            (service, p) -> testHelper.withoutRetries(service).create(p),
-            params,
-            getClient(),
-            getClientAsync());
+        call(
+            client -> sync.apply(client).create(params),
+            client -> async.apply(client).create(params));
 
     getTesting()
         .waitAndAssertTraces(
@@ -559,8 +560,35 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                     maybeWithTransportSpan(
                         span ->
                             assertResponsesSpan(span)
-                                .hasAttributesSatisfying(
-                                    equalTo(GEN_AI_RESPONSE_ID, response.id())))));
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                                    satisfies(
+                                        GEN_AI_RESPONSE_FINISH_REASONS,
+                                        val -> val.containsExactly("stop")),
+                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
+                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
+                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
+  }
+
+  private static Stream<Arguments> withOptionsCases() {
+    return Stream.of(
+        argumentSet(
+            "client",
+            (Function<OpenAIClient, ResponseService>)
+                client -> testHelper.withoutRetries(client).responses(),
+            (Function<OpenAIClientAsync, ResponseServiceAsync>)
+                client -> testHelper.withoutRetries(client).responses()),
+        argumentSet(
+            "response service",
+            (Function<OpenAIClient, ResponseService>)
+                client -> testHelper.withoutRetries(client.responses()),
+            (Function<OpenAIClientAsync, ResponseServiceAsync>)
+                client -> testHelper.withoutRetries(client.responses())));
   }
 
   @ParameterizedTest

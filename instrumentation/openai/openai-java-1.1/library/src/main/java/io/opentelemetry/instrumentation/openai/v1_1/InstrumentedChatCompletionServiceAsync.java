@@ -42,6 +42,13 @@ final class InstrumentedChatCompletionServiceAsync
   }
 
   @Override
+  protected ChatCompletionServiceAsync wrap(ChatCompletionServiceAsync delegate) {
+    return new InstrumentedChatCompletionServiceAsync(
+            delegate, instrumenter, eventLogger, captureMessageContent)
+        .createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();

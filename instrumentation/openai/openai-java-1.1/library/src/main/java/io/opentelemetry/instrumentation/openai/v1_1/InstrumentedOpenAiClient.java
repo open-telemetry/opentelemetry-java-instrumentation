@@ -43,6 +43,18 @@ final class InstrumentedOpenAiClient extends DelegatingInvocationHandler<OpenAIC
   }
 
   @Override
+  protected OpenAIClient wrap(OpenAIClient delegate) {
+    return new InstrumentedOpenAiClient(
+            delegate,
+            chatInstrumenter,
+            embeddingInstrumenter,
+            responsesInstrumenter,
+            eventLogger,
+            captureMessageContent)
+        .createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();

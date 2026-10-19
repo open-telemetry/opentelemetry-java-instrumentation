@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.openai;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.core.http.StreamResponse;
 import com.openai.models.FunctionDefinition;
@@ -14,8 +16,14 @@ import com.openai.models.chat.completions.ChatCompletionTool;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseStreamEvent;
+import com.openai.services.async.ChatServiceAsync;
+import com.openai.services.async.EmbeddingServiceAsync;
 import com.openai.services.async.ResponseServiceAsync;
+import com.openai.services.async.chat.ChatCompletionServiceAsync;
+import com.openai.services.blocking.ChatService;
+import com.openai.services.blocking.EmbeddingService;
 import com.openai.services.blocking.ResponseService;
+import com.openai.services.blocking.chat.ChatCompletionService;
 import java.util.concurrent.CompletableFuture;
 
 public interface TestHelper {
@@ -60,7 +68,24 @@ public interface TestHelper {
   AsyncStreamResponse<ResponseStreamEvent> createStreamingWithoutParams(
       ResponseServiceAsync service, boolean explicitOptions);
 
-  /** Returns {@code service.withOptions(...)} with retries disabled. */
+  // The withoutRetries methods return {@code withOptions(...)} with retries disabled.
+
+  OpenAIClient withoutRetries(OpenAIClient client);
+
+  OpenAIClientAsync withoutRetries(OpenAIClientAsync client);
+
+  ChatService withoutRetries(ChatService service);
+
+  ChatServiceAsync withoutRetries(ChatServiceAsync service);
+
+  ChatCompletionService withoutRetries(ChatCompletionService service);
+
+  ChatCompletionServiceAsync withoutRetries(ChatCompletionServiceAsync service);
+
+  EmbeddingService withoutRetries(EmbeddingService service);
+
+  EmbeddingServiceAsync withoutRetries(EmbeddingServiceAsync service);
+
   ResponseService withoutRetries(ResponseService service);
 
   ResponseServiceAsync withoutRetries(ResponseServiceAsync service);
