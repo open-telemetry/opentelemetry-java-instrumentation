@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.api.trace.StatusCode.ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
@@ -24,6 +27,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -34,8 +41,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import javax.jms.CompletionListener;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -44,6 +53,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TemporaryQueue;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 import org.assertj.core.api.AbstractAssert;
@@ -70,6 +80,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class Jms2InstrumentationTest {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";
+  private static final ContextKey<String> ASYNC_SEND_CONTEXT_KEY =
+      ContextKey.named("jms-async-send-test");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -124,6 +138,119 @@ class Jms2InstrumentationTest {
     cleanup.deferAfterAll(connectionFactory::close);
     cleanup.deferAfterAll(connection);
     cleanup.deferAfterAll(session);
+  }
+
+  @Test
+  void asyncSendSuccessRestoresCallerContext() throws Exception {
+    TemporaryQueue destination = session.createTemporaryQueue();
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer);
+    CountDownLatch completed = new CountDownLatch(1);
+    AtomicReference<String> callbackContext = new AtomicReference<>();
+    CompletionListener listener =
+        new CompletionListener() {
+          @Override
+          public void onCompletion(Message message) {
+            callbackContext.set(Context.current().get(ASYNC_SEND_CONTEXT_KEY));
+            completed.countDown();
+          }
+
+          @Override
+          public void onException(Message message, Exception exception) {
+            throw new AssertionError(exception);
+          }
+        };
+
+    Context original = Context.current();
+    Context callerContext = original.with(ASYNC_SEND_CONTEXT_KEY, "caller");
+    try (Scope ignored = callerContext.makeCurrent()) {
+      producer.send(session.createTextMessage("async message"), listener);
+      assertThat(Context.current().get(ASYNC_SEND_CONTEXT_KEY)).isEqualTo("caller");
+    }
+    assertThat(Context.current()).isSameAs(original);
+    assertThat(completed.await(10, SECONDS)).isTrue();
+    assertThat(callbackContext.get()).isEqualTo("caller");
+    String destinationName = destination.getQueueName();
+    destination.delete();
+    assertSendTelemetry(null, destinationName, "send");
+  }
+
+  @Test
+  void asyncSendImmediateFailureIsRecorded() throws Exception {
+    MessageProducer producer = session.createProducer(session.createQueue("someQueue"));
+    cleanup.deferCleanup(producer);
+    producer.close();
+    CompletionListener listener =
+        new CompletionListener() {
+          @Override
+          public void onCompletion(Message message) {
+            throw new AssertionError();
+          }
+
+          @Override
+          public void onException(Message message, Exception exception) {
+            throw new AssertionError(exception);
+          }
+        };
+
+    Exception sendFailure = null;
+    try {
+      producer.send(session.createMessage(), listener);
+    } catch (JMSException exception) {
+      sendFailure = exception;
+    }
+    assertThat(sendFailure).isInstanceOf(JMSException.class);
+    assertSendTelemetry(sendFailure, null, "send");
+  }
+
+  private static void assertSendTelemetry(
+      Exception failure, String destinationName, String spanName) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  span.hasName(spanName)
+                      .hasKind(PRODUCER)
+                      .hasNoParent()
+                      .hasAttributesSatisfying(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          equalTo(
+                              ERROR_TYPE, failure == null ? null : failure.getClass().getName()));
+                  if (failure != null) {
+                    span.hasStatusSatisfying(status -> status.hasCode(ERROR));
+                  }
+                }));
+
+    Attributes metricAttributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "jms")
+            .put(MESSAGING_OPERATION_NAME, "send")
+            .put(MESSAGING_OPERATION_TYPE, "send")
+            .put(ERROR_TYPE, failure == null ? null : failure.getClass().getName())
+            .build();
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(
+                    metric ->
+                        assertThat(metric.getHistogramData().getPoints())
+                            .singleElement()
+                            .satisfies(
+                                point ->
+                                    assertThat(point.getAttributes())
+                                        .isEqualTo(metricAttributes))));
+    assertCounter(
+        testing,
+        INSTRUMENTATION_NAME,
+        "messaging.client.sent.messages",
+        1,
+        metricAttributes.toBuilder().remove(MESSAGING_OPERATION_TYPE).build());
   }
 
   @Test
