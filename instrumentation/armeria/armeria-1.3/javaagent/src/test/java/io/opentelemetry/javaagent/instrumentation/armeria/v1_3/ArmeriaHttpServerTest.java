@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import java.lang.reflect.Method;
 import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -34,6 +35,9 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   private static final ServerEndpoint WRAPPED_RESPONSE_EXCEPTION =
       new ServerEndpoint(
           "WRAPPED_RESPONSE_EXCEPTION", "wrapped-response-exception", 500, "", false);
+
+  private static final Method RESPONSE_EXCEPTION_WITH_CAUSE_FACTORY =
+      findResponseExceptionWithCauseFactory();
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -80,9 +84,9 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   @Test
   void responseExceptionWithCauseIsReported() {
     boolean usesHttp2 = getClass() == ArmeriaHttp2ServerTest.class;
-    boolean usesOlderArmeria = !testLatestDeps();
-    // HTTP/2 gets errors from Armeria's request log, which older versions omit the cause from.
-    boolean causeIsDropped = usesHttp2 && usesOlderArmeria;
+    // HTTP/2 reads Armeria's request log; versions before 1.10 omit attached causes.
+    // Detect the runtime API because testArmeria19 stays pinned in latest-dependency runs.
+    boolean causeIsDropped = usesHttp2 && RESPONSE_EXCEPTION_WITH_CAUSE_FACTORY == null;
     AggregatedHttpResponse response =
         client.execute(request(RESPONSE_EXCEPTION_WITH_CAUSE, "GET")).aggregate().join();
 
@@ -118,19 +122,26 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
 
   private static HttpResponseException responseExceptionWithCause() {
     IllegalStateException cause = new IllegalStateException("response processing failure");
-    try {
-      // HttpResponseException.of(HttpResponse, Throwable) is available in Armeria 1.10.0+.
-      return (HttpResponseException)
-          HttpResponseException.class
-              .getMethod("of", HttpResponse.class, Throwable.class)
-              .invoke(null, HttpResponse.of(HttpStatus.OK), cause);
-    } catch (NoSuchMethodException e) {
+    if (RESPONSE_EXCEPTION_WITH_CAUSE_FACTORY == null) {
       // Before Armeria 1.10.0, attach the cause with initCause().
       HttpResponseException response = HttpResponseException.of(HttpResponse.of(HttpStatus.OK));
       response.initCause(cause);
       return response;
+    }
+    try {
+      return (HttpResponseException)
+          RESPONSE_EXCEPTION_WITH_CAUSE_FACTORY.invoke(null, HttpResponse.of(HttpStatus.OK), cause);
     } catch (ReflectiveOperationException e) {
       throw new LinkageError(e.getMessage(), e);
+    }
+  }
+
+  private static Method findResponseExceptionWithCauseFactory() {
+    try {
+      // HttpResponseException.of(HttpResponse, Throwable) is available in Armeria 1.10.0+.
+      return HttpResponseException.class.getMethod("of", HttpResponse.class, Throwable.class);
+    } catch (NoSuchMethodException ignored) {
+      return null;
     }
   }
 
