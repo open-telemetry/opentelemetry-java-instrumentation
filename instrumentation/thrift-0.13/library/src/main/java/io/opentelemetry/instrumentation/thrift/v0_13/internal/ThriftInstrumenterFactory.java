@@ -59,6 +59,8 @@ public final class ThriftInstrumenterFactory {
 
     SpanNameExtractor<ThriftRequest> originalSpanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
+    // Initialize before customization: a user-provided wrapper may hide the RPC extractor
+    // from InstrumenterBuilder's automatic initialization.
     ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> clientSpanNameExtractor =
         clientSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
@@ -92,6 +94,8 @@ public final class ThriftInstrumenterFactory {
       List<AttributesExtractor<ThriftRequest, ThriftResponse>> additionalServerExtractors) {
     SpanNameExtractor<ThriftRequest> originalSpanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
+    // Initialize before customization: a user-provided wrapper may hide the RPC extractor
+    // from InstrumenterBuilder's automatic initialization.
     ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> serverSpanNameExtractor =
         serverSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);

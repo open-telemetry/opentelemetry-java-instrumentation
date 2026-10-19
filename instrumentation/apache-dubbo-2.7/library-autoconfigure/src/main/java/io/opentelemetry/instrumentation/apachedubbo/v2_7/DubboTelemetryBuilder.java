@@ -87,6 +87,8 @@ public final class DubboTelemetryBuilder {
     DubboRpcAttributesGetter rpcAttributesGetter = new DubboRpcAttributesGetter();
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
+    // Initialize before customization: a user-provided wrapper may hide the RPC extractor
+    // from InstrumenterBuilder's automatic initialization.
     ((OpenTelemetryConfigurable) spanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<DubboRequest> clientSpanNameExtractor =
         clientSpanNameExtractorCustomizer.apply(spanNameExtractor);
