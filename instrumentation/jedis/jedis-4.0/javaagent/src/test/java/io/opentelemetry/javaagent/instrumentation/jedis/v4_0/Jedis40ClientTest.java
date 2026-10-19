@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -32,6 +33,7 @@ import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -52,6 +54,7 @@ import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisDataException;
@@ -501,40 +504,70 @@ class Jedis40ClientTest {
 
   @ParameterizedTest
   @CsvSource({
-    "sync, 1, true",
-    "sync, 2, true",
-    "syncAndReturnAll, 1, true",
-    "syncAndReturnAll, 2, true",
-    "exec, 1, true",
-    "exec, 2, true",
-    "sync, 2, false",
-    "syncAndReturnAll, 2, false",
-    "exec, 2, false"
+    "sync, 1, 1",
+    "sync, 2, 2",
+    "syncAndReturnAll, 1, 1",
+    "syncAndReturnAll, 2, 2",
+    "exec, 1, 1",
+    "exec, 2, 2",
+    "sync, 2, 0",
+    "syncAndReturnAll, 2, 0",
+    "exec, 2, 0",
+    "sync, 2, 1",
+    "syncAndReturnAll, 2, 1",
+    "exec, 2, 1",
+    "execWatch, 2, 2"
   })
-  void aggregateErrors(String terminal, int count, boolean failed) {
+  void aggregateErrors(String terminal, int count, int failedCount) {
     jedis.set("aggregate", "value");
+    boolean watchAborted = terminal.endsWith("Watch");
+    if (watchAborted) {
+      jedis.watch("aggregate");
+      try (Jedis other = new Jedis(host, port)) {
+        other.set("aggregate", "changed");
+      }
+    }
     testing.clearData();
-    String key = failed ? "aggregate" : "missing";
-    if (terminal.equals("exec")) {
+    boolean failed = failedCount == count && !watchAborted;
+    boolean transactionTerminal = terminal.startsWith("exec");
+    List<Response<?>> responses = new ArrayList<>();
+    if (transactionTerminal) {
       Transaction transaction = jedis.multi();
       for (int i = 0; i < count; i++) {
-        transaction.llen(key);
+        responses.add(transaction.llen(i < failedCount ? "aggregate" : "missing"));
       }
-      assertAggregateReplies(transaction.exec(), failed, count);
+      List<Object> replies = transaction.exec();
+      if (watchAborted) {
+        assertThat(replies).isNull();
+      } else {
+        assertAggregateReplies(replies, failedCount, count);
+      }
     } else {
       Pipeline pipeline = jedis.pipelined();
       for (int i = 0; i < count; i++) {
-        pipeline.llen(key);
+        responses.add(pipeline.llen(i < failedCount ? "aggregate" : "missing"));
       }
       if (terminal.equals("sync")) {
         pipeline.sync();
       } else {
-        assertAggregateReplies(pipeline.syncAndReturnAll(), failed, count);
+        assertAggregateReplies(pipeline.syncAndReturnAll(), failedCount, count);
       }
     }
-    String operation =
-        count == 1 ? "LLEN" : (terminal.equals("exec") ? "MULTI" : "PIPELINE") + " LLEN";
-    String query = "LLEN " + key + (count == 1 ? "" : "; LLEN " + key);
+    if (!watchAborted) {
+      assertThat(responses.subList(0, failedCount))
+          .allSatisfy(
+              response ->
+                  assertThatThrownBy(response::get)
+                      .isInstanceOf(JedisDataException.class)
+                      .hasMessageStartingWith("WRONGTYPE"));
+      assertThat(responses.subList(failedCount, count))
+          .allSatisfy(response -> assertThat(response.get()).isEqualTo(0L));
+    }
+    String operation = count == 1 ? "LLEN" : (transactionTerminal ? "MULTI" : "PIPELINE") + " LLEN";
+    String query =
+        "LLEN "
+            + (failedCount > 0 ? "aggregate" : "missing")
+            + (count == 1 ? "" : "; LLEN " + (failedCount == count ? "aggregate" : "missing"));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -576,14 +609,12 @@ class Jedis40ClientTest {
                                         equalTo(ERROR_TYPE, failed ? "WRONGTYPE" : null)))));
   }
 
-  private static void assertAggregateReplies(List<Object> replies, boolean failed, int count) {
+  private static void assertAggregateReplies(List<Object> replies, int failedCount, int count) {
     assertThat(replies).hasSize(count);
-    if (failed) {
-      assertThat(replies)
-          .allSatisfy(reply -> assertThat(reply).isInstanceOf(JedisDataException.class));
-    } else {
-      assertThat(replies).containsOnly(0L);
-    }
+    assertThat(replies.subList(0, failedCount))
+        .allSatisfy(reply -> assertThat(reply).isInstanceOf(JedisDataException.class));
+    assertThat(replies.subList(failedCount, count))
+        .allSatisfy(reply -> assertThat(reply).isEqualTo(0L));
   }
 
   @ParameterizedTest

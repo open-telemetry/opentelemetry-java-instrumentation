@@ -12,6 +12,7 @@ import io.opentelemetry.context.ContextKey;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.influxdb.dto.QueryResult;
+import retrofit2.Call;
 import retrofit2.Response;
 
 public final class InfluxDbQueryState {
@@ -21,6 +22,7 @@ public final class InfluxDbQueryState {
   private final InfluxDbQuery request;
   private final Context context;
   private final AtomicBoolean ended = new AtomicBoolean();
+  @Nullable private Call<?> call;
   @Nullable private volatile String errorType;
 
   public InfluxDbQueryState(Context parentContext, InfluxDbQuery request) {
@@ -32,8 +34,13 @@ public final class InfluxDbQueryState {
     return context;
   }
 
+  public void setCall(Call<?> call) {
+    this.call = call;
+  }
+
   public void observe(@Nullable QueryResult result) {
-    if (InfluxDbResponse.hasError(result)) {
+    // Canceling a blocked chunk read produces a synthetic error result, not a query failure.
+    if ((call == null || !call.isCanceled()) && InfluxDbResponse.hasError(result)) {
       errorType = "_OTHER";
     }
   }
@@ -51,6 +58,7 @@ public final class InfluxDbQueryState {
 
   public void end(@Nullable Throwable error) {
     if (ended.compareAndSet(false, true)) {
+      call = null;
       queryInstrumenter().end(context, request, new InfluxDbResponse(errorType), error);
     }
   }

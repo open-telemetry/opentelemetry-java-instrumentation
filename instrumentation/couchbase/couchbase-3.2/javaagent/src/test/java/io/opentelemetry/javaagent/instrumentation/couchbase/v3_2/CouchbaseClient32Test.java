@@ -25,7 +25,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyMap;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -33,7 +32,6 @@ import static org.mockito.Mockito.mock;
 import com.couchbase.client.core.CoreProtostellar;
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.error.DocumentNotFoundException;
-import com.couchbase.client.core.error.ValueTooLargeException;
 import com.couchbase.client.core.protostellar.ProtostellarRequest;
 import com.couchbase.client.core.retry.RetryStrategy;
 import com.couchbase.client.core.service.ServiceType;
@@ -41,9 +39,7 @@ import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
-import com.couchbase.client.java.codec.RawBinaryTranscoder;
 import com.couchbase.client.java.json.JsonObject;
-import com.couchbase.client.java.kv.UpsertOptions;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -55,14 +51,12 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletionException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -195,102 +189,6 @@ class CouchbaseClient32Test {
                 });
           }
         });
-  }
-
-  @Test
-  void oversizedUpsertReportsTerminalErrorType() {
-    assumeTrue(testLatestDeps());
-
-    byte[] content = new byte[21 * 1024 * 1024];
-    assertThatThrownBy(
-            () ->
-                collection.upsert(
-                    "too-big",
-                    content,
-                    UpsertOptions.upsertOptions().transcoder(RawBinaryTranscoder.INSTANCE)))
-        .isInstanceOf(ValueTooLargeException.class);
-
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertOperationSpan(
-                      span,
-                      "upsert",
-                      "too-big",
-                      StatusData.error(),
-                      ValueTooLargeException.class.getName());
-                  span.hasNoParent();
-                },
-                span ->
-                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertOperationSpan(
-                      span,
-                      "upsert",
-                      "too-big",
-                      StatusData.error(),
-                      ValueTooLargeException.class.getName());
-                  span.hasNoParent();
-                });
-          }
-        });
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = RequestSpan.StatusCode.class,
-      names = {"UNSET", "OK"})
-  void recoveredExceptionDoesNotReportErrorType(RequestSpan.StatusCode status) {
-    assumeTrue(testLatestDeps());
-
-    RequestSpan span = cluster.environment().requestTracer().requestSpan("upsert", null);
-    span.attribute("db.system", "couchbase");
-    span.recordException(new IllegalStateException("recovered"));
-    span.status(status);
-    span.end();
-
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                operation ->
-                    operation
-                        .hasKind(CLIENT)
-                        .hasStatus(
-                            status == RequestSpan.StatusCode.OK
-                                ? StatusData.ok()
-                                : StatusData.unset())
-                        .hasAttributesSatisfyingExactly(equalTo(DB_SYSTEM_NAME, "couchbase"))));
-  }
-
-  @Test
-  void terminalFailureReplacesIntermediateException() {
-    assumeTrue(testLatestDeps());
-
-    RequestSpan span = cluster.environment().requestTracer().requestSpan("upsert", null);
-    span.attribute("db.system", "couchbase");
-    span.recordException(new IllegalStateException("intermediate"));
-    span.recordException(new CompletionException(new IllegalArgumentException("terminal")));
-    span.status(RequestSpan.StatusCode.ERROR);
-    span.end();
-
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                operation ->
-                    operation
-                        .hasKind(CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "couchbase"),
-                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()))));
   }
 
   @ParameterizedTest

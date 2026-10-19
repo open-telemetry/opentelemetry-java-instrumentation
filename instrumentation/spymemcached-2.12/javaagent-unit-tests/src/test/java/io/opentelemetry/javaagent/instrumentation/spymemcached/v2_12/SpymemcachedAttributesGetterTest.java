@@ -75,6 +75,19 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
+  void terminalFailureDoesNotReadStatus() {
+    OperationFuture<?> future = mock(OperationFuture.class);
+
+    assertThat(
+            getter.getErrorType(
+                request(singletonList(node("one.example", 11211))),
+                future,
+                new IllegalStateException("connection closed")))
+        .isNull();
+    verify(future, never()).getStatus();
+  }
+
+  @Test
   void singleDefaultPortIsOmitted() {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
     request.setHandlingNode(memcachedNode("selected.example", 11212));

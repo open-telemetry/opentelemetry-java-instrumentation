@@ -5,15 +5,6 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -21,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoTimeoutException;
-import com.mongodb.MongoWriteException;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -30,7 +20,6 @@ import com.mongodb.client.result.UpdateResult;
 import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -38,8 +27,6 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractMongo31ClientTest
     extends AbstractMongoClientTest<MongoCollection<Document>> {
@@ -219,67 +206,31 @@ public abstract class AbstractMongo31ClientTest
     collection.updateOne(new BsonDocument(), new BsonDocument());
   }
 
-  @Test
-  void schemaValidationFailure() {
-    String collectionName = createCollectionName();
-    MongoDatabase db = client.getDatabase("test_db");
+  @Override
+  protected MongoCollection<Document> setupValidatedCollection(
+      String dbName, String collectionName) {
+    MongoDatabase db = client.getDatabase(dbName);
     db.runCommand(
         new Document("create", collectionName)
             .append("validator", new Document("required", new Document("$exists", true))));
-    ignoreTracesAndClear(1);
-
-    assertThatExceptionOfType(MongoWriteException.class)
-        .isThrownBy(
-            () -> db.getCollection(collectionName).insertOne(new Document("password", "SECRET")))
-        .satisfies(error -> assertThat(error.getError().getCode()).isEqualTo(121));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("insert " + collectionName)
-                            .hasStatus(StatusData.error())
-                            .hasEventsSatisfyingExactly()
-                            .hasAttributesSatisfying(
-                                equalTo(DB_SYSTEM_NAME, "mongodb"),
-                                equalTo(DB_NAMESPACE, "test_db"),
-                                equalTo(DB_OPERATION_NAME, "insert"),
-                                equalTo(ERROR_TYPE, "121"))));
-    assertDurationMetric(
-        testing(),
-        "io.opentelemetry.mongo-3.1",
-        DB_SYSTEM_NAME,
-        DB_NAMESPACE,
-        DB_COLLECTION_NAME,
-        DB_OPERATION_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT,
-        ERROR_TYPE);
+    return db.getCollection(collectionName);
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"update", "delete"})
-  void zeroMatchesAreSuccessful(String operation) {
-    MongoCollection<Document> collection = setupInsert("test_db", createCollectionName());
+  @Override
+  protected void insertInvalid(MongoCollection<Document> collection) {
+    collection.insertOne(new Document("password", "SECRET"));
+  }
+
+  @Override
+  protected long writeWithZeroMatches(MongoCollection<Document> collection, String operation) {
     if (operation.equals("update")) {
-      assertThat(
-              collection
-                  .updateOne(
-                      new Document("missing", true),
-                      new Document("$set", new Document("password", "SECRET")))
-                  .getMatchedCount())
-          .isZero();
-    } else {
-      assertThat(collection.deleteOne(new Document("missing", true)).getDeletedCount()).isZero();
+      return collection
+          .updateOne(
+              new Document("missing", true),
+              new Document("$set", new Document("password", "SECRET")))
+          .getMatchedCount();
     }
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasStatus(StatusData.unset())
-                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, null))));
+    return collection.deleteOne(new Document("missing", true)).getDeletedCount();
   }
 
   @Test

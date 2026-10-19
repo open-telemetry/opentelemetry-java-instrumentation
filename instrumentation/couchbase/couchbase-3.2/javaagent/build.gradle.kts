@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -73,6 +75,19 @@ testing {
       }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.4")
+      }
+    }
+
+    register<JvmTestSuite>("version360Test") {
+      dependencies {
+        // RequestSpan.recordException is unavailable in the baseline SDK 3.2.
+        implementation("com.couchbase.client:java-client:3.6.0")
+        implementation("org.testcontainers:testcontainers-couchbase")
+      }
+      executions {
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
+        }
       }
     }
   }

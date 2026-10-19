@@ -14,23 +14,24 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
-import static java.util.Collections.singletonMap;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.anyString;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -70,6 +71,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
 class DynamoDbErrorsTest {
   @RegisterExtension
@@ -119,7 +121,7 @@ class DynamoDbErrorsTest {
               MediaType.JSON_UTF_8,
               missingItem
                   ? "{}"
-                  : "{\"__type\":\"com.amazonaws.dynamodb.v20120810#ConditionalCheckFailedException\",\"message\":\"private value\"}"));
+                  : "{\"__type\":\"com.amazonaws.dynamodb.v20120810#ResourceNotFoundException\",\"message\":\"Requested resource not found\"}"));
       try (DynamoDbClient client =
           DynamoDbClient.builder()
               .endpointOverride(server.httpUri())
@@ -142,16 +144,18 @@ class DynamoDbErrorsTest {
         if (missingItem) {
           assertThat(client.getItem(request).item()).isEmpty();
         } else {
-          assertThatThrownBy(() -> client.getItem(request)).isInstanceOf(DynamoDbException.class);
+          assertThatThrownBy(() -> client.getItem(request))
+              .isInstanceOf(ResourceNotFoundException.class);
         }
       }
-      String errorType = missingItem ? null : "ConditionalCheckFailedException";
+      String errorType = missingItem ? null : "ResourceNotFoundException";
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
                       span.hasName("DynamoDb.GetItem")
                           .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
                           .hasStatus(missingItem ? StatusData.unset() : StatusData.error())
                           .hasAttributesSatisfyingExactly(
                               equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
@@ -165,22 +169,24 @@ class DynamoDbErrorsTest {
                               equalTo(URL_FULL, server.httpUri() + "/"),
                               equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("items")),
                               equalTo(AWS_REQUEST_ID, missingItem ? "UNKNOWN" : null),
-                              equalTo(stringKey("rpc.system"), emitOldRpcSemconv() ? "aws-api" : null),
-                              equalTo(stringKey("rpc.service"), emitOldRpcSemconv() ? "DynamoDb" : null),
-                              equalTo(stringKey("rpc.method"), emitPreviewRpcSemconv() ? null : "GetItem"),
-                              equalTo(stringKey("rpc.system.name"), emitPreviewRpcSemconv() ? "aws-api" : null))));
+                              equalTo(
+                                  stringKey("rpc.system"), emitOldRpcSemconv() ? "aws-api" : null),
+                              equalTo(
+                                  stringKey("rpc.service"),
+                                  emitOldRpcSemconv() ? "DynamoDb" : null),
+                              equalTo(
+                                  stringKey("rpc.method"),
+                                  emitPreviewRpcSemconv() ? null : "GetItem"),
+                              equalTo(
+                                  stringKey("rpc.system.name"),
+                                  emitPreviewRpcSemconv() ? "aws-api" : null))));
       assertDurationMetric(
           testing,
           "io.opentelemetry.aws-sdk-2.2",
           missingItem
-              ? new AttributeKey<?>[] {
-                DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME
-              }
+              ? new AttributeKey<?>[] {DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME}
               : new AttributeKey<?>[] {
-                DB_SYSTEM_NAME,
-                DB_COLLECTION_NAME,
-                DB_OPERATION_NAME,
-                ERROR_TYPE
+                DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME, ERROR_TYPE
               });
       testing.waitAndAssertMetrics(
           "io.opentelemetry.aws-sdk-2.2",
@@ -195,8 +201,15 @@ class DynamoDbErrorsTest {
                               .satisfies(
                                   point -> {
                                     assertThat(point.getCount()).isEqualTo(1);
-                                    assertThat(point.getAttributes().get(ERROR_TYPE))
-                                        .isEqualTo(errorType);
+                                    assertThat(point.getAttributes().asMap())
+                                        .isEqualTo(
+                                            Attributes.builder()
+                                                .put(DB_SYSTEM_NAME, "aws.dynamodb")
+                                                .put(DB_COLLECTION_NAME, "items")
+                                                .put(DB_OPERATION_NAME, "GetItem")
+                                                .put(ERROR_TYPE, errorType)
+                                                .build()
+                                                .asMap());
                                   })));
     } finally {
       server.stop();
@@ -275,8 +288,15 @@ class DynamoDbErrorsTest {
                             .satisfies(
                                 point -> {
                                   assertThat(point.getCount()).isEqualTo(1);
-                                  assertThat(point.getAttributes().get(ERROR_TYPE))
-                                      .isEqualTo(errorType);
+                                  assertThat(point.getAttributes().asMap())
+                                      .isEqualTo(
+                                          Attributes.builder()
+                                              .put(DB_SYSTEM_NAME, "aws.dynamodb")
+                                              .put(DB_COLLECTION_NAME, "items")
+                                              .put(DB_OPERATION_NAME, "GetItem")
+                                              .put(ERROR_TYPE, errorType)
+                                              .build()
+                                              .asMap());
                                 })));
   }
 
@@ -285,11 +305,11 @@ class DynamoDbErrorsTest {
         Arguments.of(
             DynamoDbException.builder()
                 .awsErrorDetails(
-                    AwsErrorDetails.builder().errorCode("ConditionalCheckFailedException").build())
+                    AwsErrorDetails.builder().errorCode("ResourceNotFoundException").build())
                 .statusCode(400)
                 .message("private value")
                 .build(),
-            "ConditionalCheckFailedException"),
+            "ResourceNotFoundException"),
         Arguments.of(
             DynamoDbException.builder().statusCode(400).message("private value").build(),
             DynamoDbException.class.getName()),
@@ -297,6 +317,14 @@ class DynamoDbErrorsTest {
             DynamoDbException.builder()
                 .awsErrorDetails(AwsErrorDetails.builder().errorCode("").build())
                 .build(),
+            DynamoDbException.class.getName()),
+        Arguments.of(
+            DynamoDbException.builder()
+                .awsErrorDetails(AwsErrorDetails.builder().errorCode(" \t").build())
+                .build(),
+            DynamoDbException.class.getName()),
+        Arguments.of(
+            DynamoDbException.builder().awsErrorDetails(AwsErrorDetails.builder().build()).build(),
             DynamoDbException.class.getName()),
         Arguments.of(
             SdkClientException.create("private value"), SdkClientException.class.getName()),

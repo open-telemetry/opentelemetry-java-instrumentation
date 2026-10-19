@@ -107,6 +107,56 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
+  protected MongoCollection<Document> setupValidatedCollection(String dbName, String collectionName)
+      throws Exception {
+    MongoDatabase db = client.getDatabase(dbName);
+    CompletableFuture<Document> result = new CompletableFuture<>();
+    db.runCommand(
+        new Document("create", collectionName)
+            .append("validator", new Document("required", new Document("$exists", true))),
+        completing(result));
+    result.get(30, SECONDS);
+    return db.getCollection(collectionName);
+  }
+
+  @Override
+  protected void insertInvalid(MongoCollection<Document> collection) throws Throwable {
+    CompletableFuture<Throwable> result = new CompletableFuture<>();
+    collection.insertOne(
+        new Document("password", "SECRET"), (ignored, error) -> result.complete(error));
+    Throwable error = result.get(30, SECONDS);
+    if (error != null) {
+      throw error;
+    }
+  }
+
+  @Override
+  protected long writeWithZeroMatches(MongoCollection<Document> collection, String operation)
+      throws Exception {
+    if (operation.equals("update")) {
+      CompletableFuture<UpdateResult> result = new CompletableFuture<>();
+      collection.updateOne(
+          new Document("missing", true),
+          new Document("$set", new Document("password", "SECRET")),
+          completing(result));
+      return result.get(30, SECONDS).getMatchedCount();
+    }
+    CompletableFuture<DeleteResult> result = new CompletableFuture<>();
+    collection.deleteOne(new Document("missing", true), completing(result));
+    return result.get(30, SECONDS).getDeletedCount();
+  }
+
+  private static <T> SingleResultCallback<T> completing(CompletableFuture<T> future) {
+    return (result, error) -> {
+      if (error != null) {
+        future.completeExceptionally(error);
+      } else {
+        future.complete(result);
+      }
+    };
+  }
+
+  @Override
   protected MongoCollection<Document> setupInsert(String dbName, String collectionName)
       throws InterruptedException {
     MongoCollection<Document> collection =

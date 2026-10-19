@@ -226,7 +226,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
         errorType = details.errorCode();
       }
     }
-    if (errorType == null || errorType.isEmpty()) {
+    if (errorType == null || errorType.trim().isEmpty()) {
       errorType = error.getClass().getName();
     }
     // The final SDK error takes precedence over an individual HTTP attempt or RPC mode.

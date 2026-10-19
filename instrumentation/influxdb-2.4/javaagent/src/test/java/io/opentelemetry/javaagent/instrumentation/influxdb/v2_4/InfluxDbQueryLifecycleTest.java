@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
@@ -144,6 +145,52 @@ class InfluxDbQueryLifecycleTest {
   }
 
   @ParameterizedTest
+  @ValueSource(strings = {"response", "chunk", "complete"})
+  void callbackFailureFinishesOnce(String callbackType) throws InterruptedException {
+    CountDownLatch callback = new CountDownLatch(1);
+    Runnable fail =
+        () -> {
+          callback.countDown();
+          throw new IllegalStateException("private callback text");
+        };
+    try (InfluxDB client = client(chain -> response(chain, SUCCESS + "\n"))) {
+      if (callbackType.equals("response")) {
+        client.query(QUERY, result -> fail.run(), error -> {});
+      } else {
+        client.query(
+            QUERY,
+            1,
+            (cancellable, result) -> {
+              if (callbackType.equals("chunk")) {
+                fail.run();
+              }
+            },
+            () -> {
+              if (callbackType.equals("complete")) {
+                fail.run();
+              }
+            },
+            error -> {});
+      }
+      assertThat(callback.await(10, SECONDS)).isTrue();
+      assertQuery(IllegalStateException.class.getName());
+    }
+  }
+
+  @Test
+  void successfulQueryAfterFailure() {
+    AtomicInteger requests = new AtomicInteger();
+    try (InfluxDB client =
+        client(chain -> response(chain, requests.getAndIncrement() == 0 ? FAILURE : SUCCESS))) {
+      assertThat(client.query(QUERY)).isNotNull();
+      assertQuery("_OTHER");
+      testing.clearData();
+      assertThat(client.query(QUERY).hasError()).isFalse();
+      assertQuery(null);
+    }
+  }
+
+  @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void chunkedResponseFinishesAfterCompletion(boolean failed) throws InterruptedException {
     CountDownLatch firstChunk = new CountDownLatch(1);
@@ -222,6 +269,66 @@ class InfluxDbQueryLifecycleTest {
           error -> {});
       assertThat(callback.await(10, SECONDS)).isTrue();
       assertQuery(null);
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void cancellationDuringChunkRead(boolean priorFailure) throws InterruptedException {
+    CountDownLatch reading = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    AtomicReference<InfluxDB.Cancellable> cancellable = new AtomicReference<>();
+    try (InfluxDB client =
+        client(
+            chain ->
+                response(chain, "")
+                    .newBuilder()
+                    .body(
+                        new ResponseBody() {
+                          private final BufferedSource source =
+                              Okio.buffer(
+                                  new ForwardingSource(
+                                      new Buffer()
+                                          .writeUtf8((priorFailure ? FAILURE : SUCCESS) + "\n")) {
+                                    @Override
+                                    public long read(Buffer sink, long byteCount)
+                                        throws IOException {
+                                      long count = super.read(sink, byteCount);
+                                      if (count != -1) {
+                                        return count;
+                                      }
+                                      reading.countDown();
+                                      await(release);
+                                      throw new IOException("Canceled");
+                                    }
+                                  });
+
+                          @Override
+                          public MediaType contentType() {
+                            return MediaType.parse("application/json");
+                          }
+
+                          @Override
+                          public long contentLength() {
+                            return -1;
+                          }
+
+                          @Override
+                          public BufferedSource source() {
+                            return source;
+                          }
+                        })
+                    .build())) {
+      client.query(QUERY, 1, (handle, result) -> cancellable.set(handle), () -> {}, error -> {});
+      try {
+        assertThat(reading.await(10, SECONDS)).isTrue();
+        assertThat(testing.spans()).isEmpty();
+        assertNoDuration();
+        cancellable.get().cancel();
+      } finally {
+        release.countDown();
+      }
+      assertQuery(priorFailure ? "_OTHER" : null);
     }
   }
 

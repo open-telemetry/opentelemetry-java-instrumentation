@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 
 /** Observes raw replies without building or consuming application-owned Responses. */
 public final class JedisBatchResponse {
+  private static final int MAX_ERROR_TYPE_LENGTH = 64;
   private static final ContextKey<JedisBatchResponse> KEY =
       ContextKey.named("opentelemetry-jedis-batch-response");
 
@@ -62,16 +63,17 @@ public final class JedisBatchResponse {
     if (message == null || message.isEmpty()) {
       return null;
     }
-    int end = message.indexOf(' ');
-    if (end == -1) {
-      end = message.length();
-    }
     // Redis protocol errors start with an uppercase error code, not the full server message.
-    for (int i = 0; i < end; i++) {
-      char c = message.charAt(i);
+    int end = 0;
+    while (end < message.length() && message.charAt(end) != ' ') {
+      if (end == MAX_ERROR_TYPE_LENGTH) {
+        return null;
+      }
+      char c = message.charAt(end);
       if (!(c >= 'A' && c <= 'Z') && c != '_') {
         return null;
       }
+      end++;
     }
     return end == 0 ? null : message.substring(0, end);
   }

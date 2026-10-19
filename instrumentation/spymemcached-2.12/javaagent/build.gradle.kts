@@ -28,6 +28,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps || name == "testProtocolStatus")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
@@ -43,7 +44,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath =
       files(sourceSets.main.get().output, sourceSets.test.get().output, protocolStatusTestRuntimeClasspath)
-    systemProperty("testLatestDeps", true)
     filter {
       includeTestsMatching("*SpymemcachedTest.storeRejectedAsTooLarge")
       includeTestsMatching("*SpymemcachedTest.conditionalOutcomesAreSuccessful")

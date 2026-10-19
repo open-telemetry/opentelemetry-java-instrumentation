@@ -133,6 +133,57 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
+  protected MongoCollection<Document> setupValidatedCollection(String dbName, String collectionName)
+      throws Exception {
+    MongoDatabase db = client.getDatabase(dbName);
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    db.runCommand(
+            new Document("create", collectionName)
+                .append("validator", new Document("required", new Document("$exists", true))))
+        .subscribe(toSubscriber(completing(result)));
+    result.get(30, SECONDS);
+    return db.getCollection(collectionName);
+  }
+
+  @Override
+  protected void insertInvalid(MongoCollection<Document> collection) throws Throwable {
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    collection
+        .insertOne(new Document("password", "SECRET"))
+        .subscribe(toSubscriber(result::complete));
+    Object value = result.get(30, SECONDS);
+    if (value instanceof Throwable) {
+      throw (Throwable) value;
+    }
+  }
+
+  @Override
+  protected long writeWithZeroMatches(MongoCollection<Document> collection, String operation)
+      throws Exception {
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    if (operation.equals("update")) {
+      collection
+          .updateOne(
+              new Document("missing", true),
+              new Document("$set", new Document("password", "SECRET")))
+          .subscribe(toSubscriber(completing(result)));
+      return ((UpdateResult) result.get(30, SECONDS)).getMatchedCount();
+    }
+    collection.deleteOne(new Document("missing", true)).subscribe(toSubscriber(completing(result)));
+    return ((DeleteResult) result.get(30, SECONDS)).getDeletedCount();
+  }
+
+  private static Consumer<Object> completing(CompletableFuture<Object> future) {
+    return result -> {
+      if (result instanceof Throwable) {
+        future.completeExceptionally((Throwable) result);
+      } else {
+        future.complete(result);
+      }
+    };
+  }
+
+  @Override
   protected long insert(MongoCollection<Document> collection) throws Exception {
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection

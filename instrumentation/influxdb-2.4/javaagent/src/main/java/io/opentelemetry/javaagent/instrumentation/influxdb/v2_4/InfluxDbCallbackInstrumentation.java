@@ -57,6 +57,16 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ResponseAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.This Callback<?> callback, @Advice.Argument(0) Call<?> call) {
+      InfluxDbQueryState state =
+          VirtualField.find(Callback.class, InfluxDbQueryState.class).get(callback);
+      if (state != null) {
+        state.setCall(call);
+      }
+    }
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.This Callback<?> callback,
