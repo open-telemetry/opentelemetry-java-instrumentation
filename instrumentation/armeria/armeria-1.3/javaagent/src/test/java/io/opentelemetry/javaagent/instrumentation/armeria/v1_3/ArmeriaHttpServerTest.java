@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.concurrent.CompletionException;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -52,9 +51,7 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
     sb.service(
         RESPONSE_EXCEPTION_WITH_CAUSE.getPath(),
         (ctx, req) -> {
-          HttpResponseException response = HttpResponseException.of(HttpResponse.of(HttpStatus.OK));
-          response.initCause(new IllegalStateException("recovered failure"));
-          throw response;
+          throw responseExceptionWithCause();
         });
     sb.service(
         WRAPPED_RESPONSE_EXCEPTION.getPath(),
@@ -82,10 +79,8 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
 
   @Test
   void responseExceptionWithCauseIsReported() {
-    // Newer Armeria versions initialize the cause in the constructor, preventing initCause().
-    Assumptions.assumeFalse(testLatestDeps());
-    // Old Armeria discards response-control causes before the HTTP/2 library fallback sees them.
     boolean libraryFallback = getClass() == ArmeriaHttp2ServerTest.class;
+    boolean causeIsReported = !libraryFallback || testLatestDeps();
     AggregatedHttpResponse response =
         client.execute(request(RESPONSE_EXCEPTION_WITH_CAUSE, "GET")).aggregate().join();
 
@@ -96,11 +91,11 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
                 span ->
                     span.hasKind(SpanKind.SERVER)
                         .hasNoParent()
-                        .hasStatus(libraryFallback ? StatusData.unset() : StatusData.error())
+                        .hasStatus(causeIsReported ? StatusData.error() : StatusData.unset())
                         .hasException(
-                            libraryFallback
-                                ? null
-                                : new IllegalStateException("recovered failure"))));
+                            causeIsReported
+                                ? new IllegalStateException("recovered failure")
+                                : null)));
   }
 
   @Test
@@ -117,6 +112,22 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(wrappedResponseException)));
+  }
+
+  private static HttpResponseException responseExceptionWithCause() {
+    IllegalStateException cause = new IllegalStateException("recovered failure");
+    try {
+      return (HttpResponseException)
+          HttpResponseException.class
+              .getMethod("of", HttpResponse.class, Throwable.class)
+              .invoke(null, HttpResponse.of(HttpStatus.OK), cause);
+    } catch (NoSuchMethodException e) {
+      HttpResponseException response = HttpResponseException.of(HttpResponse.of(HttpStatus.OK));
+      response.initCause(cause);
+      return response;
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
+    }
   }
 
   @Override
