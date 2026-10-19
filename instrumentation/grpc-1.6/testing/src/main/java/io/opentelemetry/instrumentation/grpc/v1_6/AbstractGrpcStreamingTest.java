@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -378,6 +379,82 @@ public abstract class AbstractGrpcStreamingTest {
                                           equalTo(
                                               RPC_RESPONSE_STATUS_CODE, Status.Code.OK.name())))));
     }
+  }
+
+  @Test
+  void streamingErrorReturned() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicReference<Throwable> error = new AtomicReference<>();
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public StreamObserver<Helloworld.Response> conversation(
+              StreamObserver<Helloworld.Response> observer) {
+            return new StreamObserver<Helloworld.Response>() {
+              @Override
+              public void onNext(Helloworld.Response value) {}
+
+              @Override
+              public void onError(Throwable t) {
+                observer.onError(t);
+              }
+
+              @Override
+              public void onCompleted() {
+                observer.onError(Status.INTERNAL.withDescription("failure").asException());
+              }
+            };
+          }
+        };
+
+    Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
+    ManagedChannel channel = createChannel(server);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    StreamObserver<Helloworld.Response> requestObserver =
+        GreeterGrpc.newStub(channel)
+            .conversation(
+                new StreamObserver<Helloworld.Response>() {
+                  @Override
+                  public void onNext(Helloworld.Response value) {}
+
+                  @Override
+                  public void onError(Throwable t) {
+                    error.set(t);
+                    latch.countDown();
+                  }
+
+                  @Override
+                  public void onCompleted() {
+                    latch.countDown();
+                  }
+                });
+    requestObserver.onCompleted();
+
+    assertThat(latch.await(10, SECONDS)).isTrue();
+    assertThat(error.get()).isNotNull();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("example.Greeter/Conversation")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(
+                                    ERROR_TYPE,
+                                    emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null)),
+                    span ->
+                        span.hasName("example.Greeter/Conversation")
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttributesSatisfying(
+                                equalTo(
+                                    ERROR_TYPE,
+                                    emitPreviewRpcSemconv()
+                                        ? Status.Code.INTERNAL.name()
+                                        : null))));
   }
 
   @Test

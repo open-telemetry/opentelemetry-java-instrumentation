@@ -51,7 +51,7 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(false), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
@@ -71,7 +71,7 @@ class GrpcAttributesExtractorTest {
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), null)
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(false), null)
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
@@ -84,7 +84,8 @@ class GrpcAttributesExtractorTest {
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), IncludeExclude.builder().build())
+    new GrpcAttributesExtractor(
+            new GrpcRpcAttributesGetter(false), IncludeExclude.builder().build())
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
@@ -108,7 +109,7 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(false), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
@@ -130,7 +131,7 @@ class GrpcAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     IncludeExclude selector = IncludeExclude.builder().setIncluded(singleton("*")).build();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(false), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertThat(attributes.build()).isEqualTo(Attributes.empty());
