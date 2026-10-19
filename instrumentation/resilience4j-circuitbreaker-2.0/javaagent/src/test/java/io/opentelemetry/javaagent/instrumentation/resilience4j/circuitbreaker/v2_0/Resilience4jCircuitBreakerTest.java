@@ -51,6 +51,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class Resilience4jCircuitBreakerTest {
 
@@ -508,8 +509,10 @@ class Resilience4jCircuitBreakerTest {
     assertCircuitBreakerSpan("closed", "success");
   }
 
-  @Test
-  void completingDecoratedStageInsideDecoratedSupplierKeepsStageClassification() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void completingDecoratedStageInsideDecoratedSupplierKeepsStageClassification(
+      boolean sameBreaker) {
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
     builder.recordResult(result -> Integer.valueOf(500).equals(result));
     CircuitBreaker stageCircuitBreaker =
@@ -518,7 +521,8 @@ class Resilience4jCircuitBreakerTest {
     Supplier<CompletionStage<Integer>> decoratedStage =
         CircuitBreaker.decorateCompletionStage(stageCircuitBreaker, () -> future);
 
-    CircuitBreaker supplierCircuitBreaker = CircuitBreaker.ofDefaults("supplier-circuit-breaker");
+    CircuitBreaker supplierCircuitBreaker =
+        sameBreaker ? stageCircuitBreaker : CircuitBreaker.ofDefaults("supplier-circuit-breaker");
     Supplier<Integer> decoratedSupplier =
         CircuitBreaker.decorateSupplier(
             supplierCircuitBreaker,
@@ -545,9 +549,116 @@ class Resilience4jCircuitBreakerTest {
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error()),
                 span ->
-                    span.hasName("CircuitBreaker supplier-circuit-breaker")
+                    span.hasName(
+                            sameBreaker
+                                ? "CircuitBreaker stage-circuit-breaker"
+                                : "CircuitBreaker supplier-circuit-breaker")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.unset())));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false,true", "true,false", "true,true", "false,false"})
+  void decoratedSupplierInSameBreakerStageContinuationKeepsItsClassification(
+      boolean stageFailure, boolean supplierFailure) {
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future = new CompletableFuture<>();
+    Supplier<CompletionStage<Integer>> decoratedStage =
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, () -> future);
+    Supplier<Integer> decoratedSupplier =
+        CircuitBreaker.decorateSupplier(circuitBreaker, () -> supplierFailure ? 500 : 200);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          CompletionStage<Integer> stage = decoratedStage.get();
+          CompletionStage<Integer> continuation =
+              stage.thenApply(ignored -> decoratedSupplier.get());
+          assertThat(future.complete(stageFailure ? 500 : 200)).isTrue();
+          assertThat(stage.toCompletableFuture().join()).isEqualTo(stageFailure ? 500 : 200);
+          assertThat(continuation.toCompletableFuture().join())
+              .isEqualTo(supplierFailure ? 500 : 200);
+        });
+
+    assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls())
+        .isEqualTo((stageFailure ? 1 : 0) + (supplierFailure ? 1 : 0));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(stageFailure ? StatusData.error() : StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.name"),
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.outcome"),
+                                experimental(stageFailure ? "failure" : "success"))),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasStatus(supplierFailure ? StatusData.error() : StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.name"),
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.outcome"),
+                                experimental(supplierFailure ? "failure" : "success")))));
+  }
+
+  @Test
+  void rawOnResultInsideContinuationSupplierDoesNotChangeDecoratedOutcomes() {
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future = new CompletableFuture<>();
+    Supplier<CompletionStage<Integer>> decoratedStage =
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, () -> future);
+    Supplier<Integer> decoratedSupplier =
+        CircuitBreaker.decorateSupplier(
+            circuitBreaker,
+            () -> {
+              circuitBreaker.onResult(1L, MILLISECONDS, 500);
+              return 200;
+            });
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          CompletionStage<Integer> stage = decoratedStage.get();
+          CompletionStage<Integer> continuation =
+              stage.thenApply(ignored -> decoratedSupplier.get());
+          assertThat(future.complete(200)).isTrue();
+          assertThat(continuation.toCompletableFuture().join()).isEqualTo(200);
+        });
+
+    assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.unset()),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasParent(trace.getSpan(1))
                         .hasStatus(StatusData.unset())));
   }
 

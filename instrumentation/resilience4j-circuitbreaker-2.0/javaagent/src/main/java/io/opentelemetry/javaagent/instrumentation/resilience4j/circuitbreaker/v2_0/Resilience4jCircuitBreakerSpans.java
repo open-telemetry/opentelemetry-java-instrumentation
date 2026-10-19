@@ -238,8 +238,13 @@ public class Resilience4jCircuitBreakerSpans {
       spans = new ArrayDeque<>();
       attachedPendingSpans.set(spans);
     }
+    Deque<Capture> captureStack = captures.get();
     AttachedPendingSpan attachment =
-        new AttachedPendingSpan(pendingSpan, pendingSpan.makeCurrent(), future);
+        new AttachedPendingSpan(
+            pendingSpan,
+            pendingSpan.makeCurrent(),
+            future,
+            captureStack == null ? null : captureStack.peek());
     spans.push(attachment);
     return attachment;
   }
@@ -309,35 +314,35 @@ public class Resilience4jCircuitBreakerSpans {
   private static PendingSpan currentPendingSpan(CircuitBreaker circuitBreaker) {
     Deque<Capture> captureStack = captures.get();
     Capture capture = captureStack == null ? null : captureStack.peek();
-    PendingSpan captured = null;
-    if (capture != null
+    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
+    AttachedPendingSpan attachment = spans == null ? null : spans.peek();
+    PendingSpan pendingSpan;
+    // The innermost capture or completion attachment owns classification. A newer capture also
+    // guards raw callbacks made by that decorated call's user code.
+    if (attachment != null && capture == attachment.enclosingCapture) {
+      pendingSpan = attachment.pendingSpan;
+      if (!pendingSpan.isFor(circuitBreaker)) {
+        return null;
+      }
+    } else if (capture != null
         && capture.userCodeDepth == 0
         && capture.circuitBreaker == circuitBreaker
         && capture.token != null) {
-      captured = capture.token.pendingSpan;
-    }
-    // An explicit completion attachment is the strongest ownership signal: a decorated stage or
-    // future completing inside another decorated call must classify against its own span instead
-    // of being suppressed by the enclosing capture's user-code guard.
-    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
-    PendingSpan attached = spans == null ? null : spans.peek().pendingSpan;
-    if (attached != null && !attached.isFor(circuitBreaker)) {
-      attached = null;
+      pendingSpan = capture.token.pendingSpan;
+    } else {
+      return null;
     }
     // Active classifications own their spans. Raw reentrant callbacks cannot reuse them, but
     // a nested decorated attempt can supply a different span.
     Deque<OnResult> results = onResults.get();
     if (results != null) {
       for (OnResult result : results) {
-        if (captured == result.pendingSpan) {
-          captured = null;
-        }
-        if (attached == result.pendingSpan) {
-          attached = null;
+        if (pendingSpan == result.pendingSpan) {
+          return null;
         }
       }
     }
-    return attached != null ? attached : captured;
+    return pendingSpan;
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
@@ -376,13 +381,19 @@ public class Resilience4jCircuitBreakerSpans {
     private final PendingSpan pendingSpan;
     private final Scope scope;
     @Nullable private final Future<?> future;
+    @Nullable private final Capture enclosingCapture;
     @Nullable private OnceConsumer<?> onceConsumer;
     private boolean completionOwner;
 
-    private AttachedPendingSpan(PendingSpan pendingSpan, Scope scope, @Nullable Future<?> future) {
+    private AttachedPendingSpan(
+        PendingSpan pendingSpan,
+        Scope scope,
+        @Nullable Future<?> future,
+        @Nullable Capture enclosingCapture) {
       this.pendingSpan = pendingSpan;
       this.scope = scope;
       this.future = future;
+      this.enclosingCapture = enclosingCapture;
     }
 
     void endFuture(String outcome, @Nullable Throwable throwable) {
