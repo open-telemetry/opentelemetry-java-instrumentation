@@ -158,6 +158,26 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   as `condition ? (long) intValue : null` must produce a boxed `Long`; removing
   it can select the primitive overload and unbox `null`.
 
+## [Testing] Metric Assertions
+
+- When corresponding spans already verify attribute values, normally assert the
+  metric's identity, type, unit, and exact point attribute keys without repeating
+  those values. Reuse existing domain-specific metric assertion helpers, such as
+  `DbClientMetricsTestUtil.assertDurationMetric()`, or check the point's attribute
+  map with `containsOnlyKeys(...)`.
+- Assert each expected point attribute key set separately when points have
+  different attributes. For example, a successful point omits `ERROR_TYPE`, while
+  a failed point includes it. No separate metric-side error-type value assertion
+  is needed when the corresponding span already verifies that value.
+- Likewise, omit repeated measured-value assertions when the measurement is
+  already asserted as an attribute on the corresponding span, such as token
+  usage asserted on both a span and a metric.
+- Keep attribute-value and numeric assertions when they verify metric-specific
+  behavior, such as aggregation, duplicate recording, or metric-only calculations.
+  Tests focused on attribute propagation do not need generic positive-duration
+  or observation-count checks. This is not a blanket rule against numeric
+  assertions in metric-only tests.
+
 ## [Testing] Mode-Dependent Expected Values
 
 - Use the shared static `TestLatestDeps.testLatestDeps()` and
