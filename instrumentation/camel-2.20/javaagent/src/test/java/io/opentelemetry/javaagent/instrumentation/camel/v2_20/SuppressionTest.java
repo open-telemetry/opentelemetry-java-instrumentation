@@ -15,11 +15,11 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.AgentTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 /**
  * Camel http producer spans do not use the http semantic attributes extractor, so they do not claim
@@ -44,6 +44,7 @@ class SuppressionTest {
       String url,
       String serverAddress,
       long serverPort,
+      @Nullable String expectedPeerService,
       SpanData parent) {
     if (!NESTED_HTTP_CLIENT_SPAN) {
       return;
@@ -57,8 +58,7 @@ class SuppressionTest {
                     equalTo(HTTP_REQUEST_METHOD, method),
                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                     equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                    equalTo(
-                        maybeStablePeerService(), AgentTestRunner.instance().expectedPeerService()),
+                    equalTo(maybeStablePeerService(), expectedPeerService),
                     equalTo(SERVER_ADDRESS, serverAddress),
                     equalTo(SERVER_PORT, serverPort),
                     equalTo(URL_FULL, url)));
