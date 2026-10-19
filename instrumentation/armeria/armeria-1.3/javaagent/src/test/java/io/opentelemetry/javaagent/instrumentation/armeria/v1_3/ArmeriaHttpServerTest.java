@@ -97,7 +97,7 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
                         .hasException(
                             causeIsDropped
                                 ? null
-                                : new IllegalStateException("recovered failure"))));
+                                : new IllegalStateException("response processing failure"))));
   }
 
   @Test
@@ -117,7 +117,7 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   }
 
   private static HttpResponseException responseExceptionWithCause() {
-    IllegalStateException cause = new IllegalStateException("recovered failure");
+    IllegalStateException cause = new IllegalStateException("response processing failure");
     try {
       // HttpResponseException.of(HttpResponse, Throwable) is available in Armeria 1.10.0+.
       return (HttpResponseException)
