@@ -160,6 +160,11 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
 ## [Testing] Metric Assertions
 
+These recommendations apply when writing new tests. When extending an existing
+test, add assertions in its current style rather than rewriting it to follow
+this guidance. Keep the diff focused; migrating existing tests is a separate
+cleanup.
+
 - When corresponding spans already verify attribute values, normally assert the
   metric's identity, type, unit, and exact point attribute keys without repeating
   those values. Reuse existing domain-specific metric assertion helpers, such as
