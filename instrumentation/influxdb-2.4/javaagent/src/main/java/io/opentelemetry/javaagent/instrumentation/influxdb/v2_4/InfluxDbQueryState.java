@@ -26,7 +26,6 @@ public final class InfluxDbQueryState {
   @Nullable private Call<?> call;
   @Nullable private Throwable callbackError;
   @Nullable private volatile String errorType;
-  @Nullable private String statusCode;
 
   public InfluxDbQueryState(Context parentContext, InfluxDbQuery request) {
     this.request = request;
@@ -64,8 +63,7 @@ public final class InfluxDbQueryState {
 
   public void endResponse(Response<?> response, @Nullable Throwable error, boolean canceled) {
     if (!response.isSuccessful()) {
-      statusCode = Integer.toString(response.code());
-      errorType = statusCode;
+      errorType = Integer.toString(response.code());
     }
     Object body = response.body();
     if (body instanceof QueryResult) {
@@ -81,7 +79,7 @@ public final class InfluxDbQueryState {
           .end(
               context,
               request,
-              new InfluxDbResponse(errorType, statusCode),
+              new InfluxDbResponse(errorType),
               error != null ? error : callbackError);
     }
   }

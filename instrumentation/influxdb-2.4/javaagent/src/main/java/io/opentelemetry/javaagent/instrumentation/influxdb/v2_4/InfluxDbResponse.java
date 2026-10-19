@@ -10,21 +10,14 @@ import org.influxdb.dto.QueryResult;
 
 final class InfluxDbResponse {
   @Nullable private final String errorType;
-  @Nullable private final String statusCode;
 
-  InfluxDbResponse(@Nullable String errorType, @Nullable String statusCode) {
+  InfluxDbResponse(@Nullable String errorType) {
     this.errorType = errorType;
-    this.statusCode = statusCode;
   }
 
   @Nullable
   String getErrorType() {
     return errorType;
-  }
-
-  @Nullable
-  String getStatusCode() {
-    return statusCode;
   }
 
   static boolean hasError(@Nullable QueryResult result) {

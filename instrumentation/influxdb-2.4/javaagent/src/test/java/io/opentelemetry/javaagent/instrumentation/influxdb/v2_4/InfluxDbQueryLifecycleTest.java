@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -214,9 +213,7 @@ class InfluxDbQueryLifecycleTest {
                             equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, 8086),
-                            equalTo(ERROR_TYPE, errorType),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE, "400".equals(errorType) ? "400" : null))));
+                            equalTo(ERROR_TYPE, errorType))));
     assertMetric(errorType);
   }
 

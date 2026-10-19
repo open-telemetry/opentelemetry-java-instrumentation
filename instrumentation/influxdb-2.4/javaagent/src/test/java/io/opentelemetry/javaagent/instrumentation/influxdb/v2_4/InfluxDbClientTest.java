@@ -10,7 +10,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -310,8 +309,7 @@ class InfluxDbClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_QUERY_TEXT, "SELECT MEAN(water_level) FROM;"),
                             equalTo(DB_QUERY_SUMMARY, "SELECT"),
-                            equalTo(ERROR_TYPE, "400"),
-                            equalTo(DB_RESPONSE_STATUS_CODE, "400")),
+                            equalTo(ERROR_TYPE, "400")),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
