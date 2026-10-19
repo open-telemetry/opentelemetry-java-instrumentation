@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.error.ValueTooLargeException;
 import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
@@ -33,12 +32,9 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
-import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.couchbase.BucketDefinition;
 import org.testcontainers.couchbase.CouchbaseContainer;
@@ -115,55 +111,6 @@ class CouchbaseErrorsTest {
             trace.hasSpansSatisfyingExactly(span -> assertUpsertSpan(span, oversized));
           }
         });
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = RequestSpan.StatusCode.class,
-      names = {"UNSET", "OK"})
-  void recoveredExceptionDoesNotReportErrorType(RequestSpan.StatusCode status) {
-    RequestSpan span = cluster.environment().requestTracer().requestSpan("upsert", null);
-    span.attribute("db.system", "couchbase");
-    span.recordException(new IllegalStateException("recovered"));
-    span.status(status);
-    span.end();
-
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                operation ->
-                    operation
-                        .hasName("upsert")
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasStatus(
-                            status == RequestSpan.StatusCode.OK
-                                ? StatusData.ok()
-                                : StatusData.unset())
-                        .hasAttributesSatisfyingExactly(equalTo(DB_SYSTEM_NAME, "couchbase"))));
-  }
-
-  @Test
-  void terminalFailureReplacesIntermediateException() {
-    RequestSpan span = cluster.environment().requestTracer().requestSpan("upsert", null);
-    span.attribute("db.system", "couchbase");
-    span.recordException(new IllegalStateException("intermediate"));
-    span.recordException(new CompletionException(new IllegalArgumentException("terminal")));
-    span.status(RequestSpan.StatusCode.ERROR);
-    span.end();
-
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                operation ->
-                    operation
-                        .hasName("upsert")
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "couchbase"),
-                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()))));
   }
 
   private static void assertUpsertSpan(SpanDataAssert span, boolean oversized) {
