@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
@@ -27,7 +28,7 @@ public final class MongoInstrumenterFactory {
 
   static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
-  public static Instrumenter<CommandStartedEvent, Integer> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
     return createInstrumenter(
         openTelemetry,
@@ -37,7 +38,7 @@ public final class MongoInstrumenterFactory {
         null);
   }
 
-  public static Instrumenter<CommandStartedEvent, Integer> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -50,7 +51,7 @@ public final class MongoInstrumenterFactory {
         connectionPeerResolver);
   }
 
-  public static Instrumenter<CommandStartedEvent, Integer> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -63,7 +64,7 @@ public final class MongoInstrumenterFactory {
         null);
   }
 
-  private static Instrumenter<CommandStartedEvent, Integer> createInstrumenter(
+  private static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -73,15 +74,15 @@ public final class MongoInstrumenterFactory {
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(
             querySanitizationEnabled, maxNormalizedQueryLength, connectionPeerResolver);
-    InstrumenterBuilder<CommandStartedEvent, Integer> builder =
-        Instrumenter.<CommandStartedEvent, Integer>builder(
+    InstrumenterBuilder<CommandStartedEvent, CommandSucceededEvent> builder =
+        Instrumenter.<CommandStartedEvent, CommandSucceededEvent>builder(
                 openTelemetry,
                 instrumentationName,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .setSpanStatusExtractor(
                 (status, request, response, error) -> {
-                  if (response != null) {
+                  if (MongoDbAttributesGetter.getWriteErrorCode(response) != null) {
                     status.setStatus(StatusCode.ERROR);
                   } else {
                     SpanStatusExtractor.getDefault().extract(status, request, response, error);
