@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
+package io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
@@ -12,13 +12,21 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import javax.annotation.Nullable;
 
-final class RpcSemconvSelection {
+/**
+ * Provides RPC semantic convention selection for RPC components.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
+public final class RpcSemconvSelection {
 
   @Nullable private OpenTelemetry initializedWith;
   private volatile Selection selection =
       Selection.forOpenTelemetry(GlobalOpenTelemetry.getOrNoop());
 
-  synchronized void initialize(OpenTelemetry openTelemetry) {
+  public RpcSemconvSelection() {}
+
+  public synchronized void initialize(OpenTelemetry openTelemetry) {
     if (initializedWith == openTelemetry) {
       return;
     }
@@ -31,11 +39,17 @@ final class RpcSemconvSelection {
     initializedWith = openTelemetry;
   }
 
-  Selection get() {
+  public Selection get() {
     return selection;
   }
 
-  static final class Selection {
+  /**
+   * Holds the selected RPC semantic conventions.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   */
+  public static final class Selection {
     private final boolean emitOld;
     private final boolean emitPreview;
 
@@ -48,11 +62,11 @@ final class RpcSemconvSelection {
       return new Selection(emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
     }
 
-    boolean emitOld() {
+    public boolean emitOld() {
       return emitOld;
     }
 
-    boolean emitPreview() {
+    public boolean emitPreview() {
       return emitPreview;
     }
   }

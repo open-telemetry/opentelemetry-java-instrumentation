@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralStableRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.lowercase;
@@ -16,12 +14,12 @@ import static java.util.Collections.emptyMap;
 
 import io.grpc.Metadata;
 import io.grpc.Status;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import java.util.List;
@@ -47,10 +45,7 @@ final class GrpcAttributesExtractor
   // configured keys remain allocation-free.
   private final Map<String, AttributeKey<List<String>>> literalRequestAttributeKeys;
   private final Map<String, AttributeKey<List<String>>> literalStableRequestAttributeKeys;
-  @Nullable private OpenTelemetry initializedWith;
-  private volatile boolean emitOldRpcSemconv = emitOldRpcSemconv(GlobalOpenTelemetry.getOrNoop());
-  private volatile boolean emitPreviewRpcSemconv =
-      emitPreviewRpcSemconv(GlobalOpenTelemetry.getOrNoop());
+  private final RpcSemconvSelection semconvSelection = new RpcSemconvSelection();
 
   GrpcAttributesExtractor(
       GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestMetadata) {
@@ -68,18 +63,8 @@ final class GrpcAttributesExtractor
   }
 
   @Override
-  public synchronized void internalInitialize(OpenTelemetry openTelemetry) {
-    if (initializedWith == openTelemetry) {
-      return;
-    }
-    if (initializedWith != null) {
-      throw new IllegalStateException(
-          "RPC semantic convention component is already initialized with a different"
-              + " OpenTelemetry instance");
-    }
-    emitOldRpcSemconv = emitOldRpcSemconv(openTelemetry);
-    emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
-    initializedWith = openTelemetry;
+  public void internalInitialize(OpenTelemetry openTelemetry) {
+    semconvSelection.initialize(openTelemetry);
   }
 
   @Override
@@ -94,11 +79,12 @@ final class GrpcAttributesExtractor
       GrpcRequest request,
       @Nullable Status status,
       @Nullable Throwable error) {
+    RpcSemconvSelection.Selection selection = semconvSelection.get();
     if (status != null) {
-      if (emitOldRpcSemconv) {
+      if (selection.emitOld()) {
         attributes.put(RPC_GRPC_STATUS_CODE, status.getCode().value());
       }
-      if (emitPreviewRpcSemconv) {
+      if (selection.emitPreview()) {
         attributes.put(RPC_RESPONSE_STATUS_CODE, status.getCode().name());
       }
     }
@@ -120,10 +106,10 @@ final class GrpcAttributesExtractor
       }
       List<String> value = getter.metadataValue(request, metadataKey);
       if (!value.isEmpty()) {
-        if (emitOldRpcSemconv) {
+        if (selection.emitOld()) {
           attributes.put(requestAttributeKey(metadataKey, literalRequestAttributeKeys), value);
         }
-        if (emitPreviewRpcSemconv) {
+        if (selection.emitPreview()) {
           attributes.put(
               stableRequestAttributeKey(metadataKey, literalStableRequestAttributeKeys), value);
         }
