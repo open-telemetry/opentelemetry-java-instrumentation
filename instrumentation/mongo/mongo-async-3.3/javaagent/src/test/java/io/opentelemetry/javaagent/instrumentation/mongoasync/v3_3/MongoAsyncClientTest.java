@@ -109,18 +109,18 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   @Override
   protected Document runCommand(String dbName, Document command) throws Exception {
     CompletableFuture<Document> result = new CompletableFuture<>();
-    client.getDatabase(dbName).runCommand(command, completing(result));
+    client
+        .getDatabase(dbName)
+        .runCommand(
+            command,
+            (response, error) -> {
+              if (error != null) {
+                result.completeExceptionally(error);
+              } else {
+                result.complete(response);
+              }
+            });
     return result.get(30, SECONDS);
-  }
-
-  private static <T> SingleResultCallback<T> completing(CompletableFuture<T> future) {
-    return (result, error) -> {
-      if (error != null) {
-        future.completeExceptionally(error);
-      } else {
-        future.complete(result);
-      }
-    };
   }
 
   @Override

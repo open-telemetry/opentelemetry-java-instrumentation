@@ -136,18 +136,17 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   protected Document runCommand(String dbName, Document command) throws Exception {
     MongoDatabase db = client.getDatabase(dbName);
     CompletableFuture<Object> result = new CompletableFuture<>();
-    db.runCommand(command).subscribe(toSubscriber(completing(result)));
+    db.runCommand(command)
+        .subscribe(
+            toSubscriber(
+                value -> {
+                  if (value instanceof Throwable) {
+                    result.completeExceptionally((Throwable) value);
+                  } else {
+                    result.complete(value);
+                  }
+                }));
     return (Document) result.get(30, SECONDS);
-  }
-
-  private static Consumer<Object> completing(CompletableFuture<Object> future) {
-    return result -> {
-      if (result instanceof Throwable) {
-        future.completeExceptionally((Throwable) result);
-      } else {
-        future.complete(result);
-      }
-    };
   }
 
   @Override
