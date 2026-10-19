@@ -38,6 +38,7 @@ class ServicePeerResolverTest {
           mapping("1.2.3.4", "ipSvc", "ipNs"),
           mapping("1.2.3.4/api", "ipApiSvc", null),
           mapping("1.2.3.4:8080/api", "ipPortApi", "ipPortApiNs"),
+          mapping("[::1]:8080", "ipv6PortSvc", null),
           mapping("nsonly.com", null, "nsOnly"));
 
   @ParameterizedTest
@@ -80,7 +81,10 @@ class ServicePeerResolverTest {
         // mismatch, falls back to host-only
         Arguments.of("1.2.3.4", 8080, null, "ipSvc", "ipNs"),
         // path-only matcher rejects when query port differs from matcher port
-        Arguments.of("1.2.3.4", 9000, "/api", "ipSvc", "ipNs"));
+        Arguments.of("1.2.3.4", 9000, "/api", "ipSvc", "ipNs"),
+        // bracketed IPv6 mapping matches the IPv6 address and port
+        Arguments.of("::1", 8080, null, "ipv6PortSvc", null),
+        Arguments.of("::1", 9090, null, null, null));
   }
 
   @Test

@@ -100,11 +100,9 @@ abstract class HttpCommonAttributesExtractor<
     }
 
     String errorType = null;
-    if (statusCode != null && statusCode > 0) {
-      if (statusCodeConverter.isError(statusCode)) {
-        errorType = statusCode.toString();
-      }
-    } else {
+    if (statusCode != null && statusCode > 0 && statusCodeConverter.isError(statusCode)) {
+      errorType = statusCode.toString();
+    } else if (error != null || statusCode == null || statusCode <= 0) {
       errorType = getter.getErrorType(request, response, error);
       // fall back to exception class name & _OTHER
       if (errorType == null && error != null) {
