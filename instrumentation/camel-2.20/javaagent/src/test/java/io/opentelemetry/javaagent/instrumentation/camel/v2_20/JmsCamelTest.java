@@ -14,6 +14,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
@@ -28,6 +30,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -38,6 +41,7 @@ import javax.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.JmsComponent;
@@ -84,10 +88,12 @@ class JmsCamelTest {
                       errorProcessed.countDown();
                       throw new IllegalStateException("test");
                     });
-            from("direct:faultInput").to("jms:queue:faultQueue");
-            from("jms:queue:faultQueue")
+            from("direct:faultInput")
+                .to("jms:queue:faultQueue?exchangePattern=InOut&transferFault=true");
+            from("jms:queue:faultQueue?transferFault=true")
                 .process(
                     exchange -> {
+                      exchange.getOut().setBody("fault reply");
                       exchange.getOut().setFault(true);
                       faultProcessed.countDown();
                     });
@@ -125,19 +131,107 @@ class JmsCamelTest {
   @Test
   void faultedCamelProcessCountsDeliveredMessage() throws Exception {
     ProducerTemplate template = camelContext.createProducerTemplate();
-    template.sendBody("direct:faultInput", "test message");
+    Exchange result =
+        template.request("direct:faultInput", exchange -> exchange.getIn().setBody("test message"));
 
     assertThat(faultProcessed.await(1, MINUTES)).isTrue();
-    testing.waitForTraces(2);
-    assertThat(testing.spans())
-        .filteredOn(span -> span.getName().equals("process faultQueue"))
-        .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span).hasStatus(StatusData.error());
-              assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("_OTHER");
-            });
-    assertSendAndProcessMetrics(testing, "jms", "faultQueue", "_OTHER");
+    assertThat(result.getOut().isFault()).isTrue();
+    assertThat(result.getOut().getBody()).isEqualTo("fault reply");
+    assertThat(result.getException()).isNull();
+    testing.waitAndAssertSortedTraces(
+        Comparator.comparingInt((List<SpanData> trace) -> trace.size())
+            .thenComparing(trace -> trace.get(0).getName()),
+        JmsCamelTest::assertReplyReceiveTrace,
+        JmsCamelTest::assertFaultJmsReceiveTrace,
+        JmsCamelTest::assertReplySendTrace,
+        JmsCamelTest::assertFaultCamelTrace);
+    assertSendAndProcessMetrics(testing, "jms", "faultQueue", "_OTHER", "_OTHER", null);
+  }
+
+  private static void assertReplyReceiveTrace(TraceAssert trace) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("receive")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty()),
+                    equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
+                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                    satisfies(
+                        MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
+  }
+
+  private static void assertFaultJmsReceiveTrace(TraceAssert trace) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("receive faultQueue")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasTotalRecordedLinks(1)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
+                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                    satisfies(
+                        MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
+  }
+
+  private static void assertReplySendTrace(TraceAssert trace) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("send")
+                .hasKind(SpanKind.PRODUCER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty()),
+                    equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                    satisfies(
+                        MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
+  }
+
+  private static void assertFaultCamelTrace(TraceAssert trace) {
+    trace.hasSpansSatisfyingExactly(
+        span -> span.hasName("faultInput").hasKind(SpanKind.INTERNAL).hasNoParent(),
+        span ->
+            span.hasName("send faultQueue")
+                .hasKind(SpanKind.PRODUCER)
+                .hasParent(trace.getSpan(0))
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                    equalTo(
+                        stringKey("camel.uri"),
+                        experimental(
+                            "jms://queue:faultQueue?exchangePattern=InOut&transferFault=true")),
+                    equalTo(ERROR_TYPE, "_OTHER")),
+        span ->
+            span.hasName("process faultQueue")
+                .hasKind(SpanKind.CONSUMER)
+                .hasParent(trace.getSpan(1))
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                    equalTo(
+                        stringKey("camel.uri"),
+                        experimental("jms://queue:faultQueue?transferFault=true")),
+                    equalTo(ERROR_TYPE, "_OTHER")));
   }
 
   private static void assertJmsReceiveTrace(TraceAssert trace) {
