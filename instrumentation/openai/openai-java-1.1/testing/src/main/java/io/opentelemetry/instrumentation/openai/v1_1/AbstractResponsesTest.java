@@ -318,6 +318,48 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
   }
 
   @Test
+  void streamConsumerError() {
+    // only the sync stream runs the caller's action inside the instrumented spliterator
+    assumeTrue(testType == TestType.SYNC || testType == TestType.SYNC_FROM_ASYNC);
+    ResponseCreateParams params =
+        ResponseCreateParams.builder().input(TEST_INPUT).model(TEST_MODEL).build();
+    ResponseService service =
+        testType == TestType.SYNC ? getClient().responses() : getClientAsync().sync().responses();
+    IllegalStateException failure = new IllegalStateException("consumer failure");
+
+    Throwable thrown;
+    try (StreamResponse<ResponseStreamEvent> result = service.createStreaming(params)) {
+      thrown =
+          catchThrowable(
+              () ->
+                  result.stream()
+                      .forEach(
+                          event -> {
+                            throw failure;
+                          }));
+    }
+    assertThat(thrown).isSameAs(failure);
+
+    // The caller's own failure isn't a client error, so close() ends the span without it.
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            assertResponsesSpan(span)
+                                .hasStatus(StatusData.unset())
+                                .hasException(null)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                                    equalTo(GEN_AI_REQUEST_STREAM, true),
+                                    equalTo(GEN_AI_RESPONSE_ID, "resp_14783stream"),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
+  }
+
+  @Test
   void streamIncomplete() {
     ResponseCreateParams params =
         ResponseCreateParams.builder()
