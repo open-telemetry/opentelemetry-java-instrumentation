@@ -205,8 +205,13 @@ public class Resilience4jCircuitBreakerSpans {
     if (results != null && results.isEmpty()) {
       onResults.remove();
     }
-    if (result != null && result.resultRecordedAsFailure && result.pendingSpan != null) {
-      result.pendingSpan.recordResultFailure();
+    if (result != null && result.pendingSpan != null) {
+      if (result.resultRecordedAsFailure) {
+        result.pendingSpan.recordResultFailure();
+      }
+      // The attempt's own result has been classified. Direct calls from stage continuations that
+      // run while the completion attachment is still installed must not reclassify it.
+      result.pendingSpan.markResultClassified();
     }
   }
 
@@ -326,7 +331,9 @@ public class Resilience4jCircuitBreakerSpans {
     // guards raw callbacks made by that decorated call's user code.
     if (attachment != null && capture == attachment.enclosingCapture) {
       pendingSpan = attachment.pendingSpan;
-      if (!pendingSpan.isFor(circuitBreaker)) {
+      if (!pendingSpan.isFor(circuitBreaker) || pendingSpan.resultClassified) {
+        // Once the attempt's own result has been classified, direct calls made by stage
+        // continuations running under this attachment cannot reclassify it.
         return null;
       }
     } else if (capture != null
@@ -419,6 +426,9 @@ public class Resilience4jCircuitBreakerSpans {
     // stage supplier wrappers.
     private boolean handedOff;
     @Nullable private Throwable supplierFailure;
+    // Written and read on the thread running the completion callback while its attachment is
+    // installed.
+    private boolean resultClassified;
 
     private PendingSpan(
         CircuitBreaker circuitBreaker,
@@ -441,6 +451,10 @@ public class Resilience4jCircuitBreakerSpans {
 
     void markHandedOff() {
       handedOff = true;
+    }
+
+    void markResultClassified() {
+      resultClassified = true;
     }
 
     void recordSupplierFailure(Throwable throwable) {

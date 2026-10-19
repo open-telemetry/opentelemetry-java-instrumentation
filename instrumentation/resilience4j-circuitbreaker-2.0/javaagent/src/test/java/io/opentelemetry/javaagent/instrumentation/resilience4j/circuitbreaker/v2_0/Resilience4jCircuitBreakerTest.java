@@ -663,6 +663,36 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void rawCallbackInStageContinuationDoesNotChangeDecoratedOutcome() {
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    builder.recordResult(result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future = new CompletableFuture<>();
+    Supplier<CompletionStage<Integer>> decoratedStage =
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, () -> future);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          CompletionStage<Integer> stage = decoratedStage.get();
+          CompletionStage<Integer> continuation =
+              stage.thenApply(
+                  result -> {
+                    // Runs synchronously inside the completion callback while the attempt's
+                    // completion attachment is still installed; a direct call creates no capture.
+                    circuitBreaker.acquirePermission();
+                    circuitBreaker.onResult(1L, MILLISECONDS, 500);
+                    return result;
+                  });
+          assertThat(future.complete(200)).isTrue();
+          assertThat(continuation.toCompletableFuture().join()).isEqualTo(200);
+        });
+
+    assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
   void rawCallbackInDecoratedOnResultDoesNotCreateAnotherSpan() {
     CircuitBreaker innerCircuitBreaker = CircuitBreaker.ofDefaults("inner-circuit-breaker");
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
