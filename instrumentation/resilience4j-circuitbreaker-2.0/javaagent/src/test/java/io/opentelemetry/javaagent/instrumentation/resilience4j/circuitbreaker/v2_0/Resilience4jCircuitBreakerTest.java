@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class Resilience4jCircuitBreakerTest {
@@ -368,6 +369,54 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(thrown).isSameAs(exception);
     assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+  void compositionDoesNotExtendProtectedOperation(boolean unchecked, boolean failAfter) {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    CheckedSupplier<String> supplier =
+        CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> "ok");
+    CheckedFunction<String, String> function =
+        CircuitBreaker.decorateCheckedFunction(circuitBreaker, value -> value);
+    IllegalStateException exception = new IllegalStateException("after");
+    Function<String, String> after =
+        value ->
+            testing.runWithSpan(
+                "after",
+                () -> {
+                  if (failAfter) {
+                    throw exception;
+                  }
+                  return value + "-after";
+                });
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () -> {
+                      String result =
+                          unchecked
+                              ? function.unchecked().andThen(after).apply("ok")
+                              : supplier.andThen(after::apply).get();
+                      assertThat(result).isEqualTo("ok-after");
+                      return result;
+                    }));
+
+    assertThat(thrown).isSameAs(failAfter ? exception : null);
+    assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+    assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.unset()),
+                span -> span.hasName("after").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -1033,7 +1082,7 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void checkedSupplierWithNonPublicSubinterfaceSucceeds() {
+  void checkedSupplierWithNonPublicSubinterfaceSucceeds() throws Throwable {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     LocalCheckedSupplier supplier = () -> "ok";
     CheckedSupplier<String> decorated =

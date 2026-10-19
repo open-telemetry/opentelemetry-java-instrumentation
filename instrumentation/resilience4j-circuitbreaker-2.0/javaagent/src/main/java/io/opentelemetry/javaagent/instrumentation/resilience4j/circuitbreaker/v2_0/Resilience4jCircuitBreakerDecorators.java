@@ -630,6 +630,9 @@ public class Resilience4jCircuitBreakerDecorators {
         }
         return method.invoke(delegate, args);
       }
+      if (method.isDefault()) {
+        return InvocationHandler.invokeDefault(proxy, method, args);
+      }
       Resilience4jCircuitBreakerSpans.Capture capture =
           afterAcquisition
               ? Resilience4jCircuitBreakerSpans.beginCaptureAfterAcquisition(circuitBreaker)
@@ -689,6 +692,9 @@ public class Resilience4jCircuitBreakerDecorators {
           return System.identityHashCode(proxy);
         }
         return method.invoke(delegate, args);
+      }
+      if (method.isDefault()) {
+        return InvocationHandler.invokeDefault(proxy, method, args);
       }
       Resilience4jCircuitBreakerSpans.Capture capture =
           Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
