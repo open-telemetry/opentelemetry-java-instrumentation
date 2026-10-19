@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -29,6 +30,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -47,6 +49,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -102,10 +106,12 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
+                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
                         .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("process queue1")
                         .hasKind(SpanKind.CONSUMER)
+                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
@@ -131,6 +137,7 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("process queue1")
                         .hasKind(SpanKind.CONSUMER)
+                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
@@ -148,12 +155,14 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("process queue1")
                         .hasKind(SpanKind.CONSUMER)
+                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, "message2"),
+                            equalTo(ERROR_TYPE, "_OTHER"),
                             equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
                         .hasLinks(
                             LinkData.create(
@@ -162,7 +171,51 @@ class AwsLambdaSqsMessageHandlerTest {
                                     "53995c3f42cd8ad9",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))));
-    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 3, 2, null);
+    testing.waitAndAssertMetrics(
+        TracingSqsEventHandler.INSTRUMENTATION_NAME,
+        "messaging.process.duration",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasCount(2)
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "queue1")),
+                                    point ->
+                                        point
+                                            .hasCount(1)
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
+                                                equalTo(ERROR_TYPE, "_OTHER"))))));
+    testing.waitAndAssertMetrics(
+        TracingSqsEventHandler.INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(2)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "queue1"))))));
   }
 
   @Test
@@ -235,11 +288,12 @@ class AwsLambdaSqsMessageHandlerTest {
                 span -> span.hasName("process queue1")));
   }
 
-  @Test
-  void keyedEventSuppressesSelectedMessage() {
+  @ParameterizedTest
+  @ValueSource(strings = {"message1", "message2"})
+  void keyedEventSuppressesSelectedMessage(String messageId) {
     SQSEvent.SQSMessage message = newMessage();
     message.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));
-    message.setMessageId("message1");
+    message.setMessageId(messageId);
     message.setEventSource("aws:sqs");
     message.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
 
@@ -251,7 +305,14 @@ class AwsLambdaSqsMessageHandlerTest {
         Instrumenter.<SQSEvent, Void>builder(openTelemetrySdk, "test", unused -> "custom process")
             .addAttributesExtractor(new ConsumerProcessAttributesExtractor())
             .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    new TestHandler(openTelemetrySdk, eventInstrumenter).handleRequest(event, context);
+    SQSBatchResponse response =
+        new TestHandler(openTelemetrySdk, eventInstrumenter).handleRequest(event, context);
+    if ("message1".equals(messageId)) {
+      assertThat(response.getBatchItemFailures()).isEmpty();
+    } else {
+      assertThat(response.getBatchItemFailures())
+          .satisfiesExactly(item -> assertThat(item.getItemIdentifier()).isEqualTo(messageId));
+    }
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -260,6 +321,8 @@ class AwsLambdaSqsMessageHandlerTest {
               span ->
                   span.hasName("custom process")
                       .hasKind(SpanKind.CONSUMER)
+                      .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
+                      .hasTotalAttributeCount(0)
                       .hasParent(trace.getSpan(0)));
         });
   }

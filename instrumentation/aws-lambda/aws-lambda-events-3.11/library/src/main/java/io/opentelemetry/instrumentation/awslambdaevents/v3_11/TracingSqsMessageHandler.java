@@ -83,13 +83,18 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
         io.opentelemetry.context.Context otelContext =
             messageInstrumenter.start(parentContext, message);
         Throwable error = null;
+        boolean successful = true;
         try (Scope ignored = otelContext.makeCurrent()) {
-          handleMessage(message, context, batchItemFailures);
+          successful = handleMessage(message, context, batchItemFailures);
         } catch (Throwable t) {
           error = t;
           throw t;
         } finally {
-          messageInstrumenter.end(otelContext, message, null, error);
+          messageInstrumenter.end(
+              AwsLambdaSqsInstrumenterFactory.withMessageProcessingOutcome(otelContext, successful),
+              message,
+              null,
+              error);
         }
       } else {
         handleMessage(message, context, batchItemFailures);
@@ -99,13 +104,15 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
     return new SQSBatchResponse(batchItemFailures);
   }
 
-  private void handleMessage(
+  private boolean handleMessage(
       SQSMessage message,
       Context context,
       List<SQSBatchResponse.BatchItemFailure> batchItemFailures) {
-    if (!handleMessage(message, context)) {
+    boolean successful = handleMessage(message, context);
+    if (!successful) {
       batchItemFailures.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
     }
+    return successful;
   }
 
   /**
