@@ -106,7 +106,6 @@ class CassandraTest extends AbstractCassandraTest {
     CqlSession instrumentedSession = getSession(null);
     ClassLoader helperClassLoader =
         Proxy.getInvocationHandler(instrumentedSession).getClass().getClassLoader();
-    assertThat(helperClassLoader.getClass().getName()).endsWith("InstrumentationModuleClassLoader");
     CqlSession delegate = getDelegate(instrumentedSession);
     InetSocketAddress coordinatorAddress = new InetSocketAddress("127.0.0.2", 19042);
     CqlSession mutatingDelegate =

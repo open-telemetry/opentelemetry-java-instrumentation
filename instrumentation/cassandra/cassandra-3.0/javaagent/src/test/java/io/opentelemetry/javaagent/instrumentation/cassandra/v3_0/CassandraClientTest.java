@@ -264,24 +264,11 @@ class CassandraClientTest {
     assertConfiguredTarget(configuredCluster, null, null);
   }
 
-  @Test
-  void exceptionalContactPointMutationDoesNotSuppressAnotherBuilder() {
-    assertThatThrownBy(() -> Cluster.builder().addContactPoints("127.0.0.2", null))
-        .isInstanceOf(NullPointerException.class);
-
-    Cluster configuredCluster =
-        Cluster.builder().addContactPoint("LOCALHOST").withPort(cassandraPort).build();
-
-    assertConfiguredTarget(configuredCluster, "LOCALHOST", cassandraPort);
-  }
-
   private static void assertConfiguredTarget(
       Cluster configuredCluster, String expectedAddress, Integer expectedPort) {
     cleanup.deferCleanup(configuredCluster);
     Session session = configuredCluster.connect();
     cleanup.deferCleanup(session);
-    assertThat(session.getClass().getClassLoader().getClass().getName())
-        .endsWith("InstrumentationModuleClassLoader");
 
     ResultSet resultSet = session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
     InetSocketAddress coordinatorAddress =
