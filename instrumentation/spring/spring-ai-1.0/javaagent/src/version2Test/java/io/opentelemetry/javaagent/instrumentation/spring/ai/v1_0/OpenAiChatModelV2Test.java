@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
 import com.openai.client.OpenAIClientImpl;
 import com.openai.core.ClientOptions;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -15,22 +16,20 @@ import org.springframework.ai.openai.http.okhttp.SpringAiOpenAiHttpClient;
 
 class OpenAiChatModelV2Test extends AbstractOpenAiChatModelTest {
 
-  private SpringAiOpenAiHttpClient httpClient;
+  private static SpringAiOpenAiHttpClient httpClient;
 
-  @AfterEach
-  void closeHttpClient() {
-    if (httpClient != null) {
-      // Shut down all OkHttp threads to prevent context propagation leaks between tests.
-      httpClient.getOkHttpClient().dispatcher().executorService().shutdownNow();
-      httpClient.getOkHttpClient().connectionPool().evictAll();
-      httpClient.close();
-      httpClient = null;
-    }
+  @BeforeAll
+  static void setUp() {
+    httpClient = SpringAiOpenAiHttpClient.builder().build();
+  }
+
+  @AfterAll
+  static void tearDown() {
+    httpClient.close();
   }
 
   @Override
   protected ChatModel openAiChatModel(String baseUrl, String model) {
-    httpClient = SpringAiOpenAiHttpClient.builder().build();
     OpenAIClientImpl openAiClient =
         new OpenAIClientImpl(
             ClientOptions.builder()
