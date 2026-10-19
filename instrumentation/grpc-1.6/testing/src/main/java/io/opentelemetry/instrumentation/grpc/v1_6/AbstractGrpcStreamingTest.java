@@ -496,9 +496,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         : "Conversation"),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? Status.Code.INTERNAL.name()
-                                        : null),
+                                    emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null),
                                 equalTo(
                                     RPC_GRPC_STATUS_CODE,
                                     emitOldRpcSemconv()
@@ -506,9 +504,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         : null),
                                 equalTo(
                                     RPC_RESPONSE_STATUS_CODE,
-                                    emitPreviewRpcSemconv()
-                                        ? Status.Code.INTERNAL.name()
-                                        : null),
+                                    emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
