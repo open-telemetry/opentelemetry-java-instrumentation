@@ -128,8 +128,6 @@ public final class AwsSdkInstrumenterFactory {
     };
   }
 
-  private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
 
@@ -162,21 +160,24 @@ public final class AwsSdkInstrumenterFactory {
       httpClientSuppressionAttributesExtractor =
           new AwsSdkHttpClientSuppressionAttributesExtractor();
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
+      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
+
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultAttributesExtractors =
           asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedAttributesExtractors =
           asList(
               rpcAttributesExtractor,
               experimentalAttributesExtractor,
               httpClientSuppressionAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultConsumerAttributesExtractors = asList(rpcAttributesExtractor, httpAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedConsumerAttributesExtractors =
           asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
 
