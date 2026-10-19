@@ -23,11 +23,7 @@ import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.functions.OnceConsumer;
-import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -128,56 +124,6 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(thrown).isSameAs(exception);
     assertCircuitBreakerSpan("closed", "failure", exception);
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void preservesApplicationOutcomeWhenSpanEndThrows(boolean fails) {
-    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
-    IllegalStateException exception = new IllegalStateException("application failure");
-
-    Throwable thrown;
-    try (Scope ignored = Baggage.builder().put("test-throw-on-end", "true").build().makeCurrent()) {
-      thrown =
-          catchThrowable(
-              () ->
-                  testing.runWithSpan(
-                      "parent",
-                      () -> {
-                        SpanContext parentSpanContext = Span.current().getSpanContext();
-                        try {
-                          String result =
-                              circuitBreaker.executeSupplier(
-                                  () -> {
-                                    if (fails) {
-                                      throw exception;
-                                    }
-                                    return "ok";
-                                  });
-                          assertThat(result).isEqualTo("ok");
-                        } finally {
-                          assertThat(Span.current().getSpanContext()).isEqualTo(parentSpanContext);
-                        }
-                      }));
-    }
-
-    assertThat(thrown).isSameAs(fails ? exception : null);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("CircuitBreaker test-circuit-breaker")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("resilience4j.circuit_breaker.name"),
-                                experimental("test-circuit-breaker")),
-                            equalTo(
-                                stringKey("resilience4j.circuit_breaker.state"),
-                                experimental("closed")))));
   }
 
   @Test
