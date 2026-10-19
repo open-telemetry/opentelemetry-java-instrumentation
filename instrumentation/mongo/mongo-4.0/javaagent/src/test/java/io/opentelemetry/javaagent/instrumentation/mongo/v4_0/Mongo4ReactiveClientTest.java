@@ -133,28 +133,11 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  protected MongoCollection<Document> setupValidatedCollection(String dbName, String collectionName)
-      throws Exception {
+  protected Document runCommand(String dbName, Document command) throws Exception {
     MongoDatabase db = client.getDatabase(dbName);
     CompletableFuture<Object> result = new CompletableFuture<>();
-    db.runCommand(
-            new Document("create", collectionName)
-                .append("validator", new Document("required", new Document("$exists", true))))
-        .subscribe(toSubscriber(completing(result)));
-    result.get(30, SECONDS);
-    return db.getCollection(collectionName);
-  }
-
-  @Override
-  protected void insertInvalid(MongoCollection<Document> collection) throws Throwable {
-    CompletableFuture<Object> result = new CompletableFuture<>();
-    collection
-        .insertOne(new Document("password", "SECRET"))
-        .subscribe(toSubscriber(result::complete));
-    Object value = result.get(30, SECONDS);
-    if (value instanceof Throwable) {
-      throw (Throwable) value;
-    }
+    db.runCommand(command).subscribe(toSubscriber(completing(result)));
+    return (Document) result.get(30, SECONDS);
   }
 
   private static Consumer<Object> completing(CompletableFuture<Object> future) {

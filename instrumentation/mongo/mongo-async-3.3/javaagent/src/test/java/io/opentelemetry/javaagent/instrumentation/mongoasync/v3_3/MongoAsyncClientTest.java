@@ -107,27 +107,10 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
-  protected MongoCollection<Document> setupValidatedCollection(String dbName, String collectionName)
-      throws Exception {
-    MongoDatabase db = client.getDatabase(dbName);
+  protected Document runCommand(String dbName, Document command) throws Exception {
     CompletableFuture<Document> result = new CompletableFuture<>();
-    db.runCommand(
-        new Document("create", collectionName)
-            .append("validator", new Document("required", new Document("$exists", true))),
-        completing(result));
-    result.get(30, SECONDS);
-    return db.getCollection(collectionName);
-  }
-
-  @Override
-  protected void insertInvalid(MongoCollection<Document> collection) throws Throwable {
-    CompletableFuture<Throwable> result = new CompletableFuture<>();
-    collection.insertOne(
-        new Document("password", "SECRET"), (ignored, error) -> result.complete(error));
-    Throwable error = result.get(30, SECONDS);
-    if (error != null) {
-      throw error;
-    }
+    client.getDatabase(dbName).runCommand(command, completing(result));
+    return result.get(30, SECONDS);
   }
 
   private static <T> SingleResultCallback<T> completing(CompletableFuture<T> future) {

@@ -23,11 +23,9 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
-import com.mongodb.MongoWriteException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -41,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -132,20 +131,27 @@ public abstract class AbstractMongoClientTest<T> {
 
   protected abstract void error(String dbName, String collectionName) throws Throwable;
 
-  protected abstract T setupValidatedCollection(String dbName, String collectionName)
-      throws Exception;
-
-  protected abstract void insertInvalid(T collection) throws Throwable;
+  protected abstract Document runCommand(String dbName, Document command) throws Exception;
 
   @Test
   void schemaValidationFailure() throws Exception {
+    String dbName = "test_db";
     String collectionName = createCollectionName();
-    T collection = setupValidatedCollection("test_db", collectionName);
+    Document createCollectionCommand =
+        new Document("create", collectionName)
+            .append("validator", new Document("required", new Document("$exists", true)));
+    Document insertCommand =
+        new Document("insert", collectionName)
+            .append("documents", asList(new Document("password", "SECRET")));
+
+    runCommand(dbName, createCollectionCommand);
     ignoreTracesAndClear(1);
 
-    assertThatExceptionOfType(MongoWriteException.class)
-        .isThrownBy(() -> insertInvalid(collection))
-        .satisfies(error -> assertThat(error.getError().getCode()).isEqualTo(121));
+    Document response = runCommand(dbName, insertCommand);
+    assertThat((List<?>) response.get("writeErrors"))
+        .first()
+        .satisfies(
+            writeError -> assertThat(((Document) writeError).getInteger("code")).isEqualTo(121));
 
     assertWriteResult(collectionName, "insert", "121");
   }
