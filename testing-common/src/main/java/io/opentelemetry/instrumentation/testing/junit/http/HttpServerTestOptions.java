@@ -70,6 +70,7 @@ public class HttpServerTestOptions {
   boolean useHttp2 = false;
   // request body capture disabled by default and opt-in as only a few servers/frameworks support it
   boolean testRequestBodyCapture = false;
+  boolean testRequestBodyCaptureAfterService = false;
 
   HttpServerTestOptions() {}
 
@@ -236,6 +237,13 @@ public class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setTestRequestBodyCapture(boolean testRequestBodyCapture) {
     this.testRequestBodyCapture = testRequestBodyCapture;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestRequestBodyCaptureAfterService(
+      boolean testRequestBodyCaptureAfterService) {
+    this.testRequestBodyCaptureAfterService = testRequestBodyCaptureAfterService;
     return this;
   }
 

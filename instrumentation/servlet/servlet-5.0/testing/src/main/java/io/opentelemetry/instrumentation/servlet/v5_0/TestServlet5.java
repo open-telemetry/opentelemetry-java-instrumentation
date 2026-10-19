@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test
 import static io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_DISPATCH_READ;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_LATE_READ;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -74,7 +76,7 @@ public class TestServlet5 {
 
               resp.setStatus(endpoint.getStatus());
               resp.getWriter().print(endpoint.getBody());
-            } else if (CAPTURE_BODY.equals(endpoint)) {
+            } else if (isCaptureBody(endpoint)) {
               // read body to trigger body capture
               consumeRequestBody(req);
               resp.setStatus(endpoint.getStatus());
@@ -105,6 +107,11 @@ public class TestServlet5 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
+      if (CAPTURE_BODY_DISPATCH_READ.equals(endpoint)) {
+        // the body is read by the dispatched servlet, after this method has returned
+        req.startAsync().dispatch(CAPTURE_BODY.getPath());
+        return;
+      }
       CountDownLatch latch = new CountDownLatch(1);
       boolean startAsyncInSpan =
           SUCCESS.equals(endpoint) && "true".equals(req.getParameter("startAsyncInSpan"));
@@ -155,12 +162,28 @@ public class TestServlet5 {
                       resp.setStatus(endpoint.getStatus());
                       resp.getWriter().print(endpoint.getBody());
                       context.complete();
-                    } else if (CAPTURE_BODY.equals(endpoint)) {
+                    } else if (CAPTURE_BODY.equals(endpoint)
+                        || CAPTURE_BODY_LATE_READ.equals(endpoint)) {
+                      if (CAPTURE_BODY_LATE_READ.equals(endpoint)) {
+                        // In the case of a late read, the request body is read after the servlet
+                        // service() method has returned.
+                        // This fixed delay is to let the servlet service() method to complete.
+                        // We can't use a latch to wait as it would trigger the read within the
+                        // servlet service() method.
+                        //
+                        // In the rare case where the fixed timeout is not enough, this would make
+                        // the body capture to happen before the service() method returns.
+                        // That would make the test scenario equivalent to the synchronous body
+                        // capture, so no test failure is triggered.
+                        Thread.sleep(20);
+                      }
                       // read body to trigger body capture
                       consumeRequestBody(req);
                       resp.setStatus(endpoint.getStatus());
                       resp.getWriter().print(endpoint.getBody());
-                      context.complete();
+                      if (!CAPTURE_BODY_LATE_READ.equals(endpoint)) {
+                        context.complete();
+                      }
                     } else if (ERROR.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
                       resp.getWriter().print(endpoint.getBody());
@@ -197,9 +220,17 @@ public class TestServlet5 {
               }
               throw new IllegalStateException(e);
             } finally {
+              if (CAPTURE_BODY_LATE_READ.equals(endpoint)) {
+                // nothing waits for this thread: complete once the controller span has ended
+                context.complete();
+              }
               latch.countDown();
             }
           });
+      if (CAPTURE_BODY_LATE_READ.equals(endpoint)) {
+        // return without waiting, the request body is read after returning
+        return;
+      }
       try {
         latch.await();
       } catch (InterruptedException ignored) {
@@ -246,7 +277,7 @@ public class TestServlet5 {
 
                 resp.setStatus(endpoint.getStatus());
                 resp.getWriter().print(endpoint.getBody());
-              } else if (CAPTURE_BODY.equals(endpoint)) {
+              } else if (isCaptureBody(endpoint)) {
                 // read body to trigger body capture
                 consumeRequestBody(req);
                 resp.setStatus(endpoint.getStatus());
@@ -329,6 +360,13 @@ public class TestServlet5 {
         req.startAsync().dispatch("/recursive");
       }
     }
+  }
+
+  // servlets that cannot read the body late or after a dispatch just read it directly
+  private static boolean isCaptureBody(ServerEndpoint endpoint) {
+    return CAPTURE_BODY.equals(endpoint)
+        || CAPTURE_BODY_LATE_READ.equals(endpoint)
+        || CAPTURE_BODY_DISPATCH_READ.equals(endpoint);
   }
 
   private static void consumeRequestBody(HttpServletRequest req) throws IOException {

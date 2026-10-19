@@ -11,6 +11,8 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_DISPATCH_READ;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_LATE_READ;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -636,18 +638,32 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @Test
   void requestBodyCapture() {
     assumeTrue(options.testRequestBodyCapture);
+    assertRequestBodyCapture(CAPTURE_BODY);
+  }
 
+  @Test
+  void requestBodyCaptureLateRead() {
+    assumeTrue(options.testRequestBodyCaptureAfterService);
+    assertRequestBodyCapture(CAPTURE_BODY_LATE_READ);
+  }
+
+  @Test
+  void requestBodyCaptureDispatchRead() {
+    assumeTrue(options.testRequestBodyCaptureAfterService);
+    assertRequestBodyCapture(CAPTURE_BODY_DISPATCH_READ);
+  }
+
+  private void assertRequestBodyCapture(ServerEndpoint endpoint) {
     String body = "{\"test\": \"value\"}";
     AggregatedHttpRequest request =
-        AggregatedHttpRequest.of(
-            POST, resolveAddress(CAPTURE_BODY, getProtocolPrefix()), JSON, body);
+        AggregatedHttpRequest.of(POST, resolveAddress(endpoint, getProtocolPrefix()), JSON, body);
     AggregatedHttpResponse response = client.execute(request).aggregate().join();
 
-    assertThat(response.status().code()).isEqualTo(CAPTURE_BODY.getStatus());
-    assertThat(response.contentUtf8()).isEqualTo(CAPTURE_BODY.getBody());
+    assertThat(response.status().code()).isEqualTo(endpoint.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(endpoint.getBody());
 
-    String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_BODY, null);
-    assertTheTraces(1, null, null, spanId, "POST", CAPTURE_BODY);
+    String spanId = assertResponseHasCustomizedHeaders(response, endpoint, null);
+    assertTheTraces(1, null, null, spanId, "POST", endpoint);
   }
 
   private void writeChunkedRequest(
@@ -1090,7 +1106,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               }
             }
 
-            if (endpoint == CAPTURE_BODY) {
+            if (endpoint == CAPTURE_BODY
+                || endpoint == CAPTURE_BODY_LATE_READ
+                || endpoint == CAPTURE_BODY_DISPATCH_READ) {
               List<SpanData> serverSpans =
                   trace.actual().stream()
                       .filter(span -> span.getKind() == SpanKind.SERVER)
