@@ -38,6 +38,22 @@ testing {
         }
       }
     }
+    register<JvmTestSuite>("testDubbo27") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/testDubbo/java"))
+          include("**/DubboAgentAsyncTest.java")
+        }
+      }
+      dependencies {
+        implementation(project(":instrumentation:apache-dubbo-2.7:testing")) {
+          exclude(group = "org.apache.dubbo")
+        }
+        // Keep the getResultFuture API covered even when testing latest dependencies.
+        implementation("org.apache.dubbo:dubbo:2.7.0")
+        implementation("org.apache.dubbo:dubbo-config-api:2.7.0")
+      }
+    }
   }
 }
 
