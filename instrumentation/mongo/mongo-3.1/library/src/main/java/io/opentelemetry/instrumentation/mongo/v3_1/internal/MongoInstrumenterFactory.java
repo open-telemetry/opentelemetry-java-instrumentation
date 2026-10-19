@@ -82,7 +82,7 @@ public final class MongoInstrumenterFactory {
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .setSpanStatusExtractor(
                 (status, request, response, error) -> {
-                  if (MongoDbAttributesGetter.getWriteErrorCode(response) != null) {
+                  if (dbAttributesGetter.getErrorType(request, response, error) != null) {
                     status.setStatus(StatusCode.ERROR);
                   } else {
                     SpanStatusExtractor.getDefault().extract(status, request, response, error);
