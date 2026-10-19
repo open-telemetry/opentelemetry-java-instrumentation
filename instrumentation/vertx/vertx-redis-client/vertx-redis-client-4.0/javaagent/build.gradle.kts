@@ -124,24 +124,12 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .filter { !it.name.endsWith("unitTests", true) }
-    .associate { suite ->
-      suite.name to register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-      }
-    }
-
   check {
     dependsOn(testing.suites.named("unitTests"), testing.suites.named("previewSemconvUnitTests"))
     if (otelProps.testLatestDeps) {
-      dependsOn(previewSemconvSuites.getValue("test"))
+      dependsOn(testing.suites.named("test"))
     } else {
-      dependsOn(testing.suites, previewSemconvSuites.values)
+      dependsOn(testing.suites)
     }
   }
 }

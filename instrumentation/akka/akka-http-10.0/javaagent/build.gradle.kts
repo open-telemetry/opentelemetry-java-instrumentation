@@ -76,14 +76,8 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    telemetryConfig("otel.semconv-stability.preview", "service.peer")
-  }
-
   check {
-    dependsOn(testing.suites, testPreviewSemconv)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

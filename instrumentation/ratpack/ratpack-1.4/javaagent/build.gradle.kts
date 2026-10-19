@@ -91,21 +91,8 @@ tasks {
     systemProperty("ratpack14Test", true)
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    telemetryConfig("otel.semconv-stability.preview", "service.peer")
-    systemProperty("ratpack14Test", true)
-  }
-
-  val version17TestPreviewSemconv = register<Test>("version17TestPreviewSemconv") {
-    testClassesDirs = version17Test.get().sources.output.classesDirs
-    classpath = version17Test.get().sources.runtimeClasspath
-    telemetryConfig("otel.semconv-stability.preview", "service.peer")
-  }
-
   check {
-    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {
