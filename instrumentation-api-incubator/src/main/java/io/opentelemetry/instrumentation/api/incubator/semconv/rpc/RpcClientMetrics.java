@@ -101,7 +101,11 @@ public final class RpcClientMetrics implements OperationListener {
     }
   }
 
-  /** Returns an {@link OperationMetrics} factory for RPC client metrics. */
+  /**
+   * Returns a {@link OperationMetrics} which can be used to enable recording of {@link
+   * RpcClientMetrics} on an {@link
+   * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
+   */
   public static OperationMetrics get() {
     return new Factory();
   }

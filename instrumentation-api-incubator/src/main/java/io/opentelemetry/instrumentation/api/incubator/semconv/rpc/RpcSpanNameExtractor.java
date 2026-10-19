@@ -15,8 +15,8 @@ public final class RpcSpanNameExtractor<REQUEST>
 
   /** Creates the RPC span name extractor. */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      RpcAttributesGetter<REQUEST, ?> getter) {
-    return new RpcSpanNameExtractor<>(getter);
+      RpcAttributesGetter<REQUEST, ?> attributesExtractor) {
+    return new RpcSpanNameExtractor<>(attributesExtractor);
   }
 
   private final RpcAttributesGetter<REQUEST, ?> getter;

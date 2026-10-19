@@ -68,9 +68,12 @@ public final class AwsSdkInstrumenterFactory {
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       stringKey("messaging.message.id");
 
+  private final List<AttributesExtractor<Request<?>, Response<?>>> defaultAttributesExtractors =
+      createAttributesExtractors(false);
+  private final List<AttributesExtractor<Request<?>, Response<?>>> extendedAttributesExtractors =
+      createAttributesExtractors(true);
+
   private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<Request<?>, Response<?>>> defaultAttributesExtractors;
-  private final List<AttributesExtractor<Request<?>, Response<?>>> extendedAttributesExtractors;
   private final IncludeExclude headers;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
@@ -81,8 +84,6 @@ public final class AwsSdkInstrumenterFactory {
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled) {
     this.openTelemetry = openTelemetry;
-    defaultAttributesExtractors = createAttributesExtractors(false);
-    extendedAttributesExtractors = createAttributesExtractors(true);
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;

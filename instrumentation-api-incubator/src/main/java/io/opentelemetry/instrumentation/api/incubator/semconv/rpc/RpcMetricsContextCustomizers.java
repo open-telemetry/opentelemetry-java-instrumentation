@@ -24,7 +24,10 @@ public final class RpcMetricsContextCustomizers {
   static final ContextKey<String> OLD_RPC_METHOD_CONTEXT_KEY =
       ContextKey.named("otel-rpc-old-method");
 
-  /** Creates a context customizer for RPC metrics dual-semconv support. */
+  /**
+   * Returns a {@link ContextCustomizer} that captures the old {@code rpc.method} value in context
+   * so that RPC metrics can use it when both old and stable semantic conventions are active.
+   */
   public static <REQUEST> ContextCustomizer<REQUEST> dualEmitContextCustomizer(
       RpcAttributesGetter<REQUEST, ?> getter) {
     return new DualEmitContextCustomizer<>(getter);

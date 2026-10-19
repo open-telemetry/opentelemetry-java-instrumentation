@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rmi.server;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
@@ -21,12 +20,11 @@ public class RmiServerSingletons {
   private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 
   static {
-    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     RmiServerAttributesGetter rpcAttributesGetter = new RmiServerAttributesGetter();
 
     InstrumenterBuilder<ClassAndMethod, Void> builder =
         Instrumenter.<ClassAndMethod, Void>builder(
-                openTelemetry,
+                GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
