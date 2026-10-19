@@ -9,6 +9,8 @@ import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelpe
 import io.opentelemetry.instrumentation.servlet.common.internal.CaptureInputStream;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletRequestWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
@@ -40,7 +42,19 @@ public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper
 
         @Override
         protected boolean isRequestWrapped(HttpServletRequest request) {
-          return request instanceof Servlet5BodyCaptureRequestWrapper;
+          // our wrapper can be hidden behind wrappers added by filters or frameworks
+          ServletRequest current = request;
+          while (current instanceof ServletRequestWrapper) {
+            if (current instanceof Servlet5BodyCaptureRequestWrapper) {
+              return true;
+            }
+            ServletRequest wrapped = ((ServletRequestWrapper) current).getRequest();
+            if (wrapped == current) {
+              break;
+            }
+            current = wrapped;
+          }
+          return false;
         }
 
         @Override

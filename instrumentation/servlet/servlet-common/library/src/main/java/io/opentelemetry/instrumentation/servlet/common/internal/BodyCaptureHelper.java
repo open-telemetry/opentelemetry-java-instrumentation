@@ -13,9 +13,6 @@ import java.nio.ByteBuffer;
  */
 public abstract class BodyCaptureHelper<REQUEST, INPUT> {
 
-  /** Servlet attribute used to indicate that the request has been wrapped to capture its body. */
-  private static final String WRAPPED_ATTRIBUTE = "otel.request.body.wrapped";
-
   /** Servlet attribute name used to store the request body. */
   public static final String REQUEST_BODY_ATTRIBUTE = "otel.request.body";
 
@@ -31,6 +28,10 @@ public abstract class BodyCaptureHelper<REQUEST, INPUT> {
 
   protected abstract INPUT wrapInput(INPUT inputStream, ByteBuffer buffer);
 
+  /**
+   * Checks whether the request is, or wraps, a request that captures its body. Requests can be
+   * wrapped by other filters or frameworks, which hide our wrapper.
+   */
   protected abstract boolean isRequestWrapped(REQUEST request);
 
   protected abstract REQUEST wrapRequest(REQUEST request, int maxBufferSize);
@@ -53,14 +54,10 @@ public abstract class BodyCaptureHelper<REQUEST, INPUT> {
   }
 
   public REQUEST wrapIfNeeded(REQUEST request, int maxBufferSize) {
-    // The request body only needs to be captured once. The instanceof check is a cheap fast path,
-    // the attribute also detects our wrapper when it is hidden behind wrappers added by other
-    // filters or frameworks.
-    if (isRequestWrapped(request)
-        || accessor.getRequestAttribute(request, WRAPPED_ATTRIBUTE) != null) {
+    // The request body only needs to be captured once, so we must wrap only once
+    if (isRequestWrapped(request)) {
       return request;
     }
-    accessor.setRequestAttribute(request, WRAPPED_ATTRIBUTE, true);
     return wrapRequest(request, maxBufferSize);
   }
 }
