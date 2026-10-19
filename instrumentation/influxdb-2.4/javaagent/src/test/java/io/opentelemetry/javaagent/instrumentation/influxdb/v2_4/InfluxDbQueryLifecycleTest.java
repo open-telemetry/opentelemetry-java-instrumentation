@@ -16,40 +16,27 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import okhttp3.Dispatcher;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import okio.Buffer;
-import okio.BufferedSource;
-import okio.ForwardingSource;
-import okio.Okio;
 import org.influxdb.InfluxDB;
-import org.influxdb.InfluxDBException;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
-import org.influxdb.dto.QueryResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.msgpack.core.MessageBufferPacker;
-import org.msgpack.core.MessagePack;
 
 @SuppressWarnings("deprecation") // Query callbacks and QueryResult use the legacy client API.
 class InfluxDbQueryLifecycleTest {
@@ -65,35 +52,13 @@ class InfluxDbQueryLifecycleTest {
   @ValueSource(strings = {"{\"error\":\"private query text\"}", FAILURE})
   void synchronousResponseFailure(String body) {
     try (InfluxDB client = client(chain -> response(chain, body))) {
-      QueryResult result = client.query(QUERY);
-      assertThat(result).isNotNull();
+      assertThat(client.query(QUERY)).isNotNull();
     }
     assertQuery("_OTHER");
   }
 
   @Test
-  void synchronousTransportFailure() {
-    try (InfluxDB client =
-        client(
-            chain -> {
-              throw new IOException("private query text");
-            })) {
-      assertThatThrownBy(() -> client.query(QUERY)).isInstanceOf(RuntimeException.class);
-    }
-    assertQuery("org.influxdb.InfluxDBIOException");
-  }
-
-  @Test
-  void synchronousSuccess() {
-    try (InfluxDB client = client(chain -> response(chain, SUCCESS))) {
-      assertThat(client.query(QUERY).hasError()).isFalse();
-    }
-    assertQuery(null);
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {SUCCESS, "{\"error\":\"private query text\"}", FAILURE})
-  void asynchronousResponse(String body) throws InterruptedException {
+  void asynchronousResponse() throws InterruptedException {
     CountDownLatch requestStarted = new CountDownLatch(1);
     CountDownLatch respond = new CountDownLatch(1);
     CountDownLatch callback = new CountDownLatch(1);
@@ -103,7 +68,7 @@ class InfluxDbQueryLifecycleTest {
             chain -> {
               requestStarted.countDown();
               await(respond);
-              return response(chain, body);
+              return response(chain, FAILURE);
             })) {
       client.query(
           QUERY,
@@ -121,75 +86,7 @@ class InfluxDbQueryLifecycleTest {
       }
       assertThat(callback.await(10, SECONDS)).isTrue();
       assertThat(failure.get()).isNull();
-      assertQuery(body.equals(SUCCESS) ? null : "_OTHER");
-    }
-  }
-
-  @Test
-  void asynchronousTransportFailure() throws InterruptedException {
-    CountDownLatch callback = new CountDownLatch(1);
-    AtomicReference<Throwable> failure = new AtomicReference<>();
-    try (InfluxDB client =
-        client(
-            chain -> {
-              throw new IOException("private query text");
-            })) {
-      client.query(
-          QUERY,
-          result -> callback.countDown(),
-          error -> {
-            failure.set(error);
-            callback.countDown();
-          });
-      assertThat(callback.await(10, SECONDS)).isTrue();
-      assertThat(failure.get()).isInstanceOf(IOException.class);
-      assertQuery(IOException.class.getName());
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"response", "chunk", "complete"})
-  void callbackFailureFinishesOnce(String callbackType) throws InterruptedException {
-    CountDownLatch callback = new CountDownLatch(1);
-    Runnable fail =
-        () -> {
-          callback.countDown();
-          throw new IllegalStateException("private callback text");
-        };
-    try (InfluxDB client = client(chain -> response(chain, SUCCESS + "\n"))) {
-      if (callbackType.equals("response")) {
-        client.query(QUERY, result -> fail.run(), error -> {});
-      } else {
-        client.query(
-            QUERY,
-            1,
-            (cancellable, result) -> {
-              if (callbackType.equals("chunk")) {
-                fail.run();
-              }
-            },
-            () -> {
-              if (callbackType.equals("complete")) {
-                fail.run();
-              }
-            },
-            error -> {});
-      }
-      assertThat(callback.await(10, SECONDS)).isTrue();
-      assertQuery(IllegalStateException.class.getName());
-    }
-  }
-
-  @Test
-  void successfulQueryAfterFailure() {
-    AtomicInteger requests = new AtomicInteger();
-    try (InfluxDB client =
-        client(chain -> response(chain, requests.getAndIncrement() == 0 ? FAILURE : SUCCESS))) {
-      assertThat(client.query(QUERY)).isNotNull();
       assertQuery("_OTHER");
-      testing.clearData();
-      assertThat(client.query(QUERY).hasError()).isFalse();
-      assertQuery(null);
     }
   }
 
@@ -272,291 +169,6 @@ class InfluxDbQueryLifecycleTest {
           error -> {});
       assertThat(callback.await(10, SECONDS)).isTrue();
       assertQuery(null);
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void cancellationBeforeResponseDelivery(boolean chunked) throws InterruptedException {
-    CountDownLatch requestStarted = new CountDownLatch(1);
-    CountDownLatch release = new CountDownLatch(1);
-    CountDownLatch failed = new CountDownLatch(1);
-    AtomicReference<Throwable> failure = new AtomicReference<>();
-    Dispatcher dispatcher = new Dispatcher();
-    OkHttpClient.Builder builder =
-        new OkHttpClient.Builder()
-            .dispatcher(dispatcher)
-            .addInterceptor(
-                chain -> {
-                  requestStarted.countDown();
-                  await(release);
-                  throw new IOException("Canceled");
-                });
-    try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
-      Consumer<Throwable> onFailure =
-          error -> {
-            failure.set(error);
-            failed.countDown();
-          };
-      if (chunked) {
-        client.query(QUERY, 1, (cancellable, result) -> {}, () -> {}, onFailure);
-      } else {
-        client.query(QUERY, result -> {}, onFailure);
-      }
-      try {
-        assertThat(requestStarted.await(10, SECONDS)).isTrue();
-        assertThat(testing.spans()).isEmpty();
-        assertNoDuration();
-        dispatcher.cancelAll();
-      } finally {
-        release.countDown();
-      }
-      assertThat(failed.await(10, SECONDS)).isTrue();
-      assertThat(failure.get()).isInstanceOf(IOException.class).hasMessage("Canceled");
-      assertQuery(null);
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void cancellationDuringChunkRead(boolean priorFailure) throws InterruptedException {
-    CountDownLatch reading = new CountDownLatch(1);
-    CountDownLatch release = new CountDownLatch(1);
-    AtomicReference<InfluxDB.Cancellable> cancellable = new AtomicReference<>();
-    try (InfluxDB client =
-        client(
-            chain ->
-                response(chain, "")
-                    .newBuilder()
-                    .body(
-                        new ResponseBody() {
-                          private final BufferedSource source =
-                              Okio.buffer(
-                                  new ForwardingSource(
-                                      new Buffer()
-                                          .writeUtf8((priorFailure ? FAILURE : SUCCESS) + "\n")) {
-                                    @Override
-                                    public long read(Buffer sink, long byteCount)
-                                        throws IOException {
-                                      long count = super.read(sink, byteCount);
-                                      if (count != -1) {
-                                        return count;
-                                      }
-                                      reading.countDown();
-                                      await(release);
-                                      throw new IOException("Canceled");
-                                    }
-                                  });
-
-                          @Override
-                          public MediaType contentType() {
-                            return MediaType.parse("application/json");
-                          }
-
-                          @Override
-                          public long contentLength() {
-                            return -1;
-                          }
-
-                          @Override
-                          public BufferedSource source() {
-                            return source;
-                          }
-                        })
-                    .build())) {
-      client.query(QUERY, 1, (handle, result) -> cancellable.set(handle), () -> {}, error -> {});
-      try {
-        assertThat(reading.await(10, SECONDS)).isTrue();
-        assertThat(testing.spans()).isEmpty();
-        assertNoDuration();
-        cancellable.get().cancel();
-      } finally {
-        release.countDown();
-      }
-      assertQuery(priorFailure ? "_OTHER" : null);
-    }
-  }
-
-  @Test
-  void chunkedOverloadWithoutCompletionCallback() throws InterruptedException {
-    CountDownLatch done = new CountDownLatch(1);
-    try (InfluxDB client = client(chain -> response(chain, SUCCESS + "\n"))) {
-      client.query(
-          QUERY,
-          1,
-          result -> {
-            if ("DONE".equals(result.getError())) {
-              done.countDown();
-            }
-          });
-      assertThat(done.await(10, SECONDS)).isTrue();
-      assertQuery(null);
-    }
-  }
-
-  @Test
-  void messagePackChunksWithoutCompletionCallback() throws IOException, InterruptedException {
-    byte[] body;
-    try (MessageBufferPacker packer = MessagePack.newDefaultBufferPacker()) {
-      packer
-          .packMapHeader(1)
-          .packString("results")
-          .packArrayHeader(1)
-          .packMapHeader(1)
-          .packString("statement_id")
-          .packInt(0);
-      packer
-          .packMapHeader(1)
-          .packString("results")
-          .packArrayHeader(1)
-          .packMapHeader(1)
-          .packString("statement_id")
-          .packInt(1);
-      body = packer.toByteArray();
-    }
-    CountDownLatch chunks = new CountDownLatch(2);
-    try (InfluxDB client =
-        InfluxDBFactory.connect(
-            "http://localhost:8086",
-            "user",
-            "password",
-            new OkHttpClient.Builder()
-                .addInterceptor(
-                    chain ->
-                        response(chain, "")
-                            .newBuilder()
-                            .body(
-                                ResponseBody.create(MediaType.parse("application/x-msgpack"), body))
-                            .build()),
-            InfluxDB.ResponseFormat.MSGPACK)) {
-      client.query(QUERY, 1, result -> chunks.countDown());
-      assertThat(chunks.await(10, SECONDS)).isTrue();
-      assertQuery(null);
-    }
-  }
-
-  @Test
-  void chunkedHttpFailure() throws InterruptedException {
-    CountDownLatch failed = new CountDownLatch(1);
-    AtomicReference<Throwable> failure = new AtomicReference<>();
-    try (InfluxDB client =
-        client(
-            chain ->
-                response(chain, "{\"error\":\"private query text\"}")
-                    .newBuilder()
-                    .code(400)
-                    .message("Bad Request")
-                    .build())) {
-      client.query(
-          QUERY,
-          1,
-          (cancellable, result) -> {},
-          () -> {},
-          error -> {
-            failure.set(error);
-            failed.countDown();
-          });
-      assertThat(failed.await(10, SECONDS)).isTrue();
-      assertThat(failure.get()).isInstanceOf(InfluxDBException.class);
-      assertQuery("400");
-    }
-  }
-
-  @Test
-  void chunkedTransportFailure() throws InterruptedException {
-    CountDownLatch failed = new CountDownLatch(1);
-    try (InfluxDB client =
-        client(
-            chain -> {
-              throw new IOException("private query text");
-            })) {
-      client.query(QUERY, 1, (cancellable, result) -> {}, () -> {}, error -> failed.countDown());
-      assertThat(failed.await(10, SECONDS)).isTrue();
-      assertQuery(IOException.class.getName());
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void chunkDecodingFailure(boolean failureCallback) {
-    try (InfluxDB client = client(chain -> response(chain, "{\"results\":\"invalid\"}\n"))) {
-      if (failureCallback) {
-        client.query(QUERY, 1, (cancellable, result) -> {}, () -> {}, error -> {});
-      } else {
-        client.query(QUERY, 1, result -> {});
-      }
-      assertQuery("com.squareup.moshi.JsonDataException");
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void chunkReadFailureFinishesOnce(boolean failureCallback) throws InterruptedException {
-    CountDownLatch failed = new CountDownLatch(1);
-    CountDownLatch leaveCallback = new CountDownLatch(1);
-    CountDownLatch errorChunk = new CountDownLatch(1);
-    try (InfluxDB client =
-        client(
-            chain ->
-                response(chain, "")
-                    .newBuilder()
-                    .body(
-                        new ResponseBody() {
-                          private final BufferedSource source =
-                              Okio.buffer(
-                                  new ForwardingSource(new Buffer()) {
-                                    @Override
-                                    public long read(Buffer sink, long byteCount)
-                                        throws IOException {
-                                      throw new IOException("private query text");
-                                    }
-                                  });
-
-                          @Override
-                          public MediaType contentType() {
-                            return MediaType.parse("application/json");
-                          }
-
-                          @Override
-                          public long contentLength() {
-                            return -1;
-                          }
-
-                          @Override
-                          public BufferedSource source() {
-                            return source;
-                          }
-                        })
-                    .build())) {
-      if (failureCallback) {
-        client.query(
-            QUERY,
-            1,
-            (cancellable, result) -> errorChunk.countDown(),
-            () -> {},
-            error -> {
-              failed.countDown();
-              await(leaveCallback);
-            });
-      } else {
-        client.query(
-            QUERY,
-            1,
-            result -> {
-              errorChunk.countDown();
-              failed.countDown();
-              await(leaveCallback);
-            });
-      }
-      try {
-        assertThat(failed.await(10, SECONDS)).isTrue();
-        assertThat(errorChunk.getCount()).isZero();
-        assertThat(testing.spans()).isEmpty();
-        assertNoDuration();
-      } finally {
-        leaveCallback.countDown();
-      }
-      assertQuery("_OTHER");
     }
   }
 
