@@ -51,6 +51,8 @@ class ServerDecorator extends SimpleDecoratingHttpService {
       return unwrap().serve(ctx, req);
     } catch (Throwable t) {
       Throwable error = t;
+      // Armeria uses a directly thrown HttpResponseException to send a response, even HTTP 200.
+      // Report its cause, if present, rather than treating the exception itself as a failure.
       if (t instanceof HttpResponseException) {
         error = t.getCause();
         if (error == null) {

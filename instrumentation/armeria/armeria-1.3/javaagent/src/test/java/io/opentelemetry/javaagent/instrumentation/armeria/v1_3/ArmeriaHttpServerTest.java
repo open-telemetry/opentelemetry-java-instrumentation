@@ -119,11 +119,13 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   private static HttpResponseException responseExceptionWithCause() {
     IllegalStateException cause = new IllegalStateException("recovered failure");
     try {
+      // HttpResponseException.of(HttpResponse, Throwable) is available in Armeria 1.10.0+.
       return (HttpResponseException)
           HttpResponseException.class
               .getMethod("of", HttpResponse.class, Throwable.class)
               .invoke(null, HttpResponse.of(HttpStatus.OK), cause);
     } catch (NoSuchMethodException e) {
+      // Before Armeria 1.10.0, attach the cause with initCause().
       HttpResponseException response = HttpResponseException.of(HttpResponse.of(HttpStatus.OK));
       response.initCause(cause);
       return response;
