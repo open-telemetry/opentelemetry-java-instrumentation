@@ -78,10 +78,9 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("version360Test") {
+    register<JvmTestSuite>("version334Test") {
       dependencies {
-        // RequestSpan.recordException is unavailable in the baseline SDK 3.2.
-        implementation("com.couchbase.client:java-client:3.6.0")
+        implementation("com.couchbase.client:java-client:${baseVersion("3.3.4").orLatest()}")
         implementation("org.testcontainers:testcontainers-couchbase")
       }
       executions {
