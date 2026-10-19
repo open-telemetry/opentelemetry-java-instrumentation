@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabi
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -74,6 +75,7 @@ class RpcServerMetricsTest {
         Attributes.builder()
             .put(SERVER_ADDRESS, "example.com")
             .put(SERVER_PORT, 8080)
+            .put(ERROR_TYPE, "INTERNAL")
             .put(NETWORK_LOCAL_ADDRESS, "127.0.0.1")
             .put(NETWORK_TRANSPORT, "tcp")
             .put(NETWORK_TYPE, "ipv4")
@@ -213,6 +215,7 @@ class RpcServerMetricsTest {
                                                   RPC_METHOD,
                                                   "myservice.EchoService/exampleMethod"),
                                               equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                              equalTo(ERROR_TYPE, "INTERNAL"),
                                               equalTo(SERVER_ADDRESS, "example.com"),
                                               equalTo(SERVER_PORT, 8080))
                                           .hasExemplarsSatisfying(

@@ -141,7 +141,7 @@ class GrpcAttributesExtractorTest {
 
   private static GrpcAttributesExtractor createExtractor(@Nullable IncludeExclude selector) {
     GrpcAttributesExtractor extractor =
-        new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector);
+        new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(false), selector);
     extractor.internalInitialize(OpenTelemetry.noop());
     return extractor;
   }
