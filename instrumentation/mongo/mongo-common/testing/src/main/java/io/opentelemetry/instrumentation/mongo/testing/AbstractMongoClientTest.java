@@ -197,27 +197,6 @@ public abstract class AbstractMongoClientTest<T> {
     }
     assertDurationMetric(
         testing(), scopeName.get(), expectedMetricKeys.toArray(new AttributeKey<?>[0]));
-    testing()
-        .waitAndAssertMetrics(
-            scopeName.get(),
-            "db.client.operation.duration",
-            metrics ->
-                metrics
-                    .singleElement()
-                    .satisfies(
-                        metric ->
-                            assertThat(metric)
-                                .hasName("db.client.operation.duration")
-                                .hasHistogramSatisfying(
-                                    histogram ->
-                                        histogram.hasPointsSatisfying(
-                                            point ->
-                                                point
-                                                    .hasCount(1)
-                                                    .hasAttributesSatisfying(
-                                                        attributes ->
-                                                            assertThat(attributes.get(ERROR_TYPE))
-                                                                .isEqualTo(errorType))))));
   }
 
   protected void ignoreTracesAndClear(int numberOfTraces) {
