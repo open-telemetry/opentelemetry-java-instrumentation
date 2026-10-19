@@ -67,18 +67,14 @@ testing {
   }
 }
 
-fun Test.connectionTelemetry(includeSsl: Boolean = true) {
+fun Test.connectionTelemetry() {
   filter {
     includeTestsMatching("ReactorNettyConnectionSpanTest")
-    if (includeSsl) {
-      includeTestsMatching("ReactorNettyClientSslTest")
-    }
+    includeTestsMatching("ReactorNettyClientSslTest")
   }
   include("**/ReactorNettyConnectionSpanTest.*")
-  if (includeSsl) {
-    include("**/ReactorNettyClientSslTest.*")
-    telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-  }
+  include("**/ReactorNettyClientSslTest.*")
+  telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
   telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
 }
 
@@ -93,7 +89,7 @@ tasks {
     register<Test>("testConnectionSpan$suffix") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
-      connectionTelemetry(includeSsl = false)
+      connectionTelemetry()
       if (suffix == "PreviewSemconvWithPeerServiceMapping") {
         telemetryConfig("otel.semconv-stability.preview", "service.peer")
       }

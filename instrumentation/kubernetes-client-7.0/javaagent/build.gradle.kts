@@ -49,14 +49,19 @@ testing {
       dependencies {
         implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
       }
-      targets {
-        all {
-          testTask.configure {
-            // client-java-api 22.0.0+ requires Java 11+
-            if (testJavaVersion.isJava8) {
-              enabled = false
-            }
+      executions {
+        configureEach {
+          // client-java-api 22.0.0+ requires Java 11+
+          if (testJavaVersion.isJava8) {
+            enabled = false
           }
+        }
+        register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
         }
       }
     }
