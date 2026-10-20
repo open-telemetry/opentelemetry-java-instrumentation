@@ -862,11 +862,7 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? SofaTimeOutException.class.getName()
-                                        : null))
+                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "200" : null))
                             .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     // Server span: server completes normally (after 2s), so no error status
                     span ->
@@ -894,6 +890,32 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort))
                             .hasException(null)));
+
+    if (emitPreviewRpcSemconv()) {
+      testing()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.client.call.duration",
+              metrics ->
+                  metrics.anySatisfy(
+                      metric ->
+                          assertThat(metric)
+                              .hasUnit("s")
+                              .hasHistogramSatisfying(
+                                  histogram ->
+                                      histogram.hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributesSatisfyingExactly(
+                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                  equalTo(
+                                                      RPC_METHOD,
+                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"),
+                                                  equalTo(ERROR_TYPE, "200"),
+                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                                  satisfies(
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)))))));
+    }
 
     assertExceptionLogs(clientException, null);
   }
