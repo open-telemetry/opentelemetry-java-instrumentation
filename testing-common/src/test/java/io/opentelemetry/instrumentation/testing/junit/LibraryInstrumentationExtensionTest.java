@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import io.opentelemetry.api.common.Attributes;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LibraryInstrumentationExtensionTest {
@@ -35,5 +40,65 @@ class LibraryInstrumentationExtensionTest {
             trace.hasSpansSatisfyingExactly(
                 parentSpan -> parentSpan.hasName("parent"),
                 childSpan -> childSpan.hasName("child")));
+  }
+
+  @Test
+  void shouldAssertHistogramPoints() {
+    Attributes firstAttributes = Attributes.of(stringKey("key"), "first");
+    Attributes secondAttributes = Attributes.of(stringKey("key"), "second");
+    testing
+        .getOpenTelemetry()
+        .getMeter("test")
+        .histogramBuilder("duration")
+        .setUnit("s")
+        .setDescription("Test duration.")
+        .build()
+        .record(2, firstAttributes);
+    testing
+        .getOpenTelemetry()
+        .getMeter("test")
+        .histogramBuilder("duration")
+        .setUnit("s")
+        .setDescription("Test duration.")
+        .build()
+        .record(4, secondAttributes);
+    testing
+        .getOpenTelemetry()
+        .getMeter("test")
+        .histogramBuilder("other")
+        .setUnit("ms")
+        .build()
+        .record(3);
+
+    testing.waitAndAssertHistogramPoints(
+        "test",
+        "duration",
+        metric -> metric.hasUnit("s").hasDescription("Test duration."),
+        point -> point.hasCount(1).hasSum(4).hasAttributes(secondAttributes),
+        point -> point.hasCount(1).hasSum(2).hasAttributes(firstAttributes));
+    testing.waitAndAssertHistogramPoints(
+        "test", "other", metric -> metric.hasUnit("ms"), point -> point.hasCount(1).hasSum(3));
+  }
+
+  @Test
+  void shouldPropagateMetricAssertionFailure() {
+    testing
+        .getOpenTelemetry()
+        .getMeter("test")
+        .histogramBuilder("failed-duration")
+        .setUnit("s")
+        .build()
+        .record(2);
+
+    assertThatThrownBy(
+            () ->
+                testing.waitAndAssertHistogramPoints(
+                    "test",
+                    "failed-duration",
+                    metric -> {
+                      throw new IllegalStateException("metric assertion failed");
+                    }))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("metric assertion failed");
   }
 }

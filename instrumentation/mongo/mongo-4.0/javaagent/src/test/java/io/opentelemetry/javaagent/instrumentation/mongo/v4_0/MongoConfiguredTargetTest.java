@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -92,15 +91,10 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
         DB_OPERATION_NAME,
         DB_COLLECTION_NAME,
         SERVER_ADDRESS);
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertHistogramPoints(
         "io.opentelemetry.mongo-4.0",
-        metric ->
-            metric
-                .hasName("db.client.operation.duration")
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(
-                        point ->
-                            point.hasAttribute(
-                                SERVER_ADDRESS, "db1.example:27017,db2.example:27018"))));
+        "db.client.operation.duration",
+        metric -> metric.hasUnit("s"),
+        point -> point.hasAttribute(SERVER_ADDRESS, "db1.example:27017,db2.example:27018"));
   }
 }

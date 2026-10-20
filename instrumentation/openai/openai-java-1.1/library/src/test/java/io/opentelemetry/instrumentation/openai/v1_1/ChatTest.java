@@ -132,6 +132,7 @@ class ChatTest extends AbstractChatTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -145,6 +146,7 @@ class ChatTest extends AbstractChatTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -230,6 +232,7 @@ class ChatTest extends AbstractChatTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -243,6 +246,7 @@ class ChatTest extends AbstractChatTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -357,6 +361,7 @@ class ChatTest extends AbstractChatTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -370,6 +375,7 @@ class ChatTest extends AbstractChatTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -477,6 +483,7 @@ class ChatTest extends AbstractChatTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -490,6 +497,7 @@ class ChatTest extends AbstractChatTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -619,22 +627,18 @@ class ChatTest extends AbstractChatTest {
                                         val -> val.containsExactly("stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertHistogramPoints(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("gen_ai.client.operation.duration")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                        equalTo(
-                                            GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))));
+            "gen_ai.client.operation.duration",
+            metric -> metric.hasUnit("s"),
+            point ->
+                point
+                    .hasSumGreaterThan(0.0)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                        equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -714,22 +718,18 @@ class ChatTest extends AbstractChatTest {
                                         val -> val.containsExactly("stop", "stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertHistogramPoints(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("gen_ai.client.operation.duration")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                        equalTo(
-                                            GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))));
+            "gen_ai.client.operation.duration",
+            metric -> metric.hasUnit("s"),
+            point ->
+                point
+                    .hasSumGreaterThan(0.0)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                        equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -815,22 +815,18 @@ class ChatTest extends AbstractChatTest {
                                         val -> val.containsExactly("tool_calls"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertHistogramPoints(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("gen_ai.client.operation.duration")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                        equalTo(
-                                            GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))));
+            "gen_ai.client.operation.duration",
+            metric -> metric.hasUnit("s"),
+            point ->
+                point
+                    .hasSumGreaterThan(0.0)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                        equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -916,22 +912,18 @@ class ChatTest extends AbstractChatTest {
                                         val -> val.containsExactly("stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertHistogramPoints(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("gen_ai.client.operation.duration")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
-                                        equalTo(
-                                            GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))));
+            "gen_ai.client.operation.duration",
+            metric -> metric.hasUnit("s"),
+            point ->
+                point
+                    .hasSumGreaterThan(0.0)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                        equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 

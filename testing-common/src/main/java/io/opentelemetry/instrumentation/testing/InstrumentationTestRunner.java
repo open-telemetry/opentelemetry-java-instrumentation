@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -25,6 +26,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -242,6 +244,31 @@ public abstract class InstrumentationTestRunner {
     if (Boolean.getBoolean("collectMetadata")) {
       collectEmittedMetrics(getExportedMetrics());
     }
+  }
+
+  /**
+   * Waits for exactly one histogram with the given instrumentation scope and metric name, then
+   * asserts its metadata and points.
+   */
+  @SafeVarargs
+  public final void waitAndAssertHistogramPoints(
+      String instrumentationName,
+      String metricName,
+      Consumer<MetricAssert> metricAssertion,
+      Consumer<HistogramPointAssert>... pointAssertions) {
+    waitAndAssertMetrics(
+        instrumentationName,
+        metricName,
+        metrics ->
+            metrics
+                .hasSize(1)
+                .singleElement()
+                .satisfies(
+                    metric -> {
+                      MetricAssert metricAssert = assertThat(metric);
+                      metricAssertion.accept(metricAssert);
+                      metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
+                    }));
   }
 
   private List<MetricData> metricsForScope(String instrumentationName) {

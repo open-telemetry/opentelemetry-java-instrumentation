@@ -211,6 +211,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -224,6 +225,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -374,6 +376,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -387,6 +390,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -474,6 +478,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -487,6 +492,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -604,6 +610,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -617,6 +624,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -751,6 +759,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -764,6 +773,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -920,6 +930,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -987,6 +998,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -1112,6 +1124,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -1125,6 +1138,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -1229,6 +1243,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -1382,6 +1397,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -1513,6 +1529,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -1661,6 +1678,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->

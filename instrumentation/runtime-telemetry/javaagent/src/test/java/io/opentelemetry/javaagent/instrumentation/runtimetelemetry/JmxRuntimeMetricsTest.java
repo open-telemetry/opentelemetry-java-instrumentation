@@ -37,6 +37,7 @@ class JmxRuntimeMetricsTest {
         metric ->
             metric
                 .hasName("jvm.gc.duration")
+                .hasUnit("s")
                 .satisfies(
                     hasHistogramPointsSatisfyingExactly(
                         point ->

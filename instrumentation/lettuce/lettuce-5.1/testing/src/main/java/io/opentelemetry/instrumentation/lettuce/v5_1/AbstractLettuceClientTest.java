@@ -107,8 +107,14 @@ public abstract class AbstractLettuceClientTest {
             "db.client.operation.duration",
             metrics ->
                 metrics.anySatisfy(
-                    hasHistogramPointsSatisfyingExactly(
-                        point -> point.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .satisfies(
+                                hasHistogramPointsSatisfyingExactly(
+                                    point ->
+                                        point.hasAttributesSatisfying(
+                                            equalTo(ERROR_TYPE, errorType))))));
   }
 
   protected String spanName(String operation) {

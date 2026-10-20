@@ -861,6 +861,7 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
+                .hasUnit("s")
                 .satisfies(
                     hasHistogramPointsSatisfyingExactly(
                         point ->
@@ -874,6 +875,7 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.token.usage")
+                .hasUnit("{token}")
                 .satisfies(
                     hasHistogramPointsSatisfyingExactly(
                         point ->
@@ -897,21 +899,18 @@ class ChatModelTest {
   }
 
   private static void assertMetricsWithoutTokenUsage() {
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertHistogramPoints(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("gen_ai.client.operation.duration")
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(
-                        point ->
-                            point
-                                .hasSumGreaterThan(0.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))));
+        "gen_ai.client.operation.duration",
+        metric -> metric.hasUnit("s"),
+        point ->
+            point
+                .hasSumGreaterThan(0.0)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL)));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "gen_ai.client.token.usage", metrics -> metrics.isEmpty());
   }

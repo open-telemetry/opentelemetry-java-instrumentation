@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.EXPERIMENTAL_ATTRIBUTES_ENABLED;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -436,12 +435,11 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("DEBUG " + host + ":" + port).hasKind(SpanKind.CLIENT)));
-          testing.waitAndAssertMetrics(
+          testing.waitAndAssertHistogramPoints(
               "io.opentelemetry.lettuce-5.0",
-              metrics ->
-                  metrics
-                      .hasName("db.client.operation.duration")
-                      .satisfies(hasHistogramPointsSatisfyingExactly(point -> point.hasCount(1))));
+              "db.client.operation.duration",
+              metric -> metric.hasUnit("s"),
+              point -> point.hasCount(1));
         });
   }
 

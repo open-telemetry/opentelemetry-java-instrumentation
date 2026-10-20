@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -113,6 +114,21 @@ public abstract class InstrumentationExtension
   public final void waitAndAssertMetrics(
       String instrumentationName, Consumer<MetricAssert>... assertions) {
     testRunner.waitAndAssertMetrics(instrumentationName, assertions);
+  }
+
+  /**
+   * Waits for exactly one histogram with the given instrumentation scope and metric name, then
+   * asserts its metadata and points.
+   */
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertHistogramPoints(
+      String instrumentationName,
+      String metricName,
+      Consumer<MetricAssert> metricAssertion,
+      Consumer<HistogramPointAssert>... pointAssertions) {
+    testRunner.waitAndAssertHistogramPoints(
+        instrumentationName, metricName, metricAssertion, pointAssertions);
   }
 
   /**

@@ -18,7 +18,6 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.AbstractPointAssert;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
-import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -292,8 +291,8 @@ public class DbConnectionPoolMetricsAssertions {
         metrics -> metrics.anySatisfy(this::verifyUseTimeMetric));
   }
 
-  private MetricAssert verifyUseTimeMetric(MetricData metric) {
-    return assertThat(metric)
+  private void verifyUseTimeMetric(MetricData metric) {
+    assertThat(metric)
         .hasUnit("s")
         .hasDescription("The time between borrowing a connection and returning it to the pool.")
         .satisfies(hasHistogramPointsSatisfyingExactly(this::verifyPointAttributes));

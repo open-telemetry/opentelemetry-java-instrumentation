@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
@@ -33,18 +32,15 @@ class RuntimeTelemetryDefaultsTest {
       assertThat(telemetry.getJfrTelemetry()).isNull();
       System.gc();
 
-      testing.waitAndAssertMetrics(
+      testing.waitAndAssertHistogramPoints(
           "io.opentelemetry.runtime-telemetry",
-          metric ->
-              metric
-                  .hasName("jvm.gc.duration")
-                  .satisfies(
-                      hasHistogramPointsSatisfyingExactly(
-                          point ->
-                              point.hasAttributesSatisfyingExactly(
-                                  satisfies(JVM_GC_NAME, val -> val.isNotBlank()),
-                                  satisfies(JVM_GC_ACTION, val -> val.isNotBlank()),
-                                  satisfies(JVM_GC_CAUSE, val -> val.isNotBlank())))));
+          "jvm.gc.duration",
+          metric -> metric.hasUnit("s"),
+          point ->
+              point.hasAttributesSatisfyingExactly(
+                  satisfies(JVM_GC_NAME, val -> val.isNotBlank()),
+                  satisfies(JVM_GC_ACTION, val -> val.isNotBlank()),
+                  satisfies(JVM_GC_CAUSE, val -> val.isNotBlank())));
     }
   }
 }

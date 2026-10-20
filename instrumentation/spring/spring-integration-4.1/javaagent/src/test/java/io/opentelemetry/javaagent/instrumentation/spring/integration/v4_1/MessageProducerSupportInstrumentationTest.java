@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertProcessMetrics;
@@ -336,12 +335,11 @@ class MessageProducerSupportInstrumentationTest {
 
   private static void assertSpringRabbitProcessMetrics() {
 
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertHistogramPoints(
         SPRING_RABBIT_INSTRUMENTATION_NAME,
         "messaging.process.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                hasHistogramPointsSatisfyingExactly(point -> point.hasCount(1))));
+        metric -> metric.hasUnit("s"),
+        point -> point.hasCount(1));
   }
 
   private static Message newRawMessage() {

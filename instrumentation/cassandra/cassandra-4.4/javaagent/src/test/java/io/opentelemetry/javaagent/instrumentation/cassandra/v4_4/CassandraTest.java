@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -101,23 +100,20 @@ class CassandraTest extends AbstractCassandra44Test {
               assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo(cassandraPort);
               assertThat(span.getAttributes().get(NETWORK_TYPE)).isEqualTo(null);
             });
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertHistogramPoints(
         getInstrumentationName(),
-        metric ->
-            metric
-                .hasName("db.client.operation.duration")
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(
-                        point ->
-                            point.hasAttributesSatisfyingExactly(
-                                equalTo(DB_COLLECTION_NAME, "system.local"),
-                                equalTo(DB_OPERATION_NAME, "SELECT"),
-                                equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
-                                equalTo(DB_SYSTEM_NAME, "cassandra"),
-                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, cassandraPort)))));
+        "db.client.operation.duration",
+        metric -> metric.hasUnit("s"),
+        point ->
+            point.hasAttributesSatisfyingExactly(
+                equalTo(DB_COLLECTION_NAME, "system.local"),
+                equalTo(DB_OPERATION_NAME, "SELECT"),
+                equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
+                equalTo(DB_SYSTEM_NAME, "cassandra"),
+                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                equalTo(NETWORK_PEER_PORT, cassandraPort),
+                equalTo(SERVER_ADDRESS, "localhost"),
+                equalTo(SERVER_PORT, cassandraPort)));
   }
 
   private static CqlSession getDelegate(CqlSession session) throws IllegalAccessException {

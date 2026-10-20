@@ -21,7 +21,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -455,15 +454,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               spanData -> assertServerSpan(assertThat(spanData), method, SUCCESS, SUCCESS.status));
         });
 
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertHistogramPoints(
         instrumentationName.get(),
-        metric ->
-            metric
-                .hasName("http.server.request.duration")
-                .hasDescription("Duration of HTTP server requests.")
-                .hasUnit("s")
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(point -> point.hasSumGreaterThan(0.0))));
+        "http.server.request.duration",
+        metric -> metric.hasDescription("Duration of HTTP server requests.").hasUnit("s"),
+        point -> point.hasSumGreaterThan(0.0));
   }
 
   /**

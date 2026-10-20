@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -793,15 +792,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
 
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertHistogramPoints(
         instrumentationName.get(),
-        metric ->
-            metric
-                .hasName("http.client.request.duration")
-                .hasDescription("Duration of HTTP client requests.")
-                .hasUnit("s")
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(point -> point.hasSumGreaterThan(0.0))));
+        "http.client.request.duration",
+        metric -> metric.hasDescription("Duration of HTTP client requests.").hasUnit("s"),
+        point -> point.hasSumGreaterThan(0.0));
   }
 
   /**

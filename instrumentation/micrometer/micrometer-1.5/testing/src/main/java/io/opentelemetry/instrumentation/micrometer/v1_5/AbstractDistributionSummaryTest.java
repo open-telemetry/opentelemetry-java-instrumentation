@@ -73,19 +73,15 @@ public abstract class AbstractDistributionSummaryTest {
     // then
     // The synchronous histogram returns its previous value after removal.
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertHistogramPoints(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testSummary")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSum(7)
-                                    .hasCount(3)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+            "testSummary",
+            metric -> metric.hasUnit("things"),
+            point ->
+                point
+                    .hasSum(7)
+                    .hasCount(3)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
   }
 
   @Test
