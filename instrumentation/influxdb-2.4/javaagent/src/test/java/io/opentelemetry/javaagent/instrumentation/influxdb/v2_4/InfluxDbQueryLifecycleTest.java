@@ -159,6 +159,14 @@ class InfluxDbQueryLifecycleTest {
   }
 
   @Test
+  void chunkedDecodingFailureWithoutFailureConsumer() {
+    try (InfluxDB client = client(chain -> response(chain, "{\"results\":{}}\n"))) {
+      client.query(QUERY, 1, result -> {});
+      assertQuery("com.squareup.moshi.JsonDataException");
+    }
+  }
+
+  @Test
   void cancellationIsNotFailure() throws InterruptedException {
     CountDownLatch callback = new CountDownLatch(1);
     try (InfluxDB client = client(chain -> response(chain, SUCCESS + "\n" + FAILURE + "\n"))) {
