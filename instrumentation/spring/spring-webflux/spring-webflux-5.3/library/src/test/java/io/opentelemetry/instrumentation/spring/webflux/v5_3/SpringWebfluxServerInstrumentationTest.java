@@ -6,9 +6,14 @@
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -21,8 +26,15 @@ import io.opentelemetry.testing.internal.armeria.client.Clients;
 import io.opentelemetry.testing.internal.armeria.client.ResponseCancellationException;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -94,5 +106,67 @@ class SpringWebfluxServerInstrumentationTest
         .hasMessage(ResponseCancellationException.class.getName());
 
     assertTheTraces(1, null, null, null, method, endpoint);
+    assertCancellationTelemetry("cancelled", null);
+  }
+
+  @Test
+  void cancelCommittedResponse() throws IOException {
+    try (Socket socket = new Socket("localhost", port)) {
+      socket.setSoTimeout(10_000);
+      socket
+          .getOutputStream()
+          .write(
+              ("GET "
+                      + CONTEXT_PATH
+                      + "/cancel-after-commit HTTP/1.1\r\nHost: localhost:"
+                      + port
+                      + "\r\nConnection: close\r\n\r\n")
+                  .getBytes(US_ASCII));
+      socket.getOutputStream().flush();
+
+      BufferedReader reader =
+          new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
+      assertThat(reader.readLine()).startsWith("HTTP/1.1 200");
+      String line;
+      do {
+        line = reader.readLine();
+        assertThat(line).isNotNull();
+      } while (!line.isEmpty());
+      assertThat(reader.readLine()).isEqualTo("9");
+      assertThat(reader.readLine()).isEqualTo("committed");
+    }
+
+    assertCancellationTelemetry(null, 200);
+  }
+
+  private static void assertCancellationTelemetry(String errorType, Integer responseStatusCode) {
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+            SpanData serverSpan = trace.getSpan(0);
+          assertThat(serverSpan.getKind()).isEqualTo(SpanKind.SERVER);
+          assertThat(serverSpan.getStatus()).isEqualTo(StatusData.unset());
+          assertThat(serverSpan.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
+          assertThat(serverSpan.getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+              .isEqualTo(responseStatusCode == null ? null : responseStatusCode.longValue());
+          instrumentationName.set(serverSpan.getInstrumentationScopeInfo().getName());
+        });
+
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metric ->
+            metric
+                .hasName("http.server.request.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> {
+                              if (errorType != null) {
+                                point.hasAttribute(ERROR_TYPE, errorType);
+                              } else {
+                                point.hasAttributesSatisfying(
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200L));
+                              }
+                            })));
   }
 }
