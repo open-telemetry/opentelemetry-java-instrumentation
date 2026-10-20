@@ -12,6 +12,9 @@ dependencies {
 
   testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
   if (otelProps.testLatestDeps) {
+    testImplementation(
+      "org.apache.dubbo:dubbo-rpc-triple:${baseVersion("2.7.0").orLatest()}"
+    )
     // these dependencies should be optional but when running on jdk25 more classes are loaded than
     // on earlier jdk versions and DubboRegistryTest fails with NoClassDefFoundError
     testImplementation("com.alibaba:fastjson:2.0.65")

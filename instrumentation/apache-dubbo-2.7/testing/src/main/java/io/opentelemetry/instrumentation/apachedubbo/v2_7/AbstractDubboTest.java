@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
@@ -484,22 +485,20 @@ public abstract class AbstractDubboTest {
 
   @Test
   void testRpcExceptionFailure() throws ReflectiveOperationException {
-    String code = Integer.toString(RpcException.NETWORK_EXCEPTION);
     assertFailure(
         new RpcException(RpcException.NETWORK_EXCEPTION),
         false,
         GenericException.class.getName(),
-        code);
+        RpcException.class.getName());
   }
 
   @Test
   void testAsyncRpcExceptionFailure() throws ReflectiveOperationException {
-    String code = Integer.toString(RpcException.TIMEOUT_EXCEPTION);
     assertFailure(
         new RpcException(RpcException.TIMEOUT_EXCEPTION),
         true,
         GenericException.class.getName(),
-        code);
+        RpcException.class.getName());
   }
 
   @Test
@@ -561,14 +560,21 @@ public abstract class AbstractDubboTest {
           .isInstanceOf(RuntimeException.class);
     }
 
-    assertFailureTelemetry(clientErrorType, serverErrorType, asynchronous);
+    assertFailureTelemetry(
+        "org.apache.dubbo.rpc.service.GenericService/"
+            + (asynchronous ? "$invokeAsync" : "$invoke"),
+        clientErrorType,
+        serverErrorType,
+        null,
+        true);
   }
 
   private void assertFailureTelemetry(
-      String clientErrorType, String serverErrorType, boolean asynchronous) {
-    String clientMethod =
-        "org.apache.dubbo.rpc.service.GenericService/"
-            + (asynchronous ? "$invokeAsync" : "$invoke");
+      String clientMethod,
+      String clientErrorType,
+      String serverErrorType,
+      String responseStatusCode,
+      boolean serverStatusIsError) {
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -579,16 +585,24 @@ public abstract class AbstractDubboTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfying(
                                 equalTo(
-                                    ERROR_TYPE, emitPreviewRpcSemconv() ? clientErrorType : null)),
+                                    ERROR_TYPE, emitPreviewRpcSemconv() ? clientErrorType : null),
+                                equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() ? responseStatusCode : null)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
-                            .hasStatus(StatusData.error())
+                            .hasStatus(
+                                emitPreviewRpcSemconv() && !serverStatusIsError
+                                    ? StatusData.unset()
+                                    : StatusData.error())
                             .hasAttributesSatisfying(
                                 equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv() ? serverErrorType : null))));
+                                    ERROR_TYPE, emitPreviewRpcSemconv() ? serverErrorType : null),
+                                equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() ? responseStatusCode : null))));
 
     if (emitPreviewRpcSemconv()) {
       assertPreviewErrorMetric(
@@ -597,6 +611,79 @@ public abstract class AbstractDubboTest {
           serverErrorType);
       assertPreviewErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType);
     }
+  }
+
+  @Test
+  void testTripleInternalStatusFailure() throws ReflectiveOperationException {
+    assertTripleStatusFailure("INTERNAL", "INTERNAL", "INTERNAL", true);
+  }
+
+  @Test
+  void testTripleInvalidArgumentStatus() throws ReflectiveOperationException {
+    assertTripleStatusFailure("INVALID_ARGUMENT", "INVALID_ARGUMENT", null, false);
+  }
+
+  private void assertTripleStatusFailure(
+      String statusCode,
+      String clientErrorType,
+      String serverErrorType,
+      boolean serverStatusIsError)
+      throws ReflectiveOperationException {
+    Assumptions.assumeTrue(testLatestDeps(), "Triple protocol requires Dubbo 3.x");
+
+    int port = PortUtils.findOpenPort();
+    protocolConfig.setName("tri");
+    protocolConfig.setPort(port);
+    RuntimeException failure = tripleStatusException(statusCode);
+
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-triple-failure-provider"))
+        .service(
+            configureServer(
+                new HelloServiceImpl() {
+                  @Override
+                  public String hello(String hello) {
+                    throw failure;
+                  }
+                }))
+        .protocol(protocolConfig)
+        .start();
+
+    ReferenceConfig<HelloService> referenceConfig = new ReferenceConfig<>();
+    referenceConfig.setInterface(HelloService.class);
+    referenceConfig.setRetries(0);
+    referenceConfig.setUrl("tri://localhost:" + port + "/?timeout=30000");
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-test-triple-failure-consumer"))
+        .reference(referenceConfig)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    HelloService service = referenceConfig.get();
+    assertThatThrownBy(() -> service.hello("hello")).isInstanceOf(RuntimeException.class);
+
+    assertFailureTelemetry(
+        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
+        clientErrorType,
+        serverErrorType,
+        statusCode,
+        serverStatusIsError);
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static RuntimeException tripleStatusException(String statusCode)
+      throws ReflectiveOperationException {
+    Class<?> codeClass = Class.forName("org.apache.dubbo.rpc.TriRpcStatus$Code");
+    Object code = Enum.valueOf((Class) codeClass, statusCode);
+    Class<?> statusClass = Class.forName("org.apache.dubbo.rpc.TriRpcStatus");
+    Object status = statusClass.getMethod("fromCode", codeClass).invoke(null, code);
+    return (RuntimeException) statusClass.getMethod("asException").invoke(status);
   }
 
   private void assertPreviewErrorMetric(String metricName, String method, String errorType) {
@@ -610,11 +697,19 @@ public abstract class AbstractDubboTest {
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
-                                point ->
+                                point -> {
+                                  if (errorType == null) {
                                     point.hasAttributesSatisfying(
                                         equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                         equalTo(RPC_METHOD, method),
-                                        equalTo(ERROR_TYPE, errorType)))));
+                                        equalTo(ERROR_TYPE, null));
+                                  } else {
+                                    point.hasAttributesSatisfying(
+                                        equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                        equalTo(RPC_METHOD, method),
+                                        equalTo(ERROR_TYPE, errorType));
+                                  }
+                                })));
   }
 
   @Test
