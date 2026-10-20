@@ -55,6 +55,7 @@ public final class JdbcInstrumenterFactory {
                     .setCaptureQueryParameters(captureQueryParameters)
                     .build())
             .addAttributesExtractors(extractors)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get())
             .setEnabled(enabled);
     setDbClientExceptionEventExtractor(builder);
@@ -89,6 +90,7 @@ public final class JdbcInstrumenterFactory {
                 SqlClientAttributesExtractor.builder(new JdbcAttributesGetter()).build())
             .addAttributesExtractor(new TransactionAttributeExtractor())
             .addAttributesExtractors(extractors)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get())
             .setEnabled(enabled);
     setDbClientExceptionEventExtractor(builder);

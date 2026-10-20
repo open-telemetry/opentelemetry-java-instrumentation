@@ -39,6 +39,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -340,6 +341,7 @@ public final class AwsSdkInstrumenterFactory {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
             .addAttributesExtractors(attributeExtractors)
             .setEnabled(enabled);
     customizer.accept(builder);

@@ -58,7 +58,13 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span -> span.hasName("SELECT").hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))));
+                span ->
+                    span.hasName("SELECT")
+                        .hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))));
 
     assertDurationMetric(
         testing,
@@ -67,6 +73,15 @@ class JdbcTelemetryTest {
         DB_QUERY_SUMMARY,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jdbc",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo("https://opentelemetry.io/schemas/1.44.0")));
   }
 
   @ParameterizedTest
@@ -291,7 +306,13 @@ class JdbcTelemetryTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"), span -> span.hasName("COMMIT")));
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasName("COMMIT")
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))));
 
     assertDurationMetric(
         testing,
@@ -300,6 +321,15 @@ class JdbcTelemetryTest {
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jdbc",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo("https://opentelemetry.io/schemas/1.44.0")));
   }
 
   @Test
