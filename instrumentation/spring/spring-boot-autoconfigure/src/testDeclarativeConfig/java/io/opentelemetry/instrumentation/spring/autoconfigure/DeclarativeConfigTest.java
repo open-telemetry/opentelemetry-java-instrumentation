@@ -60,7 +60,6 @@ class DeclarativeConfigTest {
                 assertThat(context)
                     .hasBean("customOpenTelemetry")
                     .doesNotHaveBean("openTelemetry")
-                    .hasBean("otelProperties")
                     .getBean("configProvider")
                     .isEqualTo(ConfigProvider.noop()));
   }
@@ -72,19 +71,16 @@ class DeclarativeConfigTest {
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner.run(
         context -> {
-          assertThat(context)
-              .getBean("openTelemetry", OpenTelemetry.class)
-              .isNotNull()
-              .satisfies(
-                  o -> {
-                    DeclarativeConfigProperties config =
-                        DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
-                    assertThat(config.getString("string_key")).isEqualTo("string_value");
-                    assertThat(config.getBoolean("bool_key")).isTrue();
-                    assertThat(config.getDouble("double_key")).isEqualTo(3.14);
-                    assertThat(config.getLong("int_key")).isEqualTo(42);
-                  });
-          assertThat(context).getBean("configProvider", ConfigProvider.class).isNotNull();
+          ConfigProvider configProvider = context.getBean(ConfigProvider.class);
+          DeclarativeConfigProperties config =
+              configProvider
+                  .getInstrumentationConfig()
+                  .getStructured("java")
+                  .getStructured("foo");
+          assertThat(config.getString("string_key")).isEqualTo("string_value");
+          assertThat(config.getBoolean("bool_key")).isTrue();
+          assertThat(config.getDouble("double_key")).isEqualTo(3.14);
+          assertThat(config.getLong("int_key")).isEqualTo(42);
         });
   }
 

@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Remove the deprecated declarative Spring Boot starter `ConfigProperties` compatibility bean. In
+  declarative mode, read configuration through `ConfigProvider` and `DeclarativeConfigProperties`;
+  the flat-property `ConfigProperties` bean remains supported.
 - Kotlin suspend function `@WithSpan` instrumentation now uses only the
   `kotlinx-coroutines-annotations` selector and is disabled by default. Use
   `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true` instead of the
@@ -291,6 +294,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove deprecated `DeclarativeConfigPropertiesBridge` and
+  `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
+  `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.
 - The `TracingSqsMessageHandler` customization constructor now accepts an
   `Instrumenter<SQSMessage, Boolean>`.
 - In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency

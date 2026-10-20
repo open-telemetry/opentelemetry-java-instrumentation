@@ -17,7 +17,6 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
-import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.instrumentation.logging.internal.AbstractSpanLoggingCustomizerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
@@ -210,24 +209,6 @@ public class OpenTelemetryAutoConfiguration {
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
         return new SpringOpenTelemetrySdk(sdk, configProvider);
-      }
-
-      /**
-       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
-       *
-       * <p>Not using spring boot properties directly, because declarative configuration does not
-       * integrate with spring boot properties.
-       *
-       * @deprecated This {@link ConfigProperties} compatibility bean will be removed in 3.0.
-       *     Auto-configurations that support the experimental Declarative Configuration should use
-       *     the Declarative Config API directly.
-       */
-      @Deprecated // will be removed in 3.0
-      @Bean
-      ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
-        return new DeclarativeConfigPropertiesBridgeBuilder()
-            .buildFromInstrumentationConfig(
-                configProviderFrom(openTelemetry).getInstrumentationConfig());
       }
 
       private static ConfigProvider configProviderFrom(OpenTelemetry openTelemetry) {
