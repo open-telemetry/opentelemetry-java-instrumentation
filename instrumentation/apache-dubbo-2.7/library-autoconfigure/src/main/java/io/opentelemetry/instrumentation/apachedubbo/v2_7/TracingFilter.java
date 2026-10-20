@@ -12,6 +12,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.AsyncRpcResult;
@@ -114,6 +115,12 @@ final class TracingFilter implements Filter {
       } catch (Throwable ignored) {
         // Dubbo may invoke the callback inline for completed results; do not end the span twice.
       }
+    }
+    if (result instanceof CompletionStage) {
+      @SuppressWarnings("unchecked") // Dubbo 2.7.2 extends CompletableFuture<Result>.
+      CompletionStage<Result> future = (CompletionStage<Result>) result;
+      future.whenComplete(completion);
+      return true;
     }
     return false;
   }
