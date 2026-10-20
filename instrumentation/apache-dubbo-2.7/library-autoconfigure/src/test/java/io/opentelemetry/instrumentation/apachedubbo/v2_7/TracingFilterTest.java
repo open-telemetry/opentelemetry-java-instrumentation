@@ -10,12 +10,16 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.AppResponse;
 import org.apache.dubbo.rpc.AsyncRpcResult;
@@ -87,6 +91,50 @@ class TracingFilterTest {
                         .hasAttributesSatisfying(equalTo(ERROR_TYPE, null))));
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // RpcContext.getContext()
+  void asyncProviderTelemetryFailureDoesNotAffectResult() {
+    AtomicInteger endCalls = new AtomicInteger();
+    Filter filter =
+        DubboTelemetry.builder(testing.getOpenTelemetry())
+            .addAttributesExtractor(
+                new AttributesExtractor<DubboRequest, Result>() {
+                  @Override
+                  public void onStart(
+                      AttributesBuilder attributes, Context parentContext, DubboRequest request) {}
+
+                  @Override
+                  public void onEnd(
+                      AttributesBuilder attributes,
+                      Context context,
+                      DubboRequest request,
+                      Result response,
+                      Throwable error) {
+                    endCalls.incrementAndGet();
+                    throw new IllegalStateException("telemetry failure");
+                  }
+                })
+            .build()
+            .newServerFilter();
+    CompletableFuture<AppResponse> future = new CompletableFuture<>();
+    AsyncRpcResult result = invokeAsyncProvider(future, filter);
+    RpcContext.removeServerContext();
+    RpcContext completionContext = RpcContext.getContext();
+    RpcContext completionServerContext = RpcContext.getServerContext();
+
+    try {
+      future.complete(new AppResponse("success"));
+
+      assertThat(result.getResponseFuture().join().getValue()).isEqualTo("success");
+      assertThat(RpcContext.getContext()).isSameAs(completionContext);
+      assertThat(RpcContext.getServerContext()).isSameAs(completionServerContext);
+      assertThat(endCalls).hasValue(1);
+    } finally {
+      RpcContext.removeContext();
+      RpcContext.removeServerContext();
+    }
+  }
+
   private static void assertFailure(Throwable failure) {
     testing.waitAndAssertTraces(
         trace ->
@@ -101,8 +149,14 @@ class TracingFilterTest {
                                 emitPreviewRpcSemconv() ? failure.getClass().getName() : null))));
   }
 
+  private static AsyncRpcResult invokeAsyncProvider(CompletableFuture<AppResponse> future) {
+    return invokeAsyncProvider(
+        future, DubboTelemetry.create(testing.getOpenTelemetry()).newServerFilter());
+  }
+
   @SuppressWarnings("deprecation") // RpcContext.getContext()
-  private static void invokeAsyncProvider(CompletableFuture<AppResponse> future) {
+  private static AsyncRpcResult invokeAsyncProvider(
+      CompletableFuture<AppResponse> future, Filter filter) {
     URL url = new URL("dubbo", "localhost", 20880, HelloService.class.getName());
     RpcInvocation invocation = new RpcInvocation();
     invocation.setMethodName("hello");
@@ -114,8 +168,8 @@ class TracingFilterTest {
     invocation.setInvoker(invoker);
 
     try {
-      Filter filter = DubboTelemetry.create(testing.getOpenTelemetry()).newServerFilter();
       assertThat(filter.invoke(invoker, invocation)).isSameAs(result);
+      return result;
     } finally {
       RpcContext.removeContext();
     }

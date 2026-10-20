@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -14,6 +16,7 @@ import java.lang.invoke.MethodType;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.AsyncRpcResult;
 import org.apache.dubbo.rpc.Filter;
@@ -24,6 +27,8 @@ import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcInvocation;
 
 final class TracingFilter implements Filter {
+
+  private static final Logger logger = Logger.getLogger(TracingFilter.class.getName());
 
   private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
@@ -97,8 +102,8 @@ final class TracingFilter implements Filter {
     if (resultWhenCompleteWithContext != null) {
       try {
         resultWhenCompleteWithContext.invoke(result, completion);
-      } catch (Throwable ignored) {
-        // Dubbo may invoke the callback inline for completed results; do not end the span twice.
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to register Dubbo provider completion", t);
       }
       return true;
     }
@@ -112,8 +117,8 @@ final class TracingFilter implements Filter {
           future.whenComplete(completion);
           return true;
         }
-      } catch (Throwable ignored) {
-        // Dubbo may invoke the callback inline for completed results; do not end the span twice.
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to register Dubbo provider completion", t);
       }
     }
     if (result instanceof CompletionStage) {
@@ -127,11 +132,15 @@ final class TracingFilter implements Filter {
 
   private void endProvider(
       Context context, DubboRequest request, @Nullable Result response, @Nullable Throwable error) {
-    instrumenter.end(
-        context,
-        request,
-        response,
-        error != null ? error : response == null ? null : response.getException());
+    try {
+      instrumenter.end(
+          context,
+          request,
+          response,
+          error != null ? error : response == null ? null : response.getException());
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to end Dubbo provider span", t);
+    }
   }
 
   @Nullable
