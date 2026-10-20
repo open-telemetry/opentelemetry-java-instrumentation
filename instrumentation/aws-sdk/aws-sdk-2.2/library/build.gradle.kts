@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.library-instrumentation")
@@ -99,6 +100,14 @@ testing {
             includeTestsMatching("Aws2SqsDefaultPropagatorTest.testDeleteMessageError")
           }
         }
+        register("PreviewSemconv") {
+          filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
+          telemetryConfig("otel.semconv-stability.preview", "rpc")
+        }
+        register("BothSemconv") {
+          filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
+          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
+        }
       }
     }
 
@@ -160,27 +169,11 @@ testing {
 }
 
 tasks {
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
-  }
-
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   check {
-    dependsOn(testing.suites, testPreviewSemconv, testBothSemconv)
+    dependsOn(testing.suites)
   }
 }
