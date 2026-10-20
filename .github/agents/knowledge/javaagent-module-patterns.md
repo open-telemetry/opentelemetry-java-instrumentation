@@ -87,7 +87,7 @@ their own component selectors.
 Place umbrellas after all component, baseline, role, and feature selectors so explicit component
 settings take precedence. Default-off features must not share any selector with default-on
 instrumentation. They use independent feature names, such as `kafka-clients-metrics`,
-`jdbc-datasource`, or `kotlinx-coroutines-annotations`. A group whose
+`jdbc-datasource`, or `kotlinx-coroutines-suspend-annotations`. A group whose
 members are all default-off can share an umbrella: `hibernate` selects default-off telemetry,
 including procedure calls, but not default-on Hibernate Reactive context propagation.
 
