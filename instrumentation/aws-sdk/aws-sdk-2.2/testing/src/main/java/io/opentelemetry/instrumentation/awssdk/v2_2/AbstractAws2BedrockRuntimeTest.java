@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_BEDROCK_GUARDRAIL_ID;
@@ -155,10 +154,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 spanData ->
                                     assertThat(
                                             spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                        .isEqualTo(
-                                            emitPreviewRpcSemconv(getTesting().getOpenTelemetry())
-                                                ? SchemaUrls.V1_44_0
-                                                : SchemaUrls.V1_37_0))
+                                        .isEqualTo(SchemaUrls.V1_37_0))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -177,10 +173,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .satisfies(
                         metricData ->
                             assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                                .isEqualTo(
-                                    emitPreviewRpcSemconv(getTesting().getOpenTelemetry())
-                                        ? SchemaUrls.V1_44_0
-                                        : SchemaUrls.V1_37_0))
+                                .isEqualTo(SchemaUrls.V1_37_0))
                     .hasUnit("{token}")
                     .hasDescription("Measures number of input and output tokens used.")
                     .hasHistogramSatisfying(
@@ -210,10 +203,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .satisfies(
                         metricData ->
                             assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                                .isEqualTo(
-                                    emitPreviewRpcSemconv(getTesting().getOpenTelemetry())
-                                        ? SchemaUrls.V1_44_0
-                                        : SchemaUrls.V1_37_0))
+                                .isEqualTo(SchemaUrls.V1_37_0))
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
                     .hasHistogramSatisfying(
