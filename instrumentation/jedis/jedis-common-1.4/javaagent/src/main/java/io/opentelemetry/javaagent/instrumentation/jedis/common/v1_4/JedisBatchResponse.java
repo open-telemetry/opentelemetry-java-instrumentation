@@ -12,13 +12,13 @@ import javax.annotation.Nullable;
 
 /** Observes raw replies without building or consuming application-owned Responses. */
 public final class JedisBatchResponse {
-  private static final int MAX_ERROR_TYPE_LENGTH = 64;
   private static final ContextKey<JedisBatchResponse> KEY =
       ContextKey.named("opentelemetry-jedis-batch-response");
 
   @Nullable private final Object connection;
   private final int commandCount;
-  @Nullable private Throwable failure;
+  private boolean failed;
+  @Nullable private String errorType;
 
   private JedisBatchResponse(@Nullable Object connection, int commandCount) {
     this.connection = connection;
@@ -45,36 +45,21 @@ public final class JedisBatchResponse {
         return;
       }
     }
-    batch.failure = (Throwable) replies.get(0);
+    batch.failed = true;
+    batch.errorType = JedisRedisErrorType.getErrorType((Throwable) replies.get(0));
   }
 
   @Nullable
-  public static Throwable getError(@Nullable Context context, @Nullable Throwable error) {
-    // A terminal failure (including connection failures after reading replies) takes precedence.
-    if (error != null) {
-      return error;
-    }
-    JedisBatchResponse batch = context != null ? context.get(KEY) : null;
-    return batch != null ? batch.failure : null;
+  public static JedisBatchResponse getResponse(Context context) {
+    return context.get(KEY);
+  }
+
+  public boolean isFailed() {
+    return failed;
   }
 
   @Nullable
-  public static String getErrorType(@Nullable String message) {
-    if (message == null || message.isEmpty()) {
-      return null;
-    }
-    // Redis protocol errors start with an uppercase error code, not the full server message.
-    int end = 0;
-    while (end < message.length() && message.charAt(end) != ' ') {
-      if (end == MAX_ERROR_TYPE_LENGTH) {
-        return null;
-      }
-      char c = message.charAt(end);
-      if (!(c >= 'A' && c <= 'Z') && c != '_') {
-        return null;
-      }
-      end++;
-    }
-    return end == 0 ? null : message.substring(0, end);
+  public String getErrorType() {
+    return errorType;
   }
 }

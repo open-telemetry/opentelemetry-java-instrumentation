@@ -8,21 +8,23 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRedisErrorType;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import javax.annotation.Nullable;
-import redis.clients.jedis.exceptions.JedisDataException;
 
-final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
+final class JedisDbAttributesGetter
+    implements DbClientAttributesGetter<JedisRequest, JedisBatchResponse> {
 
   @Override
   @Nullable
   public String getErrorType(
-      JedisRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return error instanceof JedisDataException
-        ? JedisBatchResponse.getErrorType(error.getMessage())
-        : null;
+      JedisRequest request, @Nullable JedisBatchResponse response, @Nullable Throwable error) {
+    if (error != null) {
+      return JedisRedisErrorType.getErrorType(error);
+    }
+    return response != null ? response.getErrorType() : null;
   }
 
   @Override
@@ -70,7 +72,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      JedisRequest request, @Nullable Void unused) {
+      JedisRequest request, @Nullable JedisBatchResponse unused) {
     Socket socket = request.getConnection().getSocket();
     if (socket != null && socket.getRemoteSocketAddress() instanceof InetSocketAddress) {
       return (InetSocketAddress) socket.getRemoteSocketAddress();

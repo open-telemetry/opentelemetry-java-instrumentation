@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 public class JedisRequestContext<T> {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
 
-  @Nullable private Instrumenter<T, Void> instrumenter;
+  @Nullable private Instrumenter<T, JedisBatchResponse> instrumenter;
   @Nullable private T request;
   @Nullable private Context context;
   @Nullable private Throwable throwable;
@@ -42,7 +42,7 @@ public class JedisRequestContext<T> {
    * Schedule ending of instrumented operation when current {@link JedisRequestContext} is closed.
    */
   public static <T> void endIfNotAttached(
-      Instrumenter<T, Void> instrumenter,
+      Instrumenter<T, JedisBatchResponse> instrumenter,
       Context context,
       T request,
       @Nullable Throwable throwable) {
@@ -65,7 +65,7 @@ public class JedisRequestContext<T> {
   }
 
   private static <T> void endSpan(
-      Instrumenter<T, Void> instrumenter,
+      Instrumenter<T, JedisBatchResponse> instrumenter,
       Context context,
       T request,
       @Nullable Throwable throwable) {

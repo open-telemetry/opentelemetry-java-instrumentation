@@ -8,13 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.JedisSocketFactory;
@@ -22,26 +25,38 @@ import redis.clients.jedis.JedisSocketFactory;
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-4.0";
 
-  private static final Instrumenter<JedisRequest, Void> instrumenter;
+  private static final Instrumenter<JedisRequest, JedisBatchResponse> instrumenter;
   private static final VirtualField<Connection, JedisConnectionInfo> CONNECTION_INFO =
       VirtualField.find(Connection.class, JedisConnectionInfo.class);
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
 
-    InstrumenterBuilder<JedisRequest, Void> builder =
-        Instrumenter.<JedisRequest, Void>builder(
+    InstrumenterBuilder<JedisRequest, JedisBatchResponse> builder =
+        Instrumenter.<JedisRequest, JedisBatchResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get());
+            .addOperationMetrics(DbClientMetrics.get())
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, request, response, error) -> {
+                  if (error != null) {
+                    SpanStatusExtractor.getDefault()
+                        .extract(spanStatusBuilder, request, response, error);
+                  } else if (response != null && response.isFailed()) {
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault()
+                        .extract(spanStatusBuilder, request, response, error);
+                  }
+                });
     setDbClientExceptionEventExtractor(builder);
 
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<JedisRequest, Void> instrumenter() {
+  public static Instrumenter<JedisRequest, JedisBatchResponse> instrumenter() {
     return instrumenter;
   }
 

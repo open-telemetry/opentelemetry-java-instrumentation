@@ -80,8 +80,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         JedisPipelineContext.exitTransactionFraming();
         if (scope != null) {
           scope.close();
-          instrumenter()
-              .end(context, request, null, JedisBatchResponse.getError(context, throwable));
+          instrumenter().end(context, request, JedisBatchResponse.getResponse(context), throwable);
         }
       }
     }
