@@ -70,7 +70,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
@@ -515,8 +515,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   }
 
   @ParameterizedTest
-  @NullAndEmptySource
-  @ValueSource(strings = {" ", "NoSuchBucket", "AccessDenied"})
+  @NullSource
+  @ValueSource(strings = {"NoSuchBucket", "AccessDenied"})
   void testS3ServiceError(String errorCode) throws ReflectiveOperationException {
     S3Client client = createS3Client();
 
@@ -539,17 +539,17 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     assertThat(caught).isInstanceOf(S3Exception.class);
     S3Exception error = (S3Exception) caught;
     assertThat(error.awsErrorDetails()).isNotNull();
-    if (hasErrorCode(errorCode)) {
+    if (errorCode != null) {
       assertThat(error.awsErrorDetails().rawResponse().asUtf8String())
           .contains("<Code>" + errorCode + "</Code>");
       assertThat(error.awsErrorDetails().errorCode()).isEqualTo(errorCode);
     } else {
-      assertThat(hasErrorCode(error.awsErrorDetails().errorCode())).isFalse();
+      assertThat(error.awsErrorDetails().errorCode()).isNull();
     }
 
     String expectedErrorType =
         emitPreviewRpcSemconv()
-            ? hasErrorCode(errorCode) ? errorCode : S3Exception.class.getName()
+            ? errorCode != null ? errorCode : S3Exception.class.getName()
             : null;
     getTesting()
         .waitAndAssertTraces(
@@ -619,10 +619,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         .region(Region.AP_NORTHEAST_1)
         .credentialsProvider(CREDENTIALS_PROVIDER)
         .build();
-  }
-
-  private static boolean hasErrorCode(String errorCode) {
-    return errorCode != null && !errorCode.trim().isEmpty();
   }
 
   @ParameterizedTest

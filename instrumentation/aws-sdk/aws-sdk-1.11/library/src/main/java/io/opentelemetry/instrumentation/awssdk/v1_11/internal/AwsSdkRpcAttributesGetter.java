@@ -50,10 +50,7 @@ class AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>, Respo
   public String getErrorType(
       Request<?> request, @Nullable Response<?> response, @Nullable Throwable error) {
     if (error instanceof AmazonServiceException) {
-      String errorCode = ((AmazonServiceException) error).getErrorCode();
-      if (errorCode != null && !errorCode.trim().isEmpty()) {
-        return errorCode;
-      }
+      return ((AmazonServiceException) error).getErrorCode();
     }
     return null;
   }

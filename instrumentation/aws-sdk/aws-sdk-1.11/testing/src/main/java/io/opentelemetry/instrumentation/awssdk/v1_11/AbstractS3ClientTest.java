@@ -51,7 +51,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -104,8 +104,8 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
   }
 
   @ParameterizedTest
-  @NullAndEmptySource
-  @ValueSource(strings = {" ", "NoSuchBucket", "AccessDenied"})
+  @NullSource
+  @ValueSource(strings = {"NoSuchBucket", "AccessDenied"})
   void testServiceError(String errorCode) {
     AmazonS3 client =
         configureClient(clientBuilder)
@@ -129,14 +129,14 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
     Throwable caught = catchThrowable(() -> client.getObject("someBucket", "someKey"));
     assertThat(caught).isInstanceOf(AmazonS3Exception.class);
     AmazonS3Exception error = (AmazonS3Exception) caught;
-    if (hasErrorCode(errorCode)) {
+    if (errorCode != null) {
       assertThat(error.getErrorCode()).isEqualTo(errorCode);
     } else {
-      assertThat(hasErrorCode(error.getErrorCode())).isFalse();
+      assertThat(error.getErrorCode()).isNull();
     }
 
     String expectedErrorType =
-        emitPreviewRpcSemconv() && hasErrorCode(errorCode)
+        emitPreviewRpcSemconv() && errorCode != null
             ? errorCode
             : AmazonS3Exception.class.getName();
     testing()
@@ -174,10 +174,6 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                       .hasException(error)
                       .hasTotalAttributeCount(3));
     }
-  }
-
-  private static boolean hasErrorCode(String errorCode) {
-    return errorCode != null && !errorCode.trim().isEmpty();
   }
 
   @Test

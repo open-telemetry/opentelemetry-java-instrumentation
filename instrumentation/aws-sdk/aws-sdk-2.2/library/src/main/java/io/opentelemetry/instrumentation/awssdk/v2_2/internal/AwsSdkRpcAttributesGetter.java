@@ -37,10 +37,7 @@ class AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttribut
     if (error instanceof AwsServiceException) {
       AwsErrorDetails errorDetails = ((AwsServiceException) error).awsErrorDetails();
       if (errorDetails != null) {
-        String errorCode = errorDetails.errorCode();
-        if (errorCode != null && !errorCode.trim().isEmpty()) {
-          return errorCode;
-        }
+        return errorDetails.errorCode();
       }
     }
     return null;
