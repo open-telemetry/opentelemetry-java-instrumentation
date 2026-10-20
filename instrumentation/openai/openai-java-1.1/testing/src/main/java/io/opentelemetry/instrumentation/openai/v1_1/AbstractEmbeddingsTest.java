@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -99,13 +100,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                     maybeWithTransportSpan(
                         span ->
                             span.hasName("embeddings text-embedding-3-small")
-                                .satisfies(
-                                    spanData ->
-                                        assertThat(
-                                                spanData
-                                                    .getInstrumentationScopeInfo()
-                                                    .getSchemaUrl())
-                                            .isEqualTo(SchemaUrls.V1_37_0))
+                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                                 .hasKind(SpanKind.CLIENT)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
@@ -125,10 +120,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
-                    .satisfies(
-                        metricData ->
-                            assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                                .isEqualTo(SchemaUrls.V1_37_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -143,10 +135,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
-                    .satisfies(
-                        metricData ->
-                            assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                                .isEqualTo(SchemaUrls.V1_37_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
