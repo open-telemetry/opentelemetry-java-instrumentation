@@ -85,9 +85,8 @@ class ApacheHttpClientHeaderSelectorTest {
     assertThat(result.get(stringArrayKey("http.request.header.x-test-excluded"))).isNull();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedSettersMatchHeaderNamesLiterally() {
+  void wildcardSelectorsCanExcludeSensitiveHeaders() {
     BasicHttpRequest httpRequest = new BasicHttpRequest("GET", "/test");
     httpRequest.setHeader("X-Test-Request", "request-value");
     httpRequest.setHeader("Authorization", "secret");
@@ -96,14 +95,14 @@ class ApacheHttpClientHeaderSelectorTest {
 
     HttpResponse response = new BasicHttpResponse(200);
     response.setHeader("X-Test-Response", "response-value");
+    response.setHeader("Set-Cookie", "secret");
 
-    // implementing header name enumeration must not turn the deprecated exact-name setters into
-    // wildcard matching, since "*" is a legal header name character and capturing every header
-    // would expose credentials
     AttributesExtractor<ApacheHttpClientRequest, HttpResponse> extractor =
         HttpClientAttributesExtractor.builder(new ApacheHttpClientHttpAttributesGetter())
-            .setCapturedRequestHeaders(singletonList("*"))
-            .setCapturedResponseHeaders(singletonList("*"))
+            .setRequestHeaders(
+                IncludeExclude.builder().setIncluded("*").setExcluded("authorization").build())
+            .setResponseHeaders(
+                IncludeExclude.builder().setIncluded("*").setExcluded("set-cookie").build())
             .build();
 
     AttributesBuilder attributes = Attributes.builder();
@@ -111,8 +110,11 @@ class ApacheHttpClientHeaderSelectorTest {
     extractor.onEnd(attributes, Context.root(), request, response, null);
 
     Attributes result = attributes.build();
-    assertThat(result.get(stringArrayKey("http.request.header.x-test-request"))).isNull();
+    assertThat(result.get(stringArrayKey("http.request.header.x-test-request")))
+        .isEqualTo(singletonList("request-value"));
     assertThat(result.get(stringArrayKey("http.request.header.authorization"))).isNull();
-    assertThat(result.get(stringArrayKey("http.response.header.x-test-response"))).isNull();
+    assertThat(result.get(stringArrayKey("http.response.header.x-test-response")))
+        .isEqualTo(singletonList("response-value"));
+    assertThat(result.get(stringArrayKey("http.response.header.set-cookie"))).isNull();
   }
 }

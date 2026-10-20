@@ -92,9 +92,8 @@ class HelidonHeaderSelectorTest {
     assertThat(result.get(stringArrayKey("http.request.header.x-test-excluded"))).isNull();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedSettersMatchHeaderNamesLiterally() {
+  void wildcardSelectorsCanExcludeSensitiveHeaders() {
     WritableHeaders<?> requestHeaders = WritableHeaders.create();
     requestHeaders.add(HeaderNames.create("X-Test-Request"), "request-value");
     requestHeaders.add(HeaderNames.create("Authorization"), "secret");
@@ -103,16 +102,16 @@ class HelidonHeaderSelectorTest {
 
     ServerResponseHeaders responseHeaders = ServerResponseHeaders.create();
     responseHeaders.add(HeaderNames.create("X-Test-Response"), "response-value");
+    responseHeaders.add(HeaderNames.create("Set-Cookie"), "secret");
     ServerResponse response = mock(ServerResponse.class, RETURNS_DEEP_STUBS);
     when(response.headers()).thenReturn(responseHeaders);
 
-    // implementing header name enumeration must not turn the deprecated exact-name setters into
-    // wildcard matching, since "*" is a legal header name character and capturing every header
-    // would expose credentials
     AttributesExtractor<ServerRequest, ServerResponse> extractor =
         HttpServerAttributesExtractor.builder(new HelidonAttributesGetter())
-            .setCapturedRequestHeaders(singletonList("*"))
-            .setCapturedResponseHeaders(singletonList("*"))
+            .setRequestHeaders(
+                IncludeExclude.builder().setIncluded("*").setExcluded("authorization").build())
+            .setResponseHeaders(
+                IncludeExclude.builder().setIncluded("*").setExcluded("set-cookie").build())
             .build();
 
     AttributesBuilder attributes = Attributes.builder();
@@ -120,8 +119,11 @@ class HelidonHeaderSelectorTest {
     extractor.onEnd(attributes, Context.root(), request, response, null);
 
     Attributes result = attributes.build();
-    assertThat(result.get(stringArrayKey("http.request.header.x-test-request"))).isNull();
+    assertThat(result.get(stringArrayKey("http.request.header.x-test-request")))
+        .isEqualTo(singletonList("request-value"));
     assertThat(result.get(stringArrayKey("http.request.header.authorization"))).isNull();
-    assertThat(result.get(stringArrayKey("http.response.header.x-test-response"))).isNull();
+    assertThat(result.get(stringArrayKey("http.response.header.x-test-response")))
+        .isEqualTo(singletonList("response-value"));
+    assertThat(result.get(stringArrayKey("http.response.header.set-cookie"))).isNull();
   }
 }

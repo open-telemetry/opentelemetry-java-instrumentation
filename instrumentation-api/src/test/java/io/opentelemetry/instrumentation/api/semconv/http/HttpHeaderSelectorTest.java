@@ -104,6 +104,18 @@ class HttpHeaderSelectorTest {
   }
 
   @Test
+  void wildcardSelectorCanExcludeSensitiveHeaders() {
+    assertThat(captureRequest(selector(singletonList("*"), singletonList("Authorization"))))
+        .containsOnly(
+            requestHeaderEntry("test-request-header", "one"),
+            requestHeaderEntry("test-request-other", "two"));
+    assertThat(captureResponse(selector(singletonList("*"), singletonList("Set-Cookie"))))
+        .containsOnly(
+            responseHeaderEntry("test-response-header", "three"),
+            responseHeaderEntry("test-response-other", "four"));
+  }
+
+  @Test
   void emptySelectorCapturesNothing() {
     assertThat(captureRequest(selector(emptyList(), emptyList()))).isEmpty();
     assertThat(captureResponse(selector(emptyList(), emptyList()))).isEmpty();
@@ -142,73 +154,6 @@ class HttpHeaderSelectorTest {
             capture(
                 new MapGetter(false), selector(singletonList("Test-Request-*"), emptyList()), null))
         .isEmpty();
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSettersSelectExactNames() {
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setCapturedRequestHeaders(singletonList("Test-Request-Header"))
-            .setCapturedResponseHeaders(singletonList("Test-Response-Header"))
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), REQUEST);
-    extractor.onEnd(attributes, Context.root(), REQUEST, RESPONSE, null);
-
-    assertThat(headerAttributes(attributes.build()))
-        .containsOnly(
-            requestHeaderEntry("test-request-header", "one"),
-            responseHeaderEntry("test-response-header", "three"));
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSettersMatchHeaderNamesLiterally() {
-    Map<String, String> request = new LinkedHashMap<>(REQUEST);
-    request.put("*", "literal");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setCapturedRequestHeaders(singletonList("*"))
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-
-    assertThat(headerAttributes(attributes.build()))
-        .containsOnly(requestHeaderEntry("*", "literal"));
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSettersOnlyCapturePresentLiteralNames() {
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setCapturedRequestHeaders(asList("Test-Request-Header", "Test-Request-*", "Test-?"))
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), REQUEST);
-
-    assertThat(headerAttributes(attributes.build()))
-        .containsOnly(requestHeaderEntry("test-request-header", "one"));
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSettersCaptureListedNames() {
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setCapturedRequestHeaders(singletonList("Test-Request-Header"))
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), REQUEST);
-
-    assertThat(headerAttributes(attributes.build()))
-        .containsOnly(requestHeaderEntry("test-request-header", "one"));
   }
 
   private static Map<AttributeKey<?>, Object> captureRequest(IncludeExclude headers) {

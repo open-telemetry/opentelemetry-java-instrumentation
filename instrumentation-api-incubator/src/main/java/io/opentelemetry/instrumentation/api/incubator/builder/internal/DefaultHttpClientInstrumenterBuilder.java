@@ -141,11 +141,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
    *
    * @param requestHeaders A list of HTTP header names.
    */
-  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
-    httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    Experimental.setClientCapturedRequestHeaders(httpAttributesExtractorBuilder, requestHeaders);
     return this;
   }
 
@@ -173,11 +172,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
    *
    * @param responseHeaders A list of HTTP header names.
    */
-  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
+    Experimental.setClientCapturedResponseHeaders(httpAttributesExtractorBuilder, responseHeaders);
     return this;
   }
 

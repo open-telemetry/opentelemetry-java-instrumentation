@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -29,6 +30,26 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<HttpServerAttributesExtractorBuilder<?, ?>, Set<String>>
       serverSensitiveQueryParameters;
+
+  @Nullable
+  private static volatile BiConsumer<
+          HttpClientAttributesExtractorBuilder<?, ?>, Collection<String>>
+      clientCapturedRequestHeadersSetter;
+
+  @Nullable
+  private static volatile BiConsumer<
+          HttpClientAttributesExtractorBuilder<?, ?>, Collection<String>>
+      clientCapturedResponseHeadersSetter;
+
+  @Nullable
+  private static volatile BiConsumer<
+          HttpServerAttributesExtractorBuilder<?, ?>, Collection<String>>
+      serverCapturedRequestHeadersSetter;
+
+  @Nullable
+  private static volatile BiConsumer<
+          HttpServerAttributesExtractorBuilder<?, ?>, Collection<String>>
+      serverCapturedResponseHeadersSetter;
 
   @Nullable
   private static volatile BiConsumer<HttpSpanNameExtractorBuilder<?>, Function<?, String>>
@@ -60,6 +81,54 @@ public final class Experimental {
     if (serverSensitiveQueryParameters != null) {
       serverSensitiveQueryParameters.accept(builder, sensitiveQueryParameters);
     }
+  }
+
+  public static void setClientCapturedRequestHeaders(
+      HttpClientAttributesExtractorBuilder<?, ?> builder, Collection<String> headers) {
+    if (clientCapturedRequestHeadersSetter != null) {
+      clientCapturedRequestHeadersSetter.accept(builder, headers);
+    }
+  }
+
+  public static void internalSetClientCapturedRequestHeaders(
+      BiConsumer<HttpClientAttributesExtractorBuilder<?, ?>, Collection<String>> setter) {
+    clientCapturedRequestHeadersSetter = setter;
+  }
+
+  public static void setClientCapturedResponseHeaders(
+      HttpClientAttributesExtractorBuilder<?, ?> builder, Collection<String> headers) {
+    if (clientCapturedResponseHeadersSetter != null) {
+      clientCapturedResponseHeadersSetter.accept(builder, headers);
+    }
+  }
+
+  public static void internalSetClientCapturedResponseHeaders(
+      BiConsumer<HttpClientAttributesExtractorBuilder<?, ?>, Collection<String>> setter) {
+    clientCapturedResponseHeadersSetter = setter;
+  }
+
+  public static void setServerCapturedRequestHeaders(
+      HttpServerAttributesExtractorBuilder<?, ?> builder, Collection<String> headers) {
+    if (serverCapturedRequestHeadersSetter != null) {
+      serverCapturedRequestHeadersSetter.accept(builder, headers);
+    }
+  }
+
+  public static void internalSetServerCapturedRequestHeaders(
+      BiConsumer<HttpServerAttributesExtractorBuilder<?, ?>, Collection<String>> setter) {
+    serverCapturedRequestHeadersSetter = setter;
+  }
+
+  public static void setServerCapturedResponseHeaders(
+      HttpServerAttributesExtractorBuilder<?, ?> builder, Collection<String> headers) {
+    if (serverCapturedResponseHeadersSetter != null) {
+      serverCapturedResponseHeadersSetter.accept(builder, headers);
+    }
+  }
+
+  public static void internalSetServerCapturedResponseHeaders(
+      BiConsumer<HttpServerAttributesExtractorBuilder<?, ?>, Collection<String>> setter) {
+    serverCapturedResponseHeadersSetter = setter;
   }
 
   public static void internalSetClientSensitiveQueryParameters(

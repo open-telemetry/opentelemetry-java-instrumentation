@@ -336,6 +336,8 @@
   HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
   with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
   rather than literal header-name characters.
+- Remove the deprecated request and response header setters from the stable HTTP attributes
+  extractor builders. Use `setRequestHeaders` and `setResponseHeaders` with `IncludeExclude`.
 - Remove the deprecated Elasticsearch REST library instrumentation. Use the Elasticsearch
   Java API Client's native OpenTelemetry support, or the Java agent for direct RestClient usage.
   Java agent instrumentation is unaffected.
