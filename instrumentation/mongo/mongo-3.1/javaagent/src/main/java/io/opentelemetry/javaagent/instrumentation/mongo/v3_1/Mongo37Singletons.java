@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -15,7 +16,7 @@ import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListen
 
 public class Mongo37Singletons {
 
-  private static final Instrumenter<CommandStartedEvent, Void> instrumenter =
+  private static final Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter =
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-3.1",

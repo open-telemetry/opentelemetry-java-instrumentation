@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,10 +28,7 @@ class LettuceCommandHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("write")
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext")))
-            .and(takesArgument(2, named("io.netty.channel.ChannelPromise"))),
+        named("write").and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext"))),
         getClass().getName() + "$WriteAdvice");
   }
 

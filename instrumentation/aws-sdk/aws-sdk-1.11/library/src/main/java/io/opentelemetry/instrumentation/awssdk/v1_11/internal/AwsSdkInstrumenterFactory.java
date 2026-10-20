@@ -68,10 +68,10 @@ public final class AwsSdkInstrumenterFactory {
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       stringKey("messaging.message.id");
 
-  private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors = createAttributesExtractors(false);
-  private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      extendedAttributesExtractors = createAttributesExtractors(true);
+  private final List<AttributesExtractor<Request<?>, Response<?>>> defaultAttributesExtractors =
+      createAttributesExtractors(false);
+  private final List<AttributesExtractor<Request<?>, Response<?>>> extendedAttributesExtractors =
+      createAttributesExtractors(true);
 
   private final OpenTelemetry openTelemetry;
   private final IncludeExclude headers;

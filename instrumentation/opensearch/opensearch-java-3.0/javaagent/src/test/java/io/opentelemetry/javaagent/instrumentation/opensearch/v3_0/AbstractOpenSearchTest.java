@@ -108,7 +108,7 @@ abstract class AbstractOpenSearchTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   @Test
@@ -155,7 +155,7 @@ abstract class AbstractOpenSearchTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service")),
+                                equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

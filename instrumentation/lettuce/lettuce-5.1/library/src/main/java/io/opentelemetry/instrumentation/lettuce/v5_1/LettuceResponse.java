@@ -5,25 +5,41 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import java.util.Locale;
 import javax.annotation.Nullable;
 
 final class LettuceResponse {
 
-  @Nullable private final String errorMessage;
-  @Nullable private final Throwable throwable;
+  private final boolean failed;
+  @Nullable private final String redisErrorType;
 
-  LettuceResponse(@Nullable String errorMessage, @Nullable Throwable throwable) {
-    this.errorMessage = errorMessage;
-    this.throwable = throwable;
+  static LettuceResponse fromErrorMessage(@Nullable String errorMessage) {
+    return new LettuceResponse(errorMessage != null, extractRedisErrorPrefix(errorMessage));
+  }
+
+  private LettuceResponse(boolean failed, @Nullable String redisErrorType) {
+    this.failed = failed;
+    this.redisErrorType = redisErrorType;
+  }
+
+  boolean isFailed() {
+    return failed;
   }
 
   @Nullable
-  String getErrorMessage() {
-    return errorMessage;
+  String getRedisErrorType() {
+    return redisErrorType;
   }
 
   @Nullable
-  Throwable getThrowable() {
-    return throwable;
+  private static String extractRedisErrorPrefix(@Nullable String errorMessage) {
+    if (errorMessage == null || errorMessage.isEmpty()) {
+      return null;
+    }
+
+    // Redis error prefixes are the first upper-case, space-delimited word of an error reply.
+    int separator = errorMessage.indexOf(' ');
+    String errorType = separator == -1 ? errorMessage : errorMessage.substring(0, separator);
+    return errorType.equals(errorType.toUpperCase(Locale.ROOT)) ? errorType : null;
   }
 }

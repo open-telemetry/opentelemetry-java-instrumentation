@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSinglet
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRedisErrorType;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRedisErrorType;
 import javax.annotation.Nullable;
 
 public final class JedisClusterCommandContext {

@@ -23,8 +23,8 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -531,9 +531,53 @@ public abstract class AbstractThriftTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error()),
                     span ->
-                        assertServerSpan(span, "withError", port)
+                        assertServerSpan(
+                                span, CustomHandler.class.getName(), "withError", port, "_OTHER")
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())));
+
+    if (emitPreviewRpcSemconv()) {
+      getTesting()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.thrift-0.13",
+              metric ->
+                  metric
+                      .hasName("rpc.server.call.duration")
+                      .hasUnit("s")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point ->
+                                      point.hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                          equalTo(SERVER_PORT, port),
+                                          equalTo(
+                                              RPC_METHOD,
+                                              CustomHandler.class.getName() + "/withError"),
+                                          equalTo(ERROR_TYPE, "_OTHER")))));
+      getTesting()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.thrift-0.13",
+              metric ->
+                  metric
+                      .hasName("rpc.client.call.duration")
+                      .hasUnit("s")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point ->
+                                      point.hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                          equalTo(SERVER_ADDRESS, "localhost"),
+                                          equalTo(SERVER_PORT, port),
+                                          equalTo(
+                                              RPC_METHOD,
+                                              CustomService.class.getName() + "/withError"),
+                                          equalTo(
+                                              ERROR_TYPE,
+                                              TApplicationException.class.getName())))));
+    }
   }
 
   @Test
@@ -721,8 +765,14 @@ public abstract class AbstractThriftTest {
                             .hasStatus(StatusData.error()),
                     span ->
                         (hasAsyncServerNetworkAttributes()
-                                ? assertServerSpan(span, "withError", port)
-                                : assertServerSpan(span, "withError"))
+                                ? assertServerSpan(
+                                    span,
+                                    CustomHandler.class.getName(),
+                                    "withError",
+                                    port,
+                                    "_OTHER")
+                                : assertServerSpan(
+                                    span, CustomHandler.class.getName(), "withError", "_OTHER"))
                             .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")

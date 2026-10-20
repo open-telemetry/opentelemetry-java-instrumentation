@@ -70,4 +70,14 @@ final class CamelMessagingAttributesGetter
   public String getDestinationPartitionId(CamelRequest request) {
     return request.getMessagingDestinationPartitionId();
   }
+
+  @Nullable
+  @Override
+  public String getErrorType(
+      CamelRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    if (error != null) {
+      return error.getClass().getName();
+    }
+    return request.getExchange().isFailed() ? "_OTHER" : null;
+  }
 }

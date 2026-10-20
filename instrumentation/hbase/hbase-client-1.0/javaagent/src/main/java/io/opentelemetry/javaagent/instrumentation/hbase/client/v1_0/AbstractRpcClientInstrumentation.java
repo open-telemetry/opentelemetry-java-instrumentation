@@ -57,7 +57,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This AbstractRpcClient client, @Advice.Argument(0) Configuration configuration) {
       HbaseServerTarget.store(client, configuration);
@@ -111,7 +111,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallBlockingMethodAdvice {
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This AbstractRpcClient client,
         @Advice.Argument(0) Object md,
@@ -119,7 +119,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(md, param, HbaseServerTarget.get(client));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

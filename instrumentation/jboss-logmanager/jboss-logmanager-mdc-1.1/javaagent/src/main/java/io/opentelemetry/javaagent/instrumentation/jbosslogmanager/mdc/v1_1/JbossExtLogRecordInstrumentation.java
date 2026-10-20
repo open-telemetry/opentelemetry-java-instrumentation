@@ -32,7 +32,7 @@ class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // available since jboss-logmanager 1.1
     transformer.applyAdviceToMethod(
-        isPublic().and(named("getMdc")).and(takesArguments(1)).and(takesArgument(0, String.class)),
+        isPublic().and(named("getMdc")).and(takesArgument(0, String.class)),
         getClass().getName() + "$GetMdcAdvice");
 
     // available since jboss-logmanager 1.3
