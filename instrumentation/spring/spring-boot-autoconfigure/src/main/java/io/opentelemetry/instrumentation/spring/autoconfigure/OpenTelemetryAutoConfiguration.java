@@ -315,6 +315,7 @@ public class OpenTelemetryAutoConfiguration {
   @Configuration
   @ConditionalOnBean(OpenTelemetry.class)
   @ConditionalOnMissingBean({ConfigProperties.class})
+  @Conditional(DeclarativeConfigDisabled.class)
   static class FallbackConfigProperties {
     @Bean
     ConfigProperties otelProperties(ApplicationContext applicationContext) {

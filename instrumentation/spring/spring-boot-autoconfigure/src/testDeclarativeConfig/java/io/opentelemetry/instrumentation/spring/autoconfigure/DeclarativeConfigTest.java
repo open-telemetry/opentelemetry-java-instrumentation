@@ -14,6 +14,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,8 @@ class DeclarativeConfigTest {
                 assertThat(context)
                     .hasBean("customOpenTelemetry")
                     .doesNotHaveBean("openTelemetry")
+                    .doesNotHaveBean("otelProperties")
+                    .doesNotHaveBean(ConfigProperties.class)
                     .getBean("configProvider")
                     .isEqualTo(ConfigProvider.noop()));
   }
@@ -71,12 +74,12 @@ class DeclarativeConfigTest {
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner.run(
         context -> {
+          assertThat(context)
+              .doesNotHaveBean("otelProperties")
+              .doesNotHaveBean(ConfigProperties.class);
           ConfigProvider configProvider = context.getBean(ConfigProvider.class);
           DeclarativeConfigProperties config =
-              configProvider
-                  .getInstrumentationConfig()
-                  .getStructured("java")
-                  .getStructured("foo");
+              configProvider.getInstrumentationConfig().getStructured("java").getStructured("foo");
           assertThat(config.getString("string_key")).isEqualTo("string_value");
           assertThat(config.getBoolean("bool_key")).isTrue();
           assertThat(config.getDouble("double_key")).isEqualTo(3.14);
