@@ -23,3 +23,9 @@ Comment only on a changed line and only for a supported issue.
   constant only when both key name and type match; in library production code copy
   incubating constants locally rather than importing them. Tests may import both
   stable and incubating constants directly.
+
+## Database response status codes
+
+This repository intentionally omits `db.response.status_code` when it would only duplicate the database error code recorded in `error.type`, despite the database semantic conventions conditionally requiring it for failed operations. Do not report that omission as a conformance defect or request adding the redundant attribute.
+
+See <a href="https://github.com/open-telemetry/semantic-conventions/issues/3478">open-telemetry/semantic-conventions#3478</a> and the <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16276#discussion_r2850538387">original discussion</a> for rationale. This is a repository policy, not an upstream semantic-convention exception.
