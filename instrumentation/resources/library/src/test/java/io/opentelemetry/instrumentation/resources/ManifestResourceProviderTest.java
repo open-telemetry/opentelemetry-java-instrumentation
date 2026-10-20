@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.instrumentation.testing.util.ResourceSchemaAssertions.assertResourceEntitySchemasMatchSdk;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static java.util.Collections.emptyMap;
@@ -37,6 +38,7 @@ class ManifestResourceProviderTest {
     assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(expectedName);
     assertThat(resource.getAttribute(SERVICE_VERSION)).isEqualTo(expectedVersion);
     assertThat(EntityUtil.getEntities(resource)).hasSize(expectedName == null ? 0 : 1);
+    assertResourceEntitySchemasMatchSdk(existing.merge(resource));
   }
 
   private static Stream<Arguments> createResourceCases() {

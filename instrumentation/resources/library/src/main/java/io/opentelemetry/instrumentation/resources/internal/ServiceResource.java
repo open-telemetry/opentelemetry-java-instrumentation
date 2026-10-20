@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.resources.internal.Entity;
 import io.opentelemetry.sdk.resources.internal.EntityUtil;
+import io.opentelemetry.semconv.SchemaUrls;
 import javax.annotation.Nullable;
 
 /**
@@ -31,6 +32,7 @@ public final class ServiceResource {
     return EntityUtil.createResource(
         singletonList(
             Entity.builder("service", Attributes.of(SERVICE_NAME, serviceName))
+                .setSchemaUrl(SchemaUrls.V1_40_0)
                 .setDescription(description)
                 .build()));
   }

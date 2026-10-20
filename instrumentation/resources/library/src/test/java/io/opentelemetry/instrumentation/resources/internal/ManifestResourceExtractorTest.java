@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.ResourceSchemaAssertions.assertResourceEntitySchemasMatchSdk;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +51,7 @@ class ManifestResourceExtractorTest {
       assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(expectedName);
       assertThat(resource.getAttribute(SERVICE_VERSION)).isEqualTo(expectedVersion);
       assertThat(EntityUtil.getEntities(resource)).hasSize(expectedName == null ? 0 : 1);
+      assertResourceEntitySchemasMatchSdk(resource);
     }
   }
 
