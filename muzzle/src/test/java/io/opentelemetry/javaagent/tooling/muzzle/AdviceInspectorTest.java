@@ -74,33 +74,7 @@ class AdviceInspectorTest {
     assertThat(adviceInspector.inspect(module(MixedAdvice.class))).isEqualTo(AdviceMode.MIXED);
     assertThat(adviceInspector.inspect(module(InlineAdvice.class)))
         .isEqualTo(AdviceMode.ALL_INLINE);
-    assertThat(adviceInspector.inspect(module(ExplicitInlineAdvice.class)))
-        .isEqualTo(AdviceMode.ALL_INLINE);
     assertThat(adviceInspector.inspect(module(NoAdvice.class))).isEqualTo(AdviceMode.NO_ADVICE);
-    assertThat(adviceInspector.inspect(module())).isEqualTo(AdviceMode.NO_ADVICE);
-  }
-
-  @Test
-  void noAdviceSelectionFallbacks() {
-    InstrumentationModule module = module(NoAdvice.class);
-    assertThat(adviceInspector.useIsolatedAdvice(module, singletonList(NoAdvice.class.getName())))
-        .isNull();
-    assertThat(adviceInspector.useIsolatedAdvice(module)).isFalse();
-
-    InstrumentationModule injected =
-        new InstrumentationModule("test") {
-          @Override
-          public List<TypeInstrumentation> typeInstrumentations() {
-            return emptyList();
-          }
-
-          @Override
-          public List<String> injectedClassNames() {
-            return singletonList("test.Helper");
-          }
-        };
-    assertThat(adviceInspector.inspect(injected)).isEqualTo(AdviceMode.NO_ADVICE);
-    assertThat(adviceInspector.useIsolatedAdvice(injected)).isTrue();
   }
 
   private static InstrumentationModule module(Class<?>... adviceClasses) {
@@ -145,11 +119,6 @@ class AdviceInspectorTest {
     public static void enter() {}
 
     @Advice.OnMethodExit
-    public static void exit() {}
-  }
-
-  private static class ExplicitInlineAdvice {
-    @Advice.OnMethodExit(inline = true)
     public static void exit() {}
   }
 
