@@ -5,8 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.MessagingSpanDecorator;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 
 final class CamelMessagingAttributesGetter
@@ -63,6 +68,17 @@ final class CamelMessagingAttributesGetter
   @Override
   public Long getBatchMessageCount(CamelRequest request, @Nullable Void unused) {
     return null;
+  }
+
+  @Override
+  public List<String> getMessageHeader(CamelRequest request, String name) {
+    Object value = request.getExchange().getIn().getHeaders().get(name);
+    return value == null ? emptyList() : singletonList(value.toString());
+  }
+
+  @Override
+  public Iterable<String> getMessageHeaderNames(CamelRequest request) {
+    return new ArrayList<>(request.getExchange().getIn().getHeaders().keySet());
   }
 
   @Nullable
