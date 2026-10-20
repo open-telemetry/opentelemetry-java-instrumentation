@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
@@ -265,62 +264,42 @@ class Jms2InstrumentationTest {
                   }
                 }));
 
-    AttributeKey<?>[] durationAttributeKeys =
-        failure == null
-            ? new AttributeKey<?>[] {
-              MESSAGING_SYSTEM, MESSAGING_OPERATION_NAME, MESSAGING_OPERATION_TYPE
-            }
-            : new AttributeKey<?>[] {
-              MESSAGING_SYSTEM, MESSAGING_OPERATION_NAME, MESSAGING_OPERATION_TYPE, ERROR_TYPE
-            };
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "messaging.client.operation.duration",
-        metrics ->
-            metrics
-                .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric)
-                            .hasName("messaging.client.operation.duration")
-                            .hasUnit("s")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                attributes ->
-                                                    assertThat(attributes.asMap())
-                                                        .containsOnlyKeys(
-                                                            durationAttributeKeys))))));
-
-    AttributeKey<?>[] counterAttributeKeys =
-        failure == null
-            ? new AttributeKey<?>[] {MESSAGING_SYSTEM, MESSAGING_OPERATION_NAME}
-            : new AttributeKey<?>[] {MESSAGING_SYSTEM, MESSAGING_OPERATION_NAME, ERROR_TYPE};
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.client.sent.messages",
-        metrics ->
-            metrics
-                .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric)
-                            .hasName("messaging.client.sent.messages")
-                            .hasUnit("{message}")
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.isMonotonic()
-                                        .hasPointsSatisfying(
-                                            point ->
-                                                point
-                                                    .hasValue(1)
-                                                    .hasAttributesSatisfying(
-                                                        attributes ->
-                                                            assertThat(attributes.asMap())
-                                                                .containsOnlyKeys(
-                                                                    counterAttributeKeys))))));
+        metric ->
+            metric
+                .hasName("messaging.client.operation.duration")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_SYSTEM, "jms"),
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        failure == null ? null : failure.getClass().getName())))),
+        metric ->
+            metric
+                .hasName("messaging.client.sent.messages")
+                .hasUnit("{message}")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_SYSTEM, "jms"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                            equalTo(
+                                                ERROR_TYPE,
+                                                failure == null
+                                                    ? null
+                                                    : failure.getClass().getName())))));
   }
 
   @Test
