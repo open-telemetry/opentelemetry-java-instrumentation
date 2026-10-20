@@ -32,23 +32,19 @@ public final class Experimental {
       serverSensitiveQueryParameters;
 
   @Nullable
-  private static volatile BiConsumer<
-          HttpClientAttributesExtractorBuilder<?, ?>, Collection<String>>
+  private static volatile BiConsumer<HttpClientAttributesExtractorBuilder<?, ?>, Collection<String>>
       clientCapturedRequestHeadersSetter;
 
   @Nullable
-  private static volatile BiConsumer<
-          HttpClientAttributesExtractorBuilder<?, ?>, Collection<String>>
+  private static volatile BiConsumer<HttpClientAttributesExtractorBuilder<?, ?>, Collection<String>>
       clientCapturedResponseHeadersSetter;
 
   @Nullable
-  private static volatile BiConsumer<
-          HttpServerAttributesExtractorBuilder<?, ?>, Collection<String>>
+  private static volatile BiConsumer<HttpServerAttributesExtractorBuilder<?, ?>, Collection<String>>
       serverCapturedRequestHeadersSetter;
 
   @Nullable
-  private static volatile BiConsumer<
-          HttpServerAttributesExtractorBuilder<?, ?>, Collection<String>>
+  private static volatile BiConsumer<HttpServerAttributesExtractorBuilder<?, ?>, Collection<String>>
       serverCapturedResponseHeadersSetter;
 
   @Nullable
