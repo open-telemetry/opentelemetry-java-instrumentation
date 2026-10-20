@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -116,7 +117,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               experimental("rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D")),
                           equalTo(HTTP_REQUEST_METHOD, "GET"),
                           equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))
-                      .satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.41.0")));
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
           addNestedHttpClientSpan(
               assertions,
               "GET",
@@ -155,7 +156,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
                           experimentalSatisfies(
                               stringKey("camel.uri"), val -> val.isInstanceOf(String.class)))
-                      .satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.41.0")));
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
           assertions.add(
               span ->
                   span.hasName("moduleUnit")
