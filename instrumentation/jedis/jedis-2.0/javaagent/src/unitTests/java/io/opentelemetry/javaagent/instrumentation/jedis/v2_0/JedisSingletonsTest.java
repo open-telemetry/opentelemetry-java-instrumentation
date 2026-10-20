@@ -6,13 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static java.util.Arrays.asList;
-import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRedisErrorType;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
@@ -104,26 +103,27 @@ class JedisSingletonsTest {
   @Test
   void terminalExceptionTakesPrecedenceOverCapturedBatchError() {
     Connection connection = new Connection("localhost", 6380);
-    Context context = JedisBatchResponse.store(Context.root(), connection, 2);
+    Context context = JedisBatchState.store(Context.root(), connection, 2);
 
     try (Scope ignored = context.makeCurrent()) {
-      JedisBatchResponse.capture(
+      JedisBatchState.capture(
           connection,
           asList(
               new JedisDataException("WRONGTYPE expected"),
               new JedisDataException("WRONGTYPE expected")));
     }
 
-    JedisBatchResponse response = requireNonNull(JedisBatchResponse.getResponse(context));
-    assertThat(response.isFailed()).isTrue();
-    assertThat(response.getErrorType()).isEqualTo("WRONGTYPE");
+    String errorType = JedisBatchState.getErrorType(context, null);
+    assertThat(errorType).isEqualTo("WRONGTYPE");
+    assertThat(JedisBatchState.getErrorType(context, new IOException("connection closed")))
+        .isEqualTo(IOException.class.getName());
     assertThat(
             new JedisDbAttributesGetter()
                 .getErrorType(
                     JedisRequest.create(connection, Protocol.Command.PING),
-                    response,
-                    new IOException("connection closed")))
-        .isEqualTo(IOException.class.getName());
+                    errorType,
+                    null))
+        .isEqualTo("WRONGTYPE");
     assertThat(JedisRedisErrorType.getErrorType(new JedisDataException("UNKNOWNCODE details")))
         .isEqualTo(JedisDataException.class.getName());
   }

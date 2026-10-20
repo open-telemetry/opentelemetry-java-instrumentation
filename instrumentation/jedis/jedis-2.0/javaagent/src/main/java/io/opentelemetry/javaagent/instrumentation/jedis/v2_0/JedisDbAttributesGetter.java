@@ -7,23 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRedisErrorType;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class JedisDbAttributesGetter
-    implements DbClientAttributesGetter<JedisRequest, JedisBatchResponse> {
+final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, String> {
 
   @Override
   @Nullable
   public String getErrorType(
-      JedisRequest request, @Nullable JedisBatchResponse response, @Nullable Throwable error) {
-    if (error != null) {
-      return JedisRedisErrorType.getErrorType(error);
-    }
-    return response != null ? response.getErrorType() : null;
+      JedisRequest request, @Nullable String response, @Nullable Throwable error) {
+    return response;
   }
 
   @Override
@@ -71,7 +65,7 @@ final class JedisDbAttributesGetter
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      JedisRequest request, @Nullable JedisBatchResponse unused) {
+      JedisRequest request, @Nullable String unused) {
     return request.getPeerAddress();
   }
 }

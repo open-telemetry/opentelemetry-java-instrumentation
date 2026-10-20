@@ -17,7 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -100,7 +100,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context =
-            JedisBatchResponse.store(
+            JedisBatchState.store(
                 instrumenter().start(parentContext, request),
                 request.getConnection(),
                 batchState.getRequests().size());
@@ -109,7 +109,8 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        instrumenter().end(context, request, JedisBatchResponse.getResponse(context), throwable);
+        instrumenter().end(
+            context, request, JedisBatchState.getErrorType(context, throwable), throwable);
       }
     }
 

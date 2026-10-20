@@ -19,7 +19,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchState;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRedisErrorType;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -58,7 +59,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Connection connection, @Advice.Return @Nullable List<?> replies) {
-      JedisBatchResponse.capture(connection, replies);
+      JedisBatchState.capture(connection, replies);
     }
   }
 
@@ -109,7 +110,8 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+        JedisRequestContext.endIfNotAttached(
+            instrumenter(), context, request, JedisRedisErrorType.getErrorType(throwable), throwable);
       }
     }
 

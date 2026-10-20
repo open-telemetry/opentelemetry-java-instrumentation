@@ -50,7 +50,11 @@ public final class JedisRedisErrorType {
 
   private JedisRedisErrorType() {}
 
-  public static String getErrorType(Throwable error) {
+  @Nullable
+  public static String getErrorType(@Nullable Throwable error) {
+    if (error == null) {
+      return null;
+    }
     String errorCode = getRedisErrorCode(error.getMessage());
     return errorCode != null ? errorCode : error.getClass().getName();
   }

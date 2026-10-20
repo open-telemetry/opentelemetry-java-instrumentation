@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSinglet
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRedisErrorType;
 import javax.annotation.Nullable;
 
 public final class JedisClusterCommandContext {
@@ -87,7 +88,7 @@ public final class JedisClusterCommandContext {
 
   public void end(@Nullable Throwable throwable) {
     if (context != null && request != null) {
-      instrumenter().end(context, request, null, throwable);
+      instrumenter().end(context, request, JedisRedisErrorType.getErrorType(throwable), throwable);
     }
   }
 }

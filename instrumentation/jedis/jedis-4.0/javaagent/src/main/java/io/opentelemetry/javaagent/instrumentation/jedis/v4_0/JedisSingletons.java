@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.JedisSocketFactory;
@@ -25,15 +24,15 @@ import redis.clients.jedis.JedisSocketFactory;
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-4.0";
 
-  private static final Instrumenter<JedisRequest, JedisBatchResponse> instrumenter;
+  private static final Instrumenter<JedisRequest, String> instrumenter;
   private static final VirtualField<Connection, JedisConnectionInfo> CONNECTION_INFO =
       VirtualField.find(Connection.class, JedisConnectionInfo.class);
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
 
-    InstrumenterBuilder<JedisRequest, JedisBatchResponse> builder =
-        Instrumenter.<JedisRequest, JedisBatchResponse>builder(
+    InstrumenterBuilder<JedisRequest, String> builder =
+        Instrumenter.<JedisRequest, String>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(dbAttributesGetter))
@@ -44,7 +43,7 @@ public class JedisSingletons {
                   if (error != null) {
                     SpanStatusExtractor.getDefault()
                         .extract(spanStatusBuilder, request, response, error);
-                  } else if (response != null && response.isFailed()) {
+                  } else if (response != null) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   } else {
                     SpanStatusExtractor.getDefault()
@@ -56,7 +55,7 @@ public class JedisSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<JedisRequest, JedisBatchResponse> instrumenter() {
+  public static Instrumenter<JedisRequest, String> instrumenter() {
     return instrumenter;
   }
 

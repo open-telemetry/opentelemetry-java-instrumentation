@@ -12,10 +12,11 @@ import javax.annotation.Nullable;
 public class JedisRequestContext<T> {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
 
-  @Nullable private Instrumenter<T, JedisBatchResponse> instrumenter;
+  @Nullable private Instrumenter<T, String> instrumenter;
   @Nullable private T request;
   @Nullable private Context context;
   @Nullable private Throwable throwable;
+  @Nullable private String errorType;
 
   private JedisRequestContext() {}
 
@@ -34,7 +35,7 @@ public class JedisRequestContext<T> {
   public void detachAndEnd() {
     contextThreadLocal.remove();
     if (request != null && instrumenter != null && context != null) {
-      endSpan(instrumenter, context, request, throwable);
+      endSpan(instrumenter, context, request, errorType, throwable);
     }
   }
 
@@ -42,18 +43,20 @@ public class JedisRequestContext<T> {
    * Schedule ending of instrumented operation when current {@link JedisRequestContext} is closed.
    */
   public static <T> void endIfNotAttached(
-      Instrumenter<T, JedisBatchResponse> instrumenter,
+      Instrumenter<T, String> instrumenter,
       Context context,
       T request,
+      @Nullable String errorType,
       @Nullable Throwable throwable) {
     JedisRequestContext<T> requestContext = current();
     if (requestContext == null || requestContext.request != null) {
       // end the span immediately if we are already tracking a request
-      endSpan(instrumenter, context, request, throwable);
+      endSpan(instrumenter, context, request, errorType, throwable);
     } else {
       requestContext.instrumenter = instrumenter;
       requestContext.context = context;
       requestContext.request = request;
+      requestContext.errorType = errorType;
       requestContext.throwable = throwable;
     }
   }
@@ -65,10 +68,11 @@ public class JedisRequestContext<T> {
   }
 
   private static <T> void endSpan(
-      Instrumenter<T, JedisBatchResponse> instrumenter,
+      Instrumenter<T, String> instrumenter,
       Context context,
       T request,
+      @Nullable String errorType,
       @Nullable Throwable throwable) {
-    instrumenter.end(context, request, null, throwable);
+    instrumenter.end(context, request, errorType, throwable);
   }
 }

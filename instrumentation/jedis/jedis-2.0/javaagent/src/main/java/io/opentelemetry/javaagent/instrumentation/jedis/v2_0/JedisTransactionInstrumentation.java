@@ -16,7 +16,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchResponse;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.TransactionFraming;
 import javax.annotation.Nullable;
@@ -58,7 +58,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
           scope.close();
         }
         if (context != null && request != null) {
-          instrumenter().end(context, request, JedisBatchResponse.getResponse(context), throwable);
+          instrumenter()          .end(context, request, JedisBatchState.getErrorType(context, throwable), throwable);
         }
       }
     }
@@ -75,7 +75,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         Context parentContext = Java8BytecodeBridge.currentContext();
         if (instrumenter().shouldStart(parentContext, request)) {
           context =
-              JedisBatchResponse.store(
+              JedisBatchState.store(
                   instrumenter().start(parentContext, request),
                   request.getConnection(),
                   batchState.getRequests().size());
