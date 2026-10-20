@@ -686,7 +686,10 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"))))));
+                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
+                                                  equalTo(
+                                                      ERROR_TYPE,
+                                                      SofaRpcRuntimeException.class.getName()))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -706,6 +709,9 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
+                                                  equalTo(
+                                                      ERROR_TYPE,
+                                                      SofaRpcRuntimeException.class.getName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,

@@ -137,6 +137,8 @@ class RpcInstanceSemconvTest {
                                         point
                                             .hasCount(1)
                                             .hasAttributesSatisfyingExactly(
+                                                equalTo(
+                                                    ERROR_TYPE, "java.lang.IllegalStateException"),
                                                 equalTo(RPC_SYSTEM_NAME, "test"),
                                                 equalTo(RPC_METHOD, "Service/Method")))));
       }
