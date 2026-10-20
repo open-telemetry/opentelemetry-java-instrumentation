@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import okhttp3.Dispatcher;
 import okhttp3.Interceptor;
@@ -45,6 +47,8 @@ import org.influxdb.dto.Query;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // Query callbacks and QueryResult use the legacy client API.
@@ -66,8 +70,11 @@ class InfluxDbQueryLifecycleTest {
     assertQuery("_OTHER");
   }
 
-  @Test
-  void asynchronousResponse() throws InterruptedException {
+  @ParameterizedTest
+  @MethodSource("asynchronousResponses")
+  void asynchronousResponse(
+      String body, boolean hasFailureConsumer, boolean callbackThrows, String errorType)
+      throws InterruptedException {
     CountDownLatch requestStarted = new CountDownLatch(1);
     CountDownLatch respond = new CountDownLatch(1);
     CountDownLatch callback = new CountDownLatch(1);
@@ -77,15 +84,22 @@ class InfluxDbQueryLifecycleTest {
             chain -> {
               requestStarted.countDown();
               await(respond);
-              return response(chain, FAILURE);
+              return response(chain, body);
             })) {
-      client.query(
-          QUERY,
-          result -> callback.countDown(),
+      Consumer<Throwable> failureConsumer =
           error -> {
             failure.set(error);
             callback.countDown();
-          });
+          };
+      client.query(
+          QUERY,
+          result -> {
+            callback.countDown();
+            if (callbackThrows) {
+              throw new IllegalStateException("private callback text");
+            }
+          },
+          hasFailureConsumer ? failureConsumer : null);
       try {
         assertThat(requestStarted.await(10, SECONDS)).isTrue();
         assertThat(testing.spans()).isEmpty();
@@ -95,8 +109,21 @@ class InfluxDbQueryLifecycleTest {
       }
       assertThat(callback.await(10, SECONDS)).isTrue();
       assertThat(failure.get()).isNull();
-      assertQuery("_OTHER");
+      assertQuery(errorType);
     }
+  }
+
+  private static Stream<Arguments> asynchronousResponses() {
+    return Stream.of(
+        argumentSet("statement error", FAILURE, true, false, "_OTHER"),
+        argumentSet("statement error without failure consumer", FAILURE, false, false, "_OTHER"),
+        argumentSet("success without failure consumer", SUCCESS, false, false, null),
+        argumentSet(
+            "callback error without failure consumer",
+            SUCCESS,
+            false,
+            true,
+            IllegalStateException.class.getName()));
   }
 
   @ParameterizedTest

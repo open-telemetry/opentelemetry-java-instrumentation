@@ -107,7 +107,9 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
       boolean asynchronous =
           arguments.length > 2
-              && (arguments[2] instanceof Consumer || arguments[2] instanceof BiConsumer);
+              && (arguments[1] instanceof Consumer
+                  || arguments[2] instanceof Consumer
+                  || arguments[2] instanceof BiConsumer);
       return new Object[] {newArguments, state, state.getContext().makeCurrent(), asynchronous};
     }
 
