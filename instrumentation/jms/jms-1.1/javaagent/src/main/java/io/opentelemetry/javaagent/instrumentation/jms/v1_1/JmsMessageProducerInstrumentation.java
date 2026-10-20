@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -25,6 +26,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,15 +46,61 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    ElementMatcher.Junction<MethodDescription> messageSend =
+        named("send").and(isPublic()).and(takesArgument(0, named("javax.jms.Message")));
+    ElementMatcher.Junction<MethodDescription> destinationSend =
+        named("send")
+            .and(isPublic())
+            .and(takesArgument(0, named("javax.jms.Destination")))
+            .and(takesArgument(1, named("javax.jms.Message")));
+
     transformer.applyAdviceToMethod(
-        named("send").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
+        messageSend
+            .and(takesArguments(1))
+            .or(
+                messageSend
+                    .and(takesArguments(4))
+                    .and(takesArgument(1, int.class))
+                    .and(takesArgument(2, int.class))
+                    .and(takesArgument(3, long.class))),
         getClass().getName() + "$ProducerAdvice");
     transformer.applyAdviceToMethod(
-        named("send")
-            .and(takesArgument(0, named("javax.jms.Destination")))
-            .and(takesArgument(1, named("javax.jms.Message")))
-            .and(isPublic()),
+        destinationSend
+            .and(takesArguments(2))
+            .or(
+                destinationSend
+                    .and(takesArguments(5))
+                    .and(takesArgument(2, int.class))
+                    .and(takesArgument(3, int.class))
+                    .and(takesArgument(4, long.class))),
         getClass().getName() + "$ProducerWithDestinationAdvice");
+
+    transformer.applyAdviceToMethod(
+        messageSend
+            .and(takesArguments(2))
+            .and(takesArgument(1, named("javax.jms.CompletionListener"))),
+        getClass().getName() + "$AsyncProducerAdvice");
+    transformer.applyAdviceToMethod(
+        messageSend
+            .and(takesArguments(5))
+            .and(takesArgument(1, int.class))
+            .and(takesArgument(2, int.class))
+            .and(takesArgument(3, long.class))
+            .and(takesArgument(4, named("javax.jms.CompletionListener"))),
+        getClass().getName() + "$AsyncProducerWithOptionsAdvice");
+    transformer.applyAdviceToMethod(
+        destinationSend
+            .and(takesArguments(3))
+            .and(takesArgument(2, named("javax.jms.CompletionListener"))),
+        getClass().getName() + "$AsyncProducerWithDestinationAdvice");
+    transformer.applyAdviceToMethod(
+        destinationSend
+            .and(takesArguments(6))
+            .and(takesArgument(2, int.class))
+            .and(takesArgument(3, int.class))
+            .and(takesArgument(4, long.class))
+            .and(takesArgument(5, named("javax.jms.CompletionListener"))),
+        getClass().getName() + "$AsyncProducerWithDestinationAndOptionsAdvice");
   }
 
   public static class AdviceScope {
@@ -66,7 +115,21 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       this.scope = scope;
     }
 
-    public static AdviceScope start(
+    public static AdviceScope start(MessageProducer producer, Message message) {
+      Destination destination;
+      try {
+        destination = producer.getDestination();
+      } catch (JMSException ignored) {
+        destination = null;
+      }
+      return start(CallDepth.forClass(MessageProducer.class), destination, message);
+    }
+
+    public static AdviceScope start(Destination destination, Message message) {
+      return start(CallDepth.forClass(MessageProducer.class), destination, message);
+    }
+
+    private static AdviceScope start(
         CallDepth callDepth, @Nullable Destination destination, Message message) {
       if (callDepth.getAndIncrement() > 0) {
         return new AdviceScope(callDepth, null, null);
@@ -89,10 +152,9 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
           context.makeCurrent());
     }
 
-    public Object[] wrapListener(Object[] arguments) {
-      return operation == null
-          ? arguments
-          : operation.wrapListener(arguments, MessageProducer.class);
+    @Nullable
+    public Object wrapListener(@Nullable Object listener) {
+      return operation == null ? listener : operation.wrapListener(listener, MessageProducer.class);
     }
 
     public void end(@Nullable Throwable throwable) {
@@ -111,24 +173,51 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerAdvice {
 
-    @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
+        @Advice.Argument(0) Message message, @Advice.This MessageProducer producer) {
+      return AdviceScope.start(producer, message);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable AdviceScope scope) {
+      if (scope != null) {
+        scope.end(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ProducerWithDestinationAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
+        @Advice.Argument(0) Destination destination, @Advice.Argument(1) Message message) {
+      return AdviceScope.start(destination, message);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable AdviceScope scope) {
+      if (scope != null) {
+        scope.end(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AsyncProducerAdvice {
+
+    @Advice.AssignReturned.ToArguments(
+        @ToArgument(value = 0, index = 1, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Message message,
-        @Advice.This MessageProducer producer,
-        @Advice.AllArguments Object[] arguments) {
-      Destination destination;
-      try {
-        destination = producer.getDestination();
-      } catch (JMSException ignored) {
-        destination = null;
-      }
-      CallDepth callDepth = CallDepth.forClass(MessageProducer.class);
-      AdviceScope adviceScope = AdviceScope.start(callDepth, destination, message);
-      if (arguments.length == 2 || arguments.length == 5) {
-        arguments = adviceScope.wrapListener(arguments);
-      }
-      return new Object[] {arguments, adviceScope};
+        @Advice.Argument(1) @Nullable Object listener,
+        @Advice.This MessageProducer producer) {
+      AdviceScope scope = AdviceScope.start(producer, message);
+      return new Object[] {scope.wrapListener(listener), scope};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -142,20 +231,65 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class ProducerWithDestinationAdvice {
+  public static class AsyncProducerWithOptionsAdvice {
 
-    @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
+    @Advice.AssignReturned.ToArguments(
+        @ToArgument(value = 0, index = 4, typing = Assigner.Typing.DYNAMIC))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] onEnter(
+        @Advice.Argument(0) Message message,
+        @Advice.Argument(4) @Nullable Object listener,
+        @Advice.This MessageProducer producer) {
+      AdviceScope scope = AdviceScope.start(producer, message);
+      return new Object[] {scope.wrapListener(listener), scope};
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult != null) {
+        ((AdviceScope) enterResult[1]).end(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AsyncProducerWithDestinationAdvice {
+
+    @Advice.AssignReturned.ToArguments(
+        @ToArgument(value = 0, index = 2, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Destination destination,
         @Advice.Argument(1) Message message,
-        @Advice.AllArguments Object[] arguments) {
-      CallDepth callDepth = CallDepth.forClass(MessageProducer.class);
-      AdviceScope adviceScope = AdviceScope.start(callDepth, destination, message);
-      if (arguments.length == 3 || arguments.length == 6) {
-        arguments = adviceScope.wrapListener(arguments);
+        @Advice.Argument(2) @Nullable Object listener) {
+      AdviceScope scope = AdviceScope.start(destination, message);
+      return new Object[] {scope.wrapListener(listener), scope};
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult != null) {
+        ((AdviceScope) enterResult[1]).end(throwable);
       }
-      return new Object[] {arguments, adviceScope};
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AsyncProducerWithDestinationAndOptionsAdvice {
+
+    @Advice.AssignReturned.ToArguments(
+        @ToArgument(value = 0, index = 5, typing = Assigner.Typing.DYNAMIC))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] onEnter(
+        @Advice.Argument(0) Destination destination,
+        @Advice.Argument(1) Message message,
+        @Advice.Argument(5) @Nullable Object listener) {
+      AdviceScope scope = AdviceScope.start(destination, message);
+      return new Object[] {scope.wrapListener(listener), scope};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

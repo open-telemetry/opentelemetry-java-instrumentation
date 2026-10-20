@@ -39,12 +39,11 @@ public final class JmsSendOperation {
     this.context = context;
   }
 
-  public Object[] wrapListener(Object[] arguments, Class<?> producerType) {
-    int index = arguments.length - 1;
-    if (arguments[index] == null) {
-      return arguments;
+  @Nullable
+  public Object wrapListener(@Nullable Object listener, Class<?> producerType) {
+    if (listener == null) {
+      return null;
     }
-    Object listener = arguments[index];
     try {
       // Resolve the interface only on asynchronous sends. JMS 1.1 has no CompletionListener.
       Class<?> listenerType =
@@ -53,7 +52,7 @@ public final class JmsSendOperation {
               false,
               producerType.getClassLoader());
       if (!listenerType.isInstance(listener)) {
-        return arguments;
+        return listener;
       }
       Object wrapped =
           Proxy.newProxyInstance(
@@ -73,13 +72,11 @@ public final class JmsSendOperation {
                 }
                 return invoke(listener, method, callbackArguments);
               });
-      Object[] wrappedArguments = arguments.clone();
-      wrappedArguments[index] = wrapped;
       asynchronous = true;
-      return wrappedArguments;
+      return wrapped;
     } catch (Throwable t) {
       logger.log(FINE, "Failed to wrap JMS completion listener", t);
-      return arguments;
+      return listener;
     }
   }
 
