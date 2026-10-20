@@ -53,13 +53,14 @@ testing {
       }
     }
 
+    // SDK 3.4.3 covers the ProtostellarRequest constructor taking Core as its first argument.
     register<JvmTestSuite>("version343Test") {
-      // SDK 3.4.3 covers the legacy Core-based ProtostellarRequest constructor; newer SDKs use different constructors.
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.3")
       }
     }
 
+    // SDK 3.4.4 covers the eight-argument ProtostellarRequest constructor taking CoreProtostellar.
     register<JvmTestSuite>("version344Test") {
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.4")
