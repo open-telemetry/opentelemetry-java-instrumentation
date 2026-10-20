@@ -14,6 +14,8 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_ID;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_MODEL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -234,11 +236,16 @@ class ServiceErrorTest {
                     span.hasName(operation.name + " " + MODEL)
                         .hasKind(SpanKind.CLIENT)
                         .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(ERROR_TYPE, expectedErrorType),
                             equalTo(GEN_AI_PROVIDER_NAME, "openai"),
                             equalTo(GEN_AI_OPERATION_NAME, operation.name),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL))));
+                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                            equalTo(
+                                GEN_AI_REQUEST_STREAM,
+                                operation == Operation.CHAT_STREAM ? true : null),
+                            equalTo(GEN_AI_RESPONSE_ID, hasResponse ? "chat-1" : null),
+                            equalTo(GEN_AI_RESPONSE_MODEL, hasResponse ? MODEL : null))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         metric ->
