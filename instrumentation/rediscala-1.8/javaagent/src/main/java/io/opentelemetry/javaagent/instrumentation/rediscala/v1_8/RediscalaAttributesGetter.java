@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
+import redis.actors.ReplyErrorException;
 
 final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
@@ -41,6 +42,51 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   @Nullable
   public Long getDbOperationBatchSize(RediscalaRequest request) {
     return request.getBatchSize();
+  }
+
+  @Nullable
+  @Override
+  public String getErrorType(
+      RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    if (!(error instanceof ReplyErrorException)) {
+      return null;
+    }
+
+    String message = error.getMessage();
+    if (message == null) {
+      return null;
+    }
+
+    int separator = message.indexOf(' ');
+    String prefix = separator == -1 ? message : message.substring(0, separator);
+    switch (prefix) {
+      case "ERR":
+      case "WRONGTYPE":
+      case "NOAUTH":
+      case "WRONGPASS":
+      case "NOPERM":
+      case "READONLY":
+      case "LOADING":
+      case "BUSY":
+      case "MISCONF":
+      case "OOM":
+      case "EXECABORT":
+      case "CROSSSLOT":
+      case "MASTERDOWN":
+      case "CLUSTERDOWN":
+      case "TRYAGAIN":
+      case "MOVED":
+      case "ASK":
+      case "NOSCRIPT":
+      case "NOREPLICAS":
+      case "UNBLOCKED":
+      case "BUSYGROUP":
+      case "NOGROUP":
+      case "NOTBUSY":
+        return prefix;
+      default:
+        return null;
+    }
   }
 
   @Nullable

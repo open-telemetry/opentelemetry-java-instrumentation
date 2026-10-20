@@ -10,8 +10,15 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
-import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
+import io.opentelemetry.sdk.testing.assertj.{
+  HistogramAssert,
+  HistogramPointAssert,
+  MetricAssert,
+  SpanDataAssert,
+  TraceAssert
+}
 import io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE
+import io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS
 import io.opentelemetry.semconv.DbAttributes.{
   DB_NAMESPACE,
@@ -23,6 +30,7 @@ import io.opentelemetry.semconv.NetworkAttributes.{
   NETWORK_PEER_PORT
 }
 import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
+import io.opentelemetry.sdk.trace.data.StatusData
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -31,6 +39,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource}
 import org.testcontainers.containers.GenericContainer
+import redis.actors.ReplyErrorException
 import redis.commands.TransactionBuilder
 import redis.{RedisClient, RedisDispatcher}
 
@@ -167,6 +176,78 @@ class RediscalaClientTest {
       DB_NAMESPACE,
       SERVER_ADDRESS,
       SERVER_PORT
+    )
+  }
+
+  @Test def testWrongTypeCommandSetsErrorType(): Unit = {
+    Await.result(redisClient.set("wrong-type", "value"), Duration("3 second"))
+    testing.waitForTraces(1)
+    testing.clearData()
+
+    val result = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] = {
+          redisClient.lpush("wrong-type", "value")
+        }
+      }
+    )
+
+    assertThatThrownBy(new ThrowingCallable {
+      override def call(): Unit = {
+        Await.result(result, Duration("3 second"))
+      }
+    }).isInstanceOf(classOf[ReplyErrorException])
+
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span.hasName("parent").hasNoParent
+            }
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName(s"LPUSH $host:$port")
+                .hasKind(CLIENT)
+                .hasParent(trace.getSpan(0))
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, "LPUSH"),
+                  equalTo(DB_NAMESPACE, defaultDbIndex.toString),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port),
+                  equalTo(ERROR_TYPE, "WRONGTYPE")
+                )
+            }
+          }
+        )
+    })
+
+    testing.waitAndAssertMetrics(
+      "io.opentelemetry.rediscala-1.8",
+      new Consumer[MetricAssert] {
+        override def accept(metric: MetricAssert): Unit = {
+          metric
+            .hasName("db.client.operation.duration")
+            .hasHistogramSatisfying(new Consumer[HistogramAssert] {
+              override def accept(histogram: HistogramAssert): Unit = {
+                histogram.hasPointsSatisfying(
+                  new Consumer[HistogramPointAssert] {
+                    override def accept(point: HistogramPointAssert): Unit = {
+                      point.hasAttributesSatisfying(
+                        equalTo(ERROR_TYPE, "WRONGTYPE")
+                      )
+                    }
+                  }
+                )
+              }
+            })
+        }
+      }
     )
   }
 
