@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.Experimenta
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimentalSatisfies;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.addNestedHttpClientSpan;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.nestedHttpClientSpans;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -102,7 +103,11 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                   span.hasName("start")
                       .hasKind(SpanKind.INTERNAL)
                       .hasAttributesSatisfyingExactly(
-                          equalTo(stringKey("camel.uri"), experimental("direct://start"))));
+                          equalTo(stringKey("camel.uri"), experimental("direct://start")))
+                      .satisfies(
+                          spanData ->
+                              assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                  .isNull()));
           assertions.add(
               span ->
                   span.hasName("GET")
@@ -113,7 +118,11 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               stringKey("camel.uri"),
                               experimental("rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D")),
                           equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)));
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))
+                      .satisfies(
+                          spanData ->
+                              assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                  .isEqualTo("https://opentelemetry.io/schemas/1.41.0")));
           addNestedHttpClientSpan(
               assertions,
               "GET",
@@ -151,14 +160,22 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               URL_FULL,
                               "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
                           experimentalSatisfies(
-                              stringKey("camel.uri"), val -> val.isInstanceOf(String.class))));
+                              stringKey("camel.uri"), val -> val.isInstanceOf(String.class)))
+                      .satisfies(
+                          spanData ->
+                              assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                  .isEqualTo("https://opentelemetry.io/schemas/1.41.0")));
           assertions.add(
               span ->
                   span.hasName("moduleUnit")
                       .hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(3 + nested))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(stringKey("camel.uri"), experimental("direct://moduleUnit"))));
+                          equalTo(stringKey("camel.uri"), experimental("direct://moduleUnit")))
+                      .satisfies(
+                          spanData ->
+                              assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                  .isNull()));
           trace.hasSpansSatisfyingExactly(assertions);
         });
   }

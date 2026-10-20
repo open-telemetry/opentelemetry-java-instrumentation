@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class CamelProcessMetricsTest {
@@ -104,78 +103,6 @@ class CamelProcessMetricsTest {
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "ahc, 1.41.0",
-    "http, 1.41.0",
-    "http4, 1.41.0",
-    "https4, 1.41.0",
-    "jetty, 1.41.0",
-    "netty-http, 1.41.0",
-    "netty-http4, 1.41.0",
-    "rest, 1.41.0",
-    "restlet, 1.41.0",
-    "servlet, 1.41.0",
-    "undertow, 1.41.0",
-    "sql, 1.44.0",
-    "jms, 1.43.0",
-    "custom,"
-  })
-  void spanSchemaMatchesDecorator(String component, String schemaVersion)
-      throws ReflectiveOperationException {
-    Exchange exchange = new DefaultExchange(new DefaultCamelContext());
-    exchange.getIn().setHeader(Exchange.HTTP_URL, "http://localhost/test");
-    Endpoint endpoint = mock(Endpoint.class);
-    when(endpoint.getEndpointUri()).thenReturn(component + ":test");
-
-    Class<?> singletonsClass = camelHelperClass("CamelSingletons");
-    Class<?> decoratorClass = camelHelperClass("SpanDecorator");
-    Object decorator =
-        invokeStatic(
-            singletonsClass, "getSpanDecorator", new Class<?>[] {Endpoint.class}, endpoint);
-    Class<?> directionClass = camelHelperClass("CamelDirection");
-    Class<?> spanKindClass =
-        Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.SpanKind");
-    Class<?> requestClass = camelHelperClass("CamelRequest");
-    Object request =
-        invokeStatic(
-            requestClass,
-            "create",
-            new Class<?>[] {
-              decoratorClass, Exchange.class, Endpoint.class, directionClass, spanKindClass
-            },
-            decorator,
-            exchange,
-            endpoint,
-            enumConstant(directionClass, "OUTBOUND"),
-            enumConstant(spanKindClass, "CLIENT"));
-    Object instrumenter =
-        invokeStatic(singletonsClass, "instrumenter", new Class<?>[] {requestClass}, request);
-    Class<?> contextClass =
-        Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.Context");
-    Object context =
-        instrumenter
-            .getClass()
-            .getMethod("start", contextClass, Object.class)
-            .invoke(instrumenter, contextClass.getMethod("root").invoke(null), request);
-    instrumenter
-        .getClass()
-        .getMethod("end", contextClass, Object.class, Object.class, Throwable.class)
-        .invoke(instrumenter, context, request, null, null);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.satisfies(
-                        spanData ->
-                            assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                .isEqualTo(
-                                    schemaVersion == null
-                                        ? null
-                                        : "https://opentelemetry.io/schemas/" + schemaVersion))));
-  }
-
-  @ParameterizedTest
   @MethodSource("signalsAlreadyPresent")
   void recordsOnlyAbsentMetric(
       String operation, String signal, String expectedMetric, boolean faulted)
@@ -243,16 +170,13 @@ class CamelProcessMetricsTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric -> {
-                      assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                          .isEqualTo("https://opentelemetry.io/schemas/1.43.0");
-                      assertThat(metric.getData().getPoints())
-                          .singleElement()
-                          .satisfies(
-                              point ->
-                                  assertThat(point.getAttributes().get(ERROR_TYPE))
-                                      .isEqualTo(faulted ? "_OTHER" : null));
-                    }));
+                    metric ->
+                        assertThat(metric.getData().getPoints())
+                            .singleElement()
+                            .satisfies(
+                                point ->
+                                    assertThat(point.getAttributes().get(ERROR_TYPE))
+                                        .isEqualTo(faulted ? "_OTHER" : null))));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))

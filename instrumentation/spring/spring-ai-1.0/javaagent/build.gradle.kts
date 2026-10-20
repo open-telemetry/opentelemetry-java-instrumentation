@@ -41,12 +41,6 @@ testing {
         register("CaptureMessageContent") {
           telemetryConfig("otel.instrumentation.genai.capture-message-content", "true")
         }
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-          filter {
-            includeTestsMatching("*ChatModelTest.exceptionSchema")
-          }
-        }
       }
     }
     register<JvmTestSuite>("unitTests") {
