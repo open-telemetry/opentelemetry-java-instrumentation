@@ -4,6 +4,11 @@
 
 ### ⚠️ Breaking changes
 
+- Kotlin suspend function `@WithSpan` instrumentation now uses only the
+  `kotlinx-coroutines-annotations` selector. Use
+  `otel.instrumentation.kotlinx-coroutines-annotations.enabled` instead of the `kotlinx-coroutines`,
+  `kotlinx-coroutines-1.0`, `kotlinx-coroutines-opentelemetry-instrumentation-annotations`, or
+  `opentelemetry-instrumentation-annotations` selectors to control suspend function annotations.
 - The Java agent no longer captures thread details by default. Set
   `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
