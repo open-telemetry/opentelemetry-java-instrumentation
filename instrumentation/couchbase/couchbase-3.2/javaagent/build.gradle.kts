@@ -55,27 +55,18 @@ testing {
 
     register<JvmTestSuite>("version343Test") {
       // SDK 3.4.3 covers the legacy Core-based ProtostellarRequest constructor; newer SDKs use different constructors.
-      sources {
-        java {
-          setSrcDirs(listOf("src/version343Test/java"))
-        }
-      }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.3")
       }
     }
 
     register<JvmTestSuite>("version344Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version344Test/java"))
-        }
-      }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.4")
       }
     }
 
+    // RequestSpan.recordException is available in SDK 3.3.4+.
     register<JvmTestSuite>("version334Test") {
       dependencies {
         implementation("com.couchbase.client:java-client:${baseVersion("3.3.4").orLatest()}")
