@@ -210,14 +210,14 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   public static class AsyncProducerAdvice {
 
     @Advice.AssignReturned.ToArguments(
-        @ToArgument(value = 0, index = 1, typing = Assigner.Typing.DYNAMIC))
+        @ToArgument(value = 1, index = 1, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Message message,
         @Advice.Argument(1) @Nullable Object listener,
         @Advice.This MessageProducer producer) {
       AdviceScope scope = AdviceScope.start(producer, message);
-      return new Object[] {scope.wrapListener(listener), scope};
+      return new Object[] {scope, scope.wrapListener(listener)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -225,7 +225,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable Object[] enterResult) {
       if (enterResult != null) {
-        ((AdviceScope) enterResult[1]).end(throwable);
+        ((AdviceScope) enterResult[0]).end(throwable);
       }
     }
   }
@@ -234,14 +234,14 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   public static class AsyncProducerWithOptionsAdvice {
 
     @Advice.AssignReturned.ToArguments(
-        @ToArgument(value = 0, index = 4, typing = Assigner.Typing.DYNAMIC))
+        @ToArgument(value = 4, index = 1, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Message message,
         @Advice.Argument(4) @Nullable Object listener,
         @Advice.This MessageProducer producer) {
       AdviceScope scope = AdviceScope.start(producer, message);
-      return new Object[] {scope.wrapListener(listener), scope};
+      return new Object[] {scope, scope.wrapListener(listener)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -249,7 +249,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable Object[] enterResult) {
       if (enterResult != null) {
-        ((AdviceScope) enterResult[1]).end(throwable);
+        ((AdviceScope) enterResult[0]).end(throwable);
       }
     }
   }
@@ -258,14 +258,14 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   public static class AsyncProducerWithDestinationAdvice {
 
     @Advice.AssignReturned.ToArguments(
-        @ToArgument(value = 0, index = 2, typing = Assigner.Typing.DYNAMIC))
+        @ToArgument(value = 2, index = 1, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Destination destination,
         @Advice.Argument(1) Message message,
         @Advice.Argument(2) @Nullable Object listener) {
       AdviceScope scope = AdviceScope.start(destination, message);
-      return new Object[] {scope.wrapListener(listener), scope};
+      return new Object[] {scope, scope.wrapListener(listener)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -273,7 +273,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable Object[] enterResult) {
       if (enterResult != null) {
-        ((AdviceScope) enterResult[1]).end(throwable);
+        ((AdviceScope) enterResult[0]).end(throwable);
       }
     }
   }
@@ -282,14 +282,14 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   public static class AsyncProducerWithDestinationAndOptionsAdvice {
 
     @Advice.AssignReturned.ToArguments(
-        @ToArgument(value = 0, index = 5, typing = Assigner.Typing.DYNAMIC))
+        @ToArgument(value = 5, index = 1, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Destination destination,
         @Advice.Argument(1) Message message,
         @Advice.Argument(5) @Nullable Object listener) {
       AdviceScope scope = AdviceScope.start(destination, message);
-      return new Object[] {scope.wrapListener(listener), scope};
+      return new Object[] {scope, scope.wrapListener(listener)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -297,7 +297,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable Object[] enterResult) {
       if (enterResult != null) {
-        ((AdviceScope) enterResult[1]).end(throwable);
+        ((AdviceScope) enterResult[0]).end(throwable);
       }
     }
   }
