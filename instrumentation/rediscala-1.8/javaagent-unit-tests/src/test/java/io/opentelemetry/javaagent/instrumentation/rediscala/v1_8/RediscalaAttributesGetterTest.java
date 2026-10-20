@@ -39,15 +39,17 @@ class RediscalaAttributesGetterTest {
   }
 
   @Test
-  void errorTypeUsesKnownRedisReplyPrefixOnly() {
+  void errorTypeUsesServerReplyPrefix() {
     RediscalaRequest request = request(null);
 
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("WRONGTYPE message")))
         .isEqualTo("WRONGTYPE");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("ERR"))).isEqualTo("ERR");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("UNKNOWN message")))
-        .isNull();
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("CUSTOMCODE message")))
+        .isEqualTo("CUSTOMCODE");
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("CUSTOMCODE")))
+        .isEqualTo("CUSTOMCODE");
     assertThat(getter.getErrorType(request, null, new ReplyErrorException(""))).isNull();
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException(" message"))).isNull();
     assertThat(getter.getErrorType(request, null, new IllegalStateException("WRONGTYPE message")))
         .isNull();
   }

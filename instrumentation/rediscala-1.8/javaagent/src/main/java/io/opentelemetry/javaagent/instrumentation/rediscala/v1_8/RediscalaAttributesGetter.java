@@ -48,6 +48,10 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   @Override
   public String getErrorType(
       RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
+    // error prefix; returning null for other failures preserves the shared exception-class
+    // fallback.
+    // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
     if (!(error instanceof ReplyErrorException)) {
       return null;
     }
@@ -59,34 +63,7 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
 
     int separator = message.indexOf(' ');
     String prefix = separator == -1 ? message : message.substring(0, separator);
-    switch (prefix) {
-      case "ERR":
-      case "WRONGTYPE":
-      case "NOAUTH":
-      case "WRONGPASS":
-      case "NOPERM":
-      case "READONLY":
-      case "LOADING":
-      case "BUSY":
-      case "MISCONF":
-      case "OOM":
-      case "EXECABORT":
-      case "CROSSSLOT":
-      case "MASTERDOWN":
-      case "CLUSTERDOWN":
-      case "TRYAGAIN":
-      case "MOVED":
-      case "ASK":
-      case "NOSCRIPT":
-      case "NOREPLICAS":
-      case "UNBLOCKED":
-      case "BUSYGROUP":
-      case "NOGROUP":
-      case "NOTBUSY":
-        return prefix;
-      default:
-        return null;
-    }
+    return prefix.isEmpty() ? null : prefix;
   }
 
   @Nullable
