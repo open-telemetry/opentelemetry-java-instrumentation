@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -297,11 +296,9 @@ public abstract class AbstractGrpcStreamingTest {
     if (emitOldRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.grpc-1.6"))
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.grpc-1.6",
+              "rpc.server.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(SERVER_ADDRESS, "localhost"),
@@ -315,11 +312,9 @@ public abstract class AbstractGrpcStreamingTest {
     if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.grpc-1.6"))
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.grpc-1.6",
+              "rpc.server.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "grpc"),
@@ -331,11 +326,9 @@ public abstract class AbstractGrpcStreamingTest {
     if (emitOldRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.grpc-1.6"))
-                      .hasName("rpc.client.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.grpc-1.6",
+              "rpc.client.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(SERVER_ADDRESS, "localhost"),
@@ -349,11 +342,9 @@ public abstract class AbstractGrpcStreamingTest {
     if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.grpc-1.6"))
-                      .hasName("rpc.client.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.grpc-1.6",
+              "rpc.client.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "grpc"),

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -171,33 +171,37 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                                     equalTo(MESSAGING_DESTINATION_NAME, topic))))));
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
             metric ->
                 metric
-                    .satisfies(hasScopeName("io.opentelemetry.rocketmq-client-5.0"))
-                    .hasName("messaging.client.operation.duration"),
-            point ->
-                point
-                    .hasCount(1)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_OPERATION_NAME, "send"),
-                        equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                        equalTo(MESSAGING_DESTINATION_NAME, topic),
-                        equalTo(MESSAGING_OPERATION_TYPE, "send")));
+                    .hasName("messaging.client.operation.duration")
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                        equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(MESSAGING_OPERATION_TYPE, "send")))));
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
             metric ->
                 metric
-                    .satisfies(hasScopeName("io.opentelemetry.rocketmq-client-5.0"))
-                    .hasName("messaging.process.duration"),
-            point ->
-                point
-                    .hasCount(1)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                        equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                        equalTo(MESSAGING_DESTINATION_NAME, topic)));
+                    .hasName("messaging.process.duration")
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                        equalTo(MESSAGING_DESTINATION_NAME, topic)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.rocketmq-client-5.0",

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.DistributionSummary;
@@ -46,12 +46,10 @@ public abstract class AbstractDistributionSummaryTest {
     // then
     testing()
         .waitAndAssertHistogramPoints(
+            INSTRUMENTATION_NAME,
+            "testSummary",
             metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testSummary")
-                    .hasDescription("This is a test distribution summary")
-                    .hasUnit("things"),
+                metric.hasDescription("This is a test distribution summary").hasUnit("things"),
             point ->
                 point
                     .hasSum(7)
@@ -70,16 +68,19 @@ public abstract class AbstractDistributionSummaryTest {
     // then
     // The synchronous histogram returns its previous value after removal.
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testSummary"),
-            point ->
-                point
-                    .hasSum(7)
-                    .hasCount(3)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
+                    .hasName("testSummary")
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasSum(7)
+                                    .hasCount(3)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -103,12 +104,10 @@ public abstract class AbstractDistributionSummaryTest {
     // then
     testing()
         .waitAndAssertHistogramPoints(
+            INSTRUMENTATION_NAME,
+            "testSummaryWithCustomBuckets",
             metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testSummaryWithCustomBuckets")
-                    .hasDescription("This is a test distribution summary")
-                    .hasUnit("things"),
+                metric.hasDescription("This is a test distribution summary").hasUnit("things"),
             points ->
                 points
                     .hasSum(555.5)

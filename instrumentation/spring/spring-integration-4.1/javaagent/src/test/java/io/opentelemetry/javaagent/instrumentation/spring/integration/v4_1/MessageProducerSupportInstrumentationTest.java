@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertProcessMetrics;
@@ -336,12 +336,12 @@ class MessageProducerSupportInstrumentationTest {
 
   private static void assertSpringRabbitProcessMetrics() {
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
+        SPRING_RABBIT_INSTRUMENTATION_NAME,
         metric ->
             metric
-                .satisfies(hasScopeName(SPRING_RABBIT_INSTRUMENTATION_NAME))
-                .hasName("messaging.process.duration"),
-        point -> point.hasCount(1));
+                .hasName("messaging.process.duration")
+                .satisfies(hasHistogramPointsSatisfyingExactly(point -> point.hasCount(1))));
   }
 
   private static Message newRawMessage() {

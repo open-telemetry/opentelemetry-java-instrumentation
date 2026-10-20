@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSp
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -203,11 +202,9 @@ public abstract class AbstractDubboTest {
     if (emitOldRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.apache-dubbo-2.7",
+              "rpc.server.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM, "apache_dubbo"),
@@ -218,11 +215,9 @@ public abstract class AbstractDubboTest {
 
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
-                      .hasName("rpc.client.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.apache-dubbo-2.7",
+              "rpc.client.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM, "apache_dubbo"),
@@ -236,11 +231,9 @@ public abstract class AbstractDubboTest {
     if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.apache-dubbo-2.7",
+              "rpc.server.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "dubbo"),
@@ -250,11 +243,9 @@ public abstract class AbstractDubboTest {
 
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
-                      .hasName("rpc.client.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.apache-dubbo-2.7",
+              "rpc.client.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "dubbo"),
@@ -374,11 +365,9 @@ public abstract class AbstractDubboTest {
     if (emitOldRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.apache-dubbo-2.7",
+              "rpc.server.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM, "apache_dubbo"),
@@ -389,11 +378,9 @@ public abstract class AbstractDubboTest {
 
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
-                      .hasName("rpc.client.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.apache-dubbo-2.7",
+              "rpc.client.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM, "apache_dubbo"),
@@ -407,11 +394,9 @@ public abstract class AbstractDubboTest {
     if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.apache-dubbo-2.7",
+              "rpc.server.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "dubbo"),
@@ -421,11 +406,9 @@ public abstract class AbstractDubboTest {
 
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
-                      .hasName("rpc.client.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.apache-dubbo-2.7",
+              "rpc.client.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "dubbo"),

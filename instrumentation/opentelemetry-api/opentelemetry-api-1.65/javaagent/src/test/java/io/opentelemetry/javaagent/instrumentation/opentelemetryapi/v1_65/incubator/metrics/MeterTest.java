@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_65.incubator.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -167,9 +167,17 @@ class MeterTest {
         ((ExtendedLongHistogram) longHistogram).bind(Attributes.of(stringKey("q"), "r"));
     bound.record(11);
 
-    testing.waitAndAssertHistogramPoints(
-        metric -> metric.satisfies(hasScopeName("test-bound-long-histogram")).hasName("test"),
-        point -> point.hasSum(11.0).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r")));
+    testing.waitAndAssertMetrics(
+        "test-bound-long-histogram",
+        metric ->
+            metric
+                .hasName("test")
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasSum(11.0)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -183,9 +191,17 @@ class MeterTest {
         ((ExtendedDoubleHistogram) doubleHistogram).bind(Attributes.of(stringKey("q"), "r"));
     bound.record(12.1);
 
-    testing.waitAndAssertHistogramPoints(
-        metric -> metric.satisfies(hasScopeName("test-bound-double-histogram")).hasName("test"),
-        point -> point.hasSum(12.1).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r")));
+    testing.waitAndAssertMetrics(
+        "test-bound-double-histogram",
+        metric ->
+            metric
+                .hasName("test")
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasSum(12.1)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r")))));
   }
 
   @Test

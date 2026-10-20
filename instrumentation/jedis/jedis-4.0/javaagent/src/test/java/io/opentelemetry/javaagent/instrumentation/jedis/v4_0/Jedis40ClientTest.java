@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -155,16 +155,18 @@ class Jedis40ClientTest {
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
         metric ->
             metric
-                .satisfies(hasScopeName("io.opentelemetry.jedis-4.0"))
-                .hasName("db.client.operation.duration"),
-        point ->
-            point
-                .hasAttribute(DB_OPERATION_NAME, "SET")
-                .hasAttribute(SERVER_ADDRESS, configuredHost)
-                .hasAttribute(SERVER_PORT, (long) configuredPort));
+                .hasName("db.client.operation.duration")
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasAttribute(DB_OPERATION_NAME, "SET")
+                                .hasAttribute(SERVER_ADDRESS, configuredHost)
+                                .hasAttribute(SERVER_PORT, (long) configuredPort))));
   }
 
   @Test

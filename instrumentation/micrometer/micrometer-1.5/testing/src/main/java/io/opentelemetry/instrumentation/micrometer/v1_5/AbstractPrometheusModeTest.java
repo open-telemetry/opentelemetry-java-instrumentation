@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -86,12 +85,9 @@ public abstract class AbstractPrometheusModeTest {
     // then
     testing()
         .waitAndAssertHistogramPoints(
-            metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testPrometheusSummary.items")
-                    .hasDescription("This is a test summary")
-                    .hasUnit("items"),
+            INSTRUMENTATION_NAME,
+            "testPrometheusSummary.items",
+            metric -> metric.hasDescription("This is a test summary").hasUnit("items"),
             point ->
                 point
                     .hasSum(54)
@@ -313,12 +309,9 @@ public abstract class AbstractPrometheusModeTest {
     // then
     testing()
         .waitAndAssertHistogramPoints(
-            metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testPrometheusTimer.seconds")
-                    .hasDescription("This is a test timer")
-                    .hasUnit("s"),
+            INSTRUMENTATION_NAME,
+            "testPrometheusTimer.seconds",
+            metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
             point ->
                 point
                     .hasSum(16.789)
@@ -381,12 +374,9 @@ public abstract class AbstractPrometheusModeTest {
     // then
     testing()
         .waitAndAssertHistogramPoints(
-            metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testPrometheusTimerBoundary.seconds")
-                    .hasDescription("This is a test timer")
-                    .hasUnit("s"),
+            INSTRUMENTATION_NAME,
+            "testPrometheusTimerBoundary.seconds",
+            metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
             point ->
                 point
                     .hasSum(0.1)

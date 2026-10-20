@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -259,18 +258,20 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
     getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
 
     getTesting()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("gen_ai.client.operation.duration"),
-            point ->
-                point
-                    .hasSumGreaterThan(0.0)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                        equalTo(GEN_AI_REQUEST_MODEL, MODEL)));
+                    .hasName("gen_ai.client.operation.duration")
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point
+                                    .hasSumGreaterThan(0.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
+                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                        equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
   }
 }

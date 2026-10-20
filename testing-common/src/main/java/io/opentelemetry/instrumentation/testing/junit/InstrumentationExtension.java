@@ -116,12 +116,16 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertMetrics(instrumentationName, assertions);
   }
 
-  /** Waits for a histogram matching the metadata and exact unordered point assertions. */
+  /** Waits for the named histogram to match the metadata and exact unordered point assertions. */
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final void waitAndAssertHistogramPoints(
-      Consumer<MetricAssert> metricAssertion, Consumer<HistogramPointAssert>... pointAssertions) {
-    testRunner.waitAndAssertHistogramPoints(metricAssertion, pointAssertions);
+      String instrumentationName,
+      String metricName,
+      Consumer<MetricAssert> metricAssertion,
+      Consumer<HistogramPointAssert>... pointAssertions) {
+    testRunner.waitAndAssertHistogramPoints(
+        instrumentationName, metricName, metricAssertion, pointAssertions);
   }
 
   /**

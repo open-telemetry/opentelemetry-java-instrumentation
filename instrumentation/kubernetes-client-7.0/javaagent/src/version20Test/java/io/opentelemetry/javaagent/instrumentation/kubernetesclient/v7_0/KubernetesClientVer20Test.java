@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient.v7_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -110,12 +109,9 @@ class KubernetesClientVer20Test {
                             equalTo(stringKey("kubernetes-client.name"), experimental("name")))));
 
     testing.waitAndAssertHistogramPoints(
-        metric ->
-            metric
-                .satisfies(hasScopeName("io.opentelemetry.kubernetes-client-7.0"))
-                .hasName("http.client.request.duration")
-                .hasDescription("Duration of HTTP client requests.")
-                .hasUnit("s"),
+        "io.opentelemetry.kubernetes-client-7.0",
+        "http.client.request.duration",
+        metric -> metric.hasDescription("Duration of HTTP client requests.").hasUnit("s"),
         point -> point.hasSumGreaterThan(0.0));
   }
 

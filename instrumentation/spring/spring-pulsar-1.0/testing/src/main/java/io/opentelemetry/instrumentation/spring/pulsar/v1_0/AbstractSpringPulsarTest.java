@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.pulsar.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -114,12 +113,9 @@ public abstract class AbstractSpringPulsarTest {
   protected void assertProcessMetrics() {
 
     testing.waitAndAssertHistogramPoints(
-        metric ->
-            metric
-                .satisfies(hasScopeName("io.opentelemetry.spring-pulsar-1.0"))
-                .hasName("messaging.process.duration")
-                .hasDescription("Duration of processing operation.")
-                .hasUnit("s"),
+        "io.opentelemetry.spring-pulsar-1.0",
+        "messaging.process.duration",
+        metric -> metric.hasDescription("Duration of processing operation.").hasUnit("s"),
         point ->
             point
                 .hasSumGreaterThan(0.0)

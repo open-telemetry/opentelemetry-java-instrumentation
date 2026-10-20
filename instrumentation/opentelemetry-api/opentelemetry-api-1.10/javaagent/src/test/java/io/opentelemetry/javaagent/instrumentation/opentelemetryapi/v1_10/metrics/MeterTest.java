@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.Attributes;
@@ -339,10 +338,10 @@ class MeterTest {
     instrument.record(6, Attributes.of(stringKey("q"), "r"));
 
     testing.waitAndAssertHistogramPoints(
+        instrumentationName,
+        "test",
         metric ->
             metric
-                .satisfies(hasScopeName(instrumentationName))
-                .hasName("test")
                 .hasDescription("d")
                 .hasInstrumentationScope(
                     InstrumentationScopeInfo.builder(instrumentationName)
@@ -362,10 +361,10 @@ class MeterTest {
     instrument.record(6.6, Attributes.of(stringKey("q"), "r"));
 
     testing.waitAndAssertHistogramPoints(
+        instrumentationName,
+        "test",
         metric ->
             metric
-                .satisfies(hasScopeName(instrumentationName))
-                .hasName("test")
                 .hasDescription("d")
                 .hasInstrumentationScope(
                     InstrumentationScopeInfo.builder(instrumentationName)

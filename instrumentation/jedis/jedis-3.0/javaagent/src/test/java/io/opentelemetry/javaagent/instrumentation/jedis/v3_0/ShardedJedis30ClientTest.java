@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -154,15 +154,19 @@ class ShardedJedis30ClientTest {
         SERVER_ADDRESS,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-3.0",
         metric ->
             metric
-                .satisfies(hasScopeName("io.opentelemetry.jedis-3.0"))
-                .hasName("db.client.operation.duration"),
-        point ->
-            point
-                .hasAttribute(SERVER_ADDRESS, configuredTarget)
-                .hasAttributesSatisfying(
-                    attributes -> assertThat(attributes.asMap()).doesNotContainKey(SERVER_PORT)));
+                .hasName("db.client.operation.duration")
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasAttribute(SERVER_ADDRESS, configuredTarget)
+                                .hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .doesNotContainKey(SERVER_PORT)))));
   }
 }

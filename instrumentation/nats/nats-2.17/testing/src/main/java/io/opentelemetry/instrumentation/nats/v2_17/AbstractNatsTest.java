@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -46,10 +45,10 @@ abstract class AbstractNatsTest {
 
     testing()
         .waitAndAssertHistogramPoints(
+            INSTRUMENTATION_NAME,
+            "messaging.client.operation.duration",
             metric ->
                 metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("messaging.client.operation.duration")
                     .hasDescription(
                         "Duration of messaging operation initiated by a producer or consumer client.")
                     .hasUnit("s"),
@@ -94,12 +93,9 @@ abstract class AbstractNatsTest {
 
     testing()
         .waitAndAssertHistogramPoints(
-            metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("messaging.process.duration")
-                    .hasDescription("Duration of processing operation.")
-                    .hasUnit("s"),
+            INSTRUMENTATION_NAME,
+            "messaging.process.duration",
+            metric -> metric.hasDescription("Duration of processing operation.").hasUnit("s"),
             point ->
                 point
                     .hasSumGreaterThan(0)

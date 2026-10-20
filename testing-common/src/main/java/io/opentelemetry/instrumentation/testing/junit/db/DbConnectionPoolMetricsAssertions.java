@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CLIENT_CONNECTION_POOL_NAME;
@@ -258,21 +257,19 @@ public class DbConnectionPoolMetricsAssertions {
 
   private void verifyCreateTime() {
     testing.waitAndAssertHistogramPoints(
+        instrumentationName,
+        "db.client.connection.create_time",
         metric ->
-            metric
-                .satisfies(hasScopeName(instrumentationName))
-                .hasName("db.client.connection.create_time")
-                .hasUnit("s")
-                .hasDescription("The time it took to create a new connection."),
+            metric.hasUnit("s").hasDescription("The time it took to create a new connection."),
         this::verifyPointAttributes);
   }
 
   private void verifyWaitTime() {
     testing.waitAndAssertHistogramPoints(
+        instrumentationName,
+        "db.client.connection.wait_time",
         metric ->
             metric
-                .satisfies(hasScopeName(instrumentationName))
-                .hasName("db.client.connection.wait_time")
                 .hasUnit("s")
                 .hasDescription("The time it took to obtain an open connection from the pool."),
         this::verifyPointAttributes);
@@ -280,10 +277,10 @@ public class DbConnectionPoolMetricsAssertions {
 
   private void verifyUseTime() {
     testing.waitAndAssertHistogramPoints(
+        instrumentationName,
+        "db.client.connection.use_time",
         metric ->
             metric
-                .satisfies(hasScopeName(instrumentationName))
-                .hasName("db.client.connection.use_time")
                 .hasUnit("s")
                 .hasDescription(
                     "The time between borrowing a connection and returning it to the pool."),

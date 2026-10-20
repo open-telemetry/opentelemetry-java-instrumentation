@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -195,20 +195,22 @@ class RocketMqSimpleConsumerTest {
         });
 
     assertSuccessfulReceiveTrace("disabled receive parent", sendSpan);
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
         metric ->
             metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName("messaging.client.operation.duration"),
-        point ->
-            point
-                .hasCount(1)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                    equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                    equalTo(MESSAGING_OPERATION_TYPE, "receive")));
+                .hasName("messaging.client.operation.duration")
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasCount(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "receive")))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
@@ -71,12 +70,9 @@ class GarbageCollectorTest {
         createTestNotification("G1 Old Generation", "end of major GC", "System.gc()", 11), null);
 
     testing.waitAndAssertHistogramPoints(
-        metric ->
-            metric
-                .satisfies(hasScopeName("test"))
-                .hasName("jvm.gc.duration")
-                .hasDescription("Duration of JVM garbage collection actions.")
-                .hasUnit("s"),
+        "test",
+        "jvm.gc.duration",
+        metric -> metric.hasDescription("Duration of JVM garbage collection actions.").hasUnit("s"),
         point ->
             point
                 .hasCount(2)

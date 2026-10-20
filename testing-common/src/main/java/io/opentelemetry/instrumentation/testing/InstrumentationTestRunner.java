@@ -246,25 +246,34 @@ public abstract class InstrumentationTestRunner {
     }
   }
 
-  /** Waits for a histogram matching the metadata and exact unordered point assertions. */
+  /** Waits for the named histogram to match the metadata and exact unordered point assertions. */
   @SafeVarargs
   public final void waitAndAssertHistogramPoints(
-      Consumer<MetricAssert> metricAssertion, Consumer<HistogramPointAssert>... pointAssertions) {
-    String[] matchedInstrumentationName = {""};
+      String instrumentationName,
+      String metricName,
+      Consumer<MetricAssert> metricAssertion,
+      Consumer<HistogramPointAssert>... pointAssertions) {
     awaitUntilAsserted(
         () -> {
-          matchedInstrumentationName[0] = "";
-          assertThat(getExportedMetrics())
-              .anySatisfy(
-                  metric -> {
-                    MetricAssert metricAssert = assertThat(metric);
-                    metricAssertion.accept(metricAssert);
-                    metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
-                    matchedInstrumentationName[0] = metric.getInstrumentationScopeInfo().getName();
-                  });
+          List<MetricData> matchingMetrics =
+              getExportedMetrics().stream()
+                  .filter(
+                      metric ->
+                          metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
+                              && metric.getName().equals(metricName))
+                  .collect(toList());
+          assertThat(matchingMetrics)
+              .describedAs(
+                  "Metrics for instrumentation %s and metric name %s",
+                  instrumentationName, metricName)
+              .hasSize(1);
+
+          MetricAssert metricAssert = assertThat(matchingMetrics.get(0));
+          metricAssertion.accept(metricAssert);
+          metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
         });
 
-    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(matchedInstrumentationName[0]));
+    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
 
     if (Boolean.getBoolean("collectMetadata")) {
       collectEmittedMetrics(getExportedMetrics());

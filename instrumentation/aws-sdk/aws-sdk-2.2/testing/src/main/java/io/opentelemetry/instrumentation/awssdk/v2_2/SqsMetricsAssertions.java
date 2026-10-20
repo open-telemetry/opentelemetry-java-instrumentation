@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -74,10 +73,10 @@ final class SqsMetricsAssertions {
       String operationName,
       String operationType) {
     testing.waitAndAssertHistogramPoints(
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
         metric ->
             metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName("messaging.client.operation.duration")
                 .hasUnit("s")
                 .hasDescription(
                     "Duration of messaging operation initiated by a producer or consumer client."),
@@ -99,12 +98,9 @@ final class SqsMetricsAssertions {
   private static void assertProcessDuration(
       InstrumentationExtension testing, int serverPort, long operationCount) {
     testing.waitAndAssertHistogramPoints(
-        metric ->
-            metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName("messaging.process.duration")
-                .hasUnit("s")
-                .hasDescription("Duration of processing operation."),
+        INSTRUMENTATION_NAME,
+        "messaging.process.duration",
+        metric -> metric.hasUnit("s").hasDescription("Duration of processing operation."),
         point ->
             point
                 .satisfies(data -> assertThat(data.getCount()).isEqualTo(operationCount))

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -175,12 +174,9 @@ public class CamelMessagingMetricsAssertions {
       String errorType,
       String destinationPartitionId) {
     testing.waitAndAssertHistogramPoints(
-        metric ->
-            metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName(metricName)
-                .hasDescription(description)
-                .hasUnit("s"),
+        INSTRUMENTATION_NAME,
+        metricName,
+        metric -> metric.hasDescription(description).hasUnit("s"),
         point -> {
           point.hasCount(1);
           if (operationType != null) {

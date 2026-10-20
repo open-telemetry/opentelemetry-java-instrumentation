@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSp
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -266,11 +265,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
     if (emitOldRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.sofa-rpc-5.4"))
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.server.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM, "sofarpc"),
@@ -288,11 +285,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
 
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.sofa-rpc-5.4"))
-                      .hasName("rpc.client.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.client.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM, "sofarpc"),
@@ -316,11 +311,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
     if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.sofa-rpc-5.4"))
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.server.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "sofarpc"),
@@ -336,11 +329,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
 
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.sofa-rpc-5.4"))
-                      .hasName("rpc.client.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.client.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "sofarpc"),
@@ -486,11 +477,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
     if (emitOldRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.sofa-rpc-5.4"))
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.server.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM, "sofarpc"),
@@ -510,11 +499,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
 
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.sofa-rpc-5.4"))
-                      .hasName("rpc.client.duration")
-                      .hasUnit("ms"),
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.client.duration",
+              metric -> metric.hasUnit("ms"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM, "sofarpc"),
@@ -528,11 +515,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
     if (emitPreviewRpcSemconv()) {
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.sofa-rpc-5.4"))
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.server.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "sofarpc"),
@@ -548,11 +533,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
 
       testing()
           .waitAndAssertHistogramPoints(
-              metric ->
-                  metric
-                      .satisfies(hasScopeName("io.opentelemetry.sofa-rpc-5.4"))
-                      .hasName("rpc.client.call.duration")
-                      .hasUnit("s"),
+              "io.opentelemetry.sofa-rpc-5.4",
+              "rpc.client.call.duration",
+              metric -> metric.hasUnit("s"),
               point ->
                   point.hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "sofarpc"),

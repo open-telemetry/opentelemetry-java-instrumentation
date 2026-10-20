@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -60,12 +59,9 @@ final class SpringIntegrationTestHelper {
             : equalTo(ERROR_TYPE, null);
 
     testing.waitAndAssertHistogramPoints(
-        metric ->
-            metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName("messaging.process.duration")
-                .hasDescription("Duration of processing operation.")
-                .hasUnit("s"),
+        INSTRUMENTATION_NAME,
+        "messaging.process.duration",
+        metric -> metric.hasDescription("Duration of processing operation.").hasUnit("s"),
         point ->
             point
                 .hasCount(expectedCount)
@@ -100,10 +96,10 @@ final class SpringIntegrationTestHelper {
 
   static void assertSendMetrics(InstrumentationExtension testing, String destinationName) {
     testing.waitAndAssertHistogramPoints(
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
         metric ->
             metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName("messaging.client.operation.duration")
                 .hasDescription(
                     "Duration of messaging operation initiated by a producer or consumer client.")
                 .hasUnit("s"),

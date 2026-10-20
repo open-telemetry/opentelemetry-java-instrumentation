@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -898,19 +897,21 @@ class ChatModelTest {
   }
 
   private static void assertMetricsWithoutTokenUsage() {
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
         metric ->
             metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName("gen_ai.client.operation.duration"),
-        point ->
-            point
-                .hasSumGreaterThan(0.0)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL)));
+                .hasName("gen_ai.client.operation.duration")
+                .satisfies(
+                    hasHistogramPointsSatisfyingExactly(
+                        point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "gen_ai.client.token.usage", metrics -> metrics.isEmpty());
   }

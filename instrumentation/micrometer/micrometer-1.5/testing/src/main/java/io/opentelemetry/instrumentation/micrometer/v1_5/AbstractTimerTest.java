@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -47,12 +46,9 @@ public abstract class AbstractTimerTest {
     // then
     testing()
         .waitAndAssertHistogramPoints(
-            metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testTimer")
-                    .hasDescription("This is a test timer")
-                    .hasUnit("s"),
+            INSTRUMENTATION_NAME,
+            "testTimer",
+            metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
             point ->
                 point
                     .hasSum(42)
@@ -86,11 +82,9 @@ public abstract class AbstractTimerTest {
     // then
     testing()
         .waitAndAssertHistogramPoints(
-            metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testNanoTimer")
-                    .hasUnit("s"),
+            INSTRUMENTATION_NAME,
+            "testNanoTimer",
+            metric -> metric.hasUnit("s"),
             point -> point.hasSum(0.001234).hasCount(1).hasAttributes(Attributes.empty()));
   }
 
@@ -118,12 +112,9 @@ public abstract class AbstractTimerTest {
     // then
     testing()
         .waitAndAssertHistogramPoints(
-            metric ->
-                metric
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("testTimerWithCustomBuckets")
-                    .hasDescription("This is a test timer")
-                    .hasUnit("s"),
+            INSTRUMENTATION_NAME,
+            "testTimerWithCustomBuckets",
+            metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
             point ->
                 point
                     .hasSum(555.5)

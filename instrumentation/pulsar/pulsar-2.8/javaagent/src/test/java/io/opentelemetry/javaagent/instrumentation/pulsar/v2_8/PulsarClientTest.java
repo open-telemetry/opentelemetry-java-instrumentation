@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -69,12 +68,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     latch.await(1, MINUTES);
 
     testing.waitAndAssertHistogramPoints(
-        metric ->
-            metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName("messaging.process.duration")
-                .hasDescription("Duration of processing operation.")
-                .hasUnit("s"),
+        INSTRUMENTATION_NAME,
+        "messaging.process.duration",
+        metric -> metric.hasDescription("Duration of processing operation.").hasUnit("s"),
         point ->
             point
                 .hasSumGreaterThan(0.0)
@@ -132,10 +128,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                                 equalTo(SERVER_ADDRESS, brokerHost),
                                                 equalTo(SERVER_PORT, brokerPort))))));
     testing.waitAndAssertHistogramPoints(
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
         metric ->
             metric
-                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                .hasName("messaging.client.operation.duration")
                 .hasDescription(
                     "Duration of messaging operation initiated by a producer or consumer client.")
                 .hasUnit("s"),

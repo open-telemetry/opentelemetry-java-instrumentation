@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -102,12 +102,15 @@ public abstract class AbstractLettuceClientTest {
 
   protected void assertCommandErrorMetric(String errorType) {
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertMetrics(
+            "io.opentelemetry.lettuce-5.1",
             metric ->
                 metric
-                    .satisfies(hasScopeName("io.opentelemetry.lettuce-5.1"))
-                    .hasName("db.client.operation.duration"),
-            point -> point.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)));
+                    .hasName("db.client.operation.duration")
+                    .satisfies(
+                        hasHistogramPointsSatisfyingExactly(
+                            point ->
+                                point.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
   }
 
   protected String spanName(String operation) {

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.iceberg.v1_8;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -112,11 +111,9 @@ abstract class AbstractIcebergTest {
   private void assertScanDurationMetric(ScanReport expectedReport) {
     testing()
         .waitAndAssertHistogramPoints(
-            metricAssert ->
-                metricAssert
-                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
-                    .hasName("iceberg.scan.planning.duration")
-                    .hasUnit("s"),
+            INSTRUMENTATION_NAME,
+            "iceberg.scan.planning.duration",
+            metricAssert -> metricAssert.hasUnit("s"),
             point ->
                 point
                     .hasSumGreaterThan(0.0)
