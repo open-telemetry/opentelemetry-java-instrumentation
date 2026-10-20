@@ -119,6 +119,7 @@ public class RabbitSingletons {
 
   private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter() {
     return channelInstrumenterBuilder(ChannelAndMethod::getMethod, false)
+        .setSchemaUrl(messagingSchemaUrl())
         .addAttributesExtractor(AttributesExtractor.constant(MESSAGING_SYSTEM, "rabbitmq"))
         .buildInstrumenter(channelAndMethod -> CLIENT);
   }

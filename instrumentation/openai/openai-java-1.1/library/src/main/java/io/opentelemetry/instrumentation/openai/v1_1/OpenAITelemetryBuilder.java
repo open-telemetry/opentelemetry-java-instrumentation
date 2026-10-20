@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.semconv.SchemaUrls;
 
 /** A builder of {@link OpenAITelemetry}. */
 @SuppressWarnings("IdentifierName") // Want to match library's convention
@@ -55,6 +56,7 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(chatAttributesGetter))
+            .setSchemaUrl(SchemaUrls.V1_37_0)
             .addAttributesExtractor(GenAiAttributesExtractor.create(chatAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(chatBuilder);
@@ -67,13 +69,19 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(embeddingAttributesGetter))
+            .setSchemaUrl(SchemaUrls.V1_37_0)
             .addAttributesExtractor(GenAiAttributesExtractor.create(embeddingAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(embeddingsBuilder);
     Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter =
         embeddingsBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
-    Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
+    Logger eventLogger =
+        openTelemetry
+            .getLogsBridge()
+            .loggerBuilder(INSTRUMENTATION_NAME)
+            .setSchemaUrl(SchemaUrls.V1_37_0)
+            .build();
     return new OpenAITelemetry(
         chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent);
   }

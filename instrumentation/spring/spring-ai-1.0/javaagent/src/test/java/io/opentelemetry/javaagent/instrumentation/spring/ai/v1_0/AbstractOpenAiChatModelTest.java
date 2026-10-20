@@ -36,6 +36,7 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -86,6 +87,10 @@ abstract class AbstractOpenAiChatModelTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("chat " + MODEL)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                    .isEqualTo(SchemaUrls.V1_37_0))
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -109,6 +114,10 @@ abstract class AbstractOpenAiChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo(SchemaUrls.V1_37_0))
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
@@ -123,6 +132,10 @@ abstract class AbstractOpenAiChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.token.usage")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo(SchemaUrls.V1_37_0))
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
@@ -153,12 +166,20 @@ abstract class AbstractOpenAiChatModelTest {
                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                     equalTo(stringKey("event.name"), "gen_ai.user.message"))
                 .hasSpanContext(spanContext)
+                .satisfies(
+                    logData ->
+                        assertThat(logData.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo(SchemaUrls.V1_37_0))
                 .hasBody(messageBody(PROMPT)),
         log ->
             log.hasAttributesSatisfyingExactly(
                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
+                .satisfies(
+                    logData ->
+                        assertThat(logData.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo(SchemaUrls.V1_37_0))
                 .hasBody(choiceBody()));
   }
 

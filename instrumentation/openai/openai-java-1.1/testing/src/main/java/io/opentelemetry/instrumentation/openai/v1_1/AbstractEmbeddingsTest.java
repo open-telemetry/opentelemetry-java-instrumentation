@@ -35,6 +35,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -98,6 +99,13 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                     maybeWithTransportSpan(
                         span ->
                             span.hasName("embeddings text-embedding-3-small")
+                                .satisfies(
+                                    spanData ->
+                                        assertThat(
+                                                spanData
+                                                    .getInstrumentationScopeInfo()
+                                                    .getSchemaUrl())
+                                            .isEqualTo(SchemaUrls.V1_37_0))
                                 .hasKind(SpanKind.CLIENT)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
@@ -117,6 +125,10 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .satisfies(
+                        metricData ->
+                            assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
+                                .isEqualTo(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -131,6 +143,10 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .satisfies(
+                        metricData ->
+                            assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
+                                .isEqualTo(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(

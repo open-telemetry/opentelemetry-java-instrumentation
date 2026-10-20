@@ -137,6 +137,20 @@ testing {
         val version = baseVersion("2.25.63").orLatest()
         runtimeOnly("software.amazon.awssdk:bedrockruntime:$version")
       }
+      executions {
+        register("PreviewRpcSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=rpc")
+          filter {
+            includeTestsMatching("*testConverseBasic")
+          }
+        }
+        register("PreviewRpcSemconvDup") {
+          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+          filter {
+            includeTestsMatching("*testConverseBasic")
+          }
+        }
+      }
     }
 
     register<JvmTestSuite>("testRdsData") {
