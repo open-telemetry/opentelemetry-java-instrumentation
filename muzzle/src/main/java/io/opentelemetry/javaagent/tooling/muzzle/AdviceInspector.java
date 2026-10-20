@@ -77,6 +77,7 @@ public class AdviceInspector {
     return null;
   }
 
+  // visible for testing
   public AdviceMode inspect(InstrumentationModule instrumentationModule) {
     return inspect(adviceClassNames(instrumentationModule));
   }
