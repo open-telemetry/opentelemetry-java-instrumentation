@@ -807,7 +807,7 @@ class Jedis40ClientTest {
 
   private static class BuilderTransaction extends Transaction {
     private BuilderTransaction(Jedis jedis) {
-      super(jedis);
+      super(jedis.getConnection());
     }
 
     private Response<String> appendCustomCommand(CommandObject<String> command) {
