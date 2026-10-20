@@ -25,12 +25,15 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -212,6 +215,13 @@ class Jms2InstrumentationTest {
     TestProducer controlledProducer = new TestProducer(session.createQueue(destinationName));
     MessageProducer producer = controlledProducer;
     JMSException failure = new JMSException("send failed");
+    Context callerContext = Context.current();
+    ContextKey<Object> contextKey = ContextKey.named("jms-test");
+    Object senderContextValue = new Object();
+    Object callbackContextValue = new Object();
+    Context senderContext = callerContext.with(contextKey, senderContextValue);
+    Context callbackContext = callerContext.with(contextKey, callbackContextValue);
+    RuntimeException callbackFailure = new IllegalStateException("callback failed");
     CompletionListener listener =
         new CompletionListener() {
           @Override
@@ -223,12 +233,26 @@ class Jms2InstrumentationTest {
           public void onException(Message completed, Exception exception) {
             assertThat(completed).isSameAs(message);
             assertThat(exception).isSameAs(failure);
+            assertThat(Context.current().get(contextKey)).isSameAs(senderContextValue);
+            assertThat(Span.current().getSpanContext().isValid()).isFalse();
+            throw callbackFailure;
           }
         };
 
-    producer.send(message, listener);
+    try (Scope ignored = senderContext.makeCurrent()) {
+      producer.send(message, listener);
+      assertThat(Context.current().get(contextKey)).isSameAs(senderContextValue);
+      assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    }
     assertThat(controlledProducer.sendReturned).isTrue();
-    controlledProducer.listener.onException(message, failure);
+    try (Scope ignored = callbackContext.makeCurrent()) {
+      assertThat(Context.current().get(contextKey)).isSameAs(callbackContextValue);
+      assertThatThrownBy(() -> controlledProducer.listener.onException(message, failure))
+          .isSameAs(callbackFailure);
+      assertThat(Context.current().get(contextKey)).isSameAs(callbackContextValue);
+      assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    }
+    assertThat(Context.current()).isSameAs(callerContext);
 
     testing.waitAndAssertTraces(
         trace ->
