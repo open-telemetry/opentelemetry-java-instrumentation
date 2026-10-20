@@ -54,7 +54,12 @@ public final class InfluxDbQueryState {
 
   public void onFailure(Throwable error) {
     // The client cancels after decoding failures too; only canceled reads are non-failures.
-    if (!(error instanceof IOException) || call == null || !call.isCanceled()) {
+    // MessagePackTraverser wraps read IOExceptions in InfluxDBException (absent in 2.4).
+    boolean readFailure =
+        error instanceof IOException
+            || (error.getClass().getName().equals("org.influxdb.InfluxDBException")
+                && error.getCause() instanceof IOException);
+    if (!readFailure || call == null || !call.isCanceled()) {
       callbackError = error;
     }
   }

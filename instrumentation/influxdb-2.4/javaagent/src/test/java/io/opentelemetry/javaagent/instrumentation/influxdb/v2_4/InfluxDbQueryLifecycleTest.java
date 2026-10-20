@@ -34,7 +34,12 @@ import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.ForwardingSource;
+import okio.Okio;
 import org.influxdb.InfluxDB;
+import org.influxdb.InfluxDBException;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
 import org.junit.jupiter.api.Test;
@@ -167,6 +172,73 @@ class InfluxDbQueryLifecycleTest {
   }
 
   @Test
+  void messagePackDecodingFailureWithoutFailureConsumer() {
+    try (InfluxDB client =
+        messagePackClient(
+            chain ->
+                response(chain, SUCCESS)
+                    .newBuilder()
+                    .body(
+                        ResponseBody.create(
+                            MediaType.parse("application/x-msgpack"), new byte[] {(byte) 0xc1}))
+                    .build())) {
+      client.query(QUERY, 1, result -> {});
+      assertQuery("org.msgpack.core.MessageFormatException");
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void cancellationDuringMessagePackRead(boolean hasFailureConsumer) throws InterruptedException {
+    CountDownLatch readStarted = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    BufferedSource source =
+        Okio.buffer(
+            new ForwardingSource(new Buffer()) {
+              @Override
+              public long read(Buffer sink, long byteCount) throws IOException {
+                readStarted.countDown();
+                await(release);
+                throw new IOException("Canceled");
+              }
+            });
+    Dispatcher dispatcher = new Dispatcher();
+    OkHttpClient.Builder builder =
+        new OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .addInterceptor(
+                chain ->
+                    response(chain, SUCCESS)
+                        .newBuilder()
+                        .body(
+                            ResponseBody.create(
+                                MediaType.parse("application/x-msgpack"), -1, source))
+                        .build());
+    try (InfluxDB client =
+        InfluxDBFactory.connect(
+            "http://localhost:8086",
+            "user",
+            "password",
+            builder,
+            InfluxDB.ResponseFormat.MSGPACK)) {
+      if (hasFailureConsumer) {
+        client.query(QUERY, 1, (cancellable, result) -> {}, () -> {}, error -> {});
+      } else {
+        client.query(QUERY, 1, result -> {});
+      }
+      try {
+        assertThat(readStarted.await(10, SECONDS)).isTrue();
+        assertThat(testing.spans()).isEmpty();
+        assertNoDuration();
+        dispatcher.cancelAll();
+      } finally {
+        release.countDown();
+      }
+      assertQuery(null);
+    }
+  }
+
+  @Test
   void cancellationIsNotFailure() throws InterruptedException {
     CountDownLatch callback = new CountDownLatch(1);
     try (InfluxDB client = client(chain -> response(chain, SUCCESS + "\n" + FAILURE + "\n"))) {
@@ -224,8 +296,9 @@ class InfluxDbQueryLifecycleTest {
     }
   }
 
-  @Test
-  void callbackFailureAfterCancellation() throws InterruptedException {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void callbackFailureAfterCancellation(boolean wrappedReadFailure) throws InterruptedException {
     CountDownLatch callback = new CountDownLatch(1);
     Dispatcher dispatcher = new Dispatcher();
     OkHttpClient.Builder builder =
@@ -238,12 +311,27 @@ class InfluxDbQueryLifecycleTest {
           result -> {
             dispatcher.cancelAll();
             callback.countDown();
+            if (wrappedReadFailure) {
+              throw new InfluxDBException(new IOException("private callback text"));
+            }
             throw new IllegalStateException("private callback text");
           },
           error -> {});
       assertThat(callback.await(10, SECONDS)).isTrue();
-      assertQuery(IllegalStateException.class.getName());
+      assertQuery(
+          wrappedReadFailure
+              ? InfluxDBException.class.getName()
+              : IllegalStateException.class.getName());
     }
+  }
+
+  private static InfluxDB messagePackClient(Interceptor interceptor) {
+    return InfluxDBFactory.connect(
+        "http://localhost:8086",
+        "user",
+        "password",
+        new OkHttpClient.Builder().addInterceptor(interceptor),
+        InfluxDB.ResponseFormat.MSGPACK);
   }
 
   private static InfluxDB client(Interceptor interceptor) {
