@@ -44,22 +44,20 @@ and this repository's experimental telemetry rules.
 
 A schema URL identifies the semantic convention defining a span, metric, or log, not every
 registered attribute attached to it. Select the version adopted by that signal and its effective
-mode, not the latest semconv dependency or the version used by a supporting extractor.
+mode, not the latest semconv dependency.
 
-Use `InstrumenterBuilder.setSchemaUrl(...)` explicitly, with domain-owned schema definitions where
-available. Supporting attributes must not select, change, or invalidate the schema. Independently
-constructed meters and loggers select their own schema; sharing a scope name or trace does not
-couple their schemas.
+Supporting attributes must not select, change, or invalidate the schema. Select schemas for spans,
+metrics, and logs independently, even when they share a scope name or trace.
 
-For example, this policy calls for:
+For example:
 
-- the HTTP schema for Camel HTTP operations, but no schema for custom `direct://` route spans
-- the GenAI schema for Bedrock GenAI operations, despite supporting RPC attributes
-- no schema based on code or exception attributes alone
+- HTTP operations use the HTTP schema.
+- GenAI operations use the GenAI schema, despite supporting RPC attributes.
+- Code or exception attributes alone do not justify assigning a schema to a custom operation.
 
-For custom operations without an applicable signal convention, leave the schema unset and preserve
-explicit caller-supplied schemas. Implementation work is tracked in
-[#20755](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20755).
+For custom operations without an applicable signal convention, leave the schema unset unless a
+caller explicitly supplies one. See the
+[selection policy](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20755).
 
 ## Weigh normative language
 

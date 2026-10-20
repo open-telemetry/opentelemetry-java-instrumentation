@@ -28,12 +28,11 @@ Comment only on a changed line and only for a supported issue.
 
 Select the schema URL from the semantic convention defining the emitted span, metric, or log.
 Its version follows the convention adopted by that signal and its effective mode, not the latest
-dependency or a supporting extractor. Registered attributes alone do not establish a signal
+semconv dependency. Registered attributes alone do not establish a signal
 convention; supporting attributes must not select, change, or invalidate its schema.
 For custom operations without an applicable signal convention, leave the schema unset unless
-explicitly supplied by the caller. Use explicit `InstrumenterBuilder.setSchemaUrl(...)` selection
-and domain-owned schema definitions where available. Independently constructed meters and loggers
-select their own schema. Signals are independent even when sharing a scope name or trace.
+explicitly supplied by the caller. Select each signal's schema independently; sharing a scope name
+or trace does not require sharing a schema.
 
 ## Database response status codes
 
