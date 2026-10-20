@@ -25,20 +25,10 @@ final class OpenAiErrorType {
       return null;
     }
 
-    // OpenAI-compatible services can return arbitrary strings. Only report known service codes.
-    switch (code) {
-      case "content_policy_violation":
-      case "context_length_exceeded":
-      case "insufficient_quota":
-      case "invalid_api_key":
-      case "invalid_value":
-      case "model_not_found":
-      case "rate_limit_exceeded":
-      case "server_error":
-        return code;
-      default:
-        return null;
+    if (code.codePoints().allMatch(Character::isWhitespace)) {
+      return null;
     }
+    return code;
   }
 
   private OpenAiErrorType() {}

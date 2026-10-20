@@ -45,7 +45,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class ServiceErrorTest {
 
@@ -91,12 +90,25 @@ class ServiceErrorTest {
         arguments.add(
             Arguments.of(
                 operation, async, 429, error("\"insufficient_quota\""), "insufficient_quota"));
-        for (String code :
-            new String[] {"null", "\"\"", "\"   \"", "42", "{}", "\"unknown_code\""}) {
+        for (String code : new String[] {"null", "\"\"", "\"   \"", "42", "{}"}) {
           arguments.add(
               Arguments.of(
                   operation, async, 400, error(code), BadRequestException.class.getName()));
         }
+        arguments.add(
+            Arguments.of(
+                operation,
+                async,
+                400,
+                error("\"provider_specific_code\""),
+                "provider_specific_code"));
+        arguments.add(
+            Arguments.of(
+                operation,
+                async,
+                400,
+                error("\" provider_specific_code \""),
+                " provider_specific_code "));
         arguments.add(
             Arguments.of(
                 operation,
@@ -144,8 +156,8 @@ class ServiceErrorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"\"rate_limit_exceeded\"", "null", "42"})
-  void asyncStreamTerminalError(String code) {
+  @MethodSource("asyncStreamTerminalErrors")
+  void asyncStreamTerminalError(String code, String expectedErrorType) {
     server.stubFor(
         post(urlEqualTo("/chat/completions"))
             .willReturn(
@@ -162,12 +174,15 @@ class ServiceErrorTest {
     assertThat(thrown)
         .isInstanceOf(CompletionException.class)
         .hasCauseInstanceOf(SseException.class);
-    assertTelemetry(
-        Operation.CHAT_STREAM,
-        code.equals("\"rate_limit_exceeded\"")
-            ? "rate_limit_exceeded"
-            : SseException.class.getName(),
-        true);
+    assertTelemetry(Operation.CHAT_STREAM, expectedErrorType, true);
+  }
+
+  private static Stream<Arguments> asyncStreamTerminalErrors() {
+    return Stream.of(
+        Arguments.of("\"rate_limit_exceeded\"", "rate_limit_exceeded"),
+        Arguments.of("\"provider_specific_code\"", "provider_specific_code"),
+        Arguments.of("null", SseException.class.getName()),
+        Arguments.of("42", SseException.class.getName()));
   }
 
   private static void execute(Operation operation, boolean async) {
