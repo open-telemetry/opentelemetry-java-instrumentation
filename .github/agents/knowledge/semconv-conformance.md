@@ -46,8 +46,7 @@ A schema URL identifies the semantic convention defining a span, metric, or log,
 registered attribute attached to it. Select the version adopted by that signal and its effective
 mode, not the latest semconv dependency.
 
-Supporting attributes must not select, change, or invalidate the schema. Select schemas for spans,
-metrics, and logs independently, even when they share a scope name or trace.
+Supporting attributes must not select, change, or invalidate the schema.
 
 For example:
 

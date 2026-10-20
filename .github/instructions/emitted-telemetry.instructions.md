@@ -31,8 +31,6 @@ Its version follows the convention adopted by that signal and its effective mode
 semconv dependency. Registered attributes alone do not establish a signal
 convention; supporting attributes must not select, change, or invalidate its schema.
 If no semantic convention defines the emitted signal, leave its schema URL unset.
-Select each signal's schema independently; sharing a scope name or trace does not require sharing
-a schema.
 
 ## Database response status codes
 
