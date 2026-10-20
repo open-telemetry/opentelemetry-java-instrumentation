@@ -548,15 +548,14 @@ public abstract class AbstractThriftTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
-                                          attributes ->
-                                              assertThat(attributes.asMap())
-                                                  .containsOnlyKeys(
-                                                      RPC_SYSTEM_NAME,
-                                                      SERVER_ADDRESS,
-                                                      SERVER_PORT,
-                                                      RPC_METHOD,
-                                                      ERROR_TYPE)))));
+                                      point.hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                          equalTo(SERVER_PORT, port),
+                                          equalTo(
+                                              RPC_METHOD,
+                                              CustomHandler.class.getName() + "/withError"),
+                                          equalTo(ERROR_TYPE, "_OTHER")))));
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
@@ -568,15 +567,16 @@ public abstract class AbstractThriftTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
-                                          attributes ->
-                                              assertThat(attributes.asMap())
-                                                  .containsOnlyKeys(
-                                                      RPC_SYSTEM_NAME,
-                                                      SERVER_ADDRESS,
-                                                      SERVER_PORT,
-                                                      RPC_METHOD,
-                                                      ERROR_TYPE)))));
+                                      point.hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                          equalTo(SERVER_ADDRESS, "localhost"),
+                                          equalTo(SERVER_PORT, port),
+                                          equalTo(
+                                              RPC_METHOD,
+                                              CustomService.class.getName() + "/withError"),
+                                          equalTo(
+                                              ERROR_TYPE,
+                                              TApplicationException.class.getName())))));
     }
   }
 
