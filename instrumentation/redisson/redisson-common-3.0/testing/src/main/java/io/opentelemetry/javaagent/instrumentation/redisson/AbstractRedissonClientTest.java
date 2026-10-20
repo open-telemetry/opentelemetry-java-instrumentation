@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -26,6 +27,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -33,6 +35,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -67,6 +70,7 @@ import org.redisson.api.RMap;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.RedisException;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.slf4j.Logger;
@@ -236,6 +240,49 @@ public abstract class AbstractRedissonClientTest {
     }
     assertDurationMetric(
         testing, instrumentationName.get(), expectedKeys.toArray(new AttributeKey<?>[0]));
+  }
+
+  @Test
+  void wrongTypeErrorIsRecordedInSpanAndMetrics() throws IOException, InterruptedException {
+    assertThat(
+            redisServer.execInContainer("redis-cli", "lpush", "wrong-type", "value").getExitCode())
+        .isZero();
+    assertThatThrownBy(() -> redisson.getBucket("wrong-type").get())
+        .isInstanceOf(RedisException.class);
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("GET " + address)
+                      .hasKind(CLIENT)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(NETWORK_PEER_ADDRESS, ip),
+                          equalTo(NETWORK_PEER_PORT, port),
+                          equalTo(SERVER_ADDRESS, host),
+                          equalTo(SERVER_PORT, port),
+                          equalTo(DB_SYSTEM_NAME, REDIS),
+                          equalTo(DB_NAMESPACE, dbNamespace("0")),
+                          equalTo(DB_QUERY_TEXT, "GET wrong-type"),
+                          equalTo(DB_OPERATION_NAME, "GET"),
+                          equalTo(ERROR_TYPE, "WRONGTYPE")));
+        });
+
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .containsEntry(ERROR_TYPE, "WRONGTYPE")))));
   }
 
   @Test
