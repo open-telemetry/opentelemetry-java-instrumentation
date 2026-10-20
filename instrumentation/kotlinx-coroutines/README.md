@@ -3,15 +3,21 @@
 Kotlin coroutine library instrumentation is located at
 <https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/kotlin>
 
-Instrumentation of Kotlin suspend functions annotated with `@WithSpan` uses the independent
-`kotlinx-coroutines-annotations` selector.
+Coroutine context propagation is enabled by default, including across suspension and dispatcher
+switches, and uses the `kotlinx-coroutines` selector.
 
-To disable suspend function annotations without disabling ordinary coroutine context propagation:
+## `@WithSpan`
+
+Ordinary non-suspend Kotlin functions annotated with `@WithSpan` are instrumented by default
+through the `opentelemetry-instrumentation-annotations` selector. This includes functions returning
+`Flow`; their spans end when collection completes.
+
+Instrumentation of functions declared with `suspend`, including suspend functions returning
+`Flow`, is disabled by default because of a known bug that can resume application code on the wrong
+thread and break thread-bound state such as Spring transactions, causing application failures
+([#20744](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744)).
+Enabling it opts into this unresolved risk:
 
 ```properties
-otel.instrumentation.kotlinx-coroutines-annotations.enabled=false
+otel.instrumentation.kotlinx-coroutines-annotations.enabled=true
 ```
-
-The `kotlinx-coroutines` selector controls ordinary coroutine context propagation, not suspend
-function annotations. Non-suspend `@WithSpan` methods, including methods returning `Flow`, remain
-controlled by the existing `opentelemetry-instrumentation-annotations` selector.
