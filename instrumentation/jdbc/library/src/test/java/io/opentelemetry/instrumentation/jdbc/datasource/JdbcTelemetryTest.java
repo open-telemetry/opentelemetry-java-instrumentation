@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -61,10 +63,7 @@ class JdbcTelemetryTest {
                 span ->
                     span.hasName("SELECT")
                         .hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))));
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))));
 
     assertDurationMetric(
         testing,
@@ -78,10 +77,7 @@ class JdbcTelemetryTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .satisfies(
-                    metricData ->
-                        assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                            .isEqualTo("https://opentelemetry.io/schemas/1.44.0")));
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)));
   }
 
   @ParameterizedTest
@@ -307,12 +303,7 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span ->
-                    span.hasName("COMMIT")
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))));
+                span -> span.hasName("COMMIT").satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))));
 
     assertDurationMetric(
         testing,
@@ -326,10 +317,7 @@ class JdbcTelemetryTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .satisfies(
-                    metricData ->
-                        assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                            .isEqualTo("https://opentelemetry.io/schemas/1.44.0")));
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)));
   }
 
   @Test
