@@ -5,7 +5,7 @@
 ### ⚠️ Breaking changes
 
 - In `opentelemetry-instrumentation-annotations` 3.0, `@WithSpan` and
-  `@AddingSpanAttributes` target methods only. Remove them from constructors.
+  `@AddingSpanAttributes` target methods only.
 - Kotlin suspend function `@WithSpan` instrumentation now uses only the
   `kotlinx-coroutines-annotations` selector and is disabled by default. Use
   `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true` instead of the
