@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.api.trace.StatusCode.ERROR;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -279,16 +280,19 @@ class Jms2InstrumentationTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric -> {
-                      assertThat(metric.getName()).isEqualTo("messaging.client.operation.duration");
-                      assertThat(metric.getUnit()).isEqualTo("s");
-                      assertThat(metric.getHistogramData().getPoints())
-                          .singleElement()
-                          .satisfies(
-                              point ->
-                                  assertThat(point.getAttributes().asMap())
-                                      .containsOnlyKeys(durationAttributeKeys));
-                    }));
+                    metric ->
+                        assertThat(metric)
+                            .hasName("messaging.client.operation.duration")
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                attributes ->
+                                                    assertThat(attributes.asMap())
+                                                        .containsOnlyKeys(
+                                                            durationAttributeKeys))))));
 
     AttributeKey<?>[] counterAttributeKeys =
         failure == null
@@ -301,19 +305,22 @@ class Jms2InstrumentationTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric -> {
-                      assertThat(metric.getName()).isEqualTo("messaging.client.sent.messages");
-                      assertThat(metric.getUnit()).isEqualTo("{message}");
-                      assertThat(metric.getLongSumData().isMonotonic()).isTrue();
-                      assertThat(metric.getLongSumData().getPoints())
-                          .singleElement()
-                          .satisfies(
-                              point -> {
-                                assertThat(point.getValue()).isEqualTo(1);
-                                assertThat(point.getAttributes().asMap())
-                                    .containsOnlyKeys(counterAttributeKeys);
-                              });
-                    }));
+                    metric ->
+                        assertThat(metric)
+                            .hasName("messaging.client.sent.messages")
+                            .hasUnit("{message}")
+                            .hasLongSumSatisfying(
+                                sum ->
+                                    sum.isMonotonic()
+                                        .hasPointsSatisfying(
+                                            point ->
+                                                point
+                                                    .hasValue(1)
+                                                    .hasAttributesSatisfying(
+                                                        attributes ->
+                                                            assertThat(attributes.asMap())
+                                                                .containsOnlyKeys(
+                                                                    counterAttributeKeys))))));
   }
 
   @Test
