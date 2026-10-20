@@ -65,6 +65,7 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -291,7 +292,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       exchangeName,
                       trace.getSpan(0));
                   producerSpan.set(trace.getSpan(4));
-                  span.satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.43.0"));
+                  span.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0));
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(
