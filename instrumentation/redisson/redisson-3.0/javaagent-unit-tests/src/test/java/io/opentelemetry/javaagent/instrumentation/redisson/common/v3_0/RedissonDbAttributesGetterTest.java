@@ -6,23 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.client.RedisConnectionException;
 import org.redisson.client.RedisException;
 import org.redisson.client.RedisLoadingException;
-import org.redisson.client.RedisOutOfMemoryException;
 
 class RedissonDbAttributesGetterTest {
 
@@ -32,27 +29,62 @@ class RedissonDbAttributesGetterTest {
   private static final AttributesExtractor<RedissonRequest, Void> EXTRACTOR =
       DbClientAttributesExtractor.create(GETTER);
 
-  @ParameterizedTest
-  @MethodSource("redisErrorMessages")
-  void extractsKnownRedisErrorTypes(String message, String expectedErrorType) {
-    assertThat(GETTER.getErrorType(REQUEST, null, new RedisException(message)))
-        .isEqualTo(expectedErrorType);
+  @Test
+  void capturesUnknownServerPrefixFromRespReply() {
+    ByteBuf response = Unpooled.copiedBuffer("-CUSTOM diagnostic details\r\n", US_ASCII);
+    String previous =
+        RedissonErrorCapture.currentServerErrorType()
+            .set(RedissonErrorCapture.parseServerErrorType(response));
+    RedisException error = new RedisException("CUSTOM diagnostic details. channel: redis");
+    try {
+      RedissonErrorCapture.captureServerError(error);
+    } finally {
+      RedissonErrorCapture.currentServerErrorType().restore(previous);
+      response.release();
+    }
+
+    assertThat(GETTER.getErrorType(REQUEST, null, error)).isEqualTo("CUSTOM");
+    assertThat(extractedErrorType(error)).isEqualTo("CUSTOM");
+
+    RedissonErrorCapture.clearServerError(error);
+    assertThat(extractedErrorType(error)).isEqualTo(RedisException.class.getName());
+    assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
+    assertThat(extractedErrorType(new RedisException("CUSTOM other operation")))
+        .isEqualTo(RedisException.class.getName());
   }
 
-  private static Stream<Arguments> redisErrorMessages() {
-    return Stream.of(
-        argumentSet(
-            "generic error",
-            "ERR unknown command with variable details. channel: redis command: GET",
-            "ERR"),
-        argumentSet(
-            "wrong type",
-            "WRONGTYPE Operation against a key holding the wrong kind of value. channel: redis command: GET",
-            "WRONGTYPE"),
-        argumentSet("malformed prefix", "ERR", null),
-        argumentSet("unknown prefix", "CUSTOM variable details. channel: redis command: GET", null),
-        argumentSet("message without decoder marker", "ERR connection refused", null),
-        argumentSet("non-server error", "Unable to decode response. channel: redis", null));
+  @Test
+  void malformedAndNonErrorRepliesDoNotProduceServerErrorType() {
+    ByteBuf success = Unpooled.copiedBuffer("+OK\r\n", US_ASCII);
+    try {
+      assertThat(RedissonErrorCapture.parseServerErrorType(success)).isNull();
+    } finally {
+      success.release();
+    }
+
+    ByteBuf emptyPrefix = Unpooled.copiedBuffer("- \r\n", US_ASCII);
+    try {
+      assertThat(RedissonErrorCapture.parseServerErrorType(emptyPrefix)).isNull();
+    } finally {
+      emptyPrefix.release();
+    }
+
+    ByteBuf incomplete = Unpooled.copiedBuffer("-CUSTOM", US_ASCII);
+    try {
+      assertThat(RedissonErrorCapture.parseServerErrorType(incomplete)).isNull();
+    } finally {
+      incomplete.release();
+    }
+  }
+
+  @Test
+  void clientExceptionMessageIsNotClassifiedAsServerReply() {
+    RedisException error = new RedisException("ERR connection refused");
+
+    RedissonErrorCapture.captureServerError(error);
+
+    assertThat(GETTER.getErrorType(REQUEST, null, error)).isNull();
+    assertThat(extractedErrorType(error)).isEqualTo(RedisException.class.getName());
   }
 
   @Test
@@ -67,15 +99,6 @@ class RedissonDbAttributesGetterTest {
 
     assertThat(GETTER.getErrorType(REQUEST, null, error)).isNull();
     assertThat(extractedErrorType(error)).isEqualTo(RedisLoadingException.class.getName());
-  }
-
-  @Test
-  void dedicatedExceptionWithRemovedPrefixKeepsItsExceptionClassFallback() {
-    RedisOutOfMemoryException error =
-        new RedisOutOfMemoryException("maxmemory threshold exceeded. channel: redis command: SET");
-
-    assertThat(GETTER.getErrorType(REQUEST, null, error)).isNull();
-    assertThat(extractedErrorType(error)).isEqualTo(RedisOutOfMemoryException.class.getName());
   }
 
   @Test

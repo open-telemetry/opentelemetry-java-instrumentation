@@ -35,6 +35,7 @@ public class RedissonInstrumentationModule extends InstrumentationModule {
         new ConnectionManagerConnectionFutureInstrumentation(),
         new MasterSlaveConnectionManagerInstrumentation(),
         new RedisConnectionInstrumentation(),
+        new RedisCommandDecoderInstrumentation(),
         new RedisCommandDataInstrumentation());
   }
 

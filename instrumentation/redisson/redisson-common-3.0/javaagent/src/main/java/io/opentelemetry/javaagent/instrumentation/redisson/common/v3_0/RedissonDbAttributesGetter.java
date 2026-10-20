@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
-import org.redisson.client.RedisException;
 
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest, Void> {
 
@@ -48,51 +47,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Nullable
   public String getErrorType(
       RedissonRequest request, @Nullable Void response, @Nullable Throwable error) {
-    if (error == null || error.getClass() != RedisException.class) {
-      return null;
-    }
-
-    String message = error.getMessage();
-    if (message == null) {
-      return null;
-    }
-
-    int serverErrorMarker = message.indexOf(". channel:");
-    if (serverErrorMarker < 0) {
-      return null;
-    }
-
-    int separator = message.indexOf(' ');
-    if (separator <= 0 || separator >= serverErrorMarker) {
-      return null;
-    }
-
-    String errorType = message.substring(0, separator);
-    switch (errorType) {
-      case "ERR":
-      case "WRONGTYPE":
-      case "EXECABORT":
-      case "CROSSSLOT":
-      case "MASTERDOWN":
-      case "NOREPLICAS":
-      case "READONLY":
-      case "MISCONF":
-      case "NOPERM":
-      case "NOSCRIPT":
-      case "NOAUTH":
-      case "WRONGPASS":
-      case "MOVED":
-      case "ASK":
-      case "TRYAGAIN":
-      case "LOADING":
-      case "OOM":
-      case "CLUSTERDOWN":
-      case "BUSY":
-      case "WAIT":
-        return errorType;
-      default:
-        return null;
-    }
+    return RedissonErrorCapture.getServerErrorType(error);
   }
 
   @Nullable

@@ -14,13 +14,16 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.Span;
@@ -37,6 +40,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -54,8 +58,10 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RFuture;
 import org.redisson.api.RScheduledExecutorService;
 import org.redisson.api.RScheduledFuture;
+import org.redisson.api.RScript;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.RedisException;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
@@ -103,6 +109,12 @@ public abstract class AbstractRedissonAsyncClientTest {
       newAddress = "redis://" + address;
     }
     Config config = new Config();
+    try {
+      // script cache is enabled by default in 3.46.0
+      Config.class.getMethod("setUseScriptCache", boolean.class).invoke(config, false);
+    } catch (NoSuchMethodException ignored) {
+      // ignored
+    }
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
@@ -162,6 +174,45 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"))));
+  }
+
+  @Test
+  void asyncCustomServerErrorIsRecordedInSpanAndMetrics() {
+    RFuture<?> future =
+        redisson
+            .getScript()
+            .evalAsync(
+                RScript.Mode.READ_WRITE,
+                "return redis.error_reply('CUSTOM diagnostic details')",
+                RScript.ReturnType.VALUE);
+    assertThatThrownBy(() -> future.toCompletableFuture().get(TIMEOUT.toMillis(), MILLISECONDS))
+        .hasCauseInstanceOf(RedisException.class);
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasKind(CLIENT)
+                      .hasAttributesSatisfying(
+                          attributes ->
+                              assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "CUSTOM")));
+        });
+
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .containsEntry(ERROR_TYPE, "CUSTOM")))));
   }
 
   @Test

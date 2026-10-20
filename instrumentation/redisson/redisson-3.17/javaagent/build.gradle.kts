@@ -13,6 +13,7 @@ muzzle {
 
 dependencies {
   library("org.redisson:redisson:3.17.0")
+  latestDepTestLibrary("org.redisson:redisson:3.+")
 
   implementation(project(":instrumentation:redisson:redisson-common-3.0:javaagent"))
 

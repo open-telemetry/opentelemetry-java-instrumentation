@@ -71,6 +71,8 @@ import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisException;
+import org.redisson.client.codec.StringCodec;
+import org.redisson.client.protocol.Decoder;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.slf4j.Logger;
@@ -283,6 +285,63 @@ public abstract class AbstractRedissonClientTest {
                                     attributes ->
                                         assertThat(attributes.asMap())
                                             .containsEntry(ERROR_TYPE, "WRONGTYPE")))));
+  }
+
+  @Test
+  void clientSideDecodeFailureKeepsExceptionClassFallback()
+      throws IOException, InterruptedException {
+    assertThat(
+            redisServer
+                .execInContainer("redis-cli", "set", "client-side-decode-error", "value")
+                .getExitCode())
+        .isZero();
+    RBucket<String> bucket =
+        redisson.getBucket(
+            "client-side-decode-error",
+            new StringCodec() {
+              @Override
+              public Decoder<Object> getValueDecoder() {
+                return (buffer, state) -> {
+                  throw new RedisException("ERR client-side decode failure");
+                };
+              }
+            });
+    assertThatThrownBy(bucket::get).isInstanceOf(RedisException.class);
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("GET " + address)
+                      .hasKind(CLIENT)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(NETWORK_PEER_ADDRESS, ip),
+                          equalTo(NETWORK_PEER_PORT, port),
+                          equalTo(SERVER_ADDRESS, host),
+                          equalTo(SERVER_PORT, port),
+                          equalTo(DB_SYSTEM_NAME, REDIS),
+                          equalTo(DB_NAMESPACE, dbNamespace("0")),
+                          equalTo(DB_QUERY_TEXT, "GET client-side-decode-error"),
+                          equalTo(DB_OPERATION_NAME, "GET"),
+                          equalTo(ERROR_TYPE, RedisException.class.getName())));
+        });
+
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .containsEntry(
+                                                ERROR_TYPE, RedisException.class.getName())))));
   }
 
   @Test
