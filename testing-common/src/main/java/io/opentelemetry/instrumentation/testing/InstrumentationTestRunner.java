@@ -259,8 +259,7 @@ public abstract class InstrumentationTestRunner {
         () -> {
           List<List<MetricData>> metricGroups =
               groupMetricSnapshots(instrumentationMetrics(instrumentationName));
-          assertThat(metricGroups)
-              .satisfiesExactlyInAnyOrder(toMetricGroupAssertions(assertions));
+          assertThat(metricGroups).satisfiesExactlyInAnyOrder(toMetricGroupAssertions(assertions));
         });
 
     TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
@@ -289,9 +288,7 @@ public abstract class InstrumentationTestRunner {
     for (int i = 0; i < assertions.length; i++) {
       Consumer<MetricAssert> assertion = assertions[i];
       metricAssertions[i] =
-          metrics ->
-              assertThat(metrics)
-                  .anySatisfy(metric -> assertion.accept(assertThat(metric)));
+          metrics -> assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
     }
     return metricAssertions;
   }
