@@ -117,7 +117,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               experimental("rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D")),
                           equalTo(HTTP_REQUEST_METHOD, "GET"),
                           equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))
-                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0)));
           addNestedHttpClientSpan(
               assertions,
               "GET",
@@ -156,7 +156,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
                           experimentalSatisfies(
                               stringKey("camel.uri"), val -> val.isInstanceOf(String.class)))
-                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0)));
           assertions.add(
               span ->
                   span.hasName("moduleUnit")
