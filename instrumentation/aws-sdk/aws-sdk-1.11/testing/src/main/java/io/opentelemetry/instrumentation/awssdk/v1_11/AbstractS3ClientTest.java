@@ -10,9 +10,12 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -20,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -31,6 +35,7 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -46,6 +51,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
@@ -94,6 +101,83 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
             "GET",
             (Function<AmazonS3, Object>) c -> c.getObject("someBucket", "someKey"),
             singletonList(equalTo(AWS_S3_BUCKET, "someBucket"))));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = {" ", "NoSuchBucket", "AccessDenied"})
+  void testServiceError(String errorCode) {
+    AmazonS3 client =
+        configureClient(clientBuilder)
+            .withEndpointConfiguration(endpoint)
+            .withCredentials(credentialsProvider)
+            .withClientConfiguration(
+                new ClientConfiguration()
+                    .withRetryPolicy(
+                        PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(0)))
+            .build();
+
+    server.enqueue(
+        HttpResponse.of(
+            HttpStatus.FORBIDDEN,
+            MediaType.XML_UTF_8,
+            "<Error>"
+                + (errorCode == null ? "" : "<Code>" + errorCode + "</Code>")
+                + "<Message>service failure</Message>"
+                + "</Error>"));
+
+    Throwable caught = catchThrowable(() -> client.getObject("someBucket", "someKey"));
+    assertThat(caught).isInstanceOf(AmazonS3Exception.class);
+    AmazonS3Exception error = (AmazonS3Exception) caught;
+    if (hasErrorCode(errorCode)) {
+      assertThat(error.getErrorCode()).isEqualTo(errorCode);
+    } else {
+      assertThat(hasErrorCode(error.getErrorCode())).isFalse();
+    }
+
+    String expectedErrorType =
+        emitPreviewRpcSemconv() && hasErrorCode(errorCode)
+            ? errorCode
+            : AmazonS3Exception.class.getName();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("S3.GetObject")
+                            .hasKind(CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(URL_FULL, endpoint.getServiceEndpoint()),
+                                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, null),
+                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                equalTo(SERVER_PORT, server.httpPort()),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "aws-api" : null),
+                                equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "Amazon S3" : null),
+                                equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? null : "GetObject"),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "aws-api" : null),
+                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                                equalTo(AWS_S3_BUCKET, "someBucket"),
+                                equalTo(ERROR_TYPE, expectedErrorType))));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("rpc.client.call.exception")
+                      .hasException(error)
+                      .hasTotalAttributeCount(3));
+    }
+  }
+
+  private static boolean hasErrorCode(String errorCode) {
+    return errorCode != null && !errorCode.trim().isEmpty();
   }
 
   @Test
