@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.semconv.SchemaUrls;
 import javax.annotation.Nullable;
 
 /**
@@ -69,6 +70,10 @@ public final class RpcSemconvSelection {
 
     public boolean emitPreview() {
       return emitPreview;
+    }
+
+    public String schemaUrl() {
+      return emitPreview ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
     }
   }
 }
