@@ -21,6 +21,23 @@ import javax.annotation.Nullable;
 public final class JmsSendOperation {
   private static final Logger logger = Logger.getLogger(JmsSendOperation.class.getName());
 
+  private static final ClassValue<Class<?>> listenerTypes =
+      new ClassValue<Class<?>>() {
+        @Nullable
+        @Override
+        protected Class<?> computeValue(Class<?> producerType) {
+          try {
+            return Class.forName(
+                producerType.getPackage().getName() + ".CompletionListener",
+                false,
+                producerType.getClassLoader());
+          } catch (ClassNotFoundException e) {
+            logger.log(FINE, "Failed to resolve JMS completion listener", e);
+            return null;
+          }
+        }
+      };
+
   private final Instrumenter<MessageWithDestination, Void> instrumenter;
   private final MessageWithDestination request;
   private final Context parentContext;
@@ -46,12 +63,8 @@ public final class JmsSendOperation {
     }
     try {
       // Resolve the interface only on asynchronous sends. JMS 1.1 has no CompletionListener.
-      Class<?> listenerType =
-          Class.forName(
-              producerType.getPackage().getName() + ".CompletionListener",
-              false,
-              producerType.getClassLoader());
-      if (!listenerType.isInstance(listener)) {
+      Class<?> listenerType = listenerTypes.get(producerType);
+      if (listenerType == null || !listenerType.isInstance(listener)) {
         return listener;
       }
       Object wrapped =
