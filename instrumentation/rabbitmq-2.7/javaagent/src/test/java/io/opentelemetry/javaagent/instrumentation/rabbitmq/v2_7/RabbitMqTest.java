@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertNoMessagingMetrics;
@@ -290,10 +291,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       exchangeName,
                       trace.getSpan(0));
                   producerSpan.set(trace.getSpan(4));
-                  span.satisfies(
-                      spanData ->
-                          assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                              .isEqualTo("https://opentelemetry.io/schemas/1.43.0"));
+                  span.satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.43.0"));
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(

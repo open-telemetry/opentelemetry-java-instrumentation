@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
@@ -111,10 +111,7 @@ abstract class AbstractOpenAiTest {
     logs.add(
         logRecord ->
             logRecord
-                .satisfies(
-                    logData ->
-                        assertThat(logData.getInstrumentationScopeInfo().getSchemaUrl())
-                            .isEqualTo(SchemaUrls.V1_37_0))
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                 .hasSeverity(Severity.WARN)
                 .hasEventName("gen_ai.client.operation.exception")
                 .hasException(thrown)
