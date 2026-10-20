@@ -16,6 +16,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
@@ -67,6 +68,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     TemporaryQueue destination = session.createTemporaryQueue();
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer);
+    TextMessage sentMessage = session.createTextMessage("async message");
     CountDownLatch completed = new CountDownLatch(1);
     AtomicReference<SpanContext> callbackSpanContext = new AtomicReference<>();
     CompletionListener listener =
@@ -89,16 +91,18 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
             "parent",
             () -> {
               SpanContext spanContext = Span.current().getSpanContext();
-              producer.send(session.createTextMessage("async message"), listener);
+              producer.send(sentMessage, listener);
               assertThat(Span.current().getSpanContext()).isEqualTo(spanContext);
               return spanContext;
             });
     assertThat(Context.current()).isSameAs(originalContext);
     assertThat(completed.await(10, SECONDS)).isTrue();
     assertThat(callbackSpanContext.get()).isEqualTo(parentSpanContext);
+    String messageId = sentMessage.getJMSMessageID();
+    assertThat(messageId).isNotNull();
     String destinationName = destination.getQueueName();
     destination.delete();
-    assertSendTelemetry(null, destinationName, "send", true);
+    assertSendTelemetry(null, destinationName, "send", true, messageId);
   }
 
   @Test
@@ -127,7 +131,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
       sendFailure = exception;
     }
     assertThat(sendFailure).isInstanceOf(JMSException.class);
-    assertSendTelemetry(sendFailure, null, "send", false);
+    assertSendTelemetry(sendFailure, null, "send", false, null);
   }
 
   @Test
@@ -196,7 +200,11 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
   }
 
   private static void assertSendTelemetry(
-      Exception failure, String destinationName, String spanName, boolean hasParentSpan) {
+      Exception failure,
+      String destinationName,
+      String spanName,
+      boolean hasParentSpan,
+      String messageId) {
     testing.waitAndAssertTraces(
         trace -> {
           if (hasParentSpan) {
@@ -206,9 +214,11 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasName(spanName)
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(
