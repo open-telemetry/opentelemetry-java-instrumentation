@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -62,7 +63,7 @@ public abstract class AbstractNamingConventionTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -85,17 +86,13 @@ public abstract class AbstractNamingConventionTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("test.renamedSummary")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
+            histogram(
+                metric -> metric.hasName("test.renamedSummary"),
+                point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("test.tag"), "test.value"))));
   }
 
   @Test
@@ -105,7 +102,7 @@ public abstract class AbstractNamingConventionTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -127,7 +124,7 @@ public abstract class AbstractNamingConventionTest {
         .register(Metrics.globalRegistry);
 
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -152,7 +149,7 @@ public abstract class AbstractNamingConventionTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -162,10 +159,7 @@ public abstract class AbstractNamingConventionTest {
                             sum.hasPointsSatisfying(
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
+                                        equalTo(stringKey("test.tag"), "test.value")))),
             metric ->
                 metric
                     .hasName("test.renamedFunctionTimer.sum")
@@ -184,7 +178,7 @@ public abstract class AbstractNamingConventionTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -207,7 +201,7 @@ public abstract class AbstractNamingConventionTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -217,10 +211,7 @@ public abstract class AbstractNamingConventionTest {
                             sum.hasPointsSatisfying(
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
+                                        equalTo(stringKey("test.tag"), "test.value")))),
             metric ->
                 metric
                     .hasName("test.renamedLongTaskTimer.duration")
@@ -242,16 +233,12 @@ public abstract class AbstractNamingConventionTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("test.renamedTimer")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
+            histogram(
+                metric -> metric.hasName("test.renamedTimer"),
+                point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("test.tag"), "test.value"))));
   }
 }

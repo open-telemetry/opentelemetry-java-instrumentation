@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.failsafe.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -52,7 +53,7 @@ class FailsafeTelemetryTest {
     }
 
     // then
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         "io.opentelemetry.failsafe-3.0",
         metricAssert ->
             metricAssert
@@ -106,7 +107,7 @@ class FailsafeTelemetryTest {
     }
 
     // then
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         "io.opentelemetry.failsafe-3.0",
         metricAssert ->
             metricAssert
@@ -117,32 +118,26 @@ class FailsafeTelemetryTest {
                             .hasPointsSatisfying(
                                 buildRetryPolicyAssertion(2, "failure"),
                                 buildRetryPolicyAssertion(3, "success"))),
-        metricAssert ->
-            metricAssert
-                .hasName("failsafe.retry_policy.attempts")
-                .hasHistogramSatisfying(
-                    histogramAssert ->
-                        histogramAssert.hasPointsSatisfying(
-                            histogramPointAssert ->
-                                histogramPointAssert
-                                    .hasCount(3)
-                                    .hasMin(1)
-                                    .hasMax(3)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
-                                        equalTo(
-                                            stringKey("failsafe.retry_policy.outcome"), "success"))
-                                    .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
-                            histogramPointAssert ->
-                                histogramPointAssert
-                                    .hasCount(2)
-                                    .hasMin(3)
-                                    .hasMax(3)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
-                                        equalTo(
-                                            stringKey("failsafe.retry_policy.outcome"), "failure"))
-                                    .hasBucketCounts(0L, 0L, 2L, 0L, 0L))));
+        histogram(
+            metricAssert -> metricAssert.hasName("failsafe.retry_policy.attempts"),
+            histogramPointAssert ->
+                histogramPointAssert
+                    .hasCount(3)
+                    .hasMin(1)
+                    .hasMax(3)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                        equalTo(stringKey("failsafe.retry_policy.outcome"), "success"))
+                    .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
+            histogramPointAssert ->
+                histogramPointAssert
+                    .hasCount(2)
+                    .hasMin(3)
+                    .hasMax(3)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                        equalTo(stringKey("failsafe.retry_policy.outcome"), "failure"))
+                    .hasBucketCounts(0L, 0L, 2L, 0L, 0L)));
   }
 
   private static Consumer<LongPointAssert> buildCircuitBreakerAssertion(

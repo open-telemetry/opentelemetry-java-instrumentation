@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -45,23 +46,17 @@ public abstract class AbstractTimerTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testTimer")
-                    .hasDescription("This is a test timer")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(42)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value"))
-                                        .hasBucketBoundaries(NO_BUCKETS))));
+            histogram(
+                metric ->
+                    metric.hasName("testTimer").hasDescription("This is a test timer").hasUnit("s"),
+                point ->
+                    point
+                        .hasSum(42)
+                        .hasCount(1)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
+                        .hasBucketBoundaries(NO_BUCKETS)));
 
     // micrometer gauge histogram is not emitted
     testing()
@@ -88,20 +83,11 @@ public abstract class AbstractTimerTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testNanoTimer")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.001234)
-                                        .hasCount(1)
-                                        .hasAttributes(Attributes.empty()))));
+            histogram(
+                metric -> metric.hasName("testNanoTimer").hasUnit("s"),
+                point -> point.hasSum(0.001234).hasCount(1).hasAttributes(Attributes.empty())));
   }
 
   @Test
@@ -127,24 +113,21 @@ public abstract class AbstractTimerTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testTimerWithCustomBuckets")
-                    .hasDescription("This is a test timer")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(555.5)
-                                        .hasCount(4)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value"))
-                                        .satisfies(hasBucketBoundaries(1, 10, 100, 1_000))
-                                        .hasBucketCounts(1, 1, 1, 1, 0))));
+            histogram(
+                metric ->
+                    metric
+                        .hasName("testTimerWithCustomBuckets")
+                        .hasDescription("This is a test timer")
+                        .hasUnit("s"),
+                point ->
+                    point
+                        .hasSum(555.5)
+                        .hasCount(4)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
+                        .satisfies(hasBucketBoundaries(1, 10, 100, 1_000))
+                        .hasBucketCounts(1, 1, 1, 1, 0)));
   }
 
   private static ThrowingConsumer<HistogramPointData> hasBucketBoundaries(double... buckets) {

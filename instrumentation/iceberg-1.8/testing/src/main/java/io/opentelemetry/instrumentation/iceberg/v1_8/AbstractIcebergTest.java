@@ -7,13 +7,16 @@ package io.opentelemetry.instrumentation.iceberg.v1_8;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Consumer;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileScanTask;
@@ -93,298 +96,227 @@ abstract class AbstractIcebergTest {
     assertThat(reporter.report).isInstanceOf(ScanReport.class);
     ScanReport expected = (ScanReport) reporter.report;
 
-    assertScanDurationMetric(expected);
-    assertDataFilesCountMetrics(expected);
-    assertDeleteFilesCountMetrics(expected);
-    assertDataManifestCountMetrics(expected);
-    assertDeleteManifestCountMetrics(expected);
-    assertSizeMetric(
-        "iceberg.scan.data_files.size",
-        expected,
-        expected.scanMetrics().totalFileSizeInBytes().value());
-    assertSizeMetric(
-        "iceberg.scan.delete_files.size",
-        expected,
-        expected.scanMetrics().totalDeleteFileSizeInBytes().value());
-  }
-
-  private void assertScanDurationMetric(ScanReport expectedReport) {
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
-            metricAssert ->
-                metricAssert
-                    .hasName("iceberg.scan.planning.duration")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())))));
+            assertScanDurationMetric(expected),
+            assertDataFilesCountMetrics(expected),
+            assertDeleteFilesCountMetrics(expected),
+            assertDataManifestCountMetrics(expected),
+            assertDeleteManifestCountMetrics(expected),
+            assertSizeMetric(
+                "iceberg.scan.data_files.size",
+                expected,
+                expected.scanMetrics().totalFileSizeInBytes().value()),
+            assertSizeMetric(
+                "iceberg.scan.delete_files.size",
+                expected,
+                expected.scanMetrics().totalDeleteFileSizeInBytes().value()));
   }
 
-  private void assertDataFilesCountMetrics(ScanReport expectedReport) {
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metricAssert ->
-                metricAssert
-                    .hasName("iceberg.scan.data_files.count")
-                    .hasUnit("{file}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport.scanMetrics().resultDataFiles().value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "scanned"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())),
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport.scanMetrics().skippedDataFiles().value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "skipped"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())))));
+  private static Consumer<MetricAssert> assertScanDurationMetric(ScanReport expectedReport) {
+    return histogram(
+        metric -> metric.hasName("iceberg.scan.planning.duration").hasUnit("s"),
+        point ->
+            point
+                .hasSumGreaterThan(0.0)
+                .hasCount(1)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                    equalTo(stringKey("iceberg.table.name"), expectedReport.tableName())));
   }
 
-  private void assertDataManifestCountMetrics(ScanReport expectedReport) {
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metricAssert ->
-                metricAssert
-                    .hasName("iceberg.scan.data_manifests.count")
-                    .hasUnit("{file}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .scannedDataManifests()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "scanned"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())),
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .skippedDataManifests()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "skipped"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())))));
+  private static Consumer<MetricAssert> assertDataFilesCountMetrics(ScanReport expectedReport) {
+    return metricAssert ->
+        metricAssert
+            .hasName("iceberg.scan.data_files.count")
+            .hasUnit("{file}")
+            .hasLongSumSatisfying(
+                sum ->
+                    sum.hasPointsSatisfying(
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(expectedReport.scanMetrics().resultDataFiles().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "scanned"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName())),
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(expectedReport.scanMetrics().skippedDataFiles().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "skipped"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName()))));
   }
 
-  private void assertDeleteManifestCountMetrics(ScanReport expectedReport) {
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metricAssert ->
-                metricAssert
-                    .hasName("iceberg.scan.delete_manifests.count")
-                    .hasUnit("{file}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .scannedDeleteManifests()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "scanned"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())),
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .skippedDeleteManifests()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "skipped"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())))));
+  private static Consumer<MetricAssert> assertDataManifestCountMetrics(ScanReport expectedReport) {
+    return metricAssert ->
+        metricAssert
+            .hasName("iceberg.scan.data_manifests.count")
+            .hasUnit("{file}")
+            .hasLongSumSatisfying(
+                sum ->
+                    sum.hasPointsSatisfying(
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(
+                                    expectedReport.scanMetrics().scannedDataManifests().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "scanned"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName())),
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(
+                                    expectedReport.scanMetrics().skippedDataManifests().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "skipped"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName()))));
   }
 
-  private void assertDeleteFilesCountMetrics(ScanReport expectedReport) {
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metricAssert ->
-                metricAssert
-                    .hasName("iceberg.scan.delete_files.count")
-                    .hasUnit("{file}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .resultDeleteFiles()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "scanned"),
-                                            equalTo(stringKey("iceberg.delete_file.type"), "all"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())),
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .skippedDeleteFiles()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "skipped"),
-                                            equalTo(stringKey("iceberg.delete_file.type"), "all"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())),
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .indexedDeleteFiles()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "scanned"),
-                                            equalTo(
-                                                stringKey("iceberg.delete_file.type"), "indexed"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())),
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .equalityDeleteFiles()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "scanned"),
-                                            equalTo(
-                                                stringKey("iceberg.delete_file.type"), "equality"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())),
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(
-                                            expectedReport
-                                                .scanMetrics()
-                                                .positionalDeleteFiles()
-                                                .value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "scanned"),
-                                            equalTo(
-                                                stringKey("iceberg.delete_file.type"), "position"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())),
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(expectedReport.scanMetrics().dvs().value())
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("iceberg.scan.state"), "scanned"),
-                                            equalTo(stringKey("iceberg.delete_file.type"), "dvs"),
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())))));
+  private static Consumer<MetricAssert> assertDeleteManifestCountMetrics(
+      ScanReport expectedReport) {
+    return metricAssert ->
+        metricAssert
+            .hasName("iceberg.scan.delete_manifests.count")
+            .hasUnit("{file}")
+            .hasLongSumSatisfying(
+                sum ->
+                    sum.hasPointsSatisfying(
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(
+                                    expectedReport.scanMetrics().scannedDeleteManifests().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "scanned"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName())),
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(
+                                    expectedReport.scanMetrics().skippedDeleteManifests().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "skipped"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName()))));
   }
 
-  private void assertSizeMetric(
+  private static Consumer<MetricAssert> assertDeleteFilesCountMetrics(ScanReport expectedReport) {
+    return metricAssert ->
+        metricAssert
+            .hasName("iceberg.scan.delete_files.count")
+            .hasUnit("{file}")
+            .hasLongSumSatisfying(
+                sum ->
+                    sum.hasPointsSatisfying(
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(expectedReport.scanMetrics().resultDeleteFiles().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "scanned"),
+                                    equalTo(stringKey("iceberg.delete_file.type"), "all"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName())),
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(expectedReport.scanMetrics().skippedDeleteFiles().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "skipped"),
+                                    equalTo(stringKey("iceberg.delete_file.type"), "all"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName())),
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(expectedReport.scanMetrics().indexedDeleteFiles().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "scanned"),
+                                    equalTo(stringKey("iceberg.delete_file.type"), "indexed"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName())),
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(
+                                    expectedReport.scanMetrics().equalityDeleteFiles().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "scanned"),
+                                    equalTo(stringKey("iceberg.delete_file.type"), "equality"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName())),
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(
+                                    expectedReport.scanMetrics().positionalDeleteFiles().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "scanned"),
+                                    equalTo(stringKey("iceberg.delete_file.type"), "position"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName())),
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(expectedReport.scanMetrics().dvs().value())
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("iceberg.scan.state"), "scanned"),
+                                    equalTo(stringKey("iceberg.delete_file.type"), "dvs"),
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName()))));
+  }
+
+  private static Consumer<MetricAssert> assertSizeMetric(
       String otelMetricName, ScanReport expectedReport, long expectedValue) {
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metricAssert ->
-                metricAssert
-                    .hasName(otelMetricName)
-                    .hasUnit("By")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                longSumAssert ->
-                                    longSumAssert
-                                        .hasValue(expectedValue)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                longKey("iceberg.schema.id"),
-                                                expectedReport.schemaId()),
-                                            equalTo(
-                                                stringKey("iceberg.table.name"),
-                                                expectedReport.tableName())))));
+    return metricAssert ->
+        metricAssert
+            .hasName(otelMetricName)
+            .hasUnit("By")
+            .hasLongSumSatisfying(
+                sum ->
+                    sum.hasPointsSatisfying(
+                        longSumAssert ->
+                            longSumAssert
+                                .hasValue(expectedValue)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(
+                                        longKey("iceberg.schema.id"), expectedReport.schemaId()),
+                                    equalTo(
+                                        stringKey("iceberg.table.name"),
+                                        expectedReport.tableName()))));
   }
 
   private static class SimpleReporter implements MetricsReporter {

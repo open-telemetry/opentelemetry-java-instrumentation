@@ -16,6 +16,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.util.MetricAssertions;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ class DropwizardMetricsTest {
     metricRegistry.gauge("test'gauge", () -> value::get);
 
     // then
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
         metric ->
             metric
@@ -67,7 +68,7 @@ class DropwizardMetricsTest {
     counter.dec(5);
 
     // then
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
         metric ->
             metric
@@ -96,15 +97,10 @@ class DropwizardMetricsTest {
     histogram.update(30);
 
     // then
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("testhistogram")
-                .hasHistogramSatisfying(
-                    histogramMetric ->
-                        histogramMetric.hasPointsSatisfying(
-                            point -> point.hasSum(42).hasCount(2))));
+        MetricAssertions.histogram(
+            metric -> metric.hasName("testhistogram"), point -> point.hasSum(42).hasCount(2)));
     testing.clearData();
 
     // when
@@ -127,7 +123,7 @@ class DropwizardMetricsTest {
     meter.mark(11);
 
     // then
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
         metric ->
             metric
@@ -157,15 +153,11 @@ class DropwizardMetricsTest {
     timer.update(234_000, NANOSECONDS);
 
     // then
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("testtimer")
-                .hasUnit("ms")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(point -> point.hasSum(1.234).hasCount(2))));
+        MetricAssertions.histogram(
+            metric -> metric.hasName("testtimer").hasUnit("ms"),
+            point -> point.hasSum(1.234).hasCount(2)));
     testing.clearData();
 
     // when

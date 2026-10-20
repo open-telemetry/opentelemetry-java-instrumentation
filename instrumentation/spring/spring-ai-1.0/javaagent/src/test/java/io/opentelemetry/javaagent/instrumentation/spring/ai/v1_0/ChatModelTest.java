@@ -855,7 +855,7 @@ class ChatModelTest {
   }
 
   private static void assertMetrics() {
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
         metric ->
             metric
@@ -898,7 +898,7 @@ class ChatModelTest {
   }
 
   private static void assertMetricsWithoutTokenUsage() {
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
         metric ->
             metric

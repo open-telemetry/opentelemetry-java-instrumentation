@@ -126,7 +126,7 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -229,7 +229,7 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -361,7 +361,7 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -486,7 +486,7 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -638,7 +638,7 @@ class ChatTest extends AbstractChatTest {
                                         val -> val.containsExactly("stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -735,7 +735,7 @@ class ChatTest extends AbstractChatTest {
                                         val -> val.containsExactly("stop", "stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -838,7 +838,7 @@ class ChatTest extends AbstractChatTest {
                                         val -> val.containsExactly("tool_calls"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -941,7 +941,7 @@ class ChatTest extends AbstractChatTest {
                                         val -> val.containsExactly("stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric

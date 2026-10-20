@@ -205,7 +205,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -373,7 +373,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -478,7 +478,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -613,7 +613,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -765,7 +765,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -939,7 +939,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1007,7 +1007,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                         val -> val.containsExactly("stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1134,7 +1134,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1256,7 +1256,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                         val -> val.containsExactly("stop", "stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1411,7 +1411,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                         val -> val.containsExactly("tool_calls"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1544,7 +1544,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                         val -> val.containsExactly("stop"))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1694,7 +1694,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_REQUEST_STREAM, true)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric

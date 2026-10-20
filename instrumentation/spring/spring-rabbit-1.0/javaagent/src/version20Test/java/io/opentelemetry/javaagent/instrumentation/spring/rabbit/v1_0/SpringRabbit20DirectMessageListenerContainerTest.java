@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -101,25 +102,14 @@ class SpringRabbit20DirectMessageListenerContainerTest {
               span -> span.hasName("consumer").hasParent(processSpan));
         });
 
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         SPRING_INSTRUMENTATION_NAME,
-        "messaging.process.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
-    testing.waitAndAssertMetrics(
-        SPRING_INSTRUMENTATION_NAME,
-        "messaging.client.consumed.messages",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
+        histogram(
+            metric -> metric.hasName("messaging.process.duration"), point -> point.hasCount(1)),
+        metric ->
+            metric
+                .hasName("messaging.client.consumed.messages")
+                .hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
     assertThat(testing.metrics())
         .filteredOn(
             metric ->

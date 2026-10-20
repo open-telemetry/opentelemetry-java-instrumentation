@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -194,45 +195,33 @@ class RocketMqSimpleConsumerTest {
         });
 
     assertSuccessfulReceiveTrace("disabled receive parent", sendSpan);
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
-        "messaging.client.operation.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(MESSAGING_OPERATION_TYPE, "receive"))))));
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.client.consumed.messages",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-                                                equalTo(MESSAGING_OPERATION_NAME, "receive"))))));
+        histogram(
+            metric -> metric.hasName("messaging.client.operation.duration"),
+            point ->
+                point
+                    .hasCount(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                        equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                        equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
+                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "receive"))),
+        metric ->
+            metric
+                .hasName("messaging.client.consumed.messages")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                        equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
+                                        equalTo(MESSAGING_OPERATION_NAME, "receive")))));
   }
 
   @Test

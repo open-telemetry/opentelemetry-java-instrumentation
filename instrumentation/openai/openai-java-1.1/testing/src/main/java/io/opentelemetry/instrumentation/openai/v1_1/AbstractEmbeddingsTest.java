@@ -112,7 +112,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                         val -> val.isIn(singletonList("base64"), null))))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -177,7 +177,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     equalTo(GEN_AI_USAGE_INPUT_TOKENS, 4)))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -261,7 +261,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
     getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric

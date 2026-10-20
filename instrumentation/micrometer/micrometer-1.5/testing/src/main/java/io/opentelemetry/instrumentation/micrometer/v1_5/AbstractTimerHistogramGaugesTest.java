@@ -50,10 +50,7 @@ public abstract class AbstractTimerHistogramGaugesTest {
             INSTRUMENTATION_NAME,
             histogram(
                 metric ->
-                    metric
-                        .hasName("testTimer")
-                        .hasDescription("This is a test timer")
-                        .hasUnit("s"),
+                    metric.hasName("testTimer").hasDescription("This is a test timer").hasUnit("s"),
                 point ->
                     point
                         .hasSum(555.5)
@@ -111,10 +108,7 @@ public abstract class AbstractTimerHistogramGaugesTest {
             INSTRUMENTATION_NAME,
             histogram(
                 metric ->
-                    metric
-                        .hasName("testTimer")
-                        .hasDescription("This is a test timer")
-                        .hasUnit("s"),
+                    metric.hasName("testTimer").hasDescription("This is a test timer").hasUnit("s"),
                 point ->
                     point
                         .hasSum(0.55)

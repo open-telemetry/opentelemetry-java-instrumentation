@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
@@ -25,7 +26,7 @@ class JmxRuntimeMetricsTest {
     // Force a gc to "ensure" gc metrics
     System.gc();
 
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         "io.opentelemetry.runtime-telemetry",
         metric -> metric.hasName("jvm.class.loaded"),
         metric -> metric.hasName("jvm.class.unloaded"),
@@ -33,17 +34,13 @@ class JmxRuntimeMetricsTest {
         metric -> metric.hasName("jvm.cpu.time"),
         metric -> metric.hasName("jvm.cpu.count"),
         metric -> metric.hasName("jvm.cpu.recent_utilization"),
-        metric ->
-            metric
-                .hasName("jvm.gc.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    satisfies(JVM_GC_NAME, val -> val.isNotBlank()),
-                                    satisfies(JVM_GC_ACTION, val -> val.isNotBlank()),
-                                    satisfies(JVM_GC_CAUSE, val -> val.isNotBlank())))),
+        histogram(
+            metric -> metric.hasName("jvm.gc.duration"),
+            point ->
+                point.hasAttributesSatisfyingExactly(
+                    satisfies(JVM_GC_NAME, val -> val.isNotBlank()),
+                    satisfies(JVM_GC_ACTION, val -> val.isNotBlank()),
+                    satisfies(JVM_GC_CAUSE, val -> val.isNotBlank()))),
         metric -> metric.hasName("jvm.memory.used"),
         metric -> metric.hasName("jvm.memory.committed"),
         metric -> metric.hasName("jvm.memory.limit"),

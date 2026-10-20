@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
@@ -26,8 +26,9 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
@@ -63,21 +64,22 @@ class RocketMqMetricsTest {
     Context context = instrumenter.start(Context.root(), request);
     instrumenter.end(context, request, null, error);
 
-    assertMessageCount(
-        "messaging.client.sent.messages",
-        expectedCount,
-        "send",
-        message.getTopic(),
-        null,
-        errorType);
-    assertDuration(
-        "messaging.client.operation.duration", "send", message.getTopic(), null, "send", errorType);
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .containsExactlyInAnyOrder(
-            "messaging.client.sent.messages", "messaging.client.operation.duration");
+    testing.waitAndAssertMetricsExactly(
+        INSTRUMENTATION_NAME,
+        assertMessageCount(
+            "messaging.client.sent.messages",
+            expectedCount,
+            "send",
+            message.getTopic(),
+            null,
+            errorType),
+        assertDuration(
+            "messaging.client.operation.duration",
+            "send",
+            message.getTopic(),
+            null,
+            "send",
+            errorType));
   }
 
   private static Stream<Arguments> producerCases() {
@@ -123,26 +125,22 @@ class RocketMqMetricsTest {
     instrumenter.end(consumerContext, response);
 
     String destination = messages.get(0).getTopic();
-    assertMessageCount(
-        "messaging.client.consumed.messages",
-        expectedCount,
-        "process",
-        destination,
-        "consumer-group",
-        consumeErrorType);
-    assertDuration(
-        "messaging.process.duration",
-        "process",
-        destination,
-        "consumer-group",
-        null,
-        consumeErrorType);
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .containsExactlyInAnyOrder(
-            "messaging.client.consumed.messages", "messaging.process.duration");
+    testing.waitAndAssertMetricsExactly(
+        INSTRUMENTATION_NAME,
+        assertMessageCount(
+            "messaging.client.consumed.messages",
+            expectedCount,
+            "process",
+            destination,
+            "consumer-group",
+            consumeErrorType),
+        assertDuration(
+            "messaging.process.duration",
+            "process",
+            destination,
+            "consumer-group",
+            null,
+            consumeErrorType));
   }
 
   private static Stream<Arguments> consumerCases() {
@@ -178,64 +176,48 @@ class RocketMqMetricsTest {
     return message;
   }
 
-  private static void assertMessageCount(
+  private static Consumer<MetricAssert> assertMessageCount(
       String metricName,
       long expectedCount,
       String operationName,
       String destination,
       String consumerGroup,
       String errorType) {
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        metricName,
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(expectedCount)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                equalTo(ERROR_TYPE, errorType),
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, destination))))));
+    return metric ->
+        metric
+            .hasName(metricName)
+            .hasLongSumSatisfying(
+                sum ->
+                    sum.hasPointsSatisfying(
+                        point ->
+                            point
+                                .hasValue(expectedCount)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination))));
   }
 
-  private static void assertDuration(
+  private static Consumer<MetricAssert> assertDuration(
       String metricName,
       String operationName,
       String destination,
       String consumerGroup,
       String operationType,
       String errorType) {
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        metricName,
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                equalTo(ERROR_TYPE, errorType),
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(
-                                                    MESSAGING_OPERATION_TYPE, operationType))))));
+    return histogram(
+        metric -> metric.hasName(metricName),
+        point ->
+            point
+                .hasCount(1)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_OPERATION_NAME, operationName),
+                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                    equalTo(ERROR_TYPE, errorType),
+                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                    equalTo(MESSAGING_DESTINATION_NAME, destination),
+                    equalTo(MESSAGING_OPERATION_TYPE, operationType)));
   }
 }

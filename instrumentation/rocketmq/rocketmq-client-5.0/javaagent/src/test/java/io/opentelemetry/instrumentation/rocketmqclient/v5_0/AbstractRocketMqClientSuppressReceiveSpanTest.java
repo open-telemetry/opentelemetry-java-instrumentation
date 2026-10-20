@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -150,100 +151,56 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
 
   private void assertMetrics(String topic, String consumerGroup) {
     testing()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.client.sent.messages",
-            metrics ->
-                metrics.satisfiesExactly(
-                    metric ->
-                        assertThat(metric)
-                            .satisfies(
-                                data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                    equalTo(MESSAGING_DESTINATION_NAME, topic))))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.client.operation.duration",
-            metrics ->
-                metrics.satisfiesExactly(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasCount(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                    equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                    equalTo(MESSAGING_OPERATION_TYPE, "send"))))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.process.duration",
-            metrics ->
-                metrics.satisfiesExactly(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasCount(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                    equalTo(
-                                                        MESSAGING_CONSUMER_GROUP_NAME,
-                                                        consumerGroup),
-                                                    equalTo(MESSAGING_DESTINATION_NAME, topic))))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.client.consumed.messages",
-            metrics ->
-                metrics.satisfiesExactly(
-                    metric ->
-                        assertThat(metric)
-                            .satisfies(
-                                data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                    equalTo(
-                                                        MESSAGING_CONSUMER_GROUP_NAME,
-                                                        consumerGroup),
-                                                    equalTo(MESSAGING_DESTINATION_NAME, topic))))));
-    assertThat(testing().metrics())
-        .filteredOn(
             metric ->
                 metric
-                    .getInstrumentationScopeInfo()
-                    .getName()
-                    .equals("io.opentelemetry.rocketmq-client-5.0"))
-        .extracting(metric -> metric.getName())
-        .containsExactlyInAnyOrder(
-            "messaging.client.sent.messages",
-            "messaging.client.operation.duration",
-            "messaging.process.duration",
-            "messaging.client.consumed.messages");
+                    .hasName("messaging.client.sent.messages")
+                    .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic)))),
+            histogram(
+                metric -> metric.hasName("messaging.client.operation.duration"),
+                point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"))),
+            histogram(
+                metric -> metric.hasName("messaging.process.duration"),
+                point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                            equalTo(MESSAGING_DESTINATION_NAME, topic))),
+            metric ->
+                metric
+                    .hasName("messaging.client.consumed.messages")
+                    .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic)))));
   }
 }

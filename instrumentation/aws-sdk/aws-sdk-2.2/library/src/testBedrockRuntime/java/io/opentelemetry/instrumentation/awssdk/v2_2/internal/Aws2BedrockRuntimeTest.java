@@ -172,7 +172,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -308,7 +308,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -518,7 +518,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -674,7 +674,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -932,7 +932,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1096,7 +1096,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1374,7 +1374,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1582,7 +1582,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1791,7 +1791,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -1933,7 +1933,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -2214,7 +2214,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
@@ -2397,7 +2397,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
-        .waitAndAssertMetrics(
+        .waitAndAssertMetricsExactly(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
