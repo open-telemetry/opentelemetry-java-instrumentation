@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
@@ -342,15 +343,11 @@ class ClickHouseClientV2Test {
         NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         "io.opentelemetry.clickhouse-client-v2-0.8",
-        metric ->
-            metric
-                .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(ERROR_TYPE, "60"))));
+        histogram(
+            metric -> metric.hasName("db.client.operation.duration"),
+            point -> point.hasAttribute(ERROR_TYPE, "60")));
   }
 
   @Test

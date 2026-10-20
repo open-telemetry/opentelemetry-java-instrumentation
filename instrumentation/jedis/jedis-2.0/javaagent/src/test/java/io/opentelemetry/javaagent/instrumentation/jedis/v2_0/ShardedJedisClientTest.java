@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -144,15 +145,11 @@ class ShardedJedisClientTest {
                                 NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) peerAddress.getPort()))));
 
-    testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetricsExactly(
         "io.opentelemetry.jedis-2.0",
-        metric ->
-            metric
-                .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget))));
+        histogram(
+            metric -> metric.hasName("db.client.operation.duration"),
+            point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget)));
   }
 
   @Test
