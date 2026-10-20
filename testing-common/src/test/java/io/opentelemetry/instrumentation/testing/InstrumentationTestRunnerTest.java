@@ -71,6 +71,21 @@ class InstrumentationTestRunnerTest {
   }
 
   @Test
+  void repeatedSnapshotsOfOneMetricIdentityCanMatchAnyHistoricalValue() {
+    InstrumentationTestRunner runner =
+        runner(
+            asList(
+                histogramData("test", "duration", "s", point(1)),
+                histogramData("test", "duration", "s", point(2))));
+
+    runner.waitAndAssertMetricsExactly(
+        "test",
+        histogram(
+            metric -> metric.hasName("duration").hasUnit("s"),
+            pointAssert -> pointAssert.hasCount(1).hasSum(1)));
+  }
+
+  @Test
   void rejectsMissingMetrics() {
     InstrumentationTestRunner runner =
         runner(singletonList(histogramData("test", "duration", "s", point(1))));

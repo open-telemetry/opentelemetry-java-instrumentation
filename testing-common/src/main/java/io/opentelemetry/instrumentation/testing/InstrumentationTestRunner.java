@@ -25,6 +25,8 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.MetricDataType;
+import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -40,6 +42,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -254,8 +257,10 @@ public abstract class InstrumentationTestRunner {
       String instrumentationName, Consumer<MetricAssert>... assertions) {
     awaitUntilAsserted(
         () -> {
-          List<MetricData> metrics = instrumentationMetrics(instrumentationName);
-          assertThat(metrics).satisfiesExactlyInAnyOrder(toMetricAssertions(assertions));
+          List<List<MetricData>> metricGroups =
+              groupMetricSnapshots(instrumentationMetrics(instrumentationName));
+          assertThat(metricGroups)
+              .satisfiesExactlyInAnyOrder(toMetricGroupAssertions(assertions));
         });
 
     TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
@@ -265,16 +270,67 @@ public abstract class InstrumentationTestRunner {
     }
   }
 
-  // The runtime array type is Consumer and every element is a Consumer<MetricData>.
+  private static List<List<MetricData>> groupMetricSnapshots(List<MetricData> metrics) {
+    Map<MetricIdentity, List<MetricData>> metricGroups = new HashMap<>();
+    for (MetricData metric : metrics) {
+      metricGroups
+          .computeIfAbsent(new MetricIdentity(metric), ignored -> new ArrayList<>())
+          .add(metric);
+    }
+    return new ArrayList<>(metricGroups.values());
+  }
+
+  // The runtime array type is Consumer and every element is a Consumer<List<MetricData>>.
   @SuppressWarnings("unchecked")
-  private static Consumer<MetricData>[] toMetricAssertions(Consumer<MetricAssert>[] assertions) {
-    Consumer<MetricData>[] metricAssertions =
-        (Consumer<MetricData>[]) new Consumer<?>[assertions.length];
+  private static Consumer<List<MetricData>>[] toMetricGroupAssertions(
+      Consumer<MetricAssert>[] assertions) {
+    Consumer<List<MetricData>>[] metricAssertions =
+        (Consumer<List<MetricData>>[]) new Consumer<?>[assertions.length];
     for (int i = 0; i < assertions.length; i++) {
       Consumer<MetricAssert> assertion = assertions[i];
-      metricAssertions[i] = metric -> assertion.accept(assertThat(metric));
+      metricAssertions[i] =
+          metrics ->
+              assertThat(metrics)
+                  .anySatisfy(metric -> assertion.accept(assertThat(metric)));
     }
     return metricAssertions;
+  }
+
+  private static final class MetricIdentity {
+    private final Resource resource;
+    private final InstrumentationScopeInfo instrumentationScope;
+    private final String name;
+    private final String description;
+    private final String unit;
+    private final MetricDataType type;
+
+    private MetricIdentity(MetricData metric) {
+      resource = metric.getResource();
+      instrumentationScope = metric.getInstrumentationScopeInfo();
+      name = metric.getName();
+      description = metric.getDescription();
+      unit = metric.getUnit();
+      type = metric.getType();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      if (!(other instanceof MetricIdentity)) {
+        return false;
+      }
+      MetricIdentity that = (MetricIdentity) other;
+      return resource.equals(that.resource)
+          && instrumentationScope.equals(that.instrumentationScope)
+          && name.equals(that.name)
+          && description.equals(that.description)
+          && unit.equals(that.unit)
+          && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(resource, instrumentationScope, name, description, unit, type);
+    }
   }
 
   private List<MetricData> metricsForScope(String instrumentationName) {
