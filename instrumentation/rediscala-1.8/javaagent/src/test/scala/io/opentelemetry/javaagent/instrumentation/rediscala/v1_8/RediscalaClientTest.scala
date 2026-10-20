@@ -250,7 +250,12 @@ class RediscalaClientTest {
         }
       assertThat(failure).isNotInstanceOf(classOf[ReplyErrorException])
 
-      assertErrorType("PING", failure.getClass.getName, host, JLong.valueOf(failedPort.toLong))
+      assertErrorType(
+        "PING",
+        failure.getClass.getName,
+        host,
+        JLong.valueOf(failedPort.toLong)
+      )
     } finally {
       client.stop()
     }

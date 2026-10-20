@@ -49,7 +49,7 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   public String getErrorType(
       RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
     // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
-    // error prefix; returning null for other failures preserves the shared exception-class
+    // error prefix; returning null without a usable prefix preserves the shared exception-class
     // fallback.
     // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
     if (!(error instanceof ReplyErrorException)) {
