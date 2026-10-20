@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,14 +19,14 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.client.ClientRequestContext;
 import io.opentelemetry.testing.internal.armeria.client.ClientRequestContextCaptor;
 import io.opentelemetry.testing.internal.armeria.client.Clients;
 import io.opentelemetry.testing.internal.armeria.client.ResponseCancellationException;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -143,7 +142,7 @@ class SpringWebfluxServerInstrumentationTest
     AtomicReference<String> instrumentationName = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace -> {
-            SpanData serverSpan = trace.getSpan(0);
+          SpanData serverSpan = trace.getSpan(0);
           assertThat(serverSpan.getKind()).isEqualTo(SpanKind.SERVER);
           assertThat(serverSpan.getStatus()).isEqualTo(StatusData.unset());
           assertThat(serverSpan.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
@@ -165,7 +164,11 @@ class SpringWebfluxServerInstrumentationTest
                                 point.hasAttribute(ERROR_TYPE, errorType);
                               } else {
                                 point.hasAttributesSatisfying(
-                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200L));
+                                    attributes -> {
+                                      assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                          .isEqualTo(200L);
+                                      assertThat(attributes.get(ERROR_TYPE)).isNull();
+                                    });
                               }
                             })));
   }
