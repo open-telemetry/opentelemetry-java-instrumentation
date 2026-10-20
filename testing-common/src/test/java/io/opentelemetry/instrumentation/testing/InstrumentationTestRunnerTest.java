@@ -5,7 +5,13 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleGauge;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleSum;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.exponentialHistogram;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longGauge;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.summary;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -17,12 +23,24 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
+import io.opentelemetry.sdk.metrics.data.DoublePointData;
+import io.opentelemetry.sdk.metrics.data.ExponentialHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
+import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.SummaryPointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableDoublePointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableExponentialHistogramBuckets;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableExponentialHistogramData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableExponentialHistogramPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableGaugeData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableHistogramData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableHistogramPointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableLongPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableMetricData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSumData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
@@ -175,8 +193,167 @@ class InstrumentationTestRunnerTest {
         .isInstanceOf(AssertionError.class);
   }
 
+  @Test
+  void typedAssertionsMatchMetadataAndPointsInAnyOrder() {
+    runner(
+            asList(
+                longSumData("long.sum", longPoint(1), longPoint(2)),
+                doubleSumData("double.sum", doublePoint(1.5), doublePoint(2.5)),
+                longGaugeData("long.gauge", longPoint(3), longPoint(4)),
+                doubleGaugeData("double.gauge", doublePoint(3.5), doublePoint(4.5)),
+                exponentialHistogramData(
+                    "exponential.histogram",
+                    exponentialHistogramPoint(1),
+                    exponentialHistogramPoint(2)),
+                summaryData("summary", summaryPoint(1), summaryPoint(2))))
+        .waitAndAssertMetricsExactly(
+            "test",
+            longSum(
+                metric -> metric.hasName("long.sum").hasDescription("description").hasUnit("unit"),
+                pointAssert -> pointAssert.hasValue(2),
+                pointAssert -> pointAssert.hasValue(1)),
+            doubleSum(
+                metric ->
+                    metric.hasName("double.sum").hasDescription("description").hasUnit("unit"),
+                pointAssert -> pointAssert.hasValue(2.5),
+                pointAssert -> pointAssert.hasValue(1.5)),
+            longGauge(
+                metric ->
+                    metric.hasName("long.gauge").hasDescription("description").hasUnit("unit"),
+                pointAssert -> pointAssert.hasValue(4),
+                pointAssert -> pointAssert.hasValue(3)),
+            doubleGauge(
+                metric ->
+                    metric.hasName("double.gauge").hasDescription("description").hasUnit("unit"),
+                pointAssert -> pointAssert.hasValue(4.5),
+                pointAssert -> pointAssert.hasValue(3.5)),
+            exponentialHistogram(
+                metric ->
+                    metric
+                        .hasName("exponential.histogram")
+                        .hasDescription("description")
+                        .hasUnit("unit"),
+                pointAssert -> pointAssert.hasCount(1).hasSum(2),
+                pointAssert -> pointAssert.hasCount(1).hasSum(1)),
+            summary(
+                metric -> metric.hasName("summary").hasDescription("description").hasUnit("unit"),
+                pointAssert -> pointAssert.hasCount(1).hasSum(2),
+                pointAssert -> pointAssert.hasCount(1).hasSum(1)));
+  }
+
+  @Test
+  void typedAssertionRejectsExtraPoints() {
+    assertThatThrownBy(
+            () ->
+                runner(singletonList(longSumData("sum", longPoint(1), longPoint(2))))
+                    .waitAndAssertMetricsExactly(
+                        "test",
+                        longSum(metric -> metric.hasName("sum"), point -> point.hasValue(1))))
+        .isInstanceOf(AssertionError.class);
+  }
+
+  @Test
+  void typedAssertionRejectsIncompatibleMetricType() {
+    assertThatThrownBy(
+            () ->
+                doubleGauge(metric -> metric.hasName("gauge"), point -> point.hasValue(1))
+                    .accept(assertThat(longGaugeData("gauge", longPoint(1)))))
+        .isInstanceOf(AssertionError.class);
+  }
+
   private static InstrumentationTestRunner runner(List<MetricData> metrics) {
     return new FixedMetricsTestRunner(metrics);
+  }
+
+  private static MetricData longSumData(String name, LongPointData... points) {
+    return ImmutableMetricData.createLongSum(
+        Resource.empty(),
+        InstrumentationScopeInfo.create("test"),
+        name,
+        "description",
+        "unit",
+        ImmutableSumData.create(true, AggregationTemporality.CUMULATIVE, asList(points)));
+  }
+
+  private static MetricData doubleSumData(String name, DoublePointData... points) {
+    return ImmutableMetricData.createDoubleSum(
+        Resource.empty(),
+        InstrumentationScopeInfo.create("test"),
+        name,
+        "description",
+        "unit",
+        ImmutableSumData.create(false, AggregationTemporality.CUMULATIVE, asList(points)));
+  }
+
+  private static MetricData longGaugeData(String name, LongPointData... points) {
+    return ImmutableMetricData.createLongGauge(
+        Resource.empty(),
+        InstrumentationScopeInfo.create("test"),
+        name,
+        "description",
+        "unit",
+        ImmutableGaugeData.create(asList(points)));
+  }
+
+  private static MetricData doubleGaugeData(String name, DoublePointData... points) {
+    return ImmutableMetricData.createDoubleGauge(
+        Resource.empty(),
+        InstrumentationScopeInfo.create("test"),
+        name,
+        "description",
+        "unit",
+        ImmutableGaugeData.create(asList(points)));
+  }
+
+  private static MetricData exponentialHistogramData(
+      String name, ExponentialHistogramPointData... points) {
+    return ImmutableMetricData.createExponentialHistogram(
+        Resource.empty(),
+        InstrumentationScopeInfo.create("test"),
+        name,
+        "description",
+        "unit",
+        ImmutableExponentialHistogramData.create(
+            AggregationTemporality.CUMULATIVE, asList(points)));
+  }
+
+  private static MetricData summaryData(String name, SummaryPointData... points) {
+    return ImmutableMetricData.createDoubleSummary(
+        Resource.empty(),
+        InstrumentationScopeInfo.create("test"),
+        name,
+        "description",
+        "unit",
+        ImmutableSummaryData.create(asList(points)));
+  }
+
+  private static LongPointData longPoint(long value) {
+    return ImmutableLongPointData.create(0, 1, Attributes.empty(), value);
+  }
+
+  private static DoublePointData doublePoint(double value) {
+    return ImmutableDoublePointData.create(0, 1, Attributes.empty(), value);
+  }
+
+  private static ExponentialHistogramPointData exponentialHistogramPoint(double sum) {
+    return ImmutableExponentialHistogramPointData.create(
+        0,
+        sum,
+        0,
+        false,
+        0,
+        false,
+        0,
+        ImmutableExponentialHistogramBuckets.create(0, 0, singletonList(1L)),
+        ImmutableExponentialHistogramBuckets.create(0, 0, emptyList()),
+        0,
+        1,
+        Attributes.empty(),
+        emptyList());
+  }
+
+  private static SummaryPointData summaryPoint(double sum) {
+    return ImmutableSummaryPointData.create(0, 1, Attributes.empty(), 1, sum, emptyList());
   }
 
   private static MetricData histogramData(
