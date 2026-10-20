@@ -53,10 +53,12 @@ For example:
 
 - HTTP operations use the HTTP schema.
 - GenAI operations use the GenAI schema, despite supporting RPC attributes.
+- Controller spans have no defined semantic convention, so leave their schema unset even when
+  nested under an HTTP server span.
 - Code or exception attributes alone do not justify assigning a schema to a custom operation.
 
-For custom operations without an applicable signal convention, leave the schema unset unless a
-caller explicitly supplies one. See the
+If no semantic convention defines the emitted signal, leave its schema URL unset unless a caller
+explicitly supplies one. See the
 [selection policy](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20755).
 
 ## Weigh normative language

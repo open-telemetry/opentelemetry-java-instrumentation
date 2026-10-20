@@ -30,9 +30,9 @@ Select the schema URL from the semantic convention defining the emitted span, me
 Its version follows the convention adopted by that signal and its effective mode, not the latest
 semconv dependency. Registered attributes alone do not establish a signal
 convention; supporting attributes must not select, change, or invalidate its schema.
-For custom operations without an applicable signal convention, leave the schema unset unless
-explicitly supplied by the caller. Select each signal's schema independently; sharing a scope name
-or trace does not require sharing a schema.
+If no semantic convention defines the emitted signal, leave its schema URL unset unless a caller
+explicitly supplies one. Select each signal's schema independently; sharing a scope name or trace
+does not require sharing a schema.
 
 ## Database response status codes
 
