@@ -48,10 +48,8 @@ public final class InfluxDbQueryState {
   }
 
   void onCallbackError(Throwable error) {
-    // Newer clients catch callback exceptions and cancel the call before onResponse returns.
-    if (call == null || !call.isCanceled()) {
-      callbackError = error;
-    }
+    // Cancellation must not hide exceptions thrown by user callbacks.
+    callbackError = error;
   }
 
   public void onFailure(Throwable error) {

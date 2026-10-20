@@ -22,10 +22,12 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import okhttp3.Dispatcher;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -174,6 +176,68 @@ class InfluxDbQueryLifecycleTest {
     }
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void cancellationBeforeResponse(boolean failureConsumerThrows) throws InterruptedException {
+    CountDownLatch requestStarted = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    Dispatcher dispatcher = new Dispatcher();
+    OkHttpClient.Builder builder =
+        new OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .addInterceptor(
+                chain -> {
+                  requestStarted.countDown();
+                  await(release);
+                  throw new IOException("Canceled");
+                });
+    try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
+      if (failureConsumerThrows) {
+        client.query(
+            QUERY,
+            1,
+            (cancellable, result) -> {},
+            () -> {},
+            error -> {
+              throw new IllegalStateException("private callback text");
+            });
+      } else {
+        client.query(QUERY, 1, result -> {});
+      }
+      try {
+        assertThat(requestStarted.await(10, SECONDS)).isTrue();
+        assertThat(testing.spans()).isEmpty();
+        assertNoDuration();
+        dispatcher.cancelAll();
+      } finally {
+        release.countDown();
+      }
+      assertQuery(failureConsumerThrows ? IllegalStateException.class.getName() : null);
+    }
+  }
+
+  @Test
+  void callbackFailureAfterCancellation() throws InterruptedException {
+    CountDownLatch callback = new CountDownLatch(1);
+    Dispatcher dispatcher = new Dispatcher();
+    OkHttpClient.Builder builder =
+        new OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .addInterceptor(chain -> response(chain, SUCCESS));
+    try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
+      client.query(
+          QUERY,
+          result -> {
+            dispatcher.cancelAll();
+            callback.countDown();
+            throw new IllegalStateException("private callback text");
+          },
+          error -> {});
+      assertThat(callback.await(10, SECONDS)).isTrue();
+      assertQuery(IllegalStateException.class.getName());
+    }
+  }
+
   private static InfluxDB client(Interceptor interceptor) {
     return InfluxDBFactory.connect(
         "http://localhost:8086", new OkHttpClient.Builder().addInterceptor(interceptor));
@@ -231,18 +295,21 @@ class InfluxDbQueryLifecycleTest {
                                 point
                                     .hasCount(1)
                                     .hasAttributesSatisfying(
-                                        attributes ->
-                                            assertThat(attributes.asMap())
-                                                .containsOnlyKeys(
-                                                    Stream.of(
-                                                            DB_SYSTEM_NAME,
-                                                            DB_NAMESPACE,
-                                                            DB_QUERY_SUMMARY,
-                                                            SERVER_ADDRESS,
-                                                            SERVER_PORT,
-                                                            errorType == null ? null : ERROR_TYPE)
-                                                        .filter(Objects::nonNull)
-                                                        .toArray(AttributeKey<?>[]::new))))));
+                                        attributes -> {
+                                          assertThat(attributes.asMap())
+                                              .containsOnlyKeys(
+                                                  Stream.of(
+                                                          DB_SYSTEM_NAME,
+                                                          DB_NAMESPACE,
+                                                          DB_QUERY_SUMMARY,
+                                                          SERVER_ADDRESS,
+                                                          SERVER_PORT,
+                                                          errorType == null ? null : ERROR_TYPE)
+                                                      .filter(Objects::nonNull)
+                                                      .toArray(AttributeKey<?>[]::new));
+                                          assertThat(attributes.get(ERROR_TYPE))
+                                              .isEqualTo(errorType);
+                                        }))));
   }
 
   private static void assertNoDuration() {

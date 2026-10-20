@@ -107,13 +107,13 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Callback<?> callback,
         @Advice.Argument(0) Call<?> call,
-        @Advice.Argument(1) Throwable error,
-        @Advice.Thrown @Nullable Throwable callbackError) {
+        @Advice.Argument(1) Throwable error) {
       InfluxDbQueryState state =
           VirtualField.find(Callback.class, InfluxDbQueryState.class).get(callback);
       if (state != null) {
         VirtualField.find(Callback.class, InfluxDbQueryState.class).set(callback, null);
-        state.end(call.isCanceled() ? callbackError : error);
+        // Ignore the client's cancellation wrapper; wrapped user callbacks save their own errors.
+        state.end(call.isCanceled() ? null : error);
       }
     }
   }
