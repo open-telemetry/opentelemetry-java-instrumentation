@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
@@ -37,6 +38,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.config.ApplicationConfig;
@@ -45,6 +47,8 @@ import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
+import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.service.GenericException;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
@@ -89,11 +93,15 @@ public abstract class AbstractDubboTest {
   }
 
   ServiceConfig<HelloServiceImpl> configureServer() {
+    return configureServer(new HelloServiceImpl());
+  }
+
+  ServiceConfig<HelloServiceImpl> configureServer(HelloServiceImpl implementation) {
     RegistryConfig registerConfig = new RegistryConfig();
     registerConfig.setAddress("N/A");
     ServiceConfig<HelloServiceImpl> service = new ServiceConfig<>();
     service.setInterface(HelloService.class);
-    service.setRef(new HelloServiceImpl());
+    service.setRef(implementation);
     service.setRegistry(registerConfig);
     return service;
   }
@@ -472,6 +480,141 @@ public abstract class AbstractDubboTest {
                                           satisfies(
                                               SERVER_PORT, val -> val.isInstanceOf(Long.class))))));
     }
+  }
+
+  @Test
+  void testRpcExceptionFailure() throws ReflectiveOperationException {
+    String code = Integer.toString(RpcException.NETWORK_EXCEPTION);
+    assertFailure(
+        new RpcException(RpcException.NETWORK_EXCEPTION),
+        false,
+        GenericException.class.getName(),
+        code);
+  }
+
+  @Test
+  void testAsyncRpcExceptionFailure() throws ReflectiveOperationException {
+    String code = Integer.toString(RpcException.TIMEOUT_EXCEPTION);
+    assertFailure(
+        new RpcException(RpcException.TIMEOUT_EXCEPTION),
+        true,
+        GenericException.class.getName(),
+        code);
+  }
+
+  @Test
+  void testOrdinaryExceptionFailure() throws ReflectiveOperationException {
+    assertFailure(
+        new IllegalStateException("expected failure"),
+        false,
+        GenericException.class.getName(),
+        IllegalStateException.class.getName());
+  }
+
+  private void assertFailure(
+      RuntimeException failure,
+      boolean asynchronous,
+      String clientErrorType,
+      String serverErrorType)
+      throws ReflectiveOperationException {
+    int port = PortUtils.findOpenPort();
+    protocolConfig.setPort(port);
+
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-failure-provider"))
+        .service(
+            configureServer(
+                new HelloServiceImpl() {
+                  @Override
+                  public String hello(String hello) {
+                    throw failure;
+                  }
+                }))
+        .protocol(protocolConfig)
+        .start();
+
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+    ReferenceConfig<HelloService> referenceConfig = configureClient(port);
+    referenceConfig.setRetries(0);
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-test-failure-consumer"))
+        .reference(referenceConfig)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    GenericService genericService = convertReference(referenceConfig).get();
+    if (asynchronous) {
+      CompletableFuture<Object> response =
+          genericService.$invokeAsync(
+              "hello", new String[] {String.class.getName()}, new Object[] {"hello"});
+      assertThatThrownBy(response::join).isInstanceOf(CompletionException.class);
+    } else {
+      assertThatThrownBy(
+              () ->
+                  genericService.$invoke(
+                      "hello", new String[] {String.class.getName()}, new Object[] {"hello"}))
+          .isInstanceOf(RuntimeException.class);
+    }
+
+    assertFailureTelemetry(clientErrorType, serverErrorType, asynchronous);
+  }
+
+  private void assertFailureTelemetry(
+      String clientErrorType, String serverErrorType, boolean asynchronous) {
+    String clientMethod =
+        "org.apache.dubbo.rpc.service.GenericService/"
+            + (asynchronous ? "$invokeAsync" : "$invoke");
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(clientMethod)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(
+                                    ERROR_TYPE, emitPreviewRpcSemconv() ? clientErrorType : null)),
+                    span ->
+                        span.hasName(
+                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(
+                                    ERROR_TYPE,
+                                    emitPreviewRpcSemconv() ? serverErrorType : null))));
+
+    if (emitPreviewRpcSemconv()) {
+      assertPreviewErrorMetric(
+          "rpc.server.call.duration",
+          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
+          serverErrorType);
+      assertPreviewErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType);
+    }
+  }
+
+  private void assertPreviewErrorMetric(String metricName, String method, String errorType) {
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.apache-dubbo-2.7",
+            metric ->
+                metric
+                    .hasName(metricName)
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfying(
+                                        equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                        equalTo(RPC_METHOD, method),
+                                        equalTo(ERROR_TYPE, errorType)))));
   }
 
   @Test
