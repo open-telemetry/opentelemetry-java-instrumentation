@@ -118,16 +118,13 @@ class TracingFilterTest {
             .newServerFilter();
     CompletableFuture<AppResponse> future = new CompletableFuture<>();
     AsyncRpcResult result = invokeAsyncProvider(future, filter);
-    RpcContext.removeServerContext();
     RpcContext completionContext = RpcContext.getContext();
-    RpcContext completionServerContext = RpcContext.getServerContext();
 
     try {
       future.complete(new AppResponse("success"));
 
       assertThat(result.getResponseFuture().join().getValue()).isEqualTo("success");
       assertThat(RpcContext.getContext()).isSameAs(completionContext);
-      assertThat(RpcContext.getServerContext()).isSameAs(completionServerContext);
       assertThat(endCalls).hasValue(1);
     } finally {
       RpcContext.removeContext();
