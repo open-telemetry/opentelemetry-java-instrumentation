@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -686,7 +686,10 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"))))));
+                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
+                                                  equalTo(
+                                                      ERROR_TYPE,
+                                                      SofaRpcRuntimeException.class.getName()))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -706,6 +709,9 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
+                                                  equalTo(
+                                                      ERROR_TYPE,
+                                                      SofaRpcRuntimeException.class.getName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,

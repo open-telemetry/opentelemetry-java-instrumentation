@@ -26,6 +26,8 @@ dependencies {
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
+  testInstrumentation(project(":instrumentation:okhttp:okhttp-3.0:javaagent"))
 
   // The default suite uses the Spring AI 1.x OpenAI client API.
   latestDepTestLibrary("org.springframework.ai:spring-ai-model:1.+") // documented limitation

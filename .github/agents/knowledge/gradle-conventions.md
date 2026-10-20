@@ -468,3 +468,12 @@ tasks {
 Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
 for task selection and labels. Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
 Keep `metadataConfig` labels local.
+
+Corresponding agent and library variants can use matching task names without sharing configuration
+mechanisms or metadata labels. For builder-controlled library options, use test-only fixture flags
+and label the actual builder calls, as shown in the
+[library variant example](testing-experimental-flags.md#programmatically-configured-library-tests).
+For synthetic header setup in agent, plain-library, or library-autoconfigure fixtures, follow the
+canonical collection guidance rather than adding capture-only variants or label conditions. Inline
+complete labels for fixed profiles; the source-suite variant example above composes labels because it
+preserves inherited conditions.

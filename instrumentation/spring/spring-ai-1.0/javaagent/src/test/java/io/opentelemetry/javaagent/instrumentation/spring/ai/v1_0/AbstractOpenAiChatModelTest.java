@@ -96,7 +96,9 @@ abstract class AbstractOpenAiChatModelTest {
                             equalTo(GEN_AI_RESPONSE_ID, "chatcmpl-test"),
                             equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
                             equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
-                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)),
+                // http client span
+                span -> span.hasName("POST").hasKind(CLIENT).hasParent(trace.getSpan(1))));
     assertMetrics();
     assertMessageEvents(spanContext);
   }

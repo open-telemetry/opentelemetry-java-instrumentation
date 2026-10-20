@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -103,9 +104,13 @@ class CamelProcessMetricsTest {
 
   @ParameterizedTest
   @MethodSource("signalsAlreadyPresent")
-  void recordsOnlyAbsentMetric(String operation, String signal, String expectedMetric)
+  void recordsOnlyAbsentMetric(
+      String operation, String signal, String expectedMetric, boolean faulted)
       throws ReflectiveOperationException {
     Exchange exchange = new DefaultExchange(new DefaultCamelContext());
+    if (faulted) {
+      exchange.getOut().setFault(true);
+    }
     Endpoint endpoint = mock(Endpoint.class);
     when(endpoint.getEndpointUri()).thenReturn("jms:queue:testQueue");
     // Javaagent helpers are loaded with shaded API types, so drive this helper through reflection.
@@ -159,7 +164,19 @@ class CamelProcessMetricsTest {
         processMetricsClass, "end", new Class<?>[] {Route.class, Exchange.class}, route, exchange);
 
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, expectedMetric, metrics -> metrics.hasSize(1));
+        INSTRUMENTATION_NAME,
+        expectedMetric,
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(
+                    metric ->
+                        assertThat(metric.getData().getPoints())
+                            .singleElement()
+                            .satisfies(
+                                point ->
+                                    assertThat(point.getAttributes().get(ERROR_TYPE))
+                                        .isEqualTo(faulted ? "_OTHER" : null))));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))
@@ -173,12 +190,26 @@ class CamelProcessMetricsTest {
             "consumed messages already present",
             "RECEIVE",
             "CONSUMED_MESSAGES",
-            "messaging.process.duration"),
+            "messaging.process.duration",
+            false),
         argumentSet(
             "process duration already present",
             "PROCESS",
             "PROCESS_DURATION",
-            "messaging.client.consumed.messages"));
+            "messaging.client.consumed.messages",
+            false),
+        argumentSet(
+            "consumed messages already present for faulted exchange",
+            "RECEIVE",
+            "CONSUMED_MESSAGES",
+            "messaging.process.duration",
+            true),
+        argumentSet(
+            "process duration already present for faulted exchange",
+            "PROCESS",
+            "PROCESS_DURATION",
+            "messaging.client.consumed.messages",
+            true));
   }
 
   private static Class<?> shadedApiClass(String name) throws ReflectiveOperationException {

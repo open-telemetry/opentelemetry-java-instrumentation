@@ -88,9 +88,10 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
   private static AmazonSQSAsync sqsClient;
 
   protected boolean receiveTelemetryEnabled() {
-    return !(testing() instanceof AgentInstrumentationExtension)
-        || Boolean.getBoolean(
-            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+    return testing() instanceof AgentInstrumentationExtension
+        ? Boolean.getBoolean(
+            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled")
+        : Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
   }
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(

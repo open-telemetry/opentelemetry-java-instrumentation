@@ -10,7 +10,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class SqsEventAttributesGetter extends SqsAttributesGetter<SQSEvent> {
+final class SqsEventAttributesGetter extends SqsAttributesGetter<SQSEvent, Void> {
 
   @Nullable
   @Override

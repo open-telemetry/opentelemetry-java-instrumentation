@@ -153,6 +153,6 @@ jobs:
       - analyze-java-none
       - analyze-kotlin-manual
     if: always() && github.event_name == 'schedule'
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@544059e5691c00818aa83bd1117c4e0b8b4a6e21 # v0.21.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@f09a36e1fa2576787fe05cbc1313ef6066918c78 # v0.23.0
     with:
       success: ${{ needs.analyze-actions.result == 'success' && needs.analyze-java-none.result == 'success' && needs.analyze-kotlin-manual.result == 'success' }}

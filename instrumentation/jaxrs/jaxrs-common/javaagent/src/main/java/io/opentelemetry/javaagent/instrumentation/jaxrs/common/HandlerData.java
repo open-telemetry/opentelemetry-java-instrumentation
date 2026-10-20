@@ -9,6 +9,8 @@ import io.opentelemetry.javaagent.bootstrap.jaxrs.ClassHierarchyIterable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -97,7 +99,7 @@ public abstract class HandlerData {
   private static Method findMatchingMethod(Method baseMethod, Method[] methods) {
     nextMethod:
     for (Method method : methods) {
-      if (!baseMethod.getReturnType().equals(method.getReturnType())) {
+      if (!hasMatchingReturnType(baseMethod, method)) {
         continue;
       }
 
@@ -118,6 +120,26 @@ public abstract class HandlerData {
       return method;
     }
     return null;
+  }
+
+  private static boolean hasMatchingReturnType(Method baseMethod, Method candidate) {
+    if (baseMethod.getReturnType().equals(candidate.getReturnType())) {
+      return true;
+    }
+    // Allow covariant return types: baseMethod is the overriding method, so its return type
+    // may be a subtype of candidate's return type. This requires an accessible instance
+    // method that can be overridden.
+    int baseModifiers = baseMethod.getModifiers();
+    int candidateModifiers = candidate.getModifiers();
+    return !Modifier.isStatic(baseModifiers)
+        && !Modifier.isPrivate(baseModifiers)
+        && !Modifier.isStatic(candidateModifiers)
+        && !Modifier.isPrivate(candidateModifiers)
+        && candidate.getReturnType().isAssignableFrom(baseMethod.getReturnType())
+        && ((candidateModifiers & (Modifier.PUBLIC | Modifier.PROTECTED)) != 0
+            || Objects.equals(
+                baseMethod.getDeclaringClass().getPackage(),
+                candidate.getDeclaringClass().getPackage()));
   }
 
   private static String buildSpanName(@Nullable String classPath, @Nullable String methodPath) {

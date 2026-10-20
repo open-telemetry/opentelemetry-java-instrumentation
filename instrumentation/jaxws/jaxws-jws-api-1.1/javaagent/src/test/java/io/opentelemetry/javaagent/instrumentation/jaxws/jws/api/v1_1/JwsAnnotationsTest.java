@@ -62,6 +62,23 @@ class JwsAnnotationsTest {
   }
 
   @Test
+  void covariantInterfaceMethod() {
+    new WebServiceFromInterface().covariantMethod();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("WebServiceFromInterface.covariantMethod")
+                        .hasNoParent()
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                WebServiceFromInterface.class.getName() + ".covariantMethod"))));
+  }
+
+  @Test
   @DisplayName("WebService via proxy must have span attributes from actual implementation")
   void proxy() {
     WebServiceDefinitionInterface proxy =
