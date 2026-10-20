@@ -64,9 +64,10 @@ class JedisInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {
-        requestContext.detachAndEnd();
+        requestContext.detachAndEnd(throwable);
       }
     }
   }

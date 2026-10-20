@@ -477,6 +477,55 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void wrongTypeCommandError() {
+    jedis.set("aggregate", "value");
+    testing.clearData();
+
+    assertThatThrownBy(() -> jedis.llen("aggregate"))
+        .isInstanceOf(JedisDataException.class)
+        .hasMessageStartingWith("WRONGTYPE");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("LLEN " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "LLEN aggregate"),
+                            equalTo(DB_OPERATION_NAME, "LLEN"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(ERROR_TYPE, "WRONGTYPE"))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jedis-4.0",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        ERROR_TYPE);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> point.hasAttribute(ERROR_TYPE, "WRONGTYPE"))));
+  }
+
+  @Test
   void configuredDatabaseIndex() {
     try (Jedis databaseOne =
         new Jedis(

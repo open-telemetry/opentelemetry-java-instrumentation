@@ -109,8 +109,8 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        instrumenter().end(
-            context, request, JedisBatchState.getErrorType(context, throwable), throwable);
+        instrumenter()
+            .end(context, request, JedisBatchState.getErrorType(context, throwable), throwable);
       }
     }
 

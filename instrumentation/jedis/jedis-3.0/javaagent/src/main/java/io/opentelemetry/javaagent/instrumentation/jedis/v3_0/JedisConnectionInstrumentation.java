@@ -111,7 +111,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       public void end(@Nullable Throwable throwable) {
         scope.close();
         JedisRequestContext.endIfNotAttached(
-            instrumenter(), context, request, JedisRedisErrorType.getErrorType(throwable), throwable);
+            instrumenter(),
+            context,
+            request,
+            JedisRedisErrorType.getErrorType(throwable),
+            throwable);
       }
     }
 

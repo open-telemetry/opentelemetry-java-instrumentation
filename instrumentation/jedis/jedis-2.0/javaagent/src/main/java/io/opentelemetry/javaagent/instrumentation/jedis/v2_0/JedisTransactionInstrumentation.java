@@ -58,7 +58,8 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
           scope.close();
         }
         if (context != null && request != null) {
-          instrumenter()          .end(context, request, JedisBatchState.getErrorType(context, throwable), throwable);
+          instrumenter()
+              .end(context, request, JedisBatchState.getErrorType(context, throwable), throwable);
         }
       }
     }

@@ -165,7 +165,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
           clusterCommandContext.capture(context, request);
         } else if (context != null) {
           JedisRequestContext.endIfNotAttached(
-              instrumenter(), context, request, JedisRedisErrorType.getErrorType(throwable), throwable);
+              instrumenter(),
+              context,
+              request,
+              JedisRedisErrorType.getErrorType(throwable),
+              throwable);
         }
       }
     }

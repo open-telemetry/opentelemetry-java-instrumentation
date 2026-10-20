@@ -32,10 +32,15 @@ public class JedisRequestContext<T> {
     return requestContext;
   }
 
-  public void detachAndEnd() {
+  public void detachAndEnd(@Nullable Throwable terminalThrowable) {
     contextThreadLocal.remove();
     if (request != null && instrumenter != null && context != null) {
-      endSpan(instrumenter, context, request, errorType, throwable);
+      Throwable error = terminalThrowable != null ? terminalThrowable : throwable;
+      String response =
+          terminalThrowable != null
+              ? JedisRedisErrorType.getErrorType(terminalThrowable)
+              : errorType;
+      endSpan(instrumenter, context, request, response, error);
     }
   }
 

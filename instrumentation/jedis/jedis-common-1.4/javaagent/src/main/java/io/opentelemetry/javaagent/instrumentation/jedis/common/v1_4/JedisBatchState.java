@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 /** Observes raw replies without building or consuming application-owned Responses. */
 public final class JedisBatchState {
   private static final ContextKey<JedisBatchState> KEY =
-      ContextKey.named("opentelemetry-jedis-batch-response");
+      ContextKey.named("opentelemetry-jedis-batch-state");
 
   @Nullable private final Object connection;
   private final int commandCount;

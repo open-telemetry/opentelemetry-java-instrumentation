@@ -120,9 +120,7 @@ class JedisSingletonsTest {
     assertThat(
             new JedisDbAttributesGetter()
                 .getErrorType(
-                    JedisRequest.create(connection, Protocol.Command.PING),
-                    errorType,
-                    null))
+                    JedisRequest.create(connection, Protocol.Command.PING), errorType, null))
         .isEqualTo("WRONGTYPE");
     assertThat(JedisRedisErrorType.getErrorType(new JedisDataException("UNKNOWNCODE details")))
         .isEqualTo(JedisDataException.class.getName());
