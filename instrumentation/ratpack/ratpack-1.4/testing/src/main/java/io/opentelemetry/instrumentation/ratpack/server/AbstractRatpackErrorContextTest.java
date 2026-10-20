@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server;
+package io.opentelemetry.instrumentation.ratpack.server;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -32,7 +31,6 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import ratpack.error.ServerErrorHandler;
@@ -44,18 +42,17 @@ import ratpack.handling.Context;
 import ratpack.http.client.HttpClient;
 import ratpack.server.RatpackServer;
 
-class RatpackErrorContextTest {
-
-  @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+public abstract class AbstractRatpackErrorContextTest {
 
   private static final boolean CONTROLLER_TELEMETRY_ENABLED =
       Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   private RatpackServer server;
 
+  protected abstract InstrumentationExtension testing();
+
   @AfterEach
-  void stopServer() throws Exception {
+  protected void stopServer() throws Exception {
     if (server != null) {
       server.stop();
     }
@@ -63,7 +60,7 @@ class RatpackErrorContextTest {
 
   @ParameterizedTest
   @EnumSource(ErrorPath.class)
-  void errorsUseRequestContext(ErrorPath errorPath) throws Exception {
+  protected void errorsUseRequestContext(ErrorPath errorPath) throws Exception {
     CountDownLatch pendingRequests = new CountDownLatch(2);
     ConcurrentHashMap<String, Downstream<String>> pending = new ConcurrentHashMap<>();
     server =
@@ -97,8 +94,7 @@ class RatpackErrorContextTest {
                                     Blocking.get(() -> fail(id)).then(ctx::render);
                                     break;
                                   case ASYNC:
-                                    suspend(id, pending, pendingRequests)
-                                        .then(RatpackErrorContextTest::fail);
+                                    suspend(id, pending, pendingRequests).then(this::fail);
                                     break;
                                   case FORK:
                                     fork(ctx, id, pending, pendingRequests);
@@ -123,17 +119,18 @@ class RatpackErrorContextTest {
     assertThat(secondResponse.status().code()).isEqualTo(500);
     assertThat(secondResponse.contentUtf8()).isEqualTo("second");
 
-    testing.waitAndAssertSortedTraces(
-        Comparator.comparing(trace -> trace.get(0).getAttributes().get(URL_PATH)),
-        trace -> assertRequestTrace(trace, "first"),
-        trace -> assertRequestTrace(trace, "second"));
+    testing()
+        .waitAndAssertSortedTraces(
+            Comparator.comparing(trace -> trace.get(0).getAttributes().get(URL_PATH)),
+            trace -> assertRequestTrace(trace, "first"),
+            trace -> assertRequestTrace(trace, "second"));
   }
 
   @Test
   @EnabledIfSystemProperty(
       named = "otel.instrumentation.common.controller-telemetry.enabled",
       matches = "false")
-  void outboundRequestUsesApplicationSpan() throws Exception {
+  protected void outboundRequestUsesApplicationSpan() throws Exception {
     server =
         RatpackServer.start(
             spec ->
@@ -147,18 +144,20 @@ class RatpackErrorContextTest {
                           chain.get(
                               "outbound",
                               ctx ->
-                                  testing.runWithSpan(
-                                      "application",
-                                      () ->
-                                          ctx.get(HttpClient.class)
-                                              .get(
-                                                  new URI(
-                                                      "http://localhost:"
-                                                          + ctx.getServerConfig().getPort()
-                                                          + "/downstream"))
-                                              .then(
-                                                  response ->
-                                                      ctx.render(response.getBody().getText()))));
+                                  testing()
+                                      .runWithSpan(
+                                          "application",
+                                          () ->
+                                              ctx.get(HttpClient.class)
+                                                  .get(
+                                                      new URI(
+                                                          "http://localhost:"
+                                                              + ctx.getServerConfig().getPort()
+                                                              + "/downstream"))
+                                                  .then(
+                                                      response ->
+                                                          ctx.render(
+                                                              response.getBody().getText()))));
                           chain.get("downstream", ctx -> ctx.render("success"));
                         }));
 
@@ -170,16 +169,17 @@ class RatpackErrorContextTest {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("success");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /outbound").hasKind(SpanKind.SERVER).hasNoParent(),
-                span -> span.hasName("application").hasParent(trace.getSpan(0)),
-                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("GET /downstream")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(2))));
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("GET /outbound").hasKind(SpanKind.SERVER).hasNoParent(),
+                    span -> span.hasName("application").hasParent(trace.getSpan(0)),
+                    span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("GET /downstream")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(2))));
   }
 
   private Promise<String> suspend(
@@ -211,17 +211,17 @@ class RatpackErrorContextTest {
                           // Context retains the request registry, not this fork's.
                           assertThat(execution.maybeGet(io.opentelemetry.context.Context.class))
                               .isEmpty();
-                          suspend(id, pending, pendingRequests).then(RatpackErrorContextTest::fail);
+                          suspend(id, pending, pendingRequests).then(this::fail);
                         }))
         .then(ignored -> {});
   }
 
-  private static String fail(String id) {
-    testing.runWithSpan("callback-" + id, () -> {});
+  private String fail(String id) {
+    testing().runWithSpan("callback-" + id, () -> {});
     throw new IllegalStateException(id);
   }
 
-  private static void assertRequestTrace(TraceAssert trace, String id) {
+  private void assertRequestTrace(TraceAssert trace, String id) {
     List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
     assertions.add(
         span -> {
@@ -256,7 +256,7 @@ class RatpackErrorContextTest {
     trace.hasSpansSatisfyingExactly(assertions);
   }
 
-  private enum ErrorPath {
+  protected enum ErrorPath {
     SYNC,
     BLOCKING,
     ASYNC,

@@ -59,10 +59,6 @@ listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
   }
 }
 
-testing.suites.withType<JvmTestSuite>().configureEach {
-  sources.java.srcDir("src/errorContextTest/java")
-}
-
 val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
   dependencies {
     implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
@@ -99,21 +95,38 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val controllerTelemetryDisabledTests =
-    testing.suites.withType<JvmTestSuite>().map { suite ->
-      register<Test>("${suite.name}ControllerTelemetryDisabled") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-        filter {
-          includeTestsMatching("*RatpackErrorContextTest")
-        }
-        systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
-        systemProperties.remove("metadataConfig")
+  val testSuite = testing.suites.named<JvmTestSuite>("test").get()
+  val testControllerTelemetryDisabled = register<Test>("testControllerTelemetryDisabled") {
+    testClassesDirs = testSuite.sources.output.classesDirs
+    classpath = testSuite.sources.runtimeClasspath
+    filter {
+      includeTestsMatching("io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server.RatpackErrorContextTest")
+    }
+    systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
+    systemProperties.remove("metadataConfig")
+    systemProperty("ratpack14Test", true)
+  }
+  val version17TestControllerTelemetryDisabled =
+    register<Test>("version17TestControllerTelemetryDisabled") {
+      testClassesDirs = version17Test.get().sources.output.classesDirs
+      classpath = version17Test.get().sources.runtimeClasspath
+      filter {
+        includeTestsMatching(
+          "io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server.RatpackErrorContextTest"
+        )
       }
+      systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
+      systemProperties.remove("metadataConfig")
     }
 
   check {
-    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv, controllerTelemetryDisabledTests)
+    dependsOn(
+      testing.suites,
+      testPreviewSemconv,
+      version17TestPreviewSemconv,
+      testControllerTelemetryDisabled,
+      version17TestControllerTelemetryDisabled
+    )
   }
 
   if (otelProps.denyUnsafe) {
