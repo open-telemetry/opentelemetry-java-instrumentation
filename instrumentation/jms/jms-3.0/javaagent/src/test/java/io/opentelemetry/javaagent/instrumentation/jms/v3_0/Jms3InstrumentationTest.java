@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.api.trace.StatusCode.ERROR;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
@@ -23,9 +24,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.CompletionListener;
@@ -59,8 +60,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 class Jms3InstrumentationTest extends AbstractJms3Test {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-3.0";
-  private static final ContextKey<String> ASYNC_SEND_CONTEXT_KEY =
-      ContextKey.named("jms-async-send-test");
 
   @Test
   void asyncSendSuccessRestoresCallerContext() throws Exception {
@@ -68,12 +67,12 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer);
     CountDownLatch completed = new CountDownLatch(1);
-    AtomicReference<String> callbackContext = new AtomicReference<>();
+    AtomicReference<SpanContext> callbackSpanContext = new AtomicReference<>();
     CompletionListener listener =
         new CompletionListener() {
           @Override
           public void onCompletion(Message message) {
-            callbackContext.set(Context.current().get(ASYNC_SEND_CONTEXT_KEY));
+            callbackSpanContext.set(Span.current().getSpanContext());
             completed.countDown();
           }
 
@@ -83,18 +82,22 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
           }
         };
 
-    Context original = Context.current();
-    Context callerContext = original.with(ASYNC_SEND_CONTEXT_KEY, "caller");
-    try (Scope ignored = callerContext.makeCurrent()) {
-      producer.send(session.createTextMessage("async message"), listener);
-      assertThat(Context.current().get(ASYNC_SEND_CONTEXT_KEY)).isEqualTo("caller");
-    }
-    assertThat(Context.current()).isSameAs(original);
+    Context originalContext = Context.current();
+    SpanContext parentSpanContext =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              SpanContext spanContext = Span.current().getSpanContext();
+              producer.send(session.createTextMessage("async message"), listener);
+              assertThat(Span.current().getSpanContext()).isEqualTo(spanContext);
+              return spanContext;
+            });
+    assertThat(Context.current()).isSameAs(originalContext);
     assertThat(completed.await(10, SECONDS)).isTrue();
-    assertThat(callbackContext.get()).isEqualTo("caller");
+    assertThat(callbackSpanContext.get()).isEqualTo(parentSpanContext);
     String destinationName = destination.getQueueName();
     destination.delete();
-    assertSendTelemetry(null, destinationName, "send");
+    assertSendTelemetry(null, destinationName, "send", true);
   }
 
   @Test
@@ -122,7 +125,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
       sendFailure = exception;
     }
     assertThat(sendFailure).isInstanceOf(JMSException.class);
-    assertSendTelemetry(sendFailure, null, "send");
+    assertSendTelemetry(sendFailure, null, "send", false);
   }
 
   @Test
@@ -167,9 +170,25 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
   }
 
   private static void assertSendTelemetry(
-      Exception failure, String destinationName, String spanName) {
+      Exception failure, String destinationName, String spanName, boolean hasParentSpan) {
     testing.waitAndAssertTraces(
-        trace ->
+        trace -> {
+          if (hasParentSpan) {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName)
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfying(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(
+                                ERROR_TYPE,
+                                failure == null ? null : failure.getClass().getName())));
+          } else {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasName(spanName)
@@ -185,7 +204,9 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                   if (failure != null) {
                     span.hasStatusSatisfying(status -> status.hasCode(ERROR));
                   }
-                }));
+                });
+          }
+        });
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
