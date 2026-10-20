@@ -13,7 +13,7 @@ muzzle {
 
 dependencies {
   library("org.redisson:redisson:3.17.0")
-  latestDepTestLibrary("org.redisson:redisson:3.+")
+  latestDepTestLibrary("org.redisson:redisson:3.+") // documented limitation: Redisson 4.x is not covered by this test
 
   implementation(project(":instrumentation:redisson:redisson-common-3.0:javaagent"))
 
