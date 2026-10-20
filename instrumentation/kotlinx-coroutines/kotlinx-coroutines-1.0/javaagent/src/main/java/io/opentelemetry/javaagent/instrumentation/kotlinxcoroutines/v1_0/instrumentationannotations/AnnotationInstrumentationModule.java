@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   public AnnotationInstrumentationModule() {
-    super("kotlinx-coroutines-suspend-annotations");
+    super("kotlinx-coroutines-annotations");
   }
 
   @Override
