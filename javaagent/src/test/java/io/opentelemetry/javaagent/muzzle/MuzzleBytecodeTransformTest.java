@@ -38,11 +38,17 @@ class MuzzleBytecodeTransformTest {
             .invoke(null, agentClassLoader);
     Object inspector = constructor.newInstance(locator);
     Method inspect = inspectorClass.getMethod("inspect", instrumentationModuleClass);
+    Class<?> safeServiceLoaderClass =
+        agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.SafeServiceLoader");
+    Method safeServiceLoaderLoad =
+        safeServiceLoaderClass.getMethod("load", Class.class, ClassLoader.class);
     Set<String> mixedModules = new TreeSet<>();
     Set<String> allInlineModules = new TreeSet<>();
     int moduleCount = 0;
     // Enumerate providers directly, including disabled modules and absent target libraries.
-    for (Object module : ServiceLoader.load(instrumentationModuleClass, agentClassLoader)) {
+    List<?> instrumentationModules =
+        (List<?>) safeServiceLoaderLoad.invoke(null, instrumentationModuleClass, agentClassLoader);
+    for (Object module : instrumentationModules) {
       moduleCount++;
       String mode = inspect.invoke(inspector, module).toString();
       if (mode.equals("MIXED")) {
