@@ -50,3 +50,11 @@ public class OpenAIClientConfiguration {
   }
 }
 ```
+
+### Error classification
+
+Chat and embeddings spans and operation-duration metrics report these structured service codes as
+`error.type`: `content_policy_violation`, `context_length_exceeded`, `insufficient_quota`,
+`invalid_api_key`, `invalid_value`, `model_not_found`, `rate_limit_exceeded`, and `server_error`.
+Other failures use the exception class name, including transport errors and service errors with
+missing, blank, malformed, or unrecognized codes. Error messages are not used as classifications.

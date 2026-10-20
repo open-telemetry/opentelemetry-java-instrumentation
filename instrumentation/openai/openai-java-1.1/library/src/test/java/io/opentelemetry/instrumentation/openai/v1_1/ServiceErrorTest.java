@@ -1,0 +1,263 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.openai.v1_1;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_MODEL;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
+import com.openai.core.http.AsyncStreamResponse;
+import com.openai.core.http.StreamResponse;
+import com.openai.errors.BadRequestException;
+import com.openai.errors.RateLimitException;
+import com.openai.errors.SseException;
+import com.openai.models.chat.completions.ChatCompletionChunk;
+import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import com.openai.models.embeddings.EmbeddingCreateParams;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+class ServiceErrorTest {
+
+  private static final String MODEL = "test-model";
+  private static final String INSTRUMENTATION_NAME = OpenAITelemetryBuilder.INSTRUMENTATION_NAME;
+
+  @RegisterExtension
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final WireMockExtension server =
+      WireMockExtension.newInstance().options(options().dynamicPort()).build();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private enum Operation {
+    CHAT("chat", "/chat/completions"),
+    CHAT_STREAM("chat", "/chat/completions"),
+    EMBEDDINGS("embeddings", "/embeddings");
+
+    final String name;
+    final String path;
+
+    Operation(String name, String path) {
+      this.name = name;
+      this.path = path;
+    }
+  }
+
+  private static Stream<Arguments> serviceErrors() {
+    List<Arguments> arguments = new ArrayList<>();
+    for (Operation operation : Operation.values()) {
+      for (boolean async : new boolean[] {false, true}) {
+        arguments.add(
+            Arguments.of(
+                operation,
+                async,
+                400,
+                error("\"context_length_exceeded\""),
+                "context_length_exceeded"));
+        arguments.add(
+            Arguments.of(
+                operation, async, 429, error("\"insufficient_quota\""), "insufficient_quota"));
+        for (String code :
+            new String[] {"null", "\"\"", "\"   \"", "42", "{}", "\"unknown_code\""}) {
+          arguments.add(
+              Arguments.of(
+                  operation, async, 400, error(code), BadRequestException.class.getName()));
+        }
+        arguments.add(
+            Arguments.of(
+                operation,
+                async,
+                400,
+                "{\"error\":{\"message\":\"private message\",\"type\":\"invalid_request_error\"}}",
+                BadRequestException.class.getName()));
+        arguments.add(
+            Arguments.of(
+                operation,
+                async,
+                400,
+                "{\"error\":\"unknown shape\"}",
+                BadRequestException.class.getName()));
+      }
+    }
+    return arguments.stream();
+  }
+
+  private static String error(String code) {
+    return "{\"error\":{\"code\":"
+        + code
+        + ",\"message\":\"private message\",\"type\":\"invalid_request_error\",\"param\":null}}";
+  }
+
+  @ParameterizedTest
+  @MethodSource("serviceErrors")
+  void serviceError(
+      Operation operation, boolean async, int status, String body, String expectedErrorType) {
+    server.stubFor(
+        post(urlEqualTo(operation.path))
+            .willReturn(
+                aResponse()
+                    .withStatus(status)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(body)));
+
+    Throwable thrown = catchThrowable(() -> execute(operation, async));
+    if (thrown instanceof CompletionException) {
+      thrown = thrown.getCause();
+    }
+    assertThat(thrown)
+        .isInstanceOf(status == 429 ? RateLimitException.class : BadRequestException.class);
+    assertTelemetry(operation, expectedErrorType, false);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"\"rate_limit_exceeded\"", "null", "42"})
+  void asyncStreamTerminalError(String code) {
+    server.stubFor(
+        post(urlEqualTo("/chat/completions"))
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "text/event-stream")
+                    .withBody(
+                        "data: {\"id\":\"chat-1\",\"object\":\"chat.completion.chunk\","
+                            + "\"created\":0,\"model\":\"test-model\",\"choices\":[]}\n\n"
+                            + "data: "
+                            + error(code)
+                            + "\n\n")));
+
+    Throwable thrown = catchThrowable(() -> execute(Operation.CHAT_STREAM, true));
+    assertThat(thrown)
+        .isInstanceOf(CompletionException.class)
+        .hasCauseInstanceOf(SseException.class);
+    assertTelemetry(
+        Operation.CHAT_STREAM,
+        code.equals("\"rate_limit_exceeded\"")
+            ? "rate_limit_exceeded"
+            : SseException.class.getName(),
+        true);
+  }
+
+  private static void execute(Operation operation, boolean async) {
+    OpenAITelemetry telemetry = OpenAITelemetry.builder(testing.getOpenTelemetry()).build();
+    ChatCompletionCreateParams chat =
+        ChatCompletionCreateParams.builder().model(MODEL).addUserMessage("hello").build();
+    EmbeddingCreateParams embeddings =
+        EmbeddingCreateParams.builder().model(MODEL).input("hello").build();
+    if (async) {
+      OpenAIClientAsync client =
+          telemetry.wrap(
+              OpenAIOkHttpClientAsync.builder()
+                  .baseUrl(server.baseUrl())
+                  .apiKey("unused")
+                  .maxRetries(0)
+                  .build());
+      cleanup.deferCleanup(client::close);
+      switch (operation) {
+        case CHAT:
+          client.chat().completions().create(chat).join();
+          break;
+        case EMBEDDINGS:
+          client.embeddings().create(embeddings).join();
+          break;
+        case CHAT_STREAM:
+          AsyncStreamResponse<ChatCompletionChunk> stream =
+              client.chat().completions().createStreaming(chat);
+          cleanup.deferCleanup(stream::close);
+          stream.subscribe(chunk -> {});
+          stream.onCompleteFuture().join();
+          break;
+      }
+    } else {
+      OpenAIClient client =
+          telemetry.wrap(
+              OpenAIOkHttpClient.builder()
+                  .baseUrl(server.baseUrl())
+                  .apiKey("unused")
+                  .maxRetries(0)
+                  .build());
+      cleanup.deferCleanup(client::close);
+      switch (operation) {
+        case CHAT:
+          client.chat().completions().create(chat);
+          break;
+        case EMBEDDINGS:
+          client.embeddings().create(embeddings);
+          break;
+        case CHAT_STREAM:
+          try (StreamResponse<ChatCompletionChunk> stream =
+              client.chat().completions().createStreaming(chat)) {
+            stream.stream().forEach(chunk -> {});
+          }
+          break;
+      }
+    }
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void assertTelemetry(
+      Operation operation, String expectedErrorType, boolean hasResponse) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(operation.name + " " + MODEL)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
+                        .hasAttributesSatisfying(
+                            equalTo(ERROR_TYPE, expectedErrorType),
+                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
+                            equalTo(GEN_AI_OPERATION_NAME, operation.name),
+                            equalTo(GEN_AI_REQUEST_MODEL, MODEL))));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("gen_ai.client.operation.duration")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(ERROR_TYPE, expectedErrorType),
+                                        equalTo(GEN_AI_PROVIDER_NAME, "openai"),
+                                        equalTo(GEN_AI_OPERATION_NAME, operation.name),
+                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                        equalTo(
+                                            GEN_AI_RESPONSE_MODEL, hasResponse ? MODEL : null)))));
+  }
+}
