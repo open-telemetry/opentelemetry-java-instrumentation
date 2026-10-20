@@ -12,9 +12,10 @@ The changelog is generated from merged pull requests. Do not add a changelog ent
 changes. Add an entry only for a deprecation or breaking change, where the hand-written entry is
 useful for double-checking the generated changelog.
 
-Keep entries short and focused on what changed for users. Include migration guidance only when the
-required action is not obvious from the change description. Omit generic advice such as telling users
-to handle the new behavior.
+Keep entries as short as possible without losing the user-visible change or necessary migration
+information. Omit repetition, obvious consequences, and instructions that merely restate the change.
+Include migration guidance only when users need information they cannot infer from the change
+description.
 
 ## Breaking Changes
 
