@@ -141,16 +141,12 @@ currently both use the prefix before the first hyphen in that name, regardless o
 | `spring-webmvc-3.1` | `spring`  | `spring` |
 
 Namespace and group are documentation groupings, not javaagent enablement selectors.
-The names registered by a javaagent `InstrumentationModule` determine its selectors. In v3 preview,
-the primary normally matches the full module-directory name, followed by a versionless secondary:
+The names registered by a javaagent `InstrumentationModule` determine its selectors. Use the full
+module-directory name as the primary, followed by a versionless secondary:
 
 ```java
 public SpringWebMvcInstrumentationModule() {
-  super(
-      AgentCommonConfig.get().isV3Preview() ? "spring-webmvc-3.1" : "spring-webmvc",
-      AgentCommonConfig.get().isV3Preview()
-          ? new String[] {"spring-webmvc"}
-          : new String[] {"spring-webmvc-3.1"});
+  super("spring-webmvc-3.1", new String[] {"spring-webmvc"});
 }
 ```
 
