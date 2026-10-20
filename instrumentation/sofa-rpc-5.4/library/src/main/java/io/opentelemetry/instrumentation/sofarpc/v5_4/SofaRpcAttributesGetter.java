@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import com.alipay.sofa.rpc.core.exception.RpcErrorType;
 import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
@@ -57,26 +56,12 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
     }
 
     int errorType = ((SofaRpcException) error).getErrorType();
-    switch (errorType) {
-      case RpcErrorType.SERVER_BUSY:
-      case RpcErrorType.SERVER_CLOSED:
-      case RpcErrorType.SERVER_NOT_FOUND_INVOKER:
-      case RpcErrorType.SERVER_SERIALIZE:
-      case RpcErrorType.SERVER_DESERIALIZE:
-      case RpcErrorType.SERVER_NETWORK:
-      case RpcErrorType.SERVER_BIZ:
-      case RpcErrorType.SERVER_FILTER:
-      case RpcErrorType.SERVER_UNDECLARED_ERROR:
-      case RpcErrorType.CLIENT_TIMEOUT:
-      case RpcErrorType.CLIENT_ROUTER:
-      case RpcErrorType.CLIENT_SERIALIZE:
-      case RpcErrorType.CLIENT_DESERIALIZE:
-      case RpcErrorType.CLIENT_NETWORK:
-      case RpcErrorType.CLIENT_FILTER:
-      case RpcErrorType.CLIENT_UNDECLARED_ERROR:
-        return Integer.toString(errorType);
-      default:
-        return null;
+    // SOFA RPC defines server error categories in 100-199 and client error categories in 200-299.
+    // Accepting only these ranges bounds cardinality while accommodating additional categories.
+    // https://github.com/sofastack/sofa-rpc/blob/v5.14.3/core/exception/src/main/java/com/alipay/sofa/rpc/core/exception/RpcErrorType.java
+    if (errorType >= 100 && errorType <= 299) {
+      return Integer.toString(errorType);
     }
+    return null;
   }
 }

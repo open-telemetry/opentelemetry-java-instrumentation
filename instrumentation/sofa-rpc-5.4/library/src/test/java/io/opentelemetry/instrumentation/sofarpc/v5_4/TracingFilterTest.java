@@ -74,6 +74,30 @@ class TracingFilterTest {
         Arguments.of(true, RpcErrorType.CLIENT_UNDECLARED_ERROR, "299"));
   }
 
+  private static Stream<Arguments> errorTypeRangeCases() {
+    return Stream.of(
+        Arguments.of(false, 100),
+        Arguments.of(true, 100),
+        Arguments.of(false, 199),
+        Arguments.of(true, 199),
+        Arguments.of(false, 200),
+        Arguments.of(true, 200),
+        Arguments.of(false, 260),
+        Arguments.of(true, 260),
+        Arguments.of(false, 299),
+        Arguments.of(true, 299));
+  }
+
+  private static Stream<Arguments> outOfRangeErrorTypes() {
+    return Stream.of(
+        Arguments.of(false, 99),
+        Arguments.of(true, 99),
+        Arguments.of(false, 300),
+        Arguments.of(true, 300),
+        Arguments.of(false, 999),
+        Arguments.of(true, 999));
+  }
+
   @ParameterizedTest
   @MethodSource("errorCategories")
   void thrownRpcException(boolean client, int category, String expectedErrorType) {
@@ -84,6 +108,17 @@ class TracingFilterTest {
     assertThat(Context.current()).isSameAs(Context.root());
 
     assertTelemetry(client, expectedErrorType, true);
+  }
+
+  @ParameterizedTest
+  @MethodSource("errorTypeRangeCases")
+  void errorTypeRangeBoundaries(boolean client, int errorType) {
+    SofaRpcException exception = new SofaRpcException(errorType, "request-specific message");
+    when(invoker.invoke(request)).thenThrow(exception);
+
+    assertThatThrownBy(() -> filter(client).invoke(invoker, request)).isSameAs(exception);
+
+    assertTelemetry(client, Integer.toString(errorType), true);
   }
 
   @ParameterizedTest
@@ -98,9 +133,9 @@ class TracingFilterTest {
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void unsupportedRpcErrorTypeFallsBackToExceptionClass(boolean client) {
-    SofaRpcException exception = new SofaRpcException(999, "private message");
+  @MethodSource("outOfRangeErrorTypes")
+  void unsupportedRpcErrorTypeFallsBackToExceptionClass(boolean client, int errorType) {
+    SofaRpcException exception = new SofaRpcException(errorType, "private message");
     when(invoker.invoke(request)).thenThrow(exception);
 
     assertThatThrownBy(() -> filter(client).invoke(invoker, request)).isSameAs(exception);
