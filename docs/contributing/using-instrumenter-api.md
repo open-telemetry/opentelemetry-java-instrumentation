@@ -139,8 +139,23 @@ the `Instrumenter`. You can do this in two ways:
   The `Instrumenter` automatically detects the properties file and determines the instrumentation
   version based on its name.
 
-If the `Instrumenter` adheres to a specific OpenTelemetry schema, you can set the schema URL using
-the `setSchemaUrl()` method on the `InstrumenterBuilder`. To learn more about the OpenTelemetry
+If the `Instrumenter` follows semantic conventions defining its spans, metrics, or logs, explicitly
+select their schema URL using `setSchemaUrl()` on the `InstrumenterBuilder`:
+
+```java
+Instrumenter.<Request, Response>builder(openTelemetry, "my-instrumentation", spanNameExtractor)
+    .setSchemaUrl("https://opentelemetry.io/schemas/1.41.0")
+    .addAttributesExtractor(attributesExtractor)
+    .buildInstrumenter();
+```
+
+The URL applies to the instrumenter's spans, operation metrics, and exception logs. Choose the schema
+for the conventions defining those signals, not for individual attributes. Supporting attributes from
+other domains do not change that choice. Attribute and span name extractors do not select a schema;
+without `setSchemaUrl()`, telemetry has no schema URL. Custom operations that only reuse registered
+attributes do not need a schema URL.
+
+To learn more about OpenTelemetry
 schemas [see the Overview](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/README.md).
 
 ### Name the spans using the `SpanNameExtractor`
