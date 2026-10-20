@@ -291,7 +291,7 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- In `opentelemetry-instrumentation-api-incubator` (alpha), custom
+- In `opentelemetry-instrumentation-api-incubator`, custom
   `MessagingAttributesGetter` implementations must implement `getMessageHeaderNames`, returning
   supported header names or an empty iterable for carriers without supported headers.
 - The `TracingSqsMessageHandler` customization constructor now accepts an
