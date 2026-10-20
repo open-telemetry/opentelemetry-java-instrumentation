@@ -59,12 +59,11 @@ listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
   }
 }
 
-sourceSets.test {
-  java.srcDir("src/errorContextTest/java")
+testing.suites.withType<JvmTestSuite>().configureEach {
+  sources.java.srcDir("src/errorContextTest/java")
 }
 
 val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
-  sources.java.srcDir("src/errorContextTest/java")
   dependencies {
     implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
     implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
@@ -101,11 +100,10 @@ tasks {
   }
 
   val controllerTelemetryDisabledTests =
-    listOf("test", "version17Test").map { suiteName ->
-      register<Test>("${suiteName}ControllerTelemetryDisabled") {
-        val sourceSet = sourceSets.named(suiteName).get()
-        testClassesDirs = sourceSet.output.classesDirs
-        classpath = sourceSet.runtimeClasspath
+    testing.suites.withType<JvmTestSuite>().map { suite ->
+      register<Test>("${suite.name}ControllerTelemetryDisabled") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
         filter {
           includeTestsMatching("*RatpackErrorContextTest")
         }

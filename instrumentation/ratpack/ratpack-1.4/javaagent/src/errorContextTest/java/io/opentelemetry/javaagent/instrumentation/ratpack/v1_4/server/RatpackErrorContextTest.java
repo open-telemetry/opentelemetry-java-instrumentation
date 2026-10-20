@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +37,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import ratpack.error.ServerErrorHandler;
 import ratpack.exec.Blocking;
+import ratpack.exec.Downstream;
 import ratpack.exec.Execution;
 import ratpack.exec.Promise;
 import ratpack.handling.Context;
@@ -54,11 +53,9 @@ class RatpackErrorContextTest {
       Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   private RatpackServer server;
-  private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
   @AfterEach
   void stopServer() throws Exception {
-    executor.shutdownNow();
     if (server != null) {
       server.stop();
     }
@@ -68,7 +65,7 @@ class RatpackErrorContextTest {
   @EnumSource(ErrorPath.class)
   void errorsUseRequestContext(ErrorPath errorPath) throws Exception {
     CountDownLatch pendingRequests = new CountDownLatch(2);
-    ConcurrentHashMap<String, CountDownLatch> pending = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, Downstream<String>> pending = new ConcurrentHashMap<>();
     server =
         RatpackServer.start(
             spec ->
@@ -82,7 +79,12 @@ class RatpackErrorContextTest {
                         chain -> {
                           chain.register(
                               registry ->
-                                  registry.add(ServerErrorHandler.class, new TestErrorHandler()));
+                                  registry.add(
+                                      ServerErrorHandler.class,
+                                      (ctx, throwable) ->
+                                          ctx.getResponse()
+                                              .status(500)
+                                              .send(throwable.getMessage())));
                           chain.get(
                               "error/:id",
                               ctx -> {
@@ -111,13 +113,15 @@ class RatpackErrorContextTest {
     if (errorPath == ErrorPath.ASYNC || errorPath == ErrorPath.FORK) {
       assertThat(pendingRequests.await(10, SECONDS)).isTrue();
       // Resume overlapping requests sharing the same event loop.
-      pending.get("second").countDown();
-      pending.get("first").countDown();
+      pending.get("second").success("second");
+      pending.get("first").success("first");
     }
-    assertThat(first.get(10, SECONDS).status().code()).isEqualTo(500);
-    assertThat(first.join().contentUtf8()).isEqualTo("first");
-    assertThat(second.get(10, SECONDS).status().code()).isEqualTo(500);
-    assertThat(second.join().contentUtf8()).isEqualTo("second");
+    AggregatedHttpResponse firstResponse = first.get(10, SECONDS);
+    assertThat(firstResponse.status().code()).isEqualTo(500);
+    assertThat(firstResponse.contentUtf8()).isEqualTo("first");
+    AggregatedHttpResponse secondResponse = second.get(10, SECONDS);
+    assertThat(secondResponse.status().code()).isEqualTo(500);
+    assertThat(secondResponse.contentUtf8()).isEqualTo("second");
 
     testing.waitAndAssertSortedTraces(
         Comparator.comparing(trace -> trace.get(0).getAttributes().get(URL_PATH)),
@@ -180,30 +184,19 @@ class RatpackErrorContextTest {
 
   private Promise<String> suspend(
       String id,
-      ConcurrentHashMap<String, CountDownLatch> pending,
+      ConcurrentHashMap<String, Downstream<String>> pending,
       CountDownLatch pendingRequests) {
     return Promise.async(
         downstream -> {
-          CountDownLatch resume = new CountDownLatch(1);
-          pending.put(id, resume);
-          executor.execute(
-              () -> {
-                pendingRequests.countDown();
-                try {
-                  assertThat(resume.await(10, SECONDS)).isTrue();
-                  downstream.success(id);
-                } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-                  downstream.error(e);
-                }
-              });
+          pending.put(id, downstream);
+          pendingRequests.countDown();
         });
   }
 
   private void fork(
       Context ctx,
       String id,
-      ConcurrentHashMap<String, CountDownLatch> pending,
+      ConcurrentHashMap<String, Downstream<String>> pending,
       CountDownLatch pendingRequests) {
     Promise.<Void>async(
             done ->
@@ -268,12 +261,5 @@ class RatpackErrorContextTest {
     BLOCKING,
     ASYNC,
     FORK
-  }
-
-  private static class TestErrorHandler implements ServerErrorHandler {
-    @Override
-    public void error(Context ctx, Throwable throwable) {
-      ctx.getResponse().status(500).send(throwable.getMessage());
-    }
   }
 }
