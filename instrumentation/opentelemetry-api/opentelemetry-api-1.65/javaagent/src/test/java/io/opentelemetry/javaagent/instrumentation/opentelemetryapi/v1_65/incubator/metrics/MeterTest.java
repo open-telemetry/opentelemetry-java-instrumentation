@@ -6,7 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_65.incubator.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleGauge;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleSum;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longGauge;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -65,17 +69,10 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         "test-bound-long-counter",
-        metric ->
-            metric
-                .hasName("test")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(11)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
+        longSum(
+            metric -> metric.hasName("test"),
+            point ->
+                point.hasValue(11).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r"))));
   }
 
   @Test
@@ -91,17 +88,10 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         "test-bound-double-counter",
-        metric ->
-            metric
-                .hasName("test")
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(12.1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
+        doubleSum(
+            metric -> metric.hasName("test"),
+            point ->
+                point.hasValue(12.1).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r"))));
   }
 
   @Test
@@ -117,17 +107,10 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         "test-bound-long-up-down-counter",
-        metric ->
-            metric
-                .hasName("test")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(11)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
+        longSum(
+            metric -> metric.hasName("test"),
+            point ->
+                point.hasValue(11).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r"))));
   }
 
   @Test
@@ -144,17 +127,10 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         "test-bound-double-up-down-counter",
-        metric ->
-            metric
-                .hasName("test")
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(12.1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
+        doubleSum(
+            metric -> metric.hasName("test"),
+            point ->
+                point.hasValue(12.1).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r"))));
   }
 
   @Test
@@ -205,17 +181,10 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         "test-bound-long-gauge",
-        metric ->
-            metric
-                .hasName("test")
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(123)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
+        longGauge(
+            metric -> metric.hasName("test"),
+            point ->
+                point.hasValue(123).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r"))));
   }
 
   @Test
@@ -231,16 +200,9 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         "test-bound-double-gauge",
-        metric ->
-            metric
-                .hasName("test")
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(1.23)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
+        doubleGauge(
+            metric -> metric.hasName("test"),
+            point ->
+                point.hasValue(1.23).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r"))));
   }
 }

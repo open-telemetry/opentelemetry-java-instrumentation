@@ -16,6 +16,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.semconv.HttpAttributes
@@ -99,18 +100,21 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
       "http.server.active_requests",
     ) { metrics ->
       metrics.anySatisfy { metric ->
-        assertThat(metric)
-          .hasDescription("Number of active HTTP server requests.")
-          .hasUnit("{requests}")
-          .hasLongSumSatisfying { sum ->
-            sum.hasPointsSatisfying({ point ->
-              point.hasValue(0)
-                .hasAttributesSatisfyingExactly(
-                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                  equalTo(UrlAttributes.URL_SCHEME, "http"),
-                )
-            })
-          }
+        longSum(
+          { metricAssert ->
+            metricAssert
+              .hasDescription("Number of active HTTP server requests.")
+              .hasUnit("{requests}")
+          },
+          { point ->
+            point.hasValue(0)
+              .hasAttributesSatisfyingExactly(
+                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                equalTo(UrlAttributes.URL_SCHEME, "http"),
+              )
+          },
+        )
+          .accept(assertThat(metric))
       }
     }
   }

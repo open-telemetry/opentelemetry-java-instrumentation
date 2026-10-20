@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -794,14 +795,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
-        metric ->
-            metric
-                .hasName("http.client.request.duration")
-                .hasDescription("Duration of HTTP client requests.")
-                .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
+        histogram(
+            metric ->
+                metric
+                    .hasName("http.client.request.duration")
+                    .hasDescription("Duration of HTTP client requests.")
+                    .hasUnit("s"),
+            point -> point.hasSumGreaterThan(0.0)));
   }
 
   /**

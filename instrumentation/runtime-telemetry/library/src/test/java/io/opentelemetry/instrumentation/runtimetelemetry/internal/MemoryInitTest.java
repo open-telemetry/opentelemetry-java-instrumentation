@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
 import static java.util.Arrays.asList;
@@ -59,23 +60,21 @@ class MemoryInitTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.memory.init")
-                .hasDescription("Measure of initial memory requested.")
-                .hasUnit("By")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(11)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
-                            point ->
-                                point
-                                    .hasValue(15)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.memory.init")
+                    .hasDescription("Measure of initial memory requested.")
+                    .hasUnit("By"),
+            point ->
+                point
+                    .hasValue(11)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
+            point ->
+                point
+                    .hasValue(15)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap")));
   }
 }

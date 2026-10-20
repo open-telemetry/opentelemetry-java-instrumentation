@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -99,24 +101,24 @@ class HttpServerExperimentalMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.active_requests")
-                    .hasUnit("{requests}")
-                    .hasDescription("Number of active HTTP server requests.")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))));
+                longSum(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("http.server.active_requests")
+                                .hasUnit("{requests}")
+                                .hasDescription("Number of active HTTP server requests."),
+                        point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfying(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(URL_SCHEME, "https"))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext1.getTraceId())
+                                            .hasSpanId(spanContext1.getSpanId())))
+                    .accept(assertThat(metric)));
 
     Context parent2 = Context.root().with(Span.wrap(spanContext2));
     Context context2 = listener.onStart(parent2, requestAttributes, nanos(150));
@@ -124,137 +126,127 @@ class HttpServerExperimentalMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.active_requests")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(2)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))));
+                longSum(
+                        metricAssert -> metricAssert.hasName("http.server.active_requests"),
+                        point ->
+                            point
+                                .hasValue(2)
+                                .hasAttributesSatisfying(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(URL_SCHEME, "https"))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext2.getTraceId())
+                                            .hasSpanId(spanContext2.getSpanId())))
+                    .accept(assertThat(metric)));
 
     listener.onEnd(context1, responseAttributes, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.active_requests")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))),
+                longSum(
+                        metricAssert -> metricAssert.hasName("http.server.active_requests"),
+                        point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfying(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(URL_SCHEME, "https"))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext1.getTraceId())
+                                            .hasSpanId(spanContext1.getSpanId())))
+                    .accept(assertThat(metric)),
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.request.body.size")
-                    .hasUnit("By")
-                    .hasDescription("Size of HTTP server request bodies.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(100 /* bytes */)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(ERROR_TYPE, "500"),
-                                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))),
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("http.server.request.body.size")
+                                .hasUnit("By")
+                                .hasDescription("Size of HTTP server request bodies."),
+                        point ->
+                            point
+                                .hasSum(100 /* bytes */)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(ERROR_TYPE, "500"),
+                                    equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                                    equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                                    equalTo(URL_SCHEME, "https"))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext1.getTraceId())
+                                            .hasSpanId(spanContext1.getSpanId())))
+                    .accept(assertThat(metric)),
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.response.body.size")
-                    .hasUnit("By")
-                    .hasDescription("Size of HTTP server response bodies.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(200 /* bytes */)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(ERROR_TYPE, "500"),
-                                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId())))));
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("http.server.response.body.size")
+                                .hasUnit("By")
+                                .hasDescription("Size of HTTP server response bodies."),
+                        point ->
+                            point
+                                .hasSum(200 /* bytes */)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(ERROR_TYPE, "500"),
+                                    equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                                    equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                                    equalTo(URL_SCHEME, "https"))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext1.getTraceId())
+                                            .hasSpanId(spanContext1.getSpanId())))
+                    .accept(assertThat(metric)));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.active_requests")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(0)
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))),
+                longSum(
+                        metricAssert -> metricAssert.hasName("http.server.active_requests"),
+                        point ->
+                            point
+                                .hasValue(0)
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext2.getTraceId())
+                                            .hasSpanId(spanContext2.getSpanId())))
+                    .accept(assertThat(metric)),
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.request.body.size")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(200 /* bytes */)
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))),
+                histogram(
+                        metricAssert -> metricAssert.hasName("http.server.request.body.size"),
+                        point ->
+                            point
+                                .hasSum(200 /* bytes */)
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext2.getTraceId())
+                                            .hasSpanId(spanContext2.getSpanId())))
+                    .accept(assertThat(metric)),
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.response.body.size")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(400 /* bytes */)
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))));
+                histogram(
+                        metricAssert -> metricAssert.hasName("http.server.response.body.size"),
+                        point ->
+                            point
+                                .hasSum(400 /* bytes */)
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext2.getTraceId())
+                                            .hasSpanId(spanContext2.getSpanId())))
+                    .accept(assertThat(metric)));
   }
 
   private static long nanos(int millis) {

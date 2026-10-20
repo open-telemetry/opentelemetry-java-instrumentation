@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -95,70 +96,68 @@ class HttpClientExperimentalMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("http.client.request.body.size")
-                    .hasUnit("By")
-                    .hasDescription("Size of HTTP client request bodies.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(100 /* bytes */)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(ERROR_TYPE, "400"),
-                                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SERVER_ADDRESS, "localhost"),
-                                            equalTo(SERVER_PORT, 1234))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))),
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("http.client.request.body.size")
+                                .hasUnit("By")
+                                .hasDescription("Size of HTTP client request bodies."),
+                        point ->
+                            point
+                                .hasSum(100 /* bytes */)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(ERROR_TYPE, "400"),
+                                    equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                                    equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, 1234))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                            .hasSpanId("090a0b0c0d0e0f00")))
+                    .accept(assertThat(metric)),
             metric ->
-                assertThat(metric)
-                    .hasName("http.client.response.body.size")
-                    .hasUnit("By")
-                    .hasDescription("Size of HTTP client response bodies.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(200 /* bytes */)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(ERROR_TYPE, "400"),
-                                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SERVER_ADDRESS, "localhost"),
-                                            equalTo(SERVER_PORT, 1234))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))));
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("http.client.response.body.size")
+                                .hasUnit("By")
+                                .hasDescription("Size of HTTP client response bodies."),
+                        point ->
+                            point
+                                .hasSum(200 /* bytes */)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(ERROR_TYPE, "400"),
+                                    equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                                    equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, 1234))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                            .hasSpanId("090a0b0c0d0e0f00")))
+                    .accept(assertThat(metric)));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("http.client.request.body.size")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(point -> point.hasSum(200 /* bytes */))),
+                histogram(
+                        metricAssert -> metricAssert.hasName("http.client.request.body.size"),
+                        point -> point.hasSum(200 /* bytes */))
+                    .accept(assertThat(metric)),
             metric ->
-                assertThat(metric)
-                    .hasName("http.client.response.body.size")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(point -> point.hasSum(400 /* bytes */))));
+                histogram(
+                        metricAssert -> metricAssert.hasName("http.client.response.body.size"),
+                        point -> point.hasSum(400 /* bytes */))
+                    .accept(assertThat(metric)));
   }
 
   private static long nanos(int millis) {

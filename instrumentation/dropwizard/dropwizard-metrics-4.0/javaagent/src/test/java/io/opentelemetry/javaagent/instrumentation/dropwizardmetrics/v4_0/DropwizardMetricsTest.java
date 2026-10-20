@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleGauge;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -42,10 +44,7 @@ class DropwizardMetricsTest {
     // then
     testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("testgauge")
-                .hasDoubleGaugeSatisfying(g -> g.hasPointsSatisfying(point -> point.hasValue(42))));
+        doubleGauge(metric -> metric.hasName("testgauge"), point -> point.hasValue(42)));
 
     // when
     metricRegistry.remove("test'gauge");
@@ -70,11 +69,10 @@ class DropwizardMetricsTest {
     // then
     testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("testcounter")
-                .hasLongSumSatisfying(
-                    sum -> sum.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(7))));
+        longSum(
+            metric ->
+                metric.hasName("testcounter").hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasValue(7)));
     testing.clearData();
 
     // when
@@ -125,11 +123,9 @@ class DropwizardMetricsTest {
     // then
     testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("testmeter")
-                .hasLongSumSatisfying(
-                    sum -> sum.isMonotonic().hasPointsSatisfying(point -> point.hasValue(12))));
+        longSum(
+            metric -> metric.hasName("testmeter").hasLongSumSatisfying(sum -> sum.isMonotonic()),
+            point -> point.hasValue(12)));
     testing.clearData();
 
     // when

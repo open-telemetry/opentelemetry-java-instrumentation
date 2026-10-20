@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -153,20 +154,19 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
     testing()
         .waitAndAssertMetricsExactly(
             "io.opentelemetry.rocketmq-client-5.0",
-            metric ->
-                metric
-                    .hasName("messaging.client.sent.messages")
-                    .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic)))),
+            longSum(
+                metric ->
+                    metric
+                        .hasName("messaging.client.sent.messages")
+                        .satisfies(
+                            data -> assertThat(data.getLongSumData().getPoints()).hasSize(1)),
+                point ->
+                    point
+                        .hasValue(1)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            equalTo(MESSAGING_DESTINATION_NAME, topic))),
             histogram(
                 metric -> metric.hasName("messaging.client.operation.duration"),
                 point ->
@@ -187,20 +187,19 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                             equalTo(MESSAGING_SYSTEM, "rocketmq"),
                             equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
                             equalTo(MESSAGING_DESTINATION_NAME, topic))),
-            metric ->
-                metric
-                    .hasName("messaging.client.consumed.messages")
-                    .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic)))));
+            longSum(
+                metric ->
+                    metric
+                        .hasName("messaging.client.consumed.messages")
+                        .satisfies(
+                            data -> assertThat(data.getLongSumData().getPoints()).hasSize(1)),
+                point ->
+                    point
+                        .hasValue(1)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                            equalTo(MESSAGING_DESTINATION_NAME, topic))));
   }
 }

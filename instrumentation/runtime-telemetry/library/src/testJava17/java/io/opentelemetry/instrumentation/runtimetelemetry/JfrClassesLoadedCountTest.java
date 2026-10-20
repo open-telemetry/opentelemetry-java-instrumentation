@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.UNIT_CLASSES;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -19,32 +20,26 @@ class JfrClassesLoadedCountTest {
     Thread.sleep(2000);
 
     jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName("jvm.class.loaded")
-                .hasDescription("Number of classes loaded since JVM start.")
-                .hasUnit(UNIT_CLASSES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))),
-        metric ->
-            metric
-                .hasName("jvm.class.count")
-                .hasDescription("Number of classes currently loaded.")
-                .hasUnit(UNIT_CLASSES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))),
-        metric ->
-            metric
-                .hasName("jvm.class.unloaded")
-                .hasDescription("Number of classes unloaded since JVM start.")
-                .hasUnit(UNIT_CLASSES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.class.loaded")
+                    .hasDescription("Number of classes loaded since JVM start.")
+                    .hasUnit(UNIT_CLASSES),
+            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0))),
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.class.count")
+                    .hasDescription("Number of classes currently loaded.")
+                    .hasUnit(UNIT_CLASSES),
+            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0))),
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.class.unloaded")
+                    .hasDescription("Number of classes unloaded since JVM start.")
+                    .hasUnit(UNIT_CLASSES),
+            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0))));
   }
 }

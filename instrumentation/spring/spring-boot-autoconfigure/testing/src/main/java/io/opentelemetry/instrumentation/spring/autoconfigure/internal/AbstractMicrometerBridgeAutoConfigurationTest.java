@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.micrometer.core.instrument.Clock;
@@ -152,10 +153,9 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
                   .singleElement()
                   .satisfies(
                       metric ->
-                          assertThat(metric)
-                              .hasName("test.counter")
-                              .hasDoubleSumSatisfying(
-                                  sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+                          doubleSum(
+                                  data -> data.hasName("test.counter"), point -> point.hasValue(2))
+                              .accept(assertThat(metric)));
             });
   }
 

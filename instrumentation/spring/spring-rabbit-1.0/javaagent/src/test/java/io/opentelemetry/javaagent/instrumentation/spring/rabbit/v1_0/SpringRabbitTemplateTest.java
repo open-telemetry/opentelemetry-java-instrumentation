@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -86,10 +87,9 @@ class SpringRabbitTemplateTest {
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
+                metricData ->
+                    longSum(metricAssert -> {}, point -> point.hasValue(1))
+                        .accept(assertThat(metricData))));
   }
 
   private static class StubChannel extends ChannelN {

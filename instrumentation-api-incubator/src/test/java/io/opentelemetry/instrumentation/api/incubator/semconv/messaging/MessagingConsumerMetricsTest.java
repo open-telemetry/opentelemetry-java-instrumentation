@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -80,51 +82,48 @@ class MessagingConsumerMetricsTest {
     assertThat(metrics)
         .anySatisfy(
             metric ->
-                assertThat(metric)
-                    .hasName("messaging.client.operation.duration")
-                    .hasUnit("s")
-                    .hasDescription(
-                        "Duration of messaging operation initiated by a producer or consumer client.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.2)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
-                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                            equalTo(
-                                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                "subscription"),
-                                            equalTo(
-                                                ERROR_TYPE, IllegalStateException.class.getName()),
-                                            equalTo(MESSAGING_OPERATION_TYPE, "receive")))))
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("messaging.client.operation.duration")
+                                .hasUnit("s")
+                                .hasDescription(
+                                    "Duration of messaging operation initiated by a producer or consumer client."),
+                        point ->
+                            point
+                                .hasSum(0.2)
+                                .hasBucketBoundaries(DURATION_BUCKETS)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
+                                    equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                    equalTo(
+                                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "subscription"),
+                                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "receive")))
+                    .accept(assertThat(metric)))
         .anySatisfy(
             metric ->
-                assertThat(metric)
-                    .hasName("messaging.client.consumed.messages")
-                    .hasUnit("{message}")
-                    .hasDescription("Number of messages that were delivered to the application.")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(3)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(
-                                                ERROR_TYPE, IllegalStateException.class.getName()),
-                                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
-                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                            equalTo(
-                                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                "subscription")))));
+                longSum(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("messaging.client.consumed.messages")
+                                .hasUnit("{message}")
+                                .hasDescription(
+                                    "Number of messages that were delivered to the application."),
+                        point ->
+                            point
+                                .hasValue(3)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
+                                    equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                    equalTo(
+                                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "subscription")))
+                    .accept(assertThat(metric)));
   }
 
   @Test
@@ -158,10 +157,7 @@ class MessagingConsumerMetricsTest {
         .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
         .singleElement()
         .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(3))));
+            metric -> longSum(unused -> {}, point -> point.hasValue(3)).accept(assertThat(metric)));
   }
 
   @Test
@@ -299,21 +295,17 @@ class MessagingConsumerMetricsTest {
     assertThat(metrics)
         .satisfiesExactly(
             metric ->
-                assertThat(metric)
-                    .hasName("messaging.client.consumed.messages")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                                            equalTo(
-                                                ERROR_TYPE,
-                                                IllegalStateException.class.getName())))));
+                longSum(
+                        metricAssert -> metricAssert.hasName("messaging.client.consumed.messages"),
+                        point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                                    equalTo(ERROR_TYPE, IllegalStateException.class.getName())))
+                    .accept(assertThat(metric)));
   }
 
   @Test
@@ -420,10 +412,7 @@ class MessagingConsumerMetricsTest {
         .filteredOn(metric -> metric.getName().endsWith(".messages"))
         .isNotEmpty()
         .allSatisfy(
-            metric ->
-                assertThat(metric)
-                    .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(5))));
+            metric -> longSum(unused -> {}, point -> point.hasValue(5)).accept(assertThat(metric)));
   }
 
   @Test
@@ -452,10 +441,7 @@ class MessagingConsumerMetricsTest {
         .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
         .singleElement()
         .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
+            metric -> longSum(unused -> {}, point -> point.hasValue(1)).accept(assertThat(metric)));
   }
 
   private static long nanos(int millis) {

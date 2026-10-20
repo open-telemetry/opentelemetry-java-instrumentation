@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -42,19 +43,16 @@ class ActuatorTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.micrometer-1.5",
-        metric ->
-            metric
-                .hasName("test-counter")
-                .hasUnit("thingies")
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+        doubleSum(
+            metric ->
+                metric
+                    .hasName("test-counter")
+                    .hasUnit("thingies")
+                    .hasDoubleSumSatisfying(sum -> sum.isMonotonic()),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
     // the composite registry bean must be the one spring created, not a wrapper; beans that were

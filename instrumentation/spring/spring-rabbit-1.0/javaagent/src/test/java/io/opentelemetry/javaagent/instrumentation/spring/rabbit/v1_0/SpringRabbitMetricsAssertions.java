@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -41,27 +43,27 @@ class SpringRabbitMetricsAssertions {
         metrics ->
             metrics.satisfiesExactly(
                 metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.satisfies(data -> assertThat(data.getPoints()).hasSize(1))
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(consumedMessagesCount)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, springErrorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination),
-                                                    satisfies(
-                                                        SERVER_ADDRESS, val -> val.isNotBlank()),
-                                                    satisfies(
-                                                        SERVER_PORT, val -> val.isPositive()))))));
+                    longSum(
+                            metricAssert ->
+                                metricAssert
+                                    .hasUnit("{message}")
+                                    .hasDescription(
+                                        "Number of messages that were delivered to the application.")
+                                    .hasLongSumSatisfying(
+                                        sum ->
+                                            sum.satisfies(
+                                                data -> assertThat(data.getPoints()).hasSize(1))),
+                            point ->
+                                point
+                                    .hasValue(consumedMessagesCount)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                        equalTo(ERROR_TYPE, springErrorType),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        satisfies(SERVER_ADDRESS, val -> val.isNotBlank()),
+                                        satisfies(SERVER_PORT, val -> val.isPositive())))
+                        .accept(assertThat(metric))));
     assertThat(testing.metrics())
         .filteredOn(
             metric ->
@@ -99,27 +101,26 @@ class SpringRabbitMetricsAssertions {
         metrics ->
             metrics.satisfiesExactly(
                 metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram
-                                    .satisfies(data -> assertThat(data.getPoints()).hasSize(1))
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasCount(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination),
-                                                    satisfies(
-                                                        SERVER_ADDRESS, val -> val.isNotBlank()),
-                                                    satisfies(
-                                                        SERVER_PORT, val -> val.isPositive()))))));
+                    histogram(
+                            metricAssert ->
+                                metricAssert
+                                    .hasUnit("s")
+                                    .hasDescription("Duration of processing operation.")
+                                    .hasHistogramSatisfying(
+                                        aggregate ->
+                                            aggregate.satisfies(
+                                                data -> assertThat(data.getPoints()).hasSize(1))),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                        equalTo(ERROR_TYPE, errorType),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        satisfies(SERVER_ADDRESS, val -> val.isNotBlank()),
+                                        satisfies(SERVER_PORT, val -> val.isPositive())))
+                        .accept(assertThat(metric))));
   }
 
   private SpringRabbitMetricsAssertions() {}

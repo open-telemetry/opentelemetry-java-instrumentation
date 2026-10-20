@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.pulsar.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -119,25 +120,25 @@ public abstract class AbstractSpringPulsarTest {
         metrics ->
             metrics.satisfiesExactly(
                 metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                    OTEL_SUBSCRIPTION),
-                                                equalTo(SERVER_ADDRESS, brokerHost),
-                                                equalTo(SERVER_PORT, brokerPort))))));
+                    longSum(
+                            metricAssert ->
+                                metricAssert
+                                    .hasUnit("{message}")
+                                    .hasDescription(
+                                        "Number of messages that were delivered to the application."),
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
+                                        equalTo(
+                                            MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                            OTEL_SUBSCRIPTION),
+                                        equalTo(SERVER_ADDRESS, brokerHost),
+                                        equalTo(SERVER_PORT, brokerPort)))
+                        .accept(assertThat(metric))));
     testing.waitAndAssertMetricsExactly(
         "io.opentelemetry.spring-pulsar-1.0",
         histogram(
@@ -153,19 +154,15 @@ public abstract class AbstractSpringPulsarTest {
                         equalTo(MESSAGING_OPERATION_NAME, "process"),
                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC))),
-        metric ->
-            metric
-                .hasName("messaging.client.consumed.messages")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC)))));
+        longSum(
+            metric -> metric.hasName("messaging.client.consumed.messages"),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                        equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC))));
   }
 
   protected List<AttributeAssertion> publishAttributes() {

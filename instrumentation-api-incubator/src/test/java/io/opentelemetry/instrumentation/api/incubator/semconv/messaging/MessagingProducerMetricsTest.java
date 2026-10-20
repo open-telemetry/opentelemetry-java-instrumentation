@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SENT_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -92,54 +94,53 @@ class MessagingProducerMetricsTest {
     assertThat(metrics)
         .anySatisfy(
             metric ->
-                assertThat(metric)
-                    .hasName("messaging.client.operation.duration")
-                    .hasUnit("s")
-                    .hasDescription(
-                        "Duration of messaging operation initiated by a producer or consumer client.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.15)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                            equalTo(
-                                                ERROR_TYPE, IllegalStateException.class.getName()),
-                                            equalTo(MESSAGING_DESTINATION_PARTITION_ID, "1"),
-                                            equalTo(SERVER_ADDRESS, "localhost"),
-                                            equalTo(SERVER_PORT, 6650))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))))
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("messaging.client.operation.duration")
+                                .hasUnit("s")
+                                .hasDescription(
+                                    "Duration of messaging operation initiated by a producer or consumer client."),
+                        point ->
+                            point
+                                .hasSum(0.15)
+                                .hasBucketBoundaries(DURATION_BUCKETS)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
+                                    equalTo(MESSAGING_DESTINATION_PARTITION_ID, "1"),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, 6650))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                            .hasSpanId("090a0b0c0d0e0f00")))
+                    .accept(assertThat(metric)))
         .anySatisfy(
             metric ->
-                assertThat(metric)
-                    .hasName("messaging.client.sent.messages")
-                    .hasUnit("{message}")
-                    .hasDescription("Number of messages producer attempted to send to the broker.")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(
-                                                ERROR_TYPE, IllegalStateException.class.getName()),
-                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                            equalTo(MESSAGING_DESTINATION_PARTITION_ID, "1"),
-                                            equalTo(SERVER_ADDRESS, "localhost"),
-                                            equalTo(SERVER_PORT, 6650)))));
+                longSum(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("messaging.client.sent.messages")
+                                .hasUnit("{message}")
+                                .hasDescription(
+                                    "Number of messages producer attempted to send to the broker."),
+                        point ->
+                            point
+                                .hasValue(2)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
+                                    equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                    equalTo(MESSAGING_DESTINATION_PARTITION_ID, "1"),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, 6650)))
+                    .accept(assertThat(metric)));
   }
 
   @Test
@@ -219,10 +220,7 @@ class MessagingProducerMetricsTest {
         .filteredOn(metric -> metric.getName().equals("messaging.client.sent.messages"))
         .singleElement()
         .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+            metric -> longSum(unused -> {}, point -> point.hasValue(2)).accept(assertThat(metric)));
   }
 
   @Test
@@ -290,10 +288,10 @@ class MessagingProducerMetricsTest {
     assertThat(metrics)
         .satisfiesExactly(
             metric ->
-                assertThat(metric)
-                    .hasName("messaging.client.sent.messages")
-                    .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
+                longSum(
+                        metricAssert -> metricAssert.hasName("messaging.client.sent.messages"),
+                        point -> point.hasValue(1))
+                    .accept(assertThat(metric)));
   }
 
   private static long nanos(int millis) {

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redissonmetrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -173,44 +174,41 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    assertThat(metric)
-                        .hasUnit("{connection}")
-                        .hasDescription(
-                            "The number of connections that are currently in state described by the state attribute.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(regularIdle)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey(poolNameKey()), regularPool),
-                                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                                    equalTo(stringKey(stateKey()), "idle")),
-                                        point ->
-                                            point
-                                                .hasValue(regularUsed)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey(poolNameKey()), regularPool),
-                                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                                    equalTo(stringKey(stateKey()), "used")),
-                                        point ->
-                                            point
-                                                .hasValue(subscriptionIdle)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        stringKey(poolNameKey()), subscriptionPool),
-                                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                                    equalTo(stringKey(stateKey()), "idle")),
-                                        point ->
-                                            point
-                                                .hasValue(subscriptionUsed)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        stringKey(poolNameKey()), subscriptionPool),
-                                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                                    equalTo(stringKey(stateKey()), "used"))))));
+                    longSum(
+                            data ->
+                                data.hasUnit("{connection}")
+                                    .hasDescription(
+                                        "The number of connections that are currently in state described by the state attribute.")
+                                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+                            point ->
+                                point
+                                    .hasValue(regularIdle)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey(poolNameKey()), regularPool),
+                                        equalTo(DB_SYSTEM_NAME, REDIS),
+                                        equalTo(stringKey(stateKey()), "idle")),
+                            point ->
+                                point
+                                    .hasValue(regularUsed)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey(poolNameKey()), regularPool),
+                                        equalTo(DB_SYSTEM_NAME, REDIS),
+                                        equalTo(stringKey(stateKey()), "used")),
+                            point ->
+                                point
+                                    .hasValue(subscriptionIdle)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey(poolNameKey()), subscriptionPool),
+                                        equalTo(DB_SYSTEM_NAME, REDIS),
+                                        equalTo(stringKey(stateKey()), "idle")),
+                            point ->
+                                point
+                                    .hasValue(subscriptionUsed)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey(poolNameKey()), subscriptionPool),
+                                        equalTo(DB_SYSTEM_NAME, REDIS),
+                                        equalTo(stringKey(stateKey()), "used")))
+                        .accept(assertThat(metric))));
   }
 
   private void assertPoolSizeMetric(
@@ -226,26 +224,24 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    assertThat(metric)
-                        .hasUnit("{connection}")
-                        .hasDescription(description)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(regularValue)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey(poolNameKey()), regularPool),
-                                                    equalTo(DB_SYSTEM_NAME, REDIS)),
-                                        point ->
-                                            point
-                                                .hasValue(subscriptionValue)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        stringKey(poolNameKey()), subscriptionPool),
-                                                    equalTo(DB_SYSTEM_NAME, REDIS))))));
+                    longSum(
+                            data ->
+                                data.hasUnit("{connection}")
+                                    .hasDescription(description)
+                                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+                            point ->
+                                point
+                                    .hasValue(regularValue)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey(poolNameKey()), regularPool),
+                                        equalTo(DB_SYSTEM_NAME, REDIS)),
+                            point ->
+                                point
+                                    .hasValue(subscriptionValue)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey(poolNameKey()), subscriptionPool),
+                                        equalTo(DB_SYSTEM_NAME, REDIS)))
+                        .accept(assertThat(metric))));
   }
 
   protected final void assertPendingRequests(
@@ -256,27 +252,25 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    assertThat(metric)
-                        .hasUnit("{request}")
-                        .hasDescription(
-                            "The number of current pending requests for an open connection.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(regularPending)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey(poolNameKey()), regularPool),
-                                                    equalTo(DB_SYSTEM_NAME, REDIS)),
-                                        point ->
-                                            point
-                                                .hasValue(subscriptionPending)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        stringKey(poolNameKey()), subscriptionPool),
-                                                    equalTo(DB_SYSTEM_NAME, REDIS))))));
+                    longSum(
+                            data ->
+                                data.hasUnit("{request}")
+                                    .hasDescription(
+                                        "The number of current pending requests for an open connection.")
+                                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+                            point ->
+                                point
+                                    .hasValue(regularPending)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey(poolNameKey()), regularPool),
+                                        equalTo(DB_SYSTEM_NAME, REDIS)),
+                            point ->
+                                point
+                                    .hasValue(subscriptionPending)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey(poolNameKey()), subscriptionPool),
+                                        equalTo(DB_SYSTEM_NAME, REDIS)))
+                        .accept(assertThat(metric))));
   }
 
   protected static MasterSlaveEntry getMasterSlaveEntry(Redisson redisson)

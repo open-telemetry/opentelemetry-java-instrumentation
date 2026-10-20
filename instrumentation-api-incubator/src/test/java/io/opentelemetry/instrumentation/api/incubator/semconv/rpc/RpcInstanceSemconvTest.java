@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -109,38 +110,33 @@ class RpcInstanceSemconvTest {
         assertThat(metrics)
             .anySatisfy(
                 metric ->
-                    assertThat(metric)
-                        .hasName(prefix + ".duration")
-                        .hasUnit("ms")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(RPC_SYSTEM, "test"),
-                                                equalTo(RPC_SERVICE, "package.Service"),
-                                                equalTo(RPC_METHOD, "Method")))));
+                    histogram(
+                            metricAssert ->
+                                metricAssert.hasName(prefix + ".duration").hasUnit("ms"),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM, "test"),
+                                        equalTo(RPC_SERVICE, "package.Service"),
+                                        equalTo(RPC_METHOD, "Method")))
+                        .accept(assertThat(metric)));
       }
       if (preview) {
         assertThat(metrics)
             .anySatisfy(
                 metric ->
-                    assertThat(metric)
-                        .hasName(prefix + ".call.duration")
-                        .hasUnit("s")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    ERROR_TYPE, "java.lang.IllegalStateException"),
-                                                equalTo(RPC_SYSTEM_NAME, "test"),
-                                                equalTo(RPC_METHOD, "Service/Method")))));
+                    histogram(
+                            metricAssert ->
+                                metricAssert.hasName(prefix + ".call.duration").hasUnit("s"),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(ERROR_TYPE, "java.lang.IllegalStateException"),
+                                        equalTo(RPC_SYSTEM_NAME, "test"),
+                                        equalTo(RPC_METHOD, "Service/Method")))
+                        .accept(assertThat(metric)));
       }
       assertThat(metrics)
           .allSatisfy(
@@ -164,16 +160,16 @@ class RpcInstanceSemconvTest {
         .singleElement()
         .satisfies(
             metric ->
-                assertThat(metric)
-                    .hasName(client ? "rpc.client.duration" : "rpc.server.duration")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(RPC_SYSTEM, "test"),
-                                        equalTo(RPC_SERVICE, "package.Service"),
-                                        equalTo(RPC_METHOD, "Method")))));
+                histogram(
+                        metricAssert ->
+                            metricAssert.hasName(
+                                client ? "rpc.client.duration" : "rpc.server.duration"),
+                        point ->
+                            point.hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM, "test"),
+                                equalTo(RPC_SERVICE, "package.Service"),
+                                equalTo(RPC_METHOD, "Method")))
+                    .accept(assertThat(metric)));
   }
 
   @Test

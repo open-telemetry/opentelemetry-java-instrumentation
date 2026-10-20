@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleGauge;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -56,36 +57,28 @@ public abstract class AbstractTimerHistogramGaugesTest {
                         .hasSum(555.5)
                         .hasCount(4)
                         .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))),
-            metric ->
-                metric
-                    .hasName("testTimer.histogram")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("le"), "1"),
-                                            equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point
-                                        .hasValue(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("le"), "10"),
-                                            equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point
-                                        .hasValue(3)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("le"), "100"),
-                                            equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point
-                                        .hasValue(4)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("le"), "1000"),
-                                            equalTo(stringKey("tag"), "value")))));
+            doubleGauge(
+                metric -> metric.hasName("testTimer.histogram"),
+                point ->
+                    point
+                        .hasValue(1)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("le"), "1"), equalTo(stringKey("tag"), "value")),
+                point ->
+                    point
+                        .hasValue(2)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("le"), "10"), equalTo(stringKey("tag"), "value")),
+                point ->
+                    point
+                        .hasValue(3)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("le"), "100"), equalTo(stringKey("tag"), "value")),
+                point ->
+                    point
+                        .hasValue(4)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("le"), "1000"), equalTo(stringKey("tag"), "value"))));
   }
 
   @Test
@@ -114,23 +107,16 @@ public abstract class AbstractTimerHistogramGaugesTest {
                         .hasSum(0.55)
                         .hasCount(2)
                         .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))),
-            metric ->
-                metric
-                    .hasName("testTimer.percentile")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("phi"), "0.5"),
-                                        equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("phi"), "0.95"),
-                                        equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("phi"), "0.99"),
-                                        equalTo(stringKey("tag"), "value")))));
+            doubleGauge(
+                metric -> metric.hasName("testTimer.percentile"),
+                point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("phi"), "0.5"), equalTo(stringKey("tag"), "value")),
+                point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("phi"), "0.95"), equalTo(stringKey("tag"), "value")),
+                point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("phi"), "0.99"), equalTo(stringKey("tag"), "value"))));
   }
 }

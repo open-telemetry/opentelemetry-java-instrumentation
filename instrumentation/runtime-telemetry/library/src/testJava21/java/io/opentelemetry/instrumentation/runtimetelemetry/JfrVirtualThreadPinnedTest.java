@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,10 +44,8 @@ class JfrVirtualThreadPinnedTest {
     vt.join(5000);
 
     jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName("jvm.thread.virtual.pinned")
-                .hasUnit(Constants.SECONDS)
-                .hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(point -> {})));
+        histogram(
+            metric -> metric.hasName("jvm.thread.virtual.pinned").hasUnit(Constants.SECONDS),
+            point -> {}));
   }
 }

@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleSum;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -37,40 +39,31 @@ public abstract class AbstractLongTaskTimerMillisecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testLongTaskTimerMilliseconds.active")
-                    .hasDescription("This is a test long task timer")
-                    .hasUnit("{tasks}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.isNotMonotonic()
-                                .hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("tag"), "value")))));
+            longSum(
+                metric ->
+                    metric
+                        .hasName("testLongTaskTimerMilliseconds.active")
+                        .hasDescription("This is a test long task timer")
+                        .hasUnit("{tasks}")
+                        .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+                point ->
+                    point
+                        .hasValue(1)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testLongTaskTimerMilliseconds.duration")
-                    .hasDescription("This is a test long task timer")
-                    .hasUnit("ms")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.isNotMonotonic()
-                                .hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("tag"), "value"))
-                                            .satisfies(
-                                                pointData ->
-                                                    assertThat(pointData.getValue())
-                                                        .isPositive()))));
+            doubleSum(
+                metric ->
+                    metric
+                        .hasName("testLongTaskTimerMilliseconds.duration")
+                        .hasDescription("This is a test long task timer")
+                        .hasUnit("ms")
+                        .hasDoubleSumSatisfying(sum -> sum.isNotMonotonic()),
+                point ->
+                    point
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
+                        .satisfies(pointData -> assertThat(pointData.getValue()).isPositive())));
 
     // when
     MILLISECONDS.sleep(100);
@@ -80,31 +73,21 @@ public abstract class AbstractLongTaskTimerMillisecondsTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testLongTaskTimerMilliseconds.active")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+            longSum(
+                metric -> metric.hasName("testLongTaskTimerMilliseconds.active"),
+                point ->
+                    point
+                        .hasValue(0)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testLongTaskTimerMilliseconds.duration")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+            doubleSum(
+                metric -> metric.hasName("testLongTaskTimerMilliseconds.duration"),
+                point ->
+                    point
+                        .hasValue(0)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when timer is removed from the registry
     Metrics.globalRegistry.remove(timer);

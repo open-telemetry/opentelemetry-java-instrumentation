@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.failsafe.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,30 +56,21 @@ class FailsafeTelemetryTest {
     // then
     testing.waitAndAssertMetricsExactly(
         "io.opentelemetry.failsafe-3.0",
-        metricAssert ->
-            metricAssert
-                .hasName("failsafe.circuit_breaker.execution.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                buildCircuitBreakerAssertion(
-                                    2, "failsafe.circuit_breaker.outcome", "failure"),
-                                buildCircuitBreakerAssertion(
-                                    3, "failsafe.circuit_breaker.outcome", "success"))),
-        metricAssert ->
-            metricAssert
-                .hasName("failsafe.circuit_breaker.state_change.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                buildCircuitBreakerAssertion(
-                                    1, "failsafe.circuit_breaker.state", "open"),
-                                buildCircuitBreakerAssertion(
-                                    1, "failsafe.circuit_breaker.state", "half_open"),
-                                buildCircuitBreakerAssertion(
-                                    1, "failsafe.circuit_breaker.state", "closed"))));
+        longSum(
+            metricAssert ->
+                metricAssert
+                    .hasName("failsafe.circuit_breaker.execution.count")
+                    .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+            buildCircuitBreakerAssertion(2, "failsafe.circuit_breaker.outcome", "failure"),
+            buildCircuitBreakerAssertion(3, "failsafe.circuit_breaker.outcome", "success")),
+        longSum(
+            metricAssert ->
+                metricAssert
+                    .hasName("failsafe.circuit_breaker.state_change.count")
+                    .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+            buildCircuitBreakerAssertion(1, "failsafe.circuit_breaker.state", "open"),
+            buildCircuitBreakerAssertion(1, "failsafe.circuit_breaker.state", "half_open"),
+            buildCircuitBreakerAssertion(1, "failsafe.circuit_breaker.state", "closed")));
   }
 
   @Test
@@ -109,15 +101,13 @@ class FailsafeTelemetryTest {
     // then
     testing.waitAndAssertMetricsExactly(
         "io.opentelemetry.failsafe-3.0",
-        metricAssert ->
-            metricAssert
-                .hasName("failsafe.retry_policy.execution.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                buildRetryPolicyAssertion(2, "failure"),
-                                buildRetryPolicyAssertion(3, "success"))),
+        longSum(
+            metricAssert ->
+                metricAssert
+                    .hasName("failsafe.retry_policy.execution.count")
+                    .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+            buildRetryPolicyAssertion(2, "failure"),
+            buildRetryPolicyAssertion(3, "success")),
         histogram(
             metricAssert -> metricAssert.hasName("failsafe.retry_policy.attempts"),
             histogramPointAssert ->

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -120,110 +121,101 @@ class RpcServerMetricsTest {
       assertThat(metrics1)
           .anySatisfy(
               metric ->
-                  assertThat(metric)
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasSum(150 /* millis */)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(RPC_SYSTEM, "grpc"),
-                                              equalTo(RPC_SERVICE, "myservice.EchoService"),
-                                              equalTo(RPC_METHOD, "exampleMethod"),
-                                              equalTo(SERVER_ADDRESS, "example.com"),
-                                              equalTo(SERVER_PORT, 8080),
-                                              equalTo(NETWORK_TRANSPORT, "tcp"),
-                                              equalTo(NETWORK_TYPE, "ipv4"))
-                                          .hasExemplarsSatisfying(
-                                              exemplar ->
-                                                  exemplar
-                                                      .hasTraceId(
-                                                          "ff01020304050600ff0a0b0c0d0e0f00")
-                                                      .hasSpanId("090a0b0c0d0e0f00")))))
+                  histogram(
+                          metricAssert -> metricAssert.hasName("rpc.server.duration").hasUnit("ms"),
+                          point ->
+                              point
+                                  .hasSum(150 /* millis */)
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_SYSTEM, "grpc"),
+                                      equalTo(RPC_SERVICE, "myservice.EchoService"),
+                                      equalTo(RPC_METHOD, "exampleMethod"),
+                                      equalTo(SERVER_ADDRESS, "example.com"),
+                                      equalTo(SERVER_PORT, 8080),
+                                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                                      equalTo(NETWORK_TYPE, "ipv4"))
+                                  .hasExemplarsSatisfying(
+                                      exemplar ->
+                                          exemplar
+                                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                              .hasSpanId("090a0b0c0d0e0f00")))
+                      .accept(assertThat(metric)))
           .anySatisfy(
               metric ->
-                  assertThat(metric)
-                      .hasName("rpc.server.response.size")
-                      .hasUnit("By")
-                      .hasDescription("Measures the size of RPC response messages (uncompressed).")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasSum(20 /* bytes */)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(RPC_SYSTEM, "grpc"),
-                                              equalTo(RPC_SERVICE, "myservice.EchoService"),
-                                              equalTo(RPC_METHOD, "exampleMethod"),
-                                              equalTo(SERVER_ADDRESS, "example.com"),
-                                              equalTo(SERVER_PORT, 8080),
-                                              equalTo(NETWORK_TRANSPORT, "tcp"),
-                                              equalTo(NETWORK_TYPE, "ipv4"))
-                                          .hasExemplarsSatisfying(
-                                              exemplar ->
-                                                  exemplar
-                                                      .hasTraceId(
-                                                          "ff01020304050600ff0a0b0c0d0e0f00")
-                                                      .hasSpanId("090a0b0c0d0e0f00")))))
+                  histogram(
+                          metricAssert ->
+                              metricAssert
+                                  .hasName("rpc.server.response.size")
+                                  .hasUnit("By")
+                                  .hasDescription(
+                                      "Measures the size of RPC response messages (uncompressed)."),
+                          point ->
+                              point
+                                  .hasSum(20 /* bytes */)
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_SYSTEM, "grpc"),
+                                      equalTo(RPC_SERVICE, "myservice.EchoService"),
+                                      equalTo(RPC_METHOD, "exampleMethod"),
+                                      equalTo(SERVER_ADDRESS, "example.com"),
+                                      equalTo(SERVER_PORT, 8080),
+                                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                                      equalTo(NETWORK_TYPE, "ipv4"))
+                                  .hasExemplarsSatisfying(
+                                      exemplar ->
+                                          exemplar
+                                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                              .hasSpanId("090a0b0c0d0e0f00")))
+                      .accept(assertThat(metric)))
           .anySatisfy(
               metric ->
-                  assertThat(metric)
-                      .hasName("rpc.server.request.size")
-                      .hasUnit("By")
-                      .hasDescription("Measures the size of RPC request messages (uncompressed).")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasSum(10 /* bytes */)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(RPC_SYSTEM, "grpc"),
-                                              equalTo(RPC_SERVICE, "myservice.EchoService"),
-                                              equalTo(RPC_METHOD, "exampleMethod"),
-                                              equalTo(SERVER_ADDRESS, "example.com"),
-                                              equalTo(SERVER_PORT, 8080),
-                                              equalTo(NETWORK_TRANSPORT, "tcp"),
-                                              equalTo(NETWORK_TYPE, "ipv4"))
-                                          .hasExemplarsSatisfying(
-                                              exemplar ->
-                                                  exemplar
-                                                      .hasTraceId(
-                                                          "ff01020304050600ff0a0b0c0d0e0f00")
-                                                      .hasSpanId("090a0b0c0d0e0f00")))));
+                  histogram(
+                          metricAssert ->
+                              metricAssert
+                                  .hasName("rpc.server.request.size")
+                                  .hasUnit("By")
+                                  .hasDescription(
+                                      "Measures the size of RPC request messages (uncompressed)."),
+                          point ->
+                              point
+                                  .hasSum(10 /* bytes */)
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_SYSTEM, "grpc"),
+                                      equalTo(RPC_SERVICE, "myservice.EchoService"),
+                                      equalTo(RPC_METHOD, "exampleMethod"),
+                                      equalTo(SERVER_ADDRESS, "example.com"),
+                                      equalTo(SERVER_PORT, 8080),
+                                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                                      equalTo(NETWORK_TYPE, "ipv4"))
+                                  .hasExemplarsSatisfying(
+                                      exemplar ->
+                                          exemplar
+                                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                              .hasSpanId("090a0b0c0d0e0f00")))
+                      .accept(assertThat(metric)));
     }
 
     if (emitPreviewRpcSemconv()) {
       assertThat(metrics1)
           .anySatisfy(
               metric ->
-                  assertThat(metric)
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasSum(0.15)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(
-                                                  RPC_METHOD,
-                                                  "myservice.EchoService/exampleMethod"),
-                                              equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                              equalTo(ERROR_TYPE, "INTERNAL"),
-                                              equalTo(SERVER_ADDRESS, "example.com"),
-                                              equalTo(SERVER_PORT, 8080))
-                                          .hasExemplarsSatisfying(
-                                              exemplar ->
-                                                  exemplar
-                                                      .hasTraceId(
-                                                          "ff01020304050600ff0a0b0c0d0e0f00")
-                                                      .hasSpanId("090a0b0c0d0e0f00")))));
+                  histogram(
+                          metricAssert ->
+                              metricAssert.hasName("rpc.server.call.duration").hasUnit("s"),
+                          point ->
+                              point
+                                  .hasSum(0.15)
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_METHOD, "myservice.EchoService/exampleMethod"),
+                                      equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                      equalTo(ERROR_TYPE, "INTERNAL"),
+                                      equalTo(SERVER_ADDRESS, "example.com"),
+                                      equalTo(SERVER_PORT, 8080))
+                                  .hasExemplarsSatisfying(
+                                      exemplar ->
+                                          exemplar
+                                              .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                              .hasSpanId("090a0b0c0d0e0f00")))
+                      .accept(assertThat(metric)));
     }
 
     listener.onEnd(context2, responseAttributes2, nanos(300));
@@ -234,42 +226,35 @@ class RpcServerMetricsTest {
       assertThat(metrics2)
           .anySatisfy(
               metric ->
-                  assertThat(metric)
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasSum(150 /* millis */)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(RPC_SYSTEM, "grpc"),
-                                              equalTo(RPC_SERVICE, "myservice.EchoService"),
-                                              equalTo(RPC_METHOD, "exampleMethod"),
-                                              equalTo(SERVER_PORT, 8080),
-                                              equalTo(NETWORK_TRANSPORT, "tcp")))));
+                  histogram(
+                          metricAssert -> metricAssert.hasName("rpc.server.duration").hasUnit("ms"),
+                          point ->
+                              point
+                                  .hasSum(150 /* millis */)
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_SYSTEM, "grpc"),
+                                      equalTo(RPC_SERVICE, "myservice.EchoService"),
+                                      equalTo(RPC_METHOD, "exampleMethod"),
+                                      equalTo(SERVER_PORT, 8080),
+                                      equalTo(NETWORK_TRANSPORT, "tcp")))
+                      .accept(assertThat(metric)));
     }
 
     if (emitPreviewRpcSemconv()) {
       assertThat(metrics2)
           .anySatisfy(
               metric ->
-                  assertThat(metric)
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasSum(0.15)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(
-                                                  RPC_METHOD,
-                                                  "myservice.EchoService/exampleMethod"),
-                                              equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                              equalTo(SERVER_PORT, 8080)))));
+                  histogram(
+                          metricAssert ->
+                              metricAssert.hasName("rpc.server.call.duration").hasUnit("s"),
+                          point ->
+                              point
+                                  .hasSum(0.15)
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_METHOD, "myservice.EchoService/exampleMethod"),
+                                      equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                      equalTo(SERVER_PORT, 8080)))
+                      .accept(assertThat(metric)));
     }
   }
 

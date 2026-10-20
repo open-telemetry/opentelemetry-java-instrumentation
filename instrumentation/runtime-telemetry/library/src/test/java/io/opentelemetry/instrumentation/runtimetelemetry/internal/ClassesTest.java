@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
@@ -35,39 +36,33 @@ class ClassesTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.class.loaded")
-                .hasDescription("Number of classes loaded since JVM start.")
-                .hasUnit("{class}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point -> point.hasValue(3).hasAttributes(Attributes.empty()))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.class.loaded")
+                    .hasDescription("Number of classes loaded since JVM start.")
+                    .hasUnit("{class}")
+                    .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+            point -> point.hasValue(3).hasAttributes(Attributes.empty())));
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.class.unloaded")
-                .hasDescription("Number of classes unloaded since JVM start.")
-                .hasUnit("{class}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point -> point.hasValue(2).hasAttributes(Attributes.empty()))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.class.unloaded")
+                    .hasDescription("Number of classes unloaded since JVM start.")
+                    .hasUnit("{class}")
+                    .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+            point -> point.hasValue(2).hasAttributes(Attributes.empty())));
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.class.count")
-                .hasDescription("Number of classes currently loaded.")
-                .hasUnit("{class}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point -> point.hasValue(1).hasAttributes(Attributes.empty()))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.class.count")
+                    .hasDescription("Number of classes currently loaded.")
+                    .hasUnit("{class}")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasValue(1).hasAttributes(Attributes.empty())));
   }
 }

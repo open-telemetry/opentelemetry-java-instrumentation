@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -107,48 +108,46 @@ class HttpServerMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.request.duration")
-                    .hasDescription("Duration of HTTP server requests.")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.15 /* seconds */)
-                                        .hasAttributesSatisfying(
-                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(ERROR_TYPE, "500"),
-                                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(URL_SCHEME, "https"))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext1.getTraceId())
-                                                    .hasSpanId(spanContext1.getSpanId()))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))));
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("http.server.request.duration")
+                                .hasDescription("Duration of HTTP server requests.")
+                                .hasUnit("s"),
+                        point ->
+                            point
+                                .hasSum(0.15 /* seconds */)
+                                .hasAttributesSatisfying(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(ERROR_TYPE, "500"),
+                                    equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                                    equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                                    equalTo(URL_SCHEME, "https"))
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext1.getTraceId())
+                                            .hasSpanId(spanContext1.getSpanId()))
+                                .hasBucketBoundaries(DURATION_BUCKETS))
+                    .accept(assertThat(metric)));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.request.duration")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.3 /* seconds */)
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId(spanContext2.getTraceId())
-                                                    .hasSpanId(spanContext2.getSpanId())))));
+                histogram(
+                        metricAssert -> metricAssert.hasName("http.server.request.duration"),
+                        point ->
+                            point
+                                .hasSum(0.3 /* seconds */)
+                                .hasExemplarsSatisfying(
+                                    exemplar ->
+                                        exemplar
+                                            .hasTraceId(spanContext2.getTraceId())
+                                            .hasSpanId(spanContext2.getSpanId())))
+                    .accept(assertThat(metric)));
   }
 
   @Test
@@ -176,18 +175,16 @@ class HttpServerMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .anySatisfy(
             metric ->
-                assertThat(metric)
-                    .hasName("http.server.request.duration")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.100 /* seconds */)
-                                        .hasAttributesSatisfying(
-                                            equalTo(URL_SCHEME, "https"),
-                                            equalTo(HTTP_ROUTE, "/test/{id}")))));
+                histogram(
+                        metricAssert ->
+                            metricAssert.hasName("http.server.request.duration").hasUnit("s"),
+                        point ->
+                            point
+                                .hasSum(0.100 /* seconds */)
+                                .hasAttributesSatisfying(
+                                    equalTo(URL_SCHEME, "https"),
+                                    equalTo(HTTP_ROUTE, "/test/{id}")))
+                    .accept(assertThat(metric)));
   }
 
   private static long nanos(int millis) {

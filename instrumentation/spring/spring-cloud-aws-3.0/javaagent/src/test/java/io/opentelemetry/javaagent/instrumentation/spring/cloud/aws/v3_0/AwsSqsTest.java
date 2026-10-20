@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -309,23 +310,20 @@ class AwsSqsTest {
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(ERROR_TYPE, null),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(
-                                                    SERVER_PORT,
-                                                    AwsSqsTestApplication.sqsPort))))));
+                metricData ->
+                    longSum(
+                            metric -> {},
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                        equalTo(ERROR_TYPE, null),
+                                        equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
+                                        equalTo(SERVER_ADDRESS, "localhost"),
+                                        equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort)))
+                        .accept(assertThat(metricData))));
   }
 
   private static void assertAsyncCompletion(

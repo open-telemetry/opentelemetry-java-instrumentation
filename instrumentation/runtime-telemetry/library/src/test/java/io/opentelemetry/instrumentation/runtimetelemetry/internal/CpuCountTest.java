@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.function.IntSupplier;
@@ -25,13 +27,13 @@ class CpuCountTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.cpu.count")
-                .hasDescription("Number of processors available to the Java virtual machine.")
-                .hasUnit("{cpu}")
-                .hasLongSumSatisfying(
-                    count ->
-                        count.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(8))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.cpu.count")
+                    .hasDescription("Number of processors available to the Java virtual machine.")
+                    .hasUnit("{cpu}")
+                    .hasLongSumSatisfying(count -> count.isNotMonotonic()),
+            point -> point.hasValue(8)));
   }
 }

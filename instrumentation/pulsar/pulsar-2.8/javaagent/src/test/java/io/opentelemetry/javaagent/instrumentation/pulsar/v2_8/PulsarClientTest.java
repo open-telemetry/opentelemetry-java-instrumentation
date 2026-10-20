@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -85,42 +86,37 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         equalTo(MESSAGING_DESTINATION_NAME, topic),
                         equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"))
                     .hasBucketBoundaries(DURATION_BUCKETS)),
-        metric ->
-            metric
-                .hasName("messaging.client.consumed.messages")
-                .hasUnit("{message}")
-                .hasDescription("Number of messages that were delivered to the application.")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                        equalTo(
-                                            MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
-                                        equalTo(SERVER_ADDRESS, brokerHost),
-                                        equalTo(SERVER_PORT, brokerPort)))),
-        metric ->
-            metric
-                .hasName("messaging.client.sent.messages")
-                .hasUnit("{message}")
-                .hasDescription("Number of messages producer attempted to send to the broker.")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                        equalTo(SERVER_ADDRESS, brokerHost),
-                                        equalTo(SERVER_PORT, brokerPort)))),
+        longSum(
+            metric ->
+                metric
+                    .hasName("messaging.client.consumed.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application."),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                        equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
+                        equalTo(SERVER_ADDRESS, brokerHost),
+                        equalTo(SERVER_PORT, brokerPort))),
+        longSum(
+            metric ->
+                metric
+                    .hasName("messaging.client.sent.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages producer attempted to send to the broker."),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                        equalTo(SERVER_ADDRESS, brokerHost),
+                        equalTo(SERVER_PORT, brokerPort))),
         histogram(
             metric ->
                 metric

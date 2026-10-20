@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -83,11 +84,7 @@ class CallbackGcCloseTest {
     // 3. Verify the gauge is producing metrics.
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test.gc.close")
-                .hasLongGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
+        longGauge(metric -> metric.hasName("test.gc.close"), point -> point.hasValue(42)));
 
     // 4. Release the classloader — simulates app undeploy.
     WeakReference<ClassLoader> clRef = new WeakReference<>(childCl);
@@ -120,11 +117,7 @@ class CallbackGcCloseTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test.gc.alive")
-                .hasLongGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(99))));
+        longGauge(metric -> metric.hasName("test.gc.alive"), point -> point.hasValue(99)));
 
     // prevent callback from being collected during the test
     assertThat(callback).isNotNull();

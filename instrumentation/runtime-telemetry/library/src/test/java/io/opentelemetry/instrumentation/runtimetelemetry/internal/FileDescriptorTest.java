@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.when;
 
@@ -47,21 +48,22 @@ class FileDescriptorTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.file_descriptor.count")
-                .hasDescription("Number of open file descriptors as reported by the JVM.")
-                .hasUnit("{file_descriptor}")
-                .hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(42))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.file_descriptor.count")
+                    .hasDescription("Number of open file descriptors as reported by the JVM.")
+                    .hasUnit("{file_descriptor}"),
+            point -> point.hasValue(42)));
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.file_descriptor.limit")
-                .hasDescription("Measure of max open file descriptors as reported by the JVM.")
-                .hasUnit("{file_descriptor}")
-                .hasLongSumSatisfying(
-                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(100))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.file_descriptor.limit")
+                    .hasDescription("Measure of max open file descriptors as reported by the JVM.")
+                    .hasUnit("{file_descriptor}"),
+            point -> point.hasValue(100)));
   }
 }

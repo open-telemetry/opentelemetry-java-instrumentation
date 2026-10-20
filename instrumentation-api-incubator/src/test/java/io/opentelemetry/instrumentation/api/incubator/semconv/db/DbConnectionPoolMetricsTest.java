@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics.POOL_NAME;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -74,32 +76,32 @@ class DbConnectionPoolMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                assertThat(metric)
-                    .hasName("db.client.connection.timeouts")
-                    .hasUnit("{timeout}")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
-                                            equalTo(DB_NAMESPACE, "potatoes")))),
+                longSum(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("db.client.connection.timeouts")
+                                .hasUnit("{timeout}")
+                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)),
+                        point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
+                                    equalTo(DB_NAMESPACE, "potatoes")))
+                    .accept(assertThat(metric)),
             metric ->
-                assertThat(metric)
-                    .hasName("db.client.connection.create_time")
-                    .hasUnit("s")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.025)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
-                                            equalTo(DB_NAMESPACE, "potatoes")))));
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("db.client.connection.create_time")
+                                .hasUnit("s")
+                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)),
+                        point ->
+                            point
+                                .hasSum(0.025)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
+                                    equalTo(DB_NAMESPACE, "potatoes")))
+                    .accept(assertThat(metric)));
   }
 }

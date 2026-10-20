@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.semconv.incubating.JvmIncubatingAttributes.JVM_BUFFER_POOL_NAME;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,46 +55,31 @@ class BufferPoolsTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.buffer.memory.used")
-                .hasDescription("Measure of memory used by buffers.")
-                .hasUnit("By")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(10)
-                                    .hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.buffer.memory.used")
+                    .hasDescription("Measure of memory used by buffers.")
+                    .hasUnit("By"),
+            point -> point.hasValue(10).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1")));
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.buffer.memory.limit")
-                .hasDescription("Measure of total memory capacity of buffers.")
-                .hasUnit("By")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(11)
-                                    .hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.buffer.memory.limit")
+                    .hasDescription("Measure of total memory capacity of buffers.")
+                    .hasUnit("By"),
+            point -> point.hasValue(11).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1")));
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.buffer.count")
-                .hasDescription("Number of buffers in the pool.")
-                .hasUnit("{buffer}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(12)
-                                    .hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.buffer.count")
+                    .hasDescription("Number of buffers in the pool.")
+                    .hasUnit("{buffer}"),
+            point -> point.hasValue(12).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1")));
   }
 
   @Test

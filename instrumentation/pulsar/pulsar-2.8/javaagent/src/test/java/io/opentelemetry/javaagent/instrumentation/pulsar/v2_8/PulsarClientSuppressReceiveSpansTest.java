@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -76,24 +77,20 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                    "test_sub"),
-                                                equalTo(
-                                                    ERROR_TYPE,
-                                                    IllegalStateException.class.getName()))))));
+                metricData ->
+                    longSum(
+                            metric -> {},
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(
+                                            MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
+                                        equalTo(ERROR_TYPE, IllegalStateException.class.getName())))
+                        .accept(assertThat(metricData))));
   }
 
   @Test
@@ -127,24 +124,23 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                    "test_sub"))))));
+                metricData ->
+                    longSum(
+                            metric ->
+                                metric
+                                    .hasUnit("{message}")
+                                    .hasDescription(
+                                        "Number of messages that were delivered to the application."),
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(
+                                            MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub")))
+                        .accept(assertThat(metricData))));
 
     testing.waitAndAssertTraces(
         trace ->

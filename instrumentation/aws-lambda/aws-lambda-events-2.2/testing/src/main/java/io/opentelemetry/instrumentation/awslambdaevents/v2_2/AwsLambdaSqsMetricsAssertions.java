@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -52,22 +53,20 @@ public class AwsLambdaSqsMetricsAssertions {
         instrumentationName,
         processingDurationAssertion(
             destination, processCount, errorType, failedProcessCount, failedProcessErrorType),
-        metric ->
-            metric
-                .hasName("messaging.client.consumed.messages")
-                .hasUnit("{message}")
-                .hasDescription("Number of messages that were delivered to the application.")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(consumedMessageCount)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                        equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                        equalTo(ERROR_TYPE, errorType)))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("messaging.client.consumed.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application."),
+            point ->
+                point
+                    .hasValue(consumedMessageCount)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                        equalTo(ERROR_TYPE, errorType))));
   }
 
   private static Consumer<MetricAssert> processingDurationAssertion(

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.UNIT_BUFFERS;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.semconv.incubating.JvmIncubatingAttributes.JVM_BUFFER_POOL_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -37,41 +38,26 @@ class BufferMetricTest {
 
     Attributes directBuffer = Attributes.of(JVM_BUFFER_POOL_NAME, "direct");
     jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName("jvm.buffer.count")
-                .hasDescription("Number of buffers in the pool.")
-                .hasUnit(UNIT_BUFFERS)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributes(directBuffer)
-                                    .hasValueSatisfying(v -> v.isPositive()))),
-        metric ->
-            metric
-                .hasName("jvm.buffer.memory.limit")
-                .hasDescription("Measure of total memory capacity of buffers.")
-                .hasUnit(BYTES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributes(directBuffer)
-                                    .hasValueSatisfying(v -> v.isPositive()))),
-        metric ->
-            metric
-                .hasName("jvm.buffer.memory.used")
-                .hasDescription("Measure of memory used by buffers.")
-                .hasUnit(BYTES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributes(directBuffer)
-                                    .hasValueSatisfying(v -> v.isPositive()))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.buffer.count")
+                    .hasDescription("Number of buffers in the pool.")
+                    .hasUnit(UNIT_BUFFERS),
+            point -> point.hasAttributes(directBuffer).hasValueSatisfying(v -> v.isPositive())),
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.buffer.memory.limit")
+                    .hasDescription("Measure of total memory capacity of buffers.")
+                    .hasUnit(BYTES),
+            point -> point.hasAttributes(directBuffer).hasValueSatisfying(v -> v.isPositive())),
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.buffer.memory.used")
+                    .hasDescription("Measure of memory used by buffers.")
+                    .hasUnit(BYTES),
+            point -> point.hasAttributes(directBuffer).hasValueSatisfying(v -> v.isPositive())));
   }
 }

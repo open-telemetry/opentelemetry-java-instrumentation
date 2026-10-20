@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -57,19 +58,16 @@ class CompositeCounterTest {
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("testCounter")
-                .hasDescription("This is a test counter")
-                .hasUnit("items")
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+        doubleSum(
+            metric ->
+                metric
+                    .hasName("testCounter")
+                    .hasDescription("This is a test counter")
+                    .hasUnit("items")
+                    .hasDoubleSumSatisfying(sum -> sum.isMonotonic()),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
   }
 }

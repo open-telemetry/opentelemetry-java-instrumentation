@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longGauge;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
@@ -151,15 +152,9 @@ class JmxMetricInsightInstallerTest {
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
         metric -> metric.hasName("tomcat.test.stable"),
-        metric ->
-            metric
-                .hasName("tomcat.test.unstable")
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributes(
-                                    Attributes.of(stringKey("test.source"), "custom")))));
+        longGauge(
+            metric -> metric.hasName("tomcat.test.unstable"),
+            point -> point.hasAttributes(Attributes.of(stringKey("test.source"), "custom"))));
   }
 
   @Test

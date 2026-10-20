@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
 import static java.util.Arrays.asList;
@@ -81,85 +82,77 @@ class MemoryPoolsTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.memory.used")
-                .hasDescription("Measure of memory used.")
-                .hasUnit("By")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(11)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
-                            point ->
-                                point
-                                    .hasValue(15)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.memory.used")
+                    .hasDescription("Measure of memory used.")
+                    .hasUnit("By"),
+            point ->
+                point
+                    .hasValue(11)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
+            point ->
+                point
+                    .hasValue(15)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap")));
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.memory.committed")
-                .hasDescription("Measure of memory committed.")
-                .hasUnit("By")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(12)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
-                            point ->
-                                point
-                                    .hasValue(16)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.memory.committed")
+                    .hasDescription("Measure of memory committed.")
+                    .hasUnit("By"),
+            point ->
+                point
+                    .hasValue(12)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
+            point ->
+                point
+                    .hasValue(16)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap")));
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.memory.limit")
-                .hasDescription("Measure of max obtainable memory.")
-                .hasUnit("By")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(13)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
-                            point ->
-                                point
-                                    .hasValue(17)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.memory.limit")
+                    .hasDescription("Measure of max obtainable memory.")
+                    .hasUnit("By"),
+            point ->
+                point
+                    .hasValue(13)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
+            point ->
+                point
+                    .hasValue(17)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap")));
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.memory.used_after_last_gc")
-                .hasDescription(
-                    "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
-                .hasUnit("By")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(18)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
-                            point ->
-                                point
-                                    .hasValue(19)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.memory.used_after_last_gc")
+                    .hasDescription(
+                        "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
+                    .hasUnit("By"),
+            point ->
+                point
+                    .hasValue(18)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
+            point ->
+                point
+                    .hasValue(19)
+                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap")));
   }
 
   @Test

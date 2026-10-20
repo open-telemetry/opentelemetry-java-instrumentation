@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleSum;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -57,36 +59,30 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testFunctionTimer.count")
-                    .hasDescription("This is a test function timer")
-                    .hasUnit("{invocation}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.isMonotonic()
-                                .hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("tag"), "value")))));
+            longSum(
+                metric ->
+                    metric
+                        .hasName("testFunctionTimer.count")
+                        .hasDescription("This is a test function timer")
+                        .hasUnit("{invocation}")
+                        .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+                point ->
+                    point
+                        .hasValue(1)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testFunctionTimer.sum")
-                    .hasDescription("This is a test function timer")
-                    .hasUnit("s")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(42)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+            doubleSum(
+                metric ->
+                    metric
+                        .hasName("testFunctionTimer.sum")
+                        .hasDescription("This is a test function timer")
+                        .hasUnit("s"),
+                point ->
+                    point
+                        .hasValue(42)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(functionTimer);
@@ -137,36 +133,30 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testFunctionTimer.count")
-                    .hasDescription("This is a test function timer")
-                    .hasUnit("{invocation}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.isMonotonic()
-                                .hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("tag"), "value")))));
+            longSum(
+                metric ->
+                    metric
+                        .hasName("testFunctionTimer.count")
+                        .hasDescription("This is a test function timer")
+                        .hasUnit("{invocation}")
+                        .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+                point ->
+                    point
+                        .hasValue(1)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testFunctionTimer.sum")
-                    .hasDescription("This is a test function timer")
-                    .hasUnit("s")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(42)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+            doubleSum(
+                metric ->
+                    metric
+                        .hasName("testFunctionTimer.sum")
+                        .hasDescription("This is a test function timer")
+                        .hasUnit("s"),
+                point ->
+                    point
+                        .hasValue(42)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(functionTimer);
@@ -196,15 +186,9 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testNanoFunctionTimer.sum")
-                    .hasUnit("s")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point.hasValue(0.001234).hasAttributes(Attributes.empty()))));
+            doubleSum(
+                metric -> metric.hasName("testNanoFunctionTimer.sum").hasUnit("s"),
+                point -> point.hasValue(0.001234).hasAttributes(Attributes.empty())));
   }
 
   @Test
@@ -235,22 +219,15 @@ public abstract class AbstractFunctionTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testFunctionTimerWithTags.sum")
-                    .hasUnit("s")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(12)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "1")),
-                                point ->
-                                    point
-                                        .hasValue(42)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "2")))));
+            doubleSum(
+                metric -> metric.hasName("testFunctionTimerWithTags.sum").hasUnit("s"),
+                point ->
+                    point
+                        .hasValue(12)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "1")),
+                point ->
+                    point
+                        .hasValue(42)
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "2"))));
   }
 }

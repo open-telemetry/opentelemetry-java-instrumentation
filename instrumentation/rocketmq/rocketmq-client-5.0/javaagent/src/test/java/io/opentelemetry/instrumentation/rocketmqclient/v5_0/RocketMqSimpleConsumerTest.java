@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -208,20 +209,16 @@ class RocketMqSimpleConsumerTest {
                         equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
                         equalTo(MESSAGING_OPERATION_NAME, "receive"),
                         equalTo(MESSAGING_OPERATION_TYPE, "receive"))),
-        metric ->
-            metric
-                .hasName("messaging.client.consumed.messages")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                        equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-                                        equalTo(MESSAGING_OPERATION_NAME, "receive")))));
+        longSum(
+            metricAssert -> metricAssert.hasName("messaging.client.consumed.messages"),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                        equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                        equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
+                        equalTo(MESSAGING_OPERATION_NAME, "receive"))));
   }
 
   @Test

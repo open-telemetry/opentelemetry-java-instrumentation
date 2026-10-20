@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -64,24 +65,22 @@ class MessagingProcessMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactly(
             metric ->
-                assertThat(metric)
-                    .hasName("messaging.process.duration")
-                    .hasUnit("s")
-                    .hasDescription("Duration of processing operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.25)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                            equalTo(
-                                                ERROR_TYPE,
-                                                IllegalStateException.class.getName())))));
+                histogram(
+                        metricAssert ->
+                            metricAssert
+                                .hasName("messaging.process.duration")
+                                .hasUnit("s")
+                                .hasDescription("Duration of processing operation."),
+                        point ->
+                            point
+                                .hasSum(0.25)
+                                .hasBucketBoundaries(DURATION_BUCKETS)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                    equalTo(ERROR_TYPE, IllegalStateException.class.getName())))
+                    .accept(assertThat(metric)));
   }
 
   @Test

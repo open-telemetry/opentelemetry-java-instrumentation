@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.apachecommonspool;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.awaitility.Awaitility.await;
@@ -15,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
-import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -293,6 +293,8 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
               point.hasAttributesSatisfyingExactly(
                   equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used")));
     }
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    Consumer<LongPointAssert>[] pointAssertions = assertions.toArray(new Consumer[0]);
 
     testing()
         .waitAndAssertMetrics(
@@ -301,26 +303,28 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
             metrics ->
                 metrics.anySatisfy(
                     metric ->
-                        assertThat(metric)
-                            .hasLongSumSatisfying(
-                                sum -> sum.isNotMonotonic().hasPointsSatisfying(assertions))));
+                        longSum(
+                                metricAssert ->
+                                    metricAssert.hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+                                pointAssertions)
+                            .accept(assertThat(metric))));
   }
 
   private static void verifyObjectCountMetric(MetricData metric, String poolName) {
-    assertThat(metric)
-        .hasUnit("{object}")
-        .hasDescription(
-            "The number of objects currently in the state described by the state attribute.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point ->
-                            point.hasAttributesSatisfyingExactly(
-                                equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")),
-                        point ->
-                            point.hasAttributesSatisfyingExactly(
-                                equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used"))));
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{object}")
+                    .hasDescription(
+                        "The number of objects currently in the state described by the state attribute.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point ->
+                point.hasAttributesSatisfyingExactly(
+                    equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")),
+            point ->
+                point.hasAttributesSatisfyingExactly(
+                    equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used")))
+        .accept(assertThat(metric));
   }
 
   private void verifyMinIdleObjects(String poolName) {
@@ -332,10 +336,14 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   private static void verifyMinIdleObjectsMetric(MetricData metric, String poolName) {
-    assertThat(metric)
-        .hasUnit("{object}")
-        .hasDescription("The minimum number of idle objects allowed in the pool.")
-        .hasLongSumSatisfying(sum -> verifyPoolName(sum, poolName));
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{object}")
+                    .hasDescription("The minimum number of idle objects allowed in the pool.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasAttributes(Attributes.of(POOL_NAME, poolName)))
+        .accept(assertThat(metric));
   }
 
   private void verifyMaxIdleObjects(String poolName) {
@@ -347,10 +355,14 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   private static void verifyMaxIdleObjectsMetric(MetricData metric, String poolName) {
-    assertThat(metric)
-        .hasUnit("{object}")
-        .hasDescription("The maximum number of idle objects allowed in the pool.")
-        .hasLongSumSatisfying(sum -> verifyPoolName(sum, poolName));
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{object}")
+                    .hasDescription("The maximum number of idle objects allowed in the pool.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasAttributes(Attributes.of(POOL_NAME, poolName)))
+        .accept(assertThat(metric));
   }
 
   private void verifyMaxObjects(String poolName) {
@@ -362,10 +374,14 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   private static void verifyMaxObjectsMetric(MetricData metric, String poolName) {
-    assertThat(metric)
-        .hasUnit("{object}")
-        .hasDescription("The maximum number of objects allowed in the pool.")
-        .hasLongSumSatisfying(sum -> verifyPoolName(sum, poolName));
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{object}")
+                    .hasDescription("The maximum number of objects allowed in the pool.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasAttributes(Attributes.of(POOL_NAME, poolName)))
+        .accept(assertThat(metric));
   }
 
   private void verifyPendingRequests(String poolName) {
@@ -377,15 +393,15 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   private static void verifyPendingRequestsMetric(MetricData metric, String poolName) {
-    assertThat(metric)
-        .hasUnit("{request}")
-        .hasDescription("The number of requests currently waiting for an object from the pool.")
-        .hasLongSumSatisfying(sum -> verifyPoolName(sum, poolName));
-  }
-
-  private static void verifyPoolName(LongSumAssert sum, String poolName) {
-    sum.isNotMonotonic()
-        .hasPointsSatisfying(point -> point.hasAttributes(Attributes.of(POOL_NAME, poolName)));
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{request}")
+                    .hasDescription(
+                        "The number of requests currently waiting for an object from the pool.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasAttributes(Attributes.of(POOL_NAME, poolName)))
+        .accept(assertThat(metric));
   }
 
   protected void assertNoMetrics() {

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertProcessMetrics;
@@ -319,18 +321,17 @@ class MessageProducerSupportInstrumentationTest {
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "test"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "input"))))));
+                metricData ->
+                    longSum(
+                            metric -> {},
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(MESSAGING_SYSTEM, "test"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, "input")))
+                        .accept(assertThat(metricData))));
   }
 
   private static void assertSpringRabbitProcessMetrics() {
@@ -340,11 +341,9 @@ class MessageProducerSupportInstrumentationTest {
         "messaging.process.duration",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
+                metricData ->
+                    histogram(metric -> {}, point -> point.hasCount(1))
+                        .accept(assertThat(metricData))));
   }
 
   private static Message newRawMessage() {

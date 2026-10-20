@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.incubator.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleSum;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -40,6 +42,7 @@ import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
 import io.opentelemetry.extension.incubator.metrics.LongGauge;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.util.MetricAssertions;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,25 +85,22 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test")
-                .hasDescription("d")
-                .hasUnit("u")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(instrumentationName)
-                        .setVersion("1.2.3")
-                        .setSchemaUrl("http://schema.org")
-                        .build())
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(11)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("test"), "test")))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("test")
+                    .hasDescription("d")
+                    .hasUnit("u")
+                    .hasInstrumentationScope(
+                        InstrumentationScopeInfo.builder(instrumentationName)
+                            .setVersion("1.2.3")
+                            .setSchemaUrl("http://schema.org")
+                            .build())
+                    .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+            point ->
+                point
+                    .hasValue(11)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test"))));
   }
 
   @Test
@@ -118,25 +118,22 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test")
-                .hasDescription("d")
-                .hasUnit("u")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(instrumentationName)
-                        .setVersion("1.2.3")
-                        .setSchemaUrl("http://schema.org")
-                        .build())
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(12.1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("test"), "test")))));
+        doubleSum(
+            metric ->
+                metric
+                    .hasName("test")
+                    .hasDescription("d")
+                    .hasUnit("u")
+                    .hasInstrumentationScope(
+                        InstrumentationScopeInfo.builder(instrumentationName)
+                            .setVersion("1.2.3")
+                            .setSchemaUrl("http://schema.org")
+                            .build())
+                    .hasDoubleSumSatisfying(sum -> sum.isMonotonic()),
+            point ->
+                point
+                    .hasValue(12.1)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test"))));
   }
 
   @Test
@@ -154,25 +151,22 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test")
-                .hasDescription("d")
-                .hasUnit("u")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(instrumentationName)
-                        .setVersion("1.2.3")
-                        .setSchemaUrl("http://schema.org")
-                        .build())
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(11)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("test"), "test")))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("test")
+                    .hasDescription("d")
+                    .hasUnit("u")
+                    .hasInstrumentationScope(
+                        InstrumentationScopeInfo.builder(instrumentationName)
+                            .setVersion("1.2.3")
+                            .setSchemaUrl("http://schema.org")
+                            .build())
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point ->
+                point
+                    .hasValue(11)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test"))));
   }
 
   @Test
@@ -191,25 +185,22 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test")
-                .hasDescription("d")
-                .hasUnit("u")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(instrumentationName)
-                        .setVersion("1.2.3")
-                        .setSchemaUrl("http://schema.org")
-                        .build())
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(12.1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("test"), "test")))));
+        doubleSum(
+            metric ->
+                metric
+                    .hasName("test")
+                    .hasDescription("d")
+                    .hasUnit("u")
+                    .hasInstrumentationScope(
+                        InstrumentationScopeInfo.builder(instrumentationName)
+                            .setVersion("1.2.3")
+                            .setSchemaUrl("http://schema.org")
+                            .build())
+                    .hasDoubleSumSatisfying(sum -> sum.isNotMonotonic()),
+            point ->
+                point
+                    .hasValue(12.1)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test"))));
   }
 
   @Test
@@ -295,24 +286,21 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test")
-                .hasDescription("d")
-                .hasUnit("u")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(instrumentationName)
-                        .setVersion("1.2.3")
-                        .setSchemaUrl("http://schema.org")
-                        .build())
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(123)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test"), "test")))));
+        MetricAssertions.longGauge(
+            metric ->
+                metric
+                    .hasName("test")
+                    .hasDescription("d")
+                    .hasUnit("u")
+                    .hasInstrumentationScope(
+                        InstrumentationScopeInfo.builder(instrumentationName)
+                            .setVersion("1.2.3")
+                            .setSchemaUrl("http://schema.org")
+                            .build()),
+            point ->
+                point
+                    .hasValue(123)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test"))));
 
     observableGauge.close();
 
@@ -335,25 +323,22 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test")
-                .hasDescription("d")
-                .hasUnit("u")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(instrumentationName)
-                        .setVersion("1.2.3")
-                        .setSchemaUrl("http://schema.org")
-                        .build())
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point -> point.hasValue(321).hasAttributes(Attributes.empty()),
-                            point ->
-                                point
-                                    .hasValue(123)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test"), "test")))));
+        MetricAssertions.longGauge(
+            metric ->
+                metric
+                    .hasName("test")
+                    .hasDescription("d")
+                    .hasUnit("u")
+                    .hasInstrumentationScope(
+                        InstrumentationScopeInfo.builder(instrumentationName)
+                            .setVersion("1.2.3")
+                            .setSchemaUrl("http://schema.org")
+                            .build()),
+            point -> point.hasValue(321).hasAttributes(Attributes.empty()),
+            point ->
+                point
+                    .hasValue(123)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test"))));
 
     testing.clearData();
 
@@ -374,24 +359,21 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test")
-                .hasDescription("d")
-                .hasUnit("u")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(instrumentationName)
-                        .setVersion("1.2.3")
-                        .setSchemaUrl("http://schema.org")
-                        .build())
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(1.23)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test"), "test")))));
+        MetricAssertions.doubleGauge(
+            metric ->
+                metric
+                    .hasName("test")
+                    .hasDescription("d")
+                    .hasUnit("u")
+                    .hasInstrumentationScope(
+                        InstrumentationScopeInfo.builder(instrumentationName)
+                            .setVersion("1.2.3")
+                            .setSchemaUrl("http://schema.org")
+                            .build()),
+            point ->
+                point
+                    .hasValue(1.23)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test"))));
 
     observableGauge.close();
 
@@ -413,25 +395,22 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metric ->
-            metric
-                .hasName("test")
-                .hasDescription("d")
-                .hasUnit("u")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(instrumentationName)
-                        .setVersion("1.2.3")
-                        .setSchemaUrl("http://schema.org")
-                        .build())
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point -> point.hasValue(3.21).hasAttributes(Attributes.empty()),
-                            point ->
-                                point
-                                    .hasValue(1.23)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test"), "test")))));
+        MetricAssertions.doubleGauge(
+            metric ->
+                metric
+                    .hasName("test")
+                    .hasDescription("d")
+                    .hasUnit("u")
+                    .hasInstrumentationScope(
+                        InstrumentationScopeInfo.builder(instrumentationName)
+                            .setVersion("1.2.3")
+                            .setSchemaUrl("http://schema.org")
+                            .build()),
+            point -> point.hasValue(3.21).hasAttributes(Attributes.empty()),
+            point ->
+                point
+                    .hasValue(1.23)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test"))));
 
     testing.clearData();
 

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -111,10 +112,9 @@ class SpringRabbit11SimpleMessageListenerContainerTest {
         SPRING_INSTRUMENTATION_NAME,
         histogram(
             metric -> metric.hasName("messaging.process.duration"), point -> point.hasCount(1)),
-        metric ->
-            metric
-                .hasName("messaging.client.consumed.messages")
-                .hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
+        longSum(
+            metric -> metric.hasName("messaging.client.consumed.messages"),
+            point -> point.hasValue(1)));
     assertThat(testing.metrics())
         .filteredOn(
             metric ->

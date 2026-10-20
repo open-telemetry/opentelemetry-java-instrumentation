@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.oshi.v5_0;
 
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeVersion;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.doubleGauge;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DiskIncubatingAttributes.DISK_IO_DIRECTION;
@@ -44,23 +46,23 @@ public abstract class AbstractSystemMetricsTest {
             metrics ->
                 metrics.anySatisfy(
                     metric ->
-                        assertThat(metric)
-                            .hasDescription("Reports memory in use by state.")
-                            .hasUnit("By")
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.isNotMonotonic()
-                                        .hasPointsSatisfying(
-                                            point ->
-                                                point
-                                                    .hasAttributesSatisfyingExactly(
-                                                        equalTo(SYSTEM_MEMORY_STATE, "used"))
-                                                    .hasValueSatisfying(v -> v.isNotNegative()),
-                                            point ->
-                                                point
-                                                    .hasAttributesSatisfyingExactly(
-                                                        equalTo(SYSTEM_MEMORY_STATE, "free"))
-                                                    .hasValueSatisfying(v -> v.isNotNegative())))));
+                        longSum(
+                                metricAssert ->
+                                    metricAssert
+                                        .hasDescription("Reports memory in use by state.")
+                                        .hasUnit("By")
+                                        .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+                                point ->
+                                    point
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SYSTEM_MEMORY_STATE, "used"))
+                                        .hasValueSatisfying(v -> v.isNotNegative()),
+                                point ->
+                                    point
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SYSTEM_MEMORY_STATE, "free"))
+                                        .hasValueSatisfying(v -> v.isNotNegative()))
+                            .accept(assertThat(metric))));
     testing()
         .waitAndAssertMetrics(
             scopeName(),
@@ -68,22 +70,22 @@ public abstract class AbstractSystemMetricsTest {
             metrics ->
                 metrics.anySatisfy(
                     metric ->
-                        assertThat(metric)
-                            .hasDescription("Percentage of memory bytes in use.")
-                            .hasUnit("1")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(SYSTEM_MEMORY_STATE, "used"))
-                                                .hasValueSatisfying(v -> v.isNotNegative()),
-                                        point ->
-                                            point
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(SYSTEM_MEMORY_STATE, "free"))
-                                                .hasValueSatisfying(v -> v.isNotNegative())))));
+                        doubleGauge(
+                                metricAssert ->
+                                    metricAssert
+                                        .hasDescription("Percentage of memory bytes in use.")
+                                        .hasUnit("1"),
+                                point ->
+                                    point
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SYSTEM_MEMORY_STATE, "used"))
+                                        .hasValueSatisfying(v -> v.isNotNegative()),
+                                point ->
+                                    point
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SYSTEM_MEMORY_STATE, "free"))
+                                        .hasValueSatisfying(v -> v.isNotNegative()))
+                            .accept(assertThat(metric))));
   }
 
   @Test

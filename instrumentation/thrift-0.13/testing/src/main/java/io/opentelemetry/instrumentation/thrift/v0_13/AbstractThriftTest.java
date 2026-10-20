@@ -25,6 +25,7 @@ package io.opentelemetry.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -356,77 +357,53 @@ public abstract class AbstractThriftTest {
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
-              metric ->
-                  metric
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, serverPort),
-                                          equalTo(RPC_METHOD, "say"),
-                                          equalTo(RPC_SERVICE, CustomHandler.class.getName()),
-                                          equalTo(RPC_SYSTEM, "apache_thrift"),
-                                          equalTo(NETWORK_TYPE, "ipv4")))));
+              histogram(
+                  metric -> metric.hasName("rpc.server.duration").hasUnit("ms"),
+                  point ->
+                      point.hasAttributesSatisfyingExactly(
+                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                          equalTo(SERVER_PORT, serverPort),
+                          equalTo(RPC_METHOD, "say"),
+                          equalTo(RPC_SERVICE, CustomHandler.class.getName()),
+                          equalTo(RPC_SYSTEM, "apache_thrift"),
+                          equalTo(NETWORK_TYPE, "ipv4"))));
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
-              metric ->
-                  metric
-                      .hasName("rpc.client.duration")
-                      .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, serverPort),
-                                          equalTo(RPC_METHOD, "say"),
-                                          equalTo(RPC_SERVICE, CustomService.class.getName()),
-                                          equalTo(RPC_SYSTEM, "apache_thrift"),
-                                          equalTo(NETWORK_TYPE, "ipv4")))));
+              histogram(
+                  metric -> metric.hasName("rpc.client.duration").hasUnit("ms"),
+                  point ->
+                      point.hasAttributesSatisfyingExactly(
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, serverPort),
+                          equalTo(RPC_METHOD, "say"),
+                          equalTo(RPC_SERVICE, CustomService.class.getName()),
+                          equalTo(RPC_SYSTEM, "apache_thrift"),
+                          equalTo(NETWORK_TYPE, "ipv4"))));
     }
     if (emitPreviewRpcSemconv()) {
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
-              metric ->
-                  metric
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, serverPort),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              CustomHandler.class.getName() + "/say")))));
+              histogram(
+                  metric -> metric.hasName("rpc.server.call.duration").hasUnit("s"),
+                  point ->
+                      point.hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                          equalTo(SERVER_PORT, serverPort),
+                          equalTo(RPC_METHOD, CustomHandler.class.getName() + "/say"))));
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
-              metric ->
-                  metric
-                      .hasName("rpc.client.call.duration")
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, serverPort),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              CustomService.class.getName() + "/say")))));
+              histogram(
+                  metric -> metric.hasName("rpc.client.call.duration").hasUnit("s"),
+                  point ->
+                      point.hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, serverPort),
+                          equalTo(RPC_METHOD, CustomService.class.getName() + "/say"))));
     }
   }
 
@@ -540,43 +517,27 @@ public abstract class AbstractThriftTest {
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
-              metric ->
-                  metric
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, port),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              CustomHandler.class.getName() + "/withError"),
-                                          equalTo(ERROR_TYPE, "_OTHER")))));
+              histogram(
+                  metric -> metric.hasName("rpc.server.call.duration").hasUnit("s"),
+                  point ->
+                      point.hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                          equalTo(SERVER_PORT, port),
+                          equalTo(RPC_METHOD, CustomHandler.class.getName() + "/withError"),
+                          equalTo(ERROR_TYPE, "_OTHER"))));
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
-              metric ->
-                  metric
-                      .hasName("rpc.client.call.duration")
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, port),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              CustomService.class.getName() + "/withError"),
-                                          equalTo(
-                                              ERROR_TYPE,
-                                              TApplicationException.class.getName())))));
+              histogram(
+                  metric -> metric.hasName("rpc.client.call.duration").hasUnit("s"),
+                  point ->
+                      point.hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, port),
+                          equalTo(RPC_METHOD, CustomService.class.getName() + "/withError"),
+                          equalTo(ERROR_TYPE, TApplicationException.class.getName()))));
     }
   }
 

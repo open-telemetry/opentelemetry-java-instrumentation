@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longGauge;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -209,22 +211,16 @@ class MetricAggregationTest {
   @SuppressWarnings("varargs")
   private static void waitAndAssertMetric(
       String metricName, MetricInfo.Type metricType, Consumer<LongPointAssert>... pointAsserts) {
+    Consumer<MetricAssert> metricAssertion =
+        metricType == MetricInfo.Type.GAUGE
+            ? longGauge(metric -> metric.hasDescription("description").hasUnit("1"), pointAsserts)
+            : longSum(metric -> metric.hasDescription("description").hasUnit("1"), pointAsserts);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
         metricName,
         metrics ->
-            metrics.anySatisfy(
-                metricData -> {
-                  MetricAssert metricAssert =
-                      assertThat(metricData).hasDescription("description").hasUnit("1");
-                  if (metricType == MetricInfo.Type.GAUGE) {
-                    metricAssert.hasLongGaugeSatisfying(
-                        gauge -> gauge.hasPointsSatisfying(pointAsserts));
-                  } else {
-                    metricAssert.hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(pointAsserts));
-                  }
-                }));
+            metrics.anySatisfy(metricData -> metricAssertion.accept(assertThat(metricData))));
   }
 
   private static void startTestMetric(

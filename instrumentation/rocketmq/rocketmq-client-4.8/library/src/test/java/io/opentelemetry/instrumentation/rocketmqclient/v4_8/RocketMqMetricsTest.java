@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
@@ -183,21 +184,17 @@ class RocketMqMetricsTest {
       String destination,
       String consumerGroup,
       String errorType) {
-    return metric ->
-        metric
-            .hasName(metricName)
-            .hasLongSumSatisfying(
-                sum ->
-                    sum.hasPointsSatisfying(
-                        point ->
-                            point
-                                .hasValue(expectedCount)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                    equalTo(ERROR_TYPE, errorType),
-                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                    equalTo(MESSAGING_DESTINATION_NAME, destination))));
+    return longSum(
+        metric -> metric.hasName(metricName),
+        point ->
+            point
+                .hasValue(expectedCount)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_OPERATION_NAME, operationName),
+                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                    equalTo(ERROR_TYPE, errorType),
+                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                    equalTo(MESSAGING_DESTINATION_NAME, destination)));
   }
 
   private static Consumer<MetricAssert> assertDuration(

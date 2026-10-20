@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -24,18 +25,14 @@ public class DbClientMetricsTestUtil {
     assertThat(expectedKeys).extracting(AttributeKey::getKey).contains(DB_SYSTEM_NAME.getKey());
     testing.waitAndAssertMetrics(
         instrumentationName,
-        metrics ->
-            metrics
-                .hasName("db.client.operation.duration")
-                .hasUnit("s")
-                .hasDescription("Duration of database client operations.")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsOnlyKeys(expectedKeys)))));
+        histogram(
+            metrics ->
+                metrics
+                    .hasName("db.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("Duration of database client operations."),
+            point ->
+                point.hasAttributesSatisfying(
+                    attributes -> assertThat(attributes.asMap()).containsOnlyKeys(expectedKeys))));
   }
 }

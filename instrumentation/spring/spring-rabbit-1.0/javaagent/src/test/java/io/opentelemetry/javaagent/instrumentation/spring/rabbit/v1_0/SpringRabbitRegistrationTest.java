@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -392,9 +393,8 @@ class SpringRabbitRegistrationTest {
         metrics ->
             metrics.satisfiesExactly(
                 metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(count)))));
+                    longSum(metricAssert -> {}, point -> point.hasValue(count))
+                        .accept(assertThat(metric))));
   }
 
   private static class TestContainer extends SimpleMessageListenerContainer {

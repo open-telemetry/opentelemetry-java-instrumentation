@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.enumeration;
@@ -87,15 +88,12 @@ class HandlerTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
-        metric ->
-            metric
-                .hasName("test.thread.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("test.thread.count")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0))));
     assertThat(BaseThreadHandler.createCount.get()).isEqualTo(1);
   }
 
@@ -125,24 +123,18 @@ class HandlerTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
-        metric ->
-            metric
-                .hasName("test.thread.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))),
-        metric ->
-            metric
-                .hasName("test.thread.count2")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("test.thread.count")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0))),
+        longSum(
+            metric ->
+                metric
+                    .hasName("test.thread.count2")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0))));
     assertThat(BaseThreadHandler.createCount.get()).isEqualTo(2);
   }
 
@@ -173,15 +165,12 @@ class HandlerTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
-        metric ->
-            metric
-                .hasName("test.thread.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("test.thread.count")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0))));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.jmx"))
@@ -213,24 +202,18 @@ class HandlerTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
-        metric ->
-            metric
-                .hasName("test.thread.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))),
-        metric ->
-            metric
-                .hasName("test.thread.count3")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("test.thread.count")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0))),
+        longSum(
+            metric ->
+                metric
+                    .hasName("test.thread.count3")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0))));
     assertThat(BaseThreadHandler.createCount.get()).isEqualTo(1);
   }
 

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -33,28 +35,24 @@ class RabbitMqMetricsAssertions {
         "messaging.client.sent.messages",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages producer attempted to send to the broker.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "publish"),
-                                                equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                                                equalTo(ERROR_TYPE, errorType),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                satisfies(
-                                                    SERVER_ADDRESS,
-                                                    AbstractStringAssert::isNotBlank),
-                                                satisfies(
-                                                    SERVER_PORT,
-                                                    AbstractLongAssert::isPositive))))));
+                metricData ->
+                    longSum(
+                            metric ->
+                                metric
+                                    .hasUnit("{message}")
+                                    .hasDescription(
+                                        "Number of messages producer attempted to send to the broker."),
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "publish"),
+                                        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                        equalTo(ERROR_TYPE, errorType),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
+                                        satisfies(SERVER_PORT, AbstractLongAssert::isPositive)))
+                        .accept(assertThat(metricData))));
   }
 
   static void assertReceiveMetrics(
@@ -82,30 +80,27 @@ class RabbitMqMetricsAssertions {
         "messaging.process.duration",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram
-                                    .satisfies(data -> assertThat(data.getPoints()).hasSize(1))
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasCount(consumedMessages)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination),
-                                                    satisfies(
-                                                        SERVER_ADDRESS,
-                                                        AbstractStringAssert::isNotBlank),
-                                                    satisfies(
-                                                        SERVER_PORT,
-                                                        AbstractLongAssert::isPositive))))));
+                metricData ->
+                    histogram(
+                            metric ->
+                                metric
+                                    .hasUnit("s")
+                                    .hasDescription("Duration of processing operation.")
+                                    .satisfies(
+                                        data ->
+                                            assertThat(data.getHistogramData().getPoints())
+                                                .hasSize(1)),
+                            point ->
+                                point
+                                    .hasCount(consumedMessages)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                        equalTo(ERROR_TYPE, errorType),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
+                                        satisfies(SERVER_PORT, AbstractLongAssert::isPositive)))
+                        .accept(assertThat(metricData))));
     assertConsumedMessages(testing, "process", destination, errorType, consumedMessages);
   }
 
@@ -136,34 +131,29 @@ class RabbitMqMetricsAssertions {
         "messaging.client.operation.duration",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription(
-                            "Duration of messaging operation initiated by a producer or consumer client.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram
-                                    .satisfies(data -> assertThat(data.getPoints()).hasSize(1))
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasCount(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        MESSAGING_OPERATION_NAME, operationName),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination),
-                                                    equalTo(
-                                                        MESSAGING_OPERATION_TYPE, operationType),
-                                                    satisfies(
-                                                        SERVER_ADDRESS,
-                                                        AbstractStringAssert::isNotBlank),
-                                                    satisfies(
-                                                        SERVER_PORT,
-                                                        AbstractLongAssert::isPositive))))));
+                metricData ->
+                    histogram(
+                            metric ->
+                                metric
+                                    .hasUnit("s")
+                                    .hasDescription(
+                                        "Duration of messaging operation initiated by a producer or consumer client.")
+                                    .satisfies(
+                                        data ->
+                                            assertThat(data.getHistogramData().getPoints())
+                                                .hasSize(1)),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                        equalTo(ERROR_TYPE, errorType),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                                        satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
+                                        satisfies(SERVER_PORT, AbstractLongAssert::isPositive)))
+                        .accept(assertThat(metricData))));
   }
 
   private static void assertConsumedMessages(
@@ -177,31 +167,28 @@ class RabbitMqMetricsAssertions {
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.satisfies(data -> assertThat(data.getPoints()).hasSize(1))
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(consumedMessages)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        MESSAGING_OPERATION_NAME, operationName),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination),
-                                                    satisfies(
-                                                        SERVER_ADDRESS,
-                                                        AbstractStringAssert::isNotBlank),
-                                                    satisfies(
-                                                        SERVER_PORT,
-                                                        AbstractLongAssert::isPositive))))));
+                metricData ->
+                    longSum(
+                            metric ->
+                                metric
+                                    .hasUnit("{message}")
+                                    .hasDescription(
+                                        "Number of messages that were delivered to the application.")
+                                    .satisfies(
+                                        data ->
+                                            assertThat(data.getLongSumData().getPoints())
+                                                .hasSize(1)),
+                            point ->
+                                point
+                                    .hasValue(consumedMessages)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                        equalTo(ERROR_TYPE, errorType),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
+                                        satisfies(SERVER_PORT, AbstractLongAssert::isPositive)))
+                        .accept(assertThat(metricData))));
   }
 
   private static void assertNoMetric(InstrumentationExtension testing, String metricName) {

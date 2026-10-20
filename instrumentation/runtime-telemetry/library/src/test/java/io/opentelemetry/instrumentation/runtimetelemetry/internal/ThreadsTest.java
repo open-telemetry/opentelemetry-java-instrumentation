@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_THREAD_DAEMON;
@@ -53,25 +54,19 @@ class ThreadsTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.thread.count")
-                .hasDescription("Number of executing platform threads.")
-                .hasUnit("{thread}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, true)),
-                                point ->
-                                    point
-                                        .hasValue(5)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, false)))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.thread.count")
+                    .hasDescription("Number of executing platform threads.")
+                    .hasUnit("{thread}")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point ->
+                point.hasValue(2).hasAttributesSatisfyingExactly(equalTo(JVM_THREAD_DAEMON, true)),
+            point ->
+                point
+                    .hasValue(5)
+                    .hasAttributesSatisfyingExactly(equalTo(JVM_THREAD_DAEMON, false))));
   }
 
   @Test
@@ -87,27 +82,23 @@ class ThreadsTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.thread.count")
-                .hasDescription("Number of executing platform threads.")
-                .hasUnit("{thread}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, false),
-                                            equalTo(JVM_THREAD_STATE, "runnable")),
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, true),
-                                            equalTo(JVM_THREAD_STATE, "waiting")))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.thread.count")
+                    .hasDescription("Number of executing platform threads.")
+                    .hasUnit("{thread}")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(JVM_THREAD_DAEMON, false), equalTo(JVM_THREAD_STATE, "runnable")),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(JVM_THREAD_DAEMON, true), equalTo(JVM_THREAD_STATE, "waiting"))));
   }
 
   @Test
@@ -129,27 +120,23 @@ class ThreadsTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        metric ->
-            metric
-                .hasName("jvm.thread.count")
-                .hasDescription("Number of executing platform threads.")
-                .hasUnit("{thread}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, false),
-                                            equalTo(JVM_THREAD_STATE, "runnable")),
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, true),
-                                            equalTo(JVM_THREAD_STATE, "waiting")))));
+        longSum(
+            metric ->
+                metric
+                    .hasName("jvm.thread.count")
+                    .hasDescription("Number of executing platform threads.")
+                    .hasUnit("{thread}")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(JVM_THREAD_DAEMON, false), equalTo(JVM_THREAD_STATE, "runnable")),
+            point ->
+                point
+                    .hasValue(1)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(JVM_THREAD_DAEMON, true), equalTo(JVM_THREAD_STATE, "waiting"))));
   }
 
   @Test
