@@ -34,19 +34,20 @@ import reactor.core.publisher.Mono;
 
 public final class CouchbaseRequestTracer implements RequestTracer {
 
-  private static final String SCHEMA_URL = DbSchemaUrls.SCHEMA_URL;
-
   private final CouchbaseTracer tracer;
 
   public static RequestTracer create(OpenTelemetry openTelemetry) {
     String instrumentationName = "io.opentelemetry.couchbase-3.2";
     Tracer tracer =
-        openTelemetry.tracerBuilder(instrumentationName).setSchemaUrl(SCHEMA_URL).build();
+        openTelemetry
+            .tracerBuilder(instrumentationName)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
+            .build();
     Logger exceptionLogger =
         openTelemetry
             .getLogsBridge()
             .loggerBuilder(instrumentationName)
-            .setSchemaUrl(SCHEMA_URL)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .build();
     return new CouchbaseRequestTracer(
         new CouchbaseTracer(tracer, exceptionLogger, true, false, false));
