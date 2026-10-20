@@ -44,16 +44,22 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
 
     // then
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testSummary",
             metric ->
-                metric.hasDescription("This is a test distribution summary").hasUnit("things"),
-            points ->
-                points
-                    .hasSum(555.5)
-                    .hasCount(4)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
+                metric
+                    .hasName("testSummary")
+                    .hasDescription("This is a test distribution summary")
+                    .hasUnit("things")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                points ->
+                                    points
+                                        .hasSum(555.5)
+                                        .hasCount(4)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -106,16 +112,22 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
 
     // then
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testSummary",
             metric ->
-                metric.hasDescription("This is a test distribution summary").hasUnit("things"),
-            point ->
-                point
-                    .hasSum(150)
-                    .hasCount(2)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
+                metric
+                    .hasName("testSummary")
+                    .hasDescription("This is a test distribution summary")
+                    .hasUnit("things")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(150)
+                                        .hasCount(2)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,

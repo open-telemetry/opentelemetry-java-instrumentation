@@ -337,19 +337,26 @@ class MeterTest {
     instrument.record(5, Attributes.of(stringKey("q"), "r"));
     instrument.record(6, Attributes.of(stringKey("q"), "r"));
 
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
         metric ->
             metric
+                .hasName("test")
                 .hasDescription("d")
+                .hasUnit("u")
                 .hasInstrumentationScope(
                     InstrumentationScopeInfo.builder(instrumentationName)
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasUnit("u"),
-        point -> point.hasSum(11.0).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r")));
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(11.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -360,19 +367,26 @@ class MeterTest {
     instrument.record(5.5, Attributes.of(stringKey("q"), "r"));
     instrument.record(6.6, Attributes.of(stringKey("q"), "r"));
 
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
         metric ->
             metric
+                .hasName("test")
                 .hasDescription("d")
+                .hasUnit("u")
                 .hasInstrumentationScope(
                     InstrumentationScopeInfo.builder(instrumentationName)
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasUnit("u"),
-        point -> point.hasSum(12.1).hasAttributesSatisfyingExactly(equalTo(stringKey("q"), "r")));
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(12.1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test

@@ -792,11 +792,16 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
 
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         instrumentationName.get(),
-        "http.client.request.duration",
-        metric -> metric.hasDescription("Duration of HTTP client requests.").hasUnit("s"),
-        point -> point.hasSumGreaterThan(0.0));
+        metric ->
+            metric
+                .hasName("http.client.request.duration")
+                .hasDescription("Duration of HTTP client requests.")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
   }
 
   /**

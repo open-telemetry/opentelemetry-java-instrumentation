@@ -45,15 +45,22 @@ public abstract class AbstractTimerHistogramGaugesTest {
 
     // then
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testTimer",
-            metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
-            point ->
-                point
-                    .hasSum(555.5)
-                    .hasCount(4)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
+            metric ->
+                metric
+                    .hasName("testTimer")
+                    .hasDescription("This is a test timer")
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(555.5)
+                                        .hasCount(4)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -105,15 +112,22 @@ public abstract class AbstractTimerHistogramGaugesTest {
 
     // then
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testTimer",
-            metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
-            point ->
-                point
-                    .hasSum(0.55)
-                    .hasCount(2)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
+            metric ->
+                metric
+                    .hasName("testTimer")
+                    .hasDescription("This is a test timer")
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(0.55)
+                                        .hasCount(2)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,

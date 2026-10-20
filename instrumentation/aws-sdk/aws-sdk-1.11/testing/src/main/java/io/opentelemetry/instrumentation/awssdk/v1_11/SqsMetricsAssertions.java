@@ -72,47 +72,66 @@ final class SqsMetricsAssertions {
       long operationCount,
       String operationName,
       String operationType) {
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.operation.duration",
-        metric ->
-            metric
-                .hasUnit("s")
-                .hasDescription(
-                    "Duration of messaging operation initiated by a producer or consumer client."),
-        point ->
-            point
-                .satisfies(data -> assertThat(data.getCount()).isEqualTo(operationCount))
-                .hasSumGreaterThan(0)
-                .hasBucketBoundaries(DURATION_BUCKETS)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_OPERATION_NAME, operationName),
-                    equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                    equalTo(ERROR_TYPE, null),
-                    equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                    equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                    equalTo(SERVER_ADDRESS, "localhost"),
-                    equalTo(SERVER_PORT, serverPort)));
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription(
+                            "Duration of messaging operation initiated by a producer or consumer client.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .satisfies(
+                                                data ->
+                                                    assertThat(data.getCount())
+                                                        .isEqualTo(operationCount))
+                                            .hasSumGreaterThan(0)
+                                            .hasBucketBoundaries(DURATION_BUCKETS)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(ERROR_TYPE, null),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                                equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, serverPort))))));
   }
 
   private static void assertProcessDuration(
       InstrumentationExtension testing, int serverPort, long operationCount) {
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.process.duration",
-        metric -> metric.hasUnit("s").hasDescription("Duration of processing operation."),
-        point ->
-            point
-                .satisfies(data -> assertThat(data.getCount()).isEqualTo(operationCount))
-                .hasSumGreaterThan(0)
-                .hasBucketBoundaries(DURATION_BUCKETS)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                    equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                    equalTo(ERROR_TYPE, null),
-                    equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                    equalTo(SERVER_ADDRESS, "localhost"),
-                    equalTo(SERVER_PORT, serverPort)));
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription("Duration of processing operation.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .satisfies(
+                                                data ->
+                                                    assertThat(data.getCount())
+                                                        .isEqualTo(operationCount))
+                                            .hasSumGreaterThan(0)
+                                            .hasBucketBoundaries(DURATION_BUCKETS)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(ERROR_TYPE, null),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, serverPort))))));
   }
 
   private static void assertMessageCounter(

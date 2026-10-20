@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -116,28 +115,15 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertMetrics(instrumentationName, assertions);
   }
 
-  /** Waits for exactly one named histogram to match the metadata and point assertions. */
+  /**
+   * Waits for all metrics from the given instrumentation to satisfy the supplied assertions,
+   * matching each assertion to a distinct metric in any order.
+   */
   @SafeVarargs
   @SuppressWarnings("varargs")
-  public final void waitAndAssertHistogramPoints(
-      String instrumentationName,
-      String metricName,
-      Consumer<MetricAssert> metricAssertion,
-      Consumer<HistogramPointAssert>... pointAssertions) {
-    testRunner.waitAndAssertHistogramPoints(
-        instrumentationName, metricName, metricAssertion, pointAssertions);
-  }
-
-  /** Waits for any named histogram to match the metadata and exact unordered point assertions. */
-  @SafeVarargs
-  @SuppressWarnings("varargs")
-  public final void waitAndAssertAnyHistogramPoints(
-      String instrumentationName,
-      String metricName,
-      Consumer<MetricAssert> metricAssertion,
-      Consumer<HistogramPointAssert>... pointAssertions) {
-    testRunner.waitAndAssertAnyHistogramPoints(
-        instrumentationName, metricName, metricAssertion, pointAssertions);
+  public final void waitAndAssertMetricsExactly(
+      String instrumentationName, Consumer<MetricAssert>... assertions) {
+    testRunner.waitAndAssertMetricsExactly(instrumentationName, assertions);
   }
 
   /**

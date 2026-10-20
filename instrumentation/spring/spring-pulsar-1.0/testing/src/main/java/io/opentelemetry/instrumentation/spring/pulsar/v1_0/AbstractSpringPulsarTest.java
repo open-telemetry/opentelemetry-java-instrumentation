@@ -112,17 +112,26 @@ public abstract class AbstractSpringPulsarTest {
 
   protected void assertProcessMetrics() {
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-pulsar-1.0",
         "messaging.process.duration",
-        metric -> metric.hasDescription("Duration of processing operation.").hasUnit("s"),
-        point ->
-            point
-                .hasSumGreaterThan(0.0)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                    equalTo(MESSAGING_SYSTEM, "pulsar"),
-                    equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC)));
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription("Duration of processing operation.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.pulsar-2.8",

@@ -104,11 +104,16 @@ class KubernetesClientTest {
                                 experimental("namespace")),
                             equalTo(stringKey("kubernetes-client.name"), experimental("name")))));
 
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         "io.opentelemetry.kubernetes-client-7.0",
-        "http.client.request.duration",
-        metric -> metric.hasDescription("Duration of HTTP client requests.").hasUnit("s"),
-        point -> point.hasSumGreaterThan(0.0));
+        metric ->
+            metric
+                .hasName("http.client.request.duration")
+                .hasDescription("Duration of HTTP client requests.")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
   }
 
   @Test

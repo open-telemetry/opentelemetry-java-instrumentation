@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -218,20 +217,25 @@ class RocketMqMetricsTest {
       String errorType) {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName(metricName)
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                    equalTo(ERROR_TYPE, errorType),
-                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                    equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                    equalTo(MESSAGING_OPERATION_TYPE, operationType)))));
+        metricName,
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasCount(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                equalTo(ERROR_TYPE, errorType),
+                                                equalTo(
+                                                    MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                                equalTo(
+                                                    MESSAGING_OPERATION_TYPE, operationType))))));
   }
 }

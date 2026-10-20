@@ -38,15 +38,22 @@ public abstract class AbstractTimerMillisecondsTest {
 
     // then
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testTimerMilliseconds",
-            metric -> metric.hasDescription("This is a test timer").hasUnit("ms"),
-            point ->
-                point
-                    .hasSum(23_345)
-                    .hasCount(3)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
+            metric ->
+                metric
+                    .hasName("testTimerMilliseconds")
+                    .hasDescription("This is a test timer")
+                    .hasUnit("ms")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(23_345)
+                                        .hasCount(3)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(timer);

@@ -110,17 +110,26 @@ abstract class AbstractIcebergTest {
 
   private void assertScanDurationMetric(ScanReport expectedReport) {
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "iceberg.scan.planning.duration",
-            metricAssert -> metricAssert.hasUnit("s"),
-            point ->
-                point
-                    .hasSumGreaterThan(0.0)
-                    .hasCount(1)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(longKey("iceberg.schema.id"), expectedReport.schemaId()),
-                        equalTo(stringKey("iceberg.table.name"), expectedReport.tableName())));
+            metricAssert ->
+                metricAssert
+                    .hasName("iceberg.scan.planning.duration")
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                longKey("iceberg.schema.id"),
+                                                expectedReport.schemaId()),
+                                            equalTo(
+                                                stringKey("iceberg.table.name"),
+                                                expectedReport.tableName())))));
   }
 
   private void assertDataFilesCountMetrics(ScanReport expectedReport) {

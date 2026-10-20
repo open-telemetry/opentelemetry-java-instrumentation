@@ -22,12 +22,20 @@ public class DbClientMetricsTestUtil {
     // db.system.name is required - see
     // https://opentelemetry.io/docs/specs/semconv/database/database-metrics/#metric-dbclientoperationduration
     assertThat(expectedKeys).extracting(AttributeKey::getKey).contains(DB_SYSTEM_NAME.getKey());
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         instrumentationName,
-        "db.client.operation.duration",
-        metric -> metric.hasDescription("Duration of database client operations.").hasUnit("s"),
-        point ->
-            point.hasAttributesSatisfying(
-                attributes -> assertThat(attributes.asMap()).containsOnlyKeys(expectedKeys)));
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasUnit("s")
+                .hasDescription("Duration of database client operations.")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .containsOnlyKeys(expectedKeys)))));
   }
 }

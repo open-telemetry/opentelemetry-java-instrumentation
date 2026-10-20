@@ -173,46 +173,59 @@ public class CamelMessagingMetricsAssertions {
       String destination,
       String errorType,
       String destinationPartitionId) {
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         metricName,
-        metric -> metric.hasDescription(description).hasUnit("s"),
-        point -> {
-          point.hasCount(1);
-          if (operationType != null) {
-            if (destinationPartitionId != null) {
-              point.hasAttributesSatisfyingExactly(
-                  equalTo(MESSAGING_OPERATION_NAME, operationName),
-                  equalTo(MESSAGING_SYSTEM, system),
-                  equalTo(MESSAGING_DESTINATION_NAME, destination),
-                  equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId),
-                  equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                  equalTo(ERROR_TYPE, errorType));
-            } else {
-              point.hasAttributesSatisfyingExactly(
-                  equalTo(MESSAGING_OPERATION_NAME, operationName),
-                  equalTo(MESSAGING_SYSTEM, system),
-                  equalTo(MESSAGING_DESTINATION_NAME, destination),
-                  equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                  equalTo(ERROR_TYPE, errorType));
-            }
-          } else {
-            if (destinationPartitionId != null) {
-              point.hasAttributesSatisfyingExactly(
-                  equalTo(MESSAGING_OPERATION_NAME, operationName),
-                  equalTo(MESSAGING_SYSTEM, system),
-                  equalTo(MESSAGING_DESTINATION_NAME, destination),
-                  equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId),
-                  equalTo(ERROR_TYPE, errorType));
-            } else {
-              point.hasAttributesSatisfyingExactly(
-                  equalTo(MESSAGING_OPERATION_NAME, operationName),
-                  equalTo(MESSAGING_SYSTEM, system),
-                  equalTo(MESSAGING_DESTINATION_NAME, destination),
-                  equalTo(ERROR_TYPE, errorType));
-            }
-          }
-        });
+        metrics ->
+            metrics.satisfiesExactly(
+                metric -> {
+                  assertThat(metric)
+                      .hasUnit("s")
+                      .hasDescription(description)
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point -> {
+                                    point.hasCount(1);
+                                    if (operationType != null) {
+                                      if (destinationPartitionId != null) {
+                                        point.hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                            equalTo(MESSAGING_SYSTEM, system),
+                                            equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                            equalTo(
+                                                MESSAGING_DESTINATION_PARTITION_ID,
+                                                destinationPartitionId),
+                                            equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                                            equalTo(ERROR_TYPE, errorType));
+                                      } else {
+                                        point.hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                            equalTo(MESSAGING_SYSTEM, system),
+                                            equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                            equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                                            equalTo(ERROR_TYPE, errorType));
+                                      }
+                                    } else {
+                                      if (destinationPartitionId != null) {
+                                        point.hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                            equalTo(MESSAGING_SYSTEM, system),
+                                            equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                            equalTo(
+                                                MESSAGING_DESTINATION_PARTITION_ID,
+                                                destinationPartitionId),
+                                            equalTo(ERROR_TYPE, errorType));
+                                      } else {
+                                        point.hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                            equalTo(MESSAGING_SYSTEM, system),
+                                            equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                            equalTo(ERROR_TYPE, errorType));
+                                      }
+                                    }
+                                  }));
+                }));
   }
 
   private static void assertCounter(

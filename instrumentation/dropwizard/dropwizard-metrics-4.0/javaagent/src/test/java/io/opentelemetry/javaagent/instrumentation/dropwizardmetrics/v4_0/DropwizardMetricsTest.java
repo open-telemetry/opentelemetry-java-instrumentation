@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -102,8 +101,10 @@ class DropwizardMetricsTest {
         metric ->
             metric
                 .hasName("testhistogram")
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(point -> point.hasSum(42).hasCount(2))));
+                .hasHistogramSatisfying(
+                    histogramMetric ->
+                        histogramMetric.hasPointsSatisfying(
+                            point -> point.hasSum(42).hasCount(2))));
     testing.clearData();
 
     // when
@@ -156,11 +157,15 @@ class DropwizardMetricsTest {
     timer.update(234_000, NANOSECONDS);
 
     // then
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testtimer",
-        metric -> metric.hasUnit("ms"),
-        point -> point.hasSum(1.234).hasCount(2));
+        metric ->
+            metric
+                .hasName("testtimer")
+                .hasUnit("ms")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(point -> point.hasSum(1.234).hasCount(2))));
     testing.clearData();
 
     // when

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -150,9 +149,10 @@ class ShardedJedisClientTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(
-                        point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget))));
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget))));
   }
 
   @Test

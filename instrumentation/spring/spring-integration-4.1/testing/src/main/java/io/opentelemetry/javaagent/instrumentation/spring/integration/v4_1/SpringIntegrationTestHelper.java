@@ -58,18 +58,27 @@ final class SpringIntegrationTestHelper {
             ? satisfies(ERROR_TYPE, AbstractStringAssert::isNotEmpty)
             : equalTo(ERROR_TYPE, null);
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.process.duration",
-        metric -> metric.hasDescription("Duration of processing operation.").hasUnit("s"),
-        point ->
-            point
-                .hasCount(expectedCount)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                    equalTo(MESSAGING_SYSTEM, "spring_integration"),
-                    equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                    errorType));
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription("Duration of processing operation.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasCount(expectedCount)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, "spring_integration"),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_NAME, destinationName),
+                                                errorType)))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
@@ -95,22 +104,28 @@ final class SpringIntegrationTestHelper {
   }
 
   static void assertSendMetrics(InstrumentationExtension testing, String destinationName) {
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.operation.duration",
-        metric ->
-            metric
-                .hasDescription(
-                    "Duration of messaging operation initiated by a producer or consumer client.")
-                .hasUnit("s"),
-        point ->
-            point
-                .hasCount(1)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_OPERATION_NAME, "send"),
-                    equalTo(MESSAGING_SYSTEM, "spring_integration"),
-                    equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                    equalTo(MESSAGING_OPERATION_TYPE, "send")));
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription(
+                            "Duration of messaging operation initiated by a producer or consumer client.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasCount(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                                equalTo(MESSAGING_SYSTEM, "spring_integration"),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_NAME, destinationName),
+                                                equalTo(MESSAGING_OPERATION_TYPE, "send"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.sent.messages",

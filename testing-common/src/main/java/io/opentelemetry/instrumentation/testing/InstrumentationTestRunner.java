@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -26,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -246,42 +244,37 @@ public abstract class InstrumentationTestRunner {
     }
   }
 
-  /** Waits for exactly one named histogram to match the metadata and point assertions. */
+  /**
+   * Waits for all metrics from the given instrumentation to satisfy the supplied assertions,
+   * matching each assertion to a distinct metric in any order.
+   */
   @SafeVarargs
-  public final void waitAndAssertHistogramPoints(
-      String instrumentationName,
-      String metricName,
-      Consumer<MetricAssert> metricAssertion,
-      Consumer<HistogramPointAssert>... pointAssertions) {
-    waitAndAssertMetrics(
-        instrumentationName,
-        metricName,
-        metrics ->
-            metrics.satisfiesExactly(
-                metric -> {
-                  MetricAssert metricAssert = assertThat(metric);
-                  metricAssertion.accept(metricAssert);
-                  metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
-                }));
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertMetricsExactly(
+      String instrumentationName, Consumer<MetricAssert>... assertions) {
+    awaitUntilAsserted(
+        () -> {
+          List<MetricData> metrics = instrumentationMetrics(instrumentationName);
+          assertThat(metrics).satisfiesExactlyInAnyOrder(toMetricAssertions(assertions));
+        });
+
+    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
+
+    if (Boolean.getBoolean("collectMetadata")) {
+      collectEmittedMetrics(getExportedMetrics());
+    }
   }
 
-  /** Waits for any named histogram to match the metadata and exact unordered point assertions. */
-  @SafeVarargs
-  public final void waitAndAssertAnyHistogramPoints(
-      String instrumentationName,
-      String metricName,
-      Consumer<MetricAssert> metricAssertion,
-      Consumer<HistogramPointAssert>... pointAssertions) {
-    waitAndAssertMetrics(
-        instrumentationName,
-        metricName,
-        metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  MetricAssert metricAssert = assertThat(metric);
-                  metricAssertion.accept(metricAssert);
-                  metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
-                }));
+  // The runtime array type is Consumer and every element is a Consumer<MetricData>.
+  @SuppressWarnings("unchecked")
+  private static Consumer<MetricData>[] toMetricAssertions(Consumer<MetricAssert>[] assertions) {
+    Consumer<MetricData>[] metricAssertions =
+        (Consumer<MetricData>[]) new Consumer<?>[assertions.length];
+    for (int i = 0; i < assertions.length; i++) {
+      Consumer<MetricAssert> assertion = assertions[i];
+      metricAssertions[i] = metric -> assertion.accept(assertThat(metric));
+    }
+    return metricAssertions;
   }
 
   private List<MetricData> metricsForScope(String instrumentationName) {

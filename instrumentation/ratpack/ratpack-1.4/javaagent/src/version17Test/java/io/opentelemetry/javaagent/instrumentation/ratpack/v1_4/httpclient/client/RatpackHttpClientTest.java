@@ -64,19 +64,24 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
                             }),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
 
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         "io.opentelemetry.ratpack-1.4",
-        "http.client.request.duration",
         metric ->
-            metric.satisfies(
-                metricData ->
-                    assertThat(metricData.getInstrumentationScopeInfo().getVersion()).isNotEmpty()),
-        point ->
-            point.hasAttributesSatisfyingExactly(
-                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(SERVER_ADDRESS, uri.getHost()),
-                equalTo(SERVER_PORT, uri.getPort())));
+            metric
+                .hasName("http.client.request.duration")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getInstrumentationScopeInfo().getVersion())
+                            .isNotEmpty())
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                    equalTo(SERVER_ADDRESS, uri.getHost()),
+                                    equalTo(SERVER_PORT, uri.getPort())))));
   }
 }

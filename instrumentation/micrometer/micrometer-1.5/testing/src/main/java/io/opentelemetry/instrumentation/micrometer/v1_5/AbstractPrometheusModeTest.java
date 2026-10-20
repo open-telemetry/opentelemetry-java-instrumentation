@@ -84,15 +84,22 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testPrometheusSummary.items",
-            metric -> metric.hasDescription("This is a test summary").hasUnit("items"),
-            point ->
-                point
-                    .hasSum(54)
-                    .hasCount(2)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
+            metric ->
+                metric
+                    .hasName("testPrometheusSummary.items")
+                    .hasDescription("This is a test summary")
+                    .hasUnit("items")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(54)
+                                        .hasCount(2)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -308,15 +315,22 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testPrometheusTimer.seconds",
-            metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
-            point ->
-                point
-                    .hasSum(16.789)
-                    .hasCount(3)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
+            metric ->
+                metric
+                    .hasName("testPrometheusTimer.seconds")
+                    .hasDescription("This is a test timer")
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(16.789)
+                                        .hasCount(3)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -373,20 +387,29 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertAnyHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testPrometheusTimerBoundary.seconds",
-            metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
-            point ->
-                point
-                    .hasSum(0.1)
-                    .hasCount(1)
-                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
-                    .satisfies(
-                        pointData -> {
-                          assertThat(pointData.getBoundaries()).hasSize(1);
-                          assertThat(Double.toString(pointData.getBoundaries().get(0)))
-                              .isEqualTo("0.3");
-                        }));
+            metric ->
+                metric
+                    .hasName("testPrometheusTimerBoundary.seconds")
+                    .hasDescription("This is a test timer")
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(0.1)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value"))
+                                        .satisfies(
+                                            pointData -> {
+                                              assertThat(pointData.getBoundaries()).hasSize(1);
+                                              assertThat(
+                                                      Double.toString(
+                                                          pointData.getBoundaries().get(0)))
+                                                  .isEqualTo("0.3");
+                                            }))));
   }
 }

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -118,30 +117,32 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSum(4.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(4.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
   }
 
   @Test
@@ -181,30 +182,32 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSum(4.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(4.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
   }
 
   @Test
@@ -263,15 +266,16 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
   }
 }

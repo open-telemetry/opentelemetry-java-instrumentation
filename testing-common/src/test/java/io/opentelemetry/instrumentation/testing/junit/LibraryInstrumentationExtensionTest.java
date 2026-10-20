@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 
 import io.opentelemetry.api.common.Attributes;
 import org.junit.jupiter.api.RepeatedTest;
@@ -43,7 +43,7 @@ class LibraryInstrumentationExtensionTest {
   }
 
   @Test
-  void shouldAssertHistogramPoints() {
+  void shouldAssertAllMetricsForScope() {
     Attributes firstAttributes = Attributes.of(stringKey("key"), "first");
     Attributes secondAttributes = Attributes.of(stringKey("key"), "second");
     testing
@@ -76,40 +76,13 @@ class LibraryInstrumentationExtensionTest {
         .build()
         .record(5);
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertMetricsExactly(
         "test",
-        "duration",
-        metric -> metric.hasDescription("Test duration."),
-        point -> point.hasCount(1).hasSum(4).hasAttributes(secondAttributes),
-        point -> point.hasCount(1).hasSum(2).hasAttributes(firstAttributes));
-
-    testing.waitAndAssertAnyHistogramPoints(
-        "test",
-        "duration",
-        metric -> metric.hasDescription("Test duration."),
-        point -> point.hasCount(1).hasSum(4).hasAttributes(secondAttributes),
-        point -> point.hasCount(1).hasSum(2).hasAttributes(firstAttributes));
-  }
-
-  @Test
-  void shouldPropagateMetricAssertionFailure() {
-    testing
-        .getOpenTelemetry()
-        .getMeter("test")
-        .histogramBuilder("failed-duration")
-        .setUnit("s")
-        .build()
-        .record(2);
-
-    assertThatThrownBy(
-            () ->
-                testing.waitAndAssertHistogramPoints(
-                    "test",
-                    "failed-duration",
-                    metric -> {
-                      throw new IllegalStateException("metric assertion failed");
-                    }))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("metric assertion failed");
+        histogram(
+            metric -> metric.hasName("duration").hasUnit("s").hasDescription("Test duration."),
+            point -> point.hasCount(1).hasSum(4).hasAttributes(secondAttributes),
+            point -> point.hasCount(1).hasSum(2).hasAttributes(firstAttributes)),
+        histogram(
+            metric -> metric.hasName("other").hasUnit("ms"), point -> point.hasCount(1).hasSum(3)));
   }
 }

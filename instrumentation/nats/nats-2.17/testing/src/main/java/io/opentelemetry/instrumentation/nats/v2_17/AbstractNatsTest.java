@@ -44,24 +44,31 @@ abstract class AbstractNatsTest {
   void assertProducerMetrics(String operationName, String destination, String errorType) {
 
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             "messaging.client.operation.duration",
-            metric ->
-                metric
-                    .hasDescription(
-                        "Duration of messaging operation initiated by a producer or consumer client.")
-                    .hasUnit("s"),
-            point ->
-                point
-                    .hasSumGreaterThan(0)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_OPERATION_NAME, operationName),
-                        equalTo(MESSAGING_SYSTEM, "nats"),
-                        equalTo(ERROR_TYPE, errorType),
-                        equalTo(MESSAGING_DESTINATION_NAME, destination),
-                        equalTo(MESSAGING_OPERATION_TYPE, "send"))
-                    .hasBucketBoundaries(DURATION_BUCKETS));
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasDescription(
+                                "Duration of messaging operation initiated by a producer or consumer client.")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasSumGreaterThan(0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        MESSAGING_OPERATION_NAME, operationName),
+                                                    equalTo(MESSAGING_SYSTEM, "nats"),
+                                                    equalTo(ERROR_TYPE, errorType),
+                                                    equalTo(
+                                                        MESSAGING_DESTINATION_NAME, destination),
+                                                    equalTo(MESSAGING_OPERATION_TYPE, "send"))
+                                                .hasBucketBoundaries(DURATION_BUCKETS)))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -92,19 +99,28 @@ abstract class AbstractNatsTest {
   void assertProcessMetrics(String destination, String errorType) {
 
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             "messaging.process.duration",
-            metric -> metric.hasDescription("Duration of processing operation.").hasUnit("s"),
-            point ->
-                point
-                    .hasSumGreaterThan(0)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                        equalTo(MESSAGING_SYSTEM, "nats"),
-                        equalTo(ERROR_TYPE, errorType),
-                        equalTo(MESSAGING_DESTINATION_NAME, destination))
-                    .hasBucketBoundaries(DURATION_BUCKETS));
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasDescription("Duration of processing operation.")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasSumGreaterThan(0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                    equalTo(MESSAGING_SYSTEM, "nats"),
+                                                    equalTo(ERROR_TYPE, errorType),
+                                                    equalTo(
+                                                        MESSAGING_DESTINATION_NAME, destination))
+                                                .hasBucketBoundaries(DURATION_BUCKETS)))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,

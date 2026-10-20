@@ -5,33 +5,33 @@
 
 package io.opentelemetry.instrumentation.testing.util;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.function.Consumer;
-import org.assertj.core.api.ThrowingConsumer;
 
-/** Composable assertions on {@link MetricData}, intended to be passed to {@code satisfies(...)}. */
+/** Composable assertions on metrics. */
 public final class MetricAssertions {
 
   /**
-   * Asserts that the metric is a histogram whose points match exactly the given assertions, in any
-   * order.
+   * Returns an assertion that validates metric metadata and exactly matches the histogram points,
+   * in any order.
    *
    * <pre>{@code
-   * assertThat(metric)
-   *     .hasName("duration")
-   *     .satisfies(hasHistogramPointsSatisfyingExactly(point -> point.hasCount(1)));
+   * testing.waitAndAssertMetricsExactly(
+   *     "test",
+   *     histogram(
+   *         metric -> metric.hasName("duration").hasUnit("s"),
+   *         point -> point.hasCount(1)));
    * }</pre>
    */
   @SafeVarargs
   @SuppressWarnings("varargs")
-  public static ThrowingConsumer<MetricData> hasHistogramPointsSatisfyingExactly(
-      Consumer<HistogramPointAssert>... assertions) {
-    return metric ->
-        assertThat(metric)
-            .hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(assertions));
+  public static Consumer<MetricAssert> histogram(
+      Consumer<MetricAssert> metricAssertion, Consumer<HistogramPointAssert>... pointAssertions) {
+    return metric -> {
+      metricAssertion.accept(metric);
+      metric.hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(pointAssertions));
+    };
   }
 
   private MetricAssertions() {}

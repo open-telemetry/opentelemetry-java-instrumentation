@@ -17,6 +17,7 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.AbstractPointAssert;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -256,34 +257,47 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyCreateTime() {
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         instrumentationName,
         "db.client.connection.create_time",
-        metric ->
-            metric.hasUnit("s").hasDescription("The time it took to create a new connection."),
-        this::verifyPointAttributes);
+        metrics -> metrics.anySatisfy(this::verifyCreateTimeMetric));
+  }
+
+  private void verifyCreateTimeMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("s")
+        .hasDescription("The time it took to create a new connection.")
+        .hasHistogramSatisfying(
+            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
   }
 
   private void verifyWaitTime() {
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         instrumentationName,
         "db.client.connection.wait_time",
-        metric ->
-            metric
-                .hasUnit("s")
-                .hasDescription("The time it took to obtain an open connection from the pool."),
-        this::verifyPointAttributes);
+        metrics -> metrics.anySatisfy(this::verifyWaitTimeMetric));
+  }
+
+  private void verifyWaitTimeMetric(MetricData metric) {
+    assertThat(metric)
+        .hasUnit("s")
+        .hasDescription("The time it took to obtain an open connection from the pool.")
+        .hasHistogramSatisfying(
+            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
   }
 
   private void verifyUseTime() {
-    testing.waitAndAssertAnyHistogramPoints(
+    testing.waitAndAssertMetrics(
         instrumentationName,
         "db.client.connection.use_time",
-        metric ->
-            metric
-                .hasUnit("s")
-                .hasDescription(
-                    "The time between borrowing a connection and returning it to the pool."),
-        this::verifyPointAttributes);
+        metrics -> metrics.anySatisfy(this::verifyUseTimeMetric));
+  }
+
+  private MetricAssert verifyUseTimeMetric(MetricData metric) {
+    return assertThat(metric)
+        .hasUnit("s")
+        .hasDescription("The time between borrowing a connection and returning it to the pool.")
+        .hasHistogramSatisfying(
+            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
   }
 }
