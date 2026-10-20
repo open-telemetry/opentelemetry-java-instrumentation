@@ -234,8 +234,11 @@ class DeclarativeConfigTest {
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
         .run(
             context -> {
-              assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
-              assertThat(context).getBean("configProvider").isEqualTo(ConfigProvider.noop());
+              assertThat(context)
+                  .doesNotHaveBean("otelProperties")
+                  .doesNotHaveBean(ConfigProperties.class);
+              assertThat(context.getBean(OpenTelemetry.class)).isEqualTo(OpenTelemetry.noop());
+              assertThat(context.getBean(ConfigProvider.class)).isEqualTo(ConfigProvider.noop());
             });
   }
 

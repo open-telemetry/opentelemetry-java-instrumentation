@@ -4,9 +4,9 @@
 
 ### ⚠️ Breaking changes
 
-- Remove the deprecated declarative Spring Boot starter `ConfigProperties` compatibility bean. In
-  declarative mode, read configuration through `ConfigProvider` and `DeclarativeConfigProperties`;
-  the flat-property `ConfigProperties` bean remains supported.
+- Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode, including
+  when telemetry is disabled. Read configuration through `ConfigProvider` and
+  `DeclarativeConfigProperties` instead.
 - Kotlin suspend function `@WithSpan` instrumentation now uses only the
   `kotlinx-coroutines-annotations` selector and is disabled by default. Use
   `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true` instead of the

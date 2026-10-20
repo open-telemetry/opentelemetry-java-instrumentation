@@ -287,11 +287,6 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    ConfigProperties otelProperties() {
-      return DefaultConfigProperties.createFromMap(emptyMap());
-    }
-
-    @Bean
     ConfigProvider configProvider() {
       return ConfigProvider.noop();
     }
@@ -299,6 +294,11 @@ public class OpenTelemetryAutoConfiguration {
     @Configuration
     @Conditional(DeclarativeConfigDisabled.class)
     static class PropertiesConfig {
+      @Bean
+      ConfigProperties otelProperties() {
+        return DefaultConfigProperties.createFromMap(emptyMap());
+      }
+
       /**
        * Is only added so that we have the same converters as with active OpenTelemetry SDK
        *
