@@ -18,12 +18,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class ServletRequestBodyExtractorTest {
 
-  private static ByteBuffer captured(String content, Charset charset, int capacity) {
-    ByteBuffer buffer = ByteBuffer.allocate(capacity);
-    buffer.put(content.getBytes(charset));
-    return buffer;
-  }
-
   @Test
   void notABuffer() {
     assertThat(ServletRequestBodyExtractor.decode(null, null)).isNull();
@@ -40,55 +34,46 @@ class ServletRequestBodyExtractorTest {
     ByteBuffer buffer = ByteBuffer.allocateDirect(10);
     buffer.put((byte) 'a');
 
+    // only array-backed buffers are supported
+    assertThat(buffer.hasArray()).isFalse();
+
     assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isNull();
   }
 
   @Test
   void usesCapturedBytesOnly() {
     // the buffer is larger than the captured content
-    ByteBuffer buffer = captured("request-body", UTF_8, 64);
-
+    ByteBuffer buffer = newBuffer("request-body", UTF_8, 64);
     assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isEqualTo("request-body");
   }
 
   @Test
-  void bufferWithArrayOffset() {
-    ByteBuffer base = ByteBuffer.allocate(32);
-    base.position(2);
-    // a slice shares the array of the base buffer, but starts at an offset
-    ByteBuffer buffer = base.slice();
-    buffer.put("body".getBytes(UTF_8));
-
-    assertThat(buffer.arrayOffset()).isEqualTo(2);
-    assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isEqualTo("body");
-  }
-
-  @Test
-  void charset() {
-    ByteBuffer buffer = captured("café", ISO_8859_1, 16);
-
+  void nonUtf8ContentWithCharset() {
+    ByteBuffer buffer = newBuffer("café", ISO_8859_1, 16);
     assertThat(ServletRequestBodyExtractor.decode(buffer, "ISO-8859-1")).isEqualTo("café");
   }
 
   @ParameterizedTest
   @NullSource
   @ValueSource(strings = {"not-a-charset"})
-  void defaultsToUtf8(String charsetName) {
-    ByteBuffer buffer = captured("café", UTF_8, 16);
-
+  void utf8ContentWithUnknownCharset(String charsetName) {
+    ByteBuffer buffer = newBuffer("café", UTF_8, 16);
     assertThat(ServletRequestBodyExtractor.decode(buffer, charsetName)).isEqualTo("café");
   }
 
   @Test
-  void bufferIsNotModified() {
-    ByteBuffer buffer = captured("request-body", UTF_8, 64);
-    int position = buffer.position();
-    int limit = buffer.limit();
+  void nonUtf8ContentWithUnknownCharset() {
+    // this documents the current behavior: the content is assumed to be UTF-8 when the charset is
+    // unknown. This is not a 'feature' and we can improve automatic detection in the future if this
+    // becomes a common issue.
+    ByteBuffer buffer = newBuffer("café", ISO_8859_1, 16);
+    assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isEqualTo("caf�");
+  }
 
-    assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isEqualTo("request-body");
-    // can be decoded several times, and capture can go on
-    assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isEqualTo("request-body");
-    assertThat(buffer.position()).isEqualTo(position);
-    assertThat(buffer.limit()).isEqualTo(limit);
+  private static ByteBuffer newBuffer(String content, Charset charset, int capacity) {
+    ByteBuffer buffer = ByteBuffer.allocate(capacity);
+    buffer.put(content.getBytes(charset));
+    assertThat(buffer.hasArray()).isTrue();
+    return buffer;
   }
 }

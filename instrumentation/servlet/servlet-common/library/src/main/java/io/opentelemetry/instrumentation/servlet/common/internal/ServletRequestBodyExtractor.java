@@ -71,8 +71,7 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
    * attribute. This does not depend on the servlet API, so it can also be used from app server
    * instrumentations. The buffer is left untouched, the body can be decoded several times.
    *
-   * @param bodyAttribute value of the request attribute, anything but a {@link ByteBuffer} is
-   *     ignored
+   * @param bufferObject {@link ByteBuffer} instance from request attribute
    * @param charsetName charset of the request body, UTF-8 is used when {@code null} or not
    *     supported
    * @return the captured body, or {@code null} when nothing has been captured
@@ -80,19 +79,23 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   @Nullable
   @SuppressWarnings(
       "ByteBufferBackingArray") // we know the buffer is array-backed and check it at runtime
-  public static String decode(@Nullable Object bodyAttribute, @Nullable String charsetName) {
-    if (!(bodyAttribute instanceof ByteBuffer)) {
+  public static String decode(@Nullable Object bufferObject, @Nullable String charsetName) {
+    if (!(bufferObject instanceof ByteBuffer)) {
       return null;
     }
-    ByteBuffer buffer = (ByteBuffer) bodyAttribute;
+    ByteBuffer buffer = (ByteBuffer) bufferObject;
     // the buffer is in write mode, the position is the number of bytes captured
     int length = buffer.position();
     if (length == 0 || !buffer.hasArray()) {
       return null;
     }
     Charset charset = UTF_8;
-    if (charsetName != null && Charset.isSupported(charsetName)) {
-      charset = Charset.forName(charsetName);
+    try {
+      if (charsetName != null && Charset.isSupported(charsetName)) {
+        charset = Charset.forName(charsetName);
+      }
+    } catch (IllegalArgumentException e) {
+      // silently ignored
     }
     return new String(buffer.array(), buffer.arrayOffset(), length, charset);
   }
