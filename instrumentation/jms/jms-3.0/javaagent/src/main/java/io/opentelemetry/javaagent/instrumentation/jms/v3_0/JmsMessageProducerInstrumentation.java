@@ -29,7 +29,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class JmsMessageProducerInstrumentation implements TypeInstrumentation {
@@ -209,8 +208,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncProducerAdvice {
 
-    @Advice.AssignReturned.ToArguments(
-        @ToArgument(value = 1, index = 1, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Message message,
@@ -233,8 +231,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncProducerWithOptionsAdvice {
 
-    @Advice.AssignReturned.ToArguments(
-        @ToArgument(value = 4, index = 1, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(value = 4, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Message message,
@@ -257,8 +254,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncProducerWithDestinationAdvice {
 
-    @Advice.AssignReturned.ToArguments(
-        @ToArgument(value = 2, index = 1, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Destination destination,
@@ -281,8 +277,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AsyncProducerWithDestinationAndOptionsAdvice {
 
-    @Advice.AssignReturned.ToArguments(
-        @ToArgument(value = 5, index = 1, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(value = 5, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Destination destination,
