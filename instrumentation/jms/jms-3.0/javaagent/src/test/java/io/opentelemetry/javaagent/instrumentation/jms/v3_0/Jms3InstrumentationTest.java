@@ -105,6 +105,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
   void asyncSendImmediateFailureIsRecorded() throws Exception {
     MessageProducer producer = session.createProducer(session.createQueue("someQueue"));
     cleanup.deferCleanup(producer);
+    // Close the producer so send() fails synchronously without invoking the completion listener.
     producer.close();
     CompletionListener listener =
         new CompletionListener() {
