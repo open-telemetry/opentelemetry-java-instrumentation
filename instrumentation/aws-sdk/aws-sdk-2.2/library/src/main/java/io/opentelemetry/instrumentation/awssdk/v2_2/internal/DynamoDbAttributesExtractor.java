@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -17,6 +18,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
@@ -212,7 +215,23 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
       Context context,
       ExecutionAttributes executionAttributes,
       @Nullable Response response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    if (error == null) {
+      return;
+    }
+    String errorType = null;
+    if (error instanceof AwsServiceException) {
+      AwsErrorDetails details = ((AwsServiceException) error).awsErrorDetails();
+      if (details != null) {
+        errorType = details.errorCode();
+      }
+    }
+    if (errorType == null || errorType.trim().isEmpty()) {
+      errorType = error.getClass().getName();
+    }
+    // The final SDK error takes precedence over an individual HTTP attempt or RPC mode.
+    attributes.put(ERROR_TYPE, errorType);
+  }
 
   private enum WriteOperationType {
     NONE,
