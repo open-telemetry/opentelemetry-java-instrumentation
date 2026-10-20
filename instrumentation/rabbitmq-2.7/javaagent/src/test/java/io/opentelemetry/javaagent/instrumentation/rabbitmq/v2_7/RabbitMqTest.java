@@ -277,7 +277,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> verifySpan(trace, span, 1, "exchange.declare", trace.getSpan(0)),
-                span -> verifySpan(trace, span, 2, "queue.declare", trace.getSpan(0)),
+                span -> {
+                  verifySpan(trace, span, 2, "queue.declare", trace.getSpan(0));
+                  span.satisfies(
+                      spanData ->
+                          assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                              .isEqualTo("https://opentelemetry.io/schemas/1.43.0"));
+                },
                 span -> verifySpan(trace, span, 3, "queue.bind", trace.getSpan(0)),
                 span -> {
                   verifySpan(
@@ -290,6 +296,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       exchangeName,
                       trace.getSpan(0));
                   producerSpan.set(trace.getSpan(4));
+                  span.satisfies(
+                      spanData ->
+                          assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                              .isEqualTo("https://opentelemetry.io/schemas/1.43.0"));
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(

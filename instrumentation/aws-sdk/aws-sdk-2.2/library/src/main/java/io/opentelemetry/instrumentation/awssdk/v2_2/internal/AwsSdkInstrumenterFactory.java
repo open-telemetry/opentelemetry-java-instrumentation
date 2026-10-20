@@ -469,7 +469,11 @@ public final class AwsSdkInstrumenterFactory {
   }
 
   public Logger eventLogger() {
-    return openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
+    return openTelemetry
+        .getLogsBridge()
+        .loggerBuilder(INSTRUMENTATION_NAME)
+        .setSchemaUrl(SchemaUrls.V1_37_0)
+        .build();
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(

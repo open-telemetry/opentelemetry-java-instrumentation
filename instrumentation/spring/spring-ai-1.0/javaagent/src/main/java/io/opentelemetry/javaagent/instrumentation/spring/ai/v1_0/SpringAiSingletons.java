@@ -16,12 +16,17 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.semconv.SchemaUrls;
 
 class SpringAiSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ai-1.0";
   private static final Instrumenter<SpringAiRequest, SpringAiResponse> instrumenter;
   private static final Logger eventLogger =
-      GlobalOpenTelemetry.get().getLogsBridge().get(INSTRUMENTATION_NAME);
+      GlobalOpenTelemetry.get()
+          .getLogsBridge()
+          .loggerBuilder(INSTRUMENTATION_NAME)
+          .setSchemaUrl(SchemaUrls.V1_37_0)
+          .build();
   private static final boolean captureMessageContent =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
           .get("gen_ai")
@@ -34,6 +39,7 @@ class SpringAiSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(getter))
+            .setSchemaUrl(SchemaUrls.V1_37_0)
             .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(builder);

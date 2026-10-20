@@ -34,7 +34,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
+import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.HttpSpanDecorator;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;
@@ -45,6 +47,8 @@ class CamelSingletons {
 
   private static final DecoratorRegistry registry = new DecoratorRegistry();
   private static final Instrumenter<CamelRequest, Void> instrumenter = createInstrumenter();
+  private static final Instrumenter<CamelRequest, Void> httpInstrumenter =
+      createInstrumenter(HttpSchemaUrls.SCHEMA_URL);
   private static final Instrumenter<CamelRequest, Void> databaseInstrumenter =
       createInstrumenter(DbSchemaUrls.SCHEMA_URL);
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
@@ -141,6 +145,9 @@ class CamelSingletons {
     }
     if (request.isDatabase()) {
       return databaseInstrumenter;
+    }
+    if (request.getSpanDecorator() instanceof HttpSpanDecorator) {
+      return httpInstrumenter;
     }
     return instrumenter;
   }
