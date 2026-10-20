@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -81,11 +83,9 @@ class SjmsCamelTest {
         "messaging.process.duration",
         metrics ->
             metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .singleElement()
-                        .satisfies(
-                            point -> assertThat(point.getCount()).isEqualTo(expectedCount))));
+                metricData ->
+                    histogram(metric -> {}, point -> point.hasCount(expectedCount))
+                        .accept(assertThat(metricData))));
   }
 
   private static void assertNoProcessDuration(String instrumentationName) {

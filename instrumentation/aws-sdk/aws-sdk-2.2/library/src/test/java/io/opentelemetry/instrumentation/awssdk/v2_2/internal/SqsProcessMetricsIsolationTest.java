@@ -9,6 +9,9 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -94,10 +97,9 @@ class SqsProcessMetricsIsolationTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric ->
-                        assertThat(metric.getLongSumData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getValue()).isEqualTo(1))));
+                    metricData ->
+                        longSum(metric -> {}, point -> point.hasValue(1))
+                            .accept(assertThat(metricData))));
     testing.waitAndAssertMetrics(
         AWS_INSTRUMENTATION_NAME,
         "messaging.process.duration",
@@ -105,10 +107,9 @@ class SqsProcessMetricsIsolationTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getCount()).isEqualTo(2))));
+                    metricData ->
+                        histogram(metric -> {}, point -> point.hasCount(2))
+                            .accept(assertThat(metricData))));
   }
 
   private static void assertProcessDurationIsolated(boolean receiveTelemetryEnabled) {
@@ -155,10 +156,9 @@ class SqsProcessMetricsIsolationTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric ->
-                        assertThat(metric.getLongSumData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getValue()).isEqualTo(1))));
+                    metricData ->
+                        longSum(metric -> {}, point -> point.hasValue(1))
+                            .accept(assertThat(metricData))));
     testing.waitAndAssertMetrics(
         AWS_INSTRUMENTATION_NAME,
         "messaging.process.duration",
@@ -166,10 +166,9 @@ class SqsProcessMetricsIsolationTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getCount()).isEqualTo(1))));
+                    metricData ->
+                        histogram(metric -> {}, point -> point.hasCount(1))
+                            .accept(assertThat(metricData))));
     testing.waitAndAssertMetrics(
         OUTER_INSTRUMENTATION_NAME,
         "messaging.process.duration",
@@ -177,10 +176,9 @@ class SqsProcessMetricsIsolationTest {
             metrics
                 .singleElement()
                 .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getCount()).isEqualTo(1))));
+                    metricData ->
+                        histogram(metric -> {}, point -> point.hasCount(1))
+                            .accept(assertThat(metricData))));
   }
 
   private static Instrumenter<String, Void> newOuterProcessInstrumenter() {

@@ -5,10 +5,14 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
+import java.util.function.Consumer;
 
 /** Assertions for messaging metrics. */
 public final class MessagingMetricsAssertions {
@@ -24,7 +28,14 @@ public final class MessagingMetricsAssertions {
         instrumentationName,
         metricName,
         metrics ->
-            metrics.singleElement().satisfies(metric -> verifyCounter(metric, value, attributes)));
+            metrics
+                .singleElement()
+                .satisfies(
+                    metricData ->
+                        longSum(
+                                metric -> {},
+                                point -> point.hasValue(value).hasAttributes(attributes))
+                            .accept(assertThat(metricData))));
   }
 
   /** Asserts that the named histogram has one point per given attribute set. */
@@ -37,7 +48,12 @@ public final class MessagingMetricsAssertions {
         instrumentationName,
         metricName,
         metrics ->
-            metrics.singleElement().satisfies(metric -> verifyHistogram(metric, attributes)));
+            metrics
+                .singleElement()
+                .satisfies(
+                    metricData ->
+                        histogram(metric -> {}, histogramPointAssertions(attributes))
+                            .accept(assertThat(metricData))));
   }
 
   /** Asserts that the given instrumentation did not record the named metric. */
@@ -50,21 +66,17 @@ public final class MessagingMetricsAssertions {
                     && metric.getName().equals(metricName));
   }
 
-  private static void verifyCounter(MetricData metric, long value, Attributes attributes) {
-    assertThat(metric.getLongSumData().getPoints())
-        .singleElement()
-        .satisfies(
-            point -> {
-              assertThat(point.getValue()).isEqualTo(value);
-              assertThat(point.getAttributes()).isEqualTo(attributes);
-            });
-  }
-
-  private static void verifyHistogram(MetricData metric, Attributes... attributes) {
-    assertThat(metric.getHistogramData().getPoints())
-        .allSatisfy(point -> assertThat(point.getCount()).isEqualTo(1))
-        .extracting(point -> point.getAttributes())
-        .containsExactlyInAnyOrder(attributes);
+  // This private array is populated only with consumers for histogram points.
+  @SuppressWarnings("unchecked")
+  private static Consumer<HistogramPointAssert>[] histogramPointAssertions(
+      Attributes... attributes) {
+    Consumer<HistogramPointAssert>[] assertions =
+        (Consumer<HistogramPointAssert>[]) new Consumer<?>[attributes.length];
+    for (int i = 0; i < attributes.length; i++) {
+      Attributes expectedAttributes = attributes[i];
+      assertions[i] = point -> point.hasCount(1).hasAttributes(expectedAttributes);
+    }
+    return assertions;
   }
 
   private MessagingMetricsAssertions() {}

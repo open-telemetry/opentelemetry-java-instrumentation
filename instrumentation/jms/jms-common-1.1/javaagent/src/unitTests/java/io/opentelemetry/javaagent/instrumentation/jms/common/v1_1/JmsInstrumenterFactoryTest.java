@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_PROCESS;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -102,10 +105,8 @@ class JmsInstrumenterFactoryTest {
           .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
           .singleElement()
           .satisfies(
-              metric ->
-                  assertThat(metric.getLongSumData().getPoints())
-                      .singleElement()
-                      .satisfies(point -> assertThat(point.getValue()).isEqualTo(1)));
+              metricData ->
+                  longSum(metric -> {}, point -> point.hasValue(1)).accept(assertThat(metricData)));
     }
   }
 
@@ -121,9 +122,8 @@ class JmsInstrumenterFactoryTest {
                     && metric.getName().equals("messaging.process.duration"))
         .singleElement()
         .satisfies(
-            metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .singleElement()
-                    .satisfies(point -> assertThat(point.getCount()).isEqualTo(expectedCount)));
+            metricData ->
+                histogram(metric -> {}, point -> point.hasCount(expectedCount))
+                    .accept(assertThat(metricData)));
   }
 }

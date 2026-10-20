@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -138,22 +140,24 @@ class DynamoDbErrorsTest {
               metrics
                   .singleElement()
                   .satisfies(
-                      metric ->
-                          assertThat(metric.getHistogramData().getPoints())
-                              .singleElement()
-                              .satisfies(
-                                  point -> {
-                                    assertThat(point.getCount()).isEqualTo(1);
-                                    assertThat(point.getAttributes().asMap())
-                                        .isEqualTo(
-                                            Attributes.builder()
-                                                .put(DB_SYSTEM_NAME, "aws.dynamodb")
-                                                .put(DB_COLLECTION_NAME, "items")
-                                                .put(DB_OPERATION_NAME, "GetItem")
-                                                .put(ERROR_TYPE, errorType)
-                                                .build()
-                                                .asMap());
-                                  })));
+                      metricData ->
+                          histogram(
+                                  metric -> {},
+                                  point ->
+                                      point
+                                          .hasCount(1)
+                                          .satisfies(
+                                              pointData ->
+                                                  assertThat(pointData.getAttributes().asMap())
+                                                      .isEqualTo(
+                                                          Attributes.builder()
+                                                              .put(DB_SYSTEM_NAME, "aws.dynamodb")
+                                                              .put(DB_COLLECTION_NAME, "items")
+                                                              .put(DB_OPERATION_NAME, "GetItem")
+                                                              .put(ERROR_TYPE, errorType)
+                                                              .build()
+                                                              .asMap())))
+                              .accept(assertThat(metricData))));
     } finally {
       server.stop();
     }
