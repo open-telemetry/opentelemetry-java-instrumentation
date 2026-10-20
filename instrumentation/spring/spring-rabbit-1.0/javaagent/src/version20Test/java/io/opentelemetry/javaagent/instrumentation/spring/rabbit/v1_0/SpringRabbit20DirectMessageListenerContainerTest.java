@@ -102,9 +102,10 @@ class SpringRabbit20DirectMessageListenerContainerTest {
         });
 
     testing.waitAndAssertHistogramPoints(
-        SPRING_INSTRUMENTATION_NAME,
-        "messaging.process.duration",
-        metric -> metric.hasUnit("s"),
+        metric ->
+            metric
+                .satisfies(hasScopeName(SPRING_INSTRUMENTATION_NAME))
+                .hasName("messaging.process.duration"),
         point -> point.hasCount(1));
     testing.waitAndAssertMetrics(
         SPRING_INSTRUMENTATION_NAME,

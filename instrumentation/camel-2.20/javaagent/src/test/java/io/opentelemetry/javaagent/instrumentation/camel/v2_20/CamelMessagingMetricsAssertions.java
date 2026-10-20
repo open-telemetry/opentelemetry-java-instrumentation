@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -174,58 +174,49 @@ public class CamelMessagingMetricsAssertions {
       String destination,
       String errorType,
       String destinationPartitionId) {
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        metricName,
-        metrics ->
-            metrics.satisfiesExactly(
-                metric -> {
-                  assertThat(metric)
-                      .hasUnit("s")
-                      .hasDescription(description)
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point -> {
-                                point.hasCount(1);
-                                if (operationType != null) {
-                                  if (destinationPartitionId != null) {
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                        equalTo(MESSAGING_SYSTEM, system),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                        equalTo(
-                                            MESSAGING_DESTINATION_PARTITION_ID,
-                                            destinationPartitionId),
-                                        equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                                        equalTo(ERROR_TYPE, errorType));
-                                  } else {
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                        equalTo(MESSAGING_SYSTEM, system),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                        equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                                        equalTo(ERROR_TYPE, errorType));
-                                  }
-                                } else {
-                                  if (destinationPartitionId != null) {
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                        equalTo(MESSAGING_SYSTEM, system),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                        equalTo(
-                                            MESSAGING_DESTINATION_PARTITION_ID,
-                                            destinationPartitionId),
-                                        equalTo(ERROR_TYPE, errorType));
-                                  } else {
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                        equalTo(MESSAGING_SYSTEM, system),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                        equalTo(ERROR_TYPE, errorType));
-                                  }
-                                }
-                              }));
-                }));
+    testing.waitAndAssertHistogramPoints(
+        metric ->
+            metric
+                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
+                .hasName(metricName)
+                .hasDescription(description)
+                .hasUnit("s"),
+        point -> {
+          point.hasCount(1);
+          if (operationType != null) {
+            if (destinationPartitionId != null) {
+              point.hasAttributesSatisfyingExactly(
+                  equalTo(MESSAGING_OPERATION_NAME, operationName),
+                  equalTo(MESSAGING_SYSTEM, system),
+                  equalTo(MESSAGING_DESTINATION_NAME, destination),
+                  equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId),
+                  equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                  equalTo(ERROR_TYPE, errorType));
+            } else {
+              point.hasAttributesSatisfyingExactly(
+                  equalTo(MESSAGING_OPERATION_NAME, operationName),
+                  equalTo(MESSAGING_SYSTEM, system),
+                  equalTo(MESSAGING_DESTINATION_NAME, destination),
+                  equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                  equalTo(ERROR_TYPE, errorType));
+            }
+          } else {
+            if (destinationPartitionId != null) {
+              point.hasAttributesSatisfyingExactly(
+                  equalTo(MESSAGING_OPERATION_NAME, operationName),
+                  equalTo(MESSAGING_SYSTEM, system),
+                  equalTo(MESSAGING_DESTINATION_NAME, destination),
+                  equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId),
+                  equalTo(ERROR_TYPE, errorType));
+            } else {
+              point.hasAttributesSatisfyingExactly(
+                  equalTo(MESSAGING_OPERATION_NAME, operationName),
+                  equalTo(MESSAGING_SYSTEM, system),
+                  equalTo(MESSAGING_DESTINATION_NAME, destination),
+                  equalTo(ERROR_TYPE, errorType));
+            }
+          }
+        });
   }
 
   private static void assertCounter(

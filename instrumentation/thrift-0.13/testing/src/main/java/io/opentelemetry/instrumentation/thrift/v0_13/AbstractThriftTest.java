@@ -25,7 +25,7 @@ package io.opentelemetry.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -355,73 +355,63 @@ public abstract class AbstractThriftTest {
   private void assertMetrics(int serverPort) {
     if (emitOldRpcSemconv()) {
       getTesting()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.thrift-0.13",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.thrift-0.13"))
                       .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                      equalTo(SERVER_PORT, serverPort),
-                                      equalTo(RPC_METHOD, "say"),
-                                      equalTo(RPC_SERVICE, CustomHandler.class.getName()),
-                                      equalTo(RPC_SYSTEM, "apache_thrift"),
-                                      equalTo(NETWORK_TYPE, "ipv4")))));
+                      .hasUnit("ms"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                      equalTo(SERVER_PORT, serverPort),
+                      equalTo(RPC_METHOD, "say"),
+                      equalTo(RPC_SERVICE, CustomHandler.class.getName()),
+                      equalTo(RPC_SYSTEM, "apache_thrift"),
+                      equalTo(NETWORK_TYPE, "ipv4")));
       getTesting()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.thrift-0.13",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.thrift-0.13"))
                       .hasName("rpc.client.duration")
-                      .hasUnit("ms")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      equalTo(SERVER_PORT, serverPort),
-                                      equalTo(RPC_METHOD, "say"),
-                                      equalTo(RPC_SERVICE, CustomService.class.getName()),
-                                      equalTo(RPC_SYSTEM, "apache_thrift"),
-                                      equalTo(NETWORK_TYPE, "ipv4")))));
+                      .hasUnit("ms"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      equalTo(SERVER_PORT, serverPort),
+                      equalTo(RPC_METHOD, "say"),
+                      equalTo(RPC_SERVICE, CustomService.class.getName()),
+                      equalTo(RPC_SYSTEM, "apache_thrift"),
+                      equalTo(NETWORK_TYPE, "ipv4")));
     }
     if (emitPreviewRpcSemconv()) {
       getTesting()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.thrift-0.13",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.thrift-0.13"))
                       .hasName("rpc.server.call.duration")
-                      .hasUnit("s")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                      equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                      equalTo(SERVER_PORT, serverPort),
-                                      equalTo(
-                                          RPC_METHOD, CustomHandler.class.getName() + "/say")))));
+                      .hasUnit("s"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                      equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                      equalTo(SERVER_PORT, serverPort),
+                      equalTo(RPC_METHOD, CustomHandler.class.getName() + "/say")));
       getTesting()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.thrift-0.13",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.thrift-0.13"))
                       .hasName("rpc.client.call.duration")
-                      .hasUnit("s")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      equalTo(SERVER_PORT, serverPort),
-                                      equalTo(
-                                          RPC_METHOD, CustomService.class.getName() + "/say")))));
+                      .hasUnit("s"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      equalTo(SERVER_PORT, serverPort),
+                      equalTo(RPC_METHOD, CustomService.class.getName() + "/say")));
     }
   }
 

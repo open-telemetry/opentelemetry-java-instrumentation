@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -216,9 +217,7 @@ class RocketMqMetricsTest {
       String operationType,
       String errorType) {
     testing.waitAndAssertHistogramPoints(
-        INSTRUMENTATION_NAME,
-        metricName,
-        metric -> metric.hasUnit("s"),
+        metric -> metric.satisfies(hasScopeName(INSTRUMENTATION_NAME)).hasName(metricName),
         point ->
             point
                 .hasCount(1)

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,10 +65,10 @@ class MeterTest {
     instrument.record(5, Attributes.of(stringKey("test"), "test"));
     instrument.record(6, Attributes.of(stringKey("test"), "test"));
 
-    testing.waitAndAssertMetrics(
-        instrumentationName,
+    testing.waitAndAssertHistogramPoints(
         metric ->
             metric
+                .satisfies(hasScopeName(instrumentationName))
                 .hasName("test")
                 .hasDescription("d")
                 .hasUnit("u")
@@ -76,15 +76,12 @@ class MeterTest {
                     InstrumentationScopeInfo.builder(instrumentationName)
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
-                        .build())
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(
-                        point ->
-                            point
-                                .hasSum(11.0)
-                                .hasBucketBoundaries(10.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test"), "test")))));
+                        .build()),
+        point ->
+            point
+                .hasSum(11.0)
+                .hasBucketBoundaries(10.0)
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test")));
   }
 
   @Test
@@ -98,10 +95,10 @@ class MeterTest {
     instrument.record(5.5, Attributes.of(stringKey("test"), "test"));
     instrument.record(6.6, Attributes.of(stringKey("test"), "test"));
 
-    testing.waitAndAssertMetrics(
-        instrumentationName,
+    testing.waitAndAssertHistogramPoints(
         metric ->
             metric
+                .satisfies(hasScopeName(instrumentationName))
                 .hasName("test")
                 .hasDescription("d")
                 .hasUnit("u")
@@ -109,14 +106,11 @@ class MeterTest {
                     InstrumentationScopeInfo.builder(instrumentationName)
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
-                        .build())
-                .satisfies(
-                    hasHistogramPointsSatisfyingExactly(
-                        point ->
-                            point
-                                .hasSum(12.1)
-                                .hasBucketBoundaries(10.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test"), "test")))));
+                        .build()),
+        point ->
+            point
+                .hasSum(12.1)
+                .hasBucketBoundaries(10.0)
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test")));
   }
 }

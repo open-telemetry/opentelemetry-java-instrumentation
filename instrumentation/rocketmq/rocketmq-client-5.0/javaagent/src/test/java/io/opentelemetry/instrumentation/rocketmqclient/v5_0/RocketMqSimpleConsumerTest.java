@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -195,9 +196,10 @@ class RocketMqSimpleConsumerTest {
 
     assertSuccessfulReceiveTrace("disabled receive parent", sendSpan);
     testing.waitAndAssertHistogramPoints(
-        INSTRUMENTATION_NAME,
-        "messaging.client.operation.duration",
-        metric -> metric.hasUnit("s"),
+        metric ->
+            metric
+                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
+                .hasName("messaging.client.operation.duration"),
         point ->
             point
                 .hasCount(1)

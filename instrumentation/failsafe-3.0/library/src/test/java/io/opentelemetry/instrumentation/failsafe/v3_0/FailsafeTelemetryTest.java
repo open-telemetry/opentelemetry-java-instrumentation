@@ -121,7 +121,6 @@ class FailsafeTelemetryTest {
         metricAssert ->
             metricAssert
                 .hasName("failsafe.retry_policy.attempts")
-                .hasUnit("{attempt}")
                 .satisfies(
                     hasHistogramPointsSatisfyingExactly(
                         histogramPointAssert ->

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.client;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -65,9 +66,14 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
 
     testing.waitAndAssertHistogramPoints(
-        "io.opentelemetry.ratpack-1.4",
-        "http.client.request.duration",
-        metric -> metric.hasUnit("s"),
+        metric ->
+            metric
+                .satisfies(hasScopeName("io.opentelemetry.ratpack-1.4"))
+                .hasName("http.client.request.duration")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getInstrumentationScopeInfo().getVersion())
+                            .isNotEmpty()),
         point ->
             point.hasAttributesSatisfyingExactly(
                 equalTo(HTTP_REQUEST_METHOD, "GET"),

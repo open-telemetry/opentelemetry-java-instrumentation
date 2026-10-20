@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -85,21 +85,18 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
+        .waitAndAssertHistogramPoints(
             metric ->
                 metric
+                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
                     .hasName("testPrometheusSummary.items")
                     .hasDescription("This is a test summary")
-                    .hasUnit("items")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSum(54)
-                                    .hasCount(2)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+                    .hasUnit("items"),
+            point ->
+                point
+                    .hasSum(54)
+                    .hasCount(2)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
   }
 
   @Test
@@ -315,21 +312,18 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
+        .waitAndAssertHistogramPoints(
             metric ->
                 metric
+                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
                     .hasName("testPrometheusTimer.seconds")
                     .hasDescription("This is a test timer")
-                    .hasUnit("s")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSum(16.789)
-                                    .hasCount(3)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+                    .hasUnit("s"),
+            point ->
+                point
+                    .hasSum(16.789)
+                    .hasCount(3)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
   }
 
   @Test
@@ -386,27 +380,23 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
+        .waitAndAssertHistogramPoints(
             metric ->
                 metric
+                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
                     .hasName("testPrometheusTimerBoundary.seconds")
                     .hasDescription("This is a test timer")
-                    .hasUnit("s")
+                    .hasUnit("s"),
+            point ->
+                point
+                    .hasSum(0.1)
+                    .hasCount(1)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
                     .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSum(0.1)
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value"))
-                                    .satisfies(
-                                        pointData -> {
-                                          assertThat(pointData.getBoundaries()).hasSize(1);
-                                          assertThat(
-                                                  Double.toString(pointData.getBoundaries().get(0)))
-                                              .isEqualTo("0.3");
-                                        }))));
+                        pointData -> {
+                          assertThat(pointData.getBoundaries()).hasSize(1);
+                          assertThat(Double.toString(pointData.getBoundaries().get(0)))
+                              .isEqualTo("0.3");
+                        }));
   }
 }

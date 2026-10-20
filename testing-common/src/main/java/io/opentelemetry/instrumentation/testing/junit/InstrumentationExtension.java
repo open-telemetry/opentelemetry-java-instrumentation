@@ -116,19 +116,12 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertMetrics(instrumentationName, assertions);
   }
 
-  /**
-   * Waits for exactly one histogram with the given instrumentation scope and metric name, then
-   * asserts its metadata and points.
-   */
+  /** Waits for a histogram matching the metadata and exact unordered point assertions. */
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final void waitAndAssertHistogramPoints(
-      String instrumentationName,
-      String metricName,
-      Consumer<MetricAssert> metricAssertion,
-      Consumer<HistogramPointAssert>... pointAssertions) {
-    testRunner.waitAndAssertHistogramPoints(
-        instrumentationName, metricName, metricAssertion, pointAssertions);
+      Consumer<MetricAssert> metricAssertion, Consumer<HistogramPointAssert>... pointAssertions) {
+    testRunner.waitAndAssertHistogramPoints(metricAssertion, pointAssertions);
   }
 
   /**

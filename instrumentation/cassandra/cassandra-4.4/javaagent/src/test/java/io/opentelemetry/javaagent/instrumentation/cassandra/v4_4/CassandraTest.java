@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -101,9 +102,10 @@ class CassandraTest extends AbstractCassandra44Test {
               assertThat(span.getAttributes().get(NETWORK_TYPE)).isEqualTo(null);
             });
     testing.waitAndAssertHistogramPoints(
-        getInstrumentationName(),
-        "db.client.operation.duration",
-        metric -> metric.hasUnit("s"),
+        metric ->
+            metric
+                .satisfies(hasScopeName(getInstrumentationName()))
+                .hasName("db.client.operation.duration"),
         point ->
             point.hasAttributesSatisfyingExactly(
                 equalTo(DB_COLLECTION_NAME, "system.local"),

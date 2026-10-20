@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.javalin;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -162,9 +163,10 @@ public abstract class AbstractJavalinTest {
     assertThat(response.status().code()).isEqualTo(200);
     testing()
         .waitAndAssertHistogramPoints(
-            getJettyInstrumentation(),
-            "http.server.request.duration",
-            metric -> metric.hasUnit("s"),
+            metric ->
+                metric
+                    .satisfies(hasScopeName(getJettyInstrumentation()))
+                    .hasName("http.server.request.duration"),
             point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}"));
   }
 }

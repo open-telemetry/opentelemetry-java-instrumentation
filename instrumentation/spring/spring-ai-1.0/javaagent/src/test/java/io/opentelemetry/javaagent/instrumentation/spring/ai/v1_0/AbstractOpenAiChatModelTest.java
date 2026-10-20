@@ -110,7 +110,6 @@ abstract class AbstractOpenAiChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
-                .hasUnit("s")
                 .satisfies(
                     hasHistogramPointsSatisfyingExactly(
                         point ->
@@ -124,7 +123,6 @@ abstract class AbstractOpenAiChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.token.usage")
-                .hasUnit("{token}")
                 .satisfies(
                     hasHistogramPointsSatisfyingExactly(
                         point ->

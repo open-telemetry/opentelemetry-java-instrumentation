@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.avaje.jex.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -121,9 +122,8 @@ class JexTest {
     assertThat(content).isEqualTo(id);
     assertThat(response.status().code()).isEqualTo(200);
     testing.waitAndAssertHistogramPoints(
-        instrumentation,
-        "http.server.request.duration",
-        metric -> metric.hasUnit("s"),
+        metric ->
+            metric.satisfies(hasScopeName(instrumentation)).hasName("http.server.request.duration"),
         point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}"));
   }
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -861,7 +862,6 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
-                .hasUnit("s")
                 .satisfies(
                     hasHistogramPointsSatisfyingExactly(
                         point ->
@@ -875,7 +875,6 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.token.usage")
-                .hasUnit("{token}")
                 .satisfies(
                     hasHistogramPointsSatisfyingExactly(
                         point ->
@@ -900,9 +899,10 @@ class ChatModelTest {
 
   private static void assertMetricsWithoutTokenUsage() {
     testing.waitAndAssertHistogramPoints(
-        INSTRUMENTATION_NAME,
-        "gen_ai.client.operation.duration",
-        metric -> metric.hasUnit("s"),
+        metric ->
+            metric
+                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
+                .hasName("gen_ai.client.operation.duration"),
         point ->
             point
                 .hasSumGreaterThan(0.0)

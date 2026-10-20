@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -59,25 +59,21 @@ final class SpringIntegrationTestHelper {
             ? satisfies(ERROR_TYPE, AbstractStringAssert::isNotEmpty)
             : equalTo(ERROR_TYPE, null);
 
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.process.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .satisfies(
-                            hasHistogramPointsSatisfyingExactly(
-                                point ->
-                                    point
-                                        .hasCount(expectedCount)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                            equalTo(MESSAGING_SYSTEM, "spring_integration"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                                            errorType)))));
+    testing.waitAndAssertHistogramPoints(
+        metric ->
+            metric
+                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
+                .hasName("messaging.process.duration")
+                .hasDescription("Duration of processing operation.")
+                .hasUnit("s"),
+        point ->
+            point
+                .hasCount(expectedCount)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_SYSTEM, "spring_integration"),
+                    equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                    errorType));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
@@ -103,26 +99,22 @@ final class SpringIntegrationTestHelper {
   }
 
   static void assertSendMetrics(InstrumentationExtension testing, String destinationName) {
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.client.operation.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription(
-                            "Duration of messaging operation initiated by a producer or consumer client.")
-                        .satisfies(
-                            hasHistogramPointsSatisfyingExactly(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(MESSAGING_SYSTEM, "spring_integration"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                                            equalTo(MESSAGING_OPERATION_TYPE, "send"))))));
+    testing.waitAndAssertHistogramPoints(
+        metric ->
+            metric
+                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
+                .hasName("messaging.client.operation.duration")
+                .hasDescription(
+                    "Duration of messaging operation initiated by a producer or consumer client.")
+                .hasUnit("s"),
+        point ->
+            point
+                .hasCount(1)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_SYSTEM, "spring_integration"),
+                    equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send")));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.sent.messages",

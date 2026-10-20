@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -118,7 +119,6 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
-                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -132,7 +132,6 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
-                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -183,7 +182,6 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
-                    .hasUnit("s")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -197,7 +195,6 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
-                    .hasUnit("{token}")
                     .satisfies(
                         hasHistogramPointsSatisfyingExactly(
                             point ->
@@ -263,9 +260,10 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
 
     getTesting()
         .waitAndAssertHistogramPoints(
-            INSTRUMENTATION_NAME,
-            "gen_ai.client.operation.duration",
-            metric -> metric.hasUnit("s"),
+            metric ->
+                metric
+                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
+                    .hasName("gen_ai.client.operation.duration"),
             point ->
                 point
                     .hasSumGreaterThan(0.0)

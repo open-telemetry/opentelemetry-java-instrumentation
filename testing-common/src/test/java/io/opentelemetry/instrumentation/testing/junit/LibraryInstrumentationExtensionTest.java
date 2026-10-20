@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.Attributes;
@@ -69,15 +70,24 @@ class LibraryInstrumentationExtensionTest {
         .setUnit("ms")
         .build()
         .record(3);
+    testing
+        .getOpenTelemetry()
+        .getMeter("other-scope")
+        .histogramBuilder("duration")
+        .build()
+        .record(5);
 
     testing.waitAndAssertHistogramPoints(
-        "test",
-        "duration",
-        metric -> metric.hasUnit("s").hasDescription("Test duration."),
+        metric ->
+            metric
+                .satisfies(hasScopeName("test"))
+                .hasName("duration")
+                .hasDescription("Test duration."),
         point -> point.hasCount(1).hasSum(4).hasAttributes(secondAttributes),
         point -> point.hasCount(1).hasSum(2).hasAttributes(firstAttributes));
     testing.waitAndAssertHistogramPoints(
-        "test", "other", metric -> metric.hasUnit("ms"), point -> point.hasCount(1).hasSum(3));
+        metric -> metric.satisfies(hasScopeName("test")).hasName("other"),
+        point -> point.hasCount(1).hasSum(3));
   }
 
   @Test
@@ -93,8 +103,6 @@ class LibraryInstrumentationExtensionTest {
     assertThatThrownBy(
             () ->
                 testing.waitAndAssertHistogramPoints(
-                    "test",
-                    "failed-duration",
                     metric -> {
                       throw new IllegalStateException("metric assertion failed");
                     }))

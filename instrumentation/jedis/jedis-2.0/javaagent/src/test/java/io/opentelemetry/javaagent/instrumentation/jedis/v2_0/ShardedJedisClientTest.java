@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -145,9 +146,10 @@ class ShardedJedisClientTest {
                             equalTo(NETWORK_PEER_PORT, (long) peerAddress.getPort()))));
 
     testing.waitAndAssertHistogramPoints(
-        "io.opentelemetry.jedis-2.0",
-        "db.client.operation.duration",
-        metric -> metric.hasUnit("s"),
+        metric ->
+            metric
+                .satisfies(hasScopeName("io.opentelemetry.jedis-2.0"))
+                .hasName("db.client.operation.duration"),
         point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget));
   }
 

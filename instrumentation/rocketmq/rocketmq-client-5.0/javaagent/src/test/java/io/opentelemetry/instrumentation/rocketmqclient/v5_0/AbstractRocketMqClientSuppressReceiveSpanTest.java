@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -171,9 +172,10 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                                     equalTo(MESSAGING_DESTINATION_NAME, topic))))));
     testing()
         .waitAndAssertHistogramPoints(
-            "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.client.operation.duration",
-            metric -> metric.hasUnit("s"),
+            metric ->
+                metric
+                    .satisfies(hasScopeName("io.opentelemetry.rocketmq-client-5.0"))
+                    .hasName("messaging.client.operation.duration"),
             point ->
                 point
                     .hasCount(1)
@@ -184,9 +186,10 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                         equalTo(MESSAGING_OPERATION_TYPE, "send")));
     testing()
         .waitAndAssertHistogramPoints(
-            "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.process.duration",
-            metric -> metric.hasUnit("s"),
+            metric ->
+                metric
+                    .satisfies(hasScopeName("io.opentelemetry.rocketmq-client-5.0"))
+                    .hasName("messaging.process.duration"),
             point ->
                 point
                     .hasCount(1)

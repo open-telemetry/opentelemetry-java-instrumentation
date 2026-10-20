@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -39,21 +39,18 @@ public abstract class AbstractTimerMillisecondsTest {
 
     // then
     testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
+        .waitAndAssertHistogramPoints(
             metric ->
                 metric
+                    .satisfies(hasScopeName(INSTRUMENTATION_NAME))
                     .hasName("testTimerMilliseconds")
                     .hasDescription("This is a test timer")
-                    .hasUnit("ms")
-                    .satisfies(
-                        hasHistogramPointsSatisfyingExactly(
-                            point ->
-                                point
-                                    .hasSum(23_345)
-                                    .hasCount(3)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+                    .hasUnit("ms"),
+            point ->
+                point
+                    .hasSum(23_345)
+                    .hasCount(3)
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value")));
 
     // when
     Metrics.globalRegistry.remove(timer);

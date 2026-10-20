@@ -246,29 +246,29 @@ public abstract class InstrumentationTestRunner {
     }
   }
 
-  /**
-   * Waits for exactly one histogram with the given instrumentation scope and metric name, then
-   * asserts its metadata and points.
-   */
+  /** Waits for a histogram matching the metadata and exact unordered point assertions. */
   @SafeVarargs
   public final void waitAndAssertHistogramPoints(
-      String instrumentationName,
-      String metricName,
-      Consumer<MetricAssert> metricAssertion,
-      Consumer<HistogramPointAssert>... pointAssertions) {
-    waitAndAssertMetrics(
-        instrumentationName,
-        metricName,
-        metrics ->
-            metrics
-                .hasSize(1)
-                .singleElement()
-                .satisfies(
-                    metric -> {
-                      MetricAssert metricAssert = assertThat(metric);
-                      metricAssertion.accept(metricAssert);
-                      metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
-                    }));
+      Consumer<MetricAssert> metricAssertion, Consumer<HistogramPointAssert>... pointAssertions) {
+    String[] matchedInstrumentationName = {""};
+    awaitUntilAsserted(
+        () -> {
+          matchedInstrumentationName[0] = "";
+          assertThat(getExportedMetrics())
+              .anySatisfy(
+                  metric -> {
+                    MetricAssert metricAssert = assertThat(metric);
+                    metricAssertion.accept(metricAssert);
+                    metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
+                    matchedInstrumentationName[0] = metric.getInstrumentationScopeInfo().getName();
+                  });
+        });
+
+    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(matchedInstrumentationName[0]));
+
+    if (Boolean.getBoolean("collectMetadata")) {
+      collectEmittedMetrics(getExportedMetrics());
+    }
   }
 
   private List<MetricData> metricsForScope(String instrumentationName) {

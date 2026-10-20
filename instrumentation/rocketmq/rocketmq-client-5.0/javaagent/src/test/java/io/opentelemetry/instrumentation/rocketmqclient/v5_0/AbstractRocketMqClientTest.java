@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -760,9 +761,10 @@ abstract class AbstractRocketMqClientTest {
   private void assertFailureMetrics() {
     testing()
         .waitAndAssertHistogramPoints(
-            "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.process.duration",
-            metric -> metric.hasUnit("s"),
+            metric ->
+                metric
+                    .satisfies(hasScopeName("io.opentelemetry.rocketmq-client-5.0"))
+                    .hasName("messaging.process.duration"),
             point ->
                 point
                     .hasCount(1)
@@ -818,9 +820,10 @@ abstract class AbstractRocketMqClientTest {
                                                         NORMAL_TOPIC))))));
     testing()
         .waitAndAssertHistogramPoints(
-            "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.client.operation.duration",
-            metric -> metric.hasUnit("s"),
+            metric ->
+                metric
+                    .satisfies(hasScopeName("io.opentelemetry.rocketmq-client-5.0"))
+                    .hasName("messaging.client.operation.duration"),
             point ->
                 point
                     .hasCount(1)
@@ -839,9 +842,10 @@ abstract class AbstractRocketMqClientTest {
                     equalTo(MESSAGING_OPERATION_TYPE, "receive")));
     testing()
         .waitAndAssertHistogramPoints(
-            "io.opentelemetry.rocketmq-client-5.0",
-            "messaging.process.duration",
-            metric -> metric.hasUnit("s"),
+            metric ->
+                metric
+                    .satisfies(hasScopeName("io.opentelemetry.rocketmq-client-5.0"))
+                    .hasName("messaging.process.duration"),
             point ->
                 point
                     .hasCount(1)

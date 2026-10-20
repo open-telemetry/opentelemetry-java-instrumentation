@@ -20,6 +20,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -455,9 +456,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         });
 
     testing.waitAndAssertHistogramPoints(
-        instrumentationName.get(),
-        "http.server.request.duration",
-        metric -> metric.hasDescription("Duration of HTTP server requests.").hasUnit("s"),
+        metric ->
+            metric
+                .satisfies(hasScopeName(instrumentationName.get()))
+                .hasName("http.server.request.duration")
+                .hasDescription("Duration of HTTP server requests.")
+                .hasUnit("s"),
         point -> point.hasSumGreaterThan(0.0));
   }
 

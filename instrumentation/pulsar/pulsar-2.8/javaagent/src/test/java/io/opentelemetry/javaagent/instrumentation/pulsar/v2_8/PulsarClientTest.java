@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -68,28 +68,22 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     latch.await(1, MINUTES);
 
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.process.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .satisfies(
-                            hasHistogramPointsSatisfyingExactly(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(
-                                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                "test_sub"))
-                                        .hasBucketBoundaries(DURATION_BUCKETS)))));
+    testing.waitAndAssertHistogramPoints(
+        metric ->
+            metric
+                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
+                .hasName("messaging.process.duration")
+                .hasDescription("Duration of processing operation.")
+                .hasUnit("s"),
+        point ->
+            point
+                .hasSumGreaterThan(0.0)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                    equalTo(MESSAGING_DESTINATION_NAME, topic),
+                    equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"))
+                .hasBucketBoundaries(DURATION_BUCKETS));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
@@ -137,41 +131,35 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                 equalTo(SERVER_ADDRESS, brokerHost),
                                                 equalTo(SERVER_PORT, brokerPort))))));
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.client.operation.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription(
-                            "Duration of messaging operation initiated by a producer or consumer client.")
-                        .satisfies(
-                            hasHistogramPointsSatisfyingExactly(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                            equalTo(SERVER_ADDRESS, brokerHost),
-                                            equalTo(SERVER_PORT, brokerPort)),
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(
-                                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                "test_sub"),
-                                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                                            equalTo(SERVER_ADDRESS, brokerHost),
-                                            equalTo(SERVER_PORT, brokerPort))))));
+    testing.waitAndAssertHistogramPoints(
+        metric ->
+            metric
+                .satisfies(hasScopeName(INSTRUMENTATION_NAME))
+                .hasName("messaging.client.operation.duration")
+                .hasDescription(
+                    "Duration of messaging operation initiated by a producer or consumer client.")
+                .hasUnit("s"),
+        point ->
+            point
+                .hasSumGreaterThan(0.0)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                    equalTo(MESSAGING_DESTINATION_NAME, topic),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                    equalTo(SERVER_ADDRESS, brokerHost),
+                    equalTo(SERVER_PORT, brokerPort)),
+        point ->
+            point
+                .hasSumGreaterThan(0.0)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                    equalTo(MESSAGING_SYSTEM, "pulsar"),
+                    equalTo(MESSAGING_DESTINATION_NAME, topic),
+                    equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                    equalTo(SERVER_ADDRESS, brokerHost),
+                    equalTo(SERVER_PORT, brokerPort)));
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(

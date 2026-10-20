@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSp
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
-import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.hasHistogramPointsSatisfyingExactly;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -287,111 +287,92 @@ public abstract class AbstractDubboTraceChainTest {
 
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
                       .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM, "apache_dubbo"),
-                                      equalTo(
-                                          RPC_SERVICE,
-                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
-                                      equalTo(RPC_METHOD, "hello")),
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM, "apache_dubbo"),
-                                      equalTo(
-                                          RPC_SERVICE,
-                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                      equalTo(RPC_METHOD, "hello")))));
+                      .hasUnit("ms"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM, "apache_dubbo"),
+                      equalTo(
+                          RPC_SERVICE,
+                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
+                      equalTo(RPC_METHOD, "hello")),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM, "apache_dubbo"),
+                      equalTo(
+                          RPC_SERVICE,
+                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
+                      equalTo(RPC_METHOD, "hello")));
 
       testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
                       .hasName("rpc.client.duration")
-                      .hasUnit("ms")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM, "apache_dubbo"),
-                                      equalTo(
-                                          RPC_SERVICE,
-                                          "org.apache.dubbo.rpc.service.GenericService"),
-                                      equalTo(RPC_METHOD, "$invoke"),
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                                      satisfies(
-                                          NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM, "apache_dubbo"),
-                                      equalTo(
-                                          RPC_SERVICE,
-                                          "org.apache.dubbo.rpc.service.GenericService"),
-                                      equalTo(RPC_METHOD, "$invoke"),
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                                      satisfies(
-                                          NETWORK_TYPE, AbstractDubboTest::assertNetworkType)))));
+                      .hasUnit("ms"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM, "apache_dubbo"),
+                      equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
+                      equalTo(RPC_METHOD, "$invoke"),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                      satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM, "apache_dubbo"),
+                      equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
+                      equalTo(RPC_METHOD, "$invoke"),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                      satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)));
     }
 
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
                       .hasName("rpc.server.call.duration")
-                      .hasUnit("s")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                      equalTo(
-                                          RPC_METHOD,
-                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")),
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                      equalTo(
-                                          RPC_METHOD,
-                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")))));
+                      .hasUnit("s"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                      equalTo(
+                          RPC_METHOD,
+                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                      equalTo(
+                          RPC_METHOD,
+                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")));
 
       testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
                       .hasName("rpc.client.call.duration")
-                      .hasUnit("s")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                      equalTo(
-                                          RPC_METHOD,
-                                          "org.apache.dubbo.rpc.service.GenericService/$invoke"),
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class))),
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                      equalTo(
-                                          RPC_METHOD,
-                                          "org.apache.dubbo.rpc.service.GenericService/$invoke"),
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      satisfies(
-                                          SERVER_PORT, val -> val.isInstanceOf(Long.class))))));
+                      .hasUnit("s"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                      equalTo(RPC_METHOD, "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class))),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                      equalTo(RPC_METHOD, "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class))));
     }
   }
 
@@ -500,79 +481,65 @@ public abstract class AbstractDubboTraceChainTest {
 
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
                       .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM, "apache_dubbo"),
-                                      equalTo(
-                                          RPC_SERVICE,
-                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                      equalTo(RPC_METHOD, "hello")))));
+                      .hasUnit("ms"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM, "apache_dubbo"),
+                      equalTo(
+                          RPC_SERVICE,
+                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
+                      equalTo(RPC_METHOD, "hello")));
 
       testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
                       .hasName("rpc.client.duration")
-                      .hasUnit("ms")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM, "apache_dubbo"),
-                                      equalTo(
-                                          RPC_SERVICE,
-                                          "org.apache.dubbo.rpc.service.GenericService"),
-                                      equalTo(RPC_METHOD, "$invoke"),
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                                      satisfies(
-                                          NETWORK_TYPE, AbstractDubboTest::assertNetworkType)))));
+                      .hasUnit("ms"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM, "apache_dubbo"),
+                      equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
+                      equalTo(RPC_METHOD, "$invoke"),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                      satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)));
     }
 
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
                       .hasName("rpc.server.call.duration")
-                      .hasUnit("s")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                      equalTo(
-                                          RPC_METHOD,
-                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")))));
+                      .hasUnit("s"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                      equalTo(
+                          RPC_METHOD,
+                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")));
 
       testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
+          .waitAndAssertHistogramPoints(
               metric ->
                   metric
+                      .satisfies(hasScopeName("io.opentelemetry.apache-dubbo-2.7"))
                       .hasName("rpc.client.call.duration")
-                      .hasUnit("s")
-                      .satisfies(
-                          hasHistogramPointsSatisfyingExactly(
-                              point ->
-                                  point.hasAttributesSatisfyingExactly(
-                                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                      equalTo(
-                                          RPC_METHOD,
-                                          "org.apache.dubbo.rpc.service.GenericService/$invoke"),
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      satisfies(
-                                          SERVER_PORT, val -> val.isInstanceOf(Long.class))))));
+                      .hasUnit("s"),
+              point ->
+                  point.hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                      equalTo(RPC_METHOD, "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class))));
     }
   }
 }
