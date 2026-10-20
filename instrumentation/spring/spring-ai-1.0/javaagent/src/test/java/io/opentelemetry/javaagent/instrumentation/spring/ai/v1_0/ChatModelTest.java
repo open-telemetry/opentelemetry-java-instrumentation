@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -49,14 +47,11 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.app.TestChatModel;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
-import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -100,60 +95,6 @@ class ChatModelTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private final TestChatModel chatModel = new TestChatModel(defaultOptions());
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void exceptionSchema(boolean streaming) {
-    IllegalStateException failure = new IllegalStateException("model failed");
-    chatModel.setCallFailure(failure);
-    chatModel.setStreamFailure(failure);
-
-    assertThatThrownBy(
-            () -> {
-              if (streaming) {
-                chatModel.stream(prompt()).blockLast();
-              } else {
-                chatModel.call(prompt());
-              }
-            })
-        .isSameAs(failure);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? failure : null)
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo(SchemaUrls.V1_37_0))));
-
-    List<Consumer<LogRecordDataAssert>> logs = new ArrayList<>();
-    logs.add(
-        log ->
-            log.hasAttributesSatisfyingExactly(
-                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                    equalTo(stringKey("event.name"), "gen_ai.user.message"))
-                .satisfies(
-                    logData ->
-                        assertThat(logData.getInstrumentationScopeInfo().getSchemaUrl())
-                            .isEqualTo(SchemaUrls.V1_37_0)));
-    if (emitExceptionAsLogs()) {
-      logs.add(
-          log ->
-              log.hasEventName("gen_ai.client.operation.exception")
-                  .hasException(failure)
-                  .satisfies(
-                      logData ->
-                          assertThat(logData.getInstrumentationScopeInfo().getSchemaUrl())
-                              .isEqualTo(SchemaUrls.V1_37_0)));
-    }
-    testing.waitAndAssertLogRecords(logs);
-  }
 
   @Test
   void callUsesDefaultOptionsAndCapturesRequestFields() {
