@@ -40,6 +40,27 @@ the
 [general attribute naming guidance](https://opentelemetry.io/docs/specs/semconv/general/naming/)
 and this repository's experimental telemetry rules.
 
+## Select schema URLs
+
+A schema URL identifies the semantic convention defining a span, metric, or log, not every
+registered attribute attached to it. Select the version adopted by that signal and its effective
+mode, not the latest semconv dependency or the version used by a supporting extractor.
+
+Use `InstrumenterBuilder.setSchemaUrl(...)` explicitly, with domain-owned schema definitions where
+available. Supporting attributes must not select, change, or invalidate the schema. Independently
+constructed meters and loggers select their own schema; sharing a scope name or trace does not
+couple their schemas.
+
+For example, this policy calls for:
+
+- the HTTP schema for Camel HTTP operations, but no schema for custom `direct://` route spans
+- the GenAI schema for Bedrock GenAI operations, despite supporting RPC attributes
+- no schema based on code or exception attributes alone
+
+For custom operations without an applicable signal convention, leave the schema unset and preserve
+explicit caller-supplied schemas. Implementation work is tracked in
+[#20755](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20755).
+
 ## Weigh normative language
 
 OpenTelemetry defines uppercase `MUST`, `SHOULD`, `RECOMMENDED`, and related terms using

@@ -24,6 +24,17 @@ Comment only on a changed line and only for a supported issue.
   incubating constants locally rather than importing them. Tests may import both
   stable and incubating constants directly.
 
+## Schema URLs
+
+Select the schema URL from the semantic convention defining the emitted span, metric, or log.
+Its version follows the convention adopted by that signal and its effective mode, not the latest
+dependency or a supporting extractor. Registered attributes alone do not establish a signal
+convention; supporting attributes must not select, change, or invalidate its schema.
+For custom operations without an applicable signal convention, leave the schema unset unless
+explicitly supplied by the caller. Use explicit `InstrumenterBuilder.setSchemaUrl(...)` selection
+and domain-owned schema definitions where available. Independently constructed meters and loggers
+select their own schema. Signals are independent even when sharing a scope name or trace.
+
 ## Database response status codes
 
 This repository intentionally omits `db.response.status_code` when it would only duplicate the database error code recorded in `error.type`, despite the database semantic conventions conditionally requiring it for failed operations. Do not report that omission as a conformance defect or request adding the redundant attribute.
