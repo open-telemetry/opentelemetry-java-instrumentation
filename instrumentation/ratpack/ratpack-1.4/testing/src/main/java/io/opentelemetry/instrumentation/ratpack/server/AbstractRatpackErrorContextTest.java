@@ -35,7 +35,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import ratpack.error.ServerErrorHandler;
 import ratpack.exec.Blocking;
-import ratpack.exec.Downstream;
 import ratpack.exec.Execution;
 import ratpack.exec.Promise;
 import ratpack.handling.Context;
@@ -62,7 +61,7 @@ public abstract class AbstractRatpackErrorContextTest {
   @EnumSource(ErrorPath.class)
   protected void errorsUseRequestContext(ErrorPath errorPath) throws Exception {
     CountDownLatch pendingRequests = new CountDownLatch(2);
-    ConcurrentHashMap<String, Downstream<String>> pending = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, Runnable> pending = new ConcurrentHashMap<>();
     server =
         RatpackServer.start(
             spec ->
@@ -109,8 +108,8 @@ public abstract class AbstractRatpackErrorContextTest {
     if (errorPath == ErrorPath.ASYNC || errorPath == ErrorPath.FORK) {
       assertThat(pendingRequests.await(10, SECONDS)).isTrue();
       // Resume overlapping requests sharing the same event loop.
-      pending.get("second").success("second");
-      pending.get("first").success("first");
+      pending.get("second").run();
+      pending.get("first").run();
     }
     AggregatedHttpResponse firstResponse = first.get(10, SECONDS);
     assertThat(firstResponse.status().code()).isEqualTo(500);
@@ -182,13 +181,12 @@ public abstract class AbstractRatpackErrorContextTest {
                             .hasParent(trace.getSpan(2))));
   }
 
-  private Promise<String> suspend(
-      String id,
-      ConcurrentHashMap<String, Downstream<String>> pending,
-      CountDownLatch pendingRequests) {
+  private static Promise<String> suspend(
+      String id, ConcurrentHashMap<String, Runnable> pending, CountDownLatch pendingRequests) {
     return Promise.async(
         downstream -> {
-          pending.put(id, downstream);
+          pending.put(
+              id, io.opentelemetry.context.Context.current().wrap(() -> downstream.success(id)));
           pendingRequests.countDown();
         });
   }
@@ -196,7 +194,7 @@ public abstract class AbstractRatpackErrorContextTest {
   private void fork(
       Context ctx,
       String id,
-      ConcurrentHashMap<String, Downstream<String>> pending,
+      ConcurrentHashMap<String, Runnable> pending,
       CountDownLatch pendingRequests) {
     Promise.<Void>async(
             done ->
@@ -221,7 +219,7 @@ public abstract class AbstractRatpackErrorContextTest {
     throw new IllegalStateException(id);
   }
 
-  private void assertRequestTrace(TraceAssert trace, String id) {
+  private static void assertRequestTrace(TraceAssert trace, String id) {
     List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
     assertions.add(
         span -> {
