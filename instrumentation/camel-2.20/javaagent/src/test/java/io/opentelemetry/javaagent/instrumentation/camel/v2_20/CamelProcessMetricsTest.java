@@ -164,24 +164,24 @@ class CamelProcessMetricsTest {
         processMetricsClass, "end", new Class<?>[] {Route.class, Exchange.class}, route, exchange);
 
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, expectedMetric, metrics -> metrics.hasSize(1));
+        INSTRUMENTATION_NAME,
+        expectedMetric,
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(
+                    metric ->
+                        assertThat(metric.getData().getPoints())
+                            .singleElement()
+                            .satisfies(
+                                point ->
+                                    assertThat(point.getAttributes().get(ERROR_TYPE))
+                                        .isEqualTo(faulted ? "_OTHER" : null))));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))
         .extracting(MetricData::getName)
         .containsExactly(expectedMetric);
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))
-        .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric.getData().getPoints())
-                    .singleElement()
-                    .satisfies(
-                        point ->
-                            assertThat(point.getAttributes().get(ERROR_TYPE))
-                                .isEqualTo(faulted ? "_OTHER" : null)));
   }
 
   private static Stream<Arguments> signalsAlreadyPresent() {
