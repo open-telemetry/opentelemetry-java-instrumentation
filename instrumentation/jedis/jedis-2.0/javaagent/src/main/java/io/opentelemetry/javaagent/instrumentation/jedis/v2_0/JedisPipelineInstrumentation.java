@@ -76,12 +76,15 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   public static class SyncAdvice {
 
     public static class AdviceScope {
-      private final Context context;
+      @Nullable private final Context context;
+      private final Context captureContext;
       private final Scope scope;
       private final JedisRequest request;
 
-      private AdviceScope(Context context, Scope scope, JedisRequest request) {
+      private AdviceScope(
+          @Nullable Context context, Context captureContext, Scope scope, JedisRequest request) {
         this.context = context;
+        this.captureContext = captureContext;
         this.scope = scope;
         this.request = request;
       }
@@ -96,21 +99,32 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
         }
         JedisRequest request = JedisRequest.createPipeline(batchState.getRequests());
         Context parentContext = Context.current();
-        if (!instrumenter().shouldStart(parentContext, request)) {
-          return null;
+        Context context = null;
+        Context captureParent = parentContext;
+        if (instrumenter().shouldStart(parentContext, request)) {
+          context = instrumenter().start(parentContext, request);
+          captureParent = context;
         }
-        Context context =
+        Context captureContext =
             JedisBatchState.store(
-                instrumenter().start(parentContext, request),
-                request.getConnection(),
-                batchState.getRequests().size());
-        return new AdviceScope(context, context.makeCurrent(), request);
+                captureParent, request.getConnection(), batchState.getRequests().size());
+        if (context == null) {
+          return new AdviceScope(null, captureContext, captureContext.makeCurrent(), request);
+        }
+        return new AdviceScope(
+            captureContext, captureContext, captureContext.makeCurrent(), request);
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        instrumenter()
-            .end(context, request, JedisBatchState.getErrorType(context, throwable), throwable);
+        if (context != null) {
+          instrumenter()
+              .end(
+                  context,
+                  request,
+                  JedisBatchState.getErrorType(captureContext, throwable),
+                  throwable);
+        }
       }
     }
 

@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisBatchState;
@@ -44,12 +43,17 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
 
     public static class AdviceState {
       @Nullable private final Context context;
+      @Nullable private final Context captureContext;
       @Nullable private final JedisRequest request;
       @Nullable public Scope scope;
       @Nullable public TransactionFraming previousTransactionFraming;
 
-      public AdviceState(@Nullable Context context, @Nullable JedisRequest request) {
+      public AdviceState(
+          @Nullable Context context,
+          @Nullable Context captureContext,
+          @Nullable JedisRequest request) {
         this.context = context;
+        this.captureContext = captureContext;
         this.request = request;
       }
 
@@ -57,9 +61,13 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         if (scope != null) {
           scope.close();
         }
-        if (context != null && request != null) {
+        if (context != null && request != null && captureContext != null) {
           instrumenter()
-              .end(context, request, JedisBatchState.getErrorType(context, throwable), throwable);
+              .end(
+                  context,
+                  request,
+                  JedisBatchState.getErrorType(captureContext, throwable),
+                  throwable);
         }
       }
     }
@@ -69,28 +77,30 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       BatchState batchState = JedisPipelineContext.takeBatchState(transaction);
       @Nullable JedisRequest request = null;
       @Nullable Context context = null;
+      @Nullable Context captureContext = null;
       if (batchState != null && !batchState.getRequests().isEmpty()) {
         request =
             JedisRequest.createTransaction(
                 batchState.getRequests(), batchState.getTransactionFramingPeerAddress());
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         if (instrumenter().shouldStart(parentContext, request)) {
-          context =
-              JedisBatchState.store(
-                  instrumenter().start(parentContext, request),
-                  request.getConnection(),
-                  batchState.getRequests().size());
+          context = instrumenter().start(parentContext, request);
         }
+        captureContext =
+            JedisBatchState.store(
+                context != null ? context : parentContext,
+                request.getConnection(),
+                batchState.getRequests().size());
       }
 
       // Suppress the EXEC framing command's own span; the transaction is reported as a single
       // batch span here. An empty transaction has no peer to report, so it has no batch span.
-      AdviceState adviceState = new AdviceState(context, request);
+      AdviceState adviceState = new AdviceState(context, captureContext, request);
       adviceState.previousTransactionFraming =
           currentTransactionFraming().set(transactionFraming(request));
-      if (context != null) {
+      if (captureContext != null) {
         try {
-          adviceState.scope = context.makeCurrent();
+          adviceState.scope = captureContext.makeCurrent();
         } catch (Throwable t) {
           currentTransactionFraming().restore(adviceState.previousTransactionFraming);
           throw t;

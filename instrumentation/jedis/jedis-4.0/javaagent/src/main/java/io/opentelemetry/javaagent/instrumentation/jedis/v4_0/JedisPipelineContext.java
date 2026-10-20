@@ -24,25 +24,40 @@ public final class JedisPipelineContext {
   private static final VirtualField<Transaction, List<JedisRequest>> TRANSACTION_REQUESTS =
       VirtualField.find(Transaction.class, List.class);
 
-  public static void enter(Object batch) {
+  @Nullable
+  public static Object enter(Object batch) {
     // Pipeline aggregates at sync() and Transaction at exec(); both capture their queued commands
     // here. Other batch subtypes have no flush point, so leaving them uncaptured keeps their
     // per-command spans.
     if (batch instanceof Pipeline || batch instanceof Transaction) {
+      Object previous = currentBatch.get();
       currentBatch.set(batch);
+      return previous;
+    }
+    return currentBatch.get();
+  }
+
+  public static void exit(@Nullable Object previous) {
+    if (previous == null) {
+      currentBatch.remove();
+    } else {
+      currentBatch.set(previous);
     }
   }
 
-  public static void exit() {
-    currentBatch.remove();
-  }
-
-  public static void enterTransactionFraming() {
+  @Nullable
+  public static Boolean enterTransactionFraming() {
+    Boolean previous = inTransactionFraming.get();
     inTransactionFraming.set(Boolean.TRUE);
+    return previous;
   }
 
-  public static void exitTransactionFraming() {
-    inTransactionFraming.remove();
+  public static void exitTransactionFraming(@Nullable Boolean previous) {
+    if (previous == null) {
+      inTransactionFraming.remove();
+    } else {
+      inTransactionFraming.set(previous);
+    }
   }
 
   public static boolean inTransactionFraming() {

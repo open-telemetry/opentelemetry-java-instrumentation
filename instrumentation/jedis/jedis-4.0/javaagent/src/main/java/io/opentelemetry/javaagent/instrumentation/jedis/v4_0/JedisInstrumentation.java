@@ -76,15 +76,15 @@ class JedisInstrumentation implements TypeInstrumentation {
   public static class MultiAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter() {
+    public static Boolean onEnter() {
       // The MULTI command frames a transaction that is reported as a single batch span at exec(),
       // so its own command span is suppressed.
-      JedisPipelineContext.enterTransactionFraming();
+      return JedisPipelineContext.enterTransactionFraming();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisPipelineContext.exitTransactionFraming();
+    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
+      JedisPipelineContext.exitTransactionFraming(previous);
     }
   }
 }

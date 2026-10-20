@@ -47,15 +47,16 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   public static class QueueCommandAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This PipelineBase pipeline) {
+    @Nullable
+    public static PipelineBase onEnter(@Advice.This PipelineBase pipeline) {
       // Attaches a thread-local pipeline that the nested Connection.sendCommand advice uses to
       // collect captured requests; sync() then consumes them to build the batch span.
-      JedisPipelineContext.enter(pipeline);
+      return JedisPipelineContext.enter(pipeline);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void stopCollecting() {
-      JedisPipelineContext.exit();
+    public static void stopCollecting(@Advice.Enter @Nullable PipelineBase previous) {
+      JedisPipelineContext.exit(previous);
     }
   }
 
@@ -63,12 +64,15 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   public static class SyncAdvice {
 
     public static class AdviceScope {
-      private final Context context;
+      @Nullable private final Context context;
+      private final Context captureContext;
       private final Scope scope;
       private final JedisRequest request;
 
-      private AdviceScope(Context context, Scope scope, JedisRequest request) {
+      private AdviceScope(
+          @Nullable Context context, Context captureContext, Scope scope, JedisRequest request) {
         this.context = context;
+        this.captureContext = captureContext;
         this.scope = scope;
         this.request = request;
       }
@@ -83,21 +87,31 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
         }
         JedisRequest request = JedisRequest.createPipeline(requests);
         Context parentContext = Context.current();
-        if (!instrumenter().shouldStart(parentContext, request)) {
-          return null;
+        @Nullable Context context = null;
+        Context captureParent = parentContext;
+        if (instrumenter().shouldStart(parentContext, request)) {
+          context = instrumenter().start(parentContext, request);
+          captureParent = context;
         }
-        Context context =
-            JedisBatchState.store(
-                instrumenter().start(parentContext, request),
-                request.getConnection(),
-                requests.size());
-        return new AdviceScope(context, context.makeCurrent(), request);
+        Context captureContext =
+            JedisBatchState.store(captureParent, request.getConnection(), requests.size());
+        if (context == null) {
+          return new AdviceScope(null, captureContext, captureContext.makeCurrent(), request);
+        }
+        return new AdviceScope(
+            captureContext, captureContext, captureContext.makeCurrent(), request);
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        instrumenter()
-            .end(context, request, JedisBatchState.getErrorType(context, throwable), throwable);
+        if (context != null) {
+          instrumenter()
+              .end(
+                  context,
+                  request,
+                  JedisBatchState.getErrorType(captureContext, throwable),
+                  throwable);
+        }
       }
     }
 

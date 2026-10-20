@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.PipelineBase;
 import redis.clients.jedis.Transaction;
@@ -20,26 +21,41 @@ public final class JedisPipelineContext {
   private static final VirtualField<PipelineBase, List<JedisRequest>> CAPTURED_REQUESTS =
       VirtualField.find(PipelineBase.class, List.class);
 
-  public static void enter(PipelineBase pipeline) {
+  @Nullable
+  public static PipelineBase enter(PipelineBase pipeline) {
     // Pipeline aggregates at sync(), Transaction at exec(); both capture their queued commands
     // here.
     // Other MultiKeyPipelineBase subtypes have no flush point, so leaving them uncaptured keeps
     // their per-command spans.
     if (pipeline instanceof Pipeline || pipeline instanceof Transaction) {
+      PipelineBase previous = currentPipeline.get();
       currentPipeline.set(pipeline);
+      return previous;
+    }
+    return currentPipeline.get();
+  }
+
+  public static void exit(@Nullable PipelineBase previous) {
+    if (previous == null) {
+      currentPipeline.remove();
+    } else {
+      currentPipeline.set(previous);
     }
   }
 
-  public static void exit() {
-    currentPipeline.remove();
-  }
-
-  public static void enterTransactionFraming() {
+  @Nullable
+  public static Boolean enterTransactionFraming() {
+    Boolean previous = inTransactionFraming.get();
     inTransactionFraming.set(Boolean.TRUE);
+    return previous;
   }
 
-  public static void exitTransactionFraming() {
-    inTransactionFraming.remove();
+  public static void exitTransactionFraming(@Nullable Boolean previous) {
+    if (previous == null) {
+      inTransactionFraming.remove();
+    } else {
+      inTransactionFraming.set(previous);
+    }
   }
 
   public static boolean inTransactionFraming() {

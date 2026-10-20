@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,6 +47,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
+import redis.clients.jedis.Builder;
+import redis.clients.jedis.CommandArguments;
+import redis.clients.jedis.CommandObject;
 import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.DefaultJedisSocketFactory;
 import redis.clients.jedis.HostAndPort;
@@ -54,6 +58,7 @@ import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Protocol;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.UnifiedJedis;
@@ -647,6 +652,81 @@ class Jedis40ClientTest {
                                         assertThat(pointData.getAttributes().asMap())
                                             .doesNotContainKey(ERROR_TYPE));
                               }
+                            })));
+  }
+
+  @Test
+  void nestedPipelineDuringResponseBuildDoesNotAffectOuterBatch() {
+    jedis.set("aggregate", "value");
+    testing.clearData();
+    List<Response<?>> nestedResponses = new ArrayList<>();
+    Pipeline outer = jedis.pipelined();
+    Response<String> outerResponse =
+        outer.appendCommand(
+            new CommandObject<>(
+                new CommandArguments(Protocol.Command.GET).add("aggregate"),
+                new Builder<String>() {
+                  @Override
+                  public String build(Object data) {
+                    Pipeline inner = jedis.pipelined();
+                    nestedResponses.add(inner.llen("aggregate"));
+                    nestedResponses.add(inner.llen("aggregate"));
+                    inner.sync();
+                    return new String((byte[]) data, UTF_8);
+                  }
+                }));
+    outer.get("aggregate");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("value", "value");
+    assertThat(outerResponse.get()).isEqualTo("value");
+    assertThat(nestedResponses)
+        .hasSize(2)
+        .allSatisfy(
+            response ->
+                assertThatThrownBy(response::get)
+                    .isInstanceOf(JedisDataException.class)
+                    .hasMessageStartingWith("WRONGTYPE"));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("PIPELINE GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "GET aggregate; GET aggregate"),
+                            equalTo(DB_OPERATION_NAME, "PIPELINE GET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jedis-4.0",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> {
+                              point.hasCount(1);
+                              point.satisfies(
+                                  pointData ->
+                                      assertThat(pointData.getAttributes().asMap())
+                                          .doesNotContainKey(ERROR_TYPE));
                             })));
   }
 
