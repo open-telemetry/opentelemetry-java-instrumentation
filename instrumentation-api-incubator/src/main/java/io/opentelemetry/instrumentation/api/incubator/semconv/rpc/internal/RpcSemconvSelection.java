@@ -60,6 +60,7 @@ public final class RpcSemconvSelection {
       this.emitPreview = emitPreview;
     }
 
+    // visible for testing
     public static Selection forOpenTelemetry(OpenTelemetry openTelemetry) {
       return new Selection(emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
     }
