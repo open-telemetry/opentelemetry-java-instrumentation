@@ -126,8 +126,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * {@link Instrumenter}.
    *
    * <p>The schema URL identifies the semantic conventions followed by the spans, metrics, and logs.
-   * It is not inferred from attribute or span name extractors. If this method is not called, the
-   * telemetry has no schema URL.
+   * If this method is not called, the telemetry has no schema URL.
    */
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setSchemaUrl(String schemaUrl) {
