@@ -11,6 +11,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
@@ -106,44 +107,36 @@ abstract class AbstractOpenAiChatModelTest {
   private static void assertMetrics() {
     testing.waitAndAssertMetricsExactly(
         INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("gen_ai.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL)))),
-        metric ->
-            metric
-                .hasName("gen_ai.client.token.usage")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(22.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
-                            point ->
-                                point
-                                    .hasSum(2.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
+        histogram(
+            metric -> metric.hasName("gen_ai.client.operation.duration"),
+            point ->
+                point
+                    .hasSumGreaterThan(0.0)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL))),
+        histogram(
+            metric -> metric.hasName("gen_ai.client.token.usage"),
+            point ->
+                point
+                    .hasSum(22.0)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
+                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+            point ->
+                point
+                    .hasSum(2.0)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
+                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT))));
   }
 
   private static void assertMessageEvents(SpanContext spanContext) {
