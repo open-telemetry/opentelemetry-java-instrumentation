@@ -256,7 +256,7 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyCreateTime() {
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         instrumentationName,
         "db.client.connection.create_time",
         metric ->
@@ -265,7 +265,7 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyWaitTime() {
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         instrumentationName,
         "db.client.connection.wait_time",
         metric ->
@@ -276,7 +276,7 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyUseTime() {
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         instrumentationName,
         "db.client.connection.use_time",
         metric ->

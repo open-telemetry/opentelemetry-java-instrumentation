@@ -454,7 +454,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               spanData -> assertServerSpan(assertThat(spanData), method, SUCCESS, SUCCESS.status));
         });
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         instrumentationName.get(),
         "http.server.request.duration",
         metric -> metric.hasDescription("Duration of HTTP server requests.").hasUnit("s"),

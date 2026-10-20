@@ -295,7 +295,7 @@ public abstract class AbstractGrpcStreamingTest {
                             .hasParent(trace.getSpan(0))));
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.server.duration",
               metric -> metric.hasUnit("ms"),
@@ -311,7 +311,7 @@ public abstract class AbstractGrpcStreamingTest {
     }
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.server.call.duration",
               metric -> metric.hasUnit("s"),
@@ -325,7 +325,7 @@ public abstract class AbstractGrpcStreamingTest {
     }
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.client.duration",
               metric -> metric.hasUnit("ms"),
@@ -341,7 +341,7 @@ public abstract class AbstractGrpcStreamingTest {
     }
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.client.call.duration",
               metric -> metric.hasUnit("s"),

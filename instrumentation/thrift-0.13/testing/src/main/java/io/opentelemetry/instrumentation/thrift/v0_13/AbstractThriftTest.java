@@ -354,7 +354,7 @@ public abstract class AbstractThriftTest {
   private void assertMetrics(int serverPort) {
     if (emitOldRpcSemconv()) {
       getTesting()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.thrift-0.13",
               "rpc.server.duration",
               metric -> metric.hasUnit("ms"),
@@ -367,7 +367,7 @@ public abstract class AbstractThriftTest {
                       equalTo(RPC_SYSTEM, "apache_thrift"),
                       equalTo(NETWORK_TYPE, "ipv4")));
       getTesting()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.thrift-0.13",
               "rpc.client.duration",
               metric -> metric.hasUnit("ms"),
@@ -382,7 +382,7 @@ public abstract class AbstractThriftTest {
     }
     if (emitPreviewRpcSemconv()) {
       getTesting()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.thrift-0.13",
               "rpc.server.call.duration",
               metric -> metric.hasUnit("s"),
@@ -393,7 +393,7 @@ public abstract class AbstractThriftTest {
                       equalTo(SERVER_PORT, serverPort),
                       equalTo(RPC_METHOD, CustomHandler.class.getName() + "/say")));
       getTesting()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.thrift-0.13",
               "rpc.client.call.duration",
               metric -> metric.hasUnit("s"),

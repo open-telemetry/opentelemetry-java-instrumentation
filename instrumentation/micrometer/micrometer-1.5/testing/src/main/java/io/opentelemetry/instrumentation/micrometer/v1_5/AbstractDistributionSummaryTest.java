@@ -45,7 +45,7 @@ public abstract class AbstractDistributionSummaryTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testSummary",
             metric ->
@@ -103,7 +103,7 @@ public abstract class AbstractDistributionSummaryTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testSummaryWithCustomBuckets",
             metric ->

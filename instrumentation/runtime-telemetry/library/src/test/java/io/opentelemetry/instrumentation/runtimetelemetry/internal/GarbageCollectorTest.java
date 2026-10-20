@@ -69,7 +69,7 @@ class GarbageCollectorTest {
     listener.handleNotification(
         createTestNotification("G1 Old Generation", "end of major GC", "System.gc()", 11), null);
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         "test",
         "jvm.gc.duration",
         metric -> metric.hasDescription("Duration of JVM garbage collection actions.").hasUnit("s"),

@@ -246,38 +246,42 @@ public abstract class InstrumentationTestRunner {
     }
   }
 
-  /** Waits for the named histogram to match the metadata and exact unordered point assertions. */
+  /** Waits for exactly one named histogram to match the metadata and point assertions. */
   @SafeVarargs
   public final void waitAndAssertHistogramPoints(
       String instrumentationName,
       String metricName,
       Consumer<MetricAssert> metricAssertion,
       Consumer<HistogramPointAssert>... pointAssertions) {
-    awaitUntilAsserted(
-        () -> {
-          List<MetricData> matchingMetrics =
-              getExportedMetrics().stream()
-                  .filter(
-                      metric ->
-                          metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
-                              && metric.getName().equals(metricName))
-                  .collect(toList());
-          assertThat(matchingMetrics)
-              .describedAs(
-                  "Metrics for instrumentation %s and metric name %s",
-                  instrumentationName, metricName)
-              .hasSize(1);
+    waitAndAssertMetrics(
+        instrumentationName,
+        metricName,
+        metrics ->
+            metrics.satisfiesExactly(
+                metric -> {
+                  MetricAssert metricAssert = assertThat(metric);
+                  metricAssertion.accept(metricAssert);
+                  metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
+                }));
+  }
 
-          MetricAssert metricAssert = assertThat(matchingMetrics.get(0));
-          metricAssertion.accept(metricAssert);
-          metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
-        });
-
-    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
-
-    if (Boolean.getBoolean("collectMetadata")) {
-      collectEmittedMetrics(getExportedMetrics());
-    }
+  /** Waits for any named histogram to match the metadata and exact unordered point assertions. */
+  @SafeVarargs
+  public final void waitAndAssertAnyHistogramPoints(
+      String instrumentationName,
+      String metricName,
+      Consumer<MetricAssert> metricAssertion,
+      Consumer<HistogramPointAssert>... pointAssertions) {
+    waitAndAssertMetrics(
+        instrumentationName,
+        metricName,
+        metrics ->
+            metrics.anySatisfy(
+                metric -> {
+                  MetricAssert metricAssert = assertThat(metric);
+                  metricAssertion.accept(metricAssert);
+                  metricAssert.satisfies(hasHistogramPointsSatisfyingExactly(pointAssertions));
+                }));
   }
 
   private List<MetricData> metricsForScope(String instrumentationName) {

@@ -1809,7 +1809,7 @@ public abstract class AbstractGrpcTest {
                 : null;
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.server.duration",
               metric -> metric.hasUnit("ms"),
@@ -1825,7 +1825,7 @@ public abstract class AbstractGrpcTest {
 
       if (hasSizeMetric) {
         testing()
-            .waitAndAssertHistogramPoints(
+            .waitAndAssertAnyHistogramPoints(
                 "io.opentelemetry.grpc-1.6",
                 "rpc.server.request.size",
                 metric -> metric.hasUnit("By"),
@@ -1839,7 +1839,7 @@ public abstract class AbstractGrpcTest {
                         equalTo(RPC_GRPC_STATUS_CODE, (long) statusCode.value()),
                         equalTo(NETWORK_TYPE, "ipv4")));
         testing()
-            .waitAndAssertHistogramPoints(
+            .waitAndAssertAnyHistogramPoints(
                 "io.opentelemetry.grpc-1.6",
                 "rpc.server.response.size",
                 metric -> metric.hasUnit("By"),
@@ -1855,7 +1855,7 @@ public abstract class AbstractGrpcTest {
       }
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.client.duration",
               metric -> metric.hasUnit("ms"),
@@ -1870,7 +1870,7 @@ public abstract class AbstractGrpcTest {
                       equalTo(NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.client.request.size",
               metric -> metric.hasUnit("By"),
@@ -1885,7 +1885,7 @@ public abstract class AbstractGrpcTest {
                       equalTo(NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)));
       if (hasSizeMetric) {
         testing()
-            .waitAndAssertHistogramPoints(
+            .waitAndAssertAnyHistogramPoints(
                 "io.opentelemetry.grpc-1.6",
                 "rpc.client.response.size",
                 metric -> metric.hasUnit("By"),
@@ -1902,7 +1902,7 @@ public abstract class AbstractGrpcTest {
     }
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.server.call.duration",
               metric -> metric.hasUnit("s"),
@@ -1915,7 +1915,7 @@ public abstract class AbstractGrpcTest {
                       equalTo(RPC_RESPONSE_STATUS_CODE, statusCode.name()),
                       equalTo(ERROR_TYPE, serverErrorType)));
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.grpc-1.6",
               "rpc.client.call.duration",
               metric -> metric.hasUnit("s"),

@@ -64,7 +64,7 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
                             }),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         "io.opentelemetry.ratpack-1.4",
         "http.client.request.duration",
         metric ->

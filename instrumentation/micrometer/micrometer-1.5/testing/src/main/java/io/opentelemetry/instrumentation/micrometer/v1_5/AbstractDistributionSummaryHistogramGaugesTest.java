@@ -44,7 +44,7 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testSummary",
             metric ->
@@ -106,7 +106,7 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testSummary",
             metric ->

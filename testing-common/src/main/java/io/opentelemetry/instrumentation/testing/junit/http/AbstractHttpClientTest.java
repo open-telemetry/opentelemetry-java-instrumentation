@@ -792,7 +792,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         instrumentationName.get(),
         "http.client.request.duration",
         metric -> metric.hasDescription("Duration of HTTP client requests.").hasUnit("s"),

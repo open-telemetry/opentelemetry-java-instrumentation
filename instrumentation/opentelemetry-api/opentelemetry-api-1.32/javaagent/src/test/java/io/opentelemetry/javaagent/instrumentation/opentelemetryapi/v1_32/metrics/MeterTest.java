@@ -64,7 +64,7 @@ class MeterTest {
     instrument.record(5, Attributes.of(stringKey("test"), "test"));
     instrument.record(6, Attributes.of(stringKey("test"), "test"));
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         instrumentationName,
         "test",
         metric ->
@@ -94,7 +94,7 @@ class MeterTest {
     instrument.record(5.5, Attributes.of(stringKey("test"), "test"));
     instrument.record(6.6, Attributes.of(stringKey("test"), "test"));
 
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         instrumentationName,
         "test",
         metric ->

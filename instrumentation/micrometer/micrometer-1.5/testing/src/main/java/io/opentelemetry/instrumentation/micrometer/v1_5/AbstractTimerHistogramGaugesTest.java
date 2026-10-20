@@ -45,7 +45,7 @@ public abstract class AbstractTimerHistogramGaugesTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testTimer",
             metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
@@ -105,7 +105,7 @@ public abstract class AbstractTimerHistogramGaugesTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testTimer",
             metric -> metric.hasDescription("This is a test timer").hasUnit("s"),

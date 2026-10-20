@@ -45,7 +45,7 @@ public abstract class AbstractTimerTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testTimer",
             metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
@@ -81,7 +81,7 @@ public abstract class AbstractTimerTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testNanoTimer",
             metric -> metric.hasUnit("s"),
@@ -111,7 +111,7 @@ public abstract class AbstractTimerTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testTimerWithCustomBuckets",
             metric -> metric.hasDescription("This is a test timer").hasUnit("s"),

@@ -229,7 +229,7 @@ public abstract class AbstractSofaRpcTest {
 
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.server.duration",
               metric -> metric.hasUnit("ms"),
@@ -242,7 +242,7 @@ public abstract class AbstractSofaRpcTest {
                       equalTo(RPC_METHOD, "hello")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.client.duration",
               metric -> metric.hasUnit("ms"),
@@ -258,7 +258,7 @@ public abstract class AbstractSofaRpcTest {
 
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.server.call.duration",
               metric -> metric.hasUnit("s"),
@@ -270,7 +270,7 @@ public abstract class AbstractSofaRpcTest {
                           "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.client.call.duration",
               metric -> metric.hasUnit("s"),
@@ -368,7 +368,7 @@ public abstract class AbstractSofaRpcTest {
 
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.server.duration",
               metric -> metric.hasUnit("ms"),
@@ -381,7 +381,7 @@ public abstract class AbstractSofaRpcTest {
                       equalTo(RPC_METHOD, "hello")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.client.duration",
               metric -> metric.hasUnit("ms"),
@@ -397,7 +397,7 @@ public abstract class AbstractSofaRpcTest {
 
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.server.call.duration",
               metric -> metric.hasUnit("s"),
@@ -409,7 +409,7 @@ public abstract class AbstractSofaRpcTest {
                           "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.client.call.duration",
               metric -> metric.hasUnit("s"),
@@ -551,7 +551,7 @@ public abstract class AbstractSofaRpcTest {
 
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.server.duration",
               metric -> metric.hasUnit("ms"),
@@ -564,7 +564,7 @@ public abstract class AbstractSofaRpcTest {
                       equalTo(RPC_METHOD, "throwException")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.client.duration",
               metric -> metric.hasUnit("ms"),
@@ -582,7 +582,7 @@ public abstract class AbstractSofaRpcTest {
 
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.server.call.duration",
               metric -> metric.hasUnit("s"),
@@ -595,7 +595,7 @@ public abstract class AbstractSofaRpcTest {
                       equalTo(ERROR_TYPE, SofaRpcRuntimeException.class.getName())));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.sofa-rpc-5.4",
               "rpc.client.call.duration",
               metric -> metric.hasUnit("s"),

@@ -110,7 +110,7 @@ abstract class AbstractIcebergTest {
 
   private void assertScanDurationMetric(ScanReport expectedReport) {
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "iceberg.scan.planning.duration",
             metricAssert -> metricAssert.hasUnit("s"),

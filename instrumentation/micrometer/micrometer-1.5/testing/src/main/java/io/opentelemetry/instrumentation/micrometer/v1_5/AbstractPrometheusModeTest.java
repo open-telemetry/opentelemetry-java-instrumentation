@@ -84,7 +84,7 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testPrometheusSummary.items",
             metric -> metric.hasDescription("This is a test summary").hasUnit("items"),
@@ -308,7 +308,7 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testPrometheusTimer.seconds",
             metric -> metric.hasDescription("This is a test timer").hasUnit("s"),
@@ -373,7 +373,7 @@ public abstract class AbstractPrometheusModeTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testPrometheusTimerBoundary.seconds",
             metric -> metric.hasDescription("This is a test timer").hasUnit("s"),

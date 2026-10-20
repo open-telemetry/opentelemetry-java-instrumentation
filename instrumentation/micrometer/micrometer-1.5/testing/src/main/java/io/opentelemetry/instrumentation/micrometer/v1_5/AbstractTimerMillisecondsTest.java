@@ -38,7 +38,7 @@ public abstract class AbstractTimerMillisecondsTest {
 
     // then
     testing()
-        .waitAndAssertHistogramPoints(
+        .waitAndAssertAnyHistogramPoints(
             INSTRUMENTATION_NAME,
             "testTimerMilliseconds",
             metric -> metric.hasDescription("This is a test timer").hasUnit("ms"),

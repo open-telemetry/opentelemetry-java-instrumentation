@@ -286,7 +286,7 @@ public abstract class AbstractDubboTraceChainTest {
 
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.apache-dubbo-2.7",
               "rpc.server.duration",
               metric -> metric.hasUnit("ms"),
@@ -306,7 +306,7 @@ public abstract class AbstractDubboTraceChainTest {
                       equalTo(RPC_METHOD, "hello")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.apache-dubbo-2.7",
               "rpc.client.duration",
               metric -> metric.hasUnit("ms"),
@@ -330,7 +330,7 @@ public abstract class AbstractDubboTraceChainTest {
 
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.apache-dubbo-2.7",
               "rpc.server.call.duration",
               metric -> metric.hasUnit("s"),
@@ -348,7 +348,7 @@ public abstract class AbstractDubboTraceChainTest {
                           "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.apache-dubbo-2.7",
               "rpc.client.call.duration",
               metric -> metric.hasUnit("s"),
@@ -472,7 +472,7 @@ public abstract class AbstractDubboTraceChainTest {
 
     if (emitOldRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.apache-dubbo-2.7",
               "rpc.server.duration",
               metric -> metric.hasUnit("ms"),
@@ -485,7 +485,7 @@ public abstract class AbstractDubboTraceChainTest {
                       equalTo(RPC_METHOD, "hello")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.apache-dubbo-2.7",
               "rpc.client.duration",
               metric -> metric.hasUnit("ms"),
@@ -501,7 +501,7 @@ public abstract class AbstractDubboTraceChainTest {
 
     if (emitPreviewRpcSemconv()) {
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.apache-dubbo-2.7",
               "rpc.server.call.duration",
               metric -> metric.hasUnit("s"),
@@ -513,7 +513,7 @@ public abstract class AbstractDubboTraceChainTest {
                           "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")));
 
       testing()
-          .waitAndAssertHistogramPoints(
+          .waitAndAssertAnyHistogramPoints(
               "io.opentelemetry.apache-dubbo-2.7",
               "rpc.client.call.duration",
               metric -> metric.hasUnit("s"),

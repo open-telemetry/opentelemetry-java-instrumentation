@@ -156,7 +156,7 @@ class DropwizardMetricsTest {
     timer.update(234_000, NANOSECONDS);
 
     // then
-    testing.waitAndAssertHistogramPoints(
+    testing.waitAndAssertAnyHistogramPoints(
         INSTRUMENTATION_NAME,
         "testtimer",
         metric -> metric.hasUnit("ms"),

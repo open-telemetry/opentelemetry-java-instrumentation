@@ -82,6 +82,13 @@ class LibraryInstrumentationExtensionTest {
         metric -> metric.hasDescription("Test duration."),
         point -> point.hasCount(1).hasSum(4).hasAttributes(secondAttributes),
         point -> point.hasCount(1).hasSum(2).hasAttributes(firstAttributes));
+
+    testing.waitAndAssertAnyHistogramPoints(
+        "test",
+        "duration",
+        metric -> metric.hasDescription("Test duration."),
+        point -> point.hasCount(1).hasSum(4).hasAttributes(secondAttributes),
+        point -> point.hasCount(1).hasSum(2).hasAttributes(firstAttributes));
   }
 
   @Test
