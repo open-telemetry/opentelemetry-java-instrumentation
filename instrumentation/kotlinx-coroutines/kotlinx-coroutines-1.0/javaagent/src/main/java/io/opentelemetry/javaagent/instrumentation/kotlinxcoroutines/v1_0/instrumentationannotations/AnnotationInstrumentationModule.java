@@ -20,18 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   public AnnotationInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview()
-            ? "kotlinx-coroutines-annotations"
-            : "kotlinx-coroutines",
-        // Default-off coroutine annotations need independent selectors in v3 preview.
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {}
-            : new String[] {
-              "kotlinx-coroutines-1.0",
-              "kotlinx-coroutines-opentelemetry-instrumentation-annotations",
-              "opentelemetry-instrumentation-annotations"
-            });
+    super("kotlinx-coroutines-annotations");
   }
 
   @Override
