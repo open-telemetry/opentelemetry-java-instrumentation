@@ -82,18 +82,17 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(JedisRequest request) {
+      if (JedisPipelineContext.capture(request)) {
+        // A nested pipeline or transaction can run while an outer transaction builds responses.
+        // Capture its commands before suppressing actual transaction framing commands.
+        return new AdviceScope(null, null, request);
+      }
       if (JedisPipelineContext.inTransactionFraming()) {
         // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
         // span rather than getting their own spans.
         return null;
       }
       Context parentContext = Context.current();
-      if (JedisPipelineContext.capture(request)) {
-        // A pipeline or transaction is active, so this command is captured and aggregated into the
-        // batch span created at sync()/exec() rather than getting its own span.
-        // Return a scope so method exit can capture the socket after sendCommand connects.
-        return new AdviceScope(null, null, request);
-      }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }

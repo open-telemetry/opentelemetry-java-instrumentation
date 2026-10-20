@@ -730,6 +730,91 @@ class Jedis40ClientTest {
                             })));
   }
 
+  @Test
+  void nestedPipelineDuringTransactionResponseBuildDoesNotAffectOuterBatch() {
+    jedis.set("aggregate", "value");
+    List<Response<?>> nestedResponses = new ArrayList<>();
+    BuilderTransaction transaction = new BuilderTransaction(jedis);
+    testing.clearData();
+    Response<String> transactionResponse =
+        transaction.appendCustomCommand(
+            new CommandObject<>(
+                new CommandArguments(Protocol.Command.GET).add("aggregate"),
+                new Builder<String>() {
+                  @Override
+                  public String build(Object data) {
+                    Pipeline inner = jedis.pipelined();
+                    nestedResponses.add(inner.llen("aggregate"));
+                    nestedResponses.add(inner.llen("aggregate"));
+                    inner.sync();
+                    return new String((byte[]) data, UTF_8);
+                  }
+                }));
+    transaction.get("aggregate");
+
+    assertThat(transaction.exec()).containsExactly("value", "value");
+    assertThat(transactionResponse.get()).isEqualTo("value");
+    assertThat(nestedResponses)
+        .hasSize(2)
+        .allSatisfy(
+            response ->
+                assertThatThrownBy(response::get)
+                    .isInstanceOf(JedisDataException.class)
+                    .hasMessageStartingWith("WRONGTYPE"));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("MULTI GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.UNSET))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "GET aggregate; GET aggregate"),
+                            equalTo(DB_OPERATION_NAME, "MULTI GET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jedis-4.0",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> {
+                              point.hasCount(1);
+                              point.satisfies(
+                                  pointData ->
+                                      assertThat(pointData.getAttributes().asMap())
+                                          .doesNotContainKey(ERROR_TYPE));
+                            })));
+  }
+
+  private static class BuilderTransaction extends Transaction {
+    private BuilderTransaction(Jedis jedis) {
+      super(jedis);
+    }
+
+    private Response<String> appendCustomCommand(CommandObject<String> command) {
+      return super.appendCommand(command);
+    }
+  }
+
   // Verify that instrumentation does not consume or alter application-visible batch results.
   private static void assertAggregateReplies(List<Object> replies, int failedCount, int count) {
     assertThat(replies).hasSize(count);
