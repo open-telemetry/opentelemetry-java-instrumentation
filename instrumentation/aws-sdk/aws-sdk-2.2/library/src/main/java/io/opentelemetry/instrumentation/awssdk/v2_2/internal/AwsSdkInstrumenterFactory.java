@@ -36,6 +36,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSche
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.internal.GenAiSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -462,7 +463,8 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
               .addAttributesExtractor(new BedrockRuntimeAttributesExtractor())
-              .addOperationMetrics(GenAiClientMetrics.get());
+              .addOperationMetrics(GenAiClientMetrics.get())
+              .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL);
           setGenAiClientExceptionEventExtractor(builder);
         },
         true);
@@ -472,7 +474,7 @@ public final class AwsSdkInstrumenterFactory {
     return openTelemetry
         .getLogsBridge()
         .loggerBuilder(INSTRUMENTATION_NAME)
-        .setSchemaUrl(SchemaUrls.V1_37_0)
+        .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
         .build();
   }
 

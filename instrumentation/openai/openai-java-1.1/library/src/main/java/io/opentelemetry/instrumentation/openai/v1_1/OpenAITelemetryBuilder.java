@@ -16,10 +16,10 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.internal.GenAiSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.semconv.SchemaUrls;
 
 /** A builder of {@link OpenAITelemetry}. */
 @SuppressWarnings("IdentifierName") // Want to match library's convention
@@ -56,7 +56,7 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(chatAttributesGetter))
-            .setSchemaUrl(SchemaUrls.V1_37_0)
+            .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(GenAiAttributesExtractor.create(chatAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(chatBuilder);
@@ -69,7 +69,7 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(embeddingAttributesGetter))
-            .setSchemaUrl(SchemaUrls.V1_37_0)
+            .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(GenAiAttributesExtractor.create(embeddingAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(embeddingsBuilder);
@@ -80,7 +80,7 @@ public final class OpenAITelemetryBuilder {
         openTelemetry
             .getLogsBridge()
             .loggerBuilder(INSTRUMENTATION_NAME)
-            .setSchemaUrl(SchemaUrls.V1_37_0)
+            .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
             .build();
     return new OpenAITelemetry(
         chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent);
