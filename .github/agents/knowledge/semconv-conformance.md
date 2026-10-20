@@ -57,9 +57,7 @@ For example:
   nested under an HTTP server span.
 - Code or exception attributes alone do not justify assigning a schema to a custom operation.
 
-If no semantic convention defines the emitted signal, leave its schema URL unset unless a caller
-explicitly supplies one. See the
-[selection policy](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20755).
+If no semantic convention defines the emitted signal, leave its schema URL unset.
 
 ## Weigh normative language
 
