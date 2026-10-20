@@ -6,9 +6,6 @@
 
 - In `opentelemetry-instrumentation-annotations` 3.0, `@WithSpan` and
   `@AddingSpanAttributes` target methods only. Remove them from constructors.
-- In `opentelemetry-instrumentation-api-incubator` (alpha), implementations of
-  `MessagingAttributesGetter` must implement `getMessageHeaderNames`, returning the
-  carrier's header names or an empty iterable for carriers without headers.
 - Kotlin suspend function `@WithSpan` instrumentation now uses only the
   `kotlinx-coroutines-annotations` selector and is disabled by default. Use
   `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true` instead of the
@@ -296,6 +293,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- In `opentelemetry-instrumentation-api-incubator` (alpha), implementations of
+  `MessagingAttributesGetter` must implement `getMessageHeaderNames`, returning the
+  carrier's header names or an empty iterable for carriers without headers.
 - The `TracingSqsMessageHandler` customization constructor now accepts an
   `Instrumenter<SQSMessage, Boolean>`.
 - In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency
