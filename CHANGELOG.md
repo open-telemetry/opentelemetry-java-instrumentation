@@ -14,6 +14,8 @@
   `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
   remain, instead of emitting an empty object.
+- Remove deprecated `ProcessResource.get()`. Replace it with `ProcessResource.create()` to omit
+  command-line attributes, or `ProcessResource.create(true)` to retain them.
 - Process command resource attributes are now disabled by default. Set
   `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
