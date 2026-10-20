@@ -160,11 +160,25 @@ testing {
 }
 
 tasks {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*AwsSdkErrorTypeTest")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+  }
+
+  val testPreviewSemconvDup = register<Test>("testPreviewSemconvDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*AwsSdkErrorTypeTest")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+  }
+
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testPreviewSemconv, testPreviewSemconvDup)
   }
 }
