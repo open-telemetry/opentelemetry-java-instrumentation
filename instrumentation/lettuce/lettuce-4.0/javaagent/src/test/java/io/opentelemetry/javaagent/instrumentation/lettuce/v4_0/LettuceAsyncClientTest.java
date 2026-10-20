@@ -191,6 +191,10 @@ class LettuceAsyncClientTest {
 
   @Test
   void testCommandServerErrorUsesRedisErrorType() throws Exception {
+    connection.sync().hmset("TESTHM", TEST_HASH_MAP);
+    testing.waitForTraces(1);
+    testing.clearData();
+
     Throwable thrown = catchThrowable(() -> asyncCommands.get("TESTHM").get(10, SECONDS));
 
     assertThat(thrown)
