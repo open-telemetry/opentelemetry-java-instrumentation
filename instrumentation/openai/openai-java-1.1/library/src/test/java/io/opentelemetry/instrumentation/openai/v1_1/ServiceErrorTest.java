@@ -13,10 +13,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_ENCODING_FORMATS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_ID;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_MODEL;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -190,7 +192,11 @@ class ServiceErrorTest {
     ChatCompletionCreateParams chat =
         ChatCompletionCreateParams.builder().model(MODEL).addUserMessage("hello").build();
     EmbeddingCreateParams embeddings =
-        EmbeddingCreateParams.builder().model(MODEL).input("hello").build();
+        EmbeddingCreateParams.builder()
+            .model(MODEL)
+            .input("hello")
+            .encodingFormat(EmbeddingCreateParams.EncodingFormat.BASE64)
+            .build();
     if (async) {
       OpenAIClientAsync client =
           telemetry.wrap(
@@ -256,6 +262,9 @@ class ServiceErrorTest {
                             equalTo(GEN_AI_PROVIDER_NAME, "openai"),
                             equalTo(GEN_AI_OPERATION_NAME, operation.name),
                             equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                            equalTo(
+                                GEN_AI_REQUEST_ENCODING_FORMATS,
+                                operation == Operation.EMBEDDINGS ? singletonList("base64") : null),
                             equalTo(
                                 GEN_AI_REQUEST_STREAM,
                                 operation == Operation.CHAT_STREAM ? true : null),
