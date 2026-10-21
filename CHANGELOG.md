@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Remove `otel.instrumentation.experimental.span-suppression-strategy` and
+  `java.common.span_suppression_strategy/development` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` and
+  `java.common.span_suppression_strategy`.
 - Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
   Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
 - `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
