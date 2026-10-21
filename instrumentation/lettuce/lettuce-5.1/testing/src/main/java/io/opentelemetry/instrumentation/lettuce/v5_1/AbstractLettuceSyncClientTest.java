@@ -366,15 +366,35 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @ParameterizedTest
   @MethodSource("serverErrorReplies")
   void testServerErrorReply(String errorMessage, String errorType) {
+    assertServerErrorReply(
+        "return redis.error_reply(ARGV[1])", errorMessage, errorType, errorMessage.getBytes(UTF_8));
+  }
+
+  @Test
+  void testServerErrorReplyWithInvalidUtf8Details() {
+    String prefix = "échec";
+    String errorMessage = prefix + " details";
+    byte[] messageBytes = errorMessage.getBytes(UTF_8);
+    byte[] errorReplyBytes =
+        ByteBuffer.allocate(messageBytes.length + 1).put(messageBytes).put((byte) 0xff).array();
+
+    assertServerErrorReply(
+        "return redis.error_reply(ARGV[1] .. string.char(255))",
+        errorMessage,
+        prefix,
+        errorReplyBytes);
+  }
+
+  private void assertServerErrorReply(
+      String script, String errorMessage, String errorType, byte[] errorReplyBytes) {
     String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
     // Lettuce 6.0.0 supplies no remote endpoint to command-aware spans.
     boolean missingEndpoint = "6.0.0.RELEASE".equals(lettuceVersion);
-    String script = "return redis.error_reply(ARGV[1])";
     Throwable thrown =
         catchThrowable(
             () -> syncCommands.eval(script, ScriptOutputType.VALUE, new String[0], errorMessage));
     StatusOutput<String, String> uninstrumentedOutput = new StatusOutput<>(StringCodec.UTF8);
-    uninstrumentedOutput.setError(ByteBuffer.wrap(errorMessage.getBytes(UTF_8)));
+    uninstrumentedOutput.setError(ByteBuffer.wrap(errorReplyBytes));
     assertThat(thrown)
         .isInstanceOf(RedisCommandExecutionException.class)
         .hasMessage(uninstrumentedOutput.getError());

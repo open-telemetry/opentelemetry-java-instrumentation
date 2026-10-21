@@ -82,11 +82,15 @@ final class LettuceResponse {
     if (!legacyErrorDecoding || errorMessage == null) {
       return errorMessage;
     }
+    String errorPrefix = RedisErrorPrefix.extract(errorMessage);
+    if (errorPrefix == null) {
+      return errorMessage;
+    }
     // The legacy decoder casts each signed byte to char. Reverse that mapping only for output
     // from that decoder, leaving application strings and UTF-8-decoding versions untouched.
     boolean hasEncodedBytes = false;
-    for (int i = 0; i < errorMessage.length(); i++) {
-      char c = errorMessage.charAt(i);
+    for (int i = 0; i < errorPrefix.length(); i++) {
+      char c = errorPrefix.charAt(i);
       if (c > 0x7f && c < 0xff80) {
         return errorMessage;
       }
@@ -95,9 +99,9 @@ final class LettuceResponse {
     if (!hasEncodedBytes) {
       return errorMessage;
     }
-    byte[] bytes = new byte[errorMessage.length()];
+    byte[] bytes = new byte[errorPrefix.length()];
     for (int i = 0; i < bytes.length; i++) {
-      bytes[i] = (byte) errorMessage.charAt(i);
+      bytes[i] = (byte) errorPrefix.charAt(i);
     }
     String decoded = new String(bytes, UTF_8);
     return Arrays.equals(bytes, decoded.getBytes(UTF_8)) ? decoded : errorMessage;

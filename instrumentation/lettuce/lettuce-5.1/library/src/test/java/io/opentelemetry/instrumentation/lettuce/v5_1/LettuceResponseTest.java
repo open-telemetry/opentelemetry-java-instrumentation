@@ -61,7 +61,45 @@ class LettuceResponseTest {
   }
 
   @Test
+  void decodesLegacyErrorPrefixWhenDetailsContainInvalidUtf8() {
+    StatusOutput<String, String> output = new StatusOutput<>(StringCodec.UTF8);
+    output.setError(errorReplyWithInvalidDetails());
+    String applicationMessage = output.getError();
+
+    assertThat(LettuceResponse.fromCommandOutput(output, false).getRedisErrorType())
+        .isEqualTo("échec");
+    assertThat(LettuceResponse.fromCommandOutput(output, true).getRedisErrorType())
+        .isEqualTo("échec");
+    assertThat(output.getError()).isEqualTo(applicationMessage);
+  }
+
+  @Test
+  void decodesLegacyTransactionErrorPrefixWhenDetailsContainInvalidUtf8() {
+    StatusOutput<String, String> output = new StatusOutput<>(StringCodec.UTF8);
+    MultiOutput<String, String> multi = new MultiOutput<>(StringCodec.UTF8);
+    multi.add(new Command<>(CommandType.EVAL, output));
+    multi.multi(1);
+    multi.setError(errorReplyWithInvalidDetails());
+    String applicationMessage = output.getError();
+    multi.complete(1);
+    Throwable failure = multi.get().get(0);
+
+    assertThat(
+            LettuceResponse.fromTransactionErrorMessage(failure.getMessage()).getRedisErrorType())
+        .isEqualTo("échec");
+    assertThat(output.getError()).isEqualTo(applicationMessage);
+    assertThat(failure).hasMessage(applicationMessage);
+  }
+
+  @Test
   void preservesDecodedStringVerbatim() {
     assertThat(LettuceResponse.fromErrorMessage("ￃﾩ details").getRedisErrorType()).isEqualTo("ￃﾩ");
+  }
+
+  private static ByteBuffer errorReplyWithInvalidDetails() {
+    byte[] prefix = "échec ".getBytes(UTF_8);
+    ByteBuffer error = ByteBuffer.allocate(prefix.length + 1).put(prefix).put((byte) 0xff);
+    error.flip();
+    return error;
   }
 }
