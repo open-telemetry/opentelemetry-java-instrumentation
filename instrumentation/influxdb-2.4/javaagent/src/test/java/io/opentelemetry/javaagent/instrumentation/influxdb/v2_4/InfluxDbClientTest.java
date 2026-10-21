@@ -233,6 +233,41 @@ class InfluxDbClientTest {
   }
 
   @Test
+  void testQueryWithSingleResponseCallback() throws InterruptedException {
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    Query query = new Query("SELECT * FROM cpu_load", DATABASE_NAME);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            influxDb.query(
+                query,
+                result -> {
+                  testing.runWithSpan("child", () -> {});
+                  countDownLatch.countDown();
+                },
+                throwable -> countDownLatch.countDown()));
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void testQueryWithFiveArguments() throws InterruptedException {
     CountDownLatch countDownLatch = new CountDownLatch(1);
     Query query =

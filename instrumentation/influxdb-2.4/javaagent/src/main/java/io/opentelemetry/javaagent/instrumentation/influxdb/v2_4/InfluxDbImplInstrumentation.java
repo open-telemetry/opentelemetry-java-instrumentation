@@ -18,6 +18,8 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -39,8 +41,23 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("query").and(takesArgument(0, named("org.influxdb.dto.Query"))),
+        named("query")
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArguments(1).or(takesArguments(2).and(takesArgument(1, TimeUnit.class)))),
         getClass().getName() + "$InfluxDbQueryAdvice");
+    transformer.applyAdviceToMethod(
+        named("query")
+            .and(takesArguments(3))
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArgument(1, Consumer.class))
+            .and(takesArgument(2, Consumer.class)),
+        getClass().getName() + "$InfluxDbAsyncQueryAdvice");
+    transformer.applyAdviceToMethod(
+        named("query")
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArgument(1, int.class))
+            .and(takesArguments(3).or(takesArguments(4)).or(takesArguments(5))),
+        getClass().getName() + "$InfluxDbChunkedQueryAdvice");
 
     transformer.applyAdviceToMethod(
         named("write")
@@ -69,7 +86,49 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbQueryAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static InfluxDbScope<InfluxDbQuery> onEnter(
+        @Advice.Argument(0) @Nullable Query query,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return null;
+      }
+
+      if (query == null) {
+        return null;
+      }
+      Context parentContext = Context.current();
+      HttpUrl httpUrl = retrofit.baseUrl();
+      InfluxDbQuery influxDbQuery =
+          InfluxDbQuery.create(
+              httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
+      if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
+        return null;
+      }
+
+      return InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable InfluxDbScope<InfluxDbQuery> scope) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.decrementAndGet() > 0 || scope == null) {
+        return;
+      }
+
+      scope.end(throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InfluxDbAsyncQueryAdvice {
+
     @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Object[] onEnter(
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
@@ -78,29 +137,82 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      Query query = arguments[0] instanceof Query ? (Query) arguments[0] : null;
+      Query query = (Query) arguments[0];
       if (query == null) {
         return null;
       }
       Context parentContext = Context.current();
-
       HttpUrl httpUrl = retrofit.baseUrl();
       InfluxDbQuery influxDbQuery =
           InfluxDbQuery.create(
               httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
-
       if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
         return null;
       }
 
-      // wrap callbacks so they'd run in the context of the parent span
-      Object[] newArguments = new Object[arguments.length];
-      for (int i = 0; i < arguments.length; i++) {
-        newArguments[i] = InfluxDbObjectWrapper.wrap(arguments[i], parentContext);
+      arguments[1] = InfluxDbObjectWrapper.wrapConsumer((Consumer<?>) arguments[1], parentContext);
+      arguments[2] = InfluxDbObjectWrapper.wrapConsumer((Consumer<?>) arguments[2], parentContext);
+      return new Object[] {
+        arguments, InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery)
+      };
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.decrementAndGet() > 0 || enterArgs == null) {
+        return;
+      }
+
+      ((InfluxDbScope<?>) enterArgs[1]).end(throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InfluxDbChunkedQueryAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
+    @Nullable
+    public static Object[] onEnter(
+        @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return null;
+      }
+
+      Query query = (Query) arguments[0];
+      if (query == null) {
+        return null;
+      }
+      Context parentContext = Context.current();
+      HttpUrl httpUrl = retrofit.baseUrl();
+      InfluxDbQuery influxDbQuery =
+          InfluxDbQuery.create(
+              httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
+      if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
+        return null;
+      }
+
+      if (arguments[2] instanceof Consumer<?>) {
+        arguments[2] =
+            InfluxDbObjectWrapper.wrapConsumer((Consumer<?>) arguments[2], parentContext);
+      } else if (arguments[2] instanceof BiConsumer<?, ?>) {
+        arguments[2] =
+            InfluxDbObjectWrapper.wrapBiConsumer((BiConsumer<?, ?>) arguments[2], parentContext);
+      }
+      if (arguments.length > 3 && arguments[3] instanceof Runnable) {
+        arguments[3] = InfluxDbObjectWrapper.wrapRunnable((Runnable) arguments[3], parentContext);
+      }
+      if (arguments.length > 4 && arguments[4] instanceof Consumer<?>) {
+        arguments[4] =
+            InfluxDbObjectWrapper.wrapConsumer((Consumer<?>) arguments[4], parentContext);
       }
 
       return new Object[] {
-        newArguments, InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery)
+        arguments, InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery)
       };
     }
 
