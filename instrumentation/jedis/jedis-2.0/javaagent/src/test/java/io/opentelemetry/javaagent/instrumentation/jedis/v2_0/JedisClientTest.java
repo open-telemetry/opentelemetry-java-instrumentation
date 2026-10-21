@@ -150,16 +150,18 @@ class JedisClientTest {
 
   @Test
   void pipelineAndTransactionErrorsCompleteBatchSpans() {
-    jedis.lpush("wrong-type", "value");
+    Jedis client = new Jedis(host, port);
+    cleanup.deferCleanup(client::disconnect);
+    client.lpush("wrong-type", "value");
     testing.clearData();
 
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = client.pipelined();
     pipeline.get("wrong-type");
     assertThatThrownBy(pipeline::syncAndReturnAll).hasMessageStartingWith("WRONGTYPE");
     assertErrorType("WRONGTYPE");
 
     testing.clearData();
-    Transaction transaction = jedis.multi();
+    Transaction transaction = client.multi();
     transaction.get("wrong-type");
     assertThatThrownBy(transaction::exec).hasMessageStartingWith("WRONGTYPE");
     assertErrorType("WRONGTYPE");
