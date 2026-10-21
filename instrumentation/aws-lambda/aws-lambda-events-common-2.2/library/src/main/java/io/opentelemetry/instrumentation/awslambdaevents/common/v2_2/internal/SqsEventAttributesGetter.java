@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static java.util.Collections.emptyList;
+
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import java.util.List;
@@ -23,5 +25,11 @@ final class SqsEventAttributesGetter extends SqsAttributesGetter<SQSEvent, Void>
   public Long getBatchMessageCount(SQSEvent event, @Nullable Void unused) {
     List<SQSMessage> records = event.getRecords();
     return records == null ? null : (long) records.size();
+  }
+
+  @Override
+  public Iterable<String> getMessageHeaderNames(SQSEvent event) {
+    // Headers belong to individual records, not the batch event.
+    return emptyList();
   }
 }

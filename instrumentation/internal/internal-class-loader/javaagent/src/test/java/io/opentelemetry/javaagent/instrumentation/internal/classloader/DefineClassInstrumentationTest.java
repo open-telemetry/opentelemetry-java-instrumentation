@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,6 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
+import org.mockito.verification.VerificationMode;
 
 class DefineClassInstrumentationTest {
 
@@ -93,7 +95,7 @@ class DefineClassInstrumentationTest {
           definedClass = cl.doDefineClass(className, bytecode, 0, bytecode.length, null);
           break;
         case "byteBuffer3":
-          ByteBuffer buffer = ByteBuffer.allocateDirect(bytecode.length);
+          ByteBuffer buffer = ByteBuffer.allocate(bytecode.length);
           buffer.put(bytecode);
           buffer.flip();
           definedClass = cl.doDefineClass(className, buffer, null);
@@ -107,9 +109,11 @@ class DefineClassInstrumentationTest {
 
     assertThat(definedClass.getName()).isEqualTo(className);
     assertThat(definedClass.getClassLoader()).isSameAs(cl);
-    verify(mockHandler)
+    // defineClass that accepts ByteBuffer delegates to the one that accepts byte array
+    VerificationMode verificationMode = times(signature.equals("byteBuffer3") ? 2 : 1);
+    verify(mockHandler, verificationMode)
         .beforeDefineClass(
             same(cl), eq(expectedClassName), eq(bytecode), eq(0), eq(bytecode.length));
-    verify(mockHandler).afterDefineClass(same(context));
+    verify(mockHandler, verificationMode).afterDefineClass(same(context));
   }
 }

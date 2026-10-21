@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -58,7 +60,10 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span -> span.hasName("SELECT").hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))));
+                span ->
+                    span.hasName("SELECT")
+                        .hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))));
 
     assertDurationMetric(
         testing,
@@ -67,6 +72,12 @@ class JdbcTelemetryTest {
         DB_QUERY_SUMMARY,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jdbc",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)));
   }
 
   @ParameterizedTest
@@ -291,7 +302,8 @@ class JdbcTelemetryTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"), span -> span.hasName("COMMIT")));
+                span -> span.hasName("parent"),
+                span -> span.hasName("COMMIT").satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))));
 
     assertDurationMetric(
         testing,
@@ -300,6 +312,12 @@ class JdbcTelemetryTest {
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jdbc",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)));
   }
 
   @Test

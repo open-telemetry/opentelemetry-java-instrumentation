@@ -172,6 +172,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
                                     equalTo(DB_OPERATION_NAME, "SET")))));
+
+    assertCommandErrorMetric(null);
   }
 
   @Test
@@ -259,10 +261,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                         ERROR_TYPE,
                                         testLatestDeps()
                                             ? RedisCommandTimeoutException.class.getName()
-                                            : null)))));
+                                            : "_OTHER")))));
 
     assertCommandErrorMetric(
-        testLatestDeps() ? RedisCommandTimeoutException.class.getName() : null);
+        testLatestDeps() ? RedisCommandTimeoutException.class.getName() : "_OTHER");
   }
 
   @Test

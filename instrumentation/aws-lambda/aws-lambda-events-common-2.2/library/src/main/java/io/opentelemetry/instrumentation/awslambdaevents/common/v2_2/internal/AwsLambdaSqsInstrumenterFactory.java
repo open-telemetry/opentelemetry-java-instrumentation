@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -44,6 +45,7 @@ public final class AwsLambdaSqsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 new SpanKeyOmittingAttributesExtractor<>(
                     MessagingAttributesExtractor.create(
@@ -64,6 +66,7 @@ public final class AwsLambdaSqsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 MessagingAttributesExtractor.create(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
