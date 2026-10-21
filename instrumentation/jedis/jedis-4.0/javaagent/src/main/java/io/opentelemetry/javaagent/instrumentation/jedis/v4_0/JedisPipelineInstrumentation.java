@@ -66,17 +66,17 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
       private final JedisRequest request;
-      @Nullable private final JedisRequestContext<JedisRequest> replyContext;
+      @Nullable private final JedisRequestContext<JedisRequest> requestContext;
 
       private AdviceScope(
           Context context,
           Scope scope,
           JedisRequest request,
-          @Nullable JedisRequestContext<JedisRequest> replyContext) {
+          @Nullable JedisRequestContext<JedisRequest> requestContext) {
         this.context = context;
         this.scope = scope;
         this.request = request;
-        this.replyContext = replyContext;
+        this.requestContext = requestContext;
       }
 
       @Nullable
@@ -100,7 +100,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
       public void end(@Nullable Throwable throwable) {
         scope.close();
         Throwable completionThrowable =
-            replyContext != null ? replyContext.detachAndEnd(throwable) : throwable;
+            requestContext != null ? requestContext.detachAndEnd(throwable) : throwable;
         instrumenter().end(context, request, null, completionThrowable);
       }
     }

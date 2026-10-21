@@ -11,7 +11,6 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorRequest;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -22,13 +21,12 @@ import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 
 @AutoValue
-public abstract class JedisRequest implements JedisServerErrorRequest {
+public abstract class JedisRequest {
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
   private static final int LIMIT = 32 * 1024;
   @Nullable private InetSocketAddress peerAddress;
-  @Nullable private String serverErrorReply;
 
   public static JedisRequest create(Connection connection, Protocol.Command command) {
     return create(connection, command, emptyList());
@@ -84,16 +82,6 @@ public abstract class JedisRequest implements JedisServerErrorRequest {
 
   @Nullable
   public abstract Long getBatchSize();
-
-  @Nullable
-  public String getErrorType() {
-    return JedisServerError.errorType(serverErrorReply);
-  }
-
-  @Override
-  public void setServerErrorReply(String reply) {
-    serverErrorReply = reply;
-  }
 
   public void capturePeerAddress() {
     Socket socket = getConnection().getSocket();

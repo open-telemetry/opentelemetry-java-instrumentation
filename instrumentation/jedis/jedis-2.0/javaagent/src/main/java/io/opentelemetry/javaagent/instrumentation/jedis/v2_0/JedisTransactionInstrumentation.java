@@ -45,7 +45,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
     public static class AdviceState {
       @Nullable private final Context context;
       @Nullable private final JedisRequest request;
-      @Nullable private JedisRequestContext<JedisRequest> replyContext;
+      @Nullable private JedisRequestContext<JedisRequest> requestContext;
       @Nullable public Scope scope;
       @Nullable public TransactionFraming previousTransactionFraming;
 
@@ -60,7 +60,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         }
         if (context != null && request != null) {
           Throwable completionThrowable =
-              replyContext != null ? replyContext.detachAndEnd(throwable) : throwable;
+              requestContext != null ? requestContext.detachAndEnd(throwable) : throwable;
           instrumenter().end(context, request, null, completionThrowable);
         }
       }
@@ -90,11 +90,11 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         try {
           adviceState.scope = context.makeCurrent();
           if (request != null) {
-            adviceState.replyContext = JedisRequestContext.attachForBatch(request);
+            adviceState.requestContext = JedisRequestContext.attachForBatch(request);
           }
         } catch (Throwable t) {
-          if (adviceState.replyContext != null) {
-            adviceState.replyContext.detachAndEnd(null);
+          if (adviceState.requestContext != null) {
+            adviceState.requestContext.detachAndEnd(null);
           }
           currentTransactionFraming().restore(adviceState.previousTransactionFraming);
           throw t;

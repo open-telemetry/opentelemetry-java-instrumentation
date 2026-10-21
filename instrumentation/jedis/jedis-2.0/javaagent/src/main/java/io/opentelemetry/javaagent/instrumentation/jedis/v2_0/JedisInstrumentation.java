@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.captureTransactionFramingPeerAddress;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.transactionFraming;
-import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentCommandContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentTransactionFraming;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -70,10 +69,6 @@ class JedisInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {
-        JedisClusterCommandContext commandContext = currentCommandContext().get();
-        if (commandContext != null) {
-          commandContext.captureReplyContext(requestContext);
-        }
         requestContext.detachAndEnd(throwable);
       }
     }

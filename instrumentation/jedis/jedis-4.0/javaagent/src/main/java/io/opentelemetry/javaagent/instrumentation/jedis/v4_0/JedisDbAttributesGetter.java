@@ -46,7 +46,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Nullable
   public String getErrorType(
       JedisRequest request, @Nullable Void unused, @Nullable Throwable error) {
-    return request.getErrorType();
+    return JedisServerError.errorType(error);
   }
 
   @Override

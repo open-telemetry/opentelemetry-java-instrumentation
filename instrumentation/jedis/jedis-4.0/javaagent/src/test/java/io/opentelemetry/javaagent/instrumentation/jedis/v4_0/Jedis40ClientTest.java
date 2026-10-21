@@ -141,16 +141,33 @@ class Jedis40ClientTest {
     assertErrorType("WRONGTYPE");
   }
 
-  @ParameterizedTest
-  @MethodSource("serverErrorReplies")
-  void serverErrorPrefix(String reply, String errorType) {
-    assertThatThrownBy(
+  @Test
+  void dedicatedServerErrorUsesExceptionClass() {
+    Throwable error =
+        catchThrowable(
             () ->
                 jedis.eval(
-                    "return redis.error_reply(ARGV[1])".getBytes(UTF_8), 0, reply.getBytes(UTF_8)))
-        .isInstanceOf(JedisDataException.class);
+                    "return redis.error_reply(ARGV[1])".getBytes(UTF_8),
+                    0,
+                    "MOVED 42 127.0.0.1:6379".getBytes(UTF_8)));
 
-    assertErrorType(errorType);
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertThat(error.getClass()).isNotEqualTo(JedisDataException.class);
+    assertErrorType(error.getClass().getName());
+  }
+
+  @Test
+  void unreliableServerPrefixUsesExceptionClass() {
+    Throwable error =
+        catchThrowable(
+            () ->
+                jedis.eval(
+                    "return redis.error_reply(ARGV[1])".getBytes(UTF_8),
+                    0,
+                    "échec details".getBytes(UTF_8)));
+
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertErrorType(error.getClass().getName());
   }
 
   @Test
@@ -252,20 +269,6 @@ class Jedis40ClientTest {
                     span.satisfies(
                         spanData ->
                             assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
-  }
-
-  private static Stream<Arguments> serverErrorReplies() {
-    String longPrefix = "VeryLongPrefix_0123456789_0123456789_0123456789_0123456789_0123456789";
-    return Stream.of(
-        argumentSet("dedicated code", "MOVED 42 127.0.0.1:6379", "MOVED"),
-        argumentSet("punctuation", "Custom.Code! details", "Custom.Code!"),
-        argumentSet("lowercase", "lowercase details", "lowercase"),
-        argumentSet("leading spaces", "  Custom.Code! details", "Custom.Code!"),
-        argumentSet("non-ASCII prefix", "échec details", "échec"),
-        argumentSet("long prefix", longPrefix + " details", longPrefix),
-        argumentSet("prefix only", "PrefixOnly", "PrefixOnly"),
-        argumentSet("tabs are not separators", "Custom.Code!\tmessage", "Custom.Code!\tmessage"),
-        argumentSet("empty prefix", " ", JedisDataException.class.getName()));
   }
 
   private static void assertErrorType(String errorType) {

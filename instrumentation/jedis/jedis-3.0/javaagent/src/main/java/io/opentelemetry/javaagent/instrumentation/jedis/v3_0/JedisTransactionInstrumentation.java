@@ -41,17 +41,17 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final JedisRequest request;
-      @Nullable private final JedisRequestContext<JedisRequest> replyContext;
+      @Nullable private final JedisRequestContext<JedisRequest> requestContext;
 
       private AdviceScope(
           @Nullable Context context,
           @Nullable Scope scope,
           @Nullable JedisRequest request,
-          @Nullable JedisRequestContext<JedisRequest> replyContext) {
+          @Nullable JedisRequestContext<JedisRequest> requestContext) {
         this.context = context;
         this.scope = scope;
         this.request = request;
-        this.replyContext = replyContext;
+        this.requestContext = requestContext;
       }
 
       public static AdviceScope start(Transaction transaction) {
@@ -80,7 +80,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         if (scope != null) {
           scope.close();
           Throwable completionThrowable =
-              replyContext != null ? replyContext.detachAndEnd(throwable) : throwable;
+              requestContext != null ? requestContext.detachAndEnd(throwable) : throwable;
           instrumenter().end(context, request, null, completionThrowable);
         }
       }
