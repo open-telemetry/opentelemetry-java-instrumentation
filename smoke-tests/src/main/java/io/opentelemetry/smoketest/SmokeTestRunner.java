@@ -77,6 +77,11 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
+  public List<List<MetricData>> getExportedMetricCollections() {
+    return telemetryRetriever.waitForMetricCollections();
+  }
+
+  @Override
   public List<LogRecordData> getExportedLogRecords() {
     return telemetryRetriever.waitForLogs();
   }

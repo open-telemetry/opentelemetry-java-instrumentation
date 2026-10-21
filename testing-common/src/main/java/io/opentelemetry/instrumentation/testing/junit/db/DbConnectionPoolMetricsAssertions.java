@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.longSum;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CLIENT_CONNECTION_POOL_NAME;
@@ -16,8 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.AbstractPointAssert;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
-import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -147,20 +147,16 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyUsageMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("{connection}")
-        .hasDescription(
-            "The number of connections that are currently in state described by the state attribute.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point ->
-                            verifyPointAttributes(
-                                point, equalTo(DB_CLIENT_CONNECTION_STATE, "idle")),
-                        point ->
-                            verifyPointAttributes(
-                                point, equalTo(DB_CLIENT_CONNECTION_STATE, "used"))));
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{connection}")
+                    .hasDescription(
+                        "The number of connections that are currently in state described by the state attribute.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            point -> verifyPointAttributes(point, equalTo(DB_CLIENT_CONNECTION_STATE, "idle")),
+            point -> verifyPointAttributes(point, equalTo(DB_CLIENT_CONNECTION_STATE, "used")))
+        .accept(assertThat(metric));
   }
 
   private void verifyMaxConnections() {
@@ -171,10 +167,14 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyMaxConnectionsMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("{connection}")
-        .hasDescription("The maximum number of open connections allowed.")
-        .hasLongSumSatisfying(this::verifyPoolName);
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{connection}")
+                    .hasDescription("The maximum number of open connections allowed.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            this::verifyPointAttributes)
+        .accept(assertThat(metric));
   }
 
   private void verifyMinIdleConnections() {
@@ -185,10 +185,14 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyMinIdleConnectionsMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("{connection}")
-        .hasDescription("The minimum number of idle open connections allowed.")
-        .hasLongSumSatisfying(this::verifyPoolName);
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{connection}")
+                    .hasDescription("The minimum number of idle open connections allowed.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            this::verifyPointAttributes)
+        .accept(assertThat(metric));
   }
 
   private void verifyMaxIdleConnections() {
@@ -199,14 +203,14 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyMaxIdleConnectionsMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("{connection}")
-        .hasDescription("The maximum number of idle open connections allowed.")
-        .hasLongSumSatisfying(this::verifyPoolName);
-  }
-
-  private void verifyPoolName(LongSumAssert sum) {
-    sum.isNotMonotonic().hasPointsSatisfying(this::verifyPointAttributes);
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{connection}")
+                    .hasDescription("The maximum number of idle open connections allowed.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            this::verifyPointAttributes)
+        .accept(assertThat(metric));
   }
 
   private void verifyPointAttributes(AbstractPointAssert<?, ?> point) {
@@ -234,10 +238,15 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyPendingRequestsMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("{request}")
-        .hasDescription("The number of current pending requests for an open connection.")
-        .hasLongSumSatisfying(this::verifyPoolName);
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{request}")
+                    .hasDescription(
+                        "The number of current pending requests for an open connection.")
+                    .hasLongSumSatisfying(sum -> sum.isNotMonotonic()),
+            this::verifyPointAttributes)
+        .accept(assertThat(metric));
   }
 
   private void verifyTimeouts() {
@@ -248,12 +257,15 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyTimeoutsMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("{timeout}")
-        .hasDescription(
-            "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
-        .hasLongSumSatisfying(
-            sum -> sum.isMonotonic().hasPointsSatisfying(this::verifyPointAttributes));
+    longSum(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("{timeout}")
+                    .hasDescription(
+                        "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
+                    .hasLongSumSatisfying(sum -> sum.isMonotonic()),
+            this::verifyPointAttributes)
+        .accept(assertThat(metric));
   }
 
   private void verifyCreateTime() {
@@ -264,11 +276,13 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyCreateTimeMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("s")
-        .hasDescription("The time it took to create a new connection.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+    histogram(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("s")
+                    .hasDescription("The time it took to create a new connection."),
+            this::verifyPointAttributes)
+        .accept(assertThat(metric));
   }
 
   private void verifyWaitTime() {
@@ -279,11 +293,13 @@ public class DbConnectionPoolMetricsAssertions {
   }
 
   private void verifyWaitTimeMetric(MetricData metric) {
-    assertThat(metric)
-        .hasUnit("s")
-        .hasDescription("The time it took to obtain an open connection from the pool.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+    histogram(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("s")
+                    .hasDescription("The time it took to obtain an open connection from the pool."),
+            this::verifyPointAttributes)
+        .accept(assertThat(metric));
   }
 
   private void verifyUseTime() {
@@ -293,11 +309,14 @@ public class DbConnectionPoolMetricsAssertions {
         metrics -> metrics.anySatisfy(this::verifyUseTimeMetric));
   }
 
-  private MetricAssert verifyUseTimeMetric(MetricData metric) {
-    return assertThat(metric)
-        .hasUnit("s")
-        .hasDescription("The time between borrowing a connection and returning it to the pool.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+  private void verifyUseTimeMetric(MetricData metric) {
+    histogram(
+            metricAssert ->
+                metricAssert
+                    .hasUnit("s")
+                    .hasDescription(
+                        "The time between borrowing a connection and returning it to the pool."),
+            this::verifyPointAttributes)
+        .accept(assertThat(metric));
   }
 }

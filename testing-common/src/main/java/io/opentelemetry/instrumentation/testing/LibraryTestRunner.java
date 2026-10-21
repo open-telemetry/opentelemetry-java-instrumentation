@@ -21,6 +21,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.baggage.processor.BaggageSpanProcessor;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.instrumentation.testing.internal.CollectionCapturingMetricExporter;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider;
 import io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider;
@@ -32,12 +33,10 @@ import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
-import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
@@ -59,7 +58,7 @@ public class LibraryTestRunner extends InstrumentationTestRunner {
   private static final OpenTelemetrySdk openTelemetrySdk;
   private static final OpenTelemetry openTelemetry;
   private static final InMemorySpanExporter testSpanExporter;
-  private static final InMemoryMetricExporter testMetricExporter;
+  private static final CollectionCapturingMetricExporter testMetricExporter;
   private static final InMemoryLogRecordExporter testLogRecordExporter;
   private static final MetricReader metricReader;
   private static boolean forceFlushCalled;
@@ -68,7 +67,7 @@ public class LibraryTestRunner extends InstrumentationTestRunner {
     GlobalOpenTelemetry.resetForTest();
 
     testSpanExporter = InMemorySpanExporter.create();
-    testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
+    testMetricExporter = new CollectionCapturingMetricExporter();
     testLogRecordExporter = InMemoryLogRecordExporter.create();
     TestSpanExporterComponentProvider.setSpanExporter(testSpanExporter);
     TestMetricExporterComponentProvider.setMetricExporter(testMetricExporter);
@@ -164,6 +163,12 @@ public class LibraryTestRunner extends InstrumentationTestRunner {
   public List<MetricData> getExportedMetrics() {
     metricReader.forceFlush().join(10, SECONDS);
     return testMetricExporter.getFinishedMetricItems();
+  }
+
+  @Override
+  public List<List<MetricData>> getExportedMetricCollections() {
+    metricReader.forceFlush().join(10, SECONDS);
+    return testMetricExporter.getCollections();
   }
 
   @Override

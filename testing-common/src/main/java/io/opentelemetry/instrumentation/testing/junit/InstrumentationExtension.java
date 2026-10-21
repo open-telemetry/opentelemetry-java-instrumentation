@@ -116,6 +116,18 @@ public abstract class InstrumentationExtension
   }
 
   /**
+   * Waits for the supplied assertions to match every distinct metric identity from the given
+   * instrumentation exactly once, in any order. DELTA sums and histograms include all captured
+   * collections, while gauges and cumulative data use the latest collection.
+   */
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertMetricsExactly(
+      String instrumentationName, Consumer<MetricAssert>... assertions) {
+    testRunner.waitAndAssertMetricsExactly(instrumentationName, assertions);
+  }
+
+  /**
    * Removes all captured telemetry data. After calling this method {@link #spans()} and {@link
    * #metrics()} will return empty lists until more telemetry data is captured.
    */

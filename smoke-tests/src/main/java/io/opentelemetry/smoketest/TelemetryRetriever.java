@@ -59,10 +59,15 @@ public class TelemetryRetriever implements AutoCloseable {
   }
 
   public List<MetricData> waitForMetrics() {
+    return waitForMetricCollections().stream().flatMap(Collection::stream).collect(toList());
+  }
+
+  public List<List<MetricData>> waitForMetricCollections() {
     Collection<ExportMetricsServiceRequest> requests =
         waitForTelemetry("get-metrics", ExportMetricsServiceRequest::newBuilder);
-    return TelemetryConverter.getMetricsData(
-        convert(requests, ExportMetricsServiceRequest::getResourceMetricsList));
+    return requests.stream()
+        .map(request -> TelemetryConverter.getMetricsData(request.getResourceMetricsList()))
+        .collect(toList());
   }
 
   public List<LogRecordData> waitForLogs() {

@@ -123,6 +123,26 @@ public class AgentTestingExporterAccess {
     }
   }
 
+  public static List<List<MetricData>> getExportedMetricCollections() {
+    try {
+      @SuppressWarnings("unchecked") // casting MethodHandle.invokeExact result
+      List<byte[]> bytes = (List<byte[]>) getMetricExportRequests.invokeExact();
+      return bytes.stream()
+          .map(
+              serialized -> {
+                try {
+                  return TelemetryConverter.getMetricsData(
+                      ExportMetricsServiceRequest.parseFrom(serialized).getResourceMetricsList());
+                } catch (InvalidProtocolBufferException e) {
+                  throw new AssertionError(e);
+                }
+              })
+          .collect(toList());
+    } catch (Throwable t) {
+      throw new AssertionError("Could not invoke getMetricExportRequests", t);
+    }
+  }
+
   public static List<LogRecordData> getExportedLogRecords() {
     try {
       @SuppressWarnings("unchecked") // casting MethodHandle.invokeExact result

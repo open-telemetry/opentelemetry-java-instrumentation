@@ -109,6 +109,11 @@ public class AgentTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
+  public List<List<MetricData>> getExportedMetricCollections() {
+    return AgentTestingExporterAccess.getExportedMetricCollections();
+  }
+
+  @Override
   public List<LogRecordData> getExportedLogRecords() {
     return AgentTestingExporterAccess.getExportedLogRecords();
   }

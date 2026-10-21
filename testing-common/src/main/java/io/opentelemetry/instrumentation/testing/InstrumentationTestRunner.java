@@ -19,6 +19,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.CollectedEvent;
 import io.opentelemetry.instrumentation.testing.internal.CollectedMetric;
+import io.opentelemetry.instrumentation.testing.internal.MetricDataAggregator;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -101,6 +102,10 @@ public abstract class InstrumentationTestRunner {
   public abstract List<SpanData> getExportedSpans();
 
   public abstract List<MetricData> getExportedMetrics();
+
+  public List<List<MetricData>> getExportedMetricCollections() {
+    return asList(getExportedMetrics());
+  }
 
   public abstract List<LogRecordData> getExportedLogRecords();
 
@@ -205,7 +210,7 @@ public abstract class InstrumentationTestRunner {
     awaitUntilAsserted(
         () ->
             assertion.accept(
-                assertThat(getExportedMetrics())
+                assertThat(normalizedMetrics())
                     .describedAs(
                         "Metrics for instrumentation %s and metric name %s",
                         instrumentationName, metricName)
@@ -214,11 +219,7 @@ public abstract class InstrumentationTestRunner {
                             data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
                                 && data.getName().equals(metricName))));
 
-    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
-
-    if (Boolean.getBoolean("collectMetadata")) {
-      collectEmittedMetrics(getExportedMetrics());
-    }
+    finishMetricAssertions(instrumentationName);
   }
 
   @SafeVarargs
@@ -237,16 +238,59 @@ public abstract class InstrumentationTestRunner {
           }
         });
 
-    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
+    finishMetricAssertions(instrumentationName);
+  }
 
+  /**
+   * Waits for the supplied assertions to match every distinct metric identity from the given
+   * instrumentation exactly once, in any order.
+   *
+   * <p>A metric identity consists of its resource, full instrumentation scope, name, description,
+   * unit, and data type. Point assertions apply to the normalized metric data: DELTA sums and
+   * histograms include all captured collections, while gauges and cumulative data use the latest
+   * collection.
+   */
+  @SafeVarargs
+  @SuppressWarnings({"unchecked", "varargs"})
+  public final void waitAndAssertMetricsExactly(
+      String instrumentationName, Consumer<MetricAssert>... assertions) {
+    awaitUntilAsserted(
+        () -> {
+          List<MetricData> metrics = filterMetrics(normalizedMetrics(), instrumentationName, null);
+          Consumer<MetricData>[] metricAssertions =
+              (Consumer<MetricData>[]) new Consumer<?>[assertions.length];
+          for (int i = 0; i < assertions.length; i++) {
+            Consumer<MetricAssert> assertion = assertions[i];
+            metricAssertions[i] = metric -> assertion.accept(assertThat(metric));
+          }
+          assertThat(metrics)
+              .describedAs("Metrics for instrumentation %s", instrumentationName)
+              .satisfiesExactlyInAnyOrder(metricAssertions);
+        });
+    finishMetricAssertions(instrumentationName);
+  }
+
+  private List<MetricData> normalizedMetrics() {
+    return MetricDataAggregator.aggregate(getExportedMetricCollections());
+  }
+
+  private void finishMetricAssertions(String instrumentationName) {
+    List<List<MetricData>> collections = getExportedMetricCollections();
+    List<MetricData> normalizedMetrics = MetricDataAggregator.aggregate(collections);
+    TelemetryDataUtil.assertMetricScopeVersion(
+        filterMetrics(normalizedMetrics, instrumentationName, null));
     if (Boolean.getBoolean("collectMetadata")) {
-      collectEmittedMetrics(getExportedMetrics());
+      List<MetricData> allMetrics =
+          collections.stream().flatMap(Collection::stream).collect(toList());
+      collectEmittedMetrics(allMetrics);
     }
   }
 
-  private List<MetricData> metricsForScope(String instrumentationName) {
-    return getExportedMetrics().stream()
+  private static List<MetricData> filterMetrics(
+      List<MetricData> metrics, String instrumentationName, @Nullable String metricName) {
+    return metrics.stream()
         .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+        .filter(m -> metricName == null || m.getName().equals(metricName))
         .collect(toList());
   }
 
@@ -391,9 +435,7 @@ public abstract class InstrumentationTestRunner {
   }
 
   private List<MetricData> instrumentationMetrics(String instrumentationName) {
-    return getExportedMetrics().stream()
-        .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
-        .collect(toList());
+    return filterMetrics(normalizedMetrics(), instrumentationName, null);
   }
 
   /**
