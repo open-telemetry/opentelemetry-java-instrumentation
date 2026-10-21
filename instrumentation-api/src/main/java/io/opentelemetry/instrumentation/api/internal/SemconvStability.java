@@ -11,7 +11,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,10 +54,6 @@ public final class SemconvStability {
     return emitStable(selectionResolver(openTelemetry).rpc());
   }
 
-  public static String rpcSchemaUrl(OpenTelemetry openTelemetry) {
-    return emitPreviewRpcSemconv(openTelemetry) ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
-  }
-
   private static SemconvSelectionResolver selectionResolver(OpenTelemetry openTelemetry) {
     return new SemconvSelectionResolver(
         openTelemetry, getGeneralInstrumentationConfig(openTelemetry));
@@ -95,10 +90,6 @@ public final class SemconvStability {
 
   private static boolean emitStable(SemconvMode mode) {
     return mode.version() >= 1;
-  }
-
-  public static String messagingSchemaUrl() {
-    return SchemaUrls.V1_43_0;
   }
 
   private SemconvStability() {}
