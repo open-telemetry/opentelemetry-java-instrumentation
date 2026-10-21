@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMess
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.groupTraces;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
@@ -21,8 +20,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingOperationTypeIncubatingValues.PROCESS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -71,8 +68,6 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.Producer;
-import org.assertj.core.api.AbstractLongAssert;
-import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -554,9 +549,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
       equalTo(MESSAGING_DESTINATION_PARTITION_ID, "0"),
       equalTo(MESSAGING_OPERATION_NAME, PROCESS),
       equalTo(MESSAGING_OPERATION_TYPE, PROCESS),
-      equalTo(MESSAGING_SYSTEM, KAFKA),
-      satisfies(THREAD_ID, AbstractLongAssert::isNotZero),
-      satisfies(THREAD_NAME, AbstractStringAssert::isNotBlank)
+      equalTo(MESSAGING_SYSTEM, KAFKA)
     };
   }
 

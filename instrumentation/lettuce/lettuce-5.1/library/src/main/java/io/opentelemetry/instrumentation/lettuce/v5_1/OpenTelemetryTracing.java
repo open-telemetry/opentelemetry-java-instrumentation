@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
@@ -142,10 +143,8 @@ final class OpenTelemetryTracing implements Tracing {
     }
   }
 
-  // The order that callbacks will be called in or which thread they are called from is not well
-  // defined. We go ahead and buffer all data until we know we have a span. This implementation is
-  // particularly safe, synchronizing all accesses. Relying on implementation details would allow
-  // reducing synchronization but the impact should be minimal.
+  // Callback registration publishes initialized span state to the completing thread.
+  // Each completion callback runs once, and encoding annotations do not access span state.
   private static class OpenTelemetrySpan extends Tracer.Span {
 
     private final Context parentContext;
@@ -154,8 +153,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
-    @Nullable private String errorMessage;
-    @Nullable private LettuceResponse response;
+    @Nullable private String taggedErrorMessage;
     @Nullable private Context context;
 
     OpenTelemetrySpan(
@@ -169,14 +167,14 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span name(String name) {
+    public Tracer.Span name(String name) {
       request.setCommand(name);
       return this;
     }
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
+    public Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
         OpenTelemetryEndpoint openTelemetryEndpoint = (OpenTelemetryEndpoint) endpoint;
         request.setAddress(openTelemetryEndpoint.address);
@@ -188,7 +186,7 @@ final class OpenTelemetryTracing implements Tracing {
     // @Override
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
-    public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
+    public Tracer.Span start(RedisCommand<?, ?, ?> command) {
       // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
       // so take name from the command. Later versions already set the name correctly,
       // so only fill it in when it is still null.
@@ -214,8 +212,8 @@ final class OpenTelemetryTracing implements Tracing {
         completeableCommand.onComplete(
             (o, throwable) -> {
               CommandOutput<?, ?, ?> output = command.getOutput();
-              String errorMsg = output != null ? output.getError() : null;
-              finishWithResponse(new LettuceResponse(errorMsg, throwable));
+              Throwable error = this.error != null ? this.error : throwable;
+              finishFromOutput(output != null ? output.getError() : null, error);
             });
       }
 
@@ -225,7 +223,7 @@ final class OpenTelemetryTracing implements Tracing {
     // Not called by Lettuce in 6.0+ (though we call it ourselves above).
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span start() {
+    public Tracer.Span start() {
       if (instrumenter.shouldStart(parentContext, request)) {
         context = instrumenter.start(parentContext, request);
 
@@ -244,7 +242,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span annotate(String value) {
+    public Tracer.Span annotate(String value) {
       if (value.startsWith("redis.encode.")) {
         // skip noisy encode events produced by io.lettuce.core.protocol.TracedCommand
         return this;
@@ -264,12 +262,12 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span tag(String key, String value) {
+    public Tracer.Span tag(String key, String value) {
       if (value == null || value.isEmpty()) {
         return this;
       }
       if (key.equals("error")) {
-        errorMessage = value;
+        taggedErrorMessage = value;
       }
       if (key.equals("redis.args")) {
         request.setArgsString(value);
@@ -288,31 +286,34 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span error(Throwable throwable) {
+    public Tracer.Span error(Throwable throwable) {
       this.error = throwable;
       return this;
     }
 
-    private synchronized void finishWithResponse(LettuceResponse resp) {
-      this.response = resp;
-      if (this.error == null && resp.getThrowable() != null) {
-        this.error = resp.getThrowable();
-      }
-      finish();
+    @Override
+    public void finish() {
+      finishFromOutput(taggedErrorMessage, error);
     }
 
-    @Override
-    public synchronized void finish() {
-      if (context != null) {
-        LettuceResponse response = this.response;
-        if (response == null && errorMessage != null) {
-          response = new LettuceResponse(errorMessage, null);
-        }
+    private void finishFromOutput(@Nullable String errorMessage, @Nullable Throwable error) {
+      // Lettuce also copies the message of client-side failures, such as command
+      // timeouts, into the output, so only treat it as a Redis error reply when there is
+      // no client-side failure
+      if (error instanceof RedisCommandExecutionException) {
+        end(LettuceResponse.fromErrorMessage(errorMessage), error);
+      } else if (error != null) {
+        end(null, error);
+      } else {
+        end(LettuceResponse.fromErrorMessage(errorMessage), null);
+      }
+    }
 
+    private void end(@Nullable LettuceResponse response, @Nullable Throwable error) {
+      Context context = this.context;
+      if (context != null) {
+        this.context = null;
         instrumenter.end(context, request, response, error);
-        // Null out context to prevent double-ending if both the onComplete callback and Lettuce's
-        // direct finish() call execute.
-        context = null;
       }
     }
   }

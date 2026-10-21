@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -38,8 +40,16 @@ public class SpymemcachedSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSpanStatusExtractor(
+                (status, request, response, error) -> {
+                  if (error != null
+                      || dbAttributesGetter.getErrorType(request, response, error) != null) {
+                    status.setStatus(StatusCode.ERROR);
+                  }
+                })
             .addContextCustomizer(
                 (context, request, attributes) -> SpymemcachedRequestContext.init(context, request))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 

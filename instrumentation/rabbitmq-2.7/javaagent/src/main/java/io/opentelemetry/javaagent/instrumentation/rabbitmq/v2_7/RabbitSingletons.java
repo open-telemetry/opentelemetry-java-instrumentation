@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -130,6 +131,7 @@ public class RabbitSingletons {
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.SEND, PUBLISH_OPERATION_NAME),
                 true)
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, PUBLISH_OPERATION_NAME))
@@ -159,6 +161,7 @@ public class RabbitSingletons {
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.SETTLE, operationName),
                 true)
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SETTLE, operationName))
@@ -190,6 +193,7 @@ public class RabbitSingletons {
     InstrumenterBuilder<ReceiveRequest, GetResponse> builder =
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractors(extractors)
             .addOperationMetrics(MessagingConsumerMetrics.get())
             .addSpanLinksExtractor(
@@ -222,6 +226,7 @@ public class RabbitSingletons {
     InstrumenterBuilder<DeliveryRequest, Void> builder =
         Instrumenter.<DeliveryRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractors(extractors)
             .addOperationMetrics(MessagingProcessMetrics.get())
             .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());

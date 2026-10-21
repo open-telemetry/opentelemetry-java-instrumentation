@@ -30,6 +30,13 @@ final class ChatAttributesGetter
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
 
+  @Nullable
+  @Override
+  public String getErrorType(
+      ChatCompletionRequest request, @Nullable ChatCompletion response, @Nullable Throwable error) {
+    return OpenAiErrorType.getErrorType(error);
+  }
+
   @Override
   public String getRequestModel(ChatCompletionRequest request) {
     return request.getRequest().model().asString();

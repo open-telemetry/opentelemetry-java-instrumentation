@@ -6,9 +6,11 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_ENCODING_FORMATS;
@@ -34,6 +36,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -97,6 +100,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                     maybeWithTransportSpan(
                         span ->
                             span.hasName("embeddings text-embedding-3-small")
+                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                                 .hasKind(SpanKind.CLIENT)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
@@ -116,6 +120,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -130,6 +135,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -247,6 +253,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                 .hasKind(SpanKind.CLIENT)
                                 .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
+                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                     equalTo(GEN_AI_REQUEST_MODEL, MODEL),
@@ -271,6 +278,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
+                                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));

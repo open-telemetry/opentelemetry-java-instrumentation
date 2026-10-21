@@ -6,10 +6,11 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -73,6 +74,7 @@ class RpcClientMetricsTest {
         Attributes.builder()
             .put(SERVER_ADDRESS, "example.com")
             .put(SERVER_PORT, 8080)
+            .put(ERROR_TYPE, "INTERNAL")
             .put(NETWORK_TRANSPORT, "tcp")
             .put(NETWORK_TYPE, "ipv4")
             .put(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE, 20)
@@ -207,6 +209,7 @@ class RpcClientMetricsTest {
                                                   RPC_METHOD,
                                                   "myservice.EchoService/exampleMethod"),
                                               equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                              equalTo(ERROR_TYPE, "INTERNAL"),
                                               equalTo(SERVER_ADDRESS, "example.com"),
                                               equalTo(SERVER_PORT, 8080))
                                           .hasExemplarsSatisfying(

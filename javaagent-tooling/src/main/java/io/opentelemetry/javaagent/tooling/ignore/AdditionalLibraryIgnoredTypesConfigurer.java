@@ -213,7 +213,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass(
             "org.springframework.web.context.support.AbstractRefreshableWebApplicationContext")
         .allowClass("org.springframework.web.context.support.GenericWebApplicationContext")
-        .allowClass("org.springframework.web.context.support.XmlWebApplicationContext");
+        .allowClass("org.springframework.web.context.support.XmlWebApplicationContext")
+        .allowClass("org.springframework.web.client.DefaultRestClient$DefaultResponseSpec$$Lambda");
 
     // xml-apis, xerces, xalan, but not xml web-services
     builder

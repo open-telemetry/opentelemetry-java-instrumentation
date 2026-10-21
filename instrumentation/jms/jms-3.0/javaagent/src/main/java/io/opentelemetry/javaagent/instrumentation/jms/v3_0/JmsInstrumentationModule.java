@@ -24,6 +24,8 @@ public class JmsInstrumentationModule extends InstrumentationModule {
         new JmsSessionInstrumentation(),
         new JmsMessageConsumerInstrumentation(),
         new JmsMessageListenerInstrumentation(),
-        new JmsMessageProducerInstrumentation());
+        new JmsMessageProducerInstrumentation(),
+        new JmsProducerInstrumentation(),
+        new JmsConsumerInstrumentation());
   }
 }

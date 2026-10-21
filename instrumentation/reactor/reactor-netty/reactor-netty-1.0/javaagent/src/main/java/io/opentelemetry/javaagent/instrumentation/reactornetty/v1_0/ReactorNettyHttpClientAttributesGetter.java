@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static java.util.Collections.emptyList;
 
 import io.netty.handler.codec.http.HttpVersion;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
