@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.lettuce.core.RedisCommandExecutionException;
+import io.lettuce.core.RedisCommandTimeoutException;
+import io.lettuce.core.RedisNoScriptException;
 import org.junit.jupiter.api.Test;
 
 class LettuceDbAttributesGetterTest {
@@ -23,9 +26,18 @@ class LettuceDbAttributesGetterTest {
   }
 
   @Test
-  void ignoresClientErrorMessage() {
-    LettuceResponse response = LettuceResponse.fromErrorMessage("Connection closed");
+  void ignoresClientErrorWithoutResponse() {
+    assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
+        .isNull();
+  }
 
-    assertThat(getter.getErrorType(null, response, null)).isNull();
+  @Test
+  void fallsBackToExceptionClassWhenReplyHasNoPrefix() {
+    LettuceResponse response = LettuceResponse.fromErrorMessage(" details");
+
+    assertThat(getter.getErrorType(null, response, null))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
+    assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
+        .isEqualTo(RedisNoScriptException.class.getName());
   }
 }

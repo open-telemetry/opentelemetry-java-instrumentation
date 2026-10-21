@@ -569,9 +569,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(DB_SYSTEM_NAME, REDIS),
                                   equalTo(DB_QUERY_TEXT, "SHUTDOWN NOSAVE"),
                                   equalTo(DB_OPERATION_NAME, "SHUTDOWN"),
-                                  equalTo(
-                                      ERROR_TYPE,
-                                      testLatestDeps() ? "io.lettuce.core.RedisException" : null)));
+                                  equalTo(ERROR_TYPE, RedisException.class.getName())));
                       if (testLatestDeps()) {
                         // Seems to only be treated as an error with Lettuce 6+
                         // and also produces an exception event

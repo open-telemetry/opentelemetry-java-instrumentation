@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import java.util.Locale;
 import javax.annotation.Nullable;
 
 final class LettuceResponse {
@@ -37,9 +36,15 @@ final class LettuceResponse {
       return null;
     }
 
-    // Redis error prefixes are the first upper-case, space-delimited word of an error reply.
+    // Redis error prefixes are the first nonempty, ASCII-space-delimited token of an error reply.
+    int end = errorMessage.indexOf("\r\n");
+    if (end == -1) {
+      end = errorMessage.length();
+    }
     int separator = errorMessage.indexOf(' ');
-    String errorType = separator == -1 ? errorMessage : errorMessage.substring(0, separator);
-    return errorType.equals(errorType.toUpperCase(Locale.ROOT)) ? errorType : null;
+    if (separator == -1 || separator > end) {
+      separator = end;
+    }
+    return separator == 0 ? null : errorMessage.substring(0, separator);
   }
 }

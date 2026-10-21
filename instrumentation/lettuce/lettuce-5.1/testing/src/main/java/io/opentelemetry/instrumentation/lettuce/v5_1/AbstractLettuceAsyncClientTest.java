@@ -212,7 +212,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   }
 
   @Test
-  void testCommandTimeoutDoesNotReportRedisErrorType() {
+  void testCommandTimeoutUsesExceptionClassAsErrorType() {
     RedisClient timeoutClient = createClient(embeddedDbUri);
     cleanup.deferCleanup(timeoutClient::shutdown);
     timeoutClient.setOptions(
@@ -253,16 +253,11 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "BLPOP TIMEOUT_LIST 1"),
                                     equalTo(DB_OPERATION_NAME, "BLPOP"),
-                                    // Lettuce 5.1 tags the timeout without the throwable.
-                                    // Command-aware tracing exposes the throwable in 6.0+.
                                     equalTo(
                                         ERROR_TYPE,
-                                        testLatestDeps()
-                                            ? RedisCommandTimeoutException.class.getName()
-                                            : null)))));
+                                        RedisCommandTimeoutException.class.getName())))));
 
-    assertCommandErrorMetric(
-        testLatestDeps() ? RedisCommandTimeoutException.class.getName() : null);
+    assertCommandErrorMetric(RedisCommandTimeoutException.class.getName());
   }
 
   @Test

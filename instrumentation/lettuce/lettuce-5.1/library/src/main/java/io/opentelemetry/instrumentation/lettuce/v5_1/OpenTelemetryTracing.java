@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.RedisCommandExecutionException;
+import io.lettuce.core.RedisCommandTimeoutException;
+import io.lettuce.core.RedisException;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
@@ -300,13 +302,27 @@ final class OpenTelemetryTracing implements Tracing {
       // Lettuce also copies the message of client-side failures, such as command
       // timeouts, into the output, so only treat it as a Redis error reply when there is
       // no client-side failure
-      if (error instanceof RedisCommandExecutionException) {
+      if (errorMessage != null && isShutdownDisconnect(errorMessage)) {
+        end(null, new RedisException(errorMessage));
+      } else if (error instanceof RedisCommandExecutionException) {
         end(LettuceResponse.fromErrorMessage(errorMessage), error);
       } else if (error != null) {
         end(null, error);
+      } else if (errorMessage != null && isCommandTimeoutMessage(errorMessage)) {
+        // Lettuce 5.1 reports command timeouts as output errors without exposing the exception.
+        end(null, new RedisCommandTimeoutException(errorMessage));
       } else {
         end(LettuceResponse.fromErrorMessage(errorMessage), null);
       }
+    }
+
+    private boolean isShutdownDisconnect(String errorMessage) {
+      return "SHUTDOWN".equals(request.getCommand()) && errorMessage.startsWith("Connection");
+    }
+
+    private static boolean isCommandTimeoutMessage(String errorMessage) {
+      return errorMessage.startsWith("Command timed out after ")
+          || errorMessage.contains(". Command timed out after ");
     }
 
     private void end(@Nullable LettuceResponse response, @Nullable Throwable error) {
