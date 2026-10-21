@@ -119,7 +119,8 @@ class JmxMetricInsightInstallerTest {
             metric
                 .hasName("tomcat.test.unstable")
                 .satisfies(
-                    data -> assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
+                    data ->
+                        assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
   }
 
   @Test
