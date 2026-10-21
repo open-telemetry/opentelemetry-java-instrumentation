@@ -293,6 +293,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- In `opentelemetry-instrumentation-api-incubator`, custom
+  `MessagingAttributesGetter` implementations must implement `getMessageHeaderNames`, returning
+  supported header names or an empty iterable for carriers without supported headers.
 - Remove deprecated `ProcessResource.get()`. Replace it with `ProcessResource.create()` to omit
   command-line attributes, or `ProcessResource.create(true)` to retain them.
 - The `TracingSqsMessageHandler` customization constructor now accepts an
