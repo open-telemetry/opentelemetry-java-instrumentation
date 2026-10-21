@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
-import static java.util.logging.Level.WARNING;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -33,7 +32,6 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
@@ -126,6 +124,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   /**
    * Sets the OpenTelemetry schema URL that will be associated with all telemetry produced by this
    * {@link Instrumenter}.
+   *
+   * <p>The schema URL identifies the semantic conventions followed by the spans, metrics, and logs.
+   * If this method is not called, the telemetry has no schema URL.
    */
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setSchemaUrl(String schemaUrl) {
@@ -330,7 +331,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     if (instrumentationVersion != null) {
       tracerBuilder.setInstrumentationVersion(instrumentationVersion);
     }
-    String schemaUrl = getSchemaUrl();
     if (schemaUrl != null) {
       tracerBuilder.setSchemaUrl(schemaUrl);
     }
@@ -342,7 +342,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     if (instrumentationVersion != null) {
       loggerBuilder.setInstrumentationVersion(instrumentationVersion);
     }
-    String schemaUrl = getSchemaUrl();
     if (schemaUrl != null) {
       loggerBuilder.setSchemaUrl(schemaUrl);
     }
@@ -363,7 +362,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     if (instrumentationVersion != null) {
       meterBuilder.setInstrumentationVersion(instrumentationVersion);
     }
-    String schemaUrl = getSchemaUrl();
     if (schemaUrl != null) {
       meterBuilder.setSchemaUrl(schemaUrl);
     }
@@ -373,36 +371,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
 
     return listeners;
-  }
-
-  @Nullable
-  private String getSchemaUrl() {
-    // url set explicitly overrides url computed using attributes extractors
-    if (schemaUrl != null) {
-      return schemaUrl;
-    }
-    Set<String> computedSchemaUrls =
-        attributesExtractors.stream()
-            .filter(SchemaUrlProvider.class::isInstance)
-            .map(SchemaUrlProvider.class::cast)
-            .flatMap(
-                provider -> {
-                  String url = provider.internalGetSchemaUrl();
-                  return url == null ? Stream.of() : Stream.of(url);
-                })
-            .collect(toSet());
-    switch (computedSchemaUrls.size()) {
-      case 0:
-        return null;
-      case 1:
-        return computedSchemaUrls.iterator().next();
-      default:
-        logger.log(
-            WARNING,
-            "Multiple schemaUrls were detected: {0}. The built Instrumenter will have no schemaUrl assigned.",
-            computedSchemaUrls);
-        return null;
-    }
   }
 
   SpanSuppressor buildSpanSuppressor() {
