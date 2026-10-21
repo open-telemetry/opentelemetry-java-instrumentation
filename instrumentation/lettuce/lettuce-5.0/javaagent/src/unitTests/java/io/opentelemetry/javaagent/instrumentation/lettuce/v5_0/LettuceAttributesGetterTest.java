@@ -69,15 +69,25 @@ class LettuceAttributesGetterTest {
   }
 
   private static Stream<Arguments> errorTypes() {
+    String longPrefix = String.join("", nCopies(65, "A"));
     return Stream.of(
         Arguments.of(
             new RedisCommandExecutionException("WRONGTYPE Operation against a key"), "WRONGTYPE"),
+        Arguments.of(new RedisCommandExecutionException("ERR unknown command"), "ERR"),
+        Arguments.of(new RedisCommandExecutionException("Custom.Code! details"), "Custom.Code!"),
+        Arguments.of(new RedisCommandExecutionException("lowercase details"), "lowercase"),
+        Arguments.of(new RedisCommandExecutionException(longPrefix + " details"), longPrefix),
+        Arguments.of(new RedisCommandExecutionException("Custom.Code!"), "Custom.Code!"),
+        Arguments.of(new RedisCommandExecutionException("  Custom.Code! details"), "Custom.Code!"),
+        Arguments.of(new RedisCommandExecutionException("Custom\tCode! details"), "Custom\tCode!"),
+        Arguments.of(new RedisCommandExecutionException("Custom.Code!\r\nignored"), "Custom.Code!"),
         Arguments.of(null, null),
         Arguments.of(new RedisCommandTimeoutException("WRONGTYPE command timed out"), null),
-        Arguments.of(new RedisCommandExecutionException("wrongtype Operation against a key"), null),
+        Arguments.of(new RedisCommandExecutionException(""), null),
         Arguments.of(new RedisCommandExecutionException(" "), null),
+        Arguments.of(new RedisCommandExecutionException("\r\n"), null),
         Arguments.of(new RedisCommandExecutionException((String) null), null),
-        Arguments.of(new RedisCommandExecutionException(String.join("", nCopies(65, "A"))), null));
+        Arguments.of(new RedisCommandExecutionException("\t"), "\t"));
   }
 
   @Test

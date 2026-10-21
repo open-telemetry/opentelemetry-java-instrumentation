@@ -40,6 +40,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -278,6 +279,50 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(ERROR_TYPE, "WRONGTYPE"))));
 
     assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", "WRONGTYPE");
+  }
+
+  @Test
+  void testCustomServerErrorPrefixAcrossCompletionPaths() throws Exception {
+    String script = "return redis.error_reply('Custom.Code! details')";
+
+    Throwable syncError =
+        catchThrowable(() -> connection.sync().eval(script, ScriptOutputType.VALUE));
+    Throwable asyncError =
+        catchThrowable(() -> asyncCommands.eval(script, ScriptOutputType.VALUE).get(10, SECONDS));
+    Throwable reactiveError =
+        catchThrowable(
+            () -> connection.reactive().eval(script, ScriptOutputType.VALUE).single().block());
+
+    assertThat(syncError).isInstanceOf(RedisCommandExecutionException.class);
+    assertThat(asyncError)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+    assertThat(reactiveError).isInstanceOf(RedisCommandExecutionException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, "Custom.Code!"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, "Custom.Code!"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, "Custom.Code!"))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", "Custom.Code!");
   }
 
   @Test
@@ -830,6 +875,22 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .batchSize(2)
                 .exceptionType("io.lettuce.core.RedisCommandExecutionException")
                 .errorType("ERR")
+                .build()),
+        argumentSet(
+            "customErrorPrefix",
+            BatchScenario.builder()
+                .addCommand(
+                    commands ->
+                        commands.eval(
+                            "return redis.error_reply('Custom.Code! details')",
+                            ScriptOutputType.VALUE))
+                .addCommand(commands -> commands.set("batch-after-custom-error", "v1"))
+                .operationName("PIPELINE")
+                .queryText(
+                    "EVAL return redis.error_reply('Custom.Code! ? ?; SET batch-after-custom-error ?")
+                .batchSize(2)
+                .exceptionType("io.lettuce.core.RedisCommandExecutionException")
+                .errorType("Custom.Code!")
                 .build()));
   }
 

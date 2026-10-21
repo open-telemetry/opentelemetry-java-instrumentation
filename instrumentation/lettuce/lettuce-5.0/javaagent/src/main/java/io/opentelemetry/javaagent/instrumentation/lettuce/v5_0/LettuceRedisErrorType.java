@@ -23,24 +23,23 @@ final class LettuceRedisErrorType {
       return null;
     }
 
-    int separator = message.indexOf(' ');
-    String errorType = separator == -1 ? message : message.substring(0, separator);
-    if (errorType.isEmpty()) {
+    int messageEnd = message.indexOf("\r\n");
+    if (messageEnd == -1) {
+      messageEnd = message.length();
+    }
+
+    int tokenStart = 0;
+    while (tokenStart < messageEnd && message.charAt(tokenStart) == ' ') {
+      tokenStart++;
+    }
+    if (tokenStart == messageEnd) {
       return null;
     }
-    return isRedisErrorType(errorType) ? errorType : null;
-  }
 
-  private static boolean isRedisErrorType(String errorType) {
-    if (errorType.length() > 64 || errorType.charAt(0) < 'A' || errorType.charAt(0) > 'Z') {
-      return false;
+    int tokenEnd = message.indexOf(' ', tokenStart);
+    if (tokenEnd == -1 || tokenEnd > messageEnd) {
+      tokenEnd = messageEnd;
     }
-    for (int i = 1; i < errorType.length(); i++) {
-      char c = errorType.charAt(i);
-      if ((c < 'A' || c > 'Z') && (c < '0' || c > '9') && c != '_' && c != '-') {
-        return false;
-      }
-    }
-    return true;
+    return message.substring(tokenStart, tokenEnd);
   }
 }
