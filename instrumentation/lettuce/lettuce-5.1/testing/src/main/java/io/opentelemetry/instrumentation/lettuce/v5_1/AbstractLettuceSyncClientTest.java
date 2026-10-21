@@ -817,6 +817,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                     span -> {
                       span.hasName(spanName("SHUTDOWN", host, containerConnection.port))
                           .hasKind(SpanKind.CLIENT)
+                          .hasStatus(StatusData.error())
                           .hasAttributesSatisfyingExactly(
                               addExtraAttributes(
                                   equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -832,8 +833,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                           ? RedisException.class.getName()
                                           : "_OTHER")));
                       if (testLatestDeps()) {
-                        // Seems to only be treated as an error with Lettuce 6+
-                        // and also produces an exception event
+                        // Lettuce 6+ also exposes the exception.
                         span.hasException(new RedisException("Connection disconnected"))
                             .hasEventsSatisfyingExactly(event -> event.hasName("exception"));
                       }

@@ -31,12 +31,12 @@ class LettuceDbAttributesGetterTest {
   }
 
   @Test
-  void fallsBackToExceptionClassWhenReplyHasNoPrefix() {
+  void delegatesExceptionFallbackWhenReplyHasNoPrefix() {
     LettuceResponse response = LettuceResponse.fromErrorMessage("   ");
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
     assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
-        .isEqualTo(RedisNoScriptException.class.getName());
+        .isNull();
   }
 
   @Test
@@ -48,5 +48,20 @@ class LettuceDbAttributesGetterTest {
   @Test
   void omitsErrorTypeOnSuccess() {
     assertThat(getter.getErrorType(null, LettuceResponse.fromErrorMessage(null), null)).isNull();
+  }
+
+  @Test
+  void preservesExceptionFallback() {
+    assertThat(
+            getter.getErrorType(
+                null,
+                LettuceResponse.unknownFailure(),
+                new RedisCommandTimeoutException("Connection closed")))
+        .isNull();
+  }
+
+  @Test
+  void ignoresMissingResponse() {
+    assertThat(getter.getErrorType(null, null, null)).isNull();
   }
 }

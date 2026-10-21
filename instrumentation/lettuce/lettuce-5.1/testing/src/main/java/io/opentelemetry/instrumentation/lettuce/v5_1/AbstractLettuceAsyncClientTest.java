@@ -175,6 +175,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
                                     equalTo(DB_OPERATION_NAME, "SET")))));
+
+    assertCommandMetric("SET", null);
   }
 
   @Test

@@ -29,6 +29,7 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
@@ -76,6 +77,7 @@ class RpcInstanceSemconvTest {
       boolean preview = mode != 0;
       boolean old = mode != 1;
       String schemaUrl = preview ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+      assertThat(instance.selection.schemaUrl()).isEqualTo(schemaUrl);
       Context context = instance.instrumenter.start(Context.root(), "request");
       instance.instrumenter.end(context, "request", null, new IllegalStateException());
 
@@ -264,6 +266,7 @@ class RpcInstanceSemconvTest {
     final InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
     final InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     final Instrumenter<String, Void> instrumenter;
+    final RpcSemconvSelection.Selection selection;
 
     ConfiguredInstrumenter(boolean client, boolean preview, boolean dualEmit) {
       OpenTelemetrySdk sdk =
@@ -307,6 +310,7 @@ class RpcInstanceSemconvTest {
       when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
       when(openTelemetry.getGeneralInstrumentationConfig()).thenReturn(general);
       when(openTelemetry.getInstrumentationConfig("common")).thenReturn(common);
+      selection = RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry);
 
       TestGetter getter = new TestGetter();
       instrumenter =

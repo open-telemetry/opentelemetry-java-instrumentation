@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.library-instrumentation")
@@ -86,6 +87,14 @@ testing {
             includeTestsMatching("S3ClientTest")
             includeTestsMatching("SqsTracingTest.testDeleteMessageError")
           }
+        }
+        register("PreviewSemconv") {
+          filter.includeTestsMatching("*S3ClientTest.testServiceError")
+          telemetryConfig("otel.semconv-stability.preview", "rpc")
+        }
+        register("BothSemconv") {
+          filter.includeTestsMatching("*S3ClientTest.testServiceError")
+          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
         }
       }
     }

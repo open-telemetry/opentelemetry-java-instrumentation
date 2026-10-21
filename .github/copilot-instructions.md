@@ -36,7 +36,7 @@ applicable repository review rules; use their stated conditions and exceptions. 
   CHANGELOG heading.
 - User-facing configuration names and outgoing telemetry identities also have compatibility
   contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
-  alias and emitted `otel.scope.name`, including v3-preview behavior and scope-version lookup.
+  alias and emitted `otel.scope.name`, including scope-version lookup.
   Preserving one does not preserve the other. Do not require a deprecation cycle for
   implementation-only javaagent symbols.
 - For any instrumentation module changed, compare new or changed configuration reads, types, and
@@ -61,10 +61,10 @@ of where its implementation lives.
   mechanical conversion; determine whether the bridge needs a `SPECIAL_MAPPINGS` entry instead.
 - Stable flat property names remain stable even when read by alpha implementation code.
   On rename, retain the old name until the next major version: read the replacement first,
-  fall back to the old name only outside v3-preview, and log a `WARN` once at startup *when
+  fall back to the old name, and log a `WARN` once at startup *when
   the old value is applied*, naming the old and replacement flat properties (or declarative
   paths if there is no flat form). Add the deprecation to the CHANGELOG. Experimental/preview
-  names may be removed after a subsequent minor release and do not need the v3-preview guard.
+  names may be removed after a subsequent minor release.
   Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
   replacement-first warning logic to them.
 - Read module settings from `java.<module>` and general settings from `general`; HTTP

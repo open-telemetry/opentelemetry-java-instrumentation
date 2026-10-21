@@ -46,14 +46,10 @@ final class LettuceDbAttributesGetter
     if (response == null) {
       return null;
     }
-    String redisErrorType = response.getRedisErrorType();
-    if (redisErrorType != null) {
-      return redisErrorType;
-    }
-    if (!response.isFailed()) {
-      return null;
-    }
-    return error != null ? error.getClass().getName() : "_OTHER";
+    String errorType = response.getRedisErrorType();
+    // Older Lettuce tracing can report a failure without exposing its exception.
+    // Leave exception-class fallback to the shared extractor when an exception is available.
+    return errorType == null && response.isFailed() && error == null ? "_OTHER" : errorType;
   }
 
   @Nullable
