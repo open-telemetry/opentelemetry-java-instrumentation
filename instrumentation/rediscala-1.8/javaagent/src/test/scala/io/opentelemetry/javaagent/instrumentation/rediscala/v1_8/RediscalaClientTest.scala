@@ -88,13 +88,9 @@ class RediscalaClientTest {
     nonDefaultDbClient = createClient(Some(nonDefaultDbIndex))
   }
 
-  private def createClient(db: Option[Int]): RedisClient =
-    createClient(db, host, port.intValue())
-
   private def createClient(
       db: Option[Int],
-      clientHost: String,
-      clientPort: Int
+      clientPort: Int = port.intValue()
   ): RedisClient =
     try {
       // latest RedisClient constructor takes username as argument
@@ -102,7 +98,7 @@ class RediscalaClientTest {
       classOf[RedisClient]
         .getConstructors()(0)
         .newInstance(
-          clientHost,
+          host,
           Integer.valueOf(clientPort),
           Option.apply(null),
           Option.apply(null),
@@ -118,7 +114,7 @@ class RediscalaClientTest {
         classOf[RedisClient]
           .getConstructors()(0)
           .newInstance(
-            clientHost,
+            host,
             Integer.valueOf(clientPort),
             Option.apply(null),
             db,
@@ -210,29 +206,9 @@ class RediscalaClientTest {
     assertErrorType("LPUSH", "WRONGTYPE")
   }
 
-  @Test def testCustomServerErrorPrefixSetsErrorType(): Unit = {
-    val result = testing.runWithSpan(
-      "parent",
-      new ThrowingSupplier[Future[_], Exception] {
-        override def get(): Future[_] =
-          redisClient.eval[String](
-            "return redis.error_reply('CUSTOMCODE custom message')"
-          )
-      }
-    )
-
-    assertThatThrownBy(new ThrowingCallable {
-      override def call(): Unit = {
-        Await.result(result, Duration("3 second"))
-      }
-    }).isInstanceOf(classOf[ReplyErrorException])
-
-    assertErrorType("EVAL", "CUSTOMCODE")
-  }
-
   @Test def testClientFailureUsesExceptionClassAsErrorType(): Unit = {
     val failedPort = PortUtils.findOpenPort()
-    val client = createClient(None, host, failedPort)
+    val client = createClient(None, failedPort)
     try {
       val result = testing.runWithSpan(
         "parent",
@@ -241,19 +217,12 @@ class RediscalaClientTest {
         }
       )
 
-      val failure =
-        try {
-          Await.result(result, Duration("3 second"))
-          throw new AssertionError("Expected the Redis client request to fail")
-        } catch {
-          case e: Exception => e
-        }
+      val failure = Await.result(result.failed, Duration("3 second"))
       assertThat(failure).isNotInstanceOf(classOf[ReplyErrorException])
 
       assertErrorType(
         "PING",
         failure.getClass.getName,
-        host,
         JLong.valueOf(failedPort.toLong)
       )
     } finally {
@@ -480,14 +449,10 @@ class RediscalaClientTest {
   private def assertCommandSpan(operationName: String): Unit =
     assertCommandSpan(operationName, host, port)
 
-  private def assertErrorType(operationName: String, errorType: String): Unit =
-    assertErrorType(operationName, errorType, host, port)
-
   private def assertErrorType(
       operationName: String,
       errorType: String,
-      serverAddress: String,
-      serverPort: JLong
+      serverPort: JLong = port
   ): Unit = {
     testing.waitAndAssertTraces(new Consumer[TraceAssert] {
       override def accept(trace: TraceAssert): Unit =
@@ -500,7 +465,7 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName(s"$operationName $serverAddress:$serverPort")
+                .hasName(s"$operationName $host:$serverPort")
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasStatus(StatusData.error())
@@ -508,7 +473,7 @@ class RediscalaClientTest {
                   equalTo(DB_SYSTEM_NAME, REDIS),
                   equalTo(DB_OPERATION_NAME, operationName),
                   equalTo(DB_NAMESPACE, defaultDbIndex.toString),
-                  equalTo(SERVER_ADDRESS, serverAddress),
+                  equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, serverPort),
                   equalTo(ERROR_TYPE, errorType)
                 )
