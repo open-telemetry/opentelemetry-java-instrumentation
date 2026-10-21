@@ -79,8 +79,7 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
     if (details == null) {
       return null;
     }
-    String errorCode = details.errorCode();
-    return errorCode == null || errorCode.trim().isEmpty() ? null : errorCode;
+    return details.errorCode();
   }
 
   @Override
