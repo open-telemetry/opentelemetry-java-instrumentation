@@ -16,6 +16,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.redisson.client.RedisConnectionException;
 import org.redisson.client.RedisException;
@@ -75,6 +76,39 @@ class RedissonDbAttributesGetterTest {
     } finally {
       incomplete.release();
     }
+
+    ByteBuf incompleteAfterToken = Unpooled.copiedBuffer("-CUSTOM details", US_ASCII);
+    try {
+      assertThat(RedissonErrorCapture.parseServerErrorType(incompleteAfterToken)).isNull();
+    } finally {
+      incompleteAfterToken.release();
+    }
+
+    ByteBuf emptyReply = Unpooled.copiedBuffer("-\r\n", US_ASCII);
+    try {
+      assertThat(RedissonErrorCapture.parseServerErrorType(emptyReply)).isNull();
+    } finally {
+      emptyReply.release();
+    }
+
+    ByteBuf emptyToken = Unpooled.copiedBuffer("-   \r\n", US_ASCII);
+    try {
+      assertThat(RedissonErrorCapture.parseServerErrorType(emptyToken)).isNull();
+    } finally {
+      emptyToken.release();
+    }
+  }
+
+  @Test
+  void parsesFirstNonemptyAsciiSpaceDelimitedTokenVerbatim() {
+    assertThat(parse("-Custom.Code! diagnostic details\r\n")).isEqualTo("Custom.Code!");
+    assertThat(parse("-lowercase\r\n")).isEqualTo("lowercase");
+    assertThat(parse("-prefix-only\r\n")).isEqualTo("prefix-only");
+    assertThat(parse("-  Leading.Code! diagnostic\r\n")).isEqualTo("Leading.Code!");
+    assertThat(parse("-Tab.Code!\tdiagnostic\r\n")).isEqualTo("Tab.Code!\tdiagnostic");
+
+    String longPrefix = String.join("", Collections.nCopies(80, "x"));
+    assertThat(parse("-" + longPrefix + " diagnostic\r\n")).isEqualTo(longPrefix);
   }
 
   @Test
@@ -94,11 +128,25 @@ class RedissonDbAttributesGetterTest {
   }
 
   @Test
-  void dedicatedExceptionKeepsItsExceptionClassFallback() {
+  void dedicatedExceptionUsesCapturedServerPrefixAndClearsIt() {
     RedisLoadingException error = new RedisLoadingException("LOADING Redis is loading");
+    ByteBuf response = Unpooled.copiedBuffer("-LOADING Redis is loading\r\n", US_ASCII);
+    String previous =
+        RedissonErrorCapture.currentServerErrorType()
+            .set(RedissonErrorCapture.parseServerErrorType(response));
+    try {
+      RedissonErrorCapture.captureServerError(error);
+    } finally {
+      RedissonErrorCapture.currentServerErrorType().restore(previous);
+      response.release();
+    }
 
-    assertThat(GETTER.getErrorType(REQUEST, null, error)).isNull();
+    assertThat(GETTER.getErrorType(REQUEST, null, error)).isEqualTo("LOADING");
+    assertThat(extractedErrorType(error)).isEqualTo("LOADING");
+
+    RedissonErrorCapture.clearServerError(error);
     assertThat(extractedErrorType(error)).isEqualTo(RedisLoadingException.class.getName());
+    assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
   }
 
   @Test
@@ -113,5 +161,14 @@ class RedissonDbAttributesGetterTest {
     AttributesBuilder attributes = Attributes.builder();
     EXTRACTOR.onEnd(attributes, Context.root(), REQUEST, null, error);
     return attributes.build().get(ERROR_TYPE);
+  }
+
+  private static String parse(String reply) {
+    ByteBuf response = Unpooled.copiedBuffer(reply, US_ASCII);
+    try {
+      return RedissonErrorCapture.parseServerErrorType(response);
+    } finally {
+      response.release();
+    }
   }
 }

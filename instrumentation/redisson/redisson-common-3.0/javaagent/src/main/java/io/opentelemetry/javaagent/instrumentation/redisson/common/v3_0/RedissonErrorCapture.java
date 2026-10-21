@@ -48,17 +48,29 @@ public final class RedissonErrorCapture {
       }
 
       int start = readerIndex + 1;
-      int end = start;
-      byte next;
-      do {
-        next = input.getByte(end++);
-      } while (next != ' ' && next != '\t' && next != '\r' && next != '\n');
-
-      int length = end - start - 1;
-      if (length == 0) {
+      int writerIndex = input.writerIndex();
+      int replyEnd = start;
+      while (replyEnd + 1 < writerIndex
+          && (input.getByte(replyEnd) != '\r' || input.getByte(replyEnd + 1) != '\n')) {
+        replyEnd++;
+      }
+      if (replyEnd + 1 >= writerIndex) {
         return null;
       }
 
+      while (start < replyEnd && input.getByte(start) == ' ') {
+        start++;
+      }
+      if (start == replyEnd) {
+        return null;
+      }
+
+      int end = start;
+      while (end < replyEnd && input.getByte(end) != ' ') {
+        end++;
+      }
+
+      int length = end - start;
       byte[] token = new byte[length];
       input.getBytes(start, token);
       return new String(token, US_ASCII);
@@ -69,7 +81,7 @@ public final class RedissonErrorCapture {
   }
 
   public static void captureServerError(@Nullable Throwable error) {
-    if (error == null || error.getClass() != RedisException.class) {
+    if (!(error instanceof RedisException)) {
       return;
     }
 
@@ -81,7 +93,7 @@ public final class RedissonErrorCapture {
 
   @Nullable
   public static String getServerErrorType(@Nullable Throwable error) {
-    if (error == null || error.getClass() != RedisException.class) {
+    if (!(error instanceof RedisException)) {
       return null;
     }
 
@@ -90,7 +102,7 @@ public final class RedissonErrorCapture {
   }
 
   public static void clearServerError(@Nullable Throwable error) {
-    if (error != null && error.getClass() == RedisException.class) {
+    if (error instanceof RedisException) {
       SERVER_ERROR.set((RedisException) error, null);
     }
   }

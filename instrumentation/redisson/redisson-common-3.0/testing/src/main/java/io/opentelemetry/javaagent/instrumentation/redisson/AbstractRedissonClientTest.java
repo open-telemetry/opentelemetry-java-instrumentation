@@ -68,9 +68,11 @@ import org.redisson.api.RList;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.redisson.api.RScoredSortedSet;
+import org.redisson.api.RScript;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisException;
+import org.redisson.client.RedisOutOfMemoryException;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.client.protocol.Decoder;
 import org.redisson.config.Config;
@@ -288,6 +290,46 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  void serverErrorPrefixContract() {
+    assertScriptErrorType("OOM command not allowed", "OOM", RedisOutOfMemoryException.class);
+    assertScriptErrorType("Custom.Code! diagnostic details", "Custom.Code!", null);
+    assertScriptErrorType("lowercase diagnostic", "lowercase", null);
+    assertScriptErrorType("Tab.Code!\tdiagnostic", "Tab.Code!\tdiagnostic", null);
+    String longPrefix = String.join("", nCopies(80, "x"));
+    assertScriptErrorType(longPrefix + " diagnostic", longPrefix, null);
+    assertScriptErrorType("prefix-only", "prefix-only", null);
+    assertScriptErrorType("  Leading.Code! diagnostic", "Leading.Code!", null);
+    assertScriptErrorType("", RedisException.class.getName(), null);
+    assertScriptErrorType("   ", RedisException.class.getName(), null);
+
+    Object result =
+        redisson.getScript().eval(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.INTEGER);
+    assertThat(result).isEqualTo(1L);
+    assertErrorTypeOnLastOperation(null);
+  }
+
+  @Test
+  void failedBatchErrorPrefixIsRecordedInSpanAndMetrics() throws ReflectiveOperationException {
+    try {
+      Class.forName("org.redisson.api.BatchOptions");
+    } catch (ClassNotFoundException ignored) {
+      Assumptions.abort();
+    }
+
+    RBatch batch = createBatch(redisson);
+    batch
+        .getScript()
+        .evalAsync(
+            RScript.Mode.READ_WRITE,
+            "return redis.error_reply('Batch.Code! diagnostic')",
+            RScript.ReturnType.VALUE);
+
+    assertThatThrownBy(() -> invokeExecute(batch)).hasRootCauseInstanceOf(RedisException.class);
+
+    assertErrorTypeOnLastOperation("Batch.Code!");
+  }
+
+  @Test
   void clientSideDecodeFailureKeepsExceptionClassFallback()
       throws IOException, InterruptedException {
     assertThat(
@@ -342,6 +384,66 @@ public abstract class AbstractRedissonClientTest {
                                         assertThat(attributes.asMap())
                                             .containsEntry(
                                                 ERROR_TYPE, RedisException.class.getName())))));
+  }
+
+  private void assertScriptErrorType(
+      String serverError, String expectedErrorType, Class<? extends RedisException> expectedCause) {
+    String script = "return redis.error_reply('" + serverError + "')";
+    assertThatThrownBy(
+            () ->
+                redisson
+                    .getScript()
+                    .eval(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE))
+        .satisfies(
+            error -> {
+              if (expectedCause != null) {
+                assertThat(error)
+                    .satisfiesAnyOf(
+                        e -> assertThat(e).isInstanceOf(expectedCause),
+                        e -> assertThat(e).hasRootCauseInstanceOf(expectedCause));
+              }
+            });
+    assertErrorTypeOnLastOperation(expectedErrorType);
+  }
+
+  private static void assertErrorTypeOnLastOperation(String expectedErrorType) {
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasKind(CLIENT)
+                      .hasAttributesSatisfying(
+                          attributes -> {
+                            if (expectedErrorType == null) {
+                              assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
+                            } else {
+                              assertThat(attributes.asMap())
+                                  .containsEntry(ERROR_TYPE, expectedErrorType);
+                            }
+                          }));
+        });
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes -> {
+                                      if (expectedErrorType == null) {
+                                        assertThat(attributes.asMap())
+                                            .doesNotContainKey(ERROR_TYPE);
+                                      } else {
+                                        assertThat(attributes.asMap())
+                                            .containsEntry(ERROR_TYPE, expectedErrorType);
+                                      }
+                                    }))));
+    testing.clearData();
   }
 
   @Test
