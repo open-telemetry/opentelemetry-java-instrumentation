@@ -50,9 +50,3 @@ public class OpenAIClientConfiguration {
   }
 }
 ```
-
-### Error classification
-
-Chat and embeddings spans and operation-duration metrics report structured service codes verbatim as
-`error.type`. If no code is available, including for transport failures or malformed codes,
-the exception class name is used. Error messages are not used as classifications.
