@@ -43,7 +43,7 @@ final class LettuceDbAttributesGetter
   @Override
   public String getErrorType(
       RedisCommand<?, ?, ?> request, @Nullable Void response, @Nullable Throwable error) {
-    return LettuceRedisErrorType.getErrorType(error);
+    return LettuceRedisErrorType.getErrorType(request.getOutput(), error);
   }
 
   @Nullable

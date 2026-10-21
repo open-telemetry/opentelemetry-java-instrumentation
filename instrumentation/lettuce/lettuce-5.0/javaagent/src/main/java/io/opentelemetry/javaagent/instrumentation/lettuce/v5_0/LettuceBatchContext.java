@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
@@ -70,18 +71,43 @@ public final class LettuceBatchContext {
         state.resolveConnectionState(endpoint));
   }
 
+  // visible for testing
+  @Nullable
+  static Throwable getError(@Nullable Throwable terminalError, Throwable[] commandErrors) {
+    if (terminalError != null) {
+      return terminalError;
+    }
+    Throwable firstServerError = null;
+    for (Throwable error : commandErrors) {
+      if (error != null) {
+        if (!(error instanceof RedisCommandExecutionException)) {
+          return error;
+        }
+        if (firstServerError == null) {
+          firstServerError = error;
+        }
+      }
+    }
+    return firstServerError;
+  }
+
   private LettuceBatchContext() {}
 
   public static final class BatchScope {
     private final Context context;
     private final LettuceBatchRequest request;
+    private final List<AsyncCommand<?, ?, ?>> asyncCommands;
     private final AtomicInteger remaining;
-    private final AtomicReference<Throwable> error = new AtomicReference<>();
+    private final Throwable[] commandErrors;
+    private final AtomicReference<Throwable> terminalError = new AtomicReference<>();
 
-    private BatchScope(Context context, LettuceBatchRequest request, int remaining) {
+    private BatchScope(
+        Context context, LettuceBatchRequest request, List<AsyncCommand<?, ?, ?>> asyncCommands) {
       this.context = context;
       this.request = request;
-      this.remaining = new AtomicInteger(remaining);
+      this.asyncCommands = asyncCommands;
+      this.remaining = new AtomicInteger(asyncCommands.size());
+      this.commandErrors = new Throwable[asyncCommands.size()];
     }
 
     @Nullable
@@ -101,14 +127,16 @@ public final class LettuceBatchContext {
         batchInstrumenter().end(context, request, null, null);
         return null;
       }
-      BatchScope scope = new BatchScope(context, request, asyncCommands.size());
+      BatchScope scope = new BatchScope(context, request, asyncCommands);
       // Redis executes batch commands in order, but the individual async command futures can
       // complete in a different order. Observe every future so an earlier failure or cancellation
       // is captured; the remaining counter decides when all responses have completed.
-      for (AsyncCommand<?, ?, ?> asyncCommand : asyncCommands) {
+      for (int i = 0; i < asyncCommands.size(); i++) {
+        int index = i;
+        AsyncCommand<?, ?, ?> asyncCommand = asyncCommands.get(i);
         asyncCommand.handleAsync(
             (value, throwable) -> {
-              scope.endOne(throwable);
+              scope.endOne(index, throwable);
               return null;
             });
       }
@@ -116,6 +144,10 @@ public final class LettuceBatchContext {
     }
 
     public void endOne(@Nullable Throwable throwable) {
+      endOne(-1, throwable);
+    }
+
+    private void endOne(int index, @Nullable Throwable throwable) {
       if (throwable instanceof CancellationException) {
         if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
           // On a batch span this means at least one command was cancelled
@@ -123,11 +155,25 @@ public final class LettuceBatchContext {
         }
         throwable = null;
       }
-      if (throwable != null) {
-        error.compareAndSet(null, throwable);
+      if (index >= 0) {
+        // Each callback owns one slot; the remaining counter publishes every slot to the last one.
+        commandErrors[index] = throwable;
+      } else if (throwable != null) {
+        terminalError.compareAndSet(null, throwable);
       }
       if (remaining.getAndDecrement() == 1) {
-        batchInstrumenter().end(context, request, null, error.get());
+        Throwable error = getError(terminalError.get(), commandErrors);
+        boolean selected = false;
+        for (int i = 0; i < asyncCommands.size(); i++) {
+          String errorType =
+              LettuceRedisErrorType.getErrorType(
+                  asyncCommands.get(i).getOutput(), commandErrors[i]);
+          if (error != null && !selected && commandErrors[i] == error) {
+            request.setErrorType(errorType);
+            selected = true;
+          }
+        }
+        batchInstrumenter().end(context, request, null, error);
       }
     }
   }

@@ -5,12 +5,68 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.lettuce.core.RedisCommandExecutionException;
+import io.lettuce.core.output.CommandOutput;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.nio.ByteBuffer;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
-final class LettuceRedisErrorType {
+public final class LettuceRedisErrorType {
 
-  private LettuceRedisErrorType() {}
+  private static final VirtualField<CommandOutput<?, ?, ?>, ServerError> SERVER_ERRORS =
+      VirtualField.find(CommandOutput.class, ServerError.class);
+  private static final ThreadLocal<ErrorDecode> ERROR_DECODE = new ThreadLocal<>();
+
+  public static ErrorDecode startErrorDecode(@Nullable ByteBuffer bytes) {
+    ErrorDecode decode = new ErrorDecode(readPrefix(bytes), ERROR_DECODE.get());
+    ERROR_DECODE.set(decode);
+    return decode;
+  }
+
+  public static void endErrorDecode(CommandOutput<?, ?, ?> output, @Nullable ErrorDecode decode) {
+    if (decode == null) {
+      return;
+    }
+    if (decode.previous == null) {
+      ERROR_DECODE.remove();
+    } else {
+      ERROR_DECODE.set(decode.previous);
+    }
+    capture(output, decode.prefix);
+  }
+
+  public static void captureDecoded(CommandOutput<?, ?, ?> output) {
+    ErrorDecode decode = ERROR_DECODE.get();
+    if (decode != null) {
+      capture(output, decode.prefix);
+    }
+  }
+
+  @Nullable
+  static String readPrefix(@Nullable ByteBuffer bytes) {
+    return bytes == null ? null : getPrefix(UTF_8.decode(bytes.asReadOnlyBuffer()).toString());
+  }
+
+  static void capture(CommandOutput<?, ?, ?> output, @Nullable String prefix) {
+    SERVER_ERRORS.set(output, prefix == null ? null : new ServerError(output.getError(), prefix));
+  }
+
+  @Nullable
+  static String getErrorType(@Nullable CommandOutput<?, ?, ?> output, @Nullable Throwable error) {
+    ServerError serverError = output == null ? null : SERVER_ERRORS.get(output);
+    if (output != null) {
+      SERVER_ERRORS.set(output, null);
+    }
+    if (error instanceof RedisCommandExecutionException
+        && serverError != null
+        && Objects.equals(serverError.message, error.getMessage())) {
+      return serverError.prefix;
+    }
+    return getErrorType(error);
+  }
 
   @Nullable
   static String getErrorType(@Nullable Throwable error) {
@@ -18,28 +74,46 @@ final class LettuceRedisErrorType {
       return null;
     }
 
-    String message = error.getMessage();
+    return getPrefix(error.getMessage());
+  }
+
+  @Nullable
+  private static String getPrefix(@Nullable String message) {
     if (message == null || message.isEmpty()) {
       return null;
     }
 
-    int messageEnd = message.indexOf("\r\n");
-    if (messageEnd == -1) {
-      messageEnd = message.length();
-    }
-
     int tokenStart = 0;
-    while (tokenStart < messageEnd && message.charAt(tokenStart) == ' ') {
+    while (tokenStart < message.length() && message.charAt(tokenStart) == ' ') {
       tokenStart++;
     }
-    if (tokenStart == messageEnd) {
+    if (tokenStart == message.length()) {
       return null;
     }
 
     int tokenEnd = message.indexOf(' ', tokenStart);
-    if (tokenEnd == -1 || tokenEnd > messageEnd) {
-      tokenEnd = messageEnd;
+    return message.substring(tokenStart, tokenEnd == -1 ? message.length() : tokenEnd);
+  }
+
+  private LettuceRedisErrorType() {}
+
+  public static final class ErrorDecode {
+    @Nullable private final String prefix;
+    @Nullable private final ErrorDecode previous;
+
+    private ErrorDecode(@Nullable String prefix, @Nullable ErrorDecode previous) {
+      this.prefix = prefix;
+      this.previous = previous;
     }
-    return message.substring(tokenStart, tokenEnd);
+  }
+
+  private static final class ServerError {
+    @Nullable private final String message;
+    private final String prefix;
+
+    private ServerError(@Nullable String message, String prefix) {
+      this.message = message;
+      this.prefix = prefix;
+    }
   }
 }

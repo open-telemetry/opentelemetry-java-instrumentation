@@ -17,6 +17,7 @@ final class LettuceBatchRequest {
   private final List<RedisCommand<?, ?, ?>> commands;
   @Nullable private final Integer databaseIndex;
   @Nullable private final RedisServerTarget serverTarget;
+  @Nullable private String errorType;
 
   private LettuceBatchRequest(
       String operationName,
@@ -45,6 +46,15 @@ final class LettuceBatchRequest {
 
   String getOperationName() {
     return operationName;
+  }
+
+  @Nullable
+  String getErrorType() {
+    return errorType;
+  }
+
+  void setErrorType(@Nullable String errorType) {
+    this.errorType = errorType;
   }
 
   @Nullable

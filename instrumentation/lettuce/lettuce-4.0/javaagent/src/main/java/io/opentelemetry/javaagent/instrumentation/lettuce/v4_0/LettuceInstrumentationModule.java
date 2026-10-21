@@ -25,6 +25,8 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
         new LettuceAsyncCommandInstrumentation(),
         new LettuceAsyncCommandsInstrumentation(),
         new LettuceCommandHandlerInstrumentation(),
+        new LettuceCommandOutputInstrumentation(),
+        new LettuceRedisStateMachineInstrumentation(),
         new LettuceCommandWrapperInstrumentation(),
         new LettuceReactiveCommandDispatcherInstrumentation(),
         new LettuceObservableCommandInstrumentation(),
