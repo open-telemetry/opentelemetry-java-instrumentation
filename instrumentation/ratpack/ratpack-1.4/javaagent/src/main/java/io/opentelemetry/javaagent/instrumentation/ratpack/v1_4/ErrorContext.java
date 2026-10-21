@@ -5,17 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 
 public final class ErrorContext {
 
-  private final Context context;
+  private final Span span;
 
   public ErrorContext(Context context) {
-    this.context = context;
+    this.span = Span.fromContext(context);
   }
 
-  public Context context() {
-    return context;
+  public void recordException(Throwable error) {
+    span.setStatus(StatusCode.ERROR);
+    span.recordException(ErrorCauseExtractor.getDefault().extract(error));
   }
 }
