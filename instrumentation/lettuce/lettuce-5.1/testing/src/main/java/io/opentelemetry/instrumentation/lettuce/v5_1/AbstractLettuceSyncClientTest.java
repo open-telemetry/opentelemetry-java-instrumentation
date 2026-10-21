@@ -27,7 +27,6 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.RedisClient;
@@ -62,13 +61,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -363,41 +359,17 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertCommandMetric("EVALSHA", testLatestDeps() ? "NOSCRIPT" : "_OTHER");
   }
 
-  @ParameterizedTest
-  @MethodSource("serverErrorReplies")
-  void testServerErrorReply(String errorMessage, String errorType) {
-    assertServerErrorReply(
-        "return redis.error_reply(ARGV[1])", errorMessage, errorType, errorMessage.getBytes(UTF_8));
-  }
-
   @Test
-  void testServerErrorReplyWithInvalidUtf8Details() {
-    String prefix = "échec";
-    String errorMessage = prefix + " details";
-    byte[] messageBytes = errorMessage.getBytes(UTF_8);
-    byte[] errorReplyBytes =
-        ByteBuffer.allocate(messageBytes.length + 1).put(messageBytes).put((byte) 0xff).array();
-
-    assertServerErrorReply(
-        "return redis.error_reply(ARGV[1] .. string.char(255))",
-        errorMessage,
-        prefix,
-        errorReplyBytes);
-  }
-
-  private void assertServerErrorReply(
-      String script, String errorMessage, String errorType, byte[] errorReplyBytes) {
+  void testServerErrorReplyWithTimeoutLookingDetails() {
+    String errorMessage = "ERR upstream failed. Command timed out after 100 millisecond(s)";
+    String script = "return redis.error_reply(ARGV[1])";
     String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
     // Lettuce 6.0.0 supplies no remote endpoint to command-aware spans.
     boolean missingEndpoint = "6.0.0.RELEASE".equals(lettuceVersion);
     Throwable thrown =
         catchThrowable(
             () -> syncCommands.eval(script, ScriptOutputType.VALUE, new String[0], errorMessage));
-    StatusOutput<String, String> uninstrumentedOutput = new StatusOutput<>(StringCodec.UTF8);
-    uninstrumentedOutput.setError(ByteBuffer.wrap(errorReplyBytes));
-    assertThat(thrown)
-        .isInstanceOf(RedisCommandExecutionException.class)
-        .hasMessage(uninstrumentedOutput.getError());
+    assertThat(thrown).isInstanceOf(RedisCommandExecutionException.class).hasMessage(errorMessage);
 
     String b64Script = Base64.getEncoder().encodeToString(script.getBytes(UTF_8));
     testing()
@@ -426,33 +398,13 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_QUERY_TEXT, "EVAL " + b64Script + " 0 ?"),
                                     equalTo(DB_OPERATION_NAME, "EVAL"),
                                     equalTo(
-                                        ERROR_TYPE, testLatestDeps() ? errorType : "_OTHER")))));
+                                        ERROR_TYPE,
+                                        testLatestDeps()
+                                            ? RedisCommandExecutionException.class.getName()
+                                            : "_OTHER")))));
 
-    assertCommandMetric("EVAL", testLatestDeps() ? errorType : "_OTHER");
-  }
-
-  private static Stream<Arguments> serverErrorReplies() {
-    return Stream.of(
-        argumentSet(
-            "timeout-looking details",
-            "ERR upstream failed. Command timed out after 100 millisecond(s)",
-            "ERR"),
-        argumentSet(
-            "timeout-looking prefix", "Command timed out after 100 millisecond(s)", "Command"),
-        argumentSet("disconnect-looking reply", "Connection closed", "Connection"),
-        argumentSet("lowercase", "wrongtype details", "wrongtype"),
-        argumentSet("punctuation", "Custom.Code! details", "Custom.Code!"),
-        argumentSet("leading spaces", "   Custom.Code! details", "Custom.Code!"),
-        argumentSet("tab within prefix", "ERR\tDETAIL message", "ERR\tDETAIL"),
-        argumentSet("non-ASCII prefix", "échec details", "échec"),
-        argumentSet("CJK prefix", "错误.Code! details", "错误.Code!"),
-        argumentSet("literal decoder lookalike", "ￃﾩ details", "ￃﾩ"),
-        argumentSet(
-            "long prefix",
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMN details",
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMN"),
-        argumentSet("empty reply", "", RedisCommandExecutionException.class.getName()),
-        argumentSet("spaces only", "   ", RedisCommandExecutionException.class.getName()));
+    assertCommandMetric(
+        "EVAL", testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
   }
 
   @ParameterizedTest
@@ -563,14 +515,15 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                             equalTo(
                                                 ERROR_TYPE,
                                                 testLatestDeps()
+                                                        && prefix != null
                                                         && (i == 4
                                                             || (i == 2 && !queuedAcknowledgements))
-                                                    ? prefix
+                                                    ? RedisCommandExecutionException.class.getName()
                                                     : testLatestDeps()
                                                             && i == 3
                                                             && !queuedAcknowledgements
                                                             && prefix != null
-                                                        ? "NOSCRIPT"
+                                                        ? RedisNoScriptException.class.getName()
                                                         : null))))
                 .collect(toList()));
 
@@ -598,15 +551,20 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                                                 equalTo(
                                                                     ERROR_TYPE,
                                                                     testLatestDeps()
+                                                                            && prefix != null
                                                                             && (i == 4
                                                                                 || (i == 2
                                                                                     && !queuedAcknowledgements))
-                                                                        ? prefix
+                                                                        ? RedisCommandExecutionException
+                                                                            .class
+                                                                            .getName()
                                                                         : testLatestDeps()
                                                                                 && i == 3
                                                                                 && !queuedAcknowledgements
                                                                                 && prefix != null
-                                                                            ? "NOSCRIPT"
+                                                                            ? RedisNoScriptException
+                                                                                .class
+                                                                                .getName()
                                                                             : null)))
                                             .collect(toList())))));
   }

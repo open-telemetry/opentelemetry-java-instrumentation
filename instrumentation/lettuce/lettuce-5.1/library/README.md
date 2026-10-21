@@ -54,11 +54,11 @@ StatefulRedisConnection<String, String> connection = redisClient.connect();
 Lettuce 5.x tracing callbacks can report server replies and client failures as messages without
 their exceptions. These failures use `error.type="_OTHER"` on spans and duration metrics because
 the callback cannot distinguish their origin. When Lettuce supplies an exception, its class is
-available as a fallback.
+used for `error.type`.
 
 Errors returned only as `EXEC` result elements are unavailable to the Lettuce 5.x tracing SPI
 and are not classified.
 
 With Lettuce 6.0 and higher, command-aware callbacks distinguish server replies from client
-failures. Server errors use the first nonempty ASCII-space-delimited token, preserving its
-text; client failures use their exception class. Successful operations omit `error.type`.
+failures. A dependable server reply uses its first nonempty ASCII-space-delimited token; failures
+reported only as exceptions use the exception class. Successful operations omit `error.type`.

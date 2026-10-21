@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.TransactionResult;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.output.MultiOutput;
@@ -16,7 +15,6 @@ import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
 import io.lettuce.core.protocol.ProtocolKeyword;
 import io.lettuce.core.protocol.RedisCommand;
-import io.lettuce.core.protocol.TransactionalCommand;
 import io.lettuce.core.tracing.TraceContext;
 import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
@@ -215,7 +213,6 @@ final class OpenTelemetryTracing implements Tracing {
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
         AsyncCommand<?, ?, ?> asyncCommand = CommandWrapper.unwrap(command, AsyncCommand.class);
-        boolean transactional = CommandWrapper.unwrap(command, TransactionalCommand.class) != null;
         completeableCommand.onComplete(
             (o, throwable) -> {
               Throwable error = throwable != null ? throwable : this.error;
@@ -224,11 +221,9 @@ final class OpenTelemetryTracing implements Tracing {
                 asyncCommand.whenComplete(
                     (result, terminalError) ->
                         finishFromOutput(
-                            command.getOutput(),
-                            terminalError != null ? terminalError : error,
-                            transactional));
+                            command.getOutput(), terminalError != null ? terminalError : error));
               } else {
-                finishFromOutput(command.getOutput(), error, transactional);
+                finishFromOutput(command.getOutput(), error);
               }
             });
       }
@@ -310,12 +305,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     public void finish() {
-      if (error instanceof RedisCommandExecutionException) {
-        end(
-            LettuceResponse.fromErrorMessage(
-                taggedErrorMessage != null ? taggedErrorMessage : error.getMessage()),
-            error);
-      } else if (error != null) {
+      if (error != null) {
         end(null, error);
       } else {
         // Lettuce 5.x tags both server and client errors here, suppressing their throwable.
@@ -324,15 +314,8 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     private void finishFromOutput(
-        @Nullable CommandOutput<?, ?, ?> output, @Nullable Throwable error, boolean transactional) {
-      // Command-aware callbacks expose client failures even when output contains their message.
-      if (error instanceof RedisCommandExecutionException) {
-        end(
-            output != null && output.getError() != null
-                ? LettuceResponse.fromCommandOutput(output, transactional)
-                : LettuceResponse.fromErrorMessage(error.getMessage()),
-            error);
-      } else if (error != null) {
+        @Nullable CommandOutput<?, ?, ?> output, @Nullable Throwable error) {
+      if (error != null) {
         end(null, error);
       } else {
         if (output instanceof MultiOutput && output.getError() == null) {
@@ -341,16 +324,12 @@ final class OpenTelemetryTracing implements Tracing {
             Object value = result.get(i);
             if (value instanceof Throwable) {
               Throwable failure = (Throwable) value;
-              end(
-                  failure instanceof RedisCommandExecutionException
-                      ? LettuceResponse.fromTransactionErrorMessage(failure.getMessage())
-                      : null,
-                  failure);
+              end(null, failure);
               return;
             }
           }
         }
-        end(LettuceResponse.fromCommandOutput(output, transactional), null);
+        end(LettuceResponse.fromCommandOutput(output), null);
       }
     }
 
