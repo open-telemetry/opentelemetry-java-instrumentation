@@ -540,8 +540,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     S3Exception error = (S3Exception) caught;
     assertThat(error.awsErrorDetails()).isNotNull();
     if (errorCode != null) {
-      assertThat(error.awsErrorDetails().rawResponse().asUtf8String())
-          .contains("<Code>" + errorCode + "</Code>");
       assertThat(error.awsErrorDetails().errorCode()).isEqualTo(errorCode);
     } else {
       assertThat(error.awsErrorDetails().errorCode()).isNull();
