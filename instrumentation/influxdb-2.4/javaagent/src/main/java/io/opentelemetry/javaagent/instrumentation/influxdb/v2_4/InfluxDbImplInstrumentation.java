@@ -20,8 +20,6 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -105,16 +103,12 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         newArguments[i] = InfluxDbObjectWrapper.wrap(arguments[i], parentContext, state);
       }
 
-      boolean asynchronous =
-          arguments.length > 2
-              && (arguments[1] instanceof Consumer
-                  || arguments[2] instanceof Consumer
-                  || arguments[2] instanceof BiConsumer);
-      return new Object[] {newArguments, state, state.getContext().makeCurrent(), asynchronous};
+      return new Object[] {newArguments, state, state.getContext().makeCurrent()};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
+        @Advice.Origin("#r") String returnType,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Enter @Nullable Object[] enterArgs) {
@@ -125,7 +119,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
       ((Scope) enterArgs[2]).close();
       InfluxDbQueryState state = (InfluxDbQueryState) enterArgs[1];
-      if (throwable != null || !((Boolean) enterArgs[3])) {
+      if (throwable != null || !"void".equals(returnType)) {
         if (result instanceof QueryResult) {
           state.observe((QueryResult) result);
         }

@@ -17,14 +17,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -417,22 +415,13 @@ class InfluxDbQueryLifecycleTest {
                             point ->
                                 point
                                     .hasCount(1)
-                                    .hasAttributesSatisfying(
-                                        attributes -> {
-                                          assertThat(attributes.asMap())
-                                              .containsOnlyKeys(
-                                                  Stream.of(
-                                                          DB_SYSTEM_NAME,
-                                                          DB_NAMESPACE,
-                                                          DB_QUERY_SUMMARY,
-                                                          SERVER_ADDRESS,
-                                                          SERVER_PORT,
-                                                          errorType == null ? null : ERROR_TYPE)
-                                                      .filter(Objects::nonNull)
-                                                      .toArray(AttributeKey<?>[]::new));
-                                          assertThat(attributes.get(ERROR_TYPE))
-                                              .isEqualTo(errorType);
-                                        }))));
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(DB_SYSTEM_NAME, "influxdb"),
+                                        equalTo(DB_NAMESPACE, "mydb"),
+                                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                                        equalTo(SERVER_ADDRESS, "localhost"),
+                                        equalTo(SERVER_PORT, 8086),
+                                        equalTo(ERROR_TYPE, errorType)))));
   }
 
   private static void assertNoDuration() {
