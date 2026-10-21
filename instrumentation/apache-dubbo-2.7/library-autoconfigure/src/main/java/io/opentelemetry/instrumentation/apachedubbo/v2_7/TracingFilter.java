@@ -32,10 +32,12 @@ final class TracingFilter implements Filter {
 
   private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
+  // Available in Dubbo 2.7.3 and newer.
   @Nullable
   private static final MethodHandle resultWhenCompleteWithContext =
       findVirtual(Result.class, "whenCompleteWithContext", Result.class, BiConsumer.class);
 
+  // Available in Dubbo 2.7.0 and 2.7.1.
   @Nullable
   private static final MethodHandle asyncResultFuture =
       findVirtual(AsyncRpcResult.class, "getResultFuture", CompletableFuture.class);
