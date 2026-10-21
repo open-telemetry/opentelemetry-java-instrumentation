@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.lambdaworks.redis.RedisCommandExecutionException;
 import com.lambdaworks.redis.output.CommandOutput;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -47,7 +46,7 @@ public final class LettuceRedisErrorType {
 
   @Nullable
   static String readPrefix(@Nullable ByteBuffer bytes) {
-    return bytes == null ? null : getPrefix(UTF_8.decode(bytes.asReadOnlyBuffer()).toString());
+    return RedisErrorPrefix.extract(bytes);
   }
 
   static void capture(CommandOutput<?, ?, ?> output, @Nullable String prefix) {
@@ -74,25 +73,7 @@ public final class LettuceRedisErrorType {
       return null;
     }
 
-    return getPrefix(error.getMessage());
-  }
-
-  @Nullable
-  private static String getPrefix(@Nullable String message) {
-    if (message == null || message.isEmpty()) {
-      return null;
-    }
-
-    int tokenStart = 0;
-    while (tokenStart < message.length() && message.charAt(tokenStart) == ' ') {
-      tokenStart++;
-    }
-    if (tokenStart == message.length()) {
-      return null;
-    }
-
-    int tokenEnd = message.indexOf(' ', tokenStart);
-    return message.substring(tokenStart, tokenEnd == -1 ? message.length() : tokenEnd);
+    return RedisErrorPrefix.extract(error.getMessage());
   }
 
   private LettuceRedisErrorType() {}

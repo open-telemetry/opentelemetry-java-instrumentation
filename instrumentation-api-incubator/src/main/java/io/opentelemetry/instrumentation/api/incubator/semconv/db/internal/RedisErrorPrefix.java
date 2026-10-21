@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 
 /**
@@ -36,6 +39,37 @@ public final class RedisErrorPrefix {
     }
     int end = serverErrorLine.indexOf(' ', start);
     return end < 0 ? serverErrorLine.substring(start) : serverErrorLine.substring(start, end);
+  }
+
+  /**
+   * Extracts the first nonempty ASCII-space-delimited token from a bounded UTF-8 Redis error line.
+   *
+   * <p>The caller must establish server-error provenance and exclude RESP framing.
+   */
+  @Nullable
+  public static String extract(@Nullable ByteBuffer errorLine) {
+    if (errorLine == null) {
+      return null;
+    }
+
+    int start = errorLine.position();
+    int limit = errorLine.limit();
+    while (start < limit && errorLine.get(start) == ' ') {
+      start++;
+    }
+    if (start == limit) {
+      return null;
+    }
+
+    int end = start;
+    while (end < limit && errorLine.get(end) != ' ') {
+      end++;
+    }
+
+    ByteBuffer token = errorLine.asReadOnlyBuffer();
+    token.position(start);
+    token.limit(end);
+    return UTF_8.decode(token).toString();
   }
 
   private RedisErrorPrefix() {}
