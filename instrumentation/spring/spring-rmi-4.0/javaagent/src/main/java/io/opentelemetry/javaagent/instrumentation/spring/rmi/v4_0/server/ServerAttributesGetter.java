@@ -25,4 +25,9 @@ public class ServerAttributesGetter implements RpcAttributesGetter<ClassAndMetho
   public String getMethod(ClassAndMethod classAndMethod) {
     return classAndMethod.methodName();
   }
+
+  @Override
+  public String getRpcMethod(ClassAndMethod classAndMethod) {
+    return classAndMethod.declaringClass().getName() + "/" + classAndMethod.methodName();
+  }
 }
