@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.ResourceSchemaAssertions.assertResourceEntitySchemasMatchSdk;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
@@ -76,6 +77,7 @@ class ResourceDeclarativeConfigTest {
               assertThat(EntityUtil.getEntities(resource))
                   .extracting(Entity::getType)
                   .contains("process.runtime");
+              assertResourceEntitySchemasMatchSdk(resource);
             });
   }
 }

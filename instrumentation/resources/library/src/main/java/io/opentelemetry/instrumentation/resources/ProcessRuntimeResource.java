@@ -53,7 +53,7 @@ public final class ProcessRuntimeResource {
           singletonList(
               Entity.builder("process.runtime", id)
                   .setDescription(descriptive)
-                  .setSchemaUrl(SchemaUrls.V1_24_0)
+                  .setSchemaUrl(SchemaUrls.V1_40_0)
                   .build()));
     } catch (SecurityException ignored) {
       return Resource.empty();

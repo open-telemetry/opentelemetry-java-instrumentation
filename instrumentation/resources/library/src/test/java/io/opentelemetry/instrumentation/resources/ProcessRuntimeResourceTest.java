@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.instrumentation.testing.util.ResourceSchemaAssertions.assertResourceEntitySchemasMatchSdk;
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION;
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_RUNTIME_NAME;
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_RUNTIME_VERSION;
@@ -25,7 +26,8 @@ class ProcessRuntimeResourceTest {
     Attributes attributes = resource.getAttributes();
 
     // then
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
+    assertResourceEntitySchemasMatchSdk(resource);
     assertThat(attributes.get(PROCESS_RUNTIME_NAME)).isNotBlank();
     assertThat(attributes.get(PROCESS_RUNTIME_VERSION)).isNotBlank();
     assertThat(attributes.get(PROCESS_RUNTIME_DESCRIPTION)).isNotBlank();
@@ -39,7 +41,7 @@ class ProcessRuntimeResourceTest {
                 .setDescription(
                     Attributes.of(
                         PROCESS_RUNTIME_DESCRIPTION, attributes.get(PROCESS_RUNTIME_DESCRIPTION)))
-                .setSchemaUrl(SchemaUrls.V1_24_0)
+                .setSchemaUrl(SchemaUrls.V1_40_0)
                 .build());
     assertThat(EntityUtil.getUnassociatedAttributes(resource)).isEqualTo(Attributes.empty());
   }
