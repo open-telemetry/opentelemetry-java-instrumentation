@@ -33,7 +33,7 @@ class CassandraClusterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildFromAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Cluster.Initializer initializer, @Advice.Return Cluster cluster) {
       if (initializer instanceof Cluster.Builder) {

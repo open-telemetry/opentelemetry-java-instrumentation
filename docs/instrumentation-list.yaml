@@ -419,6 +419,13 @@ definitions:
         Enables including the full content of user and assistant messages in emitted log events. Note that full content can have data privacy and size concerns, and care should be taken when enabling this.
       type: boolean
       default: false
+    otel.instrumentation.genai.capture-message-content-6a8fe672:
+      name: otel.instrumentation.genai.capture-message-content
+      declarative_name: java.common.gen_ai.capture_message_content
+      description: |
+        Enables including the full content of system, user, assistant, and tool messages in emitted log events. Note that full content can have data privacy and size concerns, and care should be taken when enabling this.
+      type: boolean
+      default: false
     otel.instrumentation.genai.capture-message-content-ceb072e9:
       name: otel.instrumentation.genai.capture-message-content
       declarative_name: java.common.gen_ai.capture_message_content
@@ -1089,7 +1096,7 @@ definitions:
     otel.instrumentation.resources.experimental.process-command-attributes.enabled:
       name: otel.instrumentation.resources.experimental.process-command-attributes.enabled
       description: |
-        Enables capture of process command-line resource attributes when v3 preview suppresses them by default.
+        Enables collection of process command-line resource attributes. These attributes are not collected by default because they may contain sensitive information.
       type: boolean
       default: false
     otel.instrumentation.rocketmq-client.experimental-span-attributes:
@@ -1684,29 +1691,6 @@ definitions:
         type: STRING
       - name: db.system.name
         type: STRING
-    db.client.operation.duration-1bd4857e:
-      name: db.client.operation.duration
-      description: Duration of database client operations.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     db.client.operation.duration-32559b79:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1854,6 +1838,46 @@ definitions:
         type: STRING
       - name: server.address
         type: STRING
+    db.client.operation.duration-6dc4ed81:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-7210186d:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
     db.client.operation.duration-83708a92:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1917,6 +1941,23 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    db.client.operation.duration-c5800c2e:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.system.name
+        type: STRING
     db.client.operation.duration-d4212042:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1934,7 +1975,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    db.client.operation.duration-e36c6087:
+    db.client.operation.duration-d440c7d0:
       name: db.client.operation.duration
       description: Duration of database client operations.
       instrument: histogram
@@ -1949,6 +1990,33 @@ definitions:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-dd161d27:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -2022,6 +2090,23 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: gen_ai.operation.name
+        type: STRING
+      - name: gen_ai.provider.name
+        type: STRING
+      - name: gen_ai.request.model
+        type: STRING
+      - name: gen_ai.response.model
+        type: STRING
+    gen_ai.client.operation.duration-7139fb88:
+      name: gen_ai.client.operation.duration
+      description: GenAI operation duration.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
       - name: gen_ai.operation.name
         type: STRING
       - name: gen_ai.provider.name
@@ -2161,6 +2246,25 @@ definitions:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: url.scheme
+        type: STRING
+    http.server.request.duration-b6723875:
+      name: http.server.request.duration
+      description: Duration of HTTP server requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
       - name: network.protocol.version
         type: STRING
       - name: url.scheme
@@ -4795,6 +4899,24 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.operation.duration-bcc65266:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.operation.duration-d165a8db:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -5116,16 +5238,35 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-7381532d:
+    rpc.client.call.duration-019ae5d4:
       name: rpc.client.call.duration
       description: Measures the duration of outbound remote procedure calls (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
       - name: rpc.response.status_code
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    rpc.client.call.duration-620a9e42:
+      name: rpc.client.call.duration
+      description: Measures the duration of outbound remote procedure calls (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -5241,30 +5382,28 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.call.duration-1e979856:
+    rpc.server.call.duration-a87cce7a:
       name: rpc.server.call.duration
       description: Measures the duration of inbound remote procedure calls (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
       attributes:
-      - name: rpc.method
+      - name: error.type
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.method
         type: STRING
       - name: rpc.system.name
         type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.server.call.duration-4a437c0b:
+    rpc.server.call.duration-ae232d87:
       name: rpc.server.call.duration
       description: Measures the duration of inbound remote procedure calls (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
       - name: rpc.system.name
@@ -5284,6 +5423,25 @@ definitions:
         type: STRING
       - name: rpc.system.name
         type: STRING
+    rpc.server.call.duration-f7f75ef6:
+      name: rpc.server.call.duration
+      description: Measures the duration of inbound remote procedure calls (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.response.status_code
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     rpc.server.duration-026d346c:
       name: rpc.server.duration
       description: The duration of an inbound RPC invocation.
@@ -5530,6 +5688,16 @@ definitions:
         type: STRING
     messaging.receive.exception-da0a5a7e:
       name: messaging.receive.exception
+      severity: WARN
+      attributes:
+      - name: exception.message
+        type: STRING
+      - name: exception.stacktrace
+        type: STRING
+      - name: exception.type
+        type: STRING
+    messaging.settle.exception-b39bdaf3:
+      name: messaging.settle.exception
       severity: WARN
       attributes:
       - name: exception.message
@@ -6995,6 +7163,8 @@ libraries:
     spans:
     - span_kind: CONSUMER
       attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.batch.message_count
         type: LONG
       - name: messaging.destination.name
@@ -7062,6 +7232,318 @@ libraries:
   - otel.instrumentation.aws-sdk.message-create-spans.enabled
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
   telemetry:
+  - when: AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)
+    metric_refs:
+    - db.client.operation.duration-5d89ffb2
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.dynamodb.table_names
+        type: STRING_ARRAY
+      - name: aws.kinesis.stream_name
+        type: STRING
+      - name: aws.lambda.function.arn
+        type: STRING
+      - name: aws.lambda.function.name
+        type: STRING
+      - name: aws.lambda.resource_mapping.id
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.s3.bucket
+        type: STRING
+      - name: aws.secretsmanager.secret.arn
+        type: STRING
+      - name: aws.sns.topic.arn
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: aws.step_functions.activity.arn
+        type: STRING
+      - name: aws.step_functions.state_machine.arn
+        type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true),AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)
+    metric_refs:
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true),otel.semconv.exception.signal.preview=logs
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.s3.bucket
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    event_refs:
+    - messaging.settle.exception-b39bdaf3
+    - rpc.client.call.exception-fadee4e0
   - when: default
     metric_refs:
     - db.client.operation.duration-5d89ffb2
@@ -7069,6 +7551,140 @@ libraries:
     - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-e08d4dc8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.dynamodb.table_names
+        type: STRING_ARRAY
+      - name: aws.kinesis.stream_name
+        type: STRING
+      - name: aws.lambda.resource_mapping.id
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.s3.bucket
+        type: STRING
+      - name: aws.secretsmanager.secret.arn
+        type: STRING
+      - name: aws.sns.topic.arn
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: aws.step_functions.activity.arn
+        type: STRING
+      - name: aws.step_functions.state_machine.arn
+        type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.instrumentation.aws-sdk.experimental-span-attributes=true
+    metric_refs:
+    - db.client.operation.duration-5d89ffb2
     spans:
     - span_kind: CLIENT
       attributes:
@@ -7105,6 +7721,81 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.instrumentation.aws-sdk.experimental-span-attributes=true,otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+    metric_refs:
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
         type: STRING
       - name: error.type
         type: STRING
@@ -7245,11 +7936,9 @@ libraries:
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
   - otel.instrumentation.genai.capture-message-content-ceb072e9
   telemetry:
-  - when: default
+  - when: AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)
     metric_refs:
-    - db.client.operation.duration-556e77d6
-    - gen_ai.client.operation.duration-d420df10
-    - gen_ai.client.token.usage-9c41606c
+    - db.client.operation.duration-7210186d
     - messaging.client.consumed.messages-471caf5c
     - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
@@ -7258,8 +7947,6 @@ libraries:
     - span_kind: CLIENT
       attributes:
       - name: aws.agent
-        type: STRING
-      - name: aws.bedrock.guardrail.id
         type: STRING
       - name: aws.dynamodb.consumed_capacity
         type: STRING_ARRAY
@@ -7309,36 +7996,20 @@ libraries:
         type: STRING
       - name: db.collection.name
         type: STRING
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.query.text
         type: STRING
       - name: db.system.name
         type: STRING
       - name: error.type
         type: STRING
-      - name: gen_ai.operation.name
-        type: STRING
-      - name: gen_ai.provider.name
-        type: STRING
-      - name: gen_ai.request.max_tokens
-        type: LONG
-      - name: gen_ai.request.model
-        type: STRING
-      - name: gen_ai.request.stop_sequences
-        type: STRING_ARRAY
-      - name: gen_ai.request.stream
-        type: BOOLEAN
-      - name: gen_ai.request.temperature
-        type: DOUBLE
-      - name: gen_ai.request.top_p
-        type: DOUBLE
-      - name: gen_ai.response.finish_reasons
-        type: STRING_ARRAY
-      - name: gen_ai.usage.input_tokens
-        type: LONG
-      - name: gen_ai.usage.output_tokens
-        type: LONG
       - name: http.request.method
         type: STRING
       - name: http.response.status_code
@@ -7419,6 +8090,807 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true),AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)
+    metric_refs:
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true),otel.semconv.exception.signal.preview=logs
+    metric_refs:
+    - db.client.operation.duration-556e77d6
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.dynamodb.consumed_capacity
+        type: STRING_ARRAY
+      - name: aws.dynamodb.count
+        type: LONG
+      - name: aws.dynamodb.global_secondary_indexes
+        type: STRING_ARRAY
+      - name: aws.dynamodb.item_collection_metrics
+        type: STRING
+      - name: aws.dynamodb.limit
+        type: LONG
+      - name: aws.dynamodb.provisioned_read_capacity
+        type: DOUBLE
+      - name: aws.dynamodb.provisioned_write_capacity
+        type: DOUBLE
+      - name: aws.dynamodb.scanned_count
+        type: LONG
+      - name: aws.dynamodb.select
+        type: STRING
+      - name: aws.dynamodb.table_count
+        type: LONG
+      - name: aws.dynamodb.table_names
+        type: STRING_ARRAY
+      - name: aws.kinesis.stream_name
+        type: STRING
+      - name: aws.lambda.function.arn
+        type: STRING
+      - name: aws.lambda.function.name
+        type: STRING
+      - name: aws.lambda.resource_mapping.id
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.s3.bucket
+        type: STRING
+      - name: aws.secretsmanager.secret.arn
+        type: STRING
+      - name: aws.sns.topic.arn
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: aws.step_functions.activity.arn
+        type: STRING
+      - name: aws.step_functions.state_machine.arn
+        type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    event_refs:
+    - messaging.settle.exception-b39bdaf3
+    - rpc.client.call.exception-fadee4e0
+  - when: AwsSdkTelemetryBuilder.setRecordIndividualHttpError(true)
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.dynamodb.table_names
+        type: STRING_ARRAY
+      - name: aws.request_id
+        type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: default
+    metric_refs:
+    - db.client.operation.duration-c5800c2e
+    - gen_ai.client.operation.duration-d420df10
+    - gen_ai.client.token.usage-9c41606c
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.bedrock.guardrail.id
+        type: STRING
+      - name: aws.dynamodb.consumed_capacity
+        type: STRING_ARRAY
+      - name: aws.dynamodb.count
+        type: LONG
+      - name: aws.dynamodb.global_secondary_indexes
+        type: STRING_ARRAY
+      - name: aws.dynamodb.item_collection_metrics
+        type: STRING
+      - name: aws.dynamodb.limit
+        type: LONG
+      - name: aws.dynamodb.provisioned_read_capacity
+        type: DOUBLE
+      - name: aws.dynamodb.provisioned_write_capacity
+        type: DOUBLE
+      - name: aws.dynamodb.scanned_count
+        type: LONG
+      - name: aws.dynamodb.select
+        type: STRING
+      - name: aws.dynamodb.table_count
+        type: LONG
+      - name: aws.dynamodb.table_names
+        type: STRING_ARRAY
+      - name: aws.kinesis.stream_name
+        type: STRING
+      - name: aws.lambda.resource_mapping.id
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.s3.bucket
+        type: STRING
+      - name: aws.secretsmanager.secret.arn
+        type: STRING
+      - name: aws.sns.topic.arn
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: aws.step_functions.activity.arn
+        type: STRING
+      - name: aws.step_functions.state_machine.arn
+        type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: gen_ai.operation.name
+        type: STRING
+      - name: gen_ai.provider.name
+        type: STRING
+      - name: gen_ai.request.max_tokens
+        type: LONG
+      - name: gen_ai.request.model
+        type: STRING
+      - name: gen_ai.request.stop_sequences
+        type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
+      - name: gen_ai.request.temperature
+        type: DOUBLE
+      - name: gen_ai.request.top_p
+        type: DOUBLE
+      - name: gen_ai.response.finish_reasons
+        type: STRING_ARRAY
+      - name: gen_ai.usage.input_tokens
+        type: LONG
+      - name: gen_ai.usage.output_tokens
+        type: LONG
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    event_refs:
+    - gen_ai.assistant.message-186a3e5f
+    - gen_ai.choice-c87a79de
+    - gen_ai.tool.message-ebf6809d
+    - gen_ai.user.message-443462e0
+  - when: otel.instrumentation.aws-sdk.experimental-record-individual-http-error=true
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.dynamodb.table_names
+        type: STRING_ARRAY
+      - name: aws.request_id
+        type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.instrumentation.aws-sdk.experimental-span-attributes=true
+    metric_refs:
+    - db.client.operation.duration-556e77d6
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.dynamodb.consumed_capacity
+        type: STRING_ARRAY
+      - name: aws.dynamodb.count
+        type: LONG
+      - name: aws.dynamodb.global_secondary_indexes
+        type: STRING_ARRAY
+      - name: aws.dynamodb.item_collection_metrics
+        type: STRING
+      - name: aws.dynamodb.limit
+        type: LONG
+      - name: aws.dynamodb.provisioned_read_capacity
+        type: DOUBLE
+      - name: aws.dynamodb.provisioned_write_capacity
+        type: DOUBLE
+      - name: aws.dynamodb.scanned_count
+        type: LONG
+      - name: aws.dynamodb.select
+        type: STRING
+      - name: aws.dynamodb.table_count
+        type: LONG
+      - name: aws.dynamodb.table_names
+        type: STRING_ARRAY
+      - name: aws.kinesis.stream_name
+        type: STRING
+      - name: aws.lambda.function.arn
+        type: STRING
+      - name: aws.lambda.function.name
+        type: STRING
+      - name: aws.lambda.resource_mapping.id
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.s3.bucket
+        type: STRING
+      - name: aws.secretsmanager.secret.arn
+        type: STRING
+      - name: aws.sns.topic.arn
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: aws.step_functions.activity.arn
+        type: STRING
+      - name: aws.step_functions.state_machine.arn
+        type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.instrumentation.aws-sdk.experimental-span-attributes=true,otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+    metric_refs:
+    - messaging.client.consumed.messages-471caf5c
+    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-e08d4dc8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.instrumentation.genai.capture-message-content=true
+    metric_refs:
+    - gen_ai.client.operation.duration-d420df10
+    - gen_ai.client.token.usage-9c41606c
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.bedrock.guardrail.id
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: gen_ai.operation.name
+        type: STRING
+      - name: gen_ai.provider.name
+        type: STRING
+      - name: gen_ai.request.max_tokens
+        type: LONG
+      - name: gen_ai.request.model
+        type: STRING
+      - name: gen_ai.request.stop_sequences
+        type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
+      - name: gen_ai.request.temperature
+        type: DOUBLE
+      - name: gen_ai.request.top_p
+        type: DOUBLE
+      - name: gen_ai.response.finish_reasons
+        type: STRING_ARRAY
+      - name: gen_ai.usage.input_tokens
+        type: LONG
+      - name: gen_ai.usage.output_tokens
+        type: LONG
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
       - name: rpc.method
         type: STRING
       - name: rpc.service
@@ -7539,8 +9011,8 @@ libraries:
   - when: default
     metric_refs:
     - messaging.client.consumed.messages-c0fc17f6
-    - messaging.client.operation.duration-68138657
-    - messaging.client.sent.messages-a16c8de0
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
     - messaging.process.duration-0ca61f76
     spans:
     - span_kind: CLIENT
@@ -7563,6 +9035,8 @@ libraries:
         type: STRING
     - span_kind: CONSUMER
       attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.message.id
@@ -7581,6 +9055,8 @@ libraries:
         type: STRING
     - span_kind: PRODUCER
       attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.message.id
@@ -7602,8 +9078,8 @@ libraries:
   - when: otel.instrumentation.camel.experimental-span-attributes=true
     metric_refs:
     - messaging.client.consumed.messages-c0fc17f6
-    - messaging.client.operation.duration-68138657
-    - messaging.client.sent.messages-a16c8de0
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
     - messaging.process.duration-0ca61f76
     spans:
     - span_kind: CLIENT
@@ -7630,6 +9106,8 @@ libraries:
       attributes:
       - name: camel.uri
         type: STRING
+      - name: error.type
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.message.id
@@ -7651,6 +9129,8 @@ libraries:
     - span_kind: PRODUCER
       attributes:
       - name: camel.uri
+        type: STRING
+      - name: error.type
         type: STRING
       - name: messaging.destination.name
         type: STRING
@@ -7701,75 +9181,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.instrumentation.common.v3-preview=true
-    metric_refs:
-    - messaging.client.consumed.messages-c0fc17f6
-    - messaging.client.operation.duration-68138657
-    - messaging.client.sent.messages-a16c8de0
-    - messaging.process.duration-0ca61f76
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.message.id
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.system
-        type: STRING
-      - name: url.full
-        type: STRING
-    - span_kind: CONSUMER
-      attributes:
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.message.id
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.system
-        type: STRING
-    - span_kind: INTERNAL
-      attributes:
-      - name: http.request.method
-        type: STRING
-      - name: url.full
-        type: STRING
-    - span_kind: PRODUCER
-      attributes:
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.message.id
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.system
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.instrumentation.jms.enabled=false
-    metric_refs:
-    - messaging.client.consumed.messages-e8268bc3
-    - messaging.client.operation.duration-68138657
-    - messaging.client.sent.messages-a16c8de0
-    - messaging.process.duration-ab13a22e
 - name: cassandra-3.0
   display_name: Cassandra Driver
   description: |
@@ -8219,6 +9630,7 @@ libraries:
   source_path: instrumentation/couchbase/couchbase-3.2
   scope:
     name: io.opentelemetry.couchbase-3.2
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.2.0,)
@@ -8236,6 +9648,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: server.address
         type: STRING
@@ -8289,6 +9703,26 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+  - when: otel.semconv.exception.signal.preview=logs
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    event_refs:
+    - db.client.operation.exception-83d4cffb
 - name: dropwizard-metrics-4.0
   display_name: Dropwizard Metrics
   description: |
@@ -8588,6 +10022,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -8638,8 +10074,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -8677,6 +10111,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -8944,6 +10380,16 @@ libraries:
         type: STRING
       - name: graphql.operation.type
         type: STRING
+  - when: otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: graphql.document
+        type: STRING
+      - name: graphql.operation.name
+        type: STRING
+      - name: graphql.operation.type
+        type: STRING
 - name: graphql-java-20.0
   display_name: GraphQL Java
   description: This instrumentation enables spans for GraphQL operations.
@@ -8975,7 +10421,7 @@ libraries:
         type: STRING
       - name: graphql.operation.type
         type: STRING
-  - when: otel.instrumentation.graphql.data-fetcher.enabled=true
+  - when: otel.instrumentation.graphql.data-fetcher.enabled=true,otel.instrumentation.graphql.operation-name-in-span-name.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -8984,6 +10430,30 @@ libraries:
       - name: graphql.field.name
         type: STRING
       - name: graphql.field.path
+        type: STRING
+      - name: graphql.operation.name
+        type: STRING
+      - name: graphql.operation.type
+        type: STRING
+  - when: otel.instrumentation.graphql.data-fetcher.enabled=true,otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: graphql.document
+        type: STRING
+      - name: graphql.field.name
+        type: STRING
+      - name: graphql.field.path
+        type: STRING
+      - name: graphql.operation.name
+        type: STRING
+      - name: graphql.operation.type
+        type: STRING
+  - when: otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: graphql.document
         type: STRING
       - name: graphql.operation.name
         type: STRING
@@ -9167,8 +10637,8 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-7381532d
-    - rpc.server.call.duration-1e979856
+    - rpc.client.call.duration-019ae5d4
+    - rpc.server.call.duration-f7f75ef6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9988,7 +11458,7 @@ libraries:
   configuration_refs:
   - common.controller-telemetry.enabled
   telemetry:
-  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.common.v3-preview=true
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -10013,7 +11483,7 @@ libraries:
   - common.controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -10038,13 +11508,13 @@ libraries:
   - common.controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function.name
         type: STRING
-  - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.jaxrs.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -10071,13 +11541,13 @@ libraries:
   - common.controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function.name
         type: STRING
-  - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.jaxrs.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -10104,13 +11574,13 @@ libraries:
   - common.controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function.name
         type: STRING
-  - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.jaxrs.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -10137,13 +11607,13 @@ libraries:
   - common.controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function.name
         type: STRING
-  - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.jaxrs.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -10170,7 +11640,7 @@ libraries:
   - common.controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -10195,13 +11665,13 @@ libraries:
   - common.controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function.name
         type: STRING
-  - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.jaxrs.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -10301,6 +11771,11 @@ libraries:
   - org.apache.cxf:cxf-rt-frontend-jaxws:[3.0.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
+  telemetry:
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
+    spans:
+    - span_kind: INTERNAL
+      attributes: []
 - name: jaxws-2.0-metro-2.2
   display_name: Metro JAX-WS
   description: |
@@ -10317,6 +11792,11 @@ libraries:
   - com.sun.xml.ws:jaxws-rt:[2.2,)
   configuration_refs:
   - common.controller-telemetry.enabled
+  telemetry:
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true
+    spans:
+    - span_kind: INTERNAL
+      attributes: []
 - name: jaxws-jws-api-1.1
   display_name: JWS API
   description: |
@@ -11153,8 +12633,8 @@ libraries:
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
     metric_refs:
     - messaging.client.consumed.messages-e8268bc3
-    - messaging.client.operation.duration-68138657
-    - messaging.client.sent.messages-a16c8de0
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
     - messaging.process.duration-ab13a22e
     spans:
     - span_kind: CLIENT
@@ -11187,6 +12667,8 @@ libraries:
         type: STRING
     - span_kind: PRODUCER
       attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.destination.temporary
@@ -11576,6 +13058,221 @@ libraries:
     - kafka.producer.txn_send_offsets_time_ns_total-f560779c
     - kafka.producer.waiting_threads-d28449be
     - messaging.client.consumed.messages-554a6d90
+    - messaging.client.operation.duration-bcc65266
+    - messaging.client.sent.messages-fec1f156
+    - messaging.process.duration-6404ad2a
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.cluster.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.message.tombstone
+        type: BOOLEAN
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.cluster.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.message.tombstone
+        type: BOOLEAN
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+    metric_refs:
+    - kafka.consumer.assigned_partitions-d0060385
+    - kafka.consumer.bytes_consumed_rate-56367072
+    - kafka.consumer.bytes_consumed_total-ced5c641
+    - kafka.consumer.commit_latency_avg-4485f528
+    - kafka.consumer.commit_latency_max-7f2fa1d5
+    - kafka.consumer.commit_rate-46241578
+    - kafka.consumer.commit_sync_time_ns_total-53a03bcd
+    - kafka.consumer.commit_total-ca0dc844
+    - kafka.consumer.committed_time_ns_total-fd04d4fd
+    - kafka.consumer.connection_close_rate-c7fc71f0
+    - kafka.consumer.connection_close_total-f1fc83b2
+    - kafka.consumer.connection_count-4a46b0bd
+    - kafka.consumer.connection_creation_rate-daba8e98
+    - kafka.consumer.connection_creation_total-821fd380
+    - kafka.consumer.failed_authentication_rate-ebbdeefd
+    - kafka.consumer.failed_authentication_total-60103189
+    - kafka.consumer.failed_reauthentication_rate-fae60910
+    - kafka.consumer.failed_reauthentication_total-669c097f
+    - kafka.consumer.failed_rebalance_rate_per_hour-7cf59d60
+    - kafka.consumer.failed_rebalance_total-4fb5699a
+    - kafka.consumer.fetch_latency_avg-9ce327b1
+    - kafka.consumer.fetch_latency_max-97c30aa2
+    - kafka.consumer.fetch_rate-26a9513c
+    - kafka.consumer.fetch_size_avg-a2efb3d8
+    - kafka.consumer.fetch_size_max-872da885
+    - kafka.consumer.fetch_throttle_time_avg-e10e8ca1
+    - kafka.consumer.fetch_throttle_time_max-d243de50
+    - kafka.consumer.fetch_total-ba8b0ac1
+    - kafka.consumer.heartbeat_rate-c1755689
+    - kafka.consumer.heartbeat_response_time_max-46b109c5
+    - kafka.consumer.heartbeat_total-243f09b7
+    - kafka.consumer.incoming_byte_rate-20a9a2be
+    - kafka.consumer.incoming_byte_total-bae60fc2
+    - kafka.consumer.io_ratio-4f200726
+    - kafka.consumer.io_time_ns_avg-afad48cb
+    - kafka.consumer.io_time_ns_total-264cdfe6
+    - kafka.consumer.io_wait_ratio-a79e2e89
+    - kafka.consumer.io_wait_time_ns_avg-41d94fd9
+    - kafka.consumer.io_wait_time_ns_total-a0781b8b
+    - kafka.consumer.join_rate-dd099cb7
+    - kafka.consumer.join_time_avg-c471dd5a
+    - kafka.consumer.join_time_max-edcb56b6
+    - kafka.consumer.join_total-5371ed55
+    - kafka.consumer.last_heartbeat_seconds_ago-34d62255
+    - kafka.consumer.last_poll_seconds_ago-c87d1726
+    - kafka.consumer.last_rebalance_seconds_ago-77720eed
+    - kafka.consumer.network_io_rate-a1624322
+    - kafka.consumer.network_io_total-96c2d0ed
+    - kafka.consumer.outgoing_byte_rate-6644f51b
+    - kafka.consumer.outgoing_byte_total-77c79077
+    - kafka.consumer.partition_assigned_latency_avg-13ee981c
+    - kafka.consumer.partition_assigned_latency_max-ce7574c8
+    - kafka.consumer.poll_idle_ratio_avg-8a7d88e7
+    - kafka.consumer.rebalance_latency_avg-b8c7062b
+    - kafka.consumer.rebalance_latency_max-0e11ebeb
+    - kafka.consumer.rebalance_latency_total-4b8a78db
+    - kafka.consumer.rebalance_rate_per_hour-2e8e9480
+    - kafka.consumer.rebalance_total-776ec5c7
+    - kafka.consumer.records_consumed_rate-86d13193
+    - kafka.consumer.records_consumed_total-52caced7
+    - kafka.consumer.records_lag-0c792b61
+    - kafka.consumer.records_lag_avg-08e5d861
+    - kafka.consumer.records_lag_max-e00db1e5
+    - kafka.consumer.records_lead-402e686c
+    - kafka.consumer.records_lead_avg-ef05b999
+    - kafka.consumer.records_lead_min-3979ed79
+    - kafka.consumer.records_per_request_avg-b6342c12
+    - kafka.consumer.request_latency_avg-931d59bf
+    - kafka.consumer.request_latency_max-3ca5684d
+    - kafka.consumer.request_rate-a100354a
+    - kafka.consumer.request_size_avg-240066b1
+    - kafka.consumer.request_size_max-a07b8993
+    - kafka.consumer.request_total-e416e172
+    - kafka.consumer.response_rate-20a7bcc4
+    - kafka.consumer.response_total-488cf080
+    - kafka.consumer.select_rate-4b0e9dda
+    - kafka.consumer.select_total-ad192bee
+    - kafka.consumer.successful_authentication_no_reauth_total-7820b6ee
+    - kafka.consumer.successful_authentication_rate-ab560886
+    - kafka.consumer.successful_authentication_total-3b74471b
+    - kafka.consumer.successful_reauthentication_rate-948eb8fa
+    - kafka.consumer.successful_reauthentication_total-8304e5a7
+    - kafka.consumer.sync_rate-a545ae3d
+    - kafka.consumer.sync_time_avg-df640ba1
+    - kafka.consumer.sync_time_max-b9433da0
+    - kafka.consumer.sync_total-f88b6ff9
+    - kafka.consumer.time_between_poll_avg-bbcaea05
+    - kafka.consumer.time_between_poll_max-8d36c879
+    - kafka.producer.batch_size_avg-856f7cb4
+    - kafka.producer.batch_size_max-b81c695b
+    - kafka.producer.batch_split_rate-d59d990e
+    - kafka.producer.batch_split_total-51d2ed9b
+    - kafka.producer.buffer_available_bytes-045becf3
+    - kafka.producer.buffer_exhausted_rate-9361f077
+    - kafka.producer.buffer_exhausted_total-42ee6115
+    - kafka.producer.buffer_total_bytes-7666ce11
+    - kafka.producer.bufferpool_wait_ratio-b07f6b99
+    - kafka.producer.bufferpool_wait_time_ns_total-d0096d79
+    - kafka.producer.byte_rate-771098de
+    - kafka.producer.byte_total-6759a224
+    - kafka.producer.compression_rate-cabaef40
+    - kafka.producer.compression_rate_avg-a5557ace
+    - kafka.producer.connection_close_rate-124ee2ba
+    - kafka.producer.connection_close_total-7cfcb090
+    - kafka.producer.connection_count-edf850f8
+    - kafka.producer.connection_creation_rate-04173267
+    - kafka.producer.connection_creation_total-5a180441
+    - kafka.producer.failed_authentication_rate-b29e94d5
+    - kafka.producer.failed_authentication_total-ca77559f
+    - kafka.producer.failed_reauthentication_rate-a7888737
+    - kafka.producer.failed_reauthentication_total-a127e41c
+    - kafka.producer.flush_time_ns_total-e9edd191
+    - kafka.producer.incoming_byte_rate-d576d873
+    - kafka.producer.incoming_byte_total-ce3d2ab0
+    - kafka.producer.io_ratio-17484cdf
+    - kafka.producer.io_time_ns_avg-b69a0eed
+    - kafka.producer.io_time_ns_total-e2dca52d
+    - kafka.producer.io_wait_ratio-66ab2832
+    - kafka.producer.io_wait_time_ns_avg-65168d28
+    - kafka.producer.io_wait_time_ns_total-588c6b98
+    - kafka.producer.metadata_age-22d80e27
+    - kafka.producer.metadata_wait_time_ns_total-1c936aa7
+    - kafka.producer.network_io_rate-c007106a
+    - kafka.producer.network_io_total-690d05c7
+    - kafka.producer.outgoing_byte_rate-e0987829
+    - kafka.producer.outgoing_byte_total-0d9bac78
+    - kafka.producer.produce_throttle_time_avg-89d38dbf
+    - kafka.producer.produce_throttle_time_max-b9000b35
+    - kafka.producer.record_error_rate-d71d3175
+    - kafka.producer.record_error_total-786888d2
+    - kafka.producer.record_queue_time_avg-a4e91bbd
+    - kafka.producer.record_queue_time_max-2753f3c6
+    - kafka.producer.record_retry_rate-13bbb1b8
+    - kafka.producer.record_retry_total-53642470
+    - kafka.producer.record_send_rate-2d1e33ac
+    - kafka.producer.record_send_total-c0645fb0
+    - kafka.producer.record_size_avg-6a093c26
+    - kafka.producer.record_size_max-63635522
+    - kafka.producer.records_per_request_avg-a84472aa
+    - kafka.producer.request_latency_avg-b3c07dba
+    - kafka.producer.request_latency_max-20817c88
+    - kafka.producer.request_rate-bf549510
+    - kafka.producer.request_size_avg-40ec26de
+    - kafka.producer.request_size_max-18397f0b
+    - kafka.producer.request_total-c46ff7ac
+    - kafka.producer.requests_in_flight-678d4216
+    - kafka.producer.response_rate-2c02ee61
+    - kafka.producer.response_total-1f3815dd
+    - kafka.producer.select_rate-3501e134
+    - kafka.producer.select_total-aa809479
+    - kafka.producer.successful_authentication_no_reauth_total-d3bbc8f6
+    - kafka.producer.successful_authentication_rate-dbacb538
+    - kafka.producer.successful_authentication_total-b28acd5c
+    - kafka.producer.successful_reauthentication_rate-977d9e9c
+    - kafka.producer.successful_reauthentication_total-efc692e3
+    - kafka.producer.txn_abort_time_ns_total-8c379132
+    - kafka.producer.txn_begin_time_ns_total-162a788e
+    - kafka.producer.txn_commit_time_ns_total-67fa698d
+    - kafka.producer.txn_init_time_ns_total-788c581e
+    - kafka.producer.txn_prepare_time_ns_total-0ac9aac3
+    - kafka.producer.txn_send_offsets_time_ns_total-f560779c
+    - kafka.producer.waiting_threads-d28449be
+    - messaging.client.consumed.messages-554a6d90
     - messaging.client.operation.duration-83802976
     - messaging.client.sent.messages-fec1f156
     - messaging.process.duration-6404ad2a
@@ -11646,7 +13343,7 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.instrumentation.kafka.experimental-span-attributes=true
+  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     metric_refs:
     - kafka.consumer.assigned_partitions-d0060385
     - kafka.consumer.bytes_consumed_rate-56367072
@@ -11898,7 +13595,7 @@ libraries:
     schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   telemetry:
-  - when: default
+  - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)
     metric_refs:
     - kafka.consumer.assigned_partitions-d0060385
     - kafka.consumer.bytes_consumed_rate-56367072
@@ -12068,12 +13765,8 @@ libraries:
         type: STRING
       - name: messaging.destination.partition.id
         type: STRING
-      - name: messaging.kafka.bootstrap.servers
-        type: STRING
       - name: messaging.kafka.cluster.id
         type: STRING
-      - name: messaging.kafka.offset
-        type: LONG
       - name: messaging.operation.name
         type: STRING
       - name: messaging.operation.type
@@ -12082,8 +13775,6 @@ libraries:
         type: STRING
     - span_kind: CONSUMER
       attributes:
-      - name: kafka.record.queue_time_ms
-        type: LONG
       - name: messaging.client.id
         type: STRING
       - name: messaging.consumer.group.name
@@ -12104,19 +13795,13 @@ libraries:
         type: STRING
     - span_kind: PRODUCER
       attributes:
-      - name: error.type
-        type: STRING
       - name: messaging.client.id
         type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.destination.partition.id
         type: STRING
-      - name: messaging.kafka.bootstrap.servers
-        type: STRING
       - name: messaging.kafka.cluster.id
-        type: STRING
-      - name: messaging.kafka.message.key
         type: STRING
       - name: messaging.kafka.offset
         type: LONG
@@ -12126,8 +13811,157 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.semconv.exception.signal.preview=logs
+  - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true),KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)
     metric_refs:
+    - kafka.consumer.assigned_partitions-d0060385
+    - kafka.consumer.bytes_consumed_rate-56367072
+    - kafka.consumer.bytes_consumed_total-ced5c641
+    - kafka.consumer.commit_latency_avg-4485f528
+    - kafka.consumer.commit_latency_max-7f2fa1d5
+    - kafka.consumer.commit_rate-46241578
+    - kafka.consumer.commit_total-ca0dc844
+    - kafka.consumer.connection_close_rate-c7fc71f0
+    - kafka.consumer.connection_close_total-f1fc83b2
+    - kafka.consumer.connection_count-4a46b0bd
+    - kafka.consumer.connection_creation_rate-daba8e98
+    - kafka.consumer.connection_creation_total-821fd380
+    - kafka.consumer.failed_authentication_rate-ebbdeefd
+    - kafka.consumer.failed_authentication_total-60103189
+    - kafka.consumer.failed_reauthentication_rate-fae60910
+    - kafka.consumer.failed_reauthentication_total-669c097f
+    - kafka.consumer.failed_rebalance_rate_per_hour-7cf59d60
+    - kafka.consumer.failed_rebalance_total-4fb5699a
+    - kafka.consumer.fetch_latency_avg-9ce327b1
+    - kafka.consumer.fetch_latency_max-97c30aa2
+    - kafka.consumer.fetch_rate-26a9513c
+    - kafka.consumer.fetch_size_avg-a2efb3d8
+    - kafka.consumer.fetch_size_max-872da885
+    - kafka.consumer.fetch_throttle_time_avg-e10e8ca1
+    - kafka.consumer.fetch_throttle_time_max-d243de50
+    - kafka.consumer.fetch_total-ba8b0ac1
+    - kafka.consumer.heartbeat_rate-c1755689
+    - kafka.consumer.heartbeat_total-243f09b7
+    - kafka.consumer.incoming_byte_rate-20a9a2be
+    - kafka.consumer.incoming_byte_total-bae60fc2
+    - kafka.consumer.io_ratio-4f200726
+    - kafka.consumer.io_time_ns_avg-afad48cb
+    - kafka.consumer.io_wait_ratio-a79e2e89
+    - kafka.consumer.io_wait_time_ns_avg-41d94fd9
+    - kafka.consumer.io_waittime_total-75c116a2
+    - kafka.consumer.iotime_total-0f985a88
+    - kafka.consumer.join_rate-dd099cb7
+    - kafka.consumer.join_time_avg-c471dd5a
+    - kafka.consumer.join_time_max-edcb56b6
+    - kafka.consumer.join_total-5371ed55
+    - kafka.consumer.last_heartbeat_seconds_ago-34d62255
+    - kafka.consumer.last_poll_seconds_ago-c87d1726
+    - kafka.consumer.last_rebalance_seconds_ago-77720eed
+    - kafka.consumer.network_io_rate-a1624322
+    - kafka.consumer.network_io_total-96c2d0ed
+    - kafka.consumer.outgoing_byte_rate-6644f51b
+    - kafka.consumer.outgoing_byte_total-77c79077
+    - kafka.consumer.partition_assigned_latency_avg-13ee981c
+    - kafka.consumer.partition_assigned_latency_max-ce7574c8
+    - kafka.consumer.poll_idle_ratio_avg-8a7d88e7
+    - kafka.consumer.rebalance_latency_avg-b8c7062b
+    - kafka.consumer.rebalance_latency_max-0e11ebeb
+    - kafka.consumer.rebalance_latency_total-4b8a78db
+    - kafka.consumer.rebalance_rate_per_hour-2e8e9480
+    - kafka.consumer.rebalance_total-776ec5c7
+    - kafka.consumer.records_consumed_rate-86d13193
+    - kafka.consumer.records_consumed_total-52caced7
+    - kafka.consumer.records_lag-1ba539f3
+    - kafka.consumer.records_lag_avg-86145b25
+    - kafka.consumer.records_lag_max-d92522df
+    - kafka.consumer.records_lead-36add5f2
+    - kafka.consumer.records_lead_avg-757713b1
+    - kafka.consumer.records_lead_min-3979ed79
+    - kafka.consumer.records_per_request_avg-b6342c12
+    - kafka.consumer.request_rate-a100354a
+    - kafka.consumer.request_size_avg-240066b1
+    - kafka.consumer.request_size_max-a07b8993
+    - kafka.consumer.request_total-e416e172
+    - kafka.consumer.response_rate-20a7bcc4
+    - kafka.consumer.response_total-488cf080
+    - kafka.consumer.select_rate-4b0e9dda
+    - kafka.consumer.select_total-ad192bee
+    - kafka.consumer.successful_authentication_no_reauth_total-7820b6ee
+    - kafka.consumer.successful_authentication_rate-ab560886
+    - kafka.consumer.successful_authentication_total-3b74471b
+    - kafka.consumer.successful_reauthentication_rate-948eb8fa
+    - kafka.consumer.successful_reauthentication_total-8304e5a7
+    - kafka.consumer.sync_rate-a545ae3d
+    - kafka.consumer.sync_time_avg-df640ba1
+    - kafka.consumer.sync_time_max-b9433da0
+    - kafka.consumer.sync_total-f88b6ff9
+    - kafka.consumer.time_between_poll_avg-bfb4f932
+    - kafka.consumer.time_between_poll_max-43a2bdb3
+    - kafka.producer.batch_size_avg-856f7cb4
+    - kafka.producer.batch_size_max-b81c695b
+    - kafka.producer.batch_split_rate-d59d990e
+    - kafka.producer.batch_split_total-51d2ed9b
+    - kafka.producer.buffer_available_bytes-045becf3
+    - kafka.producer.buffer_exhausted_rate-9361f077
+    - kafka.producer.buffer_exhausted_total-42ee6115
+    - kafka.producer.buffer_total_bytes-7666ce11
+    - kafka.producer.bufferpool_wait_ratio-b07f6b99
+    - kafka.producer.bufferpool_wait_time_total-f5f8df2f
+    - kafka.producer.byte_rate-771098de
+    - kafka.producer.byte_total-6759a224
+    - kafka.producer.compression_rate-4973769f
+    - kafka.producer.compression_rate_avg-07ac1282
+    - kafka.producer.connection_close_rate-124ee2ba
+    - kafka.producer.connection_close_total-7cfcb090
+    - kafka.producer.connection_count-edf850f8
+    - kafka.producer.connection_creation_rate-04173267
+    - kafka.producer.connection_creation_total-5a180441
+    - kafka.producer.failed_authentication_rate-b29e94d5
+    - kafka.producer.failed_authentication_total-ca77559f
+    - kafka.producer.failed_reauthentication_rate-a7888737
+    - kafka.producer.failed_reauthentication_total-a127e41c
+    - kafka.producer.incoming_byte_rate-d576d873
+    - kafka.producer.incoming_byte_total-ce3d2ab0
+    - kafka.producer.io_ratio-17484cdf
+    - kafka.producer.io_time_ns_avg-b69a0eed
+    - kafka.producer.io_wait_ratio-66ab2832
+    - kafka.producer.io_wait_time_ns_avg-65168d28
+    - kafka.producer.io_waittime_total-63eff1d0
+    - kafka.producer.iotime_total-00e6b137
+    - kafka.producer.metadata_age-22d80e27
+    - kafka.producer.network_io_rate-c007106a
+    - kafka.producer.network_io_total-690d05c7
+    - kafka.producer.outgoing_byte_rate-e0987829
+    - kafka.producer.outgoing_byte_total-0d9bac78
+    - kafka.producer.produce_throttle_time_avg-89d38dbf
+    - kafka.producer.produce_throttle_time_max-b9000b35
+    - kafka.producer.record_error_rate-d71d3175
+    - kafka.producer.record_error_total-786888d2
+    - kafka.producer.record_queue_time_avg-a4e91bbd
+    - kafka.producer.record_queue_time_max-2753f3c6
+    - kafka.producer.record_retry_rate-13bbb1b8
+    - kafka.producer.record_retry_total-53642470
+    - kafka.producer.record_send_rate-2d1e33ac
+    - kafka.producer.record_send_total-c0645fb0
+    - kafka.producer.record_size_avg-6a093c26
+    - kafka.producer.record_size_max-63635522
+    - kafka.producer.records_per_request_avg-a84472aa
+    - kafka.producer.request_latency_avg-b3c07dba
+    - kafka.producer.request_latency_max-20817c88
+    - kafka.producer.request_rate-bf549510
+    - kafka.producer.request_size_avg-40ec26de
+    - kafka.producer.request_size_max-18397f0b
+    - kafka.producer.request_total-c46ff7ac
+    - kafka.producer.requests_in_flight-678d4216
+    - kafka.producer.response_rate-2c02ee61
+    - kafka.producer.response_total-1f3815dd
+    - kafka.producer.select_rate-3501e134
+    - kafka.producer.select_total-aa809479
+    - kafka.producer.successful_authentication_no_reauth_total-d3bbc8f6
+    - kafka.producer.successful_authentication_rate-dbacb538
+    - kafka.producer.successful_authentication_total-b28acd5c
+    - kafka.producer.successful_reauthentication_rate-977d9e9c
+    - kafka.producer.successful_reauthentication_total-efc692e3
+    - kafka.producer.waiting_threads-d28449be
     - messaging.client.consumed.messages-554a6d90
     - messaging.client.operation.duration-83802976
     - messaging.client.sent.messages-fec1f156
@@ -12135,8 +13969,6 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
-      - name: error.type
-        type: STRING
       - name: messaging.batch.message_count
         type: LONG
       - name: messaging.client.id
@@ -12197,8 +14029,220 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true),otel.semconv.exception.signal.preview=logs
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     event_refs:
     - messaging.receive.exception-da0a5a7e
+  - when: default
+    metric_refs:
+    - kafka.consumer.assigned_partitions-d0060385
+    - kafka.consumer.bytes_consumed_rate-56367072
+    - kafka.consumer.bytes_consumed_total-ced5c641
+    - kafka.consumer.commit_latency_avg-4485f528
+    - kafka.consumer.commit_latency_max-7f2fa1d5
+    - kafka.consumer.commit_rate-46241578
+    - kafka.consumer.commit_total-ca0dc844
+    - kafka.consumer.connection_close_rate-c7fc71f0
+    - kafka.consumer.connection_close_total-f1fc83b2
+    - kafka.consumer.connection_count-4a46b0bd
+    - kafka.consumer.connection_creation_rate-daba8e98
+    - kafka.consumer.connection_creation_total-821fd380
+    - kafka.consumer.failed_authentication_rate-ebbdeefd
+    - kafka.consumer.failed_authentication_total-60103189
+    - kafka.consumer.failed_reauthentication_rate-fae60910
+    - kafka.consumer.failed_reauthentication_total-669c097f
+    - kafka.consumer.failed_rebalance_rate_per_hour-7cf59d60
+    - kafka.consumer.failed_rebalance_total-4fb5699a
+    - kafka.consumer.fetch_latency_avg-9ce327b1
+    - kafka.consumer.fetch_latency_max-97c30aa2
+    - kafka.consumer.fetch_rate-26a9513c
+    - kafka.consumer.fetch_size_avg-a2efb3d8
+    - kafka.consumer.fetch_size_max-872da885
+    - kafka.consumer.fetch_throttle_time_avg-e10e8ca1
+    - kafka.consumer.fetch_throttle_time_max-d243de50
+    - kafka.consumer.fetch_total-ba8b0ac1
+    - kafka.consumer.heartbeat_rate-c1755689
+    - kafka.consumer.heartbeat_total-243f09b7
+    - kafka.consumer.incoming_byte_rate-20a9a2be
+    - kafka.consumer.incoming_byte_total-bae60fc2
+    - kafka.consumer.io_ratio-4f200726
+    - kafka.consumer.io_time_ns_avg-afad48cb
+    - kafka.consumer.io_wait_ratio-a79e2e89
+    - kafka.consumer.io_wait_time_ns_avg-41d94fd9
+    - kafka.consumer.io_waittime_total-75c116a2
+    - kafka.consumer.iotime_total-0f985a88
+    - kafka.consumer.join_rate-dd099cb7
+    - kafka.consumer.join_time_avg-c471dd5a
+    - kafka.consumer.join_time_max-edcb56b6
+    - kafka.consumer.join_total-5371ed55
+    - kafka.consumer.last_heartbeat_seconds_ago-34d62255
+    - kafka.consumer.last_poll_seconds_ago-c87d1726
+    - kafka.consumer.last_rebalance_seconds_ago-77720eed
+    - kafka.consumer.network_io_rate-a1624322
+    - kafka.consumer.network_io_total-96c2d0ed
+    - kafka.consumer.outgoing_byte_rate-6644f51b
+    - kafka.consumer.outgoing_byte_total-77c79077
+    - kafka.consumer.partition_assigned_latency_avg-13ee981c
+    - kafka.consumer.partition_assigned_latency_max-ce7574c8
+    - kafka.consumer.poll_idle_ratio_avg-8a7d88e7
+    - kafka.consumer.rebalance_latency_avg-b8c7062b
+    - kafka.consumer.rebalance_latency_max-0e11ebeb
+    - kafka.consumer.rebalance_latency_total-4b8a78db
+    - kafka.consumer.rebalance_rate_per_hour-2e8e9480
+    - kafka.consumer.rebalance_total-776ec5c7
+    - kafka.consumer.records_consumed_rate-86d13193
+    - kafka.consumer.records_consumed_total-52caced7
+    - kafka.consumer.records_lag-1ba539f3
+    - kafka.consumer.records_lag_avg-86145b25
+    - kafka.consumer.records_lag_max-d92522df
+    - kafka.consumer.records_lead-36add5f2
+    - kafka.consumer.records_lead_avg-757713b1
+    - kafka.consumer.records_lead_min-3979ed79
+    - kafka.consumer.records_per_request_avg-b6342c12
+    - kafka.consumer.request_rate-a100354a
+    - kafka.consumer.request_size_avg-240066b1
+    - kafka.consumer.request_size_max-a07b8993
+    - kafka.consumer.request_total-e416e172
+    - kafka.consumer.response_rate-20a7bcc4
+    - kafka.consumer.response_total-488cf080
+    - kafka.consumer.select_rate-4b0e9dda
+    - kafka.consumer.select_total-ad192bee
+    - kafka.consumer.successful_authentication_no_reauth_total-7820b6ee
+    - kafka.consumer.successful_authentication_rate-ab560886
+    - kafka.consumer.successful_authentication_total-3b74471b
+    - kafka.consumer.successful_reauthentication_rate-948eb8fa
+    - kafka.consumer.successful_reauthentication_total-8304e5a7
+    - kafka.consumer.sync_rate-a545ae3d
+    - kafka.consumer.sync_time_avg-df640ba1
+    - kafka.consumer.sync_time_max-b9433da0
+    - kafka.consumer.sync_total-f88b6ff9
+    - kafka.consumer.time_between_poll_avg-bfb4f932
+    - kafka.consumer.time_between_poll_max-43a2bdb3
+    - kafka.producer.batch_size_avg-856f7cb4
+    - kafka.producer.batch_size_max-b81c695b
+    - kafka.producer.batch_split_rate-d59d990e
+    - kafka.producer.batch_split_total-51d2ed9b
+    - kafka.producer.buffer_available_bytes-045becf3
+    - kafka.producer.buffer_exhausted_rate-9361f077
+    - kafka.producer.buffer_exhausted_total-42ee6115
+    - kafka.producer.buffer_total_bytes-7666ce11
+    - kafka.producer.bufferpool_wait_ratio-b07f6b99
+    - kafka.producer.bufferpool_wait_time_total-f5f8df2f
+    - kafka.producer.byte_rate-771098de
+    - kafka.producer.byte_total-6759a224
+    - kafka.producer.compression_rate-4973769f
+    - kafka.producer.compression_rate_avg-07ac1282
+    - kafka.producer.connection_close_rate-124ee2ba
+    - kafka.producer.connection_close_total-7cfcb090
+    - kafka.producer.connection_count-edf850f8
+    - kafka.producer.connection_creation_rate-04173267
+    - kafka.producer.connection_creation_total-5a180441
+    - kafka.producer.failed_authentication_rate-b29e94d5
+    - kafka.producer.failed_authentication_total-ca77559f
+    - kafka.producer.failed_reauthentication_rate-a7888737
+    - kafka.producer.failed_reauthentication_total-a127e41c
+    - kafka.producer.incoming_byte_rate-d576d873
+    - kafka.producer.incoming_byte_total-ce3d2ab0
+    - kafka.producer.io_ratio-17484cdf
+    - kafka.producer.io_time_ns_avg-b69a0eed
+    - kafka.producer.io_wait_ratio-66ab2832
+    - kafka.producer.io_wait_time_ns_avg-65168d28
+    - kafka.producer.io_waittime_total-63eff1d0
+    - kafka.producer.iotime_total-00e6b137
+    - kafka.producer.metadata_age-22d80e27
+    - kafka.producer.network_io_rate-c007106a
+    - kafka.producer.network_io_total-690d05c7
+    - kafka.producer.outgoing_byte_rate-e0987829
+    - kafka.producer.outgoing_byte_total-0d9bac78
+    - kafka.producer.produce_throttle_time_avg-89d38dbf
+    - kafka.producer.produce_throttle_time_max-b9000b35
+    - kafka.producer.record_error_rate-d71d3175
+    - kafka.producer.record_error_total-786888d2
+    - kafka.producer.record_queue_time_avg-a4e91bbd
+    - kafka.producer.record_queue_time_max-2753f3c6
+    - kafka.producer.record_retry_rate-13bbb1b8
+    - kafka.producer.record_retry_total-53642470
+    - kafka.producer.record_send_rate-2d1e33ac
+    - kafka.producer.record_send_total-c0645fb0
+    - kafka.producer.record_size_avg-6a093c26
+    - kafka.producer.record_size_max-63635522
+    - kafka.producer.records_per_request_avg-a84472aa
+    - kafka.producer.request_latency_avg-b3c07dba
+    - kafka.producer.request_latency_max-20817c88
+    - kafka.producer.request_rate-bf549510
+    - kafka.producer.request_size_avg-40ec26de
+    - kafka.producer.request_size_max-18397f0b
+    - kafka.producer.request_total-c46ff7ac
+    - kafka.producer.requests_in_flight-678d4216
+    - kafka.producer.response_rate-2c02ee61
+    - kafka.producer.response_total-1f3815dd
+    - kafka.producer.select_rate-3501e134
+    - kafka.producer.select_total-aa809479
+    - kafka.producer.successful_authentication_no_reauth_total-d3bbc8f6
+    - kafka.producer.successful_authentication_rate-dbacb538
+    - kafka.producer.successful_authentication_total-b28acd5c
+    - kafka.producer.successful_reauthentication_rate-977d9e9c
+    - kafka.producer.successful_reauthentication_total-efc692e3
+    - kafka.producer.waiting_threads-d28449be
+    - messaging.client.consumed.messages-554a6d90
+    - messaging.client.operation.duration-bcc65266
+    - messaging.client.sent.messages-fec1f156
+    - messaging.process.duration-6404ad2a
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.cluster.id
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.cluster.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: kafka-connect-2.6
   display_name: Apache Kafka Connect
   description: This instrumentation enables messaging spans for Kafka Connect sink
@@ -12243,6 +14287,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
+    - messaging.client.consumed.messages-554a6d90
     - messaging.process.duration-6404ad2a
     spans:
     - span_kind: CONSUMER
@@ -12267,7 +14312,33 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.instrumentation.kafka.experimental-span-attributes=true
+  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+    metric_refs:
+    - messaging.process.duration-6404ad2a
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.cluster.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     metric_refs:
     - messaging.process.duration-6404ad2a
     spans:
@@ -12298,7 +14369,7 @@ libraries:
 - name: kotlinx-coroutines-1.0
   display_name: Kotlin Coroutines
   description: |
-    This instrumentation enables context propagation for Kotlin coroutines and adds support for @WithSpan annotations on Kotlin suspend functions by default unless v3 preview mode is enabled. It also supports @WithSpan annotations on methods returning Kotlin Flow starting with version 1.3.0.
+    This instrumentation enables context propagation for Kotlin coroutines and, for Kotlin Flow (starting with version 1.3.0), completes spans of Flow-returning methods asynchronously. The separate `kotlinx-coroutines-annotations` instrumentation supports @WithSpan annotations on Kotlin suspend functions and is disabled by default.
   library_link: https://github.com/Kotlin/kotlinx.coroutines
   features:
   - CONTEXT_PROPAGATION
@@ -12579,7 +14650,7 @@ libraries:
     metric_refs:
     - http.client.request.duration-a64b5297
     - http.server.active_requests-2c1402e2
-    - http.server.request.duration-1f6f63ed
+    - http.server.request.duration-b6723875
     - http.server.response.body.size-9ece7062
     spans:
     - span_kind: CLIENT
@@ -12890,32 +14961,6 @@ libraries:
   - otel.instrumentation.lettuce.query-sanitization.enabled
   telemetry:
   - when: default
-    metric_refs:
-    - db.client.operation.duration-8ae2b8ce
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-  - when: otel.instrumentation.common.v3-preview=true
     metric_refs:
     - db.client.operation.duration-8ae2b8ce
     spans:
@@ -13287,7 +15332,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-1bd4857e
+    - db.client.operation.duration-dd161d27
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13301,27 +15346,7 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-  - when: otel.instrumentation.common.v3-preview=true
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
+      - name: error.type
         type: STRING
       - name: network.peer.address
         type: STRING
@@ -13352,7 +15377,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-1bd4857e
+    - db.client.operation.duration-dd161d27
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13365,6 +15390,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: network.peer.address
         type: STRING
@@ -13395,7 +15422,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-e36c6087
+    - db.client.operation.duration-d440c7d0
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13408,6 +15435,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: server.address
         type: STRING
@@ -14109,6 +16138,38 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
+  - when: otel.semconv.exception.signal.preview=logs
+    metric_refs:
+    - http.client.request.duration-a64b5297
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.request.resend_count
+        type: LONG
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: peer.service
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    event_refs:
+    - http.client.request.exception-ca66bc45
 - name: openai-java-1.1
   display_name: OpenAI Java SDK
   description: This instrumentation enables Gen AI client spans and metrics for the
@@ -14129,11 +16190,13 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - gen_ai.client.operation.duration-32ef946d
+    - gen_ai.client.operation.duration-7139fb88
     - gen_ai.client.token.usage-c5ff244f
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: gen_ai.operation.name
         type: STRING
       - name: gen_ai.provider.name
@@ -14180,11 +16243,13 @@ libraries:
     - gen_ai.user.message-443462e0
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
-    - gen_ai.client.operation.duration-32ef946d
+    - gen_ai.client.operation.duration-7139fb88
     - gen_ai.client.token.usage-c5ff244f
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: gen_ai.operation.name
         type: STRING
       - name: gen_ai.provider.name
@@ -15360,28 +17425,6 @@ libraries:
         type: STRING
     - span_kind: INTERNAL
       attributes: []
-  - when: otel.instrumentation.common.v3-preview=true,otel.instrumentation.common.controller-telemetry.enabled=true
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: http.route
-        type: STRING
-      - name: network.protocol.version
-        type: STRING
-      - name: peer.service
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.full
-        type: STRING
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
@@ -16556,6 +18599,46 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+  - when: otel.instrumentation.servlet.experimental.request-parameters.included=test-*,otel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret
+    metric_refs:
+    - http.server.request.duration-1f6f63ed
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: code.function.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
 - name: servlet-5.0
   display_name: Servlet
   description: This instrumentation enables HTTP server spans and metrics for Jakarta
@@ -16583,6 +18666,46 @@ libraries:
   - otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
+  - when: default
+    metric_refs:
+    - http.server.request.duration-1f6f63ed
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: code.function.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
   - when: otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter
     metric_refs:
     - http.server.request.duration-1f6f63ed
@@ -16673,8 +18796,8 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
-    - rpc.client.call.duration-c22f308d
-    - rpc.server.call.duration-b95d8012
+    - rpc.client.call.duration-620a9e42
+    - rpc.server.call.duration-a87cce7a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -16700,9 +18823,9 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup,service.peer
     metric_refs:
-    - rpc.client.call.duration-c22f308d
+    - rpc.client.call.duration-620a9e42
     - rpc.client.duration-8ed5ac0d
-    - rpc.server.call.duration-b95d8012
+    - rpc.server.call.duration-a87cce7a
     - rpc.server.duration-3caa4b9d
     spans:
     - span_kind: CLIENT
@@ -16778,6 +18901,116 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - com.sparkjava:spark-core:[2.3,)
+- name: spring-ai-1.0
+  display_name: Spring AI
+  description: |
+    This instrumentation creates GenAI client spans for Spring AI ChatModel calls.
+  semantic_conventions:
+  - GENAI_CLIENT_SPANS
+  - GENAI_CLIENT_METRICS
+  library_link: https://spring.io/projects/spring-ai
+  source_path: instrumentation/spring/spring-ai-1.0
+  minimum_java_version: 17
+  scope:
+    name: io.opentelemetry.spring-ai-1.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.springframework.ai:spring-ai-model:[1.0.0,)
+  configuration_refs:
+  - otel.instrumentation.genai.capture-message-content-6a8fe672
+  telemetry:
+  - when: default
+    metric_refs:
+    - gen_ai.client.operation.duration-32ef946d
+    - gen_ai.client.token.usage-c5ff244f
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: gen_ai.operation.name
+        type: STRING
+      - name: gen_ai.provider.name
+        type: STRING
+      - name: gen_ai.request.frequency_penalty
+        type: DOUBLE
+      - name: gen_ai.request.max_tokens
+        type: LONG
+      - name: gen_ai.request.model
+        type: STRING
+      - name: gen_ai.request.presence_penalty
+        type: DOUBLE
+      - name: gen_ai.request.stop_sequences
+        type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
+      - name: gen_ai.request.temperature
+        type: DOUBLE
+      - name: gen_ai.request.top_k
+        type: DOUBLE
+      - name: gen_ai.request.top_p
+        type: DOUBLE
+      - name: gen_ai.response.finish_reasons
+        type: STRING_ARRAY
+      - name: gen_ai.response.id
+        type: STRING
+      - name: gen_ai.response.model
+        type: STRING
+      - name: gen_ai.usage.input_tokens
+        type: LONG
+      - name: gen_ai.usage.output_tokens
+        type: LONG
+    event_refs:
+    - gen_ai.assistant.message-186a3e5f
+    - gen_ai.choice-c87a79de
+    - gen_ai.tool.message-ebf6809d
+    - gen_ai.user.message-443462e0
+  - when: otel.instrumentation.genai.capture-message-content=true
+    metric_refs:
+    - gen_ai.client.operation.duration-32ef946d
+    - gen_ai.client.token.usage-c5ff244f
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: gen_ai.operation.name
+        type: STRING
+      - name: gen_ai.provider.name
+        type: STRING
+      - name: gen_ai.request.frequency_penalty
+        type: DOUBLE
+      - name: gen_ai.request.max_tokens
+        type: LONG
+      - name: gen_ai.request.model
+        type: STRING
+      - name: gen_ai.request.presence_penalty
+        type: DOUBLE
+      - name: gen_ai.request.stop_sequences
+        type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
+      - name: gen_ai.request.temperature
+        type: DOUBLE
+      - name: gen_ai.request.top_k
+        type: DOUBLE
+      - name: gen_ai.request.top_p
+        type: DOUBLE
+      - name: gen_ai.response.finish_reasons
+        type: STRING_ARRAY
+      - name: gen_ai.response.id
+        type: STRING
+      - name: gen_ai.response.model
+        type: STRING
+      - name: gen_ai.usage.input_tokens
+        type: LONG
+      - name: gen_ai.usage.output_tokens
+        type: LONG
+    event_refs:
+    - gen_ai.assistant.message-186a3e5f
+    - gen_ai.choice-c87a79de
+    - gen_ai.tool.message-ebf6809d
+    - gen_ai.user.message-443462e0
 - name: spring-batch-3.0
   display_name: Spring Batch
   description: |
@@ -17746,7 +19979,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-6dc4ed81
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17766,7 +19999,7 @@ libraries:
         type: LONG
   - when: otel.instrumentation.spymemcached.experimental-span-attributes=true
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-6dc4ed81
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17922,8 +20155,8 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-c22f308d
-    - rpc.server.call.duration-4a437c0b
+    - rpc.client.call.duration-620a9e42
+    - rpc.server.call.duration-ae232d87
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17967,9 +20200,9 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc/dup
     metric_refs:
-    - rpc.client.call.duration-c22f308d
+    - rpc.client.call.duration-620a9e42
     - rpc.client.duration-29bce004
-    - rpc.server.call.duration-4a437c0b
+    - rpc.server.call.duration-ae232d87
     - rpc.server.duration-026d346c
     spans:
     - span_kind: CLIENT
@@ -18085,7 +20318,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true
+  - when: otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter
     metric_refs:
     - http.server.request.duration-1f6f63ed
     spans:
@@ -18186,7 +20419,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.instrumentation.common.user.name.enabled=true,otel.instrumentation.servlet.experimental.request-parameters.included=test-*
+  - when: otel.instrumentation.common.user.name.enabled=true
     spans:
     - span_kind: SERVER
       attributes:
@@ -18216,7 +20449,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true
+  - when: otel.instrumentation.servlet.experimental.request-parameters.included=test-*
     metric_refs:
     - http.server.request.duration-1f6f63ed
     spans:
@@ -18284,7 +20517,7 @@ libraries:
   library_link: https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html
   source_path: instrumentation/tomcat/tomcat-jdbc-8.5
   scope:
-    name: io.opentelemetry.tomcat-jdbc
+    name: io.opentelemetry.tomcat-jdbc-8.5
     schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:

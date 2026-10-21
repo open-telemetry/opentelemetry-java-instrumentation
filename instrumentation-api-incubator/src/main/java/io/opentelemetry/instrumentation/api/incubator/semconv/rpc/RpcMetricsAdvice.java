@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -53,6 +54,7 @@ final class RpcMetricsAdvice {
 
     if (stable) {
       keys.add(RPC_RESPONSE_STATUS_CODE);
+      keys.add(ERROR_TYPE);
     } else {
       keys.add(RPC_GRPC_STATUS_CODE);
     }

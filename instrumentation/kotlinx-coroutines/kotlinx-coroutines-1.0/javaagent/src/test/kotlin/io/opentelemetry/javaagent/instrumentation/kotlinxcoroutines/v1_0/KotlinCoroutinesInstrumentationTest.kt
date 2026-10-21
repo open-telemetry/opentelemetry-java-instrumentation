@@ -45,6 +45,7 @@ import kotlinx.coroutines.yield
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -52,6 +53,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -82,8 +84,6 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   val tracer = testing.openTelemetry.getTracer("test")
-
-  private fun v3Preview(): Boolean = java.lang.Boolean.getBoolean("otel.instrumentation.common.v3-preview")
 
   @ParameterizedTest
   @MethodSource("dispatchersSourceArguments")
@@ -382,11 +382,6 @@ class KotlinCoroutinesInstrumentationTest {
       annotated1()
     }
 
-    if (v3Preview()) {
-      assertThat(testing.spans()).isEmpty()
-      return
-    }
-
     testing.waitAndAssertTraces(
       { trace ->
         trace.hasSpansSatisfyingExactly(
@@ -444,8 +439,6 @@ class KotlinCoroutinesInstrumentationTest {
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12837
   @Test
   fun `WithSpan restores effective context after unannotated suspension`() {
-    Assumptions.assumeFalse(v3Preview())
-
     val rootSpan = tracer.spanBuilder("root").startSpan()
     runBlocking(Context.root().asContextElement()) {
       withContext(TestContextElement(rootSpan.storeInContext(Context.root()))) {
@@ -500,8 +493,6 @@ class KotlinCoroutinesInstrumentationTest {
 
   @Test
   fun `WithSpan preserves coroutine stack frames`() {
-    Assumptions.assumeFalse(v3Preview())
-
     runBlocking {
       stackFrameCaller()
     }
@@ -529,8 +520,6 @@ class KotlinCoroutinesInstrumentationTest {
 
   @Test
   fun `WithSpan ends span on failed completion`() {
-    Assumptions.assumeFalse(v3Preview())
-
     val exception = IllegalStateException("expected")
     val result = runCatching {
       runBlocking {
@@ -563,17 +552,78 @@ class KotlinCoroutinesInstrumentationTest {
     throw exception
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = [false, true])
+  @Disabled("Tail-call @WithSpan continuations can resume application code on the wrong thread, breaking dispatcher confinement and thread-bound state such as Spring transactions: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744")
+  fun `tail delay preserves dispatcher`(annotated: Boolean) {
+    val threads = runBlocking {
+      withContext(singleThread.asCoroutineDispatcher()) {
+        val callerThread = Thread.currentThread()
+        if (annotated) {
+          annotatedDelay()
+        } else {
+          delay(100)
+        }
+        callerThread to Thread.currentThread()
+      }
+    }
+
+    if (annotated) {
+      testing.waitAndAssertTraces(
+        { trace ->
+          trace.hasSpansSatisfyingExactly(
+            { it.hasName("tail-delay") },
+          )
+        },
+      )
+    }
+    assertThat(threads.second).isSameAs(threads.first)
+  }
+
+  @WithSpan("tail-delay")
+  private suspend fun annotatedDelay() = delay(100)
+
+  @ParameterizedTest
+  @ValueSource(booleans = [false, true])
+  @Disabled("Tail-call @WithSpan continuations can resume application code on the wrong thread, breaking dispatcher confinement and thread-bound state such as Spring transactions: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744")
+  fun `tail withContext preserves dispatcher`(annotated: Boolean) {
+    val threads = runBlocking {
+      withContext(singleThread.asCoroutineDispatcher()) {
+        val callerThread = Thread.currentThread()
+        if (annotated) {
+          annotatedWithContext(threadPool.asCoroutineDispatcher())
+        } else {
+          withContext(threadPool.asCoroutineDispatcher()) {
+            delay(100)
+          }
+        }
+        callerThread to Thread.currentThread()
+      }
+    }
+
+    if (annotated) {
+      testing.waitAndAssertTraces(
+        { trace ->
+          trace.hasSpansSatisfyingExactly(
+            { it.hasName("tail-with-context") },
+          )
+        },
+      )
+    }
+    assertThat(threads.second).isSameAs(threads.first)
+  }
+
+  @WithSpan("tail-with-context")
+  private suspend fun annotatedWithContext(dispatcher: CoroutineDispatcher) = withContext(dispatcher) {
+    delay(100)
+  }
+
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9312
   @Test
   fun `test class with default constructor argument`() {
     runBlocking {
       val classDefaultConstructorArguments = ClazzWithDefaultConstructorArguments()
       classDefaultConstructorArguments.sayHello()
-    }
-
-    if (v3Preview()) {
-      assertThat(testing.spans()).isEmpty()
-      return
     }
 
     testing.waitAndAssertTraces(

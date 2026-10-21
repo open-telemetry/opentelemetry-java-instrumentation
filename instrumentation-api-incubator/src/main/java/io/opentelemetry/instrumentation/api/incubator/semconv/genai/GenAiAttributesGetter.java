@@ -71,6 +71,21 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   Long getUsageOutputTokens(REQUEST request, @Nullable RESPONSE response);
 
+  /**
+   * Returns a description of a class of error the operation ended with.
+   *
+   * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
+   * type.
+   *
+   * <p>The cardinality of the error type should be low. The instrumentations implementing this
+   * method are recommended to document the custom values they support.
+   */
+  @Nullable
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
+  }
+
   @Nullable
   default Long getUsageReasoningOutputTokens(REQUEST request, @Nullable RESPONSE response) {
     return null;

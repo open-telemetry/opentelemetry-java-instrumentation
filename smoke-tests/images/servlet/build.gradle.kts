@@ -317,7 +317,7 @@ fun configureImage(
         "17" -> "eclipse-temurin:17.0.20_8-jdk-windowsservercore-ltsc2022@sha256:8633576ebfaa3bacb67d69680476760ed53757eb0bd0f1e9a53f7eee88935785"
         "21" -> "eclipse-temurin:21.0.12_8-jdk-windowsservercore-ltsc2022@sha256:87883996bf34a15b691000be1f87650e523d995e8be6871c0bf98c601950f65a"
         "25" -> "eclipse-temurin:25.0.4_7-jdk-windowsservercore-ltsc2022@sha256:cde5960f305a580de558cda3102c9edb06bbfd06d50004db2aa291d2d3cf58ef"
-        "27" -> "eclipse-temurin:27_35-jdk-windowsservercore-ltsc2022@sha256:b0d39af6f8d2f40fa25c42e1ddbc379dfc3fda4bb400e4b0273c4dc4421935e0"
+        "27" -> "eclipse-temurin:27_35-jdk-windowsservercore-ltsc2022@sha256:8f0d4387ea3c275a44bcbc4200e7ac3214a1b456430ad997ce683ad2883d1367"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
@@ -327,7 +327,7 @@ fun configureImage(
         "17" -> "eclipse-temurin:17.0.20_8-jdk@sha256:bc033b57e11b773c3043babfd664e7a5ef110805548b921cbfc3e8c67a0725d6"
         "21" -> "eclipse-temurin:21.0.12_8-jdk@sha256:92a2a4d7a928d057e7bd999c418d66c26a34eb9a0442f3ab67721c3f88110b2d"
         "25" -> "eclipse-temurin:25.0.4_7-jdk@sha256:97014c4b396021f9ddb7d592a7dbedb0c4e4215c29e03dc01c393558aefb71c2"
-        "27" -> "eclipse-temurin:27_35-jdk@sha256:2771efbbc159b89dc38b82ebe01312fd1b5f226071ff715ca9edd5411a389761"
+        "27" -> "eclipse-temurin:27_35-jdk@sha256:4a02e0ee713d13bb7974f4e19b7bea1746668603c3557fe09c4681784a86bb52"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
@@ -339,10 +339,10 @@ fun configureImage(
       when (jdk) {
         "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:779c0c1133ebac0d599012c5a908e67adaa993352072eac21d7ced8d6a47f14d"
         "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:00bbefbb2cf3690546338c0e4ba4cf85ec658f40de5b292e77774b55e8267d66"
-        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:b306039101d6b1f0d2725de6ce25e7fd72a46e1afffa3cab12111a7c97d4f8b3"
+        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:430484daf5993fabe8ce4d47fa3645e0f2cd82223e1210e1b3fb3b74f059e9cd"
         "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:2edabc89c49cfa2b9f0c051aced57ca6dee81c2e6b8820a1257182e779b58a48"
-        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:81ccace85bbed167fae73f7a6e82d02bcbb429ba6fe879e19dab8aab9aa9af33"
-        "27" -> "ibm-semeru-runtimes:open-27.0.0.0-jdk@sha256:b56c6480323746fc1c90db05a4d8e90ff89e183e0c23f0578d0e4b0666713f9c"
+        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:865dae69f86969ab690c73c62204a1f5a258c58b2e8797581874ce9029edc1e6"
+        "27" -> "ibm-semeru-runtimes:open-27.0.0.0-jdk@sha256:3f684925311686c36d77e264496625c1b8fe51ab79aa2385410c93123eaface7"
         else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
       }
     }

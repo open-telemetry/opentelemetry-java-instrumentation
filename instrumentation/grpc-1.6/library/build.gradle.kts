@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
   id("otel.animalsniffer-conventions")
@@ -16,37 +18,27 @@ dependencies {
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
-    // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
-    jvmArgs("-Djava.net.preferIPv4Stack=true")
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv, testBothSemconv, testExceptionSignalLogs)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+          // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
+          // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
+          jvmArgs("-Djava.net.preferIPv4Stack=true")
+        }
+        register("PreviewSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=rpc")
+        }
+        register("BothSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+        }
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+      }
+    }
   }
 }
 
