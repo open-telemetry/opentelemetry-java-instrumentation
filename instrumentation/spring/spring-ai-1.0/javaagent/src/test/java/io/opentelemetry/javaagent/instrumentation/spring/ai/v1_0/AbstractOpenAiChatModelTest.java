@@ -11,6 +11,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
@@ -36,6 +37,7 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -86,6 +88,7 @@ abstract class AbstractOpenAiChatModelTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("chat " + MODEL)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -109,6 +112,7 @@ abstract class AbstractOpenAiChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
@@ -123,6 +127,7 @@ abstract class AbstractOpenAiChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.token.usage")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
@@ -153,12 +158,14 @@ abstract class AbstractOpenAiChatModelTest {
                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                     equalTo(stringKey("event.name"), "gen_ai.user.message"))
                 .hasSpanContext(spanContext)
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                 .hasBody(messageBody(PROMPT)),
         log ->
             log.hasAttributesSatisfyingExactly(
                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                 .hasBody(choiceBody()));
   }
 

@@ -24,6 +24,14 @@ Comment only on a changed line and only for a supported issue.
   incubating constants locally rather than importing them. Tests may import both
   stable and incubating constants directly.
 
+## Schema URLs
+
+Select the schema URL from the semantic convention defining the emitted span, metric, or log.
+Its version follows the convention adopted by that signal and its effective mode, not the latest
+semconv dependency. Registered attributes alone do not establish a signal
+convention; supporting attributes must not select, change, or invalidate its schema.
+If no semantic convention defines the emitted signal, leave its schema URL unset.
+
 ## Database and RPC response status codes
 
 This repository intentionally omits `db.response.status_code` and `rpc.response.status_code` when an instrumentation obtains status codes only from failures and the attribute would merely duplicate the code recorded in `error.type`. Do not flag this omission or request adding the redundant attribute.
