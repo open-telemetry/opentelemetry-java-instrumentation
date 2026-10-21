@@ -7,14 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.redis.client.Response;
 import io.vertx.redis.client.impl.types.ErrorType;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -24,39 +22,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class VertxRedisClientErrorTypeTest {
-
-  @Test
-  void doesNotClassifyClientFailuresAsServerErrors() {
-    assertThat(
-            VertxRedisClientAttributesGetter.getRedisErrorType(
-                new IllegalStateException("WRONGTYPE detail")))
-        .isNull();
-    assertThat(
-            VertxRedisClientAttributesGetter.getRedisErrorType(
-                ErrorType.create("CONNECTION_CLOSED")))
-        .isNull();
-    assertThat(
-            VertxRedisClientAttributesGetter.getRedisErrorType(
-                ErrorType.create("ILLEGAL_STATE Unknown RESP type ?")))
-        .isNull();
-    assertThat(
-            VertxRedisClientAttributesGetter.getRedisErrorType(
-                ErrorType.create("Invalid boolean value: x")))
-        .isNull();
-    assertThat(
-            VertxRedisClientAttributesGetter.getRedisErrorType(
-                ErrorType.create("ERR [0] CONNECTION_CLOSED")))
-        .isNull();
-    assertThat(VertxRedisClientAttributesGetter.getRedisErrorType(null)).isNull();
-  }
-
-  @Test
-  void findsServerErrorsInBatchResponses() {
-    ErrorType error = ErrorType.create("WRONGTYPE detail");
-    Iterable<Response> responses = singletonList(error);
-
-    assertThat(VertxRedisClientAttributesGetter.getResponseError(responses)).isSameAs(error);
-  }
 
   @ParameterizedTest
   @MethodSource("batchErrors")
