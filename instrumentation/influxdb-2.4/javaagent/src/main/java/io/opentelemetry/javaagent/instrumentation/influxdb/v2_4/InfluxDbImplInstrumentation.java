@@ -121,17 +121,19 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static InfluxDbQueryAdviceHelper.State onEnter(
+    public static InfluxDbQueryAdviceScope onEnter(
         @Advice.Argument(0) @Nullable Query query,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      return InfluxDbQueryAdviceHelper.start(query, retrofit);
+      return InfluxDbQueryAdviceScope.start(query, retrofit);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable InfluxDbQueryAdviceHelper.State state) {
-      InfluxDbQueryAdviceHelper.end(throwable, state);
+        @Advice.Enter @Nullable InfluxDbQueryAdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
+      }
     }
   }
 
@@ -149,23 +151,25 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) @Nullable Consumer<?> successCallback,
         @Advice.Argument(2) @Nullable Consumer<?> failureCallback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      InfluxDbQueryAdviceHelper.State state = InfluxDbQueryAdviceHelper.start(query, retrofit);
-      if (state == null) {
-        return null;
+      InfluxDbQueryAdviceScope adviceScope = InfluxDbQueryAdviceScope.start(query, retrofit);
+      Context parentContext = adviceScope.parentContext();
+      if (parentContext == null) {
+        return new Object[] {adviceScope, successCallback, failureCallback};
       }
 
       return new Object[] {
-        state,
-        InfluxDbObjectWrapper.wrapConsumer(successCallback, state.parentContext()),
-        InfluxDbObjectWrapper.wrapConsumer(failureCallback, state.parentContext())
+        adviceScope,
+        InfluxDbObjectWrapper.wrapConsumer(successCallback, parentContext),
+        InfluxDbObjectWrapper.wrapConsumer(failureCallback, parentContext)
       };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
-      InfluxDbQueryAdviceHelper.end(
-          throwable, enterArgs == null ? null : (InfluxDbQueryAdviceHelper.State) enterArgs[0]);
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+      }
     }
   }
 
@@ -179,20 +183,22 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable Query query,
         @Advice.Argument(2) @Nullable Consumer<?> callback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      InfluxDbQueryAdviceHelper.State state = InfluxDbQueryAdviceHelper.start(query, retrofit);
-      if (state == null) {
-        return null;
+      InfluxDbQueryAdviceScope adviceScope = InfluxDbQueryAdviceScope.start(query, retrofit);
+      Context parentContext = adviceScope.parentContext();
+      if (parentContext == null) {
+        return new Object[] {adviceScope, callback};
       }
       return new Object[] {
-        state, InfluxDbObjectWrapper.wrapConsumer(callback, state.parentContext())
+        adviceScope, InfluxDbObjectWrapper.wrapConsumer(callback, parentContext)
       };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
-      InfluxDbQueryAdviceHelper.end(
-          throwable, enterArgs == null ? null : (InfluxDbQueryAdviceHelper.State) enterArgs[0]);
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+      }
     }
   }
 
@@ -206,20 +212,22 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable Query query,
         @Advice.Argument(2) @Nullable BiConsumer<?, ?> callback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      InfluxDbQueryAdviceHelper.State state = InfluxDbQueryAdviceHelper.start(query, retrofit);
-      if (state == null) {
-        return null;
+      InfluxDbQueryAdviceScope adviceScope = InfluxDbQueryAdviceScope.start(query, retrofit);
+      Context parentContext = adviceScope.parentContext();
+      if (parentContext == null) {
+        return new Object[] {adviceScope, callback};
       }
       return new Object[] {
-        state, InfluxDbObjectWrapper.wrapBiConsumer(callback, state.parentContext())
+        adviceScope, InfluxDbObjectWrapper.wrapBiConsumer(callback, parentContext)
       };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
-      InfluxDbQueryAdviceHelper.end(
-          throwable, enterArgs == null ? null : (InfluxDbQueryAdviceHelper.State) enterArgs[0]);
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+      }
     }
   }
 
@@ -237,22 +245,24 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) @Nullable Consumer<?> callback,
         @Advice.Argument(3) @Nullable Runnable completionCallback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      InfluxDbQueryAdviceHelper.State state = InfluxDbQueryAdviceHelper.start(query, retrofit);
-      if (state == null) {
-        return null;
+      InfluxDbQueryAdviceScope adviceScope = InfluxDbQueryAdviceScope.start(query, retrofit);
+      Context parentContext = adviceScope.parentContext();
+      if (parentContext == null) {
+        return new Object[] {adviceScope, callback, completionCallback};
       }
       return new Object[] {
-        state,
-        InfluxDbObjectWrapper.wrapConsumer(callback, state.parentContext()),
-        InfluxDbObjectWrapper.wrapRunnable(completionCallback, state.parentContext())
+        adviceScope,
+        InfluxDbObjectWrapper.wrapConsumer(callback, parentContext),
+        InfluxDbObjectWrapper.wrapRunnable(completionCallback, parentContext)
       };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
-      InfluxDbQueryAdviceHelper.end(
-          throwable, enterArgs == null ? null : (InfluxDbQueryAdviceHelper.State) enterArgs[0]);
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+      }
     }
   }
 
@@ -270,22 +280,24 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) @Nullable BiConsumer<?, ?> callback,
         @Advice.Argument(3) @Nullable Runnable completionCallback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      InfluxDbQueryAdviceHelper.State state = InfluxDbQueryAdviceHelper.start(query, retrofit);
-      if (state == null) {
-        return null;
+      InfluxDbQueryAdviceScope adviceScope = InfluxDbQueryAdviceScope.start(query, retrofit);
+      Context parentContext = adviceScope.parentContext();
+      if (parentContext == null) {
+        return new Object[] {adviceScope, callback, completionCallback};
       }
       return new Object[] {
-        state,
-        InfluxDbObjectWrapper.wrapBiConsumer(callback, state.parentContext()),
-        InfluxDbObjectWrapper.wrapRunnable(completionCallback, state.parentContext())
+        adviceScope,
+        InfluxDbObjectWrapper.wrapBiConsumer(callback, parentContext),
+        InfluxDbObjectWrapper.wrapRunnable(completionCallback, parentContext)
       };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
-      InfluxDbQueryAdviceHelper.end(
-          throwable, enterArgs == null ? null : (InfluxDbQueryAdviceHelper.State) enterArgs[0]);
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+      }
     }
   }
 
@@ -305,23 +317,25 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) @Nullable Runnable completionCallback,
         @Advice.Argument(4) @Nullable Consumer<?> errorCallback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      InfluxDbQueryAdviceHelper.State state = InfluxDbQueryAdviceHelper.start(query, retrofit);
-      if (state == null) {
-        return null;
+      InfluxDbQueryAdviceScope adviceScope = InfluxDbQueryAdviceScope.start(query, retrofit);
+      Context parentContext = adviceScope.parentContext();
+      if (parentContext == null) {
+        return new Object[] {adviceScope, callback, completionCallback, errorCallback};
       }
       return new Object[] {
-        state,
-        InfluxDbObjectWrapper.wrapBiConsumer(callback, state.parentContext()),
-        InfluxDbObjectWrapper.wrapRunnable(completionCallback, state.parentContext()),
-        InfluxDbObjectWrapper.wrapConsumer(errorCallback, state.parentContext())
+        adviceScope,
+        InfluxDbObjectWrapper.wrapBiConsumer(callback, parentContext),
+        InfluxDbObjectWrapper.wrapRunnable(completionCallback, parentContext),
+        InfluxDbObjectWrapper.wrapConsumer(errorCallback, parentContext)
       };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
-      InfluxDbQueryAdviceHelper.end(
-          throwable, enterArgs == null ? null : (InfluxDbQueryAdviceHelper.State) enterArgs[0]);
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+      }
     }
   }
 
