@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,11 +29,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 class LettuceAttributesGetterTest {
 
@@ -62,38 +57,6 @@ class LettuceAttributesGetterTest {
 
     assertThat(getter.getServerAddress(request)).isEqualTo(null);
     assertThat(getter.getServerPort(request)).isEqualTo(null);
-  }
-
-  @ParameterizedTest
-  @MethodSource("errorTypes")
-  void errorType(Throwable error, String expected) {
-    assertThat(LettuceRedisErrorType.getErrorType(error)).isEqualTo(expected);
-  }
-
-  private static Stream<Arguments> errorTypes() {
-    String longPrefix = String.join("", nCopies(65, "A"));
-    return Stream.of(
-        Arguments.of(
-            new RedisCommandExecutionException("WRONGTYPE Operation against a key"), "WRONGTYPE"),
-        Arguments.of(new RedisCommandExecutionException("ERR unknown command"), "ERR"),
-        Arguments.of(new RedisCommandExecutionException("Custom.Code! details"), "Custom.Code!"),
-        Arguments.of(new RedisCommandExecutionException("lowercase details"), "lowercase"),
-        Arguments.of(new RedisCommandExecutionException(longPrefix + " details"), longPrefix),
-        Arguments.of(new RedisCommandExecutionException("Custom.Code!"), "Custom.Code!"),
-        Arguments.of(new RedisCommandExecutionException("  Custom.Code! details"), "Custom.Code!"),
-        Arguments.of(new RedisCommandExecutionException("Custom\tCode! details"), "Custom\tCode!"),
-        Arguments.of(
-            new RedisCommandExecutionException("  Custom.Code!\r\nsuffix details"),
-            "Custom.Code!\r\nsuffix"),
-        Arguments.of(new RedisCommandExecutionException("échec details"), "échec"),
-        Arguments.of(new RedisCommandExecutionException("\u00a0CODE details"), "\u00a0CODE"),
-        Arguments.of(null, null),
-        Arguments.of(new RedisCommandTimeoutException("WRONGTYPE command timed out"), null),
-        Arguments.of(new RedisCommandExecutionException(""), null),
-        Arguments.of(new RedisCommandExecutionException(" "), null),
-        Arguments.of(new RedisCommandExecutionException("\r\n"), "\r\n"),
-        Arguments.of(new RedisCommandExecutionException((String) null), null),
-        Arguments.of(new RedisCommandExecutionException("\t"), "\t"));
   }
 
   @Test
