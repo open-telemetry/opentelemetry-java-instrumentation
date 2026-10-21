@@ -13,6 +13,7 @@ import io.lettuce.core.output.MultiOutput;
 import io.lettuce.core.output.StatusOutput;
 import io.lettuce.core.protocol.Command;
 import io.lettuce.core.protocol.CommandType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import javax.annotation.Nullable;
@@ -27,7 +28,7 @@ final class LettuceResponse {
   @Nullable private final String redisErrorType;
 
   static LettuceResponse fromErrorMessage(@Nullable String errorMessage) {
-    return new LettuceResponse(errorMessage != null, extractRedisErrorPrefix(errorMessage));
+    return new LettuceResponse(errorMessage != null, RedisErrorPrefix.extract(errorMessage));
   }
 
   static LettuceResponse fromCommandOutput(
@@ -100,24 +101,5 @@ final class LettuceResponse {
     }
     String decoded = new String(bytes, UTF_8);
     return Arrays.equals(bytes, decoded.getBytes(UTF_8)) ? decoded : errorMessage;
-  }
-
-  @Nullable
-  private static String extractRedisErrorPrefix(@Nullable String errorMessage) {
-    if (errorMessage == null || errorMessage.isEmpty()) {
-      return null;
-    }
-
-    int start = 0;
-    while (start < errorMessage.length() && errorMessage.charAt(start) == ' ') {
-      start++;
-    }
-    if (start == errorMessage.length()) {
-      return null;
-    }
-    int separator = errorMessage.indexOf(' ', start);
-    return separator == -1
-        ? errorMessage.substring(start)
-        : errorMessage.substring(start, separator);
   }
 }
