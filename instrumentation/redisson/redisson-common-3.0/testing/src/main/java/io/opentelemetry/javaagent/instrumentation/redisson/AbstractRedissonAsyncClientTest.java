@@ -237,7 +237,7 @@ public abstract class AbstractRedissonAsyncClientTest {
 
     assertScriptErrorType("OOM command not allowed", "OOM", RedisOutOfMemoryException.class);
     assertScriptErrorType("Custom.Code! diagnostic details", "Custom.Code!", null);
-    assertScriptErrorType("Pr\u00e9fix diagnostic", "Pr\u00e9fix", null);
+    assertScriptErrorType("Préfix diagnostic", "Préfix", null);
     assertScriptErrorType("lowercase diagnostic", "lowercase", null);
     assertScriptErrorType("Tab.Code!\tdiagnostic", "Tab.Code!\tdiagnostic", null);
     String longPrefix = String.join("", nCopies(80, "x"));

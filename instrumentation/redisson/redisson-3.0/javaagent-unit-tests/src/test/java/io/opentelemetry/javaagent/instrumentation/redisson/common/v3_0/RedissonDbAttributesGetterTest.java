@@ -103,7 +103,7 @@ class RedissonDbAttributesGetterTest {
   @Test
   void parsesFirstNonemptyAsciiSpaceDelimitedTokenVerbatim() {
     assertThat(parse("-Custom.Code! diagnostic details\r\n")).isEqualTo("Custom.Code!");
-    assertThat(parse("-Pr\u00e9fix diagnostic\r\n")).isEqualTo("Pr\u00e9fix");
+    assertThat(parse("-Préfix diagnostic\r\n")).isEqualTo("Préfix");
     assertThat(parse("-lowercase\r\n")).isEqualTo("lowercase");
     assertThat(parse("-prefix-only\r\n")).isEqualTo("prefix-only");
     assertThat(parse("-  Leading.Code! diagnostic\r\n")).isEqualTo("Leading.Code!");
