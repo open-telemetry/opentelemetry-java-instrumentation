@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
@@ -49,27 +50,12 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   public String getErrorType(
       RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
     // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
-    // error prefix; returning null without a usable prefix preserves the shared exception-class
-    // fallback.
+    // error prefix; a missing prefix preserves the shared exception-class fallback.
     // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
     if (!(error instanceof ReplyErrorException)) {
       return null;
     }
-
-    String message = error.getMessage();
-    if (message == null) {
-      return null;
-    }
-
-    int prefixStart = 0;
-    while (prefixStart < message.length() && message.charAt(prefixStart) == ' ') {
-      prefixStart++;
-    }
-    if (prefixStart == message.length()) {
-      return null;
-    }
-    int separator = message.indexOf(' ', prefixStart);
-    return message.substring(prefixStart, separator == -1 ? message.length() : separator);
+    return RedisErrorPrefix.extract(error.getMessage());
   }
 
   @Nullable

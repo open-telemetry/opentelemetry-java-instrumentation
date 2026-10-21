@@ -212,7 +212,7 @@ class RediscalaClientTest {
       new ThrowingSupplier[Future[_], Exception] {
         override def get(): Future[_] =
           redisClient.eval[String](
-            "return redis.error_reply('Custom.Code! custom message')"
+            "return redis.error_reply('Custom.Code!É custom message')"
           )
       }
     )
@@ -223,7 +223,7 @@ class RediscalaClientTest {
       }
     }).isInstanceOf(classOf[ReplyErrorException])
 
-    assertErrorType("EVAL", "Custom.Code!")
+    assertErrorType("EVAL", "Custom.Code!É")
   }
 
   @Test def testClientFailureUsesExceptionClassAsErrorType(): Unit = {

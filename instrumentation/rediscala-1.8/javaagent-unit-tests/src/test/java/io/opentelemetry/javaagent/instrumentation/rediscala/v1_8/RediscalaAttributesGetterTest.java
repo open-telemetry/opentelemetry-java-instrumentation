@@ -39,48 +39,17 @@ class RediscalaAttributesGetterTest {
   }
 
   @Test
-  void errorTypeUsesServerReplyPrefix() {
+  void errorTypeUsesServerReplyPrefixOnlyForServerErrors() {
     RediscalaRequest request = request(null);
-    String prefixOver64Characters =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLM";
 
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("WRONGTYPE message")))
-        .isEqualTo("WRONGTYPE");
-    assertThat(
-            getter.getErrorType(request, null, new ReplyErrorException("MOVED 123 127.0.0.1:6379")))
-        .isEqualTo("MOVED");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("CUSTOMCODE message")))
-        .isEqualTo("CUSTOMCODE");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("Custom.Code! details")))
-        .isEqualTo("Custom.Code!");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("lowercase details")))
-        .isEqualTo("lowercase");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("ÉRRÖR details")))
-        .isEqualTo("ÉRRÖR");
-    assertThat(
-            getter.getErrorType(
-                request, null, new ReplyErrorException(prefixOver64Characters + " details")))
-        .isEqualTo(prefixOver64Characters);
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("Custom.Code!É details")))
+        .isEqualTo("Custom.Code!É");
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("CUSTOMCODE")))
         .isEqualTo("CUSTOMCODE");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("Custom\tCode details")))
-        .isEqualTo("Custom\tCode");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException(" message")))
-        .isEqualTo("message");
-    assertThat(
-            getter.getErrorType(request, null, new ReplyErrorException("   Custom.Code!  details")))
-        .isEqualTo("Custom.Code!");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("   CUSTOMCODE")))
-        .isEqualTo("CUSTOMCODE");
-    assertThat(
-            getter.getErrorType(request, null, new ReplyErrorException(" \tCustom.Code! details")))
-        .isEqualTo("\tCustom.Code!");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException(""))).isNull();
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("   "))).isNull();
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException(null))).isNull();
     assertThat(getter.getErrorType(request, null, new IllegalStateException("WRONGTYPE message")))
         .isNull();
     assertThat(getter.getErrorType(request, null, null)).isNull();
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException(null))).isNull();
   }
 
   private static RediscalaRequest request(RedisServerTarget target) {
