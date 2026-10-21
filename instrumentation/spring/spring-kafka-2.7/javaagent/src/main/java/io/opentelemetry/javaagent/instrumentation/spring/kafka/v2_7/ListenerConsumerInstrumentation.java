@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.batchProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -15,7 +16,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -36,26 +36,31 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunLoopAdvice");
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
+    // pollConsumer() (2.8+) returns the batch inside doPoll(), which may iterate it before
+    // returning, e.g. captureOffsets() when acks are async. Mark it there so that iteration doesn't
+    // create Kafka client process spans; doPoll() covers older versions and the sub-batches it
+    // creates.
+    transformer.applyAdviceToMethod(
+        namedOneOf("doPoll", "pollConsumer"), getClass().getName() + "$PollAdvice");
+    transformer.applyAdviceToMethod(
+        named("invokeIfHaveRecords")
+            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
+        getClass().getName() + "$MarkSpringKafkaAsProcessingOwnerAdvice");
     transformer.applyAdviceToMethod(
         named("invokeBatchOnMessageWithRecordsOrList")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         getClass().getName() + "$InvokeBatchAdvice");
   }
 
-  // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
-  public static class RunLoopAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
-    }
+  public static class PollAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+    public static void onExit(@Advice.Return @Nullable ConsumerRecords<?, ?> records) {
+      if (records != null) {
+        SpringKafkaProcessingOwnership.markSpringKafkaAsProcessingOwner(records);
+      }
     }
   }
 
@@ -75,6 +80,15 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class MarkSpringKafkaAsProcessingOwnerAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.Argument(0) ConsumerRecords<?, ?> records) {
+      SpringKafkaProcessingOwnership.markSpringKafkaAsProcessingOwner(records);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class InvokeBatchAdvice {
 
     public static class AdviceScope {
@@ -90,6 +104,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
+        SpringKafkaProcessingOwnership.markSpringKafkaAsProcessingOwner(records);
         KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
         Context receiveContext = consumerContext.getContext();
 

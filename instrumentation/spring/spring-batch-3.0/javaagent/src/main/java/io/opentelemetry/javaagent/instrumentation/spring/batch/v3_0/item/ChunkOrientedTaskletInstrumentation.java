@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -34,8 +33,6 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("execute"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.springframework.batch.core.StepContribution")))
             .and(
                 takesArgument(
                     1, named("org.springframework.batch.core.scope.context.ChunkContext"))),

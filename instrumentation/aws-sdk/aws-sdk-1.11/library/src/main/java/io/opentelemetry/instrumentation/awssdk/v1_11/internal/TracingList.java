@@ -50,18 +50,12 @@ class TracingList extends SdkInternalList<Message> {
 
   @Override
   public Iterator<Message> iterator() {
-    Iterator<Message> it;
-    // We should only return one iterator with tracing.
-    // However, this is not thread-safe, but usually the first (hopefully only) traversal of
-    // List is performed in the same thread that called receiveMessage()
+    Iterator<Message> iterator = super.iterator();
     if (firstIterator && !inAwsClient()) {
-      it = TracingIterator.wrap(super.iterator(), this);
       firstIterator = false;
-    } else {
-      it = super.iterator();
+      return TracingIterator.wrap(iterator, this);
     }
-
-    return it;
+    return iterator;
   }
 
   Instrumenter<SqsProcessRequest, Response<?>> getInstrumenter() {
@@ -81,11 +75,18 @@ class TracingList extends SdkInternalList<Message> {
     return processParentContext;
   }
 
+  boolean isProcessingOwnedOutsideSqsSdk() {
+    return SqsProcessTracing.isProcessingOwnedOutsideSqsSdk(this);
+  }
+
+  @Nullable
+  static SdkInternalList<?> processingOwner(List<?> messages) {
+    return messages instanceof TracingList ? (TracingList) messages : null;
+  }
+
   @Override
   public void forEach(Consumer<? super Message> action) {
-    for (Message message : this) {
-      action.accept(message);
-    }
+    iterator().forEachRemaining(action);
   }
 
   private static boolean inAwsClient() {

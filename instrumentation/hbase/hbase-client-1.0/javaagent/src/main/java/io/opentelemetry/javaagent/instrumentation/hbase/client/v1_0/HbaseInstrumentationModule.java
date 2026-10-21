@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HbaseInstrumentationModule extends InstrumentationModule {
 
   public HbaseInstrumentationModule() {
-    super("hbase-client", "hbase-client-1.0");
+    super("hbase-client-1.0", "hbase-client");
   }
 
   @Override

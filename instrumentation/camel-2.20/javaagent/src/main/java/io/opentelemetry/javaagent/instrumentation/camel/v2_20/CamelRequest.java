@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DbSpanDecorator;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.MessagingSpanDecorator;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -32,16 +31,11 @@ abstract class CamelRequest {
     if (spanDecorator instanceof MessagingSpanDecorator) {
       MessagingSpanDecorator messagingSpanDecorator = (MessagingSpanDecorator) spanDecorator;
       messagingSystem = messagingSpanDecorator.getSystem();
-      if (emitStableMessagingSemconv()) {
-        String stableMessagingDestination =
-            messagingSpanDecorator.getStableDestination(exchange, endpoint, camelDirection);
-        messagingDestination =
-            normalizeStableMessagingDestination(messagingSystem, stableMessagingDestination);
-        messagingDestinationTemporary =
-            isTemporaryStableMessagingDestination(messagingSystem, stableMessagingDestination);
-        messagingDestinationPartitionId =
-            messagingSpanDecorator.getDestinationPartitionId(exchange);
-      }
+      String destination =
+          messagingSpanDecorator.getDestination(exchange, endpoint, camelDirection);
+      messagingDestination = normalizeMessagingDestination(messagingSystem, destination);
+      messagingDestinationTemporary = isTemporaryMessagingDestination(messagingSystem, destination);
+      messagingDestinationPartitionId = messagingSpanDecorator.getDestinationPartitionId(exchange);
       messagingSendOperationName = messagingSpanDecorator.getSendOperationName();
       messagingSpanContextPropagated = messagingSpanDecorator.isSpanContextPropagated(endpoint);
     }
@@ -51,6 +45,7 @@ abstract class CamelRequest {
         endpoint,
         camelDirection,
         spanKind,
+        spanDecorator instanceof DbSpanDecorator,
         messagingSystem,
         messagingDestination,
         messagingDestinationPartitionId,
@@ -60,7 +55,7 @@ abstract class CamelRequest {
   }
 
   @Nullable
-  private static String normalizeStableMessagingDestination(
+  private static String normalizeMessagingDestination(
       String messagingSystem, @Nullable String messagingDestination) {
     // the amqp component is the jms component with an amqp connection factory, so both use the
     // [queue:|topic:|temp-queue:|temp-topic:]destinationName endpoint syntax
@@ -82,7 +77,7 @@ abstract class CamelRequest {
     return messagingDestination;
   }
 
-  private static boolean isTemporaryStableMessagingDestination(
+  private static boolean isTemporaryMessagingDestination(
       String messagingSystem, @Nullable String messagingDestination) {
     return messagingDestination != null
         && isJmsMessagingSystem(messagingSystem)
@@ -103,6 +98,8 @@ abstract class CamelRequest {
   abstract CamelDirection getCamelDirection();
 
   abstract SpanKind getSpanKind();
+
+  abstract boolean isDatabase();
 
   boolean isMessaging() {
     return getMessagingSystem() != null;

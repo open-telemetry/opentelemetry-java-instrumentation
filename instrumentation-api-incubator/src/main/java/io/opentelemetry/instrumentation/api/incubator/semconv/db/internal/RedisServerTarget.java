@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,31 @@ public final class RedisServerTarget {
   @Nullable
   public static RedisServerTarget ofUnorderedEndpoints(@Nullable List<String> endpoints) {
     return createFromEndpoints(endpoints, true);
+  }
+
+  /**
+   * Returns a target that keeps {@code endpoint} in front, such as the master of a master and
+   * replicas deployment, and sorts {@code otherEndpoints} so that permutations of the same
+   * deployment render identically.
+   */
+  @Nullable
+  public static RedisServerTarget ofEndpointAndUnorderedEndpoints(
+      @Nullable String endpoint, @Nullable List<String> otherEndpoints) {
+    int otherEndpointCount = otherEndpoints == null ? 0 : otherEndpoints.size();
+    List<String> endpoints = new ArrayList<>(otherEndpointCount + 1);
+    endpoints.add(endpoint);
+    if (otherEndpoints != null) {
+      endpoints.addAll(otherEndpoints);
+    }
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, false);
+    if (parsed == null || parsed.isEmpty()) {
+      return null;
+    }
+    if (parsed.size() == 1) {
+      return directTarget(parsed.get(0));
+    }
+    parsed.subList(1, parsed.size()).sort(comparing(Endpoint::renderConfigured));
+    return networkTarget(parsed, false);
   }
 
   @Nullable
@@ -244,7 +270,7 @@ public final class RedisServerTarget {
     if (portStart <= 0) {
       return value;
     }
-    Integer port = Endpoint.parsePort(value.substring(portStart + 1));
+    Integer port = DbServerEndpointUtil.parsePort(value.substring(portStart + 1));
     String host = value.substring(0, portStart);
     return port != null && DbServerEndpointUtil.isIpv6Literal(host) ? endpoint(host, port) : value;
   }
@@ -351,7 +377,7 @@ public final class RedisServerTarget {
         if (!rest.startsWith(":")) {
           return null;
         }
-        Integer port = parsePort(rest.substring(1));
+        Integer port = DbServerEndpointUtil.parsePort(rest.substring(1));
         return port == null ? null : new Endpoint(host, port, false);
       }
       if (authority.indexOf('[') >= 0 || authority.indexOf(']') >= 0) {
@@ -361,7 +387,7 @@ public final class RedisServerTarget {
       int portStart = authority.indexOf(':');
       int secondColon = portStart < 0 ? -1 : authority.indexOf(':', portStart + 1);
       if (portStart > 0 && secondColon < 0) {
-        Integer port = parsePort(authority.substring(portStart + 1));
+        Integer port = DbServerEndpointUtil.parsePort(authority.substring(portStart + 1));
         return port == null ? null : new Endpoint(authority.substring(0, portStart), port, false);
       }
       // an unbracketed literal IPv6 address has more than one colon and carries no port
@@ -418,22 +444,6 @@ public final class RedisServerTarget {
         }
       }
       return result;
-    }
-
-    @Nullable
-    private static Integer parsePort(String value) {
-      if (value.isEmpty() || value.length() > 5) {
-        return null;
-      }
-      int port = 0;
-      for (int i = 0; i < value.length(); i++) {
-        char c = value.charAt(i);
-        if (c < '0' || c > '9') {
-          return null;
-        }
-        port = port * 10 + (c - '0');
-      }
-      return port >= 1 && port <= 65535 ? port : null;
     }
 
     String renderConfigured() {

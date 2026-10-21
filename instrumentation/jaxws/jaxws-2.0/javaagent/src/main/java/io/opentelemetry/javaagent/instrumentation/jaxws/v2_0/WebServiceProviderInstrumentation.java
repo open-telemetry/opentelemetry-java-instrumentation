@@ -77,7 +77,10 @@ class WebServiceProviderInstrumentation implements TypeInstrumentation {
       }
 
       public void end(@Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0 || scope == null) {
+        if (callDepth.decrementAndGet() > 0
+            || scope == null
+            || context == null
+            || request == null) {
           return;
         }
         scope.close();

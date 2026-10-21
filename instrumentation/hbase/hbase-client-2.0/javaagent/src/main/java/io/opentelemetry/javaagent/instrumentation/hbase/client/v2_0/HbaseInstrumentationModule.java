@@ -21,7 +21,7 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
   private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
 
   public HbaseInstrumentationModule() {
-    super("hbase-client", "hbase-client-2.0");
+    super("hbase-client-2.0", "hbase-client");
   }
 
   @Override
@@ -43,6 +43,15 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
   @Override
   public List<String> injectedClassNames() {
     return asList(CALL_UTIL);
+  }
+
+  @Override
+  public List<String> exposedClassNames() {
+    // OpenTelemetryCallUtil must share HBase's class loader to access package-private Call.
+    // Expose these types so it uses the same state classes as the isolated advice.
+    return asList(
+        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext",
+        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest");
   }
 
   @Override

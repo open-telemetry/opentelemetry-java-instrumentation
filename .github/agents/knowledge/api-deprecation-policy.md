@@ -1,11 +1,8 @@
 # [API] Breaking Changes and Deprecation Policy
 
-## Quick Reference
-
-- Use when: reviewing public API removals/renames, `@Deprecated` usage, stable-vs-alpha compatibility, or any module rename that touches user-facing config keys or emitted telemetry identity
-- Review focus: deprecate-then-remove timing (driven by the publishing artifact's stability),
-  delegation direction, required Javadoc/CHANGELOG coverage, v3-preview gating for config keys and
-  scope names
+Use this article when changing a published API or renaming a module. It
+explains how artifact stability sets removal timing and how to preserve
+configuration aliases and telemetry identity during migration.
 
 ## What Counts as "Public API"
 
@@ -80,9 +77,7 @@ be removed in 3.0` comments to make this explicit.
 Some deprecations are scheduled for 3.0 because 3.0 is where a *behavior* changes, not because the
 symbol is stable. These correctly say 3.0 even in alpha modules, so leave them alone: old-semconv
 support and the `SemconvStability` clusters, `@Override`s of interface methods that are themselves
-scheduled for 3.0, anything gated on `otel.instrumentation.common.v3-preview`,
-`|deprecated:<old>` instrumentation-name aliases, the Zipkin exporter removal, and the flat
-`ConfigProperties` bridge.
+scheduled for 3.0, the Zipkin exporter removal, and the flat `ConfigProperties` bridge.
 
 ## Correct `@Deprecated` Usage
 
@@ -127,141 +122,14 @@ default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
 }
 ```
 
-## Module renames: config keys and emitted scope names
+## Instrumentation names and emitted scope names
 
-A module rename touches **two user-facing API surfaces** that must each be preserved by default
-and only change under `otel.instrumentation.common.v3-preview`. The mechanism differs because
-the surfaces are different: config keys can coexist as aliases, emitted scope names cannot.
+Instrumentation names and emitted `otel.scope.name` values are separate user-facing contracts.
+The former controls `otel.instrumentation.<name>.enabled`; the latter identifies spans, metrics, and
+logs in backends. Follow the current module-naming rules for selectors, and assess both surfaces
+independently when changing a module name.
 
-### 1. `InstrumentationModule` names (controls `otel.instrumentation.<name>.enabled`)
-
-The names passed to the `InstrumentationModule` constructor drive the
-`otel.instrumentation.<name>.enabled` config keys — any of them, not just the first. A rename
-silently breaks users who have the old key in their config.
-
-Keep the pre-rename name by passing the `"<current>|deprecated:<old>"` marker through
-`expandDeprecatedNames`:
-
-```java
-public CxfInstrumentationModule() {
-  super(
-      "cxf",
-      expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
-}
-```
-
-The helper splits the marker and registers both names, so both
-`otel.instrumentation.jaxws-2.0-cxf-3.0.enabled` and
-`otel.instrumentation.jaxws-cxf-3.0.enabled` keep working (flat properties and YAML alike).
-Under `otel.instrumentation.common.v3-preview=true` the deprecated name is dropped and its key
-silently ignored, matching 3.0; releases before then still warn outside preview mode. Unlike
-ordinary replacement-property fallback, the alias warning is driven by explicit legacy-key presence,
-so it fires even when the current name determines the effective enablement.
-
-No per-module `AgentCommonConfig` branching, `isV3Preview()` checks, or bespoke logging are
-needed — the marker string plus the statically imported `expandDeprecatedNames` call is the
-entire change.
-
-### 2. Emitted instrumentation scope name (`INSTRUMENTATION_NAME` in `*Singletons`)
-
-The `INSTRUMENTATION_NAME` string passed to `Instrumenter.builder(...)` becomes the
-`otel.scope.name` attribute on every emitted span / metric / log. A rename silently breaks
-dashboards and filters that match on the old scope.
-
-Keep emitting the **pre-rename** scope name by default, and switch to the new one only under
-v3-preview:
-
-```java
-public class CxfSingletons {
-  private static final String INSTRUMENTATION_NAME =
-      AgentCommonConfig.get().isV3Preview()
-          ? "io.opentelemetry.jaxws-2.0-cxf-3.0"
-          // keep the pre-rename scope name so existing dashboards/filters on
-          // otel.scope.name="io.opentelemetry.jaxws-cxf-3.0" continue to work
-          : "io.opentelemetry.jaxws-cxf-3.0";
-  ...
-}
-```
-
-Note the asymmetry with the config-key case: there the list carries **both** names at once
-(aliases); here only **one** scope name is emitted at a time, and the default is the **old**
-one. Do not log a deprecation warning here — users cannot switch the scope name without
-enabling v3-preview globally (which affects every module), so a warning would push them
-toward something they are not expected to enable generally.
-
-Emitting the old scope name by default has one consequence: the version `.properties` file
-generated by `generateInstrumentationVersionFile` is named after the **new** module name
-(e.g. `io.opentelemetry.jaxws-2.0-cxf-3.0.properties`), and `Instrumenter.builder` looks the
-version up via `EmbeddedInstrumentationProperties.findVersion(instrumentationName)` keyed on
-the scope name passed in. With the old name as the default the lookup returns `null`, the
-emitted scope has no version, and `TelemetryDataUtil.assertScopeVersion` fails every test in
-CI with:
-
-> Instrumentation version of module `io.opentelemetry.<old>` was empty; make sure that the
-> instrumentation name matches the gradle module name
-
-Resolve this by looking up the version under the **new** module name and calling
-`setInstrumentationVersion` on the builder explicitly:
-
-```java
-private static final String VERSION_LOOKUP_NAME = "io.opentelemetry.jaxws-2.0-cxf-3.0";
-
-private static final String INSTRUMENTATION_NAME =
-    AgentCommonConfig.get().isV3Preview() ? VERSION_LOOKUP_NAME : "io.opentelemetry.jaxws-cxf-3.0";
-
-static {
-  InstrumenterBuilder<CxfRequest, Void> builder =
-      Instrumenter.<CxfRequest, Void>builder(
-              GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, CxfRequest::spanName)
-          .setEnabled(...);
-  String version = EmbeddedInstrumentationProperties.findVersion(VERSION_LOOKUP_NAME);
-  if (version != null) {
-    builder.setInstrumentationVersion(version);
-  }
-  instrumenter = builder.buildInstrumenter();
-}
-```
-
-### CHANGELOG
-
-An instrumentation-name alias rename belongs under `🚫 Deprecations`, not breaking changes, while
-the compatibility alias remains. Record the breaking removal when v3-preview behavior becomes the
-default in 3.0.
-
-## What to Flag in Review
-
-- **Breaking change without a prior deprecation**: a method/class was removed or its signature
-  changed in a stable module, but there was no `@Deprecated` annotation in the preceding release.
-  Flag and ask for the deprecation to be introduced first.
-
-- **Removal of a deprecated item from a stable module before 3.0**: deprecated items in stable
-  modules must not be removed in a minor release — they stay until the next major version.
-
-- **`to be removed in 3.0` on an alpha-only symbol**: check the publishing module's
-  `gradle.properties`. If it is not `otel.stable=true`, the deprecation should say
-  `may be removed in the next minor release` — unless it is 3.0 milestone work.
-
-- **Removal timing in a CHANGELOG deprecation bullet**: ask for the timing sentence to be dropped;
-  it belongs in the Javadoc, annotation comment, runtime warning, `metadata.yaml`, and README.
-
-- **`@Deprecated` without Javadoc**: annotation present but no `@deprecated` Javadoc, or the
-  Javadoc doesn't name the replacement — ask for both.
-
-- **Wrong delegation direction**: the new method delegates to the old/deprecated one instead of
-  the reversed. This breaks overriders of the old method.
-
-- **Deprecated method with new logic**: instead of delegating, it reimplements. The logic should
-  live in the new method.
-
-- **Removal PR for things never deprecated**: a removal PR must only remove things that were
-  already annotated `@Deprecated` in an earlier release.
-
-- **Missing CHANGELOG entry**: a breaking change PR that does not add an
-  `⚠️ Breaking changes to non-stable APIs` bullet in the `Unreleased` section of `CHANGELOG.md`.
-
-- **Module rename without backcompat**: `InstrumentationModule` constructor uses only the new
-  name, dropping the pre-rename name that drove the legacy
-  `otel.instrumentation.<old>.enabled` config key (it should be appended to the new name with
-  the {@code "|deprecated:<old>"} marker so `DeprecatedInstrumentationNames` can gate it on
-  v3-preview); and/or `*Singletons#INSTRUMENTATION_NAME` was changed unconditionally instead
-  of being gated on `AgentCommonConfig.get().isV3Preview()`.
+Retain any existing enablement names needed for configuration compatibility. A changed scope name
+can affect dashboards and filters, so treat it as a telemetry identity change and document it as a
+breaking change when appropriate. Keep instrumentation-version lookup aligned with the name passed
+to `Instrumenter.builder(...)`; a mismatch can leave the emitted scope without a version.

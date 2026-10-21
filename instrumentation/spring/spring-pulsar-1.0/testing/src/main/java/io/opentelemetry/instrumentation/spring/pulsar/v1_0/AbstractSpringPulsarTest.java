@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.spring.pulsar.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -18,7 +16,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -51,7 +48,6 @@ import org.springframework.pulsar.core.PulsarTemplate;
 import org.testcontainers.pulsar.PulsarContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringPulsarTest {
 
   @RegisterExtension
@@ -114,10 +110,7 @@ public abstract class AbstractSpringPulsarTest {
 
   protected abstract void assertSpringPulsar();
 
-  protected void assertStableProcessMetrics() {
-    if (!emitStableMessagingSemconv()) {
-      return;
-    }
+  protected void assertProcessMetrics() {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-pulsar-1.0",
@@ -165,26 +158,32 @@ public abstract class AbstractSpringPulsarTest {
                                                     OTEL_SUBSCRIPTION),
                                                 equalTo(SERVER_ADDRESS, brokerHost),
                                                 equalTo(SERVER_PORT, brokerPort))))));
-    // the pulsar client already counts the consumed messages, so spring-pulsar must not count them
-    // a second time
-    assertThat(testing.metrics())
-        .noneMatch(
-            metric ->
-                metric
-                        .getInstrumentationScopeInfo()
-                        .getName()
-                        .equals("io.opentelemetry.spring-pulsar-1.0")
-                    && metric.getName().equals("messaging.client.consumed.messages"));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-pulsar-1.0",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
   }
 
   protected List<AttributeAssertion> publishAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        oldOperation("publish"),
-        operationName("send"),
-        operationType("send"),
+        equalTo(MESSAGING_OPERATION_NAME, "send"),
+        equalTo(MESSAGING_OPERATION_TYPE, "send"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-        bodySize(),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
@@ -198,52 +197,24 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> processAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        oldOperation("process"),
-        operationName("process"),
-        operationType("process"),
-        bodySize(),
+        equalTo(MESSAGING_OPERATION_NAME, "process"),
+        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+        equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC));
-  }
-
-  // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
-  private static AttributeAssertion bodySize() {
-    return emitOldMessagingSemconv()
-        ? satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)
-        : equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
   }
 
   protected List<AttributeAssertion> receiveAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        oldOperation("receive"),
-        operationName("receive"),
-        operationType("receive"),
+        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
         satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        subscriptionName(),
-        bodySize());
-  }
-
-  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
-  private static AttributeAssertion subscriptionName() {
-    return equalTo(
-        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-        emitStableMessagingSemconv() ? OTEL_SUBSCRIPTION : null);
-  }
-
-  private static AttributeAssertion oldOperation(String operation) {
-    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationName(String operation) {
-    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationType(String operation) {
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
+        equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, OTEL_SUBSCRIPTION),
+        equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
   }
 
   @SpringBootConfiguration

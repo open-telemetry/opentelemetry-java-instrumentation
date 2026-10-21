@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1;
 import com.mongodb.ServerAddress;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
@@ -18,7 +19,7 @@ import java.util.List;
 // TODO this class is used for all Mongo versions. Extract to mongo-common module
 /** Entrypoint to OpenTelemetry instrumentation of the MongoDB client. */
 public final class MongoTelemetry {
-  private final Instrumenter<CommandStartedEvent, Void> instrumenter;
+  private final Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter;
 
   /** Returns a new {@link MongoTelemetry} configured with the given {@link OpenTelemetry}. */
   public static MongoTelemetry create(OpenTelemetry openTelemetry) {
@@ -49,11 +50,8 @@ public final class MongoTelemetry {
    * <p>Use this overload when you have the seed addresses from the client's configuration. Pass the
    * complete seed list used to configure the client.
    *
-   * <p>The supplied addresses are used to derive the stable {@code server.address} and {@code
-   * server.port} attributes when stable database semantic conventions are enabled.
-   *
-   * <p>Where the old database conventions are emitted, {@code db.connection_string} continues to
-   * describe the server selected by the driver.
+   * <p>The supplied addresses are used to derive the {@code server.address} and {@code server.port}
+   * attributes.
    *
    * @param configuredServerAddresses all seed addresses configured for the client
    * @return a command listener
@@ -68,9 +66,8 @@ public final class MongoTelemetry {
    * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
    *
    * <p>Use this method only when the client's configured seed addresses are not available. If they
-   * are available, use {@link #createCommandListener(List)} so that stable database semantic
-   * conventions can derive {@code server.address} and {@code server.port} from the configured
-   * target.
+   * are available, use {@link #createCommandListener(List)} to derive {@code server.address} and
+   * {@code server.port} from the configured target.
    */
   public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);

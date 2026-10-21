@@ -1,0 +1,18 @@
+display_name: Vert.x Redis Client
+description: >
+  This instrumentation enables database client spans and database client metrics for Redis operations
+  using the Vert.x Redis Client library.
+library_link: https://vertx.io/docs/vertx-redis-client/java/
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+configurations:
+  - name: otel.instrumentation.vertx-redis-client.query-sanitization.enabled
+    declarative_name: java.vertx_redis_client.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Vert.x Redis client queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
+    type: boolean
+  - ref: common.db.query-sanitization.enabled
+  - ref: common.peer-service-mapping

@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GraphqlInstrumentationModule extends InstrumentationModule {
 
   public GraphqlInstrumentationModule() {
-    super("graphql-java", "graphql-java-12.0");
+    super("graphql-java-12.0", "graphql-java");
   }
 
   @Override

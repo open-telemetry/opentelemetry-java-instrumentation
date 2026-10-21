@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -16,12 +16,11 @@ import java.util.List;
 public class VertxKafkaInstrumentationModule extends InstrumentationModule {
 
   public VertxKafkaInstrumentationModule() {
-    super("vertx-kafka-client", "vertx-kafka-client-3.6", "vertx");
+    super("vertx-kafka-client-3.6", "vertx-kafka-client", "vertx");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new KafkaReadStreamImplInstrumentation(), new KafkaConsumerRecordsImplInstrumentation());
+    return singletonList(new KafkaReadStreamImplInstrumentation());
   }
 }

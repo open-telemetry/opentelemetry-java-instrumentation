@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -47,7 +46,7 @@ class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
       }
 
       // always set it: you never know what might be polluting the thread local context at the time
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       return ContextPropagatingRunnable.propagateContext(task, context);
     }
   }

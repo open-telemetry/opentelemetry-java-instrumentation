@@ -108,7 +108,7 @@ class OpenTelemetryCallUtilTimeoutTest {
   }
 
   private static RequestAndContext requestAndContext() {
-    HbaseRequest request = HbaseRequest.create("Get", null, null, null, null, null, null);
+    HbaseRequest request = HbaseRequest.create("Get", null, null, null);
     return RequestAndContext.create(request, () -> {}, Context.root());
   }
 }

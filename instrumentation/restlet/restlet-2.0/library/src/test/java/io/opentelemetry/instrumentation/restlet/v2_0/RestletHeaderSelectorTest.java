@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.restlet.v2_0;
 
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -29,20 +28,14 @@ class RestletHeaderSelectorTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedSettersMatchHeaderNamesLiterally() {
+  void doesNotCaptureHeadersByDefault() {
     Filter filter =
-        RestletTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("*"))
-            .setCapturedResponseHeaders(singletonList("*"))
-            .build()
-            .createFilter("/test");
+        RestletTelemetry.builder(testing.getOpenTelemetry()).build().createFilter("/test");
     filter.setNext(new Restlet() {});
 
     Request request = new Request(Method.GET, "http://localhost/test");
     request.setOriginalRef(new Reference("http://localhost/test"));
-    // Authorization is present so that treating "*" as a glob would capture it
     request
         .getAttributes()
         .put("org.restlet.http.headers", headers("X-Test-Request", "Authorization"));

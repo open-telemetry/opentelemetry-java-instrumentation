@@ -8,8 +8,10 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -26,21 +28,26 @@ public final class TracingList extends ArrayList<Message> {
   private final ExecutionAttributes request;
   private final Response response;
   private final TracingExecutionInterceptor config;
+  private final IdentityHashMap<Message, SqsMessage> tracingMessages;
   @Nullable private final Context processParentContext;
-  private boolean firstIterator = true;
+  private final AtomicBoolean firstIterator = new AtomicBoolean(true);
+  private volatile boolean processingOwnedOutsideSqsSdk;
 
   public static TracingList wrap(
       List<Message> messages,
+      List<SqsMessage> tracingMessages,
       Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
       Response response,
       TracingExecutionInterceptor config,
       @Nullable Context processParentContext) {
-    return new TracingList(messages, instrumenter, request, response, config, processParentContext);
+    return new TracingList(
+        messages, tracingMessages, instrumenter, request, response, config, processParentContext);
   }
 
   private TracingList(
       List<Message> messages,
+      List<SqsMessage> tracingMessages,
       Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
       Response response,
@@ -52,34 +59,31 @@ public final class TracingList extends ArrayList<Message> {
     this.response = response;
     this.config = config;
     this.processParentContext = processParentContext;
+    this.tracingMessages = new IdentityHashMap<>();
+    for (int i = 0; i < messages.size(); i++) {
+      this.tracingMessages.put(messages.get(i), tracingMessages.get(i));
+    }
   }
 
-  public void disableTracing() {
-    // only the first call to iterator() is traced
-    firstIterator = false;
+  public void markProcessingOwnedOutsideSqsSdk() {
+    processingOwnedOutsideSqsSdk = true;
+  }
+
+  boolean isProcessingOwnedOutsideSqsSdk() {
+    return processingOwnedOutsideSqsSdk;
   }
 
   @Override
   public Iterator<Message> iterator() {
-    Iterator<Message> it;
-    // We should only return one iterator with tracing.
-    // However, this is not thread-safe, but usually the first (hopefully only) traversal of
-    // List is performed in the same thread that called receiveMessage()
-    if (firstIterator) {
-      it = TracingIterator.wrap(super.iterator(), this);
-      firstIterator = false;
-    } else {
-      it = super.iterator();
-    }
-
-    return it;
+    Iterator<Message> delegate = super.iterator();
+    return firstIterator.getAndSet(false) && !processingOwnedOutsideSqsSdk
+        ? TracingIterator.wrap(delegate, this)
+        : delegate;
   }
 
   @Override
   public void forEach(Consumer<? super Message> action) {
-    for (Message message : this) {
-      action.accept(message);
-    }
+    iterator().forEachRemaining(action);
   }
 
   public Instrumenter<SqsProcessRequest, Response> getInstrumenter() {
@@ -96,6 +100,11 @@ public final class TracingList extends ArrayList<Message> {
 
   public TracingExecutionInterceptor getConfig() {
     return config;
+  }
+
+  @Nullable
+  public SqsMessage getTracingMessage(Message message) {
+    return tracingMessages.get(message);
   }
 
   @Nullable

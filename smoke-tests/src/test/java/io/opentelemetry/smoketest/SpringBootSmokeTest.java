@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class SpringBootSmokeTest extends AbstractSpringBootSmokeTest {
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 25})
+  @ValueSource(ints = {8, 11, 17, 21, 25, 27})
   void springBootSmokeTest(int jdk) {
     SmokeTestOutput output = start(jdk);
 

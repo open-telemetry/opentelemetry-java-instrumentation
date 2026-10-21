@@ -5,16 +5,15 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -43,6 +42,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Constructor;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
@@ -77,7 +78,6 @@ class AwsLambdaSqsMessageHandlerTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void processSpans() {
     SQSEvent.SQSMessage message1 = newMessage();
@@ -106,28 +106,20 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
+                        .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
+                    span.hasName("process queue1")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasKind(SpanKind.CONSUMER)
+                        .hasStatus(StatusData.unset())
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_DESTINATION_NAME,
-                                emitStableMessagingSemconv() ? "queue1" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_BATCH_MESSAGE_COUNT,
-                                emitStableMessagingSemconv() ? Long.valueOf(2) : null))
+                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -135,37 +127,26 @@ class AwsLambdaSqsMessageHandlerTest {
                                     "53995c3f42cd8ad8",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault()),
-                                emitStableMessagingSemconv()
-                                    ? Attributes.of(MESSAGING_MESSAGE_ID, "message1")
-                                    : Attributes.empty()),
+                                Attributes.of(MESSAGING_MESSAGE_ID, "message1")),
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
                                     "5759e988bd862e3fe1be46a994272793",
                                     "53995c3f42cd8ad9",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault()),
-                                emitStableMessagingSemconv()
-                                    ? Attributes.of(MESSAGING_MESSAGE_ID, "message2")
-                                    : Attributes.empty())),
+                                Attributes.of(MESSAGING_MESSAGE_ID, "message2"))),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
+                    span.hasName("process queue1")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasKind(SpanKind.CONSUMER)
+                        .hasStatus(StatusData.unset())
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, "message1"),
-                            equalTo(
-                                MESSAGING_DESTINATION_NAME,
-                                emitStableMessagingSemconv() ? "queue1" : "aws:sqs"))
+                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -174,24 +155,18 @@ class AwsLambdaSqsMessageHandlerTest {
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault()))),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
+                    span.hasName("process queue1")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasKind(SpanKind.CONSUMER)
+                        .hasStatus(StatusData.error())
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, "message2"),
-                            equalTo(
-                                MESSAGING_DESTINATION_NAME,
-                                emitStableMessagingSemconv() ? "queue1" : "aws:sqs"))
+                            equalTo(ERROR_TYPE, "_OTHER"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -199,7 +174,8 @@ class AwsLambdaSqsMessageHandlerTest {
                                     "53995c3f42cd8ad9",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))));
-    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 3, 2, null);
+    assertMetrics(
+        testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 2, null, 1, "_OTHER");
   }
 
   @Test
@@ -227,6 +203,33 @@ class AwsLambdaSqsMessageHandlerTest {
   }
 
   @Test
+  void reusedEventStartsNewProcessing() {
+    SQSEvent.SQSMessage message = newMessage();
+    message.setAttributes(emptyMap());
+    message.setMessageId("message1");
+    message.setEventSource("aws:sqs");
+    message.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
+
+    SQSEvent event = new SQSEvent();
+    event.setRecords(asList(message));
+
+    TestHandler handler = new TestHandler(testing.getOpenTelemetrySdk());
+    handler.handleRequest(event, context);
+    testing.waitForTraces(1);
+    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 1, null);
+    testing.clearData();
+
+    handler.handleRequest(event, context);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("my_function"),
+                span -> span.hasName("process queue1"),
+                span -> span.hasName("process queue1")));
+    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 1, null);
+  }
+
+  @Test
   void missingEventSource() {
     SQSEvent.SQSMessage message = newMessage();
     message.setMessageId("message1");
@@ -241,18 +244,12 @@ class AwsLambdaSqsMessageHandlerTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("my_function"),
-                span ->
-                    span.hasName(
-                        emitStableMessagingSemconv()
-                            ? "process queue1"
-                            : "multiple_sources process"),
-                span ->
-                    span.hasName(
-                        emitStableMessagingSemconv() ? "process queue1" : "null process")));
+                span -> span.hasName("process queue1"),
+                span -> span.hasName("process queue1")));
   }
 
   @Test
-  void nestedProcessSpan() {
+  void keyedEventSuppressesSelectedMessage() {
     SQSEvent.SQSMessage message = newMessage();
     message.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));
     message.setMessageId("message1");
@@ -271,16 +268,12 @@ class AwsLambdaSqsMessageHandlerTest {
 
     testing.waitAndAssertTraces(
         trace -> {
-          if (emitStableMessagingSemconv()) {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("my_function"),
-                span -> span.hasName("custom process").hasKind(SpanKind.CONSUMER));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("my_function"),
-                span -> span.hasName("custom process").hasKind(SpanKind.CONSUMER),
-                span -> span.hasName("aws:sqs process").hasKind(SpanKind.CONSUMER));
-          }
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("my_function"),
+              span ->
+                  span.hasName("custom process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(0)));
         });
   }
 

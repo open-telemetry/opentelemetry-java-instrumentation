@@ -67,7 +67,7 @@ class MessageListenerInstrumentation implements TypeInstrumentation {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> message) {
-      Context parent = VirtualFieldStore.extract(message);
+      Context parent = VirtualFieldStore.extractProcessParentContext(message);
 
       Instrumenter<PulsarRequest, Void> instrumenter = consumerProcessInstrumenter();
       PulsarRequest request = PulsarRequest.create(message, consumer);
@@ -76,14 +76,14 @@ class MessageListenerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context current = instrumenter.start(parent, request);
-      try (Scope scope = current.makeCurrent()) {
+      Context currentContext = instrumenter.start(parent, request);
+      try (Scope ignored = currentContext.makeCurrent()) {
         this.delegate.received(consumer, message);
-        instrumenter.end(current, request, null, null);
       } catch (Throwable t) {
-        instrumenter.end(current, request, null, t);
+        instrumenter.end(currentContext, request, null, t);
         throw t;
       }
+      instrumenter.end(currentContext, request, null, null);
     }
 
     @Override

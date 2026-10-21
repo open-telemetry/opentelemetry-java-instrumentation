@@ -33,6 +33,17 @@ dependencies {
   testCompileOnly("org.springframework:spring-core:4.3.30.RELEASE")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+      }
+    }
+  }
+}
+
 tasks {
   val testIncludeProperty = register<Test>("testIncludeProperty") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -92,6 +103,12 @@ tasks {
   }
 
   check {
-    dependsOn(testIncludeProperty, testExcludeMethodsProperty, testDeclarativeConfigInclude, testDeclarativeConfigExcludeMethods)
+    dependsOn(
+      testing.suites,
+      testIncludeProperty,
+      testExcludeMethodsProperty,
+      testDeclarativeConfigInclude,
+      testDeclarativeConfigExcludeMethods,
+    )
   }
 }

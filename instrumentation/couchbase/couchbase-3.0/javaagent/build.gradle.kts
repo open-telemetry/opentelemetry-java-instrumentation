@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -19,7 +20,6 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-couchbase")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
 
@@ -29,18 +29,17 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

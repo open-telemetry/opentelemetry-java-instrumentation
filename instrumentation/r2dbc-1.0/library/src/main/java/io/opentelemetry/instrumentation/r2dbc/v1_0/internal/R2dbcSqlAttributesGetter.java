@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
@@ -27,22 +25,9 @@ public final class R2dbcSqlAttributesGetter
     return request.getSystemName();
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  public String getDbSystem(DbExecution request) {
-    return request.getSystem();
-  }
-
   @Override
   public SqlDialect getSqlDialect(DbExecution request) {
     return fromDbSystemName(request.getSystemName());
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getUser(DbExecution request) {
-    return request.getUser();
   }
 
   @Override
@@ -51,33 +36,9 @@ public final class R2dbcSqlAttributesGetter
     return request.getNamespace();
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  public String getConnectionString(DbExecution request) {
-    return request.getConnectionString();
-  }
-
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
     return request.getRawQueryTexts();
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Override
-  public Collection<String> getRawQueryTextsForOldSemconv(DbExecution request) {
-    Collection<String> rawQueryTexts = request.getRawQueryTexts();
-    return rawQueryTexts.size() == 1 ? rawQueryTexts : singleton(join(";\n", rawQueryTexts));
-  }
-
-  private static String join(String delimiter, Collection<String> collection) {
-    StringBuilder builder = new StringBuilder();
-    for (String string : collection) {
-      if (builder.length() != 0) {
-        builder.append(delimiter);
-      }
-      builder.append(string);
-    }
-    return builder.toString();
   }
 
   @Override
@@ -99,17 +60,13 @@ public final class R2dbcSqlAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DbExecution request) {
-    return emitStableDatabaseSemconv()
-        ? request.getConfiguredServerAddress()
-        : request.getServerAddress();
+    return request.getConfiguredServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbExecution request) {
-    return emitStableDatabaseSemconv()
-        ? request.getConfiguredServerPort()
-        : request.getServerPort();
+    return request.getConfiguredServerPort();
   }
 
   @Override

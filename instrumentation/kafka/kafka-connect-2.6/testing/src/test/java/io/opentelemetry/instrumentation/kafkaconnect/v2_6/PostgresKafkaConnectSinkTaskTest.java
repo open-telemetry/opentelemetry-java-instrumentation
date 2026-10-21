@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -136,32 +134,20 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             // producer is in a separate trace, linked to consumer with a span link
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + testTopicName
-                              : testTopicName + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasNoParent();
+                  span.hasName("send " + testTopicName).hasKind(SpanKind.PRODUCER).hasNoParent();
                   producerSpanContext.set(span.actual().getSpanContext());
                 }),
         trace -> {
           // kafka connect consumer trace, linked to producer span via a span link
           Consumer<SpanDataAssert> selectAssertion =
               span -> {
-                if (emitStableDatabaseSemconv()) {
-                  span.satisfies(spanData -> assertThat(spanData.getName()).startsWith("SELECT"));
-                } else {
-                  span.hasName("SELECT " + DATABASE_NAME);
-                }
+                span.satisfies(spanData -> assertThat(spanData.getName()).startsWith("SELECT"));
                 span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
               };
 
           trace.hasSpansSatisfyingExactly(
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process " + testTopicName
-                              : testTopicName + " process")
+                  span.hasName("process " + testTopicName)
                       .hasKind(CONSUMER)
                       .hasNoParent()
                       .hasLinks(recordLink(producerSpanContext.get(), "test-key"))
@@ -172,10 +158,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
               selectAssertion,
               selectAssertion,
               span ->
-                  span.hasName(
-                          emitStableDatabaseSemconv()
-                              ? "INSERT \"" + DB_TABLE_PERSON + "\""
-                              : "INSERT " + DATABASE_NAME + "." + DB_TABLE_PERSON)
+                  span.hasName("INSERT \"" + DB_TABLE_PERSON + "\"")
                       .hasKind(SpanKind.CLIENT)
                       .hasParent(trace.getSpan(0)));
         });
@@ -240,22 +223,16 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             SpanData process = trace.get(0);
             assertThat(trace).hasSize(7);
             for (SpanData select : trace.subList(1, 6)) {
-              if (emitStableDatabaseSemconv()) {
-                assertThat(select.getName()).startsWith("SELECT");
-              } else {
-                assertThat(select.getName()).isEqualTo("SELECT " + DATABASE_NAME);
-              }
+              assertThat(select.getName()).startsWith("SELECT");
               assertThat(select.getKind()).isEqualTo(SpanKind.CLIENT);
               assertThat(select.getParentSpanId()).isEqualTo(process.getSpanId());
             }
             SpanData insert = trace.get(6);
             assertThat(insert.getName())
                 .isEqualTo(
-                    emitStableDatabaseSemconv()
-                        ? (process.getLinks().size() == 1 ? "INSERT \"" : "BATCH INSERT \"")
-                            + DB_TABLE_PERSON
-                            + "\""
-                        : "INSERT " + DATABASE_NAME + "." + DB_TABLE_PERSON);
+                    (process.getLinks().size() == 1 ? "INSERT \"" : "BATCH INSERT \"")
+                        + DB_TABLE_PERSON
+                        + "\"");
             assertThat(insert.getKind()).isEqualTo(SpanKind.CLIENT);
             assertThat(insert.getParentSpanId()).isEqualTo(process.getSpanId());
           }

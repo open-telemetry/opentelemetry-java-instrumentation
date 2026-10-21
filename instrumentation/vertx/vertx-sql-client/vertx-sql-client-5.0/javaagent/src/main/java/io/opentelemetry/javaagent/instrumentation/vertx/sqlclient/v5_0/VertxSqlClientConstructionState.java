@@ -16,28 +16,33 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public final class VertxSqlClientConstructionState {
-  private final List<SqlConnectOptions> databases;
+  @Nullable private final List<SqlConnectOptions> databases;
   private final List<SqlClientBase> clients = new ArrayList<>();
-  @Nullable private VertxSqlClientInfo info;
+  @Nullable private VertxSqlClientState state;
 
-  public VertxSqlClientConstructionState(List<SqlConnectOptions> databases, String dbSystemName) {
+  public VertxSqlClientConstructionState(
+      @Nullable List<SqlConnectOptions> databases, String dbSystemName) {
     this.databases = databases;
     updateInfo(dbSystemName);
   }
 
   @Nullable
-  public VertxSqlClientInfo getInfo() {
-    return info;
+  public VertxSqlClientState getState() {
+    return state;
   }
 
   public void setDbSystemName(String dbSystemName) {
-    if (info == null || !VertxSqlClientUtil.isKnownDbSystem(info.getDbSystemName())) {
+    if (state == null || !VertxSqlClientUtil.isKnownDbSystem(state.getInfo().getDbSystemName())) {
       updateInfo(dbSystemName);
     }
   }
 
   private void updateInfo(String dbSystemName) {
-    info = VertxSqlClientInfo.create(databases, dbSystemName);
+    VertxSqlClientInfo info =
+        databases == null
+            ? VertxSqlClientInfo.createUnknown(dbSystemName)
+            : VertxSqlClientInfo.create(databases, dbSystemName);
+    state = info != null ? new VertxSqlClientState(info, databases == null) : null;
   }
 
   public void attachClient(SqlClientBase client) {
@@ -52,11 +57,11 @@ public final class VertxSqlClientConstructionState {
       publish(constructedClient);
     }
     if (client instanceof Pool) {
-      VertxSqlClientSingletons.setPoolClientInfo((Pool) client, info);
+      VertxSqlClientSingletons.setPoolClientState((Pool) client, state);
     }
   }
 
   private void publish(SqlClientBase client) {
-    VertxSqlClientSingletons.attachClientInfo(client, info);
+    VertxSqlClientSingletons.attachClientState(client, state);
   }
 }

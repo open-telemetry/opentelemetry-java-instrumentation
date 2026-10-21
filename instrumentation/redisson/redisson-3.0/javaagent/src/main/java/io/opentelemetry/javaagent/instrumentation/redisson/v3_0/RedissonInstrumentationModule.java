@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -19,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RedissonInstrumentationModule extends InstrumentationModule {
 
   public RedissonInstrumentationModule() {
-    super("redisson", "redisson-3.0");
+    super("redisson-3.0", "redisson");
   }
 
   @Override
@@ -32,7 +33,18 @@ public class RedissonInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ConnectionManagerConnectionFutureInstrumentation(),
+        new MasterSlaveConnectionManagerInstrumentation(),
         new RedisConnectionInstrumentation(),
         new RedisCommandDataInstrumentation());
+  }
+
+  @Override
+  public boolean isHelperClass(String className) {
+    return "org.redisson.config.ConfigServerTargetUtil30".equals(className);
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    return singletonList("org.redisson.config.ConfigServerTargetUtil30");
   }
 }

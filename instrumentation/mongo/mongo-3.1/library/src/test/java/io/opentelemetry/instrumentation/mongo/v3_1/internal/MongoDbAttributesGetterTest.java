@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -19,6 +18,7 @@ import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -112,6 +112,20 @@ class MongoDbAttributesGetterTest {
         .isIn("{\"cmd\": \"c\", \"f1\": [\"?\", \"?", "{\"cmd\": \"c\", \"f1\": [\"?\",");
   }
 
+  @Test
+  void shouldNotSplitSurrogatePairWhenTruncating() {
+    MongoDbAttributesGetter extractor = new MongoDbAttributesGetter(true, 20);
+
+    String normalized =
+        sanitizeQueryAcrossVersions(
+            extractor, new BsonDocument("cmd", new BsonString("aaaaaaaaaa😀")));
+
+    assertThat(normalized)
+        .hasSizeLessThanOrEqualTo(20)
+        .startsWith("{\"cmd\": \"")
+        .doesNotContain(String.valueOf((char) 0xd83d), String.valueOf((char) 0xde00));
+  }
+
   @ParameterizedTest
   @MethodSource("errorTypes")
   void getErrorTypeReturnsServerCodeOrFallsBack(Throwable error, String expectedErrorType) {
@@ -119,6 +133,21 @@ class MongoDbAttributesGetterTest {
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
     assertThat(getter.getErrorType(null, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  @Test
+  void getErrorTypeReturnsWriteConcernErrorCode() {
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+    CommandSucceededEvent response =
+        new CommandSucceededEvent(
+            1,
+            new ConnectionDescription(new ServerId(new ClusterId(), new ServerAddress())),
+            "insert",
+            BsonDocument.parse("{\"ok\": 1, \"writeConcernError\": {\"code\": 64}}"),
+            1);
+
+    assertThat(getter.getErrorType(null, response, null)).isEqualTo("64");
   }
 
   @Test
@@ -137,12 +166,9 @@ class MongoDbAttributesGetterTest {
     assertThat(libraryGetter.getNetworkPeerPort(event, null)).isNull();
     assertThat(libraryGetter.getNetworkPeerInetSocketAddress(event, null)).isNull();
     assertThat(agentGetter.getNetworkPeerAddress(event, null))
-        .isEqualTo(
-            emitStableDatabaseSemconv() ? InetAddress.getLoopbackAddress().getHostAddress() : null);
-    assertThat(agentGetter.getNetworkPeerPort(event, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27018 : null);
-    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null))
-        .isSameAs(emitStableDatabaseSemconv() ? socketAddress : null);
+        .isEqualTo(InetAddress.getLoopbackAddress().getHostAddress());
+    assertThat(agentGetter.getNetworkPeerPort(event, null)).isEqualTo(27018);
+    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null)).isSameAs(socketAddress);
   }
 
   @Test
@@ -156,9 +182,8 @@ class MongoDbAttributesGetterTest {
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
     assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "0:0:0:0:0:0:0:1" : null);
-    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27018 : null);
+        .isEqualTo("0:0:0:0:0:0:0:1");
+    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isEqualTo(27018);
   }
 
   @Test
@@ -173,8 +198,7 @@ class MongoDbAttributesGetterTest {
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
-    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
-        .isEqualTo(emitStableDatabaseSemconv() ? socketPath : null);
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
     assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
   }
@@ -186,8 +210,7 @@ class MongoDbAttributesGetterTest {
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
-    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
-        .isEqualTo(emitStableDatabaseSemconv() ? socketPath : null);
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
     assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
   }

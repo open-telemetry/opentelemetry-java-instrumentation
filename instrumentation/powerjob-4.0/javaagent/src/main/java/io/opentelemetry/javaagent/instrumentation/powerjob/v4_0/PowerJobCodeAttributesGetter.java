@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 class PowerJobCodeAttributesGetter implements CodeAttributesGetter<PowerJobProcessRequest> {
 
@@ -15,7 +15,7 @@ class PowerJobCodeAttributesGetter implements CodeAttributesGetter<PowerJobProce
   }
 
   @Override
-  public String getMethodName(PowerJobProcessRequest powerJobProcessRequest) {
+  public String getCodeMethodName(PowerJobProcessRequest powerJobProcessRequest) {
     return powerJobProcessRequest.getMethodName();
   }
 }

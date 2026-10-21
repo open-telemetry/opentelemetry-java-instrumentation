@@ -17,11 +17,6 @@ import java.util.concurrent.ConcurrentMap;
 final class Bridging {
 
   private final ConcurrentMap<String, String> descriptionsCache = new ConcurrentHashMap<>();
-  private final boolean v3Preview;
-
-  Bridging(boolean v3Preview) {
-    this.v3Preview = v3Preview;
-  }
 
   static Attributes tagsAsAttributes(Meter.Id id, NamingConvention namingConvention) {
     Iterable<Tag> tags = id.getTagsAsIterable();
@@ -67,9 +62,6 @@ final class Bridging {
     // use "total_time" instead of "total" to avoid clashing with Statistic.TOTAL
     String statisticStr =
         statistic == Statistic.TOTAL_TIME ? "total_time" : statistic.getTagValueRepresentation();
-    if (v3Preview) {
-      return name(id, namingConvention) + "." + statisticStr;
-    }
-    return namingConvention.name(id.getName() + "." + statisticStr, id.getType(), id.getBaseUnit());
+    return name(id, namingConvention) + "." + statisticStr;
   }
 }

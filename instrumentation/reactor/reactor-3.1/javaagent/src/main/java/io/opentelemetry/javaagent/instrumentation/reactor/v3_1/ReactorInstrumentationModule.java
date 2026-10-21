@@ -16,7 +16,7 @@ import java.util.List;
 public class ReactorInstrumentationModule extends InstrumentationModule {
 
   public ReactorInstrumentationModule() {
-    super("reactor", "reactor-3.1");
+    super("reactor-3.1", "reactor");
   }
 
   @Override
