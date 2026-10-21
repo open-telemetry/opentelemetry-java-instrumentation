@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
@@ -67,6 +68,10 @@ public abstract class AbstractDubboTraceChainTest {
   }
 
   protected abstract InstrumentationExtension testing();
+
+  protected boolean canCaptureNativeResponseStatus() {
+    return false;
+  }
 
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>();
@@ -195,6 +200,11 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
+                                equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() && canCaptureNativeResponseStatus()
+                                        ? "OK"
+                                        : null),
                                 equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
@@ -225,6 +235,11 @@ public abstract class AbstractDubboTraceChainTest {
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"
                                         : "hello"),
                                 equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() && canCaptureNativeResponseStatus()
+                                        ? "OK"
+                                        : null),
+                                equalTo(
                                     maybeStablePeerService(),
                                     testLatestDeps() ? testing().expectedPeerService() : null),
                                 satisfies(
@@ -247,6 +262,11 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
+                                equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() && canCaptureNativeResponseStatus()
+                                        ? "OK"
+                                        : null),
                                 equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
@@ -276,6 +296,11 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() && canCaptureNativeResponseStatus()
+                                        ? "OK"
+                                        : null),
                                 equalTo(
                                     maybeStablePeerService(),
                                     testLatestDeps() ? testing().expectedPeerService() : null),
@@ -363,13 +388,19 @@ public abstract class AbstractDubboTraceChainTest {
                                           equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                           equalTo(
                                               RPC_METHOD,
-                                              "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")),
+                                              "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
+                                          equalTo(
+                                              stringKey("rpc.response.status_code"),
+                                              canCaptureNativeResponseStatus() ? "OK" : null)),
                                   point ->
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                           equalTo(
                                               RPC_METHOD,
-                                              "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")))));
+                                              "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"),
+                                          equalTo(
+                                              stringKey("rpc.response.status_code"),
+                                              canCaptureNativeResponseStatus() ? "OK" : null)))));
 
       testing()
           .waitAndAssertMetrics(
@@ -389,7 +420,10 @@ public abstract class AbstractDubboTraceChainTest {
                                               "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           satisfies(
-                                              SERVER_PORT, val -> val.isInstanceOf(Long.class))),
+                                              SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                          equalTo(
+                                              stringKey("rpc.response.status_code"),
+                                              canCaptureNativeResponseStatus() ? "OK" : null)),
                                   point ->
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "dubbo"),
@@ -398,7 +432,10 @@ public abstract class AbstractDubboTraceChainTest {
                                               "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           satisfies(
-                                              SERVER_PORT, val -> val.isInstanceOf(Long.class))))));
+                                              SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                          equalTo(
+                                              stringKey("rpc.response.status_code"),
+                                              canCaptureNativeResponseStatus() ? "OK" : null)))));
     }
   }
 
@@ -468,6 +505,11 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
+                                equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() && canCaptureNativeResponseStatus()
+                                        ? "OK"
+                                        : null),
                                 equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
@@ -497,6 +539,11 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"
                                         : "hello"),
+                                equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() && canCaptureNativeResponseStatus()
+                                        ? "OK"
+                                        : null),
                                 equalTo(
                                     maybeStablePeerService(),
                                     testLatestDeps() ? testing().expectedPeerService() : null),
@@ -565,7 +612,10 @@ public abstract class AbstractDubboTraceChainTest {
                                           equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                           equalTo(
                                               RPC_METHOD,
-                                              "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")))));
+                                              "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello"),
+                                          equalTo(
+                                              stringKey("rpc.response.status_code"),
+                                              canCaptureNativeResponseStatus() ? "OK" : null)))));
 
       testing()
           .waitAndAssertMetrics(
@@ -585,7 +635,10 @@ public abstract class AbstractDubboTraceChainTest {
                                               "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           satisfies(
-                                              SERVER_PORT, val -> val.isInstanceOf(Long.class))))));
+                                              SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                          equalTo(
+                                              stringKey("rpc.response.status_code"),
+                                              canCaptureNativeResponseStatus() ? "OK" : null)))));
     }
   }
 }

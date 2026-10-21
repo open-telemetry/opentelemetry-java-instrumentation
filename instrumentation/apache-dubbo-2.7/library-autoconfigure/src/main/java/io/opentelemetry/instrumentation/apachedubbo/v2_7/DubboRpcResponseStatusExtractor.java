@@ -53,12 +53,13 @@ final class DubboRpcResponseStatusExtractor
     if (!semconvSelection.get().emitPreview()) {
       return;
     }
-    String statusCode = DubboRpcStatus.getStatusCode(response, error);
+    String statusCode = DubboRpcStatus.getStatusCode(request, response, error);
     if (statusCode == null) {
       return;
     }
     attributes.put(RPC_RESPONSE_STATUS_CODE, statusCode);
-    if (!DubboRpcStatus.isError(statusCode, isClient)) {
+    if (!DubboRpcStatus.isError(statusCode, isClient)
+        && (!"OK".equals(statusCode) || !DubboRpcStatus.hasException(response, error))) {
       attributes.remove(ERROR_TYPE);
     }
   }
@@ -74,13 +75,19 @@ final class DubboRpcResponseStatusExtractor
           .extract(spanStatusBuilder, request, response, error);
       return;
     }
-    String statusCode = DubboRpcStatus.getStatusCode(response, error);
+    String statusCode = DubboRpcStatus.getStatusCode(request, response, error);
     if (statusCode == null) {
       SpanStatusExtractor.<DubboRequest, Result>getDefault()
           .extract(spanStatusBuilder, request, response, error);
       return;
     }
-    spanStatusBuilder.setStatus(
-        DubboRpcStatus.isError(statusCode, isClient) ? StatusCode.ERROR : StatusCode.UNSET);
+    if (DubboRpcStatus.isError(statusCode, isClient)) {
+      spanStatusBuilder.setStatus(StatusCode.ERROR);
+    } else if ("OK".equals(statusCode) && DubboRpcStatus.hasException(response, error)) {
+      SpanStatusExtractor.<DubboRequest, Result>getDefault()
+          .extract(spanStatusBuilder, request, response, error);
+    } else {
+      spanStatusBuilder.setStatus(StatusCode.UNSET);
+    }
   }
 }

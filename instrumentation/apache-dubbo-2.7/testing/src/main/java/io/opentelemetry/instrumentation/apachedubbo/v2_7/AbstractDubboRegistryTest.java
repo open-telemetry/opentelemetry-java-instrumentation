@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
@@ -63,6 +64,10 @@ public abstract class AbstractDubboRegistryTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
+
+  protected boolean canCaptureNativeResponseStatus() {
+    return false;
+  }
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -179,6 +184,11 @@ public abstract class AbstractDubboRegistryTest {
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() && canCaptureNativeResponseStatus()
+                                        ? "OK"
+                                        : null),
+                                equalTo(
                                     maybeStablePeerService(),
                                     testLatestDeps() && !emitPreviewRpcSemconv()
                                         ? testing().expectedPeerService()
@@ -227,6 +237,11 @@ public abstract class AbstractDubboRegistryTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
+                                equalTo(
+                                    stringKey("rpc.response.status_code"),
+                                    emitPreviewRpcSemconv() && canCaptureNativeResponseStatus()
+                                        ? "OK"
+                                        : null),
                                 equalTo(
                                     maybeStablePeerService(),
                                     testLatestDeps() ? testing().expectedPeerService() : null),
