@@ -5,11 +5,9 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.SpanKind;
@@ -49,7 +47,6 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testDoesNotCreateContextWhenTraceFieldCannotBeInjected() {
-    assumeTrue(emitStableMessagingSemconv());
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -90,7 +87,6 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testInjectsMissingPropagationFieldAtAttributeLimit() {
-    assumeTrue(emitStableMessagingSemconv());
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());

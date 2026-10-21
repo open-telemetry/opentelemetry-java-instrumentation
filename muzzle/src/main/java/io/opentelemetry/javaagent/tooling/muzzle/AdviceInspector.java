@@ -39,23 +39,8 @@ public class AdviceInspector {
   }
 
   public boolean useIsolatedAdvice(InstrumentationModule instrumentationModule) {
-    Set<String> adviceClassNames = new HashSet<>();
-    for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
-      typeInstrumentation.transform(
-          new TypeTransformer() {
-            @Override
-            public void applyAdviceToMethod(
-                ElementMatcher<? super MethodDescription> methodMatcher,
-                Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
-                String adviceClassName) {
-              adviceClassNames.add(adviceClassName);
-            }
-
-            @Override
-            public void applyTransformer(AgentBuilder.Transformer transformer) {}
-          });
-    }
-    Boolean result = useIsolatedAdvice(instrumentationModule, adviceClassNames);
+    Boolean result =
+        useIsolatedAdvice(instrumentationModule, adviceClassNames(instrumentationModule));
 
     // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not,
     // so we assume that it is not
@@ -65,6 +50,39 @@ public class AdviceInspector {
   @Nullable
   public Boolean useIsolatedAdvice(
       InstrumentationModule instrumentationModule, Collection<String> adviceClassNames) {
+    AdviceMode mode = inspect(adviceClassNames);
+    if (mode == AdviceMode.MIXED) {
+      return null;
+    }
+    if (mode == AdviceMode.ALL_INLINE) {
+      return false;
+    }
+    // Having all advice non-inline is treated as a marker that the instrumentation can use indy.
+    // Users can override the selection by explicitly choosing how to load helper classes.
+    if (mode == AdviceMode.ALL_NON_INLINE) {
+      return true;
+    }
+
+    // no advice annotations were used so the instrumentation is using an AgentBuilder.Transformer
+    // injected class names makes sense only for indy instrumentation
+    if (!instrumentationModule.injectedClassNames().isEmpty()) {
+      return true;
+    }
+    // exposed class names makes sense only for indy instrumentation
+    if (!instrumentationModule.exposedClassNames().isEmpty()) {
+      return true;
+    }
+
+    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not
+    return null;
+  }
+
+  // visible for testing
+  public AdviceMode inspect(InstrumentationModule instrumentationModule) {
+    return inspect(adviceClassNames(instrumentationModule));
+  }
+
+  private AdviceMode inspect(Collection<String> adviceClassNames) {
     TypePool typePool = AgentBuilder.PoolStrategy.Default.FAST.typePool(classFileLocator, null);
 
     int inlineCount = 0;
@@ -94,34 +112,42 @@ public class AdviceInspector {
         }
       }
     }
-    // mixed inline and non-inline advice
     if (inlineCount > 0 && nonInlineCount > 0) {
-      return null;
+      return AdviceMode.MIXED;
     }
     if (inlineCount > 0) {
-      return false;
+      return AdviceMode.ALL_INLINE;
     }
-    // While it is possible to use non-inline advice with the non-indy instrumentation, by
-    // adding the advice classes as helper classes, we assume that nobody relies on that.
-    // Having all advice non-inline is treated as a marker that the instrumentation can use indy.
-    // Similarly inline advice could be used with indy instrumentation. For now, we default to
-    // non-indy instrumentation in that case, but users can override that by explicitly choosing
-    // whether to inject or isolate helper classes when mixed advice is used.
     if (nonInlineCount > 0) {
-      return true;
+      return AdviceMode.ALL_NON_INLINE;
     }
+    return AdviceMode.NO_ADVICE;
+  }
 
-    // no advice annotations were used so the instrumentation is using an AgentBuilder.Transformer
-    // injected class names makes sense only for indy instrumentation
-    if (!instrumentationModule.injectedClassNames().isEmpty()) {
-      return true;
-    }
-    // exposed class names makes sense only for indy instrumentation
-    if (!instrumentationModule.exposedClassNames().isEmpty()) {
-      return true;
-    }
+  private static Set<String> adviceClassNames(InstrumentationModule instrumentationModule) {
+    Set<String> adviceClassNames = new HashSet<>();
+    for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
+      typeInstrumentation.transform(
+          new TypeTransformer() {
+            @Override
+            public void applyAdviceToMethod(
+                ElementMatcher<? super MethodDescription> methodMatcher,
+                Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+                String adviceClassName) {
+              adviceClassNames.add(adviceClassName);
+            }
 
-    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not
-    return null;
+            @Override
+            public void applyTransformer(AgentBuilder.Transformer transformer) {}
+          });
+    }
+    return adviceClassNames;
+  }
+
+  public enum AdviceMode {
+    NO_ADVICE,
+    ALL_INLINE,
+    ALL_NON_INLINE,
+    MIXED
   }
 }

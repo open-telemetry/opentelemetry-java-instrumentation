@@ -16,7 +16,7 @@ import java.util.List;
 public class ReactorKafkaInstrumentationModule extends InstrumentationModule {
 
   public ReactorKafkaInstrumentationModule() {
-    super("reactor-kafka", "reactor-kafka-1.0");
+    super("reactor-kafka-1.0", "reactor-kafka");
   }
 
   @Override

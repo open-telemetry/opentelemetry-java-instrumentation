@@ -11,17 +11,20 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GwtSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.gwt-2.0";
 
-  public static final ContextKey<Boolean> RPC_CONTEXT_KEY =
-      ContextKey.named("opentelemetry-gwt-rpc-context-key");
+  // holds the failure that GWT encodes into the rpc response instead of throwing it
+  public static final ContextKey<AtomicReference<Throwable>> RPC_FAILURE_KEY =
+      ContextKey.named("opentelemetry-gwt-rpc-failure-key");
 
   private static final Instrumenter<Method, Void> instrumenter;
 
@@ -32,6 +35,9 @@ public class GwtSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
+            .setSchemaUrl(
+                RpcSemconvSelection.Selection.forOpenTelemetry(GlobalOpenTelemetry.get())
+                    .schemaUrl())
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(builder);
 

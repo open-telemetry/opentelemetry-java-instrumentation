@@ -47,8 +47,12 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
     synchronized (loggedIds) {
       loggedIds.add(
           new AbstractMap.SimpleEntry<>(
-              request.getAttribute("trace_id").toString(),
-              request.getAttribute("span_id").toString()));
+              request.getAttribute("trace_id") == null
+                  ? null
+                  : request.getAttribute("trace_id").toString(),
+              request.getAttribute("span_id") == null
+                  ? null
+                  : request.getAttribute("span_id").toString()));
       loggedIds.notifyAll();
     }
   }

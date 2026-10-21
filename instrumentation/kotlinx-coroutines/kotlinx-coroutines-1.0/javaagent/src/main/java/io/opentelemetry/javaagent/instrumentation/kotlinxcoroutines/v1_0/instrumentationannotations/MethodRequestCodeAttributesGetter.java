@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 class MethodRequestCodeAttributesGetter implements CodeAttributesGetter<MethodRequest> {
 
@@ -15,7 +15,7 @@ class MethodRequestCodeAttributesGetter implements CodeAttributesGetter<MethodRe
   }
 
   @Override
-  public String getMethodName(MethodRequest methodRequest) {
+  public String getCodeMethodName(MethodRequest methodRequest) {
     return methodRequest.getMethodName();
   }
 }

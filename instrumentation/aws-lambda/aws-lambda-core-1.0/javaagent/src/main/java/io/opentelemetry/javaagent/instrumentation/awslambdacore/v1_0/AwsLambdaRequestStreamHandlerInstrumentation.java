@@ -52,6 +52,7 @@ class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrumentatio
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handleRequest"))
+            .and(takesArgument(0, InputStream.class))
             .and(takesArgument(2, named("com.amazonaws.services.lambda.runtime.Context"))),
         getClass().getName() + "$HandleRequestAdvice");
   }

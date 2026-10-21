@@ -36,12 +36,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   String getConversationId(REQUEST request);
 
   @Nullable
-  Long getMessageBodySize(REQUEST request);
-
-  @Nullable
-  Long getMessageEnvelopeSize(REQUEST request);
-
-  @Nullable
   String getMessageId(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
@@ -58,8 +52,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns the name of the destination subscription from which a message is consumed, or {@code
    * null} if there is none.
-   *
-   * <p>This attribute only exists in the v1.43 messaging semantic conventions.
    */
   @Nullable
   default String getDestinationSubscriptionName(REQUEST request) {
@@ -99,16 +91,12 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
    * <p>This is used to resolve header selectors that cannot be turned into a list of exact header
    * names, such as selectors containing wildcard patterns or selectors that only exclude headers.
    * Selectors that only list exact header names are resolved with {@link #getMessageHeader(Object,
-   * String)} alone. To preserve compatibility with existing implementations, overriding this method
-   * is optional until 3.0.
+   * String)} alone.
    *
    * <p>Implementations of this method <b>must not</b> return a null value; an empty iterable should
    * be returned instead. The returned iterable is only read, so implementations may return a view
    * over the underlying header names as long as that view cannot change while the returned iterable
    * is being read.
    */
-  // TODO: remove the default implementation and make this required to implement in 3.0
-  default Iterable<String> getMessageHeaderNames(REQUEST request) {
-    return emptyList();
-  }
+  Iterable<String> getMessageHeaderNames(REQUEST request);
 }

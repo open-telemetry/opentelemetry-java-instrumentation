@@ -1,9 +1,8 @@
 # [Build] Gradle Conventions
 
-## Quick Reference
-
-- Use when: reviewing `build.gradle.kts`, `settings.gradle.kts`, or Gradle test tasks
-- Review focus: muzzle config, plugin type, include ordering, test task wiring, `withType` usage
+Consult this article when changing module registration, Muzzle ranges,
+dependencies, or test-task wiring. It includes the build-specific exceptions
+and steps for finding version siblings and configuring task variants.
 
 ## `settings.gradle.kts` Ordering
 
@@ -33,6 +32,41 @@ muzzle {
 
 Use `fail` blocks for versions that must NOT be instrumented. Use `skip()` for specific
 broken/incompatible versions.
+
+### Compatibility range ownership
+
+Versioned javaagent Gradle projects for the same component and target artifact should ideally own
+disjoint compatibility ranges. Create a new versioned project when the baseline implementation
+changes incompatibly and the old and new implementations are mutually exclusive, or when a real
+build or dependency boundary prevents one project from compiling both implementations.
+
+When behavior is additive, optional, or starts in a higher subrange while the baseline remains
+compatible, keep the independently selected `InstrumentationModule` classes in the existing
+javaagent project. Public enablement names describe the library and independently selectable
+features, not compatibility implementations. Multiple classes may share all their public names.
+Configure one Muzzle `pass` per range and target artifact, excluding unrelated modules in each pass.
+Prefer `excludeInstrumentationName(...)` when the public name selects the intended classes. Use
+`excludeInstrumentationModule(...)` with a fully qualified
+class name when public names cannot distinguish the required implementations. Both forms apply
+to inverse checks, and unknown class exclusions fail the check. Keep the baseline library dependency
+and add newer or optional referenced types with `compileOnly` when appropriate.
+
+Multiple Scala or artifact-name variants, a separate enablement name, a different test matrix, or
+dependencies on separate library, testing, helper, generated-code, or language-specific projects do
+not by themselves require another javaagent project. Those auxiliary projects may remain separate,
+but they should not own an overlapping `InstrumentationModule` unless the javaagent selector cannot
+share the build.
+
+Narrow exceptions include incompatible toolchains or plugins and version-specific generated or
+shaded compile classpaths. The `opentelemetry-api-*` family is one example: each layer compiles
+against a distinct shaded API configuration. Kotlin helpers such as Kotlin Flow can share a
+javaagent project with Java `InstrumentationModule` classes when `byteBuddyKotlin` is disabled.
+Muzzle generation runs through `byteBuddyJava`, whose classpath includes the Kotlin compiler output,
+and recursively inspects the referenced Kotlin helpers.
+
+Muzzle verifies generated symbol references, not whether every Byte Buddy method matcher matches.
+A pass lower bound may therefore start when the referenced types exist even when a more precise
+runtime matcher activates the behavior only in a later version.
 
 ### Important: do not remove existing `assertInverse` or `skip`
 
@@ -88,6 +122,46 @@ or checks the `testLatestDeps` system property directly.
 `-PtestLatestDeps=true` is set; the system property is only for runtime test code that branches on
 that mode.
 
+### Multiple library versions in javaagent integration tests
+
+`library("group:artifact:version")` contributes the baseline library to `compileOnly` and the
+default test suite. `testLibrary("group:artifact:version")` also contributes to
+`testImplementation`; it is appropriate when the default tests should compile or run against a
+different version, or need a test-only artifact.
+
+Do not use `library(...)` plus `testLibrary(...)` for the same module coordinate when the goal is
+to test two runtime versions. Gradle resolves one dependency graph for the default test suite and
+normally selects the higher requested version, so the default javaagent integration tests no
+longer exercise the baseline runtime.
+
+When both versions need real javaagent integration coverage:
+
+- Keep the baseline dependency in `library(...)` and leave baseline-compatible tests in `src/test`.
+- Move only tests that require the newer API or runtime behavior into a version-specific source
+  set, such as `src/version36Test`.
+- Register a `JvmTestSuite` for that source set and declare the newer library inside the suite.
+- Wire `testing.suites` into `check` so the additional suite cannot be skipped.
+
+```kotlin
+testing {
+  suites {
+    register<JvmTestSuite>("version36Test") {
+      dependencies {
+        implementation("group:artifact:3.6.1")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+```
+
+Keep `testLibrary(...)` for the single-runtime or test-only-artifact cases it is designed for.
+
 ## `testInstrumentation` Dependencies
 
 The `testInstrumentation` configuration declares which other javaagent instrumentation modules
@@ -114,7 +188,7 @@ A small set of javaagent modules are bundled directly into the main agent via
 `baseJavaagentLibs(...)` in `javaagent/build.gradle.kts`, and therefore into
 `agent-for-testing` as well. For these, the sibling cross-version rule does **not** apply:
 they are already loaded in every test JVM, so adding them via `testInstrumentation`
-from a sibling's `build.gradle.kts` is redundant and should be rejected in review.
+from a sibling's `build.gradle.kts` is redundant.
 
 In particular, do not add `testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.N:javaagent"))`
 entries to sibling `opentelemetry-api-*` modules — all `opentelemetry-api-1.*:javaagent`
@@ -128,7 +202,7 @@ in a `baseJavaagentLibs(...)` line, omit the `testInstrumentation` entry.
 
 ### How to check for missing siblings (step by step)
 
-When reviewing a `javaagent/` module:
+When checking or wiring a `javaagent/` module:
 
 1. Identify the **library grouping directory** — the directory that contains multiple
    versioned subdirectories for the same library. For example, if the module is
@@ -157,7 +231,8 @@ When reviewing a `javaagent/` module:
 
 ## Unnecessary Dependencies
 
-Flag `build.gradle.kts` dependencies that appear unused or redundant:
+When changing `build.gradle.kts` dependencies, remove those confirmed unused
+or redundant:
 
 - A `compileOnly` or `implementation` dependency whose classes are not referenced in the module.
 - A dependency that duplicates something already provided transitively.
@@ -227,6 +302,11 @@ Put the tests under `src/unitTests`. Declare test-only dependencies inside the s
 with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` covers only the
 default source set.
 
+The semconv examples use `<domain>` as a placeholder for a supported selector.
+Use `otel.semconv-stability.opt-in=<domain>` for selectable stable conventions or
+`otel.semconv-stability.preview=<domain>` for preview conventions. Replace the placeholder
+before using the example in a build script; an unrecognized selector does not change the mode.
+
 Derive one variant task per suite only when every suite exercises behavior affected by the
 variant and the same task configuration applies to all of them:
 
@@ -237,8 +317,8 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      jvmArgs("-Dotel.semconv-stability.opt-in=<domain>")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=<domain>")
     }
   }
 
@@ -248,15 +328,21 @@ check {
 ```
 
 The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
-preserved. Declare a separate map per variant when a module has more than one, for example
-`${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
+preserved. For preview selection, use a `previewSemconvSuites` map that registers
+`${suite.name}PreviewSemconv` tasks and sets `otel.semconv-stability.preview=<domain>`.
+Declare a separate map per variant when a module has more than one. Use the `StableSemconv`
+suffix for stable selection, `PreviewSemconv` for preview selection, and `BothSemconv`
+when duplicate-mode coverage is required.
+See [testing-semconv-stability.md](testing-semconv-stability.md) for domain-specific modes.
+
+Preserve mixed variants for selectable domains, along with experimental and library-version suites.
 
 #### Preserving source suite JVM settings
 
 When source suite tasks have different JVM arguments or system properties, copy those values into
 the variant before adding its own configuration. This avoids rebuilding source settings with
-suite-name checks. When metadata collection is already active, append the variant setting to the
-inherited `metadataConfig`:
+suite-name checks. For a collected telemetry mode, preserve the inherited telemetry conditions and
+append the variant's telemetry setting to `metadataConfig`, not every copied JVM setting:
 
 ```kotlin
 val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
@@ -345,7 +431,7 @@ copies from individual tasks unless a task intentionally overrides the shared va
 
 **When the module has only a single test task, prefer the simple `tasks.test { ... }` form.**
 Do **not** convert `tasks.test { ... }` to `withType<Test>().configureEach` in single-test-task
-modules, and do **not** flag the simple form as a problem. The `withType<Test>().configureEach`
+modules; keep the simple form. The `withType<Test>().configureEach`
 form is only justified when the same `build.gradle.kts` actually registers additional `Test` tasks.
 
 **`latestDepTest` does not count as a second test task for this rule.** It is registered
@@ -366,44 +452,28 @@ that should apply to all tasks. If so, move them to `withType<Test>().configureE
 ```kotlin
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    // ... other properties common to all test tasks
+    // ... properties common to all test tasks
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv by registering(Test::class) {
     // only task-specific config here
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.preview=<domain>")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
   }
 }
 ```
 
 ## `collectMetadata` and `metadataConfig`
 
-These system properties support the metadata collection pipeline. They are not required for
-test correctness and are being added as a separate migration — **do not add them during
-review**. Only verify correctness when they are already present.
+Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
+for task selection and labels. Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
+Keep `metadataConfig` labels local.
 
-Do not add `collectMetadata` or `metadataConfig` to `unitTests` suites or legacy
-`javaagent-unit-tests` projects. These are unit tests, and metadata collection should not run there.
-
-| Property          | Type            | Value                                                                                            |
-| ----------------- | --------------- | ------------------------------------------------------------------------------------------------ |
-| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false`                                 |
-| `metadataConfig`  | System property | A single `key=value` string describing the non-default configuration active during this test run |
-
-When already present, verify:
-
-- `metadataConfig` is only used in files that also configure `collectMetadata`. A lone
-  `metadataConfig` does not enable collection and should be removed, not added as a partial
-  metadata migration.
-- `collectMetadata` is in `tasks.test` for single-test-task modules, or in
-  `withType<Test>().configureEach` for modules that explicitly register additional `Test`
-  tasks via `by registering(Test::class)` (`latestDepTest` does not count) — never on
-  individual tasks. Do not use
-  `withType<Test>().configureEach { ... }` in single-test-task modules.
-- `metadataConfig` is on each non-default task that participates in metadata collection. It may
-  also appear on the default `test` task when that task participates in metadata collection and
-  itself runs with non-default `jvmArgs` (e.g., an experimental flag enabled module-wide via
-  `withType<Test>().configureEach { jvmArgs(...) }`); in that case the `metadataConfig` value
-  should describe those non-default jvmArgs.
-- The `metadataConfig` value matches at least one of the jvmArgs configured in the task
+Corresponding agent and library variants can use matching task names without sharing configuration
+mechanisms or metadata labels. For builder-controlled library options, use test-only fixture flags
+and label the actual builder calls, as shown in the
+[library variant example](testing-experimental-flags.md#programmatically-configured-library-tests).
+For synthetic header setup in agent, plain-library, or library-autoconfigure fixtures, follow the
+canonical collection guidance rather than adding capture-only variants or label conditions. Inline
+complete labels for fixed profiles; the source-suite variant example above composes labels because it
+preserves inherited conditions.

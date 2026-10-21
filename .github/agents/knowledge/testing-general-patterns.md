@@ -1,9 +1,63 @@
 # [Testing] General Test Patterns
 
-## Quick Reference
+Consult this article when changing test structure, assertions, resource
+cleanup, or mode-dependent expectations. It gives the setup and API details
+behind the shorter Java test instructions.
 
-- Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
+## Javaagent integration coverage versus unit coverage
+
+Unit suites and legacy `javaagent-unit-tests` projects exercise helper or instrumentation classes
+directly without installing the javaagent against a live target library. They do not verify agent
+loading, class transformation, or runtime behavior of clients, pools, clusters, sentinels, and
+other integrations.
+
+When a change must support multiple runtime versions, retain real agent-backed integration tests
+for each required version. Keep tests that run on the baseline in the default `test` suite and
+place only newer-version-specific tests in a dedicated `JvmTestSuite`; do not count a unit suite
+as coverage for the missing integration runtime.
+
+## Configuration test ownership
+
+For settings available in both forms, prefer default-behavior and module-specific flat-property tests.
+The bridge exposes flat properties through the declarative API; test conversion centrally rather
+than repeating behavior assertions for equivalent YAML.
+
+Shared helpers own defaults, fallback, and precedence tests. Keep caller-specific logic covered,
+and add missing central coverage before removing a module test.
+
+Retain declarative tests for structured/YAML-only settings, distinct binding, parsing, initialization,
+or migration paths, and native configuration integration. Single-source declarative unit tests are not duplicates.
+
+Remove unused fixtures, dependencies, task registrations, and metadata-collection inputs with redundant
+variants. Keep metadata describing supported settings.
+
+## Instrumentation enablement selectors
+
+Javaagent selectors such as `otel.instrumentation.<name>.enabled` are escape
+hatches for disabling buggy instrumentation until a fix is available, not a
+recommended way to tune telemetry.
+
+Do not add per-instrumentation selector tests, including for new modules,
+renames, aliases, or consolidations:
+
+- No `instrumentationNames()` or name-order assertions.
+- No enable/disable matrices, precedence, fallback, legacy-name handling, flat/YAML
+  parity, or deprecation-warning checks.
+- No test projects, source sets, JVM variants, fixtures, or dependencies solely
+  for those checks.
+
+This applies to unit tests and installed-agent tests alike. Test shared
+enablement and alias-helper changes centrally, not in every caller. Existing
+coverage includes `InstrumentationModuleInstallerTest` for flat resolution and
+`AgentDistributionConfigTest` for declarative resolution.
+
+Keep instrumentation behavior and compatibility coverage, including propagation,
+scopes, runtime versions, and Muzzle. Tests may use selectors to disable unrelated
+instrumentation without testing the selectors themselves.
+
+Changes to [default enablement](testing-default-enablement.md), feature settings,
+and experimental telemetry still need behavior coverage. An `.enabled` suffix
+alone does not make a setting an instrumentation selector.
 
 ## Assertion Framework
 
@@ -292,47 +346,69 @@ expected:
 
 - Experimental attributes (`-Dotel.instrumentation.<module>.experimental-*=true`) — see
   [testing-experimental-flags.md](testing-experimental-flags.md).
-- Semconv stability (`-Dotel.semconv-stability.opt-in=...`) — see
+- Semconv selection (`-Dotel.semconv-stability.opt-in=<domain>` for selectable stable
+  conventions or `-Dotel.semconv-stability.preview=<domain>` for preview conventions), see
   [testing-semconv-stability.md](testing-semconv-stability.md).
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
 
-### Read the flag through a shared static helper, not a per-class field
+### Read mode flags through helpers
 
-Each flag has a shared static accessor; static-import it and call it directly. Never call
-`Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
-site.
+Use the shared static accessors below for global test modes. Static-import them rather than reading
+properties in assertions or builder calls. Module-specific flags can use a constant when every
+fixture reads the same property, or an instance method when the configuration source varies by
+fixture.
 
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.opt-in=<domain>`       | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.preview=<domain>`      | the domain's `emitOld*Semconv()` / `emitPreview*Semconv()` accessors                                               | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
+
+Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
+and `emitPreview*Semconv()` for preview selection.
+
+### Shared agent and library fixtures
+
+Shared tests can exercise an option configured through a production property in the agent and
+through a builder in the plain library. Resolve the mode in an instance method on the shared test
+base, using the production property for agent fixtures and a test-only flag for plain-library
+fixtures. For example, the AWS SDK tests use:
+
+```java
+protected boolean captureExperimentalSpanAttributes() {
+  return testing() instanceof AgentInstrumentationExtension
+      ? EXPERIMENTAL_ATTRIBUTES
+      : Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+}
+```
+
+Here `EXPERIMENTAL_ATTRIBUTES` reads the agent's production property. Use the same method in
+library builder setup and expected-value helpers. Keep selection dependent on the concrete
+fixture instance; do not cache the resolved mode in a shared static field.
+
+Library-autoconfigure fixtures can use `LibraryInstrumentationExtension` while genuinely reading
+production properties. Override the shared method in those fixtures to select the production
+setting. Preserve overrides that intentionally force a value for a regression scenario.
+This distinction applies to builder-controlled options, not shared production settings that
+libraries actually read. See the
+[library variant example](testing-experimental-flags.md#programmatically-configured-library-tests)
+for Gradle wiring and metadata labels. For synthetic header capture in baseline fixtures and its
+metadata treatment, follow the
+[canonical collection guidance](../../../instrumentation-docs/readme.md#telemetry-collection).
 
 ### Mode-dependent expected values
 
-Database instrumentation tests run either the default or stable database
-semconv mode. Do not add `database/dup` test tasks or expand assertions to
-cover both modes at once. Duplicate-mode coverage belongs in tests for the
-semconv stability API itself.
-
-Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
-carry the same expected value:
+Assert keys and values directly when expectations do not depend on a mode:
 
 ```java
-equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH)
-equalTo(maybeStable(DB_OPERATION), "info")
+equalTo(DB_SYSTEM_NAME, ELASTICSEARCH)
+equalTo(DB_OPERATION_NAME, "info")
+equalTo(ERROR_TYPE, "42601")
 ```
 
-Do not replace these with separate null-gated assertions for the old and stable
-keys:
-
-```java
-equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)
-equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null)
-```
-
-When no established semconv utility applies, put the ternary inside the
+For selectable domains, when no established semconv utility applies, put the ternary inside the
 `equalTo` value or single attribute key. Do not duplicate two whole
 `hasAttributesSatisfyingExactly(...)` blocks under a `flag ? a : b`. This
 includes attributes that exist in only one mode and attributes whose expected
@@ -340,8 +416,8 @@ values differ by mode. The assertion API treats `null` as "expect attribute
 absent":
 
 ```java
-equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
-equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
+equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null)
+equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null)
 equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
@@ -365,20 +441,20 @@ derivation only:
 
 ```java
 // Bad: the helper conditionally builds a list and hides the expected shape.
-private static List<AttributeAssertion> databaseAttributes() {
+private static List<AttributeAssertion> rpcAttributes() {
   List<AttributeAssertion> attributes = new ArrayList<>();
-  if (emitOldDatabaseSemconv()) {
-    attributes.add(equalTo(DB_USER, USER_DB));
+  if (emitOldRpcSemconv()) {
+    attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
   }
-  if (emitStableDatabaseSemconv()) {
-    attributes.add(equalTo(ERROR_TYPE, "42601"));
+  if (emitPreviewRpcSemconv()) {
+    attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
   }
   return attributes;
 }
-span.hasAttributesSatisfyingExactly(databaseAttributes());
+span.hasAttributesSatisfyingExactly(rpcAttributes());
 
 // Good: pass each assertion directly and keep its mode check visible.
 span.hasAttributesSatisfyingExactly(
-    equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
-    equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
+    equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
+    equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
 ```

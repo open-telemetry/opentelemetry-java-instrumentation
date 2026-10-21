@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class KafkaStreamsInstrumentationModule extends InstrumentationModule {
   public KafkaStreamsInstrumentationModule() {
-    super("kafka-streams", "kafka-streams-0.11", "kafka");
+    super("kafka-streams-0.11", "kafka-streams", "kafka");
   }
 
   @Override

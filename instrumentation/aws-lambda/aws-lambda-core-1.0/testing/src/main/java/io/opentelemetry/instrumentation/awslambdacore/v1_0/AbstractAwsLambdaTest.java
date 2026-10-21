@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
@@ -19,6 +20,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +71,7 @@ public abstract class AbstractAwsLambdaTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("my_function")
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
@@ -85,6 +88,7 @@ public abstract class AbstractAwsLambdaTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("my_function")
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasKind(SpanKind.SERVER)
                             .hasStatus(StatusData.error())
                             .hasException(emitExceptionAsSpanEvents() ? thrown : null)
@@ -96,6 +100,7 @@ public abstract class AbstractAwsLambdaTest {
           .waitAndAssertLogRecords(
               logRecord ->
                   logRecord
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                       .hasSeverity(Severity.ERROR)
                       .hasEventName("faas.invocation.exception")
                       .hasException(thrown)

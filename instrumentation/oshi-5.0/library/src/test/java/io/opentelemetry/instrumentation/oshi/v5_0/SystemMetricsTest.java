@@ -11,6 +11,9 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,14 +42,27 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
     return testing;
   }
 
-  @Override
-  @SuppressWarnings("deprecation") // overriding a deprecated abstract method
-  protected String scopeName() {
-    return "io.opentelemetry.oshi-5.0";
+  @Test
+  void verifyObservablesAreNotEmpty() {
+    assertThat(observables).hasSize(7);
   }
 
   @Test
-  void verifyObservablesAreNotEmpty() {
-    assertThat(observables).isNotEmpty();
+  void closingObserversStopsCollection() throws Exception {
+    InMemoryMetricReader reader = InMemoryMetricReader.create();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(reader).build();
+    cleanup.deferCleanup(meterProvider);
+    List<AutoCloseable> callerObservers =
+        SystemMetrics.registerObservers(
+            OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build());
+    try {
+      assertThat(reader.collectAllMetrics()).isNotEmpty();
+    } finally {
+      for (AutoCloseable observer : callerObservers) {
+        observer.close();
+      }
+    }
+    assertThat(reader.collectAllMetrics()).isEmpty();
   }
 }

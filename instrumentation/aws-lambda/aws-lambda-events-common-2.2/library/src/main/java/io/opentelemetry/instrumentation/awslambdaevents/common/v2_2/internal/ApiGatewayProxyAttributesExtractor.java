@@ -11,7 +11,11 @@ import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUt
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -21,6 +25,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import java.io.UnsupportedEncodingException;
@@ -68,13 +73,19 @@ final class ApiGatewayProxyAttributesExtractor
     String userAgent = headers.get("user-agent");
     attributes.put(USER_AGENT_ORIGINAL, userAgent);
 
-    attributes.put(URL_FULL, getHttpUrl(request, headers, sensitiveQueryParameters));
+    attributes.put(URL_PATH, request.getPath());
+    attributes.put(URL_SCHEME, headers.get("x-forwarded-proto"));
+    attributes.put(HTTP_ROUTE, request.getResource());
+    String query = getQueryString(request);
+    attributes.put(URL_QUERY, UrlQuerySanitizer.redactQueryString(query, sensitiveQueryParameters));
+    attributes.put(URL_FULL, getHttpUrl(request, headers, query, sensitiveQueryParameters));
   }
 
   @Nullable
   private static String getHttpUrl(
       APIGatewayProxyRequestEvent request,
       Map<String, String> headers,
+      @Nullable String query,
       Set<String> sensitiveQueryParameters) {
     StringBuilder str = new StringBuilder();
 
@@ -91,21 +102,33 @@ final class ApiGatewayProxyAttributesExtractor
       str.append(path);
     }
 
+    if (query != null) {
+      str.append('?').append(query);
+    }
+    return str.length() == 0
+        ? null
+        : UrlSanitizer.sanitizeUrl(str.toString(), sensitiveQueryParameters);
+  }
+
+  @Nullable
+  private static String getQueryString(APIGatewayProxyRequestEvent request) {
+    StringBuilder str = new StringBuilder();
     try {
       boolean first = true;
       for (Map.Entry<String, String> entry :
           emptyIfNull(request.getQueryStringParameters()).entrySet()) {
         String key = URLEncoder.encode(entry.getKey(), UTF_8.name());
         String value = URLEncoder.encode(entry.getValue(), UTF_8.name());
-        str.append(first ? '?' : '&').append(key).append('=').append(value);
+        if (!first) {
+          str.append('&');
+        }
+        str.append(key).append('=').append(value);
         first = false;
       }
-    } catch (UnsupportedEncodingException ignored) {
-      // Ignore
+    } catch (UnsupportedEncodingException e) {
+      throw new IllegalStateException(e);
     }
-    return str.length() == 0
-        ? null
-        : UrlSanitizer.sanitizeUrl(str.toString(), sensitiveQueryParameters);
+    return str.length() == 0 ? null : str.toString();
   }
 
   @Override

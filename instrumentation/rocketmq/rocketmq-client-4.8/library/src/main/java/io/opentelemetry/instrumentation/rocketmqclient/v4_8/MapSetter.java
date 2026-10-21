@@ -18,7 +18,7 @@ final class MapSetter implements TextMapSetter<SendMessageContext> {
       return;
     }
     Message message = carrier.getMessage();
-    if (message == null) {
+    if (message == null || RocketMqBatchSendSpanLinksExtractor.isBatchRequest(carrier)) {
       return;
     }
     message.getProperties().put(key, value);

@@ -20,7 +20,73 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("*.internal.*")
+      excludeTestsMatching("*.ExceptionHandlingTest")
+      excludeTestsMatching("*.WrapperPropagationDisabledTest")
+      excludeTestsMatching("*.WrapperSuppressReceiveSpansTest")
+      excludeTestsMatching("*.InterceptorsSuppressReceiveSpansTest")
+    }
+  }
+
+  val testRegression = register<Test>("testRegression") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("*.internal.*")
+      includeTestsMatching("*.ExceptionHandlingTest")
+      includeTestsMatching("*.WrapperPropagationDisabledTest")
+      includeTestsMatching("*.WrapperSuppressReceiveSpansTest")
+      includeTestsMatching("*.InterceptorsSuppressReceiveSpansTest")
+    }
+  }
+
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testConsumerError")
+    }
+    systemProperty("test.messagingReceiveTelemetryEnabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)"
+    )
+  }
+
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testWrappers")
+    }
+    systemProperty("test.messagingReceiveTelemetryEnabled", "true")
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
+        "KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)"
+    )
+  }
+
+  val testExperimentalRegression = register<Test>("testExperimentalRegression") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperPropagationDisabledTest.testWrappers")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperSuppressReceiveSpansTest.testWrappers")
+    }
+    systemProperty("test.captureExperimentalSpanAttributes", "true")
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
@@ -28,28 +94,25 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("WrapperTest")
+      includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testConsumerError")
     }
+    systemProperty("test.messagingReceiveTelemetryEnabled", "true")
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+    systemProperty(
+      "metadataConfig",
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
+        "otel.semconv.exception.signal.preview=logs"
+    )
   }
 
   check {
-    dependsOn(testExceptionSignalLogs, testMessagingPreview, testBothSemconv)
+    dependsOn(
+      testRegression,
+      testReceiveTelemetry,
+      testExperimental,
+      testExperimentalRegression,
+      testExceptionSignalLogs,
+    )
   }
 }
 

@@ -12,7 +12,6 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSin
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.api.StatefulConnection;
@@ -38,7 +37,7 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("call").and(takesArguments(1)).and(takesArgument(0, named("rx.Subscriber"))),
+        named("call").and(takesArgument(0, named("rx.Subscriber"))),
         getClass().getName() + "$CallAdvice");
   }
 
@@ -67,10 +66,16 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        if (throwable != null) {
-          instrumenter().end(context, command, null, throwable);
-        } else if (!InstrumentationPoints.expectsResponse(command)) {
-          instrumenter().end(context, command, null, null);
+        try {
+          if (throwable != null) {
+            LettuceSingletons.finishCommandPeer(command);
+            instrumenter().end(context, command, null, throwable);
+          } else if (!InstrumentationPoints.expectsResponse(command)) {
+            LettuceSingletons.finishCommandPeer(command);
+            instrumenter().end(context, command, null, null);
+          }
+        } finally {
+          LettuceSingletons.clearCommandPeer(command);
         }
       }
     }
@@ -97,6 +102,7 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
       // remember the context that called dispatch, it is used in
       // LettuceObservableCommandInstrumentation
       context = context.with(COMMAND_CONTEXT_KEY, parentContext);
+      context = LettuceSingletons.initializeCommandPeer(context, otelCommand);
       return new AdviceScope(otelCommand, context);
     }
 

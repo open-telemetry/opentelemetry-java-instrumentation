@@ -10,10 +10,10 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -22,9 +22,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 public final class CassandraTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-4.4";
-  // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_CASSANDRA_TABLE =
-      AttributeKey.stringKey("db.cassandra.table");
 
   private final OpenTelemetry openTelemetry;
 
@@ -35,10 +32,9 @@ public final class CassandraTelemetryBuilder {
   }
 
   /**
-   * Sets whether the {@code db.statement}/{@code db.query.text} attribute on the spans emitted by
-   * the constructed {@link CassandraTelemetry} should be sanitized. If set to {@code true}, all
-   * parameters that can potentially contain sensitive information will be masked. Enabled by
-   * default.
+   * Sets whether the {@code db.query.text} attribute on the spans emitted by the constructed {@link
+   * CassandraTelemetry} should be sanitized. If set to {@code true}, all parameters that can
+   * potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
   public CassandraTelemetryBuilder setQuerySanitizationEnabled(boolean enabled) {
@@ -54,7 +50,6 @@ public final class CassandraTelemetryBuilder {
     return new CassandraTelemetry(createInstrumenter(openTelemetry, querySanitizationEnabled));
   }
 
-  @SuppressWarnings("deprecation") // to support old database semantic conventions
   private static Instrumenter<CassandraRequest, ExecutionInfo> createInstrumenter(
       OpenTelemetry openTelemetry, boolean querySanitizationEnabled) {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
@@ -66,11 +61,11 @@ public final class CassandraTelemetryBuilder {
                 DbClientSpanNameExtractor.create(attributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
-                    .setTableAttribute(DB_CASSANDRA_TABLE)
                     .setSingleOperationAndCollection(true)
                     .setQuerySanitizationEnabled(querySanitizationEnabled)
                     .build())
             .addAttributesExtractor(new CassandraAttributesExtractor())
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

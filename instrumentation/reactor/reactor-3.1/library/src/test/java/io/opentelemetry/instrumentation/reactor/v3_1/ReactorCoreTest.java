@@ -26,6 +26,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
@@ -282,6 +284,18 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
   }
 
   @Test
+  void fluxPassesDownstreamDemandToSource() {
+    List<Long> requests = new CopyOnWriteArrayList<>();
+    // hide() prevents fusion so that demand reaches the source as request() calls
+    Flux<Integer> source = Flux.range(0, 100).hide().doOnRequest(requests::add);
+    Flux<Integer> flux = ContextPropagationOperator.runWithContext(source, Context.root());
+
+    StepVerifier.create(flux, 1).expectNext(0).thenCancel().verify();
+
+    assertThat(requests).containsExactly(1L);
+  }
+
+  @Test
   void doesNotOverrideInnerCurrentSpans() {
     Flux<Object> publish =
         Flux.create(
@@ -429,6 +443,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     Flux<Integer> publish =
         Flux.create(
             sink -> {
+              assertThat(Context.current().get(TEST_CONTEXT_KEY)).isEqualTo("test-context-value");
               for (int i = 0; i < 2; i++) {
                 int index = i;
                 testing.runWithSpan(
@@ -460,30 +475,35 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         throw new IllegalStateException("Unsupported retry kind " + retryKind);
     }
 
-    flux.subscribe();
+    try (Scope ignored =
+        Context.root().with(TEST_CONTEXT_KEY, "test-context-value").makeCurrent()) {
+      flux.subscribe();
+    }
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
             "produce before retry 0",
             "produce before retry 1",
             "produce after retry 0",
-            "produce after retry 1"),
+            "produce after retry 1",
+            "process 0",
+            "process 1"),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce before retry 0").hasNoParent(),
-                span -> span.hasName("process 0").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce before retry 0").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce before retry 1").hasNoParent(),
-                span -> span.hasName("process 1").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce before retry 1").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce after retry 0").hasNoParent(),
-                span -> span.hasName("process 0").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce after retry 0").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce after retry 1").hasNoParent(),
-                span -> span.hasName("process 1").hasParent(trace.getSpan(0))));
+                span -> span.hasName("produce after retry 1").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 0").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 0").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 1").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 1").hasNoParent()));
   }
 
   @Test

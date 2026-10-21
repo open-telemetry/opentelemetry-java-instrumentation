@@ -7,13 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.time.Duration;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,10 +30,7 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("receiveMessage")
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("apache.rocketmq.v2.ReceiveMessageRequest")))
-            .and(takesArgument(1, named("org.apache.rocketmq.client.java.route.MessageQueueImpl")))
-            .and(takesArgument(2, Duration.class)),
+            .and(takesArgument(0, named("apache.rocketmq.v2.ReceiveMessageRequest"))),
         getClass().getName() + "$ReceiveMessageAdvice");
   }
 
@@ -44,8 +39,8 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onStart(@Advice.This Object consumer) {
-      // SimpleConsumer receives are recorded at the application-facing SimpleConsumerImpl level
-      // under stable/v3 semconv, so the per-queue calls underneath are not recorded again.
+      // SimpleConsumer receives are recorded at the application-facing SimpleConsumerImpl level,
+      // so the per-queue calls underneath do not create duplicate receive spans.
       if (SimpleConsumerReceiveOperation.handlesReceive(consumer)) {
         return null;
       }

@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
@@ -119,10 +118,6 @@ public final class InstrumentationModuleInstaller {
       }
     }
 
-    // enabled for v3 preview, otherwise opt-in
-    if (!AgentCommonConfig.get().isV3Preview() && !AgentDistributionConfig.get().isIndyEnabled()) {
-      return false;
-    }
     // check whether muzzle has collected information about the advice classes
     if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
       Boolean useIsolated =
@@ -160,10 +155,8 @@ public final class InstrumentationModuleInstaller {
             logger,
             instrumentationModule,
             cl ->
-                // In indy modules muzzle searches for types in both application class loader and in
-                // the agent class loader. Since we allow using agent class in indy instrumentation
-                // these classes are treated as regular non-helper classes for which muzzle performs
-                // reference checks.
+                // With isolated helpers, muzzle searches application and agent class loaders.
+                // Agent classes are non-helper classes, so muzzle checks their references.
                 IndyModuleRegistry.createInstrumentationClassLoaderForMuzzle(
                     instrumentationModule, cl));
 

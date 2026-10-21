@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.api.v1_1;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -34,7 +35,9 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(WebServiceClass.class, "doSomethingPublic"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                WebServiceClass.class.getName() + ".doSomethingPublic"))));
   }
 
   @Test
@@ -52,8 +55,27 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(
-                                WebServiceFromInterface.class, "partOfPublicInterface"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                WebServiceFromInterface.class.getName()
+                                    + ".partOfPublicInterface"))));
+  }
+
+  @Test
+  void covariantInterfaceMethod() {
+    new WebServiceFromInterface().covariantMethod();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("WebServiceFromInterface.covariantMethod")
+                        .hasNoParent()
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                WebServiceFromInterface.class.getName() + ".covariantMethod"))));
   }
 
   @Test
@@ -75,7 +97,9 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(
-                                WebServiceFromInterface.class, "partOfPublicInterface"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                WebServiceFromInterface.class.getName()
+                                    + ".partOfPublicInterface"))));
   }
 }

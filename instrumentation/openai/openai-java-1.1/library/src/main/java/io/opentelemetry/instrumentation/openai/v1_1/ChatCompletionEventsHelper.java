@@ -96,7 +96,11 @@ final class ChatCompletionEventsHelper {
       } else {
         continue;
       }
-      newEvent(eventLogger, eventType).setContext(context).setBody(Value.of(body)).emit();
+      LogRecordBuilder event = newEvent(eventLogger, eventType).setContext(context);
+      if (!body.isEmpty()) {
+        event.setBody(Value.of(body));
+      }
+      event.emit();
     }
   }
 

@@ -8,7 +8,7 @@ then runs ``copilot -p ...`` capturing stdout/stderr to
 Exits with the Copilot CLI's exit code so the caller can decide whether to
 upload diagnostics and gate downstream steps.
 
-Required env: ``COPILOT_GITHUB_TOKEN`` (set by the workflow).
+Required env: ``GITHUB_TOKEN`` (set by the workflow for Copilot inference).
 Optional env: ``MODEL`` (defaults to ``gpt-5.5``).
 """
 

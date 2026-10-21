@@ -6,36 +6,41 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
-import java.net.InetSocketAddress;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
 final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final Long batchSize;
-  @Nullable private final InetSocketAddress serverAddress;
+  private final List<RedisCommand<?, ?, ?>> commands;
   @Nullable private final Integer databaseIndex;
+  @Nullable private final RedisServerTarget serverTarget;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable Long batchSize,
-      @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex) {
+      List<RedisCommand<?, ?, ?>> commands,
+      @Nullable Integer databaseIndex,
+      @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.batchSize = batchSize;
-    this.serverAddress = serverAddress;
+    this.commands = commands;
     this.databaseIndex = databaseIndex;
+    this.serverTarget = serverTarget;
   }
 
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
-      @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex) {
+      @Nullable Integer databaseIndex,
+      @Nullable RedisServerTarget serverTarget) {
     return new LettuceBatchRequest(
         operationName(commands),
         commands.size() != 1 ? (long) commands.size() : null,
-        serverAddress,
-        databaseIndex);
+        commands,
+        databaseIndex,
+        serverTarget);
   }
 
   String getOperationName() {
@@ -48,13 +53,20 @@ final class LettuceBatchRequest {
   }
 
   @Nullable
-  InetSocketAddress getServerAddress() {
-    return serverAddress;
+  SocketAddress getPeerAddress() {
+    // Read lazily when the span ends so an outbound write that races the batch dispatch can still
+    // supply the peer.
+    return LettuceSingletons.batchPeerAddress(commands);
   }
 
   @Nullable
   Integer getDatabaseIndex() {
     return databaseIndex;
+  }
+
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return serverTarget;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

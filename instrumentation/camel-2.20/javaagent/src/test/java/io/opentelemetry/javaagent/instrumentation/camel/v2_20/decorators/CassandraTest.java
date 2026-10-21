@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -18,8 +17,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.SchemaUrls.V1_24_0;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
@@ -28,11 +25,7 @@ import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_PAGE_SIZE;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_QUERY_IDEMPOTENT;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
@@ -145,73 +138,37 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
 
     template.requestBody("direct:input", (Object) null);
 
-    if (emitStableDatabaseSemconv()) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("camel.uri"), experimental("direct://input"))),
-                  span ->
-                      span.hasName("select test.users")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
-                              equalTo(SERVER_ADDRESS, host),
-                              equalTo(SERVER_PORT, cassandraPort),
-                              satisfies(
-                                  NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
-                              equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                              equalTo(DB_NAMESPACE, "test"),
-                              equalTo(DB_OPERATION_NAME, "select"),
-                              equalTo(DB_COLLECTION_NAME, "test.users"),
-                              equalTo(
-                                  DB_QUERY_TEXT,
-                                  "select * from test.users where id=1 ALLOW FILTERING"),
-                              equalTo(DB_QUERY_SUMMARY, "select test.users"),
-                              equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                              equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                              satisfies(
-                                  CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
-                              equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                              equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
-                              equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))));
-    } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("camel.uri"), experimental("direct://input"))),
-                  // Camel's DB span (less accurate)
-                  span ->
-                      span.hasName("cql")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .satisfies(
-                              spanData ->
-                                  assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                      .isEqualTo(V1_24_0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  stringKey("camel.uri"),
-                                  experimental("cql://" + host + ":" + cassandraPort + "/test")),
-                              equalTo(DB_NAME, "test"),
-                              equalTo(
-                                  DB_STATEMENT,
-                                  "select * from test.users where id=? ALLOW FILTERING"),
-                              equalTo(DB_SYSTEM, CASSANDRA)),
-                  // Cassandra instrumentation's DB span (more accurate, with connection info)
-                  span ->
-                      span.hasName("SELECT test.users")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(1))));
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
+                span ->
+                    span.hasName("select test.users")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                            equalTo(DB_NAMESPACE, "test"),
+                            equalTo(DB_OPERATION_NAME, "select"),
+                            equalTo(DB_COLLECTION_NAME, "test.users"),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "select * from test.users where id=1 ALLOW FILTERING"),
+                            equalTo(DB_QUERY_SUMMARY, "select test.users"),
+                            equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                            equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                            satisfies(
+                                CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                            equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                            equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
+                            equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))));
   }
 }

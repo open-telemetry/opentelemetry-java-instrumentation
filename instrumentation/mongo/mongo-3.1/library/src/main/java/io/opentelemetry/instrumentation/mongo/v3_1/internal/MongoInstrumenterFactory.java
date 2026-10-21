@@ -8,13 +8,17 @@ package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -25,7 +29,7 @@ public final class MongoInstrumenterFactory {
 
   static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
-  public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
     return createInstrumenter(
         openTelemetry,
@@ -35,7 +39,7 @@ public final class MongoInstrumenterFactory {
         null);
   }
 
-  public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -48,7 +52,7 @@ public final class MongoInstrumenterFactory {
         connectionPeerResolver);
   }
 
-  public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -61,7 +65,7 @@ public final class MongoInstrumenterFactory {
         null);
   }
 
-  private static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  private static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
@@ -71,14 +75,21 @@ public final class MongoInstrumenterFactory {
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(
             querySanitizationEnabled, maxNormalizedQueryLength, connectionPeerResolver);
-    SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
-        new MongoSpanNameExtractor(dbAttributesGetter);
-
-    InstrumenterBuilder<CommandStartedEvent, Void> builder =
-        Instrumenter.<CommandStartedEvent, Void>builder(
-                openTelemetry, instrumentationName, spanNameExtractor)
+    InstrumenterBuilder<CommandStartedEvent, CommandSucceededEvent> builder =
+        Instrumenter.<CommandStartedEvent, CommandSucceededEvent>builder(
+                openTelemetry,
+                instrumentationName,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(new MongoAttributesExtractor(dbAttributesGetter))
+            .setSpanStatusExtractor(
+                (status, request, response, error) -> {
+                  if (dbAttributesGetter.getErrorType(request, response, error) != null) {
+                    status.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault().extract(status, request, response, error);
+                  }
+                })
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

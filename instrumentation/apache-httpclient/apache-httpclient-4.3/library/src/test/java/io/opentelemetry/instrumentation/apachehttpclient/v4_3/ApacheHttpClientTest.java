@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
-import static java.util.Collections.singletonList;
-
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -26,12 +24,10 @@ class ApacheHttpClientTest extends AbstractApacheHttpClientTest {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // testing deprecated API
   protected CloseableHttpClient createClient(boolean readTimeout) {
     HttpClientBuilder builder =
         ApacheHttpClientTelemetry.builder(testing.getOpenTelemetry())
-            // keeps coverage of the deprecated exact-name setter
-            .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+            .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .build()
             .createHttpClientBuilder();

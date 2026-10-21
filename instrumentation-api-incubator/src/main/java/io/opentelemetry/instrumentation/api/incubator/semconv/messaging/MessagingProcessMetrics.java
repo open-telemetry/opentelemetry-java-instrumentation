@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
@@ -23,7 +22,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -37,10 +35,10 @@ public final class MessagingProcessMetrics implements OperationListener {
       ContextKey.named("messaging-process-metrics-state");
   private static final Logger logger = Logger.getLogger(MessagingProcessMetrics.class.getName());
 
-  @Nullable private final DoubleHistogram processDurationHistogram;
+  private final DoubleHistogram processDurationHistogram;
 
   private MessagingProcessMetrics(Meter meter) {
-    processDurationHistogram = emitStableMessagingSemconv() ? buildProcessDuration(meter) : null;
+    processDurationHistogram = buildProcessDuration(meter);
   }
 
   public static OperationMetrics get() {
@@ -50,9 +48,6 @@ public final class MessagingProcessMetrics implements OperationListener {
   @Override
   @CanIgnoreReturnValue
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    if (processDurationHistogram == null) {
-      return context;
-    }
     boolean recordProcessDuration =
         !MessagingTelemetryState.contains(
             context, MessagingOperationType.PROCESS, MessagingTelemetrySignal.PROCESS_DURATION);
@@ -71,9 +66,6 @@ public final class MessagingProcessMetrics implements OperationListener {
 
   @Override
   public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-    if (processDurationHistogram == null) {
-      return;
-    }
     State state = context.get(MESSAGING_PROCESS_METRICS_STATE);
     if (state == null) {
       logger.log(

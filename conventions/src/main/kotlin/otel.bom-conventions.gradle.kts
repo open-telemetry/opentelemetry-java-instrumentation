@@ -27,7 +27,7 @@ afterEvaluate {
   bomProjects.forEach { project ->
     dependencies {
       constraints {
-        api(project)
+        api(dependencies.project(project.path))
       }
     }
   }

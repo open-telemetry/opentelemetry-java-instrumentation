@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -35,20 +34,20 @@ class CassandraBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddContactPointsAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter() {
       CallDepth callDepth = CallDepth.forClass(Cluster.Builder.class);
       callDepth.getAndIncrement();
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Cluster.Builder builder,
         @Advice.AllArguments Object[] arguments,
         @Advice.Enter CallDepth callDepth,
         @Advice.Thrown @Nullable Throwable throwable) {
-      if (callDepth.decrementAndGet() == 0 && emitStableDatabaseSemconv()) {
+      if (callDepth.decrementAndGet() == 0) {
         if (throwable == null) {
           CassandraServerTarget.capture(builder, arguments);
         } else {

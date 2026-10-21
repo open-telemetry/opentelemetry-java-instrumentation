@@ -32,7 +32,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -267,7 +267,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
-            .setSchemaUrl(SchemaUrls.V1_41_0);
+            .setSchemaUrl(HttpSchemaUrls.SCHEMA_URL);
     setHttpClientExceptionEventExtractor(builder);
     if (emitExperimentalHttpClientTelemetry) {
       builder
@@ -288,7 +288,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
           SpanNameExtractor<? super BUILDERREQUEST> spanNameExtractor) {
     return Instrumenter.<BUILDERREQUEST, BUILDERRESPONSE>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
-        .setSchemaUrl(SchemaUrls.V1_41_0);
+        .setSchemaUrl(HttpSchemaUrls.SCHEMA_URL);
   }
 
   public static <REQUEST> void setHttpClientExceptionEventExtractor(
