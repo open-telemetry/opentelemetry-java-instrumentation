@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -29,9 +28,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.ws.rs.core.Application;
 import org.eclipse.jetty.server.Server;
@@ -45,6 +46,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JerseyTest extends AbstractHttpServerUsingTest<Server> {
+
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -118,37 +122,44 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
     assertThat(response.contentUtf8()).isEqualTo(expectedResponse);
 
     String controllerName = className + "." + methodName;
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("POST " + getContextPath() + expectedRoute)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(HTTP_ROUTE, getContextPath() + expectedRoute),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(URL_PATH, getContextPath() + "/" + resource),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT)),
-                span ->
-                    span.hasName(controllerName)
-                        .satisfies(
-                            hasScopeName(
-                                v3Preview()
-                                    ? "io.opentelemetry.jaxrs-1.0-annotations"
-                                    : "io.opentelemetry.jaxrs-1.0"))
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                Resource.class.getName() + "$" + className + "." + methodName))));
+    Consumer<SpanDataAssert> serverSpan =
+        span ->
+            span.hasName(
+                    "POST "
+                        + getContextPath()
+                        + (CONTROLLER_TELEMETRY_ENABLED ? expectedRoute : "/*"))
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
+                    equalTo(HTTP_REQUEST_METHOD, "POST"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                    equalTo(
+                        HTTP_ROUTE,
+                        getContextPath() + (CONTROLLER_TELEMETRY_ENABLED ? expectedRoute : "/*")),
+                    equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                    satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(URL_PATH, getContextPath() + "/" + resource),
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT));
+    if (CONTROLLER_TELEMETRY_ENABLED) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  serverSpan,
+                  span ->
+                      span.hasName(controllerName)
+                          .satisfies(hasScopeName("io.opentelemetry.jaxrs-1.0-annotations"))
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  Resource.class.getName() + "$" + className + "." + methodName))));
+    } else {
+      testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(serverSpan));
+    }
   }
 }

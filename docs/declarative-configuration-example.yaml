@@ -35,7 +35,7 @@ instrumentation/development:
     sanitization:
       url:
         # List of URL query parameter names whose values are redacted in URL attributes. See
-        # https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+        # https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full.
         sensitive_query_parameters:
           - AWSAccessKeyId
           - Signature
@@ -95,9 +95,9 @@ instrumentation/development:
           # adverse impact on database performance.
           enabled: false
       gen_ai:
-        # Determines whether Generative AI events include full content of user and assistant
-        # messages. Note that full content can have data privacy and size concerns and care should
-        # be taken when enabling this
+        # Enables including the full content of system, user, assistant, and tool messages in
+        # emitted log events. Note that full content can have data privacy and size concerns, and
+        # care should be taken when enabling this.
         capture_message_content: false
       http:
         client:
@@ -152,9 +152,9 @@ instrumentation/development:
           # attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs,
           # Logback Logstash markers, and Logstash structured arguments. "*" matches any number of
           # characters and "?" matches one character. Excluded patterns take precedence. An
-          # exclude-only selector captures every key not excluded. An absent or empty selector
-          # captures all structured attributes by default. MDC and logger-context attributes remain
-          # separate and opt-in.
+          # exclude-only selector captures every key not excluded. When the selector is absent or
+          # empty, all structured attributes are captured by default. MDC and logger-context
+          # attributes remain separate and opt-in.
           included: []
 
         # Specifies the key name used to store the trace flags in the logging context.
@@ -169,14 +169,16 @@ instrumentation/development:
       messaging:
         headers:
           # A comma-separated list of case-sensitive message header name glob patterns to exclude
-          # from span attributes. `?` matches one character and `*` matches zero or more characters.
-          # Excluded patterns take precedence over included patterns. An absent or empty selector
-          # captures no headers; an exclude-only selector captures every header not excluded, which
-          # may expose sensitive information.
+          # from span attributes. Captured attribute keys preserve the header name's original
+          # spelling, including dashes. `?` matches one character and `*` matches zero or more
+          # characters. Excluded patterns take precedence over included patterns. An absent or empty
+          # selector captures no headers; an exclude-only selector captures every header not
+          # excluded, which may expose sensitive information.
           excluded: []
 
           # A comma-separated list of case-sensitive message header name glob patterns to capture as
-          # span attributes. `?` matches one character and `*` matches zero or more characters.
+          # span attributes. Captured attribute keys preserve the header name's original spelling,
+          # including dashes. `?` matches one character and `*` matches zero or more characters.
           # Excluded patterns take precedence over included patterns. An absent or empty selector
           # captures no headers; an exclude-only selector captures every header not excluded.
           included: []
@@ -214,16 +216,12 @@ instrumentation/development:
           # Enables capturing the `user.roles` identity attribute. Identity attributes are not
           # captured by default.
           enabled: false
-
-      # Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring
-      # deprecated settings. The set of changes it enables can grow in any release.
-      v3_preview: false
       view_telemetry:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
-      # Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
-      # Different operation types receive different experimental attributes.
+      # Enables experimental span attributes for Couchbase 2.x. For Couchbase 3.x, also enables the
+      # request_encoding and dispatch_to_server internal spans emitted by the SDK.
       emit_experimental_telemetry/development: false
     elasticsearch:
       # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
@@ -363,9 +361,6 @@ instrumentation/development:
       discovery:
         # Time in milliseconds between JMX MBean detection attempts.
         delay: 60000
-
-      # Enables collection of JMX metrics.
-      enabled: true
       metrics:
         # Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*"
         # matches any number of characters and "?" matches one character. Excluded patterns take
@@ -402,9 +397,6 @@ instrumentation/development:
       # `kubernetes-client.name` for Kubernetes API requests.
       experimental_span_attributes/development: false
     lettuce:
-      command_encoding_events/development:
-        # Enables capturing `redis.encode.start` and `redis.encode.end` span events.
-        enabled: false
       connection_telemetry:
         # Enables connection telemetry spans for Redis connections.
         enabled: false
@@ -580,8 +572,8 @@ instrumentation/development:
       jfr_metrics/development:
         # Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with
         # * and ?. Excluded patterns take precedence over included patterns, including over
-        # shorthand and legacy selections. Configuring this property without included selects all
-        # metrics except those excluded.
+        # experimental JFR shorthand selections. Configuring this property without included selects
+        # all metrics except those excluded.
         excluded: []
 
         # Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
@@ -606,7 +598,8 @@ instrumentation/development:
       javascript_snippet/development: ''
       request_parameters/development:
         # A comma-separated list of case-sensitive request parameter name patterns to exclude from
-        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # span attributes under `servlet.request.parameter.<name>`, preserving the original
+        # parameter-name casing. `?` matches one character and `*` matches zero or more characters.
         # Excluded patterns take precedence over included patterns. No request parameters are
         # captured unless an included or excluded pattern is configured; configuring only excluded
         # patterns captures all request parameters that do not match them, which may expose
@@ -614,7 +607,8 @@ instrumentation/development:
         excluded: []
 
         # A comma-separated list of case-sensitive request parameter name patterns to capture as
-        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # span attributes under `servlet.request.parameter.<name>`, preserving the original
+        # parameter-name casing. `?` matches one character and `*` matches zero or more characters.
         # Excluded patterns take precedence over included patterns. No request parameters are
         # captured unless an included or excluded pattern is configured; configuring only excluded
         # patterns captures all request parameters that do not match them, which may expose
@@ -623,7 +617,7 @@ instrumentation/development:
       trace_id_request_attribute/development:
         # Enables adding the trace ID and span ID as request attributes for downstream servlet
         # access.
-        enabled: true
+        enabled: false
     spring_batch:
       chunk/development:
         # When enabled, a new root span will be created for each chunk processing. Please note that

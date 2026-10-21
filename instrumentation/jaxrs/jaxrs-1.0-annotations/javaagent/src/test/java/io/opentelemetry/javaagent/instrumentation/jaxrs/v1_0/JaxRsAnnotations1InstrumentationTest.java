@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -18,7 +17,10 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JavaInterfaces.Jax;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -34,6 +36,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JaxRsAnnotations1InstrumentationTest {
+
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -112,27 +117,29 @@ class JaxRsAnnotations1InstrumentationTest {
     String className = getClassName(action.getClass());
     testing.runWithHttpServerSpan(action::call);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + path)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_ROUTE, path),
-                            equalTo(ERROR_TYPE, OTHER)),
-                span ->
-                    span.hasName(className + ".call")
-                        .satisfies(
-                            hasScopeName(
-                                v3Preview()
-                                    ? "io.opentelemetry.jaxrs-1.0-annotations"
-                                    : "io.opentelemetry.jaxrs-1.0"))
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call"))));
+    Consumer<SpanDataAssert> serverSpan =
+        span ->
+            span.hasName(CONTROLLER_TELEMETRY_ENABLED ? "GET " + path : "GET")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(HTTP_ROUTE, CONTROLLER_TELEMETRY_ENABLED ? path : null),
+                    equalTo(ERROR_TYPE, OTHER));
+    if (CONTROLLER_TELEMETRY_ENABLED) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  serverSpan,
+                  span ->
+                      span.hasName(className + ".call")
+                          .satisfies(hasScopeName("io.opentelemetry.jaxrs-1.0-annotations"))
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call"))));
+    } else {
+      testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(serverSpan));
+    }
   }
 
   @Test
@@ -155,6 +162,61 @@ class JaxRsAnnotations1InstrumentationTest {
                             equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
   }
 
+  @Test
+  void covariantInterfaceMethod() {
+    CovariantInterfaceResource action = new CovariantInterfaceResourceImpl();
+    testing.runWithHttpServerSpan((ThrowingRunnable<RuntimeException>) action::call);
+    assertCovariantRoute("/covariant-interface/interface", CovariantInterfaceResourceImpl.class);
+  }
+
+  @Test
+  void covariantSuperclassMethod() {
+    CovariantSuperclassResource action = new CovariantSuperclassResourceImpl();
+    testing.runWithHttpServerSpan((ThrowingRunnable<RuntimeException>) action::call);
+    assertCovariantRoute("/covariant-superclass/superclass", CovariantSuperclassResourceImpl.class);
+  }
+
+  @Test
+  void covariantMethodWithDifferentParametersIsNotMatched() {
+    CovariantInterfaceResourceImpl action = new CovariantInterfaceResourceImpl();
+    testing.runWithHttpServerSpan((ThrowingRunnable<RuntimeException>) () -> action.call(1L));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
+  }
+
+  private static void assertCovariantRoute(String route, Class<?> resourceClass) {
+    testing.waitAndAssertTraces(
+        trace -> {
+          Consumer<SpanDataAssert> serverSpan =
+              span ->
+                  span.hasName(CONTROLLER_TELEMETRY_ENABLED ? "GET " + route : "GET")
+                      .hasKind(SpanKind.SERVER)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "GET"),
+                          equalTo(HTTP_ROUTE, CONTROLLER_TELEMETRY_ENABLED ? route : null),
+                          equalTo(ERROR_TYPE, OTHER));
+          if (CONTROLLER_TELEMETRY_ENABLED) {
+            trace.hasSpansSatisfyingExactly(
+                serverSpan,
+                span ->
+                    span.hasName(getClassName(resourceClass) + ".call")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, resourceClass.getName() + ".call")));
+          } else {
+            trace.hasSpansSatisfyingExactly(serverSpan);
+          }
+        });
+  }
+
   @Path("/interface")
   interface InterfaceWithPath extends Jax {
     @GET
@@ -175,5 +237,52 @@ class JaxRsAnnotations1InstrumentationTest {
     @POST
     @Override
     public void call() {}
+  }
+
+  @Path("covariant-interface")
+  interface CovariantInterfaceResource {
+    @GET
+    @Path("interface")
+    Object call();
+
+    @GET
+    @Path("overload")
+    Object call(Integer value);
+  }
+
+  static class CovariantInterfaceResourceImpl implements CovariantInterfaceResource {
+    @Override
+    public String call() {
+      return "";
+    }
+
+    @Override
+    public Object call(Integer value) {
+      return value;
+    }
+
+    public String call(Long value) {
+      return value.toString();
+    }
+  }
+
+  @Path("covariant-superclass")
+  abstract static class CovariantSuperclassResource {
+    @GET
+    @Path("superclass")
+    public abstract Object call();
+
+    @GET
+    @Path("overload")
+    public Object call(Integer value) {
+      return value;
+    }
+  }
+
+  static class CovariantSuperclassResourceImpl extends CovariantSuperclassResource {
+    @Override
+    public String call() {
+      return "";
+    }
   }
 }

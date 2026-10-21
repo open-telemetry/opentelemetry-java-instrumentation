@@ -19,17 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule {
   public SpringSecurityConfigServletInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview()
-            ? "spring-security-config-6.0"
-            : "spring-security-config",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-security-config"}
-            : new String[] {
-              "spring-security-config-6.0",
-              "spring-security-config-servlet",
-              "spring-security-config-servlet-6.0"
-            });
+    super("spring-security-config-6.0", "spring-security-config");
   }
 
   @Override

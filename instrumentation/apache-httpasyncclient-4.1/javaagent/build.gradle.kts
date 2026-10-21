@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -17,19 +20,14 @@ dependencies {
   library("org.apache.httpcomponents:httpasyncclient:4.1")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("PreviewSemconv") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+        }
+      }
+    }
   }
 }

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -25,9 +26,8 @@ public class RediscalaSingletons {
 
   private static final Instrumenter<RediscalaRequest, Void> instrumenter;
 
-  public static final VirtualField<TransactionBuilder, RediscalaTransactionState>
-      TRANSACTION_STATE =
-          VirtualField.find(TransactionBuilder.class, RediscalaTransactionState.class);
+  public static final VirtualField<TransactionBuilder, Object> TRANSACTION_CLIENT =
+      VirtualField.find(TransactionBuilder.class, Object.class, "transactionClient");
 
   public static final VirtualField<Request, RedisServerTarget> REQUEST_TARGET =
       VirtualField.find(Request.class, RedisServerTarget.class);
@@ -41,6 +41,7 @@ public class RediscalaSingletons {
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 

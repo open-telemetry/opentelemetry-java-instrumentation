@@ -52,13 +52,12 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val redisson324StableSemconv = testing.suites.withType(JvmTestSuite::class)
+  val redisson324ServerTarget = testing.suites.withType(JvmTestSuite::class)
     .matching { it.name == "redisson324Test" }
     .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
+      register<Test>("${suite.name}ServerTarget") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
         filter {
@@ -69,7 +68,7 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, redisson324StableSemconv)
+    dependsOn(testing.suites, redisson324ServerTarget)
   }
 
   if (otelProps.denyUnsafe) {

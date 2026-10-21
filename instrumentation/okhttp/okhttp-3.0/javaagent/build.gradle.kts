@@ -34,14 +34,22 @@ testing {
         implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
       }
     }
+
+    register<JvmTestSuite>("okhttp4Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+      dependencies {
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+        implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+      }
+    }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
       register<Test>("${suite.name}PreviewSemconv") {

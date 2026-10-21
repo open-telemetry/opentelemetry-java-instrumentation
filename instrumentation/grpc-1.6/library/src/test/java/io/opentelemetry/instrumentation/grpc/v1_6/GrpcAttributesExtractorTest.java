@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -26,6 +27,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.HashSet;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -52,8 +54,7 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
-        .onEnd(attributes, Context.root(), request, null, null);
+    createExtractor(selector).onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
     assertThat(result.get(oldMetadataAttributeKey("included-key")))
@@ -73,8 +74,7 @@ class GrpcAttributesExtractorTest {
         GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), null)
-        .onEnd(attributes, Context.root(), request, null, null);
+    createExtractor(null).onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
   }
@@ -87,7 +87,7 @@ class GrpcAttributesExtractorTest {
         GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), IncludeExclude.builder().build())
+    createExtractor(IncludeExclude.builder().build())
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
@@ -112,8 +112,7 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
-        .onEnd(attributes, Context.root(), request, null, null);
+    createExtractor(selector).onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
     assertThat(result.get(oldMetadataAttributeKey("included-key")))
@@ -135,8 +134,7 @@ class GrpcAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     IncludeExclude selector = IncludeExclude.builder().setIncluded(singleton("*")).build();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
-        .onEnd(attributes, Context.root(), request, null, null);
+    createExtractor(selector).onEnd(attributes, Context.root(), request, null, null);
 
     assertThat(attributes.build()).isEqualTo(Attributes.empty());
   }
@@ -144,6 +142,13 @@ class GrpcAttributesExtractorTest {
   private static void assertExcludedMetadata(Attributes attributes, String key) {
     assertThat(attributes.get(oldMetadataAttributeKey(key))).isNull();
     assertThat(attributes.get(stableMetadataAttributeKey(key))).isNull();
+  }
+
+  private static GrpcAttributesExtractor createExtractor(@Nullable IncludeExclude selector) {
+    GrpcAttributesExtractor extractor =
+        new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(false), selector);
+    extractor.internalInitialize(OpenTelemetry.noop());
+    return extractor;
   }
 
   private static AttributeKey<List<String>> oldMetadataAttributeKey(String key) {

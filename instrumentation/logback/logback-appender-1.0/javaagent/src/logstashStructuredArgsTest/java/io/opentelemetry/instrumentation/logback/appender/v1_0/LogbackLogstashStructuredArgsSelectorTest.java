@@ -76,8 +76,6 @@ class LogbackLogstashStructuredArgsSelectorTest {
         // an empty included list captures everything not excluded
         expectedKeys = asList("key1", "key2", "keyLong");
         break;
-      case "all":
-        return new HashMap<>(STRUCTURED_ARGUMENTS);
       case "none":
         expectedKeys = emptyList();
         break;

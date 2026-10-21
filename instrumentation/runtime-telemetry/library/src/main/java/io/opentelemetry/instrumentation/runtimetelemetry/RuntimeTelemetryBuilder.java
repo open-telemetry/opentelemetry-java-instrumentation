@@ -49,15 +49,8 @@ public final class RuntimeTelemetryBuilder {
 
   private boolean emitExperimentalMetrics;
   private boolean emitExperimentalJfrMetrics;
-  private boolean preferJfrMetrics;
   @Nullable private IncludeExclude jfrMetrics;
-  private boolean suppressOverlappingJmxMetrics = true;
   private boolean disableJmx;
-  private boolean captureGcCause;
-  private boolean useLegacyJfrCpuCountMetric;
-  // For backward compatibility: support separate instrumentation names for JMX and JFR metrics
-  @Nullable private String jmxInstrumentationName;
-  @Nullable private String jfrInstrumentationName;
 
   static {
     Experimental.internalSetEmitExperimentalMetrics(
@@ -65,21 +58,6 @@ public final class RuntimeTelemetryBuilder {
     Experimental.internalSetEmitExperimentalJfrMetrics(
         (builder, emit) -> builder.emitExperimentalJfrMetrics = emit);
     Experimental.internalSetJfrMetrics((builder, selector) -> builder.jfrMetrics = selector);
-    Experimental.internalSetPreferJfrMetrics(
-        (builder, prefer) -> builder.preferJfrMetrics = prefer);
-    Internal.internalSetJfrMetrics((builder, selector) -> builder.jfrMetrics = selector);
-    Internal.internalSetSuppressOverlappingJmxMetrics(
-        (builder, suppress) -> builder.suppressOverlappingJmxMetrics = suppress);
-    Internal.internalSetCaptureGcCause((builder, capture) -> builder.captureGcCause = capture);
-    Internal.internalSetUseLegacyJfrCpuCountMetric(
-        (builder, useLegacy) -> {
-          builder.useLegacyJfrCpuCountMetric = useLegacy;
-          builder.jfrConfig.setUseLegacyJfrCpuCountMetric(useLegacy);
-        });
-    Internal.internalSetJmxInstrumentationName(
-        (builder, name) -> builder.jmxInstrumentationName = name);
-    Internal.internalSetJfrInstrumentationName(
-        (builder, name) -> builder.jfrInstrumentationName = name);
     Internal.internalSetDisableJmx((builder, disable) -> builder.disableJmx = disable);
   }
 
@@ -97,42 +75,31 @@ public final class RuntimeTelemetryBuilder {
 
   /** Build and start a {@link RuntimeTelemetry} with the config from this builder. */
   public RuntimeTelemetry build() {
-    // Use configured names, or fall back to default if not set
-    String jmxName =
-        jmxInstrumentationName != null ? jmxInstrumentationName : DEFAULT_INSTRUMENTATION_NAME;
-    String jfrName =
-        jfrInstrumentationName != null ? jfrInstrumentationName : DEFAULT_INSTRUMENTATION_NAME;
-
+    Meter schemaMeter = getMeter(openTelemetry, SchemaUrls.V1_44_0);
     IncludeExclude effectiveJfrMetrics = getEffectiveJfrMetrics();
     JfrConfig.JfrTelemetry jfrTelemetry =
         effectiveJfrMetrics == null
             ? new JfrConfig.JfrTelemetry(null, emptySet())
             : jfrConfig.buildJfrTelemetry(
                 effectiveJfrMetrics::matches,
-                this::isJfrMetricCoveredBySchema,
-                getMeter(openTelemetry, jfrName, SchemaUrls.V1_44_0),
-                getMeter(openTelemetry, jfrName, null),
-                suppressOverlappingJmxMetrics && !disableJmx,
+                RuntimeTelemetryBuilder::isJfrMetricCoveredBySchema,
+                schemaMeter,
+                getMeter(openTelemetry, null),
+                !disableJmx,
                 emitExperimentalMetrics);
     Set<String> jfrMetricNames = jfrTelemetry.getMetricNames();
 
-    Meter jmxMeter = getMeter(openTelemetry, jmxName, SchemaUrls.V1_44_0);
     List<AutoCloseable> observables =
         disableJmx
             ? emptyList()
             : JmxRuntimeMetricsFactory.buildObservables(
                 emitExperimentalMetrics,
-                captureGcCause,
-                metricName ->
-                    !suppressOverlappingJmxMetrics || !jfrMetricNames.contains(metricName),
-                jmxMeter);
+                metricName -> !jfrMetricNames.contains(metricName),
+                schemaMeter);
     return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry());
   }
 
-  private boolean isJfrMetricCoveredBySchema(String metricName) {
-    if (useLegacyJfrCpuCountMetric && metricName.equals("jvm.cpu.limit")) {
-      return false;
-    }
+  private static boolean isJfrMetricCoveredBySchema(String metricName) {
     if (EXPERIMENTAL_JFR_METRICS.contains(metricName)) {
       // Experimental JFR buffer metrics are covered by the schema.
       return metricName.startsWith("jvm.buffer.");
@@ -155,9 +122,6 @@ public final class RuntimeTelemetryBuilder {
       included.addAll(selector.getIncluded());
       excluded = selector.getExcluded();
     }
-    if (preferJfrMetrics) {
-      included.addAll(Experimental.JMX_OVERLAPPING_JFR_METRICS);
-    }
     if (emitExperimentalJfrMetrics) {
       included.addAll(EXPERIMENTAL_JFR_METRICS);
     }
@@ -169,15 +133,11 @@ public final class RuntimeTelemetryBuilder {
     return IncludeExclude.builder().setIncluded(included).setExcluded(excluded).build();
   }
 
-  private static Meter getMeter(
-      OpenTelemetry openTelemetry, String instrumentationName, @Nullable String schemaUrl) {
-    MeterBuilder meterBuilder = openTelemetry.meterBuilder(instrumentationName);
+  private static Meter getMeter(OpenTelemetry openTelemetry, @Nullable String schemaUrl) {
+    MeterBuilder meterBuilder = openTelemetry.meterBuilder(DEFAULT_INSTRUMENTATION_NAME);
     if (schemaUrl != null) {
       meterBuilder.setSchemaUrl(schemaUrl);
     }
-    // version file is generated from the gradle module name; the emitted scope may be a legacy
-    // name from a previously-renamed module (e.g. runtime-telemetry-java8) that has no version
-    // file of its own, so always look the version up under the current module name
     String version = EmbeddedInstrumentationProperties.findVersion(DEFAULT_INSTRUMENTATION_NAME);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);

@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Struts2InstrumentationModule extends InstrumentationModule {
 
   public Struts2InstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "struts-7.0" : "struts",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"struts"}
-            : new String[] {"struts-7.0"});
+    super("struts-7.0", "struts");
   }
 
   @Override

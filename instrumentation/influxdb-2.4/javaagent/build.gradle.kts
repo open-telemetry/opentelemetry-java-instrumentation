@@ -41,7 +41,6 @@ tasks {
     // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
     jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   if (!otelProps.testLatestDeps) {
@@ -63,23 +62,11 @@ tasks {
     filter {
       includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
     }
-    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false")
-    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-  }
-
-  val testQuerySanitizationEnabledOverride = register<Test>("testQuerySanitizationEnabledOverride") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("InfluxDbClientTest.testQueryWithTwoArguments")
-    }
-    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.instrumentation.influxdb.query-sanitization.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-    jvmArgs("-Dotel.instrumentation.influxdb.query-sanitization.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.influxdb.query-sanitization.enabled=false")
+    jvmArgs("-Dotel.instrumentation.influxdb.query-sanitization.enabled=false")
   }
 
   check {
-    dependsOn(testQuerySanitizationDisabled, testQuerySanitizationEnabledOverride)
+    dependsOn(testQuerySanitizationDisabled)
   }
 }
