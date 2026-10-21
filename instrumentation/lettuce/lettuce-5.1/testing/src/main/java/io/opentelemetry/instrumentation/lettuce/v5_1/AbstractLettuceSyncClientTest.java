@@ -22,6 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.RedisClient;
@@ -42,8 +43,12 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClientTest {
@@ -149,6 +154,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 NETWORK_PEER_ADDRESS,
                 NETWORK_PEER_PORT));
     assertDurationMetric(testing(), "io.opentelemetry.lettuce-5.1", toArray(expected));
+    assertCommandMetric("SET", null);
   }
 
   @SuppressWarnings("rawtypes")
@@ -294,10 +300,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(DB_OPERATION_NAME, "LPUSH"),
-                                    equalTo(ERROR_TYPE, "WRONGTYPE")))
+                                    equalTo(ERROR_TYPE, testLatestDeps() ? "WRONGTYPE" : "_OTHER")))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
-    assertCommandErrorMetric("WRONGTYPE");
+    assertCommandMetric("LPUSH", testLatestDeps() ? "WRONGTYPE" : "_OTHER");
   }
 
   @Test
@@ -329,9 +335,72 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                         DB_QUERY_TEXT,
                                         "EVALSHA 0000000000000000000000000000000000000000 0"),
                                     equalTo(DB_OPERATION_NAME, "EVALSHA"),
-                                    equalTo(ERROR_TYPE, "NOSCRIPT")))));
+                                    equalTo(
+                                        ERROR_TYPE, testLatestDeps() ? "NOSCRIPT" : "_OTHER")))));
 
-    assertCommandErrorMetric("NOSCRIPT");
+    assertCommandMetric("EVALSHA", testLatestDeps() ? "NOSCRIPT" : "_OTHER");
+  }
+
+  @ParameterizedTest
+  @MethodSource("serverErrorReplies")
+  void testServerErrorReply(String errorMessage, String errorType) {
+    String script = "return redis.error_reply(ARGV[1])";
+    Throwable thrown =
+        catchThrowable(
+            () -> syncCommands.eval(script, ScriptOutputType.VALUE, new String[0], errorMessage));
+    // Lettuce 5.1 decodes error bytes individually instead of as UTF-8.
+    assertThat(thrown)
+        .isInstanceOf(RedisCommandExecutionException.class)
+        .hasMessage(
+            !testLatestDeps() && errorMessage.equals("échec details")
+                ? "ￃﾩchec details"
+                : errorMessage);
+
+    String b64Script = Base64.getEncoder().encodeToString(script.getBytes(UTF_8));
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("EVAL"))
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(DB_SYSTEM_NAME, REDIS),
+                                    equalTo(DB_QUERY_TEXT, "EVAL " + b64Script + " 0 ?"),
+                                    equalTo(DB_OPERATION_NAME, "EVAL"),
+                                    equalTo(
+                                        ERROR_TYPE, testLatestDeps() ? errorType : "_OTHER")))));
+
+    assertCommandMetric("EVAL", testLatestDeps() ? errorType : "_OTHER");
+  }
+
+  private static Stream<Arguments> serverErrorReplies() {
+    return Stream.of(
+        argumentSet(
+            "timeout-looking details",
+            "ERR upstream failed. Command timed out after 100 millisecond(s)",
+            "ERR"),
+        argumentSet(
+            "timeout-looking prefix", "Command timed out after 100 millisecond(s)", "Command"),
+        argumentSet("disconnect-looking reply", "Connection closed", "Connection"),
+        argumentSet("lowercase", "wrongtype details", "wrongtype"),
+        argumentSet("punctuation", "Custom.Code! details", "Custom.Code!"),
+        argumentSet("leading spaces", "   Custom.Code! details", "Custom.Code!"),
+        argumentSet("tab within prefix", "ERR\tDETAIL message", "ERR\tDETAIL"),
+        argumentSet("non-ASCII prefix", "échec details", "échec"),
+        argumentSet(
+            "long prefix",
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMN details",
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMN"),
+        argumentSet("empty reply", "", RedisCommandExecutionException.class.getName()),
+        argumentSet("spaces only", "   ", RedisCommandExecutionException.class.getName()));
   }
 
   @Test
@@ -569,7 +638,11 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(DB_SYSTEM_NAME, REDIS),
                                   equalTo(DB_QUERY_TEXT, "SHUTDOWN NOSAVE"),
                                   equalTo(DB_OPERATION_NAME, "SHUTDOWN"),
-                                  equalTo(ERROR_TYPE, RedisException.class.getName())));
+                                  equalTo(
+                                      ERROR_TYPE,
+                                      testLatestDeps()
+                                          ? RedisException.class.getName()
+                                          : "_OTHER")));
                       if (testLatestDeps()) {
                         // Seems to only be treated as an error with Lettuce 6+
                         // and also produces an exception event
@@ -577,5 +650,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasEventsSatisfyingExactly(event -> event.hasName("exception"));
                       }
                     }));
+
+    assertCommandMetric("SHUTDOWN", testLatestDeps() ? RedisException.class.getName() : "_OTHER");
   }
 }

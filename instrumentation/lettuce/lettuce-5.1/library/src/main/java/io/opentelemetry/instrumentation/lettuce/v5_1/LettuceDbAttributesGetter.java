@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import io.lettuce.core.RedisCommandExecutionException;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -54,9 +53,7 @@ final class LettuceDbAttributesGetter
     if (!response.isFailed()) {
       return null;
     }
-    return error != null
-        ? error.getClass().getName()
-        : RedisCommandExecutionException.class.getName();
+    return error != null ? error.getClass().getName() : "_OTHER";
   }
 
   @Nullable

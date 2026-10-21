@@ -48,3 +48,14 @@ ClientResources clientResources = ClientResources.builder()
 RedisClient redisClient = RedisClient.create(clientResources, "redis://localhost:6379");
 StatefulRedisConnection<String, String> connection = redisClient.connect();
 ```
+
+### Error classification
+
+Lettuce 5.x tracing callbacks can report server replies and client failures as messages without
+their exceptions. These failures use `error.type="_OTHER"` on spans and duration metrics because
+the callback cannot distinguish their origin. When Lettuce supplies an exception, its class is
+available as a fallback.
+
+With Lettuce 6.0 and higher, command-aware callbacks distinguish server replies from client
+failures. Server errors use the first nonempty ASCII-space-delimited token, preserving its
+text; client failures use their exception class. Successful operations omit `error.type`.

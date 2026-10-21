@@ -35,22 +35,27 @@ class LettuceResponseTest {
   }
 
   @Test
-  void stopsAtReplyTerminator() {
-    assertThat(LettuceResponse.fromErrorMessage("ERR\r\nadditional data").getRedisErrorType())
+  void skipsLeadingAsciiSpaces() {
+    assertThat(LettuceResponse.fromErrorMessage("   ERR details").getRedisErrorType())
         .isEqualTo("ERR");
+    assertThat(LettuceResponse.fromErrorMessage("   Custom.Code!").getRedisErrorType())
+        .isEqualTo("Custom.Code!");
   }
 
   @Test
   void onlyAsciiSpaceSeparatesTokens() {
     assertThat(LettuceResponse.fromErrorMessage("ERR\tDETAIL message").getRedisErrorType())
         .isEqualTo("ERR\tDETAIL");
+    assertThat(LettuceResponse.fromErrorMessage(" \tERR details").getRedisErrorType())
+        .isEqualTo("\tERR");
+    assertThat(LettuceResponse.fromErrorMessage("échec details").getRedisErrorType())
+        .isEqualTo("échec");
   }
 
   @Test
   void returnsNullWhenReplyHasNoUsablePrefix() {
     assertThat(LettuceResponse.fromErrorMessage(null).getRedisErrorType()).isNull();
     assertThat(LettuceResponse.fromErrorMessage("").getRedisErrorType()).isNull();
-    assertThat(LettuceResponse.fromErrorMessage(" details").getRedisErrorType()).isNull();
-    assertThat(LettuceResponse.fromErrorMessage("\r\n").getRedisErrorType()).isNull();
+    assertThat(LettuceResponse.fromErrorMessage("   ").getRedisErrorType()).isNull();
   }
 }

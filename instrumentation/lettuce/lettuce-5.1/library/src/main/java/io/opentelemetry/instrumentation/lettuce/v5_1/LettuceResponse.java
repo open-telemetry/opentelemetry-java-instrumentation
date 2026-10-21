@@ -16,6 +16,10 @@ final class LettuceResponse {
     return new LettuceResponse(errorMessage != null, extractRedisErrorPrefix(errorMessage));
   }
 
+  static LettuceResponse unknownFailure() {
+    return new LettuceResponse(true, null);
+  }
+
   private LettuceResponse(boolean failed, @Nullable String redisErrorType) {
     this.failed = failed;
     this.redisErrorType = redisErrorType;
@@ -36,15 +40,16 @@ final class LettuceResponse {
       return null;
     }
 
-    // Redis error prefixes are the first nonempty, ASCII-space-delimited token of an error reply.
-    int end = errorMessage.indexOf("\r\n");
-    if (end == -1) {
-      end = errorMessage.length();
+    int start = 0;
+    while (start < errorMessage.length() && errorMessage.charAt(start) == ' ') {
+      start++;
     }
-    int separator = errorMessage.indexOf(' ');
-    if (separator == -1 || separator > end) {
-      separator = end;
+    if (start == errorMessage.length()) {
+      return null;
     }
-    return separator == 0 ? null : errorMessage.substring(0, separator);
+    int separator = errorMessage.indexOf(' ', start);
+    return separator == -1
+        ? errorMessage.substring(start)
+        : errorMessage.substring(start, separator);
   }
 }
