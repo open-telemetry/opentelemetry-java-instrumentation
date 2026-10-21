@@ -37,6 +37,10 @@ testing {
 
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  if (otelProps.testLatestDeps) {
+    // The reflection-based Triple transport serializes Dubbo's status object with the exception.
+    systemProperty("dubbo.application.serialize-check-status", "WARN")
+  }
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")

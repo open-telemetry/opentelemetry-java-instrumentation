@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsCont
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -107,6 +108,7 @@ public final class DubboTelemetryBuilder {
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
+            .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
             .addAttributesExtractor(RpcServerAttributesExtractor.create(serverRpcAttributesGetter))
             .addAttributesExtractor(serverStatusExtractor)
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
@@ -120,6 +122,7 @@ public final class DubboTelemetryBuilder {
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor)
+            .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
             .addAttributesExtractor(RpcClientAttributesExtractor.create(clientRpcAttributesGetter))
             .addAttributesExtractor(clientStatusExtractor)
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))

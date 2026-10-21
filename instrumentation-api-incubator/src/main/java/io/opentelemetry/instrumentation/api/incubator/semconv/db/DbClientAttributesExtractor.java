@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
@@ -23,7 +24,6 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -143,6 +143,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public String internalGetSchemaUrl() {
-    return SchemaUrls.V1_44_0;
+    return DbSchemaUrls.SCHEMA_URL;
   }
 }

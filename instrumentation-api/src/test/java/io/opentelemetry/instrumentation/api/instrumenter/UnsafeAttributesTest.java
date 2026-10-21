@@ -11,9 +11,21 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import org.junit.jupiter.api.Test;
 
 class UnsafeAttributesTest {
+
+  @Test
+  void removeAttribute() {
+    AttributesBuilder attributes = new UnsafeAttributes();
+    attributes.put("animal", "cat");
+    attributes.put("country", "japan");
+
+    attributes.remove(stringKey("animal"));
+
+    assertThat(attributes.build()).containsOnly(attributeEntry("country", "japan"));
+  }
 
   @Test
   void buildAndUse() {

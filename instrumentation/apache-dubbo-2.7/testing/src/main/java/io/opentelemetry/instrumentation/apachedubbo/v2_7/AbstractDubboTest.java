@@ -486,19 +486,13 @@ public abstract class AbstractDubboTest {
   @Test
   void testRpcExceptionFailure() throws ReflectiveOperationException {
     assertFailure(
-        new RpcException(RpcException.NETWORK_EXCEPTION),
-        false,
-        GenericException.class.getName(),
-        RpcException.class.getName());
+        new RpcException(RpcException.NETWORK_EXCEPTION), false, RpcException.class.getName());
   }
 
   @Test
   void testAsyncRpcExceptionFailure() throws ReflectiveOperationException {
     assertFailure(
-        new RpcException(RpcException.TIMEOUT_EXCEPTION),
-        true,
-        GenericException.class.getName(),
-        RpcException.class.getName());
+        new RpcException(RpcException.TIMEOUT_EXCEPTION), true, RpcException.class.getName());
   }
 
   @Test
@@ -506,15 +500,10 @@ public abstract class AbstractDubboTest {
     assertFailure(
         new IllegalStateException("expected failure"),
         false,
-        GenericException.class.getName(),
         IllegalStateException.class.getName());
   }
 
-  private void assertFailure(
-      RuntimeException failure,
-      boolean asynchronous,
-      String clientErrorType,
-      String serverErrorType)
+  private void assertFailure(RuntimeException failure, boolean asynchronous, String serverErrorType)
       throws ReflectiveOperationException {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
@@ -563,9 +552,10 @@ public abstract class AbstractDubboTest {
     assertFailureTelemetry(
         "org.apache.dubbo.rpc.service.GenericService/"
             + (asynchronous ? "$invokeAsync" : "$invoke"),
-        clientErrorType,
+        testLatestDeps()
+            ? "com.alibaba.dubbo.rpc.service.GenericException"
+            : GenericException.class.getName(),
         serverErrorType,
-        null,
         true);
   }
 
@@ -573,7 +563,6 @@ public abstract class AbstractDubboTest {
       String clientMethod,
       String clientErrorType,
       String serverErrorType,
-      String responseStatusCode,
       boolean serverStatusIsError) {
     testing()
         .waitAndAssertTraces(
@@ -598,17 +587,14 @@ public abstract class AbstractDubboTest {
                             .hasAttributesSatisfying(
                                 equalTo(
                                     ERROR_TYPE, emitPreviewRpcSemconv() ? serverErrorType : null),
-                                equalTo(
-                                    stringKey("rpc.response.status_code"),
-                                    emitPreviewRpcSemconv() ? responseStatusCode : null))));
+                                equalTo(stringKey("rpc.response.status_code"), null))));
 
     if (emitPreviewRpcSemconv()) {
       assertPreviewErrorMetric(
           "rpc.server.call.duration",
           "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
-          serverErrorType,
-          responseStatusCode);
-      assertPreviewErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType, null);
+          serverErrorType);
+      assertPreviewErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType);
     }
   }
 
@@ -671,7 +657,6 @@ public abstract class AbstractDubboTest {
         "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
         clientErrorType,
         serverErrorType,
-        statusCode,
         serverStatusIsError);
   }
 
@@ -685,8 +670,7 @@ public abstract class AbstractDubboTest {
     return (RuntimeException) statusClass.getMethod("asException").invoke(status);
   }
 
-  private void assertPreviewErrorMetric(
-      String metricName, String method, String errorType, String responseStatusCode) {
+  private void assertPreviewErrorMetric(String metricName, String method, String errorType) {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.apache-dubbo-2.7",
@@ -703,17 +687,13 @@ public abstract class AbstractDubboTest {
                                         equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                         equalTo(RPC_METHOD, method),
                                         equalTo(ERROR_TYPE, null),
-                                        equalTo(
-                                            stringKey("rpc.response.status_code"),
-                                            responseStatusCode));
+                                        equalTo(stringKey("rpc.response.status_code"), null));
                                   } else {
                                     point.hasAttributesSatisfying(
                                         equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                         equalTo(RPC_METHOD, method),
                                         equalTo(ERROR_TYPE, errorType),
-                                        equalTo(
-                                            stringKey("rpc.response.status_code"),
-                                            responseStatusCode));
+                                        equalTo(stringKey("rpc.response.status_code"), null));
                                   }
                                 })));
   }

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
@@ -24,9 +23,6 @@ final class DubboRpcResponseStatusExtractor
     implements AttributesExtractor<DubboRequest, Result>,
         SpanStatusExtractor<DubboRequest, Result>,
         OpenTelemetryConfigurable {
-
-  private static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE =
-      AttributeKey.stringKey("rpc.response.status_code");
 
   private final boolean isClient;
   private final RpcSemconvSelection semconvSelection = new RpcSemconvSelection();
@@ -57,7 +53,6 @@ final class DubboRpcResponseStatusExtractor
     if (statusCode == null) {
       return;
     }
-    attributes.put(RPC_RESPONSE_STATUS_CODE, statusCode);
     if (!DubboRpcStatus.isError(statusCode, isClient)
         && (!"OK".equals(statusCode) || !DubboRpcStatus.hasException(response, error))) {
       attributes.remove(ERROR_TYPE);
