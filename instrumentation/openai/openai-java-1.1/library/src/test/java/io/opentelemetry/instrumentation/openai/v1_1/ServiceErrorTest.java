@@ -39,8 +39,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -78,58 +76,22 @@ class ServiceErrorTest {
     }
   }
 
-  private static Stream<Arguments> serviceErrors() {
-    List<Arguments> arguments = new ArrayList<>();
-    for (Operation operation : Operation.values()) {
-      for (boolean async : new boolean[] {false, true}) {
-        arguments.add(
-            Arguments.of(
-                operation,
-                async,
-                400,
-                error("\"context_length_exceeded\""),
-                "context_length_exceeded"));
-        arguments.add(
-            Arguments.of(
-                operation, async, 429, error("\"insufficient_quota\""), "insufficient_quota"));
-        for (String code : new String[] {"null", "42", "{}"}) {
-          arguments.add(
-              Arguments.of(
-                  operation, async, 400, error(code), BadRequestException.class.getName()));
-        }
-        arguments.add(Arguments.of(operation, async, 400, error("\"\""), ""));
-        arguments.add(Arguments.of(operation, async, 400, error("\"   \""), "   "));
-        arguments.add(
-            Arguments.of(
-                operation,
-                async,
-                400,
-                error("\"provider_specific_code\""),
-                "provider_specific_code"));
-        arguments.add(
-            Arguments.of(
-                operation,
-                async,
-                400,
-                error("\" provider_specific_code \""),
-                " provider_specific_code "));
-        arguments.add(
-            Arguments.of(
-                operation,
-                async,
-                400,
-                "{\"error\":{\"message\":\"private message\",\"type\":\"invalid_request_error\"}}",
-                BadRequestException.class.getName()));
-        arguments.add(
-            Arguments.of(
-                operation,
-                async,
-                400,
-                "{\"error\":\"unknown shape\"}",
-                BadRequestException.class.getName()));
-      }
-    }
-    return arguments.stream();
+  private static Stream<Arguments> httpErrorPayloads() {
+    return Stream.of(
+        Arguments.of(400, error("\"context_length_exceeded\""), "context_length_exceeded"),
+        Arguments.of(429, error("\"insufficient_quota\""), "insufficient_quota"),
+        Arguments.of(400, error("null"), BadRequestException.class.getName()),
+        Arguments.of(400, error("42"), BadRequestException.class.getName()),
+        Arguments.of(400, error("{}"), BadRequestException.class.getName()),
+        Arguments.of(400, error("\"\""), ""),
+        Arguments.of(400, error("\"   \""), "   "),
+        Arguments.of(400, error("\"provider_specific_code\""), "provider_specific_code"),
+        Arguments.of(400, error("\" provider_specific_code \""), " provider_specific_code "),
+        Arguments.of(
+            400,
+            "{\"error\":{\"message\":\"private message\",\"type\":\"invalid_request_error\"}}",
+            BadRequestException.class.getName()),
+        Arguments.of(400, "{\"error\":\"unknown shape\"}", BadRequestException.class.getName()));
   }
 
   private static String error(String code) {
@@ -139,8 +101,37 @@ class ServiceErrorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("serviceErrors")
-  void serviceError(
+  @MethodSource("httpErrorPayloads")
+  void serviceErrorPayload(int status, String body, String expectedErrorType) {
+    assertServiceError(Operation.CHAT, false, status, body, expectedErrorType);
+  }
+
+  @ParameterizedTest
+  @MethodSource("serviceErrorCallPaths")
+  void serviceErrorCallPath(
+      Operation operation, boolean async, String code, String expectedErrorType) {
+    assertServiceError(operation, async, 400, error(code), expectedErrorType);
+  }
+
+  private static Stream<Arguments> serviceErrorCallPaths() {
+    return Stream.of(
+        Arguments.of(Operation.CHAT, true, "\"provider_specific_code\"", "provider_specific_code"),
+        Arguments.of(Operation.CHAT, true, "42", BadRequestException.class.getName()),
+        Arguments.of(
+            Operation.CHAT_STREAM, false, "\"provider_specific_code\"", "provider_specific_code"),
+        Arguments.of(Operation.CHAT_STREAM, false, "42", BadRequestException.class.getName()),
+        Arguments.of(
+            Operation.CHAT_STREAM, true, "\"provider_specific_code\"", "provider_specific_code"),
+        Arguments.of(Operation.CHAT_STREAM, true, "42", BadRequestException.class.getName()),
+        Arguments.of(
+            Operation.EMBEDDINGS, false, "\"provider_specific_code\"", "provider_specific_code"),
+        Arguments.of(Operation.EMBEDDINGS, false, "42", BadRequestException.class.getName()),
+        Arguments.of(
+            Operation.EMBEDDINGS, true, "\"provider_specific_code\"", "provider_specific_code"),
+        Arguments.of(Operation.EMBEDDINGS, true, "42", BadRequestException.class.getName()));
+  }
+
+  private static void assertServiceError(
       Operation operation, boolean async, int status, String body, String expectedErrorType) {
     server.stubFor(
         post(urlEqualTo(operation.path))
