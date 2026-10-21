@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,6 +15,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.common.ValueType;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -43,8 +45,8 @@ class ServletBodyCaptureTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   // TODO: to be replaced with 1.45.0 semconv incubating attribute when available
-  private static final AttributeKey<String> BODY_ATTRIBUTE_KEY =
-      stringKey("http.request.body.content");
+  private static final AttributeKey<Value<?>> BODY_ATTRIBUTE_KEY =
+      valueKey("http.request.body.content");
 
   @Test
   void capturesRequestBody_default() throws Exception {
@@ -86,7 +88,14 @@ class ServletBodyCaptureTest {
 
     List<List<SpanData>> traces = testing.waitForTraces(1);
 
-    assertThat(traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY)).isEqualTo(expected);
+    Value<?> value = traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY);
+    if (expected == null) {
+      assertThat(value).isNull();
+    } else {
+      assertThat(value).isNotNull();
+      assertThat(value.getType()).isEqualTo(ValueType.STRING);
+      assertThat(value.asString()).isEqualTo(expected);
+    }
   }
 
   private static void readRequestBody(ServletRequest req) throws IOException {
@@ -110,6 +119,7 @@ class ServletBodyCaptureTest {
     when(request.getAttribute(anyString()))
         .thenAnswer(invocation -> attributes.get((String) invocation.getArgument(0)));
     when(request.getMethod()).thenReturn("POST");
+    when(request.getCharacterEncoding()).thenReturn("UTF-8");
     when(request.getInputStream())
         .thenReturn(
             new ServletInputStream() {

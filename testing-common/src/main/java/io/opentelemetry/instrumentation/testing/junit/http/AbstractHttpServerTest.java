@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
@@ -52,6 +53,7 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.testing.internal.armeria.common.HttpMethod.POST;
 import static io.opentelemetry.testing.internal.armeria.common.MediaType.JSON;
 import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -61,6 +63,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -115,6 +118,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1115,8 +1119,27 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                       .collect(toList());
               assertThat(serverSpans).hasSize(1);
               SpanData serverSpan = serverSpans.get(0);
-              assertThat(serverSpan.getAttributes())
-                  .containsEntry("http.request.body.content", "{\"test\": \"value\"}");
+
+              String key = "http.request.body.content";
+              assertThat(serverSpan.getAttributes()).containsKey(key);
+
+              // request body content can be captured as string or byte buffer
+              String expected = "{\"test\": \"value\"}";
+              Value<?> bodyValue = serverSpan.getAttributes().get(valueKey(key));
+              assertThat(bodyValue).isNotNull();
+              Object value = bodyValue.getValue();
+              switch (bodyValue.getType()) {
+                case STRING:
+                  assertThat(value).isEqualTo(expected);
+                  break;
+                case BYTES:
+                  assertThat(value)
+                      .isInstanceOf(ByteBuffer.class)
+                      .isEqualTo(ByteBuffer.wrap(expected.getBytes(UTF_8)));
+                  break;
+                default:
+                  throw new AssertionError("Unexpected value type: " + bodyValue.getType());
+              }
             }
           });
     }

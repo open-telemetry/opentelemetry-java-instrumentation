@@ -5,75 +5,137 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getRequestBodyValue;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Value;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+import io.opentelemetry.api.common.ValueType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class ServletRequestBodyExtractorTest {
 
+  private final Object request = new Object();
+  private final Map<String, Object> requestAttributes = new HashMap<>();
+
+  @SuppressWarnings("unchecked")
+  private final ServletAccessor<Object, Object> accessor = mock(ServletAccessor.class);
+
+  @BeforeEach
+  void setUp() {
+    when(accessor.getRequestAttribute(any(), anyString()))
+        .thenAnswer(invocation -> requestAttributes.get(invocation.<String>getArgument(1)));
+    doAnswer(
+            invocation -> {
+              String name = invocation.getArgument(1);
+              Object value = invocation.getArgument(2);
+              // same contract as ServletRequest#setAttribute: null removes the attribute
+              if (value == null) {
+                requestAttributes.remove(name);
+              } else {
+                requestAttributes.put(name, value);
+              }
+              return null;
+            })
+        .when(accessor)
+        .setRequestAttribute(any(), anyString(), any());
+  }
+
+  @Test
+  void noBodyAttribute() {
+    assertThat(extractRequestBody(accessor, request)).isNull();
+    assertThat(requestAttributes).isEmpty();
+  }
+
   @Test
   void notABuffer() {
-    assertThat(ServletRequestBodyExtractor.decode(null, null)).isNull();
-    assertThat(ServletRequestBodyExtractor.decode("body", null)).isNull();
+    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, "body");
+
+    assertThat(extractRequestBody(accessor, request)).isNull();
+
+    // attributes that are not a buffer are not ours to remove
+    assertThat(requestAttributes).containsEntry(REQUEST_BODY_ATTRIBUTE, "body");
   }
 
   @Test
   void emptyBuffer() {
-    assertThat(ServletRequestBodyExtractor.decode(ByteBuffer.allocate(10), null)).isNull();
+    ByteBuffer buffer = ByteBuffer.allocate(10);
+    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
+
+    assertThat(extractRequestBody(accessor, request)).isNull();
+
+    assertThat(requestAttributes).doesNotContainKey(REQUEST_BODY_ATTRIBUTE);
   }
 
   @Test
-  void directBuffer() {
-    ByteBuffer buffer = ByteBuffer.allocateDirect(10);
-    buffer.put((byte) 'a');
+  void bodyExtractedOnce() {
+    ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
+    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
 
-    // only array-backed buffers are supported
-    assertThat(buffer.hasArray()).isFalse();
-
-    assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isNull();
+    assertThat(extractRequestBody(accessor, request)).isEqualTo(Value.of("abc"));
+    assertThat(extractRequestBody(accessor, request)).isNull();
   }
 
   @Test
-  void usesCapturedBytesOnly() {
-    // the buffer is larger than the captured content
-    ByteBuffer buffer = newBuffer("request-body", UTF_8, 64);
-    assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isEqualTo("request-body");
+  void validUtf8Body() {
+    ByteBuffer buffer = bufferOf("request-body".getBytes(UTF_8));
+
+    Value<?> body = getRequestBodyValue(buffer, null);
+    assertThat(body).isEqualTo(Value.of("request-body"));
+  }
+
+  private static final byte[] ISO_8859_1_BODY = "café".getBytes(ISO_8859_1);
+
+  @Test
+  void nonUtf8WithoutContentTypeCapturedAsBinary() {
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null))
+        .isEqualTo(Value.of(ISO_8859_1_BODY));
   }
 
   @Test
-  void nonUtf8ContentWithCharset() {
-    ByteBuffer buffer = newBuffer("café", ISO_8859_1, 16);
-    assertThat(ServletRequestBodyExtractor.decode(buffer, "ISO-8859-1")).isEqualTo("café");
+  void nonUtf8WithContentTypeWithoutCharsetCapturedAsBinary() {
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null))
+        .isEqualTo(Value.of(ISO_8859_1_BODY));
   }
 
   @ParameterizedTest
-  @NullSource
-  @ValueSource(strings = {"not-a-charset"})
-  void utf8ContentWithUnknownCharset(String charsetName) {
-    ByteBuffer buffer = newBuffer("café", UTF_8, 16);
-    assertThat(ServletRequestBodyExtractor.decode(buffer, charsetName)).isEqualTo("café");
+  @ValueSource(
+      strings = {
+        "text/plain; charset=ISO-8859-1",
+        "text/plain;charset=iso-8859-1",
+        "text/plain; charset=\"ISO-8859-1\"",
+        "text/plain; charset=ISO-8859-1; boundary=x"
+      })
+  void nonUtf8WithContentTypeWithEncodingCapturedAsText(String contentType) {
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), contentType))
+        .isEqualTo(Value.of("café"));
   }
 
   @Test
-  void nonUtf8ContentWithUnknownCharset() {
-    // this documents the current behavior: the content is assumed to be UTF-8 when the charset is
-    // unknown. This is not a 'feature' and we can improve automatic detection in the future if this
-    // becomes a common issue.
-    ByteBuffer buffer = newBuffer("café", ISO_8859_1, 16);
-    assertThat(ServletRequestBodyExtractor.decode(buffer, null)).isEqualTo("caf�");
+  void unknownCharsetFallsBackToUtf8() {
+    assertThat(getRequestBodyValue(bufferOf("café".getBytes(UTF_8)), "text/plain; charset=unknown"))
+        .isEqualTo(Value.of("café"));
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), "text/plain; charset=unknown"))
+        .isEqualTo(Value.of(ISO_8859_1_BODY));
   }
 
-  private static ByteBuffer newBuffer(String content, Charset charset, int capacity) {
-    ByteBuffer buffer = ByteBuffer.allocate(capacity);
-    buffer.put(content.getBytes(charset));
-    assertThat(buffer.hasArray()).isTrue();
+  private static ByteBuffer bufferOf(byte[] bytes) {
+    ByteBuffer buffer = ByteBuffer.allocate(64);
+    buffer.put(bytes);
     return buffer;
   }
 }

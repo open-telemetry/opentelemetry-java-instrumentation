@@ -7,14 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 
 import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE;
+import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor;
+import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
-import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
@@ -36,14 +37,15 @@ class Jetty12RequestBodyExtractor implements AttributesExtractor<Request, Respon
       @Nullable Response response,
       @Nullable Throwable error) {
     Object bodyAttribute = request.getAttribute(REQUEST_BODY_ATTRIBUTE);
-    if (bodyAttribute == null) {
+    if (!(bodyAttribute instanceof ByteBuffer buffer)) {
       return;
     }
-    String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
-    String charset = contentType != null ? MimeTypes.getCharsetFromContentType(contentType) : null;
-    String body = ServletRequestBodyExtractor.decode(bodyAttribute, charset);
+    request.setAttribute(REQUEST_BODY_ATTRIBUTE, null);
+
+    String contentType = request.getHeaders().get(CONTENT_TYPE);
+    Value<?> body = ServletRequestBodyExtractor.getRequestBodyValue(buffer, contentType);
     if (body != null) {
-      attributes.put(SPAN_BODY_ATTRIBUTE.getKey(), body);
+      attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }
   }
 }

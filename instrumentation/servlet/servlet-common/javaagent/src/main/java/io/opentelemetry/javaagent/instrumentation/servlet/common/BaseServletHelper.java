@@ -7,8 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
 import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -18,7 +21,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAdditionalAttributesExtractor;
-import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestParametersExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
@@ -143,9 +145,9 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       return;
     }
 
-    String body = ServletRequestBodyExtractor.getRequestBodyValue(accessor, request);
+    Value<?> body = extractRequestBody(accessor, request);
     if (body != null) {
-      serverSpan.setAttribute(ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE.getKey(), body);
+      serverSpan.setAttribute(SPAN_BODY_ATTRIBUTE, body);
     }
   }
 

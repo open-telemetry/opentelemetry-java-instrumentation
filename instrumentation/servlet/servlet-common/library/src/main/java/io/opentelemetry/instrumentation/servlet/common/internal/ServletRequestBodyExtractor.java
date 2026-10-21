@@ -10,10 +10,16 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -26,8 +32,11 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
 
   /** Semconv attribute used to store request body in span */
   // TODO: replace this when available in semconv 1.45.0
-  public static final AttributeKey<?> SPAN_BODY_ATTRIBUTE =
+  public static final AttributeKey<Value<?>> SPAN_BODY_ATTRIBUTE =
       AttributeKey.valueKey("http.request.body.content");
+
+  private static final Pattern CHARSET_PATTERN =
+      Pattern.compile("charset\\s*=\\s*\"?([^\\s\";]+)", Pattern.CASE_INSENSITIVE);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
@@ -49,54 +58,76 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       @Nullable ServletResponseContext<RESPONSE> responseServletResponseContext,
       @Nullable Throwable error) {
 
-    String body = getRequestBodyValue(accessor, requestServletRequestContext.request());
+    Value<?> body = extractRequestBody(accessor, requestServletRequestContext.request());
     if (body != null) {
-      attributes.put(SPAN_BODY_ATTRIBUTE.getKey(), body);
+      attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }
   }
 
+  /**
+   * Extract and removes the request body stored in request attributes.
+   *
+   * @param accessor servlet accessor
+   * @param request servlet request
+   * @param <REQUEST> request type
+   * @param <RESPONSE> response type
+   * @return extracted request body value, or {@code null} if no or empty request body was captured
+   */
   @Nullable
-  public static <REQUEST, RESPONSE> String getRequestBodyValue(
+  public static <REQUEST, RESPONSE> Value<?> extractRequestBody(
       ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
     Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE);
     if (!(bodyAttribute instanceof ByteBuffer)) {
       return null;
     }
-    return decode(bodyAttribute, accessor.getRequestContentEncoding(request));
+
+    // remove request attribute so the buffer is no longer accessible for writing
+    accessor.setRequestAttribute(request, REQUEST_BODY_ATTRIBUTE, null);
+
+    String contentType = accessor.getRequestHeader(request, "Content-Type");
+    return getRequestBodyValue((ByteBuffer) bodyAttribute, contentType);
   }
 
-  /**
-   * Decodes the request body captured in the {@link
-   * io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper#REQUEST_BODY_ATTRIBUTE}
-   * attribute. This does not depend on the servlet API, so it can also be used from app server
-   * instrumentations. The buffer is left untouched, the body can be decoded several times.
-   *
-   * @param bufferObject {@link ByteBuffer} instance from request attribute
-   * @param charsetName charset of the request body, UTF-8 is used when {@code null} or not
-   *     supported
-   * @return the captured body, or {@code null} when nothing has been captured
-   */
   @Nullable
-  @SuppressWarnings(
-      "ByteBufferBackingArray") // we know the buffer is array-backed and check it at runtime
-  public static String decode(@Nullable Object bufferObject, @Nullable String charsetName) {
-    if (!(bufferObject instanceof ByteBuffer)) {
+  public static Value<?> getRequestBodyValue(ByteBuffer buffer, @Nullable String contentType) {
+    if (buffer.position() == 0) {
+      // empty buffer
       return null;
     }
-    ByteBuffer buffer = (ByteBuffer) bufferObject;
-    // the buffer is in write mode, the position is the number of bytes captured
-    int length = buffer.position();
-    if (length == 0 || !buffer.hasArray()) {
-      return null;
-    }
-    Charset charset = UTF_8;
+
+    buffer.flip();
     try {
-      if (charsetName != null && Charset.isSupported(charsetName)) {
-        charset = Charset.forName(charsetName);
-      }
-    } catch (IllegalArgumentException e) {
-      // silently ignored
+      // malformed input must be reported, not silently replaced, so that a body that is not valid
+      // text in the expected charset is captured as binary
+      CharsetDecoder decoder =
+          getCharset(contentType)
+              .newDecoder()
+              .onMalformedInput(CodingErrorAction.REPORT)
+              .onUnmappableCharacter(CodingErrorAction.REPORT);
+      // decode a duplicate to keep the buffer content available for the binary fallback
+      return Value.of(decoder.decode(buffer.duplicate()).toString());
+    } catch (CharacterCodingException e) {
+      // TODO: create a dedicated Value<ByteBuffer> implementation that avoids doing any copy
+      // we can do that because we know the buffer will not be modified anymore.
+      byte[] bytes = new byte[buffer.remaining()];
+      buffer.get(bytes);
+      return Value.of(bytes);
     }
-    return new String(buffer.array(), buffer.arrayOffset(), length, charset);
+  }
+
+  /** Returns the charset from the content type, or UTF-8 when it is missing or unknown. */
+  private static Charset getCharset(@Nullable String contentType) {
+    if (contentType == null) {
+      return UTF_8;
+    }
+    Matcher matcher = CHARSET_PATTERN.matcher(contentType);
+    if (matcher.find()) {
+      try {
+        return Charset.forName(matcher.group(1));
+      } catch (IllegalArgumentException e) {
+        // illegal or unsupported charset name, use the default
+      }
+    }
+    return UTF_8;
   }
 }
