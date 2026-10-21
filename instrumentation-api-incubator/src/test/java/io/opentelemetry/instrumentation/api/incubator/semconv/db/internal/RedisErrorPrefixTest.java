@@ -5,10 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import java.nio.ByteBuffer;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,6 +22,44 @@ class RedisErrorPrefixTest {
   @MethodSource("serverErrorLines")
   void extractsFirstToken(String serverErrorLine, String expected) {
     assertThat(RedisErrorPrefix.extract(serverErrorLine)).isEqualTo(expected);
+  }
+
+  @ParameterizedTest
+  @MethodSource("serverErrorLines")
+  void extractsFirstTokenFromByteBuffer(String serverErrorLine, String expected) {
+    ByteBuffer errorLine =
+        serverErrorLine == null ? null : ByteBuffer.wrap(serverErrorLine.getBytes(UTF_8));
+    assertThat(RedisErrorPrefix.extract(errorLine)).isEqualTo(expected);
+  }
+
+  @Test
+  void extractsFromByteBufferViewsWithoutChangingState() {
+    String errorLine = "excluded-before  ERRé中! detail excluded-after";
+    byte[] contents = errorLine.getBytes(UTF_8);
+    int position = "excluded-before".length();
+    int limit = position + "  ERRé中!".getBytes(UTF_8).length;
+
+    ByteBuffer heap = ByteBuffer.wrap(contents);
+    assertExtractsWithoutChangingState(heap, position, limit);
+
+    ByteBuffer direct = ByteBuffer.allocateDirect(contents.length);
+    direct.put(contents).flip();
+    assertExtractsWithoutChangingState(direct, position, limit);
+
+    ByteBuffer readOnly = ByteBuffer.wrap(contents).asReadOnlyBuffer();
+    assertExtractsWithoutChangingState(readOnly, position, limit);
+
+    byte[] slicedContents = ("outside" + errorLine + "outside").getBytes(UTF_8);
+    ByteBuffer parent = ByteBuffer.wrap(slicedContents);
+    parent.position("outside".length());
+    parent.limit("outside".length() + contents.length);
+    ByteBuffer slice = parent.slice();
+    assertExtractsWithoutChangingState(slice, position, limit);
+  }
+
+  @Test
+  void handlesNullByteBuffer() {
+    assertThat(RedisErrorPrefix.extract((ByteBuffer) null)).isNull();
   }
 
   private static Stream<Arguments> serverErrorLines() {
@@ -42,7 +83,31 @@ class RedisErrorPrefixTest {
         argumentSet("leading tab", "\tERR detail", "\tERR"),
         argumentSet("tab only", "\t", "\t"),
         argumentSet("spaces before tab", "  \tERR detail", "\tERR"),
-        argumentSet("Unicode space", "ERR\u2003custom detail", "ERR\u2003custom"),
+        argumentSet("Unicode space", "ERR custom detail", "ERR custom"),
         argumentSet("Unicode text", "ERRé中 detail", "ERRé中"));
+  }
+
+  private static void assertExtractsWithoutChangingState(
+      ByteBuffer input, int position, int limit) {
+    byte[] originalContents = contents(input);
+    input.position(position);
+    input.limit(limit);
+    input.position(position);
+    input.mark();
+
+    assertThat(RedisErrorPrefix.extract(input)).isEqualTo("ERRé中!");
+    assertThat(input.position()).isEqualTo(position);
+    assertThat(input.limit()).isEqualTo(limit);
+    input.reset();
+    assertThat(input.position()).isEqualTo(position);
+    assertThat(contents(input)).containsExactly(originalContents);
+  }
+
+  private static byte[] contents(ByteBuffer input) {
+    ByteBuffer duplicate = input.duplicate();
+    duplicate.clear();
+    byte[] contents = new byte[duplicate.remaining()];
+    duplicate.get(contents);
+    return contents;
   }
 }

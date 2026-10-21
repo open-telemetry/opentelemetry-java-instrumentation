@@ -17,7 +17,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.redisson.client.RedisConnectionException;
 import org.redisson.client.RedisException;
@@ -101,25 +100,12 @@ class RedissonDbAttributesGetterTest {
   }
 
   @Test
-  void parsesFirstNonemptyAsciiSpaceDelimitedTokenVerbatim() {
-    assertThat(parse("-Custom.Code! diagnostic details\r\n")).isEqualTo("Custom.Code!");
-    assertThat(parse("-Préfix diagnostic\r\n")).isEqualTo("Préfix");
-    assertThat(parse("-lowercase\r\n")).isEqualTo("lowercase");
-    assertThat(parse("-prefix-only\r\n")).isEqualTo("prefix-only");
-    assertThat(parse("-  Leading.Code! diagnostic\r\n")).isEqualTo("Leading.Code!");
-    assertThat(parse("-Tab.Code!\tdiagnostic\r\n")).isEqualTo("Tab.Code!\tdiagnostic");
-
-    String longPrefix = String.join("", Collections.nCopies(80, "x"));
-    assertThat(parse("-" + longPrefix + " diagnostic\r\n")).isEqualTo(longPrefix);
-  }
-
-  @Test
   void parsingStopsAtTheReplyTerminatorWithoutConsumingTheBuffer() {
     ByteBuf response =
-        Unpooled.copiedBuffer("ignored:-PrefixOnly\r\n-SECOND diagnostic\r\n", UTF_8);
+        Unpooled.copiedBuffer("ignored:-PréfixOnly\r\n-SECOND diagnostic\r\n", UTF_8);
     response.readerIndex(8);
     try {
-      assertThat(RedissonErrorCapture.parseServerErrorType(response)).isEqualTo("PrefixOnly");
+      assertThat(RedissonErrorCapture.parseServerErrorType(response)).isEqualTo("PréfixOnly");
       assertThat(response.readerIndex()).isEqualTo(8);
     } finally {
       response.release();
@@ -176,14 +162,5 @@ class RedissonDbAttributesGetterTest {
     AttributesBuilder attributes = Attributes.builder();
     EXTRACTOR.onEnd(attributes, Context.root(), REQUEST, null, error);
     return attributes.build().get(ERROR_TYPE);
-  }
-
-  private static String parse(String reply) {
-    ByteBuf response = Unpooled.copiedBuffer(reply, UTF_8);
-    try {
-      return RedissonErrorCapture.parseServerErrorType(response);
-    } finally {
-      response.release();
-    }
   }
 }
