@@ -25,7 +25,6 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.io.ByteArrayInputStream;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
@@ -207,11 +206,6 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void messagingUsesAdoptedSchemaUrl() {
-    assertThat(SemconvStability.messagingSchemaUrl()).isEqualTo(SchemaUrls.V1_43_0);
-  }
-
-  @Test
   void domainsResolveIndependently() {
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(
@@ -311,8 +305,6 @@ class SemconvStabilityTest {
     assertThat(emitOldRpcSemconv(openTelemetry))
         .isEqualTo(expected.version() == 0 || expected.dualEmit());
     assertThat(emitPreviewRpcSemconv(openTelemetry)).isEqualTo(expected.version() >= 1);
-    assertThat(SemconvStability.rpcSchemaUrl(openTelemetry))
-        .isEqualTo(expected.version() >= 1 ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0);
   }
 
   private static Stream<Arguments> structuredRpcSelections() {

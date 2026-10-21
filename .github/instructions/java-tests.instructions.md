@@ -49,7 +49,7 @@ convention not caught by CI.
   are escape hatches for buggy instrumentation, not general telemetry-tuning
   settings. Do not add or request per-instrumentation selector tests for new
   modules, aliases, renames, or consolidations. This includes module name-list
-  assertions, enable/disable matrices, precedence, legacy/v3-preview handling,
+  assertions, enable/disable matrices, precedence, legacy-name handling,
   flat/YAML parity, warning checks, and dedicated JVM variants or test projects.
   Test shared enablement or alias-helper changes centrally. Keep coverage for
   actual default-enablement changes as described above, feature settings, and
