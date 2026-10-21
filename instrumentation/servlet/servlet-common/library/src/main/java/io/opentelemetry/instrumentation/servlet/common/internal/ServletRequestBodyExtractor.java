@@ -18,6 +18,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -95,6 +96,10 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       return null;
     }
 
+    // TODO: this conversion part will need to be revisited for optimization
+    // - decoder cache per charset (and normalize them)
+    // - when the data is already utf-8, can we just produce a string attribute without decoding ?
+
     buffer.flip();
     ByteBuffer original = buffer.duplicate();
     try {
@@ -110,8 +115,10 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     } catch (CharacterCodingException e) {
       // TODO: create a dedicated Value<ByteBuffer> implementation that avoids doing any copy
       // we can do that because we know the buffer will not be modified anymore.
-      original.arrayOffset(); // ensure array is accessible
-      return Value.of(original.array());
+      int start = original.arrayOffset() + original.position();
+      int end = original.arrayOffset() + original.limit();
+      byte[] bytes = Arrays.copyOfRange(original.array(), start, end);
+      return Value.of(bytes);
     }
   }
 

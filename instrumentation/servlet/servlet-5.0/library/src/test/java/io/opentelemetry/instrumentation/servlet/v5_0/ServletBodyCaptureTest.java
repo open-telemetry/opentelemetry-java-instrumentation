@@ -30,6 +30,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,19 +77,24 @@ class ServletBodyCaptureTest {
     testCaptureRequestBody(builder, "request");
   }
 
+  @Test
+  void capturesRequestBody_binary() throws Exception {
+    // not valid UTF-8, hexadecimal 0001fffe: it can only be captured as bytes
+    byte[] body = {0x00, 0x01, (byte) 0xff, (byte) 0xfe};
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBodyMaxSize(builder, 32);
+
+    Value<?> value = captureRequestBody(builder, body, "application/octet-stream");
+
+    assertThat(value).isNotNull();
+    assertThat(value.getType()).isEqualTo(ValueType.BYTES);
+    assertThat(value.getValue()).isEqualTo(ByteBuffer.wrap(body));
+  }
+
   private static void testCaptureRequestBody(
       ServletTelemetryBuilder builder, @Nullable String expected) throws Exception {
 
-    Filter filter = builder.build().createFilter();
-
-    HttpServletRequest request = requestWithBody();
-    HttpServletResponse response = mock(HttpServletResponse.class);
-
-    filter.doFilter(request, response, (req, res) -> readRequestBody(req));
-
-    List<List<SpanData>> traces = testing.waitForTraces(1);
-
-    Value<?> value = traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY);
+    Value<?> value = captureRequestBody(builder, "request-body".getBytes(UTF_8), null);
     if (expected == null) {
       assertThat(value).isNull();
     } else {
@@ -98,7 +104,22 @@ class ServletBodyCaptureTest {
     }
   }
 
-  private static void readRequestBody(ServletRequest req) throws IOException {
+  @Nullable
+  private static Value<?> captureRequestBody(
+      ServletTelemetryBuilder builder, byte[] body, @Nullable String contentType) throws Exception {
+    Filter filter = builder.build().createFilter();
+
+    HttpServletRequest request = requestWithBody(body, contentType);
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    filter.doFilter(request, response, (req, res) -> readRequestBody(req, body));
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+
+    return traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY);
+  }
+
+  private static void readRequestBody(ServletRequest req, byte[] expected) throws IOException {
     ServletInputStream input = req.getInputStream();
     ByteArrayOutputStream content = new ByteArrayOutputStream();
     int value;
@@ -106,10 +127,11 @@ class ServletBodyCaptureTest {
       content.write(value);
     }
     // the application must always see the full body, whatever is captured in the span
-    assertThat(content.toString(UTF_8.name())).isEqualTo("request-body");
+    assertThat(content.toByteArray()).isEqualTo(expected);
   }
 
-  private static HttpServletRequest requestWithBody() throws IOException {
+  private static HttpServletRequest requestWithBody(byte[] body, @Nullable String contentType)
+      throws IOException {
     HttpServletRequest request = mock(HttpServletRequest.class);
     // a mock does not keep attributes, so back them with a map
     Map<String, Object> attributes = new HashMap<>();
@@ -120,11 +142,11 @@ class ServletBodyCaptureTest {
         .thenAnswer(invocation -> attributes.get((String) invocation.getArgument(0)));
     when(request.getMethod()).thenReturn("POST");
     when(request.getCharacterEncoding()).thenReturn("UTF-8");
+    when(request.getHeader("Content-Type")).thenReturn(contentType);
     when(request.getInputStream())
         .thenReturn(
             new ServletInputStream() {
-              private final ByteArrayInputStream input =
-                  new ByteArrayInputStream("request-body".getBytes(UTF_8));
+              private final ByteArrayInputStream input = new ByteArrayInputStream(body);
 
               @Override
               public int read() {
