@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.netty.buffer.ByteBuf;
@@ -102,6 +103,7 @@ class RedissonDbAttributesGetterTest {
   @Test
   void parsesFirstNonemptyAsciiSpaceDelimitedTokenVerbatim() {
     assertThat(parse("-Custom.Code! diagnostic details\r\n")).isEqualTo("Custom.Code!");
+    assertThat(parse("-Pr\u00e9fix diagnostic\r\n")).isEqualTo("Pr\u00e9fix");
     assertThat(parse("-lowercase\r\n")).isEqualTo("lowercase");
     assertThat(parse("-prefix-only\r\n")).isEqualTo("prefix-only");
     assertThat(parse("-  Leading.Code! diagnostic\r\n")).isEqualTo("Leading.Code!");
@@ -109,6 +111,19 @@ class RedissonDbAttributesGetterTest {
 
     String longPrefix = String.join("", Collections.nCopies(80, "x"));
     assertThat(parse("-" + longPrefix + " diagnostic\r\n")).isEqualTo(longPrefix);
+  }
+
+  @Test
+  void parsingStopsAtTheReplyTerminatorWithoutConsumingTheBuffer() {
+    ByteBuf response =
+        Unpooled.copiedBuffer("ignored:-PrefixOnly\r\n-SECOND diagnostic\r\n", UTF_8);
+    response.readerIndex(8);
+    try {
+      assertThat(RedissonErrorCapture.parseServerErrorType(response)).isEqualTo("PrefixOnly");
+      assertThat(response.readerIndex()).isEqualTo(8);
+    } finally {
+      response.release();
+    }
   }
 
   @Test
@@ -164,7 +179,7 @@ class RedissonDbAttributesGetterTest {
   }
 
   private static String parse(String reply) {
-    ByteBuf response = Unpooled.copiedBuffer(reply, US_ASCII);
+    ByteBuf response = Unpooled.copiedBuffer(reply, UTF_8);
     try {
       return RedissonErrorCapture.parseServerErrorType(response);
     } finally {

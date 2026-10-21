@@ -225,12 +225,19 @@ public abstract class AbstractRedissonAsyncClientTest {
                 .execInContainer("redis-cli", "lpush", "async-wrong-type", "value")
                 .getExitCode())
         .isZero();
-    assertThatThrownBy(() -> redisson.<String>getBucket("async-wrong-type").getAsync().join())
+    assertThatThrownBy(
+            () ->
+                redisson
+                    .<String>getBucket("async-wrong-type")
+                    .getAsync()
+                    .toCompletableFuture()
+                    .join())
         .hasRootCauseInstanceOf(RedisException.class);
     assertErrorTypeOnLastOperation("WRONGTYPE");
 
     assertScriptErrorType("OOM command not allowed", "OOM", RedisOutOfMemoryException.class);
     assertScriptErrorType("Custom.Code! diagnostic details", "Custom.Code!", null);
+    assertScriptErrorType("Pr\u00e9fix diagnostic", "Pr\u00e9fix", null);
     assertScriptErrorType("lowercase diagnostic", "lowercase", null);
     assertScriptErrorType("Tab.Code!\tdiagnostic", "Tab.Code!\tdiagnostic", null);
     String longPrefix = String.join("", nCopies(80, "x"));
@@ -243,7 +250,7 @@ public abstract class AbstractRedissonAsyncClientTest {
     assertThat(
             redisson
                 .getScript()
-                .evalAsync(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.INTEGER)
+                .evalAsync(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.VALUE)
                 .toCompletableFuture()
                 .join())
         .isEqualTo(1L);
@@ -252,13 +259,7 @@ public abstract class AbstractRedissonAsyncClientTest {
 
   @Test
   void asyncFailedBatchErrorPrefixIsRecordedInSpanAndMetrics() {
-    try {
-      Class.forName("org.redisson.api.BatchOptions");
-    } catch (ClassNotFoundException ignored) {
-      Assumptions.abort();
-    }
-
-    RBatch batch = redisson.createBatch(BatchOptions.defaults());
+    RBatch batch = createBatch(redisson);
     batch
         .getScript()
         .evalAsync(
@@ -377,16 +378,18 @@ public abstract class AbstractRedissonAsyncClientTest {
                     histogram ->
                         histogram.hasPointsSatisfying(
                             point ->
-                                point.hasAttributesSatisfying(
-                                    attributes -> {
-                                      if (expectedErrorType == null) {
-                                        assertThat(attributes.asMap())
-                                            .doesNotContainKey(ERROR_TYPE);
-                                      } else {
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(ERROR_TYPE, expectedErrorType);
-                                      }
-                                    }))));
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        attributes -> {
+                                          if (expectedErrorType == null) {
+                                            assertThat(attributes.asMap())
+                                                .doesNotContainKey(ERROR_TYPE);
+                                          } else {
+                                            assertThat(attributes.asMap())
+                                                .containsEntry(ERROR_TYPE, expectedErrorType);
+                                          }
+                                        }))));
     testing.clearData();
   }
 
@@ -548,6 +551,10 @@ public abstract class AbstractRedissonAsyncClientTest {
 
   private String dbNamespace(String databaseIndex) {
     return hasDatabaseIndex() ? databaseIndex : null;
+  }
+
+  protected RBatch createBatch(RedissonClient redisson) {
+    return redisson.createBatch(BatchOptions.defaults());
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {

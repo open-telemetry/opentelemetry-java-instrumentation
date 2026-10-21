@@ -293,6 +293,7 @@ public abstract class AbstractRedissonClientTest {
   void serverErrorPrefixContract() {
     assertScriptErrorType("OOM command not allowed", "OOM", RedisOutOfMemoryException.class);
     assertScriptErrorType("Custom.Code! diagnostic details", "Custom.Code!", null);
+    assertScriptErrorType("Pr\u00e9fix diagnostic", "Pr\u00e9fix", null);
     assertScriptErrorType("lowercase diagnostic", "lowercase", null);
     assertScriptErrorType("Tab.Code!\tdiagnostic", "Tab.Code!\tdiagnostic", null);
     String longPrefix = String.join("", nCopies(80, "x"));
@@ -303,19 +304,13 @@ public abstract class AbstractRedissonClientTest {
     assertScriptErrorType("   ", RedisException.class.getName(), null);
 
     Object result =
-        redisson.getScript().eval(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.INTEGER);
+        redisson.getScript().eval(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.VALUE);
     assertThat(result).isEqualTo(1L);
     assertErrorTypeOnLastOperation(null);
   }
 
   @Test
   void failedBatchErrorPrefixIsRecordedInSpanAndMetrics() throws ReflectiveOperationException {
-    try {
-      Class.forName("org.redisson.api.BatchOptions");
-    } catch (ClassNotFoundException ignored) {
-      Assumptions.abort();
-    }
-
     RBatch batch = createBatch(redisson);
     batch
         .getScript()
@@ -433,16 +428,18 @@ public abstract class AbstractRedissonClientTest {
                     histogram ->
                         histogram.hasPointsSatisfying(
                             point ->
-                                point.hasAttributesSatisfying(
-                                    attributes -> {
-                                      if (expectedErrorType == null) {
-                                        assertThat(attributes.asMap())
-                                            .doesNotContainKey(ERROR_TYPE);
-                                      } else {
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(ERROR_TYPE, expectedErrorType);
-                                      }
-                                    }))));
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        attributes -> {
+                                          if (expectedErrorType == null) {
+                                            assertThat(attributes.asMap())
+                                                .doesNotContainKey(ERROR_TYPE);
+                                          } else {
+                                            assertThat(attributes.asMap())
+                                                .containsEntry(ERROR_TYPE, expectedErrorType);
+                                          }
+                                        }))));
     testing.clearData();
   }
 

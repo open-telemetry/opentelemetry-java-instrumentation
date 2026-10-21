@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
@@ -17,7 +17,7 @@ import org.redisson.client.RedisException;
  * Captures the first token from RESP error replies before Redisson completes the command promise.
  *
  * <p>Redisson's {@code CommandDecoder} calls {@code CommandData.tryFailure} while decoding a {@code
- * -} reply, so the token is scoped to that decoder frame and attached to the resulting generic
+ * -} reply, so the token is scoped to that decoder frame and attached to the resulting Redisson
  * exception before completion callbacks can run. The operation listener clears it after extracting
  * telemetry; all other errors use the shared exception-class fallback.
  *
@@ -73,7 +73,7 @@ public final class RedissonErrorCapture {
       int length = end - start;
       byte[] token = new byte[length];
       input.getBytes(start, token);
-      return new String(token, US_ASCII);
+      return new String(token, UTF_8);
     } catch (Throwable ignored) {
       // ReplayingDecoder retries incomplete replies; leave buffer handling to Redisson.
       return null;
