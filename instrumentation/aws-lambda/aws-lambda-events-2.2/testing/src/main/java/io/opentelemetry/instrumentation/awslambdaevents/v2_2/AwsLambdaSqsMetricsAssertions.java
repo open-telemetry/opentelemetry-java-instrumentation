@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -15,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.semconv.SchemaUrls;
 
 public class AwsLambdaSqsMetricsAssertions {
 
@@ -52,6 +54,7 @@ public class AwsLambdaSqsMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasUnit("s")
                         .hasDescription("Duration of processing operation.")
                         .hasHistogramSatisfying(
@@ -105,6 +108,7 @@ public class AwsLambdaSqsMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages that were delivered to the application.")
