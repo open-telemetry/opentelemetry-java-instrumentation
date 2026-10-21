@@ -18,8 +18,7 @@ class JarAnalyzerConfigTest {
 
   @Test
   void disabledByDefault() {
-    assertThat(JarAnalyzerConfig.getInstrumentationName(DeclarativeConfigProperties.empty()))
-        .isNull();
+    assertThat(JarAnalyzerConfig.isEnabled(DeclarativeConfigProperties.empty())).isFalse();
   }
 
   @ParameterizedTest
@@ -28,8 +27,7 @@ class JarAnalyzerConfigTest {
     DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
     when(config.getBoolean("enabled", false)).thenReturn(enabled);
 
-    assertThat(JarAnalyzerConfig.getInstrumentationName(config))
-        .isEqualTo(enabled ? "io.opentelemetry.runtime-telemetry" : null);
+    assertThat(JarAnalyzerConfig.isEnabled(config)).isEqualTo(enabled);
   }
 
   @ParameterizedTest

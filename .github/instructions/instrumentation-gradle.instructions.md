@@ -16,7 +16,7 @@ or test failure that CI will report.
   instrumentation. In shared modules, use a `-common`
   suffix qualified by the minimum version or API variant only when needed. For new javaagent
   modules, check that Muzzle covers their supported ranges and that the main enablement name
-  in v3 preview matches the full module directory, including versions, except where a default-off
+  matches the full module directory, including versions, except where a default-off
   feature needs a separate identity within that module. Default-off registrations must not share
   names with default-on instrumentation. Include new telemetry-collection test variants in
   `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
@@ -29,7 +29,7 @@ or test failure that CI will report.
   where an inverse exists. A pass covering all versions has no meaningful inverse. If
   multiple `InstrumentationModule`s share a project, separate their ranges and exclude
   unrelated modules in each pass. Prefer `excludeInstrumentationName(...)` when the name selects
-  the intended classes both outside v3 preview and in preview; otherwise use
+  the intended classes; otherwise use
   `excludeInstrumentationModule(...)` with fully qualified class names. Public enablement names
   need not distinguish compatibility implementations. Muzzle checks referenced symbols, not
   whether a Byte Buddy method matcher will ever match.
@@ -100,7 +100,7 @@ or test failure that CI will report.
   `testPreviewSemconv` for preview selection; define both when both are exercised. Preserve explicit
   legacy opt-in compatibility tests. `/dup` coverage is required for RPC, not service-peer.
   Code and database conventions are stable-only and need no selection task. Keep mixed variants
-  that exercise selectable domains. For default enablement under
-  v3-preview, use a separate `testDisabled` JVM rather than setting a property after agent
+  that exercise selectable domains. For default enablement, use a separate `testDisabled` JVM rather
+  than setting a property after agent
   startup. Because `testDisabled` intentionally emits no target instrumentation telemetry, do
   not add it to `.github/scripts/instrumentations.sh` or give it `metadataConfig`.

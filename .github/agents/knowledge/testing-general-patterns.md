@@ -41,7 +41,7 @@ Do not add per-instrumentation selector tests, including for new modules,
 renames, aliases, or consolidations:
 
 - No `instrumentationNames()` or name-order assertions.
-- No enable/disable matrices, precedence, fallback, legacy/v3-preview, flat/YAML
+- No enable/disable matrices, precedence, fallback, legacy-name handling, flat/YAML
   parity, or deprecation-warning checks.
 - No test projects, source sets, JVM variants, fixtures, or dependencies solely
   for those checks.
