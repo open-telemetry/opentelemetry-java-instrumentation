@@ -40,6 +40,24 @@ the
 [general attribute naming guidance](https://opentelemetry.io/docs/specs/semconv/general/naming/)
 and this repository's experimental telemetry rules.
 
+## Select schema URLs
+
+A schema URL identifies the semantic convention defining a span, metric, or log, not every
+registered attribute attached to it. Select the version adopted by that signal and its effective
+mode, not the latest semconv dependency.
+
+Supporting attributes must not select, change, or invalidate the schema.
+
+For example:
+
+- HTTP operations use the HTTP schema.
+- GenAI operations use the GenAI schema, despite supporting RPC attributes.
+- Controller spans have no defined semantic convention, so leave their schema unset even when
+  nested under an HTTP server span.
+- Code or exception attributes alone do not justify assigning a schema to a custom operation.
+
+If no semantic convention defines the emitted signal, leave its schema URL unset.
+
 ## Weigh normative language
 
 OpenTelemetry defines uppercase `MUST`, `SHOULD`, `RECOMMENDED`, and related terms using
