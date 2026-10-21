@@ -88,7 +88,10 @@ class RediscalaClientTest {
     nonDefaultDbClient = createClient(Some(nonDefaultDbIndex))
   }
 
-  private def createClient(db: Option[Int], port: JLong = this.port): RedisClient =
+  private def createClient(
+      db: Option[Int],
+      serverPort: JLong = port
+  ): RedisClient =
     try {
       // latest RedisClient constructor takes username as argument
       classOf[RedisClient].getMethod("username")
@@ -96,7 +99,7 @@ class RediscalaClientTest {
         .getConstructors()(0)
         .newInstance(
           host,
-          Integer.valueOf(port.intValue()),
+          Integer.valueOf(serverPort.intValue()),
           Option.apply(null),
           Option.apply(null),
           db,
@@ -112,7 +115,7 @@ class RediscalaClientTest {
           .getConstructors()(0)
           .newInstance(
             host,
-            Integer.valueOf(port.intValue()),
+            Integer.valueOf(serverPort.intValue()),
             Option.apply(null),
             db,
             "RedisClient",
