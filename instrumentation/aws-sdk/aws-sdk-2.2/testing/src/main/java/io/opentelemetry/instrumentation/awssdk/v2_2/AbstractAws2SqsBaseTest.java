@@ -82,9 +82,10 @@ public abstract class AbstractAws2SqsBaseTest extends AbstractAwsSdkTest {
   protected SendMessageBatchRequest sendMessageBatchRequest;
 
   protected boolean receiveTelemetryEnabled() {
-    return !(getTesting() instanceof AgentInstrumentationExtension)
-        || Boolean.getBoolean(
-            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+    return getTesting() instanceof AgentInstrumentationExtension
+        ? Boolean.getBoolean(
+            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled")
+        : Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
   }
 
   protected abstract SqsClient configureSqsClient(SqsClient sqsClient);

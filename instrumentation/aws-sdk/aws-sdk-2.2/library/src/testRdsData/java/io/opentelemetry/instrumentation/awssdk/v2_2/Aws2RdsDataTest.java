@@ -24,7 +24,7 @@ class Aws2RdsDataTest extends AbstractAws2RdsDataTest {
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(
             AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-                .setCaptureExperimentalSpanAttributes(true)
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
                 .build()
                 .createExecutionInterceptor());
   }

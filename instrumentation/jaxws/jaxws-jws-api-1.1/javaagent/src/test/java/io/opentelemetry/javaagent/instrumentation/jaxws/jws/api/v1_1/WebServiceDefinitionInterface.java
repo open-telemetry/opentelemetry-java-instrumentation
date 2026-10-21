@@ -10,4 +10,6 @@ import javax.jws.WebService;
 @WebService
 public interface WebServiceDefinitionInterface {
   void partOfPublicInterface();
+
+  Object covariantMethod();
 }

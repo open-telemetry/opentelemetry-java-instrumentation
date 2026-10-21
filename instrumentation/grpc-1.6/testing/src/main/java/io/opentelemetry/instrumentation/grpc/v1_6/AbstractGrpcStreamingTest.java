@@ -5,16 +5,17 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExtraClientAttributes;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -378,6 +379,137 @@ public abstract class AbstractGrpcStreamingTest {
                                           equalTo(
                                               RPC_RESPONSE_STATUS_CODE, Status.Code.OK.name())))));
     }
+  }
+
+  @Test
+  void streamingErrorReturned() throws Exception {
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicReference<Throwable> error = new AtomicReference<>();
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public StreamObserver<Helloworld.Response> conversation(
+              StreamObserver<Helloworld.Response> observer) {
+            return new StreamObserver<Helloworld.Response>() {
+              @Override
+              public void onNext(Helloworld.Response value) {}
+
+              @Override
+              public void onError(Throwable t) {
+                observer.onError(t);
+              }
+
+              @Override
+              public void onCompleted() {
+                observer.onError(Status.INTERNAL.withDescription("failure").asException());
+              }
+            };
+          }
+        };
+
+    Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
+    ManagedChannel channel = createChannel(server);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    StreamObserver<Helloworld.Response> requestObserver =
+        GreeterGrpc.newStub(channel)
+            .conversation(
+                new StreamObserver<Helloworld.Response>() {
+                  @Override
+                  public void onNext(Helloworld.Response value) {}
+
+                  @Override
+                  public void onError(Throwable t) {
+                    error.set(t);
+                    latch.countDown();
+                  }
+
+                  @Override
+                  public void onCompleted() {
+                    latch.countDown();
+                  }
+                });
+    requestObserver.onCompleted();
+
+    assertThat(latch.await(10, SECONDS)).isTrue();
+    assertThat(error.get()).isNotNull();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("example.Greeter/Conversation")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraClientAttributes(
+                                    experimentalSatisfies(
+                                        GRPC_RECEIVED_MESSAGE_COUNT,
+                                        v -> assertThat(v).isEqualTo(0)),
+                                    experimentalSatisfies(
+                                        GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
+                                    equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
+                                    equalTo(
+                                        RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
+                                    equalTo(
+                                        RPC_SERVICE,
+                                        emitOldRpcSemconv() ? "example.Greeter" : null),
+                                    equalTo(
+                                        RPC_METHOD,
+                                        emitPreviewRpcSemconv()
+                                            ? "example.Greeter/Conversation"
+                                            : "Conversation"),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        emitPreviewRpcSemconv()
+                                            ? Status.Code.INTERNAL.name()
+                                            : null),
+                                    equalTo(
+                                        RPC_GRPC_STATUS_CODE,
+                                        emitOldRpcSemconv()
+                                            ? (long) Status.Code.INTERNAL.value()
+                                            : null),
+                                    equalTo(
+                                        RPC_RESPONSE_STATUS_CODE,
+                                        emitPreviewRpcSemconv()
+                                            ? Status.Code.INTERNAL.name()
+                                            : null),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort()))),
+                    span ->
+                        span.hasName("example.Greeter/Conversation")
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttributesSatisfyingExactly(
+                                experimentalSatisfies(
+                                    GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
+                                experimentalSatisfies(
+                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
+                                equalTo(
+                                    RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
+                                equalTo(
+                                    RPC_METHOD,
+                                    emitPreviewRpcSemconv()
+                                        ? "example.Greeter/Conversation"
+                                        : "Conversation"),
+                                equalTo(
+                                    ERROR_TYPE,
+                                    emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null),
+                                equalTo(
+                                    RPC_GRPC_STATUS_CODE,
+                                    emitOldRpcSemconv()
+                                        ? (long) Status.Code.INTERNAL.value()
+                                        : null),
+                                equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))));
   }
 
   @Test
