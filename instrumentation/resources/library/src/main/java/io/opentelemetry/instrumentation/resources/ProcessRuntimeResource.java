@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.resources.internal.Entity;
 import io.opentelemetry.sdk.resources.internal.EntityUtil;
@@ -44,11 +45,19 @@ public final class ProcessRuntimeResource {
               + " "
               + System.getProperty("java.vm.version");
 
+      if (name == null || version == null) {
+        AttributesBuilder attributes =
+            Attributes.builder().put(PROCESS_RUNTIME_DESCRIPTION, description);
+        if (name != null) {
+          attributes.put(PROCESS_RUNTIME_NAME, name);
+        }
+        if (version != null) {
+          attributes.put(PROCESS_RUNTIME_VERSION, version);
+        }
+        return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
+      }
       Attributes descriptive = Attributes.of(PROCESS_RUNTIME_DESCRIPTION, description);
       Attributes id = Attributes.of(PROCESS_RUNTIME_NAME, name, PROCESS_RUNTIME_VERSION, version);
-      if (id.isEmpty()) {
-        return Resource.create(descriptive, SchemaUrls.V1_24_0);
-      }
       return EntityUtil.createResource(
           singletonList(
               Entity.builder("process.runtime", id)
