@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Promise;
@@ -33,7 +34,7 @@ public final class VertxRedisClientError {
       // ReadableBuffer.readLine maps wire bytes to ISO-8859-1, preserving them for UTF-8 decoding.
       reply = new String(reply.getBytes(ISO_8859_1), UTF_8);
     }
-    SERVER_ERROR.set(error, new VertxRedisClientError(parseErrorType(reply)));
+    SERVER_ERROR.set(error, new VertxRedisClientError(RedisErrorPrefix.extract(reply)));
   }
 
   @Nullable
@@ -44,23 +45,6 @@ public final class VertxRedisClientError {
   @Nullable
   String getErrorType() {
     return errorType;
-  }
-
-  // visible for testing
-  @Nullable
-  static String parseErrorType(@Nullable String reply) {
-    if (reply == null) {
-      return null;
-    }
-    int start = 0;
-    while (start < reply.length() && reply.charAt(start) == ' ') {
-      start++;
-    }
-    if (start == reply.length()) {
-      return null;
-    }
-    int separator = reply.indexOf(' ', start);
-    return separator == -1 ? reply.substring(start) : reply.substring(start, separator);
   }
 
   @Nullable

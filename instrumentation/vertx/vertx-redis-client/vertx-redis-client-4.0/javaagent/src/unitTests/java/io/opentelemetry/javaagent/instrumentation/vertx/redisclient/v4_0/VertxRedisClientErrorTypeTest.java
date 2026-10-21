@@ -16,7 +16,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.redis.client.Response;
 import io.vertx.redis.client.impl.types.ErrorType;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -25,32 +24,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class VertxRedisClientErrorTypeTest {
-
-  @ParameterizedTest
-  @MethodSource("serverErrorReplies")
-  void extractsServerErrorPrefix(String reply, String expected) {
-    assertThat(VertxRedisClientError.parseErrorType(reply)).isEqualTo(expected);
-  }
-
-  private static Stream<Arguments> serverErrorReplies() {
-    String longPrefix = String.join("", Collections.nCopies(65, "x"));
-    return Stream.of(
-        argumentSet(
-            "wrongtype",
-            "WRONGTYPE Operation against a key holding the wrong kind of value",
-            "WRONGTYPE"),
-        argumentSet("punctuation", "Custom.Code! detail", "Custom.Code!"),
-        argumentSet("lowercase", "lowercase detail", "lowercase"),
-        argumentSet("longPrefix", longPrefix + " detail", longPrefix),
-        argumentSet("prefixOnly", "PrefixOnly", "PrefixOnly"),
-        argumentSet("leadingSpaces", "  Prefix detail", "Prefix"),
-        argumentSet("tabIsNotSeparator", "Custom\tCode detail", "Custom\tCode"),
-        argumentSet("unicode", "échec detail", "échec"),
-        argumentSet("emptyPrefix", " ", null),
-        argumentSet("emptyReply", "", null),
-        argumentSet("nullReply", null, null),
-        argumentSet("realErrReply", "ERR [0] application detail", "ERR"));
-  }
 
   @Test
   void doesNotClassifyClientFailuresAsServerErrors() {
