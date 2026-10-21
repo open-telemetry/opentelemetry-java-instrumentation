@@ -50,7 +50,7 @@ final class DubboRpcResponseStatusExtractor
       DubboRequest request,
       @Nullable Result response,
       @Nullable Throwable error) {
-    if (!semconvSelection.get().emitPreview()) {
+    if (!semconvSelection.get().emitPreview() || isClient) {
       return;
     }
     String statusCode = DubboRpcStatus.getStatusCode(response, error);

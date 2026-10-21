@@ -586,9 +586,7 @@ public abstract class AbstractDubboTest {
                             .hasAttributesSatisfying(
                                 equalTo(
                                     ERROR_TYPE, emitPreviewRpcSemconv() ? clientErrorType : null),
-                                equalTo(
-                                    stringKey("rpc.response.status_code"),
-                                    emitPreviewRpcSemconv() ? responseStatusCode : null)),
+                                equalTo(stringKey("rpc.response.status_code"), null)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
@@ -608,8 +606,9 @@ public abstract class AbstractDubboTest {
       assertPreviewErrorMetric(
           "rpc.server.call.duration",
           "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
-          serverErrorType);
-      assertPreviewErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType);
+          serverErrorType,
+          responseStatusCode);
+      assertPreviewErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType, null);
     }
   }
 
@@ -686,7 +685,8 @@ public abstract class AbstractDubboTest {
     return (RuntimeException) statusClass.getMethod("asException").invoke(status);
   }
 
-  private void assertPreviewErrorMetric(String metricName, String method, String errorType) {
+  private void assertPreviewErrorMetric(
+      String metricName, String method, String errorType, String responseStatusCode) {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.apache-dubbo-2.7",
@@ -702,12 +702,18 @@ public abstract class AbstractDubboTest {
                                     point.hasAttributesSatisfying(
                                         equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                         equalTo(RPC_METHOD, method),
-                                        equalTo(ERROR_TYPE, null));
+                                        equalTo(ERROR_TYPE, null),
+                                        equalTo(
+                                            stringKey("rpc.response.status_code"),
+                                            responseStatusCode));
                                   } else {
                                     point.hasAttributesSatisfying(
                                         equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                         equalTo(RPC_METHOD, method),
-                                        equalTo(ERROR_TYPE, errorType));
+                                        equalTo(ERROR_TYPE, errorType),
+                                        equalTo(
+                                            stringKey("rpc.response.status_code"),
+                                            responseStatusCode));
                                   }
                                 })));
   }
