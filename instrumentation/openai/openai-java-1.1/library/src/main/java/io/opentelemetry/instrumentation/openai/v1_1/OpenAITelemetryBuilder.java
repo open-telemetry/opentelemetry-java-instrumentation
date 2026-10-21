@@ -83,6 +83,7 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(responsesAttributesGetter))
+            .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(GenAiAttributesExtractor.create(responsesAttributesGetter))
             .setSpanStatusExtractor(new ResponsesSpanStatusExtractor())
             .addOperationMetrics(GenAiClientMetrics.get());

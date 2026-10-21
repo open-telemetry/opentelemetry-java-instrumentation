@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -56,6 +57,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -117,6 +119,7 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -131,6 +134,7 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -404,6 +408,7 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
           .waitAndAssertLogRecords(
               logRecord ->
                   logRecord
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                       .hasSeverity(Severity.WARN)
                       .hasEventName("gen_ai.client.operation.exception")
                       .hasException(thrown)
@@ -678,6 +683,7 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                         span ->
                             span.hasName("chat")
                                 .hasKind(SpanKind.CLIENT)
+                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                                 .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
@@ -730,6 +736,7 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                         span ->
                             span.hasName("chat")
                                 .hasKind(SpanKind.CLIENT)
+                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                                 .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
@@ -741,7 +748,9 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
   }
 
   private static SpanDataAssert assertResponsesSpan(SpanDataAssert span) {
-    return span.hasName("chat " + TEST_MODEL).hasKind(SpanKind.CLIENT);
+    return span.hasName("chat " + TEST_MODEL)
+        .hasKind(SpanKind.CLIENT)
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0));
   }
 
   private Response doResponses(ResponseCreateParams params) {
