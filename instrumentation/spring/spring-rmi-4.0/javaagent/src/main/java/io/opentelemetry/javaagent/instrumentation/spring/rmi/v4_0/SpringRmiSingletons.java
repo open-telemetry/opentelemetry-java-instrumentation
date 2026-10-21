@@ -12,6 +12,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -35,6 +36,9 @@ public class SpringRmiSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
+            .setSchemaUrl(
+                RpcSemconvSelection.Selection.forOpenTelemetry(GlobalOpenTelemetry.get())
+                    .schemaUrl())
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter));
     setRpcClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -48,6 +52,9 @@ public class SpringRmiSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
+            .setSchemaUrl(
+                RpcSemconvSelection.Selection.forOpenTelemetry(GlobalOpenTelemetry.get())
+                    .schemaUrl())
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());

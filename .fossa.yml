@@ -618,7 +618,7 @@ targets:
       target: ':instrumentation:jedis:jedis-4.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jedis:jedis-common-1.4:javaagent'
+      target: ':instrumentation:jedis:jedis-common:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jetty:jetty-11.0:javaagent'

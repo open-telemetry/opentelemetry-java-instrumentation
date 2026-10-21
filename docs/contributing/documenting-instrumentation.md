@@ -255,7 +255,7 @@ configurations:
 ```
 
 The same file's `global_configurations` section documents settings read on behalf of every
-instrumentation, such as `otel.instrumentation.common.v3-preview`. Modules don't reference those.
+instrumentation, such as semantic convention selection. Modules don't reference those.
 
 The generated `docs/declarative-configuration-example.yaml` sets each configuration to its default,
 so any entry can be copied on its own. It leaves out deprecated configurations and configurations

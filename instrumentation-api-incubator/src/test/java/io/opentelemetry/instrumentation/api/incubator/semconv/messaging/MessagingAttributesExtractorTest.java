@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
@@ -289,6 +290,11 @@ class MessagingAttributesExtractorTest {
     @Override
     public String getErrorType(Map<String, String> request, String response, Throwable error) {
       return "failure".equals(response) ? response : null;
+    }
+
+    @Override
+    public Iterable<String> getMessageHeaderNames(Map<String, String> request) {
+      return emptyList();
     }
   }
 }

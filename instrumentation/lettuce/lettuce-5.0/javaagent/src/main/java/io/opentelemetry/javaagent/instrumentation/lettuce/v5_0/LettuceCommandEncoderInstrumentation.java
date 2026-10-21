@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,7 +28,6 @@ class LettuceCommandEncoderInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("encode")
-            .and(takesArguments(3))
             .and(takesArgument(0, named("io.netty.channel.ChannelHandlerContext")))
             .and(takesArgument(1, Object.class)),
         getClass().getName() + "$EncodeAdvice");
