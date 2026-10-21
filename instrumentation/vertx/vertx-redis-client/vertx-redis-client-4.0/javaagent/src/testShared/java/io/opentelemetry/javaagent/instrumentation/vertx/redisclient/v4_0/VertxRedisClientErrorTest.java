@@ -155,9 +155,10 @@ class VertxRedisClientErrorTest {
   @Test
   void wrappedBatchTransportFailure()
       throws ExecutionException, IOException, InterruptedException, TimeoutException {
-    RedisConnection connection = connect((String) null);
+    RedisConnection connection = connect((String) null, null);
 
     assertThat(failure(connection.batch(requests()))).isInstanceOf(ErrorType.class);
+    assertThat(server.requestCommands.get()).isEqualTo(2);
 
     assertTelemetry(ErrorType.class.getName(), 2);
   }
@@ -372,6 +373,7 @@ class VertxRedisClientErrorTest {
     private final List<String> replies;
     private final AtomicReference<Throwable> failure = new AtomicReference<>();
     private final AtomicInteger handshakeCommands = new AtomicInteger();
+    private final AtomicInteger requestCommands = new AtomicInteger();
     private volatile Socket socket;
     private volatile boolean closed;
 
@@ -389,7 +391,6 @@ class VertxRedisClientErrorTest {
           DataInputStream input = new DataInputStream(connection.getInputStream())) {
         socket = connection;
         OutputStream output = connection.getOutputStream();
-        int index = 0;
         while (!closed) {
           List<String> command = TestRedisCluster.readCommand(input);
           if (command.isEmpty()) {
@@ -410,11 +411,16 @@ class VertxRedisClientErrorTest {
               TestRedisCluster.write(output, "*0\r\n");
               break;
             case "GET":
-              String reply = replies.get(index++);
+              int index = requestCommands.getAndIncrement();
+              String reply = replies.get(index);
               if (reply == null) {
-                return;
+                // Closing with unread pipelined requests can turn EOF into a TCP reset.
+                if (index + 1 == replies.size()) {
+                  return;
+                }
+              } else {
+                TestRedisCluster.write(output, reply);
               }
-              TestRedisCluster.write(output, reply);
               break;
             default:
               throw new AssertionError("Unexpected command: " + command);
