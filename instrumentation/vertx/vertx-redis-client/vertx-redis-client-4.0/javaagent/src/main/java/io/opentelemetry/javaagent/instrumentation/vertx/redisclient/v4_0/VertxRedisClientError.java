@@ -10,17 +10,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Promise;
 import io.vertx.redis.client.impl.types.ErrorType;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
 public final class VertxRedisClientError {
   private static final VirtualField<ErrorType, VertxRedisClientError> SERVER_ERROR =
       VirtualField.find(ErrorType.class, VertxRedisClientError.class);
-  private static final VirtualField<Promise<?>, BatchErrors> BATCH_ERRORS =
-      VirtualField.find(Promise.class, BatchErrors.class);
 
   @Nullable private final String errorType;
 
@@ -45,62 +40,5 @@ public final class VertxRedisClientError {
   @Nullable
   String getErrorType() {
     return errorType;
-  }
-
-  @Nullable
-  public static BatchCompletion recordBatchResult(
-      Promise<?> promise, int index, AsyncResult<?> result, AtomicInteger remaining) {
-    if (promise.future().isComplete()) {
-      return null;
-    }
-    BatchErrors errors = BATCH_ERRORS.get(promise);
-    if (errors == null) {
-      errors = new BatchErrors();
-      BATCH_ERRORS.set(promise, errors);
-      promise.future().onComplete(unused -> BATCH_ERRORS.set(promise, null));
-    }
-    if (result.failed()) {
-      errors.record(index, result.cause());
-    }
-    return new BatchCompletion(errors, remaining);
-  }
-
-  public static void captureBatchError(ErrorType error, @Nullable BatchCompletion completion) {
-    // The batch callback constructs its aggregate only after decrementing the reply count to zero.
-    if (completion != null && completion.remaining.get() == 0 && !completion.captured) {
-      completion.captured = true;
-      BatchErrors errors = completion.errors;
-      if (!errors.clientFailure) {
-        SERVER_ERROR.set(error, errors.firstError);
-      }
-    }
-  }
-
-  public static final class BatchErrors {
-    private int firstIndex = Integer.MAX_VALUE;
-    @Nullable private VertxRedisClientError firstError;
-    private boolean clientFailure;
-
-    private void record(int index, @Nullable Throwable error) {
-      VertxRedisClientError serverError = get(error);
-      if (serverError == null) {
-        clientFailure = true;
-      }
-      if (index < firstIndex) {
-        firstIndex = index;
-        firstError = serverError;
-      }
-    }
-  }
-
-  public static final class BatchCompletion {
-    private final BatchErrors errors;
-    private final AtomicInteger remaining;
-    private boolean captured;
-
-    private BatchCompletion(BatchErrors errors, AtomicInteger remaining) {
-      this.errors = errors;
-      this.remaining = remaining;
-    }
   }
 }

@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentBatchCompletion;
 import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentRedisUri;
 import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -17,9 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.net.NetSocket;
 import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.Request;
@@ -28,7 +24,6 @@ import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
 import io.vertx.redis.client.impl.RequestUtil;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -49,35 +44,6 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("batch").and(takesArgument(0, List.class)), getClass().getName() + "$BatchAdvice");
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
-    transformer.applyAdviceToMethod(
-        nameStartsWith("lambda$batch$")
-            .or(nameStartsWith("lambda$doBatch$"))
-            .and(takesArgument(0, StringBuilder.class))
-            .and(takesArgument(1, int.class))
-            .and(takesArgument(3, AtomicInteger.class))
-            .and(takesArgument(4, named("io.vertx.core.Promise")))
-            .and(takesArgument(5, named("io.vertx.core.AsyncResult"))),
-        getClass().getName() + "$BatchResultAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class BatchResultAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static VertxRedisClientError.BatchCompletion onEnter(
-        @Advice.Argument(1) int index,
-        @Advice.Argument(3) AtomicInteger remaining,
-        @Advice.Argument(4) Promise<?> promise,
-        @Advice.Argument(5) AsyncResult<?> result) {
-      return currentBatchCompletion()
-          .set(VertxRedisClientError.recordBatchResult(promise, index, result, remaining));
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Enter @Nullable VertxRedisClientError.BatchCompletion previous) {
-      currentBatchCompletion().restore(previous);
-    }
   }
 
   @SuppressWarnings("unused")

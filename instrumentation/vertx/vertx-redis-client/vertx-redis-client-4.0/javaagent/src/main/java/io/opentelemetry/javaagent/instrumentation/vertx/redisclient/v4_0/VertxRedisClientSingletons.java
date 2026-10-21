@@ -34,8 +34,6 @@ public class VertxRedisClientSingletons {
 
   private static final ScopedThreadValue<RedisURI> currentRedisUri = new ScopedThreadValue<>();
   private static final ScopedThreadValue<RESPParser> currentErrorParser = new ScopedThreadValue<>();
-  private static final ScopedThreadValue<VertxRedisClientError.BatchCompletion>
-      currentBatchCompletion = new ScopedThreadValue<>();
   private static final VirtualField<Command, String> COMMAND_NAME =
       VirtualField.find(Command.class, String.class);
   private static final VirtualField<RedisStandaloneConnection, RedisURI> REDIS_URI =
@@ -93,10 +91,6 @@ public class VertxRedisClientSingletons {
 
   public static ScopedThreadValue<RESPParser> currentErrorParser() {
     return currentErrorParser;
-  }
-
-  public static ScopedThreadValue<VertxRedisClientError.BatchCompletion> currentBatchCompletion() {
-    return currentBatchCompletion;
   }
 
   public static void setCommandName(Command command, String commandName) {

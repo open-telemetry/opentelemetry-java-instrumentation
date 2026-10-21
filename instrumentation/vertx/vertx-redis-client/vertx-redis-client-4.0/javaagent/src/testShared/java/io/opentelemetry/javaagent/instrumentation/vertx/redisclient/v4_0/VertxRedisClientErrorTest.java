@@ -123,9 +123,12 @@ class VertxRedisClientErrorTest {
       throws ExecutionException, IOException, InterruptedException, TimeoutException {
     RedisConnection connection = connect("-" + first + "\r\n", "-" + second + "\r\n");
 
-    assertThat(failure(connection.batch(requests()))).isInstanceOf(ErrorType.class);
+    Throwable error = failure(connection.batch(requests()));
+    assertThat(error).isInstanceOf(ErrorType.class);
 
-    assertTelemetry(expected, 2);
+    String decodedFirstReply = new String(first.getBytes(UTF_8), ISO_8859_1);
+    assertTelemetry(
+        error.getMessage().equals(decodedFirstReply) ? expected : error.getClass().getName(), 2);
   }
 
   private static Stream<Arguments> batchReplies() {
@@ -183,9 +186,9 @@ class VertxRedisClientErrorTest {
 
     assertThat(error).isInstanceOf(ErrorType.class);
     // 4.0.x terminates on the first server error; aggregating versions also await the client
-    // failure.
+    // failure and fall back to the aggregate exception class.
     assertTelemetry(
-        "First detail".equals(error.getMessage()) ? "First" : ErrorType.class.getName(), 2);
+        "First detail".equals(error.getMessage()) ? "First" : error.getClass().getName(), 2);
   }
 
   @ParameterizedTest
@@ -237,9 +240,11 @@ class VertxRedisClientErrorTest {
       throws ExecutionException, IOException, InterruptedException, TimeoutException {
     RedisConnection connection = connect("*1\r\n-Collection detail\r\n", "-Terminal detail\r\n");
 
-    assertThat(failure(connection.batch(requests()))).isInstanceOf(ErrorType.class);
+    Throwable error = failure(connection.batch(requests()));
+    assertThat(error).isInstanceOf(ErrorType.class);
 
-    assertTelemetry("Terminal", 2);
+    assertTelemetry(
+        "Terminal detail".equals(error.getMessage()) ? "Terminal" : error.getClass().getName(), 2);
   }
 
   @Test
