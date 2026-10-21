@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
+import io.vertx.redis.client.impl.RESPParser;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
 import java.util.concurrent.CompletableFuture;
@@ -31,6 +32,9 @@ public class VertxRedisClientSingletons {
   private static final Instrumenter<VertxRedisClientRequest, Object> instrumenter;
 
   private static final ScopedThreadValue<RedisURI> currentRedisUri = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<RESPParser> currentErrorParser = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<VertxRedisClientError.BatchCompletion>
+      currentBatchCompletion = new ScopedThreadValue<>();
   private static final VirtualField<Command, String> COMMAND_NAME =
       VirtualField.find(Command.class, String.class);
   private static final VirtualField<RedisStandaloneConnection, RedisURI> REDIS_URI =
@@ -83,6 +87,14 @@ public class VertxRedisClientSingletons {
 
   public static ScopedThreadValue<RedisURI> currentRedisUri() {
     return currentRedisUri;
+  }
+
+  public static ScopedThreadValue<RESPParser> currentErrorParser() {
+    return currentErrorParser;
+  }
+
+  public static ScopedThreadValue<VertxRedisClientError.BatchCompletion> currentBatchCompletion() {
+    return currentBatchCompletion;
   }
 
   public static void setCommandName(Command command, String commandName) {

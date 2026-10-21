@@ -5,15 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import io.vertx.redis.client.Response;
+import io.vertx.redis.client.ResponseType;
 import io.vertx.redis.client.impl.types.ErrorType;
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class VertxRedisClientAttributesGetter
     implements DbClientAttributesGetter<VertxRedisClientRequest, Object> {
+
+  private static final Logger logger =
+      Logger.getLogger(VertxRedisClientAttributesGetter.class.getName());
+  @Nullable private static final Method IS_MAP = findIsMap();
 
   @Override
   public String getDbSystemName(VertxRedisClientRequest request) {
@@ -86,38 +96,8 @@ final class VertxRedisClientAttributesGetter
   // visible for testing
   @Nullable
   static String getRedisErrorType(@Nullable Throwable error) {
-    if (!(error instanceof ErrorType)) {
-      return null;
-    }
-
-    String message = error.getMessage();
-    if (message == null || message.equals("CONNECTION_CLOSED")) {
-      return null;
-    }
-
-    int terminator = message.indexOf("\r\n");
-    if (terminator != -1) {
-      message = message.substring(0, terminator);
-    }
-
-    // Vert.x 4.4.5 wraps batch failures as "ERR [index] <server reply>".
-    if (message.startsWith("ERR [")) {
-      int indexEnd = message.indexOf("] ");
-      if (indexEnd > 5 && isBatchIndex(message, indexEnd)) {
-        message = message.substring(indexEnd + 2);
-      }
-    }
-
-    int start = 0;
-    while (start < message.length() && message.charAt(start) == ' ') {
-      start++;
-    }
-    if (start == message.length()) {
-      return null;
-    }
-
-    int separator = message.indexOf(' ', start);
-    return separator == -1 ? message.substring(start) : message.substring(start, separator);
+    VertxRedisClientError serverError = VertxRedisClientError.get(error);
+    return serverError == null ? null : serverError.getErrorType();
   }
 
   @Nullable
@@ -127,20 +107,46 @@ final class VertxRedisClientAttributesGetter
     }
     if (response instanceof List<?>) {
       for (Object item : (List<?>) response) {
-        if (item instanceof ErrorType) {
-          return (ErrorType) item;
+        Throwable error = getResponseError(item);
+        if (error != null) {
+          return error;
+        }
+      }
+    } else if (response instanceof Response && ((Response) response).type() == ResponseType.MULTI) {
+      Response multi = (Response) response;
+      if (IS_MAP != null) {
+        try {
+          if (Boolean.TRUE.equals(IS_MAP.invoke(multi))) {
+            // These map iterators yield single-entry maps, so traverse their values directly.
+            for (String key : multi.getKeys()) {
+              Throwable error = getResponseError(multi.get(key));
+              if (error != null) {
+                return error;
+              }
+            }
+            return null;
+          }
+        } catch (ReflectiveOperationException e) {
+          logger.log(FINE, "Failed to inspect the Vert.x Redis response collection", e);
+          return null;
+        }
+      }
+      for (Response item : multi) {
+        Throwable error = getResponseError(item);
+        if (error != null) {
+          return error;
         }
       }
     }
     return null;
   }
 
-  private static boolean isBatchIndex(String message, int indexEnd) {
-    for (int i = 5; i < indexEnd; i++) {
-      if (message.charAt(i) < '0' || message.charAt(i) > '9') {
-        return false;
-      }
+  @Nullable
+  private static Method findIsMap() {
+    try {
+      return Response.class.getMethod("isMap");
+    } catch (NoSuchMethodException ignored) {
+      return null;
     }
-    return true;
   }
 }
