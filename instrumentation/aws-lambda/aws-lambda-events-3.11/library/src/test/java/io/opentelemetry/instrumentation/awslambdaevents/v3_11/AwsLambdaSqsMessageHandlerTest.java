@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -42,6 +43,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Constructor;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
@@ -108,6 +110,7 @@ class AwsLambdaSqsMessageHandlerTest {
                         .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("process queue1")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasStatus(StatusData.unset())
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
@@ -134,6 +137,7 @@ class AwsLambdaSqsMessageHandlerTest {
                                 Attributes.of(MESSAGING_MESSAGE_ID, "message2"))),
                 span ->
                     span.hasName("process queue1")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasStatus(StatusData.unset())
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
@@ -152,6 +156,7 @@ class AwsLambdaSqsMessageHandlerTest {
                                     TraceState.getDefault()))),
                 span ->
                     span.hasName("process queue1")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasStatus(StatusData.error())
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
