@@ -14,8 +14,8 @@ generated constants are available, while instrumentations may intentionally pres
 from an older convention. For a domain with multiple supported modes, resolve the effective mode
 through
 [`SemconvSelectionResolver`](../../../instrumentation-api/src/main/java/io/opentelemetry/instrumentation/api/internal/SemconvSelectionResolver.java).
-The resolver applies structured per-domain settings before stability and preview flags and accounts
-for v3-preview behavior. Use the matching released documentation rather than silently comparing
+The resolver applies structured per-domain settings before stability and preview flags. Use the
+matching released documentation rather than silently comparing
 existing telemetry with the latest conventions. If the target version cannot be established, do
 not draw a version-specific conformance conclusion. See
 [testing-semconv-stability.md](testing-semconv-stability.md) for legacy opt-in test modes.
