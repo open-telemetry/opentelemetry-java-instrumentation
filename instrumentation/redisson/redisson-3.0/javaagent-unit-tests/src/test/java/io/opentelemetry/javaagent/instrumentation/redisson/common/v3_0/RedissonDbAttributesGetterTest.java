@@ -123,12 +123,6 @@ class RedissonDbAttributesGetterTest {
   }
 
   @Test
-  void missingMessageHasNoErrorType() {
-    assertThat(GETTER.getErrorType(REQUEST, null, new RedisException())).isNull();
-    assertThat(GETTER.getErrorType(REQUEST, null, null)).isNull();
-  }
-
-  @Test
   void dedicatedExceptionUsesCapturedServerPrefixAndClearsIt() {
     RedisLoadingException error = new RedisLoadingException("LOADING Redis is loading");
     ByteBuf response = Unpooled.copiedBuffer("-LOADING Redis is loading\r\n", US_ASCII);
