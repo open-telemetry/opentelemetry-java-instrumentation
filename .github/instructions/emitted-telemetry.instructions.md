@@ -26,8 +26,8 @@ Comment only on a changed line and only for a supported issue.
 
 ## Database and RPC response status codes
 
-This repository intentionally omits `db.response.status_code` and `rpc.response.status_code` when an instrumentation obtains status codes only from failures and the attribute would merely duplicate the code recorded in `error.type`. For databases, this is a repository policy despite the semantic conventions' conditional inclusion requirement, not an upstream exception. Do not report this intentional omission as a conformance defect or request adding the redundant attribute.
+This repository intentionally omits `db.response.status_code` and `rpc.response.status_code` when an instrumentation obtains status codes only from failures and the attribute would merely duplicate the code recorded in `error.type`. Do not flag this omission or request adding the redundant attribute.
 
-Treat this as an instrumentation-level distinction, not per-call deduplication. When an instrumentation captures statuses for both successful and failed operations, retain the existing status attributes on both, including failure statuses that match `error.type`. Do not request removing this existing capture or fabricating successful statuses to justify adding a separate response-status attribute. Preserve status-based error classification and exception-type fallback.
+Apply this rule to the instrumentation as a whole, not individual calls. If it already captures statuses for both successes and failures, keep them on both, even when a failure status matches `error.type`. Do not invent successful statuses to justify adding a response-status attribute. Preserve status-based error classification and exception-type fallback.
 
-See <a href="https://github.com/open-telemetry/semantic-conventions/issues/3478">open-telemetry/semantic-conventions#3478</a> and the <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16276#discussion_r2850538387">original discussion</a> for rationale. This is a repository policy, not an upstream semantic-convention exception.
+This repository policy applies despite the semantic conventions' conditional inclusion requirements.
