@@ -619,13 +619,13 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     RedisFuture<Long> redisFuture = asyncCommands.del("key1", "key2");
     boolean completedExceptionally =
         ((AsyncCommand<?, ?, ?>) redisFuture)
-            .completeExceptionally(new IllegalStateException("WRONGTYPE client failure"));
+            .completeExceptionally(new IllegalStateException("TestException"));
 
     redisFuture.exceptionally(
         error -> {
           assertThat(error).isNotNull();
           assertThat(error).isInstanceOf(IllegalStateException.class);
-          assertThat(error.getMessage()).isEqualTo("WRONGTYPE client failure");
+          assertThat(error.getMessage()).isEqualTo("TestException");
           throw new RuntimeException(error);
         });
 
@@ -646,7 +646,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("DEL " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException("WRONGTYPE client failure"))
+                        .hasException(new IllegalStateException("TestException"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
