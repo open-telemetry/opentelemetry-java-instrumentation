@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 public class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
-  private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
+  private static final Instrumenter<VertxRedisClientRequest, Object> instrumenter;
 
   private static final ScopedThreadValue<RedisURI> currentRedisUri = new ScopedThreadValue<>();
   private static final VirtualField<Command, String> COMMAND_NAME =
@@ -39,8 +39,8 @@ public class VertxRedisClientSingletons {
   static {
     VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
 
-    InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
-        Instrumenter.<VertxRedisClientRequest, Void>builder(
+    InstrumenterBuilder<VertxRedisClientRequest, Object> builder =
+        Instrumenter.<VertxRedisClientRequest, Object>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(getter))
@@ -53,7 +53,7 @@ public class VertxRedisClientSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<VertxRedisClientRequest, Void> instrumenter() {
+  public static Instrumenter<VertxRedisClientRequest, Object> instrumenter() {
     return instrumenter;
   }
 
@@ -65,7 +65,11 @@ public class VertxRedisClientSingletons {
         .toCompletionStage()
         .whenComplete(
             (value, throwable) -> {
-              instrumenter().end(context, request, null, throwable);
+              Throwable error =
+                  throwable != null
+                      ? throwable
+                      : VertxRedisClientAttributesGetter.getResponseError(value);
+              instrumenter().end(context, request, value, error);
               try (Scope ignore = parentContext.makeCurrent()) {
                 if (throwable != null) {
                   result.completeExceptionally(throwable);
