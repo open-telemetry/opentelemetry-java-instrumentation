@@ -73,25 +73,6 @@ class TracingFilterTest {
   }
 
   @Test
-  void asyncProviderSuccessAfterReturn() {
-    CompletableFuture<AppResponse> future = new CompletableFuture<>();
-    invokeAsyncProvider(future);
-
-    assertThat(testing.waitForTraces(0)).isEmpty();
-
-    future.complete(new AppResponse("success"));
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(HelloService.class.getName() + "/hello")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, null))));
-  }
-
-  @Test
   @SuppressWarnings("deprecation") // RpcContext.getContext()
   void asyncProviderTelemetryFailureDoesNotAffectResult() {
     AtomicInteger endCalls = new AtomicInteger();

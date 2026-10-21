@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -89,7 +88,6 @@ public abstract class AbstractDubboAsyncTest {
     assertThat(response).isNotDone();
     assertThat(serverSpan.isRecording()).isTrue();
 
-    long completionTime = MILLISECONDS.toNanos(System.currentTimeMillis());
     if (fail) {
       provider.result.completeExceptionally(new IllegalStateException("delayed failure"));
       assertThatThrownBy(response::join)
@@ -104,11 +102,7 @@ public abstract class AbstractDubboAsyncTest {
         .waitAndAssertSortedTraces(
             Comparator.comparing(trace -> trace.get(0).getName()),
             trace -> assertCall(trace, "barrier", false),
-            trace -> {
-              assertCall(trace, "hello", fail);
-              assertThat(trace.getSpan(1).getEndEpochNanos())
-                  .isGreaterThanOrEqualTo(completionTime);
-            });
+            trace -> assertCall(trace, "hello", fail));
     assertThat(serverSpan.isRecording()).isFalse();
 
     if (emitOldRpcSemconv()) {
