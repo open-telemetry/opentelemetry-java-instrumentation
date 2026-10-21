@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,6 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
+import org.mockito.verification.VerificationMode;
 
 class DefineClassInstrumentationTest {
 
@@ -107,9 +110,15 @@ class DefineClassInstrumentationTest {
 
     assertThat(definedClass.getName()).isEqualTo(className);
     assertThat(definedClass.getClassLoader()).isSameAs(cl);
-    verify(mockHandler)
+    // on openj9 the defineClass that accepts ByteBuffer delegates to the one that accepts byte
+    // array
+    VerificationMode verificationMode =
+        signature.equals("byteBuffer3") && System.getProperty("java.vm.name").contains("OpenJ9")
+            ? atLeast(1)
+            : times(1);
+    verify(mockHandler, verificationMode)
         .beforeDefineClass(
             same(cl), eq(expectedClassName), eq(bytecode), eq(0), eq(bytecode.length));
-    verify(mockHandler).afterDefineClass(same(context));
+    verify(mockHandler, verificationMode).afterDefineClass(same(context));
   }
 }
