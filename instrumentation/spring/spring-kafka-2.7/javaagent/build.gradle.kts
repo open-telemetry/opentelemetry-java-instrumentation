@@ -36,6 +36,14 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("testAsyncAcks") {
+      dependencies {
+        // async acks were added in 2.8
+        val springKafkaVersion = baseVersion("2.8.0").orLatest()
+        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+      }
+    }
+
     register<JvmTestSuite>("testNoReceiveTelemetry") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
@@ -120,6 +128,7 @@ if (!otelProps.testLatestDeps) {
     listOf(
       testRuntimeClasspath,
       named("testNoReceiveTelemetryRuntimeClasspath"),
+      named("testAsyncAcksRuntimeClasspath"),
     )
       .forEach {
         it.configure {

@@ -104,6 +104,13 @@ enum WebfluxServerHttpAttributesGetter
     return getStatusCode(response.getResponse());
   }
 
+  @Nullable
+  @Override
+  public String getErrorType(
+      ServerWebExchange request, @Nullable ServerWebExchange response, @Nullable Throwable error) {
+    return response == null && error == null ? "cancelled" : null;
+  }
+
   @Override
   public List<String> getHttpResponseHeader(
       ServerWebExchange request, ServerWebExchange response, String name) {

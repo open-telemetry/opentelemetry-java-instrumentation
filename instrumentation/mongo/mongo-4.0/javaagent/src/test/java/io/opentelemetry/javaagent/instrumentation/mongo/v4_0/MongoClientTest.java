@@ -154,6 +154,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
+  protected Document runCommand(String dbName, Document command) {
+    return client.getDatabase(dbName).runCommand(command);
+  }
+
+  @Override
   protected MongoCollection<Document> setupInsert(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()

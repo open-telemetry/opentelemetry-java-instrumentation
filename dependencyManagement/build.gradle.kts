@@ -27,7 +27,7 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.22.3",
+  "com.fasterxml.jackson:jackson-bom:2.22.4",
   "com.google.guava:guava-bom:33.7.2-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
@@ -39,7 +39,7 @@ val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.50.0"
 val byteBuddyVersion = "1.18.14"
-val asmVersion = "9.11"
+val asmVersion = "9.11.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.20"

@@ -9,13 +9,10 @@ import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.internal.ClassLoaderMatcherCacheHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.URL;
 import java.net.URLClassLoader;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -31,11 +28,7 @@ class UrlClassLoaderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("addURL")
-            .and(takesArguments(1))
-            .and(takesArgument(0, URL.class))
-            .and(isProtected())
-            .and(not(isStatic())),
+        named("addURL").and(isProtected()).and(not(isStatic())),
         getClass().getName() + "$AddUrlAdvice");
   }
 
