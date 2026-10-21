@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -17,6 +18,7 @@ import com.couchbase.client.core.msg.RequestContext;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseTracer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConfiguredTarget;
@@ -91,6 +93,8 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     private final CouchbaseSpan delegate;
     private final CouchbaseSpanName spanName;
     private final boolean hasCapturedPeer;
+    private RequestSpan.StatusCode statusCode = RequestSpan.StatusCode.UNSET;
+    @Nullable private String errorType;
 
     private AgentRequestSpan(String name, CouchbaseSpan delegate, @Nullable Peer peer) {
       this.delegate = delegate;
@@ -131,6 +135,10 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void status(RequestSpan.StatusCode statusCode) {
+      if (this.statusCode != RequestSpan.StatusCode.OK
+          && statusCode != RequestSpan.StatusCode.UNSET) {
+        this.statusCode = statusCode;
+      }
       io.opentelemetry.api.trace.StatusCode openTelemetryStatus =
           io.opentelemetry.api.trace.StatusCode.UNSET;
       switch (statusCode) {
@@ -148,6 +156,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void recordException(Throwable throwable) {
+      errorType = ErrorCauseExtractor.getDefault().extract(throwable).getClass().getName();
       delegate.recordException(throwable);
     }
 
@@ -155,6 +164,11 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     public void end() {
       if (spanName.isDatabaseRequest()) {
         delegate.updateName(spanName.spanName());
+      }
+      // A recorded exception does not necessarily mean the operation failed.
+      // Only set error.type if the SDK reports a failed operation.
+      if (statusCode == RequestSpan.StatusCode.ERROR) {
+        delegate.setRawAttribute(ERROR_TYPE.getKey(), errorType);
       }
       delegate.end();
     }
