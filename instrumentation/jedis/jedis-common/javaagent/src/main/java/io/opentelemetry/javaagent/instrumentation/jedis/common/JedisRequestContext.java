@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.common;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
@@ -16,11 +18,11 @@ public class JedisRequestContext<T> {
   @Nullable private Instrumenter<T, Void> instrumenter;
   @Nullable private T request;
   @Nullable private Context context;
-  @Nullable private Throwable throwable;
   @Nullable private Throwable serverErrorThrowable;
   @Nullable private String serverErrorReply;
+  @Nullable private Throwable firstServerErrorThrowable;
+  @Nullable private String firstServerErrorReply;
   private boolean captureServerErrors;
-  private boolean serverErrorReplyCaptured;
 
   private JedisRequestContext() {}
 
@@ -50,15 +52,11 @@ public class JedisRequestContext<T> {
   public Throwable detachAndEnd(@Nullable Throwable methodThrowable) {
     contextThreadLocal.remove();
     Throwable completionThrowable = methodThrowable;
-    if (completionThrowable == null) {
-      completionThrowable = captureServerErrors ? serverErrorThrowable : throwable;
+    if (completionThrowable == null && captureServerErrors) {
+      completionThrowable = firstServerErrorThrowable;
     }
-    if (serverErrorReplyCaptured
-        && serverErrorReply != null
-        && serverErrorThrowable != null
-        && (captureServerErrors || methodThrowable == serverErrorThrowable)
-        && request instanceof JedisServerErrorRequest) {
-      ((JedisServerErrorRequest) request).setServerErrorReply(serverErrorReply);
+    if (request instanceof JedisServerErrorRequest) {
+      applyServerErrorReply((JedisServerErrorRequest) request, completionThrowable);
     }
     if (request != null && instrumenter != null && context != null) {
       endSpan(instrumenter, context, request, completionThrowable);
@@ -66,9 +64,26 @@ public class JedisRequestContext<T> {
     return completionThrowable;
   }
 
+  public void applyServerErrorReply(
+      JedisServerErrorRequest request, @Nullable Throwable completionThrowable) {
+    if (completionThrowable == null) {
+      return;
+    }
+    if (completionThrowable == serverErrorThrowable && serverErrorReply != null) {
+      request.setServerErrorReply(serverErrorReply);
+    } else if (completionThrowable == firstServerErrorThrowable && firstServerErrorReply != null) {
+      request.setServerErrorReply(firstServerErrorReply);
+    }
+  }
+
   public static boolean beginServerErrorReply() {
     boolean previous = Boolean.TRUE.equals(processingServerErrorReply.get());
     processingServerErrorReply.set(true);
+    JedisRequestContext<?> requestContext = current();
+    if (!previous && requestContext != null) {
+      requestContext.serverErrorReply = null;
+      requestContext.serverErrorThrowable = null;
+    }
     return previous;
   }
 
@@ -77,9 +92,13 @@ public class JedisRequestContext<T> {
       return;
     }
     JedisRequestContext<?> requestContext = current();
-    if (requestContext != null && !requestContext.serverErrorReplyCaptured) {
-      requestContext.serverErrorReply = reply;
-      requestContext.serverErrorReplyCaptured = true;
+    if (requestContext != null) {
+      // RedisInputStream.readLine() casts each signed byte to char instead of decoding UTF-8.
+      byte[] bytes = new byte[reply.length()];
+      for (int i = 0; i < reply.length(); i++) {
+        bytes[i] = (byte) reply.charAt(i);
+      }
+      requestContext.serverErrorReply = new String(bytes, UTF_8);
     }
   }
 
@@ -90,10 +109,12 @@ public class JedisRequestContext<T> {
       processingServerErrorReply.remove();
     }
     JedisRequestContext<?> requestContext = current();
-    if (requestContext != null
-        && requestContext.serverErrorReplyCaptured
-        && requestContext.serverErrorThrowable == null) {
+    if (!previous && requestContext != null && requestContext.serverErrorReply != null) {
       requestContext.serverErrorThrowable = throwable;
+      if (requestContext.captureServerErrors && requestContext.firstServerErrorThrowable == null) {
+        requestContext.firstServerErrorReply = requestContext.serverErrorReply;
+        requestContext.firstServerErrorThrowable = throwable;
+      }
     }
   }
 
@@ -113,7 +134,6 @@ public class JedisRequestContext<T> {
       requestContext.instrumenter = instrumenter;
       requestContext.context = context;
       requestContext.request = request;
-      requestContext.throwable = throwable;
     }
   }
 

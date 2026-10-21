@@ -81,6 +81,8 @@ class Jedis23ServerErrorTest {
         argumentSet("dedicated code", "MOVED 42 127.0.0.1:6379", "MOVED"),
         argumentSet("punctuation", "Custom.Code! details", "Custom.Code!"),
         argumentSet("lowercase", "lowercase details", "lowercase"),
+        argumentSet("leading spaces", "  Custom.Code! details", "Custom.Code!"),
+        argumentSet("non-ASCII prefix", "échec details", "échec"),
         argumentSet("long prefix", longPrefix + " details", longPrefix),
         argumentSet("prefix only", "PrefixOnly", "PrefixOnly"),
         argumentSet("tabs are not separators", "Custom.Code!\tmessage", "Custom.Code!\tmessage"),

@@ -12,13 +12,16 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -37,6 +40,8 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Connection;
@@ -44,7 +49,9 @@ import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisClientConfig;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.providers.ClusterConnectionProvider;
+import redis.clients.jedis.util.JedisClusterCRC16;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class JedisCluster40ClientTest {
@@ -138,6 +145,89 @@ class JedisCluster40ClientTest {
                             equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void redirectedCommandUsesTerminalReply(boolean fail) throws ReflectiveOperationException {
+    await().untilAsserted(() -> assertThat(jedis.clusterInfo()).contains("cluster_state:ok"));
+    JedisCluster cluster = new JedisCluster(singleton(new HostAndPort(host, port)), clientConfig());
+    cleanup.deferCleanup(cluster);
+    String key = fail ? "redirect-error" : "redirect-success";
+    jedis.del(key);
+    assertThat(cluster.get(key)).isNull();
+    String script =
+        "if redis.call('EXISTS', KEYS[1]) == 0 then "
+            + "redis.call('SET', KEYS[1], 'attempted'); "
+            + "return redis.error_reply('MOVED "
+            + JedisClusterCRC16.getSlot(key)
+            + " 127.0.0.1:"
+            + port
+            + "') end "
+            + (fail
+                ? "return redis.error_reply('WRONGTYPE terminal failure')"
+                : "return 'recovered'");
+    testing.clearData();
+
+    if (fail) {
+      assertThatThrownBy(() -> cluster.eval(script, singletonList(key), singletonList("unused")))
+          .hasMessageStartingWith("WRONGTYPE");
+    } else {
+      assertThat(cluster.eval(script, singletonList(key), singletonList("unused")))
+          .isEqualTo("recovered");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().get(ERROR_TYPE))
+                                    .isEqualTo(fail ? "WRONGTYPE" : null))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("CLUSTER " + host + ":" + port)),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .filteredOn(
+                            point -> "EVAL".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                        .anySatisfy(
+                            point ->
+                                assertThat(point.getAttributes().get(ERROR_TYPE))
+                                    .isEqualTo(fail ? "WRONGTYPE" : null))));
+
+    testing.clearData();
+    assertThat(cluster.get(key)).isEqualTo("attempted");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .allSatisfy(
+                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
   }
 
   @Test

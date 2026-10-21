@@ -9,11 +9,13 @@ import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSinglet
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import javax.annotation.Nullable;
 
 public final class JedisClusterCommandContext {
   @Nullable private Context context;
   @Nullable private JedisRequest request;
+  @Nullable private JedisRequestContext<?> replyContext;
   private int executionDepth;
   private int connectionAcquisitionDepth;
 
@@ -87,7 +89,16 @@ public final class JedisClusterCommandContext {
 
   public void end(@Nullable Throwable throwable) {
     if (context != null && request != null) {
+      if (replyContext != null) {
+        replyContext.applyServerErrorReply(request, throwable);
+      }
       instrumenter().end(context, request, null, throwable);
+    }
+  }
+
+  public void captureReplyContext(JedisRequestContext<?> replyContext) {
+    if (isExecuting()) {
+      this.replyContext = replyContext;
     }
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -45,6 +46,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.exceptions.JedisConnectionException;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class JedisClientTest {
@@ -153,18 +155,92 @@ class JedisClientTest {
     Jedis client = new Jedis(host, port);
     cleanup.deferCleanup(client::disconnect);
     client.lpush("wrong-type", "value");
+    client.set("not-number", "value");
     testing.clearData();
 
     Pipeline pipeline = client.pipelined();
     pipeline.get("wrong-type");
-    assertThatThrownBy(pipeline::syncAndReturnAll).hasMessageStartingWith("WRONGTYPE");
+    pipeline.incr("not-number");
+    if (testLatestDeps()) {
+      assertThat(pipeline.syncAndReturnAll())
+          .hasSize(2)
+          .allSatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
+    } else {
+      assertThatThrownBy(pipeline::syncAndReturnAll).hasMessageStartingWith("WRONGTYPE");
+    }
     assertErrorType("WRONGTYPE");
 
+    client.disconnect();
+    client = new Jedis(host, port);
+    cleanup.deferCleanup(client::disconnect);
     testing.clearData();
     Transaction transaction = client.multi();
     transaction.get("wrong-type");
-    assertThatThrownBy(transaction::exec).hasMessageStartingWith("WRONGTYPE");
+    transaction.incr("not-number");
+    if (testLatestDeps()) {
+      assertThat(transaction.exec())
+          .hasSize(2)
+          .allSatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
+    } else {
+      assertThatThrownBy(transaction::exec).hasMessageStartingWith("WRONGTYPE");
+    }
     assertErrorType("WRONGTYPE");
+  }
+
+  @Test
+  void terminalTransactionServerFailureWinsOverQueuedError() {
+    Jedis client = new Jedis(host, port);
+    cleanup.deferCleanup(client::disconnect);
+    Transaction transaction = client.multi();
+    String[] noKeys = {};
+    transaction.del(noKeys);
+    testing.clearData();
+
+    assertThatThrownBy(transaction::exec)
+        .isInstanceOf(JedisDataException.class)
+        .hasMessageStartingWith(testLatestDeps() ? "EXECABORT" : "ERR");
+    assertErrorType(testLatestDeps() ? "EXECABORT" : "ERR");
+
+    testing.clearData();
+    jedis.set("after-error", "value");
+    assertNoErrorTypeMetric();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData ->
+                            assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+  }
+
+  @Test
+  void terminalPipelineConnectionFailureWinsOverServerReply() {
+    assumeTrue(testLatestDeps());
+    Jedis client = new Jedis(host, port);
+    cleanup.deferCleanup(client::disconnect);
+    client.lpush("wrong-type", "value");
+
+    Pipeline pipeline = client.pipelined();
+    pipeline.get("wrong-type");
+    client.getClient().quit();
+    pipeline.get("after-quit");
+    pipeline.get("after-quit-again");
+    testing.clearData();
+
+    Throwable error = catchThrowable(pipeline::syncAndReturnAll);
+    assertThat(error).isInstanceOf(JedisConnectionException.class);
+    assertErrorType(error.getClass().getName());
+
+    testing.clearData();
+    jedis.set("after-error", "value");
+    assertNoErrorTypeMetric();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData ->
+                            assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
   }
 
   private static void assertErrorType(String errorType) {

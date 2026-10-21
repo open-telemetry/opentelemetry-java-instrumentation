@@ -178,20 +178,80 @@ class Jedis40ClientTest {
   @Test
   void pipelineAndTransactionErrorsCompleteBatchSpans() {
     jedis.lpush("wrong-type", "value");
+    jedis.set("not-number", "value");
     testing.clearData();
 
     Pipeline pipeline = jedis.pipelined();
     pipeline.get("wrong-type");
+    pipeline.incr("not-number");
     assertThat(pipeline.syncAndReturnAll())
-        .anySatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
+        .hasSize(2)
+        .allSatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
     assertErrorType("WRONGTYPE");
 
     testing.clearData();
     Transaction transaction = jedis.multi();
     transaction.get("wrong-type");
+    transaction.incr("not-number");
     assertThat(transaction.exec())
-        .anySatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
+        .hasSize(2)
+        .allSatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
     assertErrorType("WRONGTYPE");
+  }
+
+  @Test
+  void terminalTransactionServerFailureWinsOverQueuedError() {
+    Jedis client = new Jedis(host, port);
+    cleanup.deferCleanup(client::disconnect);
+    Transaction transaction = client.multi();
+    String[] noKeys = {};
+    transaction.del(noKeys);
+    testing.clearData();
+
+    assertThatThrownBy(transaction::exec)
+        .isInstanceOf(JedisDataException.class)
+        .hasMessageStartingWith("EXECABORT");
+    assertErrorType("EXECABORT");
+
+    testing.clearData();
+    jedis.set("after-error", "value");
+    assertNoErrorTypeMetric();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData ->
+                            assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+  }
+
+  @Test
+  void terminalPipelineConnectionFailureWinsOverServerReply() {
+    Jedis client = new Jedis(host, port);
+    cleanup.deferCleanup(client::disconnect);
+    client.lpush("wrong-type", "value");
+
+    Pipeline pipeline = client.pipelined();
+    pipeline.get("wrong-type");
+    client.getClient().sendCommand(() -> "QUIT".getBytes(UTF_8));
+    pipeline.get("after-quit");
+    pipeline.get("after-quit-again");
+    testing.clearData();
+
+    Throwable error = catchThrowable(pipeline::syncAndReturnAll);
+    assertThat(error).isInstanceOf(JedisConnectionException.class);
+    assertErrorType(error.getClass().getName());
+
+    testing.clearData();
+    jedis.set("after-error", "value");
+    assertNoErrorTypeMetric();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData ->
+                            assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
   }
 
   private static Stream<Arguments> serverErrorReplies() {
@@ -200,6 +260,8 @@ class Jedis40ClientTest {
         argumentSet("dedicated code", "MOVED 42 127.0.0.1:6379", "MOVED"),
         argumentSet("punctuation", "Custom.Code! details", "Custom.Code!"),
         argumentSet("lowercase", "lowercase details", "lowercase"),
+        argumentSet("leading spaces", "  Custom.Code! details", "Custom.Code!"),
+        argumentSet("non-ASCII prefix", "échec details", "échec"),
         argumentSet("long prefix", longPrefix + " details", longPrefix),
         argumentSet("prefix only", "PrefixOnly", "PrefixOnly"),
         argumentSet("tabs are not separators", "Custom.Code!\tmessage", "Custom.Code!\tmessage"),

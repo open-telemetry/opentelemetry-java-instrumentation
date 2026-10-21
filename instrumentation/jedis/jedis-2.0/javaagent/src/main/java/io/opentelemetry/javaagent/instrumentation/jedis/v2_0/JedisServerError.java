@@ -20,7 +20,7 @@ public final class JedisServerError {
     int end = start;
     while (end < reply.length()) {
       char character = reply.charAt(end);
-      if (character == ' ' || character == '\r' || character == '\n') {
+      if (character == ' ') {
         break;
       }
       end++;

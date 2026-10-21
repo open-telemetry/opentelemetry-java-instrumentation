@@ -34,9 +34,11 @@ class JedisServerErrorTest {
         argumentSet("prefix only", "PrefixOnly", "PrefixOnly"),
         argumentSet("tabs are not separators", "Custom.Code!\tmessage", "Custom.Code!\tmessage"),
         argumentSet("leading spaces", "  Custom.Code! detail", "Custom.Code!"),
+        argumentSet("non-ASCII prefix", "échec detail", "échec"),
+        argumentSet("bare carriage return", "Code\rsuffix detail", "Code\rsuffix"),
+        argumentSet("bare line feed", "Code\nsuffix detail", "Code\nsuffix"),
         argumentSet("empty", "", null),
         argumentSet("missing prefix", " ", null),
-        argumentSet("empty RESP message", "\r\n", null),
-        argumentSet("crlf", "Custom.Code!\r\nignored", "Custom.Code!"));
+        argumentSet("null reply", null, null));
   }
 }
