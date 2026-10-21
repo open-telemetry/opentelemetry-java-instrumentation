@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
  * @deprecated This class is only needed during the transition period when both old and stable RPC
  *     semantic conventions are emitted simultaneously.
  */
-@Deprecated // to be removed in 3.0
+@Deprecated
 public final class RpcMetricsContextCustomizers {
 
   static final ContextKey<String> OLD_RPC_METHOD_CONTEXT_KEY =

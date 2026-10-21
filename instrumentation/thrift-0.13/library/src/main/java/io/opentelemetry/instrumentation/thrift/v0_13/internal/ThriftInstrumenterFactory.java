@@ -51,7 +51,7 @@ public final class ThriftInstrumenterFactory {
         }
       };
 
-  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
+  @SuppressWarnings("deprecation") // for RPC metrics dual-semconv support
   public static Instrumenter<ThriftRequest, ThriftResponse> createClientInstrumenter(
       OpenTelemetry openTelemetry,
       UnaryOperator<SpanNameExtractor<ThriftRequest>> clientSpanNameExtractorCustomizer,
@@ -88,7 +88,7 @@ public final class ThriftInstrumenterFactory {
     return clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
+  @SuppressWarnings("deprecation") // for RPC metrics dual-semconv support
   public static Instrumenter<ThriftRequest, ThriftResponse> createServerInstrumenter(
       OpenTelemetry openTelemetry,
       UnaryOperator<SpanNameExtractor<ThriftRequest>> serverSpanNameExtractorCustomizer,

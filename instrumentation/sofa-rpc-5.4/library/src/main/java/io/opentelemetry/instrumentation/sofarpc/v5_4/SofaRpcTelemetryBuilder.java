@@ -82,7 +82,7 @@ public final class SofaRpcTelemetryBuilder {
   }
 
   /** Returns a new {@link SofaRpcTelemetry} with the settings of this builder. */
-  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
+  @SuppressWarnings("deprecation") // for RPC metrics dual-semconv support
   public SofaRpcTelemetry build() {
     SofaRpcAttributesGetter rpcAttributesGetter = new SofaRpcAttributesGetter();
     SpanNameExtractor<SofaRpcRequest> spanNameExtractor =

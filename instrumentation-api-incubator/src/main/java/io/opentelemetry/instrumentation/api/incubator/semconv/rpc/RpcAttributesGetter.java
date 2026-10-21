@@ -30,7 +30,7 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated Use {@link #getRpcSystemName(REQUEST)}. To be removed in 3.0.
+   * @deprecated Use {@link #getRpcSystemName(REQUEST)} for stable semconv.
    */
   @Deprecated
   String getSystem(REQUEST request);
@@ -41,7 +41,7 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   /**
    * @deprecated Use {@link #getRpcMethod(REQUEST)} for stable semconv.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated
   @Nullable
   String getMethod(REQUEST request);
 

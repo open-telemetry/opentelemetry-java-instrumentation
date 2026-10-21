@@ -83,7 +83,7 @@ public final class DubboTelemetryBuilder {
   /**
    * Returns a new {@link DubboTelemetry} with the settings of this {@link DubboTelemetryBuilder}.
    */
-  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
+  @SuppressWarnings("deprecation") // for RPC metrics dual-semconv support
   public DubboTelemetry build() {
     DubboRpcAttributesGetter rpcAttributesGetter = new DubboRpcAttributesGetter();
     SpanNameExtractor<DubboRequest> spanNameExtractor =
