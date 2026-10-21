@@ -56,20 +56,32 @@ class RediscalaAttributesGetterTest {
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("lowercase details")))
         .isEqualTo("lowercase");
     assertThat(
+            getter.getErrorType(request, null, new ReplyErrorException("\u00c9RR\u00d6R details")))
+        .isEqualTo("\u00c9RR\u00d6R");
+    assertThat(
             getter.getErrorType(
                 request, null, new ReplyErrorException(prefixOver64Characters + " details")))
         .isEqualTo(prefixOver64Characters);
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("CUSTOMCODE")))
         .isEqualTo("CUSTOMCODE");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("CRLFCODE\r\ntrailing")))
-        .isEqualTo("CRLFCODE");
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("Custom\tCode details")))
         .isEqualTo("Custom\tCode");
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException(" message")))
+        .isEqualTo("message");
+    assertThat(
+            getter.getErrorType(request, null, new ReplyErrorException("   Custom.Code!  details")))
+        .isEqualTo("Custom.Code!");
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("   CUSTOMCODE")))
+        .isEqualTo("CUSTOMCODE");
+    assertThat(
+            getter.getErrorType(request, null, new ReplyErrorException(" \tCustom.Code! details")))
+        .isEqualTo("\tCustom.Code!");
     assertThat(getter.getErrorType(request, null, new ReplyErrorException(""))).isNull();
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException(" message"))).isNull();
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("   "))).isNull();
     assertThat(getter.getErrorType(request, null, new ReplyErrorException(null))).isNull();
     assertThat(getter.getErrorType(request, null, new IllegalStateException("WRONGTYPE message")))
         .isNull();
+    assertThat(getter.getErrorType(request, null, null)).isNull();
   }
 
   private static RediscalaRequest request(RedisServerTarget target) {

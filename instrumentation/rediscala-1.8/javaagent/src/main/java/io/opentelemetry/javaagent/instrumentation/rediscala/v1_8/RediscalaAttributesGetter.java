@@ -61,13 +61,15 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
       return null;
     }
 
-    int replyEnd = message.indexOf("\r\n");
-    if (replyEnd != -1) {
-      message = message.substring(0, replyEnd);
+    int prefixStart = 0;
+    while (prefixStart < message.length() && message.charAt(prefixStart) == ' ') {
+      prefixStart++;
     }
-    int separator = message.indexOf(' ');
-    String prefix = separator == -1 ? message : message.substring(0, separator);
-    return prefix.isEmpty() ? null : prefix;
+    if (prefixStart == message.length()) {
+      return null;
+    }
+    int separator = message.indexOf(' ', prefixStart);
+    return message.substring(prefixStart, separator == -1 ? message.length() : separator);
   }
 
   @Nullable
