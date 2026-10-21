@@ -55,9 +55,8 @@ class RediscalaAttributesGetterTest {
         .isEqualTo("Custom.Code!");
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("lowercase details")))
         .isEqualTo("lowercase");
-    assertThat(
-            getter.getErrorType(request, null, new ReplyErrorException("\u00c9RR\u00d6R details")))
-        .isEqualTo("\u00c9RR\u00d6R");
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("ÉRRÖR details")))
+        .isEqualTo("ÉRRÖR");
     assertThat(
             getter.getErrorType(
                 request, null, new ReplyErrorException(prefixOver64Characters + " details")))
