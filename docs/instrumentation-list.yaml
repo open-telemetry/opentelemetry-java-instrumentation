@@ -89,14 +89,6 @@ definitions:
         attributes are not captured by default.
       type: boolean
       default: false
-    common.v3-preview:
-      name: otel.instrumentation.common.v3-preview
-      declarative_name: java.common.v3_preview
-      description: Enables a preview of the behavior planned for version 3.0 of the
-        agent, such as ignoring deprecated settings. The set of changes it enables
-        can grow in any release.
-      type: boolean
-      default: false
     http.client.capture-request-headers:
       name: otel.instrumentation.http.client.capture-request-headers
       declarative_name: general.http.client.request_captured_headers
@@ -1428,15 +1420,6 @@ definitions:
         suppression.'
       type: string
       default: semconv
-    span-suppression-strategy.deprecated:
-      name: otel.instrumentation.experimental.span-suppression-strategy
-      declarative_name: java.common.span_suppression_strategy/development
-      description: 'Deprecated: use `otel.instrumentation.common.span-suppression-strategy`
-        or `java.common.span_suppression_strategy` instead. This setting will be removed
-        in 3.0.'
-      type: string
-      deprecated: true
-      replaced_by: otel.instrumentation.common.span-suppression-strategy
   metrics:
     apache_commons_pool.object.count-0fb5f06e:
       name: apache_commons_pool.object.count
@@ -5735,12 +5718,10 @@ definitions:
       - name: exception.type
         type: STRING
 global_configuration_refs:
-- common.v3-preview
 - semconv-stability.opt-in
 - semconv-stability.preview
 - semconv-exception.signal.preview
 - span-suppression-strategy
-- span-suppression-strategy.deprecated
 - rpc.semconv.version
 - rpc.semconv.experimental
 - rpc.semconv.dual_emit
