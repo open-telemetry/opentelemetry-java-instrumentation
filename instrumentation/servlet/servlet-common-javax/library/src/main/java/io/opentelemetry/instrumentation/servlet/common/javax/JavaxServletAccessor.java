@@ -128,8 +128,4 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
     return throwable instanceof ServletException;
   }
 
-  @Override
-  public String getRequestContentEncoding(HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getCharacterEncoding();
-  }
 }

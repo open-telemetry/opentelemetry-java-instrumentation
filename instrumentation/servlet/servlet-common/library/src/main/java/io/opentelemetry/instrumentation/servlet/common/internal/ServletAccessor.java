@@ -92,5 +92,4 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   boolean isServletException(Throwable throwable);
 
-  String getRequestContentEncoding(REQUEST request);
 }
