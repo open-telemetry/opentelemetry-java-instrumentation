@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class NettyInstrumentationModule extends InstrumentationModule {
   public NettyInstrumentationModule() {
-    super("netty", "netty-3.8");
+    super("netty-3.8", "netty");
   }
 
   @Override

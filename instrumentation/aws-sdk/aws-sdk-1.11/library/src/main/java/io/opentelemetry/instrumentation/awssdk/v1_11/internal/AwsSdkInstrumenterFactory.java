@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -24,9 +23,11 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -36,7 +37,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -57,6 +60,7 @@ public final class AwsSdkInstrumenterFactory {
 
   // messaging.operation.name values, named after the SQS API operations
   private static final String SEND_OPERATION_NAME = "send";
+  private static final String CREATE_OPERATION_NAME = "create";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
   private static final String DELETE_OPERATION_NAME = "delete";
@@ -65,10 +69,10 @@ public final class AwsSdkInstrumenterFactory {
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       stringKey("messaging.message.id");
 
-  private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors = createAttributesExtractors(false);
-  private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      extendedAttributesExtractors = createAttributesExtractors(true);
+  private final List<AttributesExtractor<Request<?>, Response<?>>> defaultAttributesExtractors =
+      createAttributesExtractors(false);
+  private final List<AttributesExtractor<Request<?>, Response<?>>> extendedAttributesExtractors =
+      createAttributesExtractors(true);
 
   private final OpenTelemetry openTelemetry;
   private final IncludeExclude headers;
@@ -139,20 +143,17 @@ public final class AwsSdkInstrumenterFactory {
         toSqsRequestExtractors(attributesExtractors()),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          builder.addOperationMetrics(MessagingConsumerMetrics.get());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingReceiveExceptionEventExtractor(builder);
-          if (emitStableMessagingSemconv()) {
-            builder.addSpanLinksExtractor(
-                (spanLinks, parentContext, request) -> {
-                  for (SqsMessage message : request.getMessages()) {
-                    SpanContext spanContext =
-                        Span.fromContext(message.getCreationContext()).getSpanContext();
-                    if (spanContext.isValid()) {
-                      spanLinks.addLink(spanContext, messageLinkAttributes(message));
-                    }
-                  }
-                });
-          }
+          builder.addSpanLinksExtractor(
+              (spanLinks, parentContext, request) -> {
+                for (SqsMessage message : request.getMessages()) {
+                  SpanContext spanContext =
+                      Span.fromContext(message.getCreationContext()).getSpanContext();
+                  spanLinks.addLink(spanContext, messageLinkAttributes(message));
+                }
+              });
         },
         messagingReceiveInstrumentationEnabled);
   }
@@ -170,36 +171,31 @@ public final class AwsSdkInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors()))
             .addAttributesExtractor(messagingAttributeExtractor)
-            .addOperationMetrics(MessagingProcessMetrics.get());
-    if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
+    if (!messagingReceiveInstrumentationEnabled) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }
     setMessagingProcessExceptionEventExtractor(builder);
 
-    if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
-      builder.addSpanLinksExtractor(
-          (spanLinks, parentContext, request) -> {
-            // getCreationContext() extracts against a root context, so it is either a valid
-            // creation context or an invalid one; in particular it can never pick up the ambient
-            // span. the creation context is linked even when it ends up being this span's parent,
-            // which happens when there is no ambient span, because semconv asks for a link to the
-            // creation context for every message the span accounts for
-            //
-            // the link carries no messaging.message.id: a process span accounts for a single
-            // message, so that attribute belongs on the span itself, where it already is
-            SpanContext creationSpanContext =
-                Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
-            if (creationSpanContext.isValid()) {
-              spanLinks.addLink(creationSpanContext);
-            }
-          });
-    }
-    if (emitStableMessagingSemconv()) {
-      builder.addContextCustomizer(
-          MessagingProcessContextCustomizer.create(
-              (parentContext, request) ->
-                  parentContext.with(Span.fromContext(request.getMessage().getCreationContext()))));
-    }
+    builder.addSpanLinksExtractor(
+        (spanLinks, parentContext, request) -> {
+          // getCreationContext() extracts against a root context, so it is either a valid
+          // creation context or an invalid one; in particular it can never pick up the ambient
+          // span. the creation context is linked even when it ends up being this span's parent,
+          // which happens when there is no ambient span, because semconv asks for a link to the
+          // creation context for every message the span accounts for
+          //
+          // the link carries no messaging.message.id: a process span accounts for a single
+          // message, so that attribute belongs on the span itself, where it already is
+          SpanContext creationSpanContext =
+              Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
+          spanLinks.addLink(creationSpanContext);
+        });
+    builder.addContextCustomizer(
+        MessagingProcessContextCustomizer.create(
+            (parentContext, request) ->
+                parentContext.with(Span.fromContext(request.getMessage().getCreationContext()))));
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -244,14 +240,39 @@ public final class AwsSdkInstrumenterFactory {
     return createInstrumenter(
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
-        SpanKindExtractor.alwaysProducer(),
+        request ->
+            SqsAccess.isBatchRequest(request)
+                    && !SqsAccess.getBatchMessageContexts(request).isEmpty()
+                ? SpanKind.CLIENT
+                : SpanKind.PRODUCER,
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+          builder.addOperationMetrics(MessagingProducerMetrics.get());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingSendExceptionEventExtractor(builder);
+          builder.addSpanLinksExtractor(
+              (spanLinks, parentContext, request) -> {
+                for (Context creationContext : SqsAccess.getBatchMessageContexts(request)) {
+                  SpanContext spanContext = Span.fromContext(creationContext).getSpanContext();
+                  spanLinks.addLink(spanContext);
+                }
+              });
         },
         true);
+  }
+
+  public Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter() {
+    MessagingOperationType operationType = MessagingOperationType.CREATE;
+    SqsCreateRequestAttributesGetter getter = new SqsCreateRequestAttributesGetter();
+    return Instrumenter.<SqsCreateRequest, Void>builder(
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
+        .addAttributesExtractor(
+            messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
+        .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
+        .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<Request<?>, Response<?>> settleInstrumenter() {
@@ -267,7 +288,8 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          builder.addOperationMetrics(MessagingConsumerMetrics.get());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingSettleExceptionEventExtractor(builder);
         },
         true);
@@ -282,7 +304,8 @@ public final class AwsSdkInstrumenterFactory {
         builder -> {
           builder
               .addAttributesExtractor(new DynamoDbAttributesExtractor())
-              .addOperationMetrics(DbClientMetrics.get());
+              .addOperationMetrics(DbClientMetrics.get())
+              .setSchemaUrl(DbSchemaUrls.SCHEMA_URL);
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -318,6 +341,7 @@ public final class AwsSdkInstrumenterFactory {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
             .addAttributesExtractors(attributeExtractors)
             .setEnabled(enabled);
     customizer.accept(builder);

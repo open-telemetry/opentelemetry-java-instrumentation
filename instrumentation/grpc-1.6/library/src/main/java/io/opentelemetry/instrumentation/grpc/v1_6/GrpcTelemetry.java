@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
-
 import io.grpc.ClientInterceptor;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
@@ -22,6 +20,7 @@ public final class GrpcTelemetry {
   private final ContextPropagators propagators;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean emitMessageEvents;
+  private final boolean emitPreviewRpcSemconv;
 
   /** Returns a new {@link GrpcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static GrpcTelemetry create(OpenTelemetry openTelemetry) {
@@ -38,12 +37,14 @@ public final class GrpcTelemetry {
       Instrumenter<GrpcRequest, Status> clientInstrumenter,
       ContextPropagators propagators,
       boolean captureExperimentalSpanAttributes,
-      boolean emitMessageEvents) {
+      boolean emitMessageEvents,
+      boolean emitPreviewRpcSemconv) {
     this.serverInstrumenter = serverInstrumenter;
     this.clientInstrumenter = clientInstrumenter;
     this.propagators = propagators;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.emitMessageEvents = emitMessageEvents;
+    this.emitPreviewRpcSemconv = emitPreviewRpcSemconv;
   }
 
   /**
@@ -59,15 +60,15 @@ public final class GrpcTelemetry {
    * Configures a {@link ServerBuilder} with the server interceptor, which handles registered
    * service methods.
    *
-   * <p>When stable RPC semantic conventions are enabled, through {@code
-   * otel.semconv-stability.opt-in=rpc} or {@code otel.semconv-stability.opt-in=rpc/dup}, this also
-   * registers a stream tracer factory that creates spans for requests to unregistered services,
-   * which server interceptors never see. The factory is left off otherwise, because those spans are
-   * only produced under the stable conventions.
+   * <p>When preview RPC semantic conventions are enabled, through {@code
+   * otel.semconv-stability.preview=rpc} or {@code otel.semconv-stability.preview=rpc/dup}, this
+   * also registers a stream tracer factory that creates spans for requests to unregistered
+   * services, which server interceptors never see. The factory is left off otherwise, because those
+   * spans are only produced under the preview conventions.
    */
   public void configureServerBuilder(ServerBuilder<?> serverBuilder) {
     serverBuilder.intercept(createServerInterceptor());
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv) {
       serverBuilder.addStreamTracerFactory(
           new TracingServerStreamTracerFactory(serverInstrumenter, propagators));
     }

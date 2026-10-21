@@ -34,33 +34,45 @@ testing {
         implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
       }
     }
+
+    register<JvmTestSuite>("okhttp4Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+      dependencies {
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+        implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+      }
+    }
   }
 }
 
 tasks {
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}PreviewSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+      }
+    }
+
+  val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}ExceptionSignalLogs") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+      }
+    }
+
   check {
-    dependsOn(testing.suites)
-  }
-
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
-  check {
-    dependsOn(testStableSemconv, testExceptionSignalLogs)
+    dependsOn(testing.suites, previewSemconvSuites, exceptionSignalLogsSuites)
   }
 }

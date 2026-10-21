@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
@@ -19,15 +17,16 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.springframework.kafka.listener.BatchInterceptor;
 
+@SuppressWarnings("ThreadLocalUsage") // invocation state and retry tracking
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
 
-  private static final VirtualField<ConsumerRecords<?, ?>, State<KafkaReceiveRequest>> stateField =
-      VirtualField.find(ConsumerRecords.class, State.class);
   private static final ThreadLocal<WeakReference<ConsumerRecords<?, ?>>> lastProcessed =
       new ThreadLocal<>();
 
   private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
   @Nullable private final BatchInterceptor<K, V> decorated;
+  private final ThreadLocal<ProcessingInvocation<KafkaReceiveRequest>> currentInvocation =
+      new ThreadLocal<>();
 
   InstrumentedBatchInterceptor(
       Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter,
@@ -41,22 +40,27 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     Context parentContext = getParentContext(records);
 
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
+    Context context = null;
     if (batchProcessInstrumenter.shouldStart(parentContext, request) && !skipProcessing(records)) {
-      Context context = batchProcessInstrumenter.start(parentContext, request);
-      Scope scope = context.makeCurrent();
-      stateField.set(records, State.create(request, context, scope));
+      context = batchProcessInstrumenter.start(parentContext, request);
     }
-
-    return decorated == null ? records : decorated.intercept(records, consumer);
+    ProcessingInvocation<KafkaReceiveRequest> invocation =
+        new ProcessingInvocation<>(request, context, currentInvocation.get());
+    currentInvocation.set(invocation);
+    try {
+      ConsumerRecords<K, V> result =
+          decorated == null ? records : decorated.intercept(records, consumer);
+      if (result == null || context == null) {
+        end(invocation, null);
+      }
+      return result;
+    } catch (Throwable t) {
+      end(invocation, t);
+      throw t;
+    }
   }
 
   private static boolean skipProcessing(ConsumerRecords<?, ?> records) {
-    // When retrying failed listener interceptors work as expected only in the earlier versions that
-    // we test (e.g spring-kafka:2.7.1). In later versions interceptor isn't called at all during
-    // the retry, which results in missing process span, or worse, the intercept method is called,
-    // but neither success nor failure is called, which results in a context leak. Here we attempt
-    // to prevent the context leak by observing whether intercept is called with the same
-    // ConsumerRecords as on previous call, and if it is, we skip creating the process span.
     WeakReference<ConsumerRecords<?, ?>> reference = lastProcessed.get();
     return reference != null && reference.get() == records;
   }
@@ -71,34 +75,52 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   @Override
   public void success(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
+    ProcessingInvocation<KafkaReceiveRequest> invocation = currentInvocation.get();
     try {
       if (decorated != null) {
         decorated.success(records, consumer);
       }
+    } catch (Throwable t) {
+      if (invocation != null) {
+        invocation.error = t;
+      }
+      throw t;
     } finally {
-      end(records, null);
+      end(invocation, invocation == null ? null : invocation.error);
     }
   }
 
   @Override
   public void failure(ConsumerRecords<K, V> records, Exception exception, Consumer<K, V> consumer) {
+    ProcessingInvocation<KafkaReceiveRequest> invocation = currentInvocation.get();
     try {
       if (decorated != null) {
         decorated.failure(records, exception, consumer);
       }
     } finally {
-      end(records, exception);
+      end(invocation, exception);
     }
   }
 
-  private void end(ConsumerRecords<K, V> records, @Nullable Throwable error) {
-    State<KafkaReceiveRequest> state = stateField.get(records);
-    stateField.set(records, null);
-    if (state != null) {
-      KafkaReceiveRequest request = state.request();
-      state.scope().close();
-      batchProcessInstrumenter.end(state.context(), request, null, error);
-      lastProcessed.set(new WeakReference<>(records));
+  private void end(
+      @Nullable ProcessingInvocation<KafkaReceiveRequest> invocation, @Nullable Throwable error) {
+    if (invocation == null || invocation.completed) {
+      return;
+    }
+    invocation.completed = true;
+    if (currentInvocation.get() == invocation) {
+      if (invocation.previous == null) {
+        currentInvocation.remove();
+      } else {
+        currentInvocation.set(invocation.previous);
+      }
+    }
+    if (invocation.scope != null) {
+      invocation.scope.close();
+    }
+    if (invocation.context != null) {
+      batchProcessInstrumenter.end(invocation.context, invocation.request, null, error);
+      lastProcessed.set(new WeakReference<>(invocation.request.getRecords()));
     }
   }
 

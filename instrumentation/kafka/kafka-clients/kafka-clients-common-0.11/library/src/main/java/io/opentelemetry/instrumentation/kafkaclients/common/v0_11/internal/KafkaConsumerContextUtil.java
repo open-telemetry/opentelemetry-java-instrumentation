@@ -5,16 +5,18 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,28 +25,31 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 public final class KafkaConsumerContextUtil {
   private static final ContextKey<Span> PROCESS_SPAN_KEY =
       ContextKey.named("opentelemetry-kafka-process-span");
-  private static final ContextKey<Span> PROCESS_PARENT_SPAN_KEY =
-      ContextKey.named("opentelemetry-kafka-process-parent-span");
+  private static final ContextKey<Context> PROCESS_PARENT_CONTEXT_KEY =
+      ContextKey.named("opentelemetry-kafka-process-parent-context");
   private static final ContextKey<Boolean> RECEIVE_OPERATION_KEY =
       ContextKey.named("opentelemetry-kafka-receive-operation");
   // these fields can be used for multiple instrumentations because of that we don't use a helper
   // class as field type
-  private static final VirtualField<ConsumerRecord<?, ?>, Context> recordContextField =
+  private static final VirtualField<ConsumerRecord<?, ?>, Context> RECORD_CONTEXT =
       VirtualField.find(ConsumerRecord.class, Context.class);
-  private static final VirtualField<ConsumerRecord<?, ?>, String[]> recordConsumerInfoField =
+  private static final VirtualField<ConsumerRecord<?, ?>, String[]> RECORD_CONSUMER_INFO =
       VirtualField.find(ConsumerRecord.class, String[].class);
-  private static final VirtualField<ConsumerRecords<?, ?>, Context> recordsContextField =
+  private static final VirtualField<ConsumerRecords<?, ?>, Context> RECORDS_CONTEXT =
       VirtualField.find(ConsumerRecords.class, Context.class);
-  private static final VirtualField<ConsumerRecords<?, ?>, String[]> recordsConsumerInfoField =
+  private static final VirtualField<ConsumerRecords<?, ?>, String[]> RECORDS_CONSUMER_INFO =
       VirtualField.find(ConsumerRecords.class, String[].class);
-  private static final VirtualField<ConsumerRecord<?, ?>, Boolean> recordCountedField =
+  private static final VirtualField<ConsumerRecord<?, ?>, Boolean> RECORD_COUNTED =
       VirtualField.find(ConsumerRecord.class, Boolean.class);
+  private static final VirtualField<ConsumerRecord<?, ?>, BooleanSupplier>
+      RAW_PROCESSING_ELIGIBILITY = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
+
+  /** Checks a distinct Kafka operation without treating an ambient consumer as its owner. */
+  public static Context spanSuppressionContext(Context context) {
+    return Context.root().with(Span.fromContext(context));
+  }
 
   public static Context withoutLeakedProcessSpan(Context context) {
-    if (!emitStableMessagingSemconv()) {
-      return context;
-    }
-
     Span processSpan = context.get(PROCESS_SPAN_KEY);
     if (processSpan == null) {
       return context;
@@ -55,15 +60,15 @@ public final class KafkaConsumerContextUtil {
       return context;
     }
 
-    Span parentSpan = context.get(PROCESS_PARENT_SPAN_KEY);
-    Context restored = context.with(parentSpan != null ? parentSpan : Span.getInvalid());
+    Context parentContext = context.get(PROCESS_PARENT_CONTEXT_KEY);
+    Context restored = parentContext != null ? parentContext : context.with(Span.getInvalid());
     return restored.with(RECEIVE_OPERATION_KEY, false);
   }
 
   public static Context withProcessParentSpan(Context context, Context parentContext) {
     return context
         .with(PROCESS_SPAN_KEY, Span.fromContext(context))
-        .with(PROCESS_PARENT_SPAN_KEY, Span.fromContext(parentContext));
+        .with(PROCESS_PARENT_CONTEXT_KEY, parentContext);
   }
 
   public static Context withReceiveOperation(Context context, boolean receiveOperation) {
@@ -79,44 +84,75 @@ public final class KafkaConsumerContextUtil {
    * that operations that observe the same record do not count it twice.
    */
   public static boolean markConsumedMessageCounted(ConsumerRecord<?, ?> record) {
-    if (Boolean.TRUE.equals(recordCountedField.get(record))) {
+    if (Boolean.TRUE.equals(RECORD_COUNTED.get(record))) {
       return false;
     }
-    recordCountedField.set(record, true);
+    RECORD_COUNTED.set(record, true);
     return true;
   }
 
+  public static void setRawProcessingEligibility(
+      ConsumerRecord<?, ?> record, BooleanSupplier rawProcessingEligibility) {
+    RAW_PROCESSING_ELIGIBILITY.set(record, rawProcessingEligibility);
+  }
+
+  @Nullable
+  public static BooleanSupplier getRawProcessingEligibility(ConsumerRecord<?, ?> record) {
+    return RAW_PROCESSING_ELIGIBILITY.get(record);
+  }
+
+  /** Reads batch membership without invoking tracing iterators. */
+  public static List<ConsumerRecord<?, ?>> getRecords(ConsumerRecords<?, ?> records) {
+    List<ConsumerRecord<?, ?>> result = new ArrayList<>(records.count());
+    for (TopicPartition partition : records.partitions()) {
+      List<? extends ConsumerRecord<?, ?>> partitionRecords = records.records(partition);
+      result.addAll(partitionRecords);
+    }
+    return result;
+  }
+
   public static KafkaConsumerContext get(ConsumerRecord<?, ?> records) {
-    Context receiveContext = recordContextField.get(records);
+    Context receiveContext = RECORD_CONTEXT.get(records);
     String consumerGroup = null;
     String clientId = null;
-    String[] consumerInfo = recordConsumerInfoField.get(records);
+    String clusterId = null;
+    String[] consumerInfo = RECORD_CONSUMER_INFO.get(records);
     if (consumerInfo != null) {
       consumerGroup = consumerInfo[0];
       clientId = consumerInfo[1];
+      clusterId = consumerInfo.length > 2 ? consumerInfo[2] : null;
     }
-    return create(receiveContext, consumerGroup, clientId);
+    return create(receiveContext, consumerGroup, clientId, clusterId);
   }
 
   public static KafkaConsumerContext get(ConsumerRecords<?, ?> records) {
-    Context receiveContext = recordsContextField.get(records);
+    Context receiveContext = RECORDS_CONTEXT.get(records);
     String consumerGroup = null;
     String clientId = null;
-    String[] consumerInfo = recordsConsumerInfoField.get(records);
+    String clusterId = null;
+    String[] consumerInfo = RECORDS_CONSUMER_INFO.get(records);
     if (consumerInfo != null) {
       consumerGroup = consumerInfo[0];
       clientId = consumerInfo[1];
+      clusterId = consumerInfo.length > 2 ? consumerInfo[2] : null;
     }
-    return create(receiveContext, consumerGroup, clientId);
+    return create(receiveContext, consumerGroup, clientId, clusterId);
   }
 
   public static KafkaConsumerContext create(@Nullable Context context, Consumer<?, ?> consumer) {
-    return create(context, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    return create(
+        context,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getClusterId(consumer));
   }
 
   public static KafkaConsumerContext create(
-      @Nullable Context context, @Nullable String consumerGroup, @Nullable String clientId) {
-    return KafkaConsumerContext.create(context, consumerGroup, clientId);
+      @Nullable Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable String clusterId) {
+    return KafkaConsumerContext.create(context, consumerGroup, clientId, clusterId);
   }
 
   public static void set(ConsumerRecord<?, ?> record, KafkaConsumerContext consumerContext) {
@@ -124,16 +160,18 @@ public final class KafkaConsumerContextUtil {
         record,
         consumerContext.getContext(),
         consumerContext.getConsumerGroup(),
-        consumerContext.getClientId());
+        consumerContext.getClientId(),
+        consumerContext.getClusterId());
   }
 
   private static void set(
       ConsumerRecord<?, ?> record,
       @Nullable Context context,
       @Nullable String consumerGroup,
-      @Nullable String clientId) {
-    recordContextField.set(record, context);
-    recordConsumerInfoField.set(record, new String[] {consumerGroup, clientId});
+      @Nullable String clientId,
+      @Nullable String clusterId) {
+    RECORD_CONTEXT.set(record, context);
+    RECORD_CONSUMER_INFO.set(record, new String[] {consumerGroup, clientId, clusterId});
   }
 
   public static void set(ConsumerRecords<?, ?> records, KafkaConsumerContext consumerContext) {
@@ -141,21 +179,25 @@ public final class KafkaConsumerContextUtil {
         records,
         consumerContext.getContext(),
         consumerContext.getConsumerGroup(),
-        consumerContext.getClientId());
+        consumerContext.getClientId(),
+        consumerContext.getClusterId());
   }
 
   private static void set(
       ConsumerRecords<?, ?> records,
       @Nullable Context context,
       @Nullable String consumerGroup,
-      @Nullable String clientId) {
-    recordsContextField.set(records, context);
-    recordsConsumerInfoField.set(records, new String[] {consumerGroup, clientId});
+      @Nullable String clientId,
+      @Nullable String clusterId) {
+    RECORDS_CONTEXT.set(records, context);
+    RECORDS_CONSUMER_INFO.set(records, new String[] {consumerGroup, clientId, clusterId});
   }
 
   public static void copy(ConsumerRecord<?, ?> from, ConsumerRecord<?, ?> to) {
-    recordContextField.set(to, recordContextField.get(from));
-    recordConsumerInfoField.set(to, recordConsumerInfoField.get(from));
+    RECORD_CONTEXT.set(to, RECORD_CONTEXT.get(from));
+    RECORD_CONSUMER_INFO.set(to, RECORD_CONSUMER_INFO.get(from));
+    RECORD_COUNTED.set(to, RECORD_COUNTED.get(from));
+    RAW_PROCESSING_ELIGIBILITY.set(to, RAW_PROCESSING_ELIGIBILITY.get(from));
   }
 
   private KafkaConsumerContextUtil() {}

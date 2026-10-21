@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.never;
@@ -14,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -27,19 +25,6 @@ class MessagingSpanNameExtractorTest {
 
   @Mock MessagingAttributesGetter<Message, Void> getter;
 
-  @SuppressWarnings("deprecation")
-  @Test
-  void shouldKeepLegacyNameForMessageOperation() {
-    Message message = new Message();
-    when(getter.isTemporaryDestination(message)).thenReturn(false);
-    when(getter.getDestination(message)).thenReturn("destination");
-
-    SpanNameExtractor<Message> underTest =
-        MessagingSpanNameExtractor.create(getter, MessageOperation.PUBLISH);
-
-    assertThat(underTest.extract(message)).isEqualTo("destination publish");
-  }
-
   @ParameterizedTest
   @MethodSource("spanNameParams")
   void shouldExtractSpanName(
@@ -49,26 +34,18 @@ class MessagingSpanNameExtractorTest {
       String destinationTemplate,
       MessagingOperationType operationType,
       String operationName,
-      String oldSpanName,
       String spanName) {
     // given
     Message message = new Message();
 
-    if (emitStableMessagingSemconv()) {
-      when(getter.getDestinationTemplate(message)).thenReturn(destinationTemplate);
-      if (destinationTemplate == null) {
-        when(getter.isTemporaryDestination(message)).thenReturn(isTemporaryQueue);
-        if (!isTemporaryQueue) {
-          when(getter.isAnonymousDestination(message)).thenReturn(isAnonymousQueue);
-          if (!isAnonymousQueue) {
-            when(getter.getDestination(message)).thenReturn(destinationName);
-          }
-        }
-      }
-    } else {
+    when(getter.getDestinationTemplate(message)).thenReturn(destinationTemplate);
+    if (destinationTemplate == null) {
       when(getter.isTemporaryDestination(message)).thenReturn(isTemporaryQueue);
       if (!isTemporaryQueue) {
-        when(getter.getDestination(message)).thenReturn(destinationName);
+        when(getter.isAnonymousDestination(message)).thenReturn(isAnonymousQueue);
+        if (!isAnonymousQueue) {
+          when(getter.getDestination(message)).thenReturn(destinationName);
+        }
       }
     }
 
@@ -79,8 +56,8 @@ class MessagingSpanNameExtractorTest {
     String actualSpanName = underTest.extract(message);
 
     // then
-    assertThat(actualSpanName).isEqualTo(emitStableMessagingSemconv() ? spanName : oldSpanName);
-    if (emitStableMessagingSemconv() && destinationTemplate != null) {
+    assertThat(actualSpanName).isEqualTo(spanName);
+    if (destinationTemplate != null) {
       verify(getter, never()).isTemporaryDestination(message);
       verify(getter, never()).isAnonymousDestination(message);
     }
@@ -96,7 +73,6 @@ class MessagingSpanNameExtractorTest {
             null,
             MessagingOperationType.SEND,
             "send",
-            "destination publish",
             "send destination"),
         argumentSet(
             "temporary destination",
@@ -106,8 +82,25 @@ class MessagingSpanNameExtractorTest {
             "generated-{id}",
             MessagingOperationType.PROCESS,
             "process",
-            "(temporary) process",
             "process generated-{id}"),
+        argumentSet(
+            "temporary destination without template",
+            true,
+            false,
+            "generated",
+            null,
+            MessagingOperationType.PROCESS,
+            "process",
+            "process"),
+        argumentSet(
+            "anonymous destination without template",
+            false,
+            true,
+            "generated",
+            null,
+            MessagingOperationType.PROCESS,
+            "process",
+            "process"),
         argumentSet(
             "missing destination",
             false,
@@ -116,7 +109,6 @@ class MessagingSpanNameExtractorTest {
             null,
             MessagingOperationType.RECEIVE,
             "receive",
-            "unknown receive",
             "receive"),
         argumentSet(
             "destination template",
@@ -126,7 +118,6 @@ class MessagingSpanNameExtractorTest {
             "customer-{id}",
             MessagingOperationType.SEND,
             "send",
-            "customer-42 publish",
             "send customer-{id}"),
         argumentSet(
             "anonymous destination",
@@ -136,7 +127,6 @@ class MessagingSpanNameExtractorTest {
             "generated-{id}",
             MessagingOperationType.PROCESS,
             "process",
-            "generated process",
             "process generated-{id}"));
   }
 

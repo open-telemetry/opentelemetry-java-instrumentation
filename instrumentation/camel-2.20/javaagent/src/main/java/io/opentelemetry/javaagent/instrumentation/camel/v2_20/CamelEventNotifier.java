@@ -65,7 +65,12 @@ final class CamelEventNotifier extends EventNotifierSupport {
     Context context = startOnExchangeSending(request);
 
     ActiveContextManager.activate(context, request);
-    CamelPropagationUtil.injectParent(context, ese.getExchange().getIn().getHeaders());
+    if (!request.isMessaging() || request.isMessagingSpanContextPropagated()) {
+      CamelPropagationUtil.injectParent(
+          context != null ? context : Context.current(), ese.getExchange().getIn().getHeaders());
+    } else {
+      CamelPropagationUtil.clearPropagationFields(ese.getExchange().getIn().getHeaders());
+    }
 
     logger.log(FINE, "[Exchange sending] Initiator span started: {0}", context);
   }
@@ -73,10 +78,10 @@ final class CamelEventNotifier extends EventNotifierSupport {
   @Nullable
   private static Context startOnExchangeSending(CamelRequest request) {
     Context parentContext = Context.current();
-    if (!instrumenter().shouldStart(parentContext, request)) {
+    if (!instrumenter(request).shouldStart(parentContext, request)) {
       return null;
     }
-    return instrumenter().start(parentContext, request);
+    return instrumenter(request).start(parentContext, request);
   }
 
   /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */

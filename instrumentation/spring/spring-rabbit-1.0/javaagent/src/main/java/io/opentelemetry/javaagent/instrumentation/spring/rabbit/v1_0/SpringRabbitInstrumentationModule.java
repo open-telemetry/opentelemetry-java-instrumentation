@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -15,11 +15,14 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class SpringRabbitInstrumentationModule extends InstrumentationModule {
   public SpringRabbitInstrumentationModule() {
-    super("spring-rabbit", "spring-rabbit-1.0");
+    super("spring-rabbit-1.0", "spring-rabbit");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AbstractMessageListenerContainerInstrumentation());
+    return asList(
+        new AbstractMessageListenerContainerInstrumentation(),
+        new SpringRabbitConsumerInstrumentation(),
+        new SimpleMessageListenerContainerInstrumentation());
   }
 }

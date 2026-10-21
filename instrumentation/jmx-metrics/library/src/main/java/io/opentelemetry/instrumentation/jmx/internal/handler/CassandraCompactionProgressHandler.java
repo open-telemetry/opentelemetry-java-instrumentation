@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.handler;
 
+import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -92,6 +93,11 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
         },
         currentGauge,
         totalGauge);
+  }
+
+  @Override
+  public List<String> getMetricNames() {
+    return asList(METRIC_CURRENT, METRIC_TOTAL);
   }
 
   static Map<Attributes, long[]> queryGroups(Supplier<Detector> detectorSupplier) {

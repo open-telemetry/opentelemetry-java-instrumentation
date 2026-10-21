@@ -1,11 +1,11 @@
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+import io.opentelemetry.instrumentation.gradle.TestSuiteExecutionsPlugin
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.time.Duration
 
 plugins {
   `java-library`
-  groovy
   checkstyle
   idea
 
@@ -18,23 +18,25 @@ plugins {
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 val otelProps = the<OtelPropsExtension>()
 
+apply<TestSuiteExecutionsPlugin>()
+
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
-  if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
+  if (extra.properties["mavenGroupId"] == "io.opentelemetry.javaagent.instrumentation") {
     base.archivesName.set("opentelemetry-javaagent-$previousBaseArchiveName")
   } else if (!previousBaseArchiveName.startsWith("opentelemetry-")) {
     base.archivesName.set("opentelemetry-$previousBaseArchiveName")
   }
 }
 
-// Version to use to compile code and run tests.
-val repositoryDefaultJavaVersion = JavaVersion.VERSION_21
+// Default Java toolchain version for compilation and tests.
+val repositoryDefaultJavaToolchainVersion = JavaVersion.VERSION_25
 
 java {
   toolchain {
     languageVersion.set(
       otelJava.minJavaVersionSupported.map {
-        val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(repositoryDefaultJavaVersion).majorVersion.toInt()
+        val defaultJavaVersion = otelJava.javaToolchainVersion.getOrElse(repositoryDefaultJavaToolchainVersion).majorVersion.toInt()
         JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), defaultJavaVersion))
       }
     )
@@ -103,6 +105,17 @@ tasks.withType<JavaCompile>().configureEach {
   }
 }
 
+// Compile against project jars rather than class directories. Several projects add shaded classes
+// to their main output via sourceSets.main.output.dir(...), which is packaged into the jar but is
+// not part of the "classes" variant that java-library would otherwise select.
+sourceSets.configureEach {
+  configurations.named(compileClasspathConfigurationName) {
+    attributes {
+      attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+    }
+  }
+}
+
 // Groovy and Scala compilers don't actually understand --release option
 afterEvaluate {
   tasks.withType<GroovyCompile>().configureEach {
@@ -150,7 +163,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.137.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.139.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -322,6 +335,8 @@ val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 
+  systemProperty("collectMetadata", otelProps.collectMetadata)
+
   // work around jvm crash on openJ9 8 after updating armeria to 1.33.1
   val testJavaVersion = otelProps.testJavaVersion
   val useJ9 = otelProps.testJavaVM == "openj9"
@@ -403,17 +418,17 @@ afterEvaluate {
         }
       )
       isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
-    } else {
-      // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
-      // the default test task's version so commands like `./gradlew check` can test all projects regardless
-      // of Java version.
-      if (!isJavaVersionAllowed(repositoryDefaultJavaVersion) && otelJava.maxJavaVersionForTests.isPresent) {
-        javaLauncher.set(
-          javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
-          }
-        )
-      }
+    } else if (
+      otelJava.maxJavaVersionForTests.isPresent &&
+      otelJava.maxJavaVersionForTests.get().compareTo(repositoryDefaultJavaToolchainVersion) < 0
+    ) {
+      // Tests capped below the repository default use their maximum supported test version,
+      // so commands like `./gradlew check` can cover all projects.
+      javaLauncher.set(
+        javaToolchains.launcherFor {
+          languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
+        }
+      )
     }
   }
 }
@@ -421,7 +436,7 @@ afterEvaluate {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "13.11.0"
+  toolVersion = "14.1.0"
   maxWarnings = 0
 }
 

@@ -5,21 +5,17 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
@@ -111,23 +107,6 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.markAsLowLevelInstrumentation();
     optionsBuilder.setMaxRedirects(21); // 1st send + 20 retries
-
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-
-          // protocol is extracted from the response, and those URLs cause exceptions (= null
-          // response)
-          if ("http://localhost:61/".equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())
-              || "http://192.0.2.1/".equals(uri.toString())
-              || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(NETWORK_PROTOCOL_VERSION);
-          }
-
-          return attributes;
-        });
   }
 
   @Test

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.oracleucp.v11_2;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import oracle.ucp.UniversalConnectionPool;
 
 /** Entrypoint for instrumenting Oracle UCP database connection pools. */
@@ -24,6 +25,19 @@ public final class OracleUcpTelemetry {
   /** Start collecting metrics for given connection pool. */
   public void registerMetrics(UniversalConnectionPool universalConnectionPool) {
     ConnectionPoolMetrics.registerMetrics(openTelemetry, universalConnectionPool);
+  }
+
+  /** Start collecting metrics using {@code poolName} as the connection pool name. */
+  public void registerMetrics(UniversalConnectionPool universalConnectionPool, String poolName) {
+    ConnectionPoolMetrics.registerMetrics(openTelemetry, universalConnectionPool, poolName);
+  }
+
+  public void registerMetrics(
+      UniversalConnectionPool universalConnectionPool,
+      String poolName,
+      Attributes databaseAttributes) {
+    ConnectionPoolMetrics.registerMetrics(
+        openTelemetry, universalConnectionPool, poolName, databaseAttributes);
   }
 
   /** Stop collecting metrics for given connection pool. */

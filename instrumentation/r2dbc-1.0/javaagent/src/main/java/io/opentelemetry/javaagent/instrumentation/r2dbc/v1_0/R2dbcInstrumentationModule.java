@@ -16,7 +16,7 @@ import java.util.List;
 public class R2dbcInstrumentationModule extends InstrumentationModule {
 
   public R2dbcInstrumentationModule() {
-    super("r2dbc", "r2dbc-1.0");
+    super("r2dbc-1.0", "r2dbc");
   }
 
   @Override

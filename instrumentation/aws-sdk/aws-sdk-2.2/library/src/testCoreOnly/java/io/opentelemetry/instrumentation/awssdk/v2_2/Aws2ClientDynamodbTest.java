@@ -24,7 +24,7 @@ class Aws2ClientDynamodbTest extends AbstractAws2ClientCoreTest {
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(
             AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-                .setCaptureExperimentalSpanAttributes(true)
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
                 .setUseConfiguredPropagatorForMessaging(isSqsAttributeInjectionEnabled())
                 .build()
                 .createExecutionInterceptor());

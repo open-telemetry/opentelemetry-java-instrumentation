@@ -10,15 +10,17 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.V3PreviewFallbackEnabledInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-@SuppressWarnings("deprecation") // using v3 preview fallback helper until 3.0
-public class OpenTelemetryApiInstrumentationModule
-    extends V3PreviewFallbackEnabledInstrumentationModule {
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.57");
+    super("opentelemetry-api-1.57", "opentelemetry-api");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return true;
   }
 
   @Override

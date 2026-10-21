@@ -12,6 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.apachecommonspool.CommonsPoolMetricsSuppression;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -49,10 +51,14 @@ class GenericObjectPoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This BaseGenericObjectPool<?> pool,
         @Advice.Argument(1) BaseObjectPoolConfig config) {
+      if (CommonsPoolMetricsSuppression.isSuppressed(Context.current())) {
+        return;
+      }
+
       String poolName = config.getJmxNamePrefix();
       if (poolName == null || poolName.isEmpty()) {
         poolName = "unknown";
@@ -68,7 +74,7 @@ class GenericObjectPoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CloseAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This BaseGenericObjectPool<?> pool) {
       if (pool instanceof GenericKeyedObjectPoolMXBean<?>) {
         telemetry().unregisterMetrics((GenericKeyedObjectPoolMXBean<?>) pool);

@@ -19,6 +19,7 @@ public final class AwsSdkTelemetryBuilder {
   private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes;
   private boolean messagingReceiveTelemetryEnabled;
+  private boolean batchSendMessageCreationSpansEnabled = true;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -28,9 +29,8 @@ public final class AwsSdkTelemetryBuilder {
    * Configures which message headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
-   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
-   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
-   * preserved.
+   * {@code <name>} part in the attribute key is the header name with its original spelling,
+   * including dashes.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
    * of characters, including none. Excluded patterns take precedence over included patterns. A
@@ -89,6 +89,20 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Sets whether a producer "Create" span is emitted for each eligible entry in an SQS batch send.
+   * An entry is eligible when it does not already contain a creation context and the AWS SDK
+   * version supports the per-entry {@code AWSTraceHeader} system attribute.
+   *
+   * <p>This option is enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(
+      boolean batchSendMessageCreationSpansEnabled) {
+    this.batchSendMessageCreationSpansEnabled = batchSendMessageCreationSpansEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
@@ -96,6 +110,7 @@ public final class AwsSdkTelemetryBuilder {
         openTelemetry,
         headers,
         captureExperimentalSpanAttributes,
-        messagingReceiveTelemetryEnabled);
+        messagingReceiveTelemetryEnabled,
+        batchSendMessageCreationSpansEnabled);
   }
 }

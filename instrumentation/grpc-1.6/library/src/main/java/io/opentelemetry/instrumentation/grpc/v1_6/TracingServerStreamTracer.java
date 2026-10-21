@@ -24,8 +24,8 @@ import javax.annotation.Nullable;
  * TracingServerInterceptor}. If the interceptor does not fire (unregistered method), {@link
  * #streamClosed(Status)} creates a span for the unhandled request.
  *
- * <p>That span is only created when stable RPC semantic conventions are enabled, through {@code
- * otel.semconv-stability.opt-in=rpc} or {@code otel.semconv-stability.opt-in=rpc/dup}.
+ * <p>That span is only created when preview RPC semantic conventions are enabled, through {@code
+ * otel.semconv-stability.preview=rpc} or {@code otel.semconv-stability.preview=rpc/dup}.
  */
 final class TracingServerStreamTracer extends ServerStreamTracer {
 

@@ -5,13 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
-import static io.opentelemetry.javaagent.instrumentation.runtimetelemetry.JarAnalyzer.PACKAGE_CHECKSUM;
-import static io.opentelemetry.javaagent.instrumentation.runtimetelemetry.JarAnalyzer.PACKAGE_CHECKSUM_ALGORITHM;
-import static io.opentelemetry.javaagent.instrumentation.runtimetelemetry.JarAnalyzer.PACKAGE_DESCRIPTION;
-import static io.opentelemetry.javaagent.instrumentation.runtimetelemetry.JarAnalyzer.PACKAGE_NAME;
-import static io.opentelemetry.javaagent.instrumentation.runtimetelemetry.JarAnalyzer.PACKAGE_PATH;
-import static io.opentelemetry.javaagent.instrumentation.runtimetelemetry.JarAnalyzer.PACKAGE_TYPE;
-import static io.opentelemetry.javaagent.instrumentation.runtimetelemetry.JarAnalyzer.PACKAGE_VERSION;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -63,17 +57,18 @@ class JarAnalyzerTest {
             assertAttributes(
                 attributes ->
                     attributes
-                        .containsEntry(PACKAGE_TYPE, "jar")
+                        .containsEntry(stringKey("package.type"), "jar")
                         .hasEntrySatisfying(
-                            PACKAGE_PATH,
+                            stringKey("package.path"),
                             path ->
                                 assertThat(path)
                                     .matches(
                                         "opentelemetry-javaagent-runtime-telemetry-[0-9a-zA-Z-\\.]+\\.jar"))
-                        .containsEntry(PACKAGE_DESCRIPTION, "javaagent by OpenTelemetry")
-                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
+                        .containsEntry(
+                            stringKey("package.description"), "javaagent by OpenTelemetry")
+                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM,
+                            stringKey("package.checksum"),
                             checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // dummy war
         Arguments.of(
@@ -81,12 +76,13 @@ class JarAnalyzerTest {
             assertAttributes(
                 attributes ->
                     attributes
-                        .containsEntry(PACKAGE_TYPE, "war")
-                        .containsEntry(PACKAGE_PATH, "app.war")
-                        .containsEntry(PACKAGE_DESCRIPTION, "Dummy App by OpenTelemetry")
-                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
+                        .containsEntry(stringKey("package.type"), "war")
+                        .containsEntry(stringKey("package.path"), "app.war")
+                        .containsEntry(
+                            stringKey("package.description"), "Dummy App by OpenTelemetry")
+                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM,
+                            stringKey("package.checksum"),
                             checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // io.opentelemetry:opentelemetry-api
         Arguments.of(
@@ -94,16 +90,16 @@ class JarAnalyzerTest {
             assertAttributes(
                 attributes ->
                     attributes
-                        .containsEntry(PACKAGE_TYPE, "jar")
+                        .containsEntry(stringKey("package.type"), "jar")
                         .hasEntrySatisfying(
-                            PACKAGE_PATH,
+                            stringKey("package.path"),
                             path ->
                                 assertThat(path)
                                     .matches("opentelemetry-api-[0-9a-zA-Z-\\.]+\\.jar"))
-                        .containsEntry(PACKAGE_DESCRIPTION, "all")
-                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
+                        .containsEntry(stringKey("package.description"), "all")
+                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM,
+                            stringKey("package.checksum"),
                             checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // org.springframework:spring-webmvc
         Arguments.of(
@@ -111,16 +107,16 @@ class JarAnalyzerTest {
             assertAttributes(
                 attributes ->
                     attributes
-                        .containsEntry(PACKAGE_TYPE, "jar")
+                        .containsEntry(stringKey("package.type"), "jar")
                         // TODO(jack-berg): can we extract version out of path to populate
                         // package.version field?
                         .hasEntrySatisfying(
-                            PACKAGE_PATH,
+                            stringKey("package.path"),
                             path -> assertThat(path).matches("spring-web-[0-9a-zA-Z-\\.]+\\.jar"))
-                        .containsEntry(PACKAGE_DESCRIPTION, "org.springframework.web")
-                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
+                        .containsEntry(stringKey("package.description"), "org.springframework.web")
+                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM,
+                            stringKey("package.checksum"),
                             checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // com.google.guava:guava
         Arguments.of(
@@ -128,16 +124,17 @@ class JarAnalyzerTest {
             assertAttributes(
                 attributes ->
                     attributes
-                        .containsEntry(PACKAGE_TYPE, "jar")
+                        .containsEntry(stringKey("package.type"), "jar")
                         .hasEntrySatisfying(
-                            PACKAGE_PATH,
+                            stringKey("package.path"),
                             path -> assertThat(path).matches("guava-[0-9a-zA-Z-\\.]+\\.jar"))
-                        .containsEntry(PACKAGE_NAME, "com.google.guava:guava")
+                        .containsEntry(stringKey("package.name"), "com.google.guava:guava")
                         .hasEntrySatisfying(
-                            PACKAGE_VERSION, version -> assertThat(version).isNotEmpty())
-                        .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
+                            stringKey("package.version"),
+                            version -> assertThat(version).isNotEmpty())
+                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM,
+                            stringKey("package.checksum"),
                             checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))));
   }
 

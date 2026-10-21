@@ -21,6 +21,23 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseSpringRepositoryTes
   }
 
   @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
+  }
+
+  @Override
+  protected boolean includesExperimentalLocalAddressAttribute() {
+    // The core-io versions before 1.6.0 have no localSocket field to capture it from.
+    return false;
+  }
+
+  @Override
+  protected boolean includesExperimentalOperationIdAttribute() {
+    // The core-io versions before 1.6.0 have no CouchbaseRequest.operationId() to correlate with.
+    return false;
+  }
+
+  @Override
   protected TestDocument findById(TestRepository repository, String id) {
     return repository.findOne(id);
   }

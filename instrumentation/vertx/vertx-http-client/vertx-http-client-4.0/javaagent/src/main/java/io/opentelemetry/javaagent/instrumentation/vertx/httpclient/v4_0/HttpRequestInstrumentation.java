@@ -62,7 +62,8 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         nameStartsWith("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
+        named("handleException").and(takesArgument(0, Throwable.class)),
+        getClass().getName() + "$HandleExceptionAdvice");
 
     transformer.applyAdviceToMethod(
         named("handleResponse")
@@ -92,6 +93,12 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(HttpClientRequest request) {
+        // Skip if this request has already been instrumented.
+        Contexts contexts = CONTEXTS.get(request);
+        if (contexts != null) {
+          return null;
+        }
+
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

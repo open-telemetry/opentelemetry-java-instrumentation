@@ -5,15 +5,19 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.time.Duration;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -97,6 +101,55 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
     assertTraceparentHeader(subscription);
   }
 
+  @Test
+  void testSettleJetStreamAckSubjects() {
+    String firstAckSubject =
+        "$JS.ACK.ingestion-stream.partition-a.1.18822351.18675175.1785834929935121483.14757";
+    String secondAckSubject =
+        "$JS.ACK.ingestion-stream.partition-a.2.18822352.18675176.1785834929935121484.14756";
+    String thirdAckSubject =
+        "$JS.ACK.ingestion-stream.partition-a.3.18822353.18675177.1785834929935121485.14755";
+    String fourthAckSubject =
+        "$JS.ACK.ingestion-stream.partition-a.4.18822354.18675178.1785834929935121486.14754";
+
+    // Settlement operations use generated subjects with per-message values in them.
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> {
+              connection.publish(firstAckSubject, body("+ACK"));
+              connection.publish(secondAckSubject, body("-NAK"));
+              connection.publish(thirdAckSubject, body("+WPI"));
+              connection.publish(fourthAckSubject, body("+TERM"));
+            });
+
+    int clientId = connection.getServerInfo().getClientId();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    settlementSpan(trace, firstAckSubject, "ack", clientId),
+                    settlementSpan(trace, secondAckSubject, "nak", clientId),
+                    settlementSpan(trace, thirdAckSubject, "in-progress", clientId),
+                    settlementSpan(trace, fourthAckSubject, "term", clientId)));
+  }
+
+  private static byte[] body(String body) {
+    return body.getBytes(US_ASCII);
+  }
+
+  private static Consumer<SpanDataAssert> settlementSpan(
+      TraceAssert trace, String subject, String operation, int clientId) {
+
+    AttributeAssertion[] attributes = messagingAttributes(operation, subject, clientId);
+    return span ->
+        span.hasName(operation + " $JS.ACK")
+            .hasKind(SpanKind.CLIENT)
+            .hasParent(trace.getSpan(0))
+            .hasAttributesSatisfyingExactly(attributes);
+  }
+
   private void assertPublishSpan() {
     testing()
         .waitAndAssertTraces(
@@ -104,7 +157,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName(emitStableMessagingSemconv() ? "publish sub" : "sub publish")
+                        span.hasName("publish sub")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(

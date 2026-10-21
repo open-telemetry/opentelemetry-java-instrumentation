@@ -49,7 +49,10 @@ class MessageListenerInstrumentation implements TypeInstrumentation {
     public static MessageListener<?> after(
         @Advice.This ConsumerConfigurationData<?> data,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) MessageListener<?> listener) {
-      return listener == null ? null : new MessageListenerWrapper<>(listener);
+      if (listener == null || listener instanceof MessageListenerWrapper) {
+        return listener;
+      }
+      return new MessageListenerWrapper<>(listener);
     }
   }
 
@@ -64,7 +67,7 @@ class MessageListenerInstrumentation implements TypeInstrumentation {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> message) {
-      Context parent = VirtualFieldStore.extract(message);
+      Context parent = VirtualFieldStore.extractProcessParentContext(message);
 
       Instrumenter<PulsarRequest, Void> instrumenter = consumerProcessInstrumenter();
       PulsarRequest request = PulsarRequest.create(message, consumer);
@@ -73,14 +76,14 @@ class MessageListenerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context current = instrumenter.start(parent, request);
-      try (Scope scope = current.makeCurrent()) {
+      Context currentContext = instrumenter.start(parent, request);
+      try (Scope ignored = currentContext.makeCurrent()) {
         this.delegate.received(consumer, message);
-        instrumenter.end(current, request, null, null);
       } catch (Throwable t) {
-        instrumenter.end(current, request, null, t);
+        instrumenter.end(currentContext, request, null, t);
         throw t;
       }
+      instrumenter.end(currentContext, request, null, null);
     }
 
     @Override

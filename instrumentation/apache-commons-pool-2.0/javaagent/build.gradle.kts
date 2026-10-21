@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -16,13 +17,13 @@ dependencies {
 
   implementation(project(":instrumentation:apache-commons-pool-2.0:library"))
 
+  bootstrap(project(":instrumentation:apache-commons-pool-2.0:bootstrap"))
+
   testImplementation(project(":instrumentation:apache-commons-pool-2.0:testing"))
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.apache-commons-pool.enabled=true")
   }
 }

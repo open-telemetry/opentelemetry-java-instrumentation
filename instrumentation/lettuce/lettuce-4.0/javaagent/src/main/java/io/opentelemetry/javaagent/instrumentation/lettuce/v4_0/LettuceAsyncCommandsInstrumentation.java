@@ -38,7 +38,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand"))),
         getClass().getName() + "$DispatchAdvice");
     transformer.applyAdviceToMethod(
-        named("setAutoFlushCommands").and(takesArguments(1)),
+        named("setAutoFlushCommands").and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetAutoFlushAdvice");
     transformer.applyAdviceToMethod(
         named("flushCommands").and(takesArguments(0)), getClass().getName() + "$FlushAdvice");
@@ -94,6 +94,9 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       LettuceSingletons.attachAddress(command, commands.getConnection());
+      // Every buffered command needs its own peer state so a later netty write can record the
+      // address it observed, whether or not this command starts its own span.
+      LettuceSingletons.initializeCommandPeer(command);
       if (LettuceBatchContext.isBatching(commands)) {
         return AdviceScope.captureForBatching(commands);
       }

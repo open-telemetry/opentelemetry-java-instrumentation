@@ -1,2 +1,26 @@
-Comparing source compatibility of opentelemetry-instrumentation-api-2.32.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.31.0.jar
-No changes.
+Comparing source compatibility of opentelemetry-instrumentation-api-3.0.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.32.0.jar
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter<REQUEST>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object, java.lang.Object, java.lang.Throwable)
+	+++  NEW METHOD: PUBLIC(+) void onStart(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.Class<?> getCodeClass(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String getCodeMethodName(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.code.CodeSpanNameExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<REQUEST> create(io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter<REQUEST>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String extract(java.lang.Object)

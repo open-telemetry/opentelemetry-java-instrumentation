@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.client.ClientFactory;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
+import io.opentelemetry.testing.internal.armeria.client.WebClientBuilder;
 import io.opentelemetry.testing.internal.armeria.client.logging.LoggingClient;
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import java.time.Duration;
@@ -43,21 +44,26 @@ public class HttpServerInstrumentationExtension extends InstrumentationExtension
   }
 
   private final int port;
+  private final ClientFactory clientFactory;
   private final WebClient client;
+  private final WebClient clientWithoutForwardedFor;
 
   private HttpServerInstrumentationExtension(InstrumentationTestRunner runner) {
     super(runner);
 
     port = PortUtils.findOpenPort();
-    client =
-        WebClient.builder()
-            .responseTimeout(Duration.ofMinutes(1))
-            .writeTimeout(Duration.ofMinutes(1))
-            .factory(ClientFactory.builder().connectTimeout(Duration.ofMinutes(1)).build())
-            .setHeader(HttpHeaderNames.USER_AGENT, TEST_USER_AGENT)
-            .setHeader(HttpHeaderNames.X_FORWARDED_FOR, TEST_CLIENT_IP)
-            .decorator(LoggingClient.newDecorator())
-            .build();
+    clientFactory = ClientFactory.builder().connectTimeout(Duration.ofMinutes(1)).build();
+    client = clientBuilder().setHeader(HttpHeaderNames.X_FORWARDED_FOR, TEST_CLIENT_IP).build();
+    clientWithoutForwardedFor = clientBuilder().build();
+  }
+
+  private WebClientBuilder clientBuilder() {
+    return WebClient.builder()
+        .responseTimeout(Duration.ofMinutes(1))
+        .writeTimeout(Duration.ofMinutes(1))
+        .factory(clientFactory)
+        .setHeader(HttpHeaderNames.USER_AGENT, TEST_USER_AGENT)
+        .decorator(LoggingClient.newDecorator());
   }
 
   @Override
@@ -71,6 +77,7 @@ public class HttpServerInstrumentationExtension extends InstrumentationExtension
               + "AbstractHttpServerUsingTest");
     }
 
-    ((AbstractHttpServerUsingTest) testInstance).setTesting(getTestRunner(), client, port);
+    ((AbstractHttpServerUsingTest) testInstance)
+        .setTesting(getTestRunner(), client, clientWithoutForwardedFor, port);
   }
 }

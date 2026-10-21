@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
@@ -25,37 +27,10 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return request.getDbInfo().getDbSystemName();
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  public String getDbSystem(DbRequest request) {
-    return request.getDbInfo().getDbSystem();
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  @Override
-  public String getUser(DbRequest request) {
-    return request.getDbInfo().getDbUser();
-  }
-
   @Nullable
   @Override
   public String getDbNamespace(DbRequest request) {
     return request.getDbInfo().getDbNamespace();
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  @Override
-  public String getDbName(DbRequest request) {
-    return request.getDbInfo().getDbName();
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  @Override
-  public String getConnectionString(DbRequest request) {
-    return request.getDbInfo().getDbConnectionString();
   }
 
   @Override
@@ -78,8 +53,16 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
-      int errorCode = ((SQLException) error).getErrorCode();
-      return errorCode == 0 ? null : Integer.toString(errorCode);
+      SQLException sqlException = (SQLException) error;
+      int errorCode = sqlException.getErrorCode();
+      if (errorCode != 0) {
+        return Integer.toString(errorCode);
+      }
+      String sqlState = sqlException.getSQLState();
+      if (sqlState == null || sqlState.isEmpty() || sqlState.equals("00000")) {
+        return null;
+      }
+      return sqlState;
     }
     return null;
   }
@@ -98,12 +81,16 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   @Override
   public String getServerAddress(DbRequest request) {
-    return request.getDbInfo().getServerAddress();
+    DbInfo dbInfo = request.getDbInfo();
+    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    return target == null ? null : target.getAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbRequest request) {
-    return request.getDbInfo().getServerPort();
+    DbInfo dbInfo = request.getDbInfo();
+    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    return target == null ? null : target.getPort();
   }
 }

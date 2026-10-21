@@ -11,11 +11,12 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
+import javax.annotation.Nullable;
 
 @AutoService(ComponentProvider.class)
 public class AgentTestLogRecordExporterComponentProvider implements ComponentProvider {
 
-  private static LogRecordExporter logRecordExporter;
+  @Nullable private static LogRecordExporter logRecordExporter;
 
   @Override
   public Class<LogRecordExporter> getType() {

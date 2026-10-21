@@ -48,7 +48,7 @@ public final class ThriftAsyncProcessFunctionInstrumentation implements TypeInst
   public static class GetResultHandlerAdvice {
 
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static AsyncMethodCallback<?> methodExit(
         @Advice.Argument(value = 0) AbstractNonblockingServer.AsyncFrameBuffer fb,
         @Advice.Return AsyncMethodCallback<?> callback) {

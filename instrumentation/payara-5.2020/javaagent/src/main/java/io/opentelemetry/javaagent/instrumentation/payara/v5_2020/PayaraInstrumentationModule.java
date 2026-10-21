@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class PayaraInstrumentationModule extends InstrumentationModule {
 
   public PayaraInstrumentationModule() {
-    super("payara", "payara-5.2020");
+    super("payara-5.2020", "payara");
   }
 
   @Override

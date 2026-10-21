@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
-import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
-import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,12 +58,8 @@ public final class ManifestResourceExtractor {
 
   private static Resource extract(Manifest manifest) {
     String serviceName = manifest.getMainAttributes().getValue("Implementation-Title");
-    AttributesBuilder builder = Attributes.builder();
-    builder.put(SERVICE_NAME, serviceName);
-
     String serviceVersion = manifest.getMainAttributes().getValue("Implementation-Version");
-    builder.put(SERVICE_VERSION, serviceVersion);
-    return Resource.create(builder.build());
+    return ServiceResource.create(serviceName, serviceVersion);
   }
 
   private static Optional<Manifest> readManifest(Path jarPath) {

@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class MongoClientInstrumentationModule extends InstrumentationModule {
 
   public MongoClientInstrumentationModule() {
-    super("mongo", "mongo-4.0");
+    super("mongo-4.0", "mongo");
   }
 
   @Override
@@ -31,8 +31,12 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new MongoClientSettingsBuilderInstrumentation(),
+        new ClusterSettingsBuilderInstrumentation(),
+        new SocketStreamInstrumentation(),
+        new NettyStreamInstrumentation(),
         new InternalStreamConnectionInstrumentation(),
         new BaseClusterInstrumentation(),
+        new ClusterInstrumentation(),
         new DefaultConnectionPoolInstrumentation(),
         new DefaultConnectionPoolTaskInstrumentation(),
         new AsyncWorkManagerInstrumentation());

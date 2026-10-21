@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
@@ -110,17 +111,17 @@ class ArmeriaGrpcTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
+                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
                             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
                             equalTo(
                                 RPC_METHOD,
-                                emitStableRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
+                                emitPreviewRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
                             equalTo(
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
-                                emitStableRpcSemconv() ? Status.Code.OK.name() : null),
+                                emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
@@ -158,17 +159,17 @@ class ArmeriaGrpcTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
+                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
                             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
                             equalTo(
                                 RPC_METHOD,
-                                emitStableRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
+                                emitPreviewRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
                             equalTo(
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
-                                emitStableRpcSemconv() ? Status.Code.OK.name() : null),
+                                emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
@@ -210,11 +211,11 @@ class ArmeriaGrpcTest {
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
+                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
                             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
                             equalTo(
                                 RPC_METHOD,
-                                emitStableRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
+                                emitPreviewRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
                             equalTo(
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv()
@@ -222,9 +223,12 @@ class ArmeriaGrpcTest {
                                     : null),
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
-                                emitStableRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null),
+                                emitPreviewRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()))
+                            equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitPreviewRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event

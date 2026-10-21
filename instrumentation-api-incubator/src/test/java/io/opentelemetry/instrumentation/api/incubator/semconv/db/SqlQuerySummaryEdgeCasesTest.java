@@ -23,7 +23,7 @@ class SqlQuerySummaryEdgeCasesTest {
   private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
 
   private static SqlQuery sanitize(String sql) {
-    return ANALYZER.analyzeWithSummary(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    return ANALYZER.analyze(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   // ===== DATABASE-SPECIFIC DML SYNTAX =====

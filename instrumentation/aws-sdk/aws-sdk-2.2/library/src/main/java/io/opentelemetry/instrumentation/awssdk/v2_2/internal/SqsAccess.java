@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.Collection;
@@ -50,9 +51,36 @@ final class SqsAccess {
         : null;
   }
 
+  @Nullable
+  @NoMuzzle
+  static SdkRequest prepareBatchRequest(
+      SdkRequest request,
+      ExecutionAttributes executionAttributes,
+      io.opentelemetry.context.Context parentContext,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
+      boolean useXrayPropagator,
+      TextMapPropagator messagingPropagator,
+      boolean messageCreateSpansEnabled) {
+    return enabled
+        ? SqsImpl.prepareBatchRequest(
+            request,
+            executionAttributes,
+            parentContext,
+            producerCreateInstrumenter,
+            useXrayPropagator,
+            messagingPropagator,
+            messageCreateSpansEnabled)
+        : null;
+  }
+
   @NoMuzzle
   static boolean isSqsProducerRequest(SdkRequest request) {
     return enabled && SqsImpl.isSqsProducerRequest(request);
+  }
+
+  @NoMuzzle
+  static boolean isBatchRequest(SdkRequest request) {
+    return enabled && SqsImpl.isBatchRequest(request);
   }
 
   @NoMuzzle

@@ -1,0 +1,10 @@
+rules:
+  - bean: java.lang:type=Threading
+    metricAttribute:
+      test.source: const(embedded)
+    mapping:
+      PeakThreadCount:
+        metric: tomcat.test.unstable
+        type: gauge
+        unit: "{thread}"
+        desc: Current number of threads.

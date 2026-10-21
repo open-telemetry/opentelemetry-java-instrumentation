@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.semconv.SchemaUrls;
 
 public class AwsLambdaSqsMetricsAssertions {
 
@@ -26,18 +27,26 @@ public class AwsLambdaSqsMetricsAssertions {
       long processCount,
       long consumedMessageCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertMetricNamesAbsent(
-          testing,
-          "messaging.process.duration",
-          "messaging.client.consumed.messages",
-          "messaging.publish.duration",
-          "messaging.publish.messages",
-          "messaging.receive.duration",
-          "messaging.receive.messages");
-      return;
-    }
+    assertMetrics(
+        testing,
+        instrumentationName,
+        destination,
+        processCount,
+        consumedMessageCount,
+        errorType,
+        0,
+        null);
+  }
 
+  public static void assertMetrics(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String destination,
+      long processCount,
+      long consumedMessageCount,
+      String errorType,
+      long failedProcessCount,
+      String failedProcessErrorType) {
     testing.waitAndAssertMetrics(
         instrumentationName,
         "messaging.process.duration",
@@ -45,10 +54,12 @@ public class AwsLambdaSqsMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasUnit("s")
                         .hasDescription("Duration of processing operation.")
                         .hasHistogramSatisfying(
-                            histogram ->
+                            histogram -> {
+                              if (failedProcessCount == 0) {
                                 histogram.hasPointsSatisfying(
                                     point ->
                                         point
@@ -61,7 +72,35 @@ public class AwsLambdaSqsMetricsAssertions {
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(ERROR_TYPE, errorType))))));
+                                                equalTo(ERROR_TYPE, errorType)));
+                              } else {
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .satisfies(
+                                                data ->
+                                                    assertThat(data.getCount())
+                                                        .isEqualTo(processCount))
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                                equalTo(ERROR_TYPE, errorType)),
+                                    point ->
+                                        point
+                                            .satisfies(
+                                                data ->
+                                                    assertThat(data.getCount())
+                                                        .isEqualTo(failedProcessCount))
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                                equalTo(ERROR_TYPE, failedProcessErrorType)));
+                              }
+                            })));
     testing.waitAndAssertMetrics(
         instrumentationName,
         "messaging.client.consumed.messages",
@@ -69,6 +108,7 @@ public class AwsLambdaSqsMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages that were delivered to the application.")
@@ -83,17 +123,12 @@ public class AwsLambdaSqsMetricsAssertions {
                                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                                                 equalTo(ERROR_TYPE, errorType))))));
-    assertMetricNamesAbsent(
-        testing,
-        "messaging.publish.duration",
-        "messaging.publish.messages",
-        "messaging.receive.duration",
-        "messaging.receive.messages");
-  }
-
-  private static void assertMetricNamesAbsent(
-      InstrumentationExtension testing, String... metricNames) {
-    assertThat(testing.metrics()).extracting(MetricData::getName).doesNotContain(metricNames);
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.process.duration", "messaging.client.consumed.messages");
   }
 
   private AwsLambdaSqsMetricsAssertions() {}

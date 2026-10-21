@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.gwt.v2_0.GwtSingletons.RPC_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.gwt.v2_0.GwtSingletons.RPC_FAILURE_KEY;
 import static io.opentelemetry.javaagent.instrumentation.gwt.v2_0.GwtSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -32,23 +33,14 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("invokeAndEncodeResponse")
-            .and(takesArguments(5))
-            .and(takesArgument(0, Object.class))
-            .and(takesArgument(1, Method.class))
-            .and(takesArgument(2, Object[].class))
-            .and(takesArgument(3, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
-            .and(takesArgument(4, int.class)),
+        named("invokeAndEncodeResponse").and(takesArguments(5)).and(takesArgument(1, Method.class)),
         getClass().getName() + "$InvokeAndEncodeResponseAdvice");
 
     // encodeResponseForFailure is called by invokeAndEncodeResponse in case of failure
     transformer.applyAdviceToMethod(
         named("encodeResponseForFailure")
             .and(takesArguments(4))
-            .and(takesArgument(0, Method.class))
-            .and(takesArgument(1, Throwable.class))
-            .and(takesArgument(2, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
-            .and(takesArgument(3, int.class)),
+            .and(takesArgument(1, Throwable.class)),
         getClass().getName() + "$EncodeResponseForFailureAdvice");
   }
 
@@ -58,10 +50,12 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
+      private final AtomicReference<Throwable> failure;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope, AtomicReference<Throwable> failure) {
         this.context = context;
         this.scope = scope;
+        this.failure = failure;
       }
 
       @Nullable
@@ -70,13 +64,15 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
         if (!instrumenter().shouldStart(parentContext, method)) {
           return null;
         }
-        Context context = instrumenter().start(parentContext, method).with(RPC_CONTEXT_KEY, true);
-        return new AdviceScope(context, context.makeCurrent());
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        Context context =
+            instrumenter().start(parentContext, method).with(RPC_FAILURE_KEY, failure);
+        return new AdviceScope(context, context.makeCurrent(), failure);
       }
 
       public void end(Method method, @Nullable Throwable throwable) {
         scope.close();
-        instrumenter().end(context, method, null, throwable);
+        instrumenter().end(context, method, null, throwable != null ? throwable : failure.get());
       }
     }
 
@@ -105,12 +101,13 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
       if (throwable == null) {
         return;
       }
-      Context context = Java8BytecodeBridge.currentContext();
-      if (context.get(RPC_CONTEXT_KEY) == null) {
+      AtomicReference<Throwable> failure =
+          Java8BytecodeBridge.currentContext().get(RPC_FAILURE_KEY);
+      if (failure == null) {
         // not inside rpc invocation
         return;
       }
-      Java8BytecodeBridge.spanFromContext(context).recordException(throwable);
+      failure.set(throwable);
     }
   }
 }

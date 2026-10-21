@@ -32,8 +32,8 @@ import io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtra
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
@@ -55,6 +55,7 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
+  private static final AtomicBoolean spanSuppressionConfigWarningLogged = new AtomicBoolean();
   private static final AtomicBoolean spanSuppressionPropertyWarningLogged = new AtomicBoolean();
 
   final OpenTelemetry openTelemetry;
@@ -105,6 +106,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.openTelemetry = openTelemetry;
     this.instrumentationName = instrumentationName;
     this.spanNameExtractor = spanNameExtractor;
+    initializeOpenTelemetry(spanNameExtractor);
   }
 
   /**
@@ -147,6 +149,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
+    initializeOpenTelemetry(attributesExtractor);
     this.attributesExtractors.add(requireNonNull(attributesExtractor, "attributesExtractor"));
     return this;
   }
@@ -175,6 +178,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super REQUEST> contextCustomizer) {
+    initializeOpenTelemetry(contextCustomizer);
     contextCustomizers.add(requireNonNull(contextCustomizer, "contextCustomizer"));
     return this;
   }
@@ -195,6 +199,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addOperationMetrics(OperationMetrics factory) {
+    initializeOpenTelemetry(factory);
     operationMetrics.add(requireNonNull(factory, "operationMetrics"));
     return this;
   }
@@ -418,18 +423,26 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getInstrumentationConfig("common");
     }
 
-    String result = commonConfig.getString("span_suppression_strategy/development");
-    if (result == null && !SemconvStability.v3Preview(openTelemetry)) {
-      String deprecatedResult =
-          SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
-      if (deprecatedResult != null) {
-        if (spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
+    String result = commonConfig.getString("span_suppression_strategy");
+    if (result == null) {
+      // Deprecated declarative and flat names remain available until 3.0.
+      result = commonConfig.getString("span_suppression_strategy/development");
+      if (result != null && spanSuppressionConfigWarningLogged.compareAndSet(false, true)) {
+        logger.warning(
+            "The otel.instrumentation.experimental.span-suppression-strategy setting and the"
+                + " equivalent declarative configuration property are deprecated and will be removed"
+                + " in 3.0. Use otel.instrumentation.common.span-suppression-strategy or equivalent"
+                + " declarative configuration instead.");
+      }
+      if (result == null) {
+        result =
+            SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
+        if (result != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
           logger.warning(
               "The otel.instrumentation.experimental.span-suppression-strategy setting is"
                   + " deprecated and will be removed in 3.0. Use the programmatic API or equivalent"
                   + " declarative instrumentation configuration instead.");
         }
-        result = deprecatedResult;
       }
     }
     return SpanSuppressionStrategy.fromConfig(result);
@@ -445,6 +458,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               return spanKey == null ? Stream.of() : Stream.of(spanKey);
             })
         .collect(toSet());
+  }
+
+  private void initializeOpenTelemetry(Object component) {
+    if (component instanceof OpenTelemetryConfigurable) {
+      ((OpenTelemetryConfigurable) component).internalInitialize(openTelemetry);
+    }
   }
 
   private void propagateOperationListenersToOnEnd() {
@@ -499,6 +518,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
                 UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer) {
               builder.spanNameExtractor =
                   spanNameExtractorCustomizer.apply(builder.spanNameExtractor);
+              builder.initializeOpenTelemetry(builder.spanNameExtractor);
             }
 
             @Override

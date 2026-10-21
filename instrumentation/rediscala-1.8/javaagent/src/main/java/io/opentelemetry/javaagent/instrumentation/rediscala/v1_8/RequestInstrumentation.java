@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -24,7 +25,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.ActorRequest;
 import redis.BufferedRequest;
-import redis.RedisClientActorLike;
 import redis.RedisCommand;
 import redis.Request;
 import redis.RoundRobinPoolRequest;
@@ -78,14 +78,9 @@ class RequestInstrumentation implements TypeInstrumentation {
           return null;
         }
 
-        String host = null;
-        Integer port = null;
-        if (action instanceof RedisClientActorLike) {
-          RedisClientActorLike client = (RedisClientActorLike) action;
-          host = client.host();
-          port = client.port();
-        }
-        RediscalaRequest request = RediscalaRequest.create(cmd, host, port);
+        ServerEndpoint endpoint = ServerEndpoint.create(action, cmd.isMasterOnly());
+        RedisServerTarget serverTarget = RediscalaServerTargets.get(action);
+        RediscalaRequest request = RediscalaRequest.create(cmd, endpoint, serverTarget);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
@@ -110,7 +105,7 @@ class RequestInstrumentation implements TypeInstrumentation {
           ctx = ((RoundRobinPoolRequest) action).executionContext();
         }
 
-        if (throwable != null || responseFuture == null) {
+        if (throwable != null || responseFuture == null || ctx == null) {
           instrumenter().end(context, request, null, throwable);
         } else {
           responseFuture.onComplete(new OnCompleteHandler(context, request), ctx);

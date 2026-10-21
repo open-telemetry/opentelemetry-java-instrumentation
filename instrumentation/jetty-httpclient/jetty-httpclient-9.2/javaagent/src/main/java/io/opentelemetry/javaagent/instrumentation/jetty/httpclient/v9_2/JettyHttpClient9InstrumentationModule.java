@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JettyHttpClient9InstrumentationModule extends InstrumentationModule {
 
   public JettyHttpClient9InstrumentationModule() {
-    super("jetty-httpclient", "jetty-httpclient-9.2");
+    super("jetty-httpclient-9.2", "jetty-httpclient");
   }
 
   @Override

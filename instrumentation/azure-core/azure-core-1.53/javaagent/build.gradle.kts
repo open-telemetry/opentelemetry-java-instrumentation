@@ -11,7 +11,7 @@ muzzle {
     // this module bridges an explicitly supplied application parent context, so it references the
     // application's io.opentelemetry.context.{Context,Scope} and only applies when the application
     // uses the OpenTelemetry API itself; it is verified separately below
-    excludeInstrumentationName("azure-core-1.53-context")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.AzureContextInstrumentationModule")
   }
 
   pass {

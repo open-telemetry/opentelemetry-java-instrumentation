@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -34,7 +37,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
-  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
 
   // using 3.4.3 to avoid the "Spec. Rule 1.3" issue in reactor-core during tests
   // https://github.com/reactor/reactor-core/issues/2579
@@ -44,45 +46,35 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testConnectionSpan = register<Test>("testConnectionSpan") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("ReactorNettyConnectionSpanTest")
-      includeTestsMatching("ReactorNettyClientSslTest")
-    }
-    include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.reactor-netty.connection-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.netty.ssl-telemetry.enabled=true,otel.instrumentation.reactor-netty.connection-telemetry.enabled=true",
-    )
-  }
-
   test {
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
       excludeTestsMatching("ReactorNettyClientSslTest")
     }
   }
+}
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-    filter {
-      excludeTestsMatching("ReactorNettyConnectionSpanTest")
-      excludeTestsMatching("ReactorNettyClientSslTest")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ConnectionSpan") {
+          filter {
+            includeTestsMatching("ReactorNettyConnectionSpanTest")
+            includeTestsMatching("ReactorNettyClientSslTest")
+          }
+          include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
+          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+          telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
+        }
+        register("PreviewSemconv") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          filter {
+            excludeTestsMatching("ReactorNettyConnectionSpanTest")
+            excludeTestsMatching("ReactorNettyClientSslTest")
+          }
+        }
+      }
     }
-  }
-
-  check {
-    dependsOn(testConnectionSpan, testStableSemconv)
   }
 }
