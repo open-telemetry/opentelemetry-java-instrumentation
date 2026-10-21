@@ -7,8 +7,10 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -20,7 +22,10 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -29,26 +34,43 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.RedisException;
+import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisNoScriptException;
 import io.lettuce.core.ScriptOutputType;
+import io.lettuce.core.TransactionResult;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.codec.StringCodec;
+import io.lettuce.core.output.MultiOutput;
+import io.lettuce.core.output.StatusOutput;
+import io.lettuce.core.protocol.Command;
+import io.lettuce.core.protocol.CommandType;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClientTest {
@@ -344,17 +366,18 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @ParameterizedTest
   @MethodSource("serverErrorReplies")
   void testServerErrorReply(String errorMessage, String errorType) {
+    String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
+    // Lettuce 6.0.0 supplies no remote endpoint to command-aware spans.
+    boolean missingEndpoint = "6.0.0.RELEASE".equals(lettuceVersion);
     String script = "return redis.error_reply(ARGV[1])";
     Throwable thrown =
         catchThrowable(
             () -> syncCommands.eval(script, ScriptOutputType.VALUE, new String[0], errorMessage));
-    // Lettuce 5.1 decodes error bytes individually instead of as UTF-8.
+    StatusOutput<String, String> uninstrumentedOutput = new StatusOutput<>(StringCodec.UTF8);
+    uninstrumentedOutput.setError(ByteBuffer.wrap(errorMessage.getBytes(UTF_8)));
     assertThat(thrown)
         .isInstanceOf(RedisCommandExecutionException.class)
-        .hasMessage(
-            !testLatestDeps() && errorMessage.equals("échec details")
-                ? "ￃﾩchec details"
-                : errorMessage);
+        .hasMessage(uninstrumentedOutput.getError());
 
     String b64Script = Base64.getEncoder().encodeToString(script.getBytes(UTF_8));
     testing()
@@ -362,16 +385,23 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(spanName("EVAL"))
+                        span.hasName(missingEndpoint ? "EVAL" : spanName("EVAL"))
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
+                                    equalTo(NETWORK_PEER_ADDRESS, missingEndpoint ? null : ip),
+                                    equalTo(
+                                        NETWORK_PEER_PORT, missingEndpoint ? null : (long) port),
+                                    equalTo(SERVER_ADDRESS, missingEndpoint ? null : host),
+                                    equalTo(SERVER_PORT, missingEndpoint ? null : (long) port),
+                                    equalTo(
+                                        DB_NAMESPACE,
+                                        lettuceVersion != null
+                                                && lettuceVersion.startsWith("6.5.0.RELEASE")
+                                            ? String.valueOf(DB_INDEX)
+                                            : null),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "EVAL " + b64Script + " 0 ?"),
                                     equalTo(DB_OPERATION_NAME, "EVAL"),
@@ -395,12 +425,170 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         argumentSet("leading spaces", "   Custom.Code! details", "Custom.Code!"),
         argumentSet("tab within prefix", "ERR\tDETAIL message", "ERR\tDETAIL"),
         argumentSet("non-ASCII prefix", "échec details", "échec"),
+        argumentSet("CJK prefix", "错误.Code! details", "错误.Code!"),
+        argumentSet("literal decoder lookalike", "ￃﾩ details", "ￃﾩ"),
         argumentSet(
             "long prefix",
             "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMN details",
             "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMN"),
         argumentSet("empty reply", "", RedisCommandExecutionException.class.getName()),
         argumentSet("spaces only", "   ", RedisCommandExecutionException.class.getName()));
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = {"échec", "错误.Code!", "ￃﾩ"})
+  void testTransactionResults(@Nullable String prefix)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
+    boolean missingEndpoint = "6.0.0.RELEASE".equals(lettuceVersion);
+    boolean queuedAcknowledgements = !testLatestDeps() || missingEndpoint;
+    String script = prefix != null ? "return redis.error_reply(ARGV[1])" : "return ARGV[1]";
+    assertThat(syncCommands.multi()).isEqualTo("OK");
+    RedisFuture<String> successful = connection.async().set("transaction-key", "value");
+    RedisFuture<Object> evaluated =
+        connection
+            .async()
+            .eval(
+                script,
+                ScriptOutputType.VALUE,
+                new String[0],
+                prefix != null ? prefix + " details" : "value");
+    RedisFuture<?> last =
+        prefix != null
+            ? connection.async().evalsha("00000000", ScriptOutputType.VALUE)
+            : connection.async().get("transaction-key");
+
+    testing().waitForTraces(queuedAcknowledgements ? 4 : 1);
+    assertThat(successful.toCompletableFuture()).isNotDone();
+    assertThat(evaluated.toCompletableFuture()).isNotDone();
+    assertThat(last.toCompletableFuture()).isNotDone();
+
+    TransactionResult transaction = syncCommands.exec();
+    assertThat(transaction).hasSize(3);
+    assertThat(transaction.<String>get(0)).isEqualTo("OK");
+    assertThat(successful.get(10, SECONDS)).isEqualTo("OK");
+    if (prefix != null) {
+      StatusOutput<String, String> uninstrumentedOutput = new StatusOutput<>(StringCodec.UTF8);
+      MultiOutput<String, String> uninstrumentedMulti = new MultiOutput<>(StringCodec.UTF8);
+      uninstrumentedMulti.add(new Command<>(CommandType.EVAL, uninstrumentedOutput));
+      uninstrumentedMulti.multi(1);
+      uninstrumentedMulti.setError(ByteBuffer.wrap((prefix + " details").getBytes(UTF_8)));
+      assertThat(transaction.<Throwable>get(1))
+          .isInstanceOf(RedisCommandExecutionException.class)
+          .hasMessage(uninstrumentedOutput.getError());
+      assertThat(transaction.<Throwable>get(2)).isInstanceOf(RedisNoScriptException.class);
+      assertThatThrownBy(() -> evaluated.get(10, SECONDS))
+          .hasCauseInstanceOf(RedisCommandExecutionException.class)
+          .cause()
+          .hasMessage(uninstrumentedOutput.getError());
+      assertThatThrownBy(() -> last.get(10, SECONDS))
+          .hasCauseInstanceOf(RedisNoScriptException.class);
+    } else {
+      assertThat(transaction.<String>get(1)).isEqualTo("value");
+      assertThat(transaction.<String>get(2)).isEqualTo("value");
+      assertThat(evaluated.get(10, SECONDS)).isEqualTo("value");
+      assertThat(last.get(10, SECONDS)).isEqualTo("value");
+    }
+
+    List<String> operations =
+        asList("MULTI", "SET", "EVAL", prefix != null ? "EVALSHA" : "GET", "EXEC");
+    List<String> statements =
+        asList(
+            "MULTI",
+            "SET transaction-key ?",
+            "EVAL " + Base64.getEncoder().encodeToString(script.getBytes(UTF_8)) + " 0 ?",
+            prefix != null ? "EVALSHA 00000000 0" : "GET transaction-key",
+            "EXEC");
+    testing()
+        .waitAndAssertTraces(
+            IntStream.range(0, operations.size())
+                .<Consumer<TraceAssert>>mapToObj(
+                    i ->
+                        trace ->
+                            trace.hasSpansSatisfyingExactly(
+                                span ->
+                                    span.hasName(
+                                            missingEndpoint
+                                                ? operations.get(i)
+                                                : spanName(operations.get(i)))
+                                        .hasKind(SpanKind.CLIENT)
+                                        .hasNoParent()
+                                        .hasStatus(
+                                            testLatestDeps()
+                                                    && prefix != null
+                                                    && (i == 4
+                                                        || (!queuedAcknowledgements && i > 1))
+                                                ? StatusData.error()
+                                                : StatusData.unset())
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(DB_SYSTEM_NAME, REDIS),
+                                            equalTo(DB_QUERY_TEXT, statements.get(i)),
+                                            equalTo(DB_OPERATION_NAME, operations.get(i)),
+                                            equalTo(
+                                                NETWORK_PEER_ADDRESS, missingEndpoint ? null : ip),
+                                            equalTo(
+                                                NETWORK_PEER_PORT,
+                                                missingEndpoint ? null : (long) port),
+                                            equalTo(SERVER_ADDRESS, missingEndpoint ? null : host),
+                                            equalTo(
+                                                SERVER_PORT, missingEndpoint ? null : (long) port),
+                                            equalTo(
+                                                DB_NAMESPACE,
+                                                lettuceVersion != null
+                                                        && lettuceVersion.startsWith(
+                                                            "6.5.0.RELEASE")
+                                                    ? String.valueOf(DB_INDEX)
+                                                    : null),
+                                            equalTo(
+                                                ERROR_TYPE,
+                                                testLatestDeps()
+                                                        && (i == 4
+                                                            || (i == 2 && !queuedAcknowledgements))
+                                                    ? prefix
+                                                    : testLatestDeps()
+                                                            && i == 3
+                                                            && !queuedAcknowledgements
+                                                            && prefix != null
+                                                        ? "NOSCRIPT"
+                                                        : null))))
+                .collect(toList()));
+
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.lettuce-5.1",
+            "db.client.operation.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        IntStream.range(0, operations.size())
+                                            .<Consumer<HistogramPointAssert>>mapToObj(
+                                                i ->
+                                                    point ->
+                                                        point
+                                                            .hasCount(1)
+                                                            .hasAttributesSatisfying(
+                                                                equalTo(
+                                                                    DB_OPERATION_NAME,
+                                                                    operations.get(i)),
+                                                                equalTo(
+                                                                    ERROR_TYPE,
+                                                                    testLatestDeps()
+                                                                            && (i == 4
+                                                                                || (i == 2
+                                                                                    && !queuedAcknowledgements))
+                                                                        ? prefix
+                                                                        : testLatestDeps()
+                                                                                && i == 3
+                                                                                && !queuedAcknowledgements
+                                                                                && prefix != null
+                                                                            ? "NOSCRIPT"
+                                                                            : null)))
+                                            .collect(toList())))));
   }
 
   @Test

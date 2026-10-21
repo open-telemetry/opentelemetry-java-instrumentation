@@ -7,11 +7,16 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.RedisCommandExecutionException;
+import io.lettuce.core.TransactionResult;
 import io.lettuce.core.output.CommandOutput;
+import io.lettuce.core.output.MultiOutput;
+import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
 import io.lettuce.core.protocol.ProtocolKeyword;
 import io.lettuce.core.protocol.RedisCommand;
+import io.lettuce.core.protocol.TransactionalCommand;
 import io.lettuce.core.tracing.TraceContext;
 import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
@@ -209,11 +214,22 @@ final class OpenTelemetryTracing implements Tracing {
 
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
+        AsyncCommand<?, ?, ?> asyncCommand = CommandWrapper.unwrap(command, AsyncCommand.class);
+        boolean transactional = CommandWrapper.unwrap(command, TransactionalCommand.class) != null;
         completeableCommand.onComplete(
             (o, throwable) -> {
-              CommandOutput<?, ?, ?> output = command.getOutput();
               Throwable error = throwable != null ? throwable : this.error;
-              finishFromOutput(output != null ? output.getError() : null, error);
+              // Older wrappers discard the exception, but their async result may already have it.
+              if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
+                asyncCommand.whenComplete(
+                    (result, terminalError) ->
+                        finishFromOutput(
+                            command.getOutput(),
+                            terminalError != null ? terminalError : error,
+                            transactional));
+              } else {
+                finishFromOutput(command.getOutput(), error, transactional);
+              }
             });
       }
 
@@ -294,25 +310,47 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     public void finish() {
-      if (error != null) {
-        finishFromOutput(taggedErrorMessage, error);
+      if (error instanceof RedisCommandExecutionException) {
+        end(
+            LettuceResponse.fromErrorMessage(
+                taggedErrorMessage != null ? taggedErrorMessage : error.getMessage()),
+            error);
+      } else if (error != null) {
+        end(null, error);
       } else {
         // Lettuce 5.x tags both server and client errors here, suppressing their throwable.
         end(taggedErrorMessage != null ? LettuceResponse.unknownFailure() : null, null);
       }
     }
 
-    private void finishFromOutput(@Nullable String errorMessage, @Nullable Throwable error) {
+    private void finishFromOutput(
+        @Nullable CommandOutput<?, ?, ?> output, @Nullable Throwable error, boolean transactional) {
       // Command-aware callbacks expose client failures even when output contains their message.
       if (error instanceof RedisCommandExecutionException) {
         end(
-            LettuceResponse.fromErrorMessage(
-                errorMessage != null ? errorMessage : error.getMessage()),
+            output != null && output.getError() != null
+                ? LettuceResponse.fromCommandOutput(output, transactional)
+                : LettuceResponse.fromErrorMessage(error.getMessage()),
             error);
       } else if (error != null) {
         end(null, error);
       } else {
-        end(LettuceResponse.fromErrorMessage(errorMessage), null);
+        if (output instanceof MultiOutput && output.getError() == null) {
+          TransactionResult result = ((MultiOutput<?, ?>) output).get();
+          for (int i = 0; i < result.size(); i++) {
+            Object value = result.get(i);
+            if (value instanceof Throwable) {
+              Throwable failure = (Throwable) value;
+              end(
+                  failure instanceof RedisCommandExecutionException
+                      ? LettuceResponse.fromTransactionErrorMessage(failure.getMessage())
+                      : null,
+                  failure);
+              return;
+            }
+          }
+        }
+        end(LettuceResponse.fromCommandOutput(output, transactional), null);
       }
     }
 
