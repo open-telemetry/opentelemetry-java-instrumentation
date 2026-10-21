@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -325,16 +326,91 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  void batchRedirectIsRetriedAndPreservesBatchResult()
+      throws IOException, InterruptedException, ReflectiveOperationException {
+    String key = "batch-redirect-" + UUID.randomUUID();
+    String script =
+        "local count = redis.call('INCR', '"
+            + key
+            + "'); if count == 1 then return redis.error_reply('MOVED 1234 "
+            + host
+            + ":"
+            + port
+            + "'); end; return 'redirected'";
+    RBatch batch = createBatch(redisson);
+    batch.getScript().evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE);
+
+    assertThat(batchResponses(invokeExecute(batch))).isEqualTo(asList("redirected"));
+    assertErrorTypeOnLastOperation(null);
+    assertFollowingOperationsHaveNoLeakedServerError();
+  }
+
+  @Test
+  void batchRetryErrorPrefixIsCapturedBeforeCompletion()
+      throws IOException, InterruptedException, ReflectiveOperationException {
+    Assumptions.assumeTrue(isClassAvailable("org.redisson.api.BatchOptions"));
+    Assumptions.assumeTrue(isClassAvailable("org.redisson.client.RedisRetryException"));
+    Class<?> redisRetryException;
+    try {
+      redisRetryException = Class.forName("org.redisson.client.RedisRetryException");
+    } catch (ClassNotFoundException ignored) {
+      Assumptions.abort();
+      return;
+    }
+    assertBatchServerErrorPrefix("LOADING Redis is loading", "LOADING", redisRetryException);
+    assertFollowingOperationsHaveNoLeakedServerError();
+  }
+
+  @Test
   void clientSideDecodeFailureKeepsExceptionClassFallback()
       throws IOException, InterruptedException {
-    assertThat(
-            redisServer
-                .execInContainer("redis-cli", "set", "client-side-decode-error", "value")
-                .getExitCode())
+    assertClientSideDecodeFailure("client-side-decode-error");
+  }
+
+  private void assertBatchServerErrorPrefix(
+      String serverError, String expectedErrorType, Class<?> expectedFailureType)
+      throws ReflectiveOperationException {
+    RBatch batch = createBatchWithoutRetries();
+    batch
+        .getScript()
+        .evalAsync(
+            RScript.Mode.READ_WRITE,
+            "return redis.error_reply('" + serverError + "')",
+            RScript.ReturnType.VALUE);
+
+    assertThatThrownBy(() -> invokeExecute(batch))
+        .satisfies(error -> assertThat(rootCause(error)).isInstanceOf(expectedFailureType));
+    assertErrorTypeOnLastOperation(expectedErrorType);
+  }
+
+  private RBatch createBatchWithoutRetries() throws ReflectiveOperationException {
+    Class<?> batchOptions = Class.forName("org.redisson.api.BatchOptions");
+    Object options = batchOptions.getMethod("defaults").invoke(null);
+    batchOptions.getMethod("retryAttempts", int.class).invoke(options, 0);
+    return (RBatch)
+        redisson.getClass().getMethod("createBatch", batchOptions).invoke(redisson, options);
+  }
+
+  private static List<?> batchResponses(Object result) throws ReflectiveOperationException {
+    if (result instanceof List) {
+      return (List<?>) result;
+    }
+    return (List<?>) result.getClass().getMethod("getResponses").invoke(result);
+  }
+
+  private void assertFollowingOperationsHaveNoLeakedServerError()
+      throws IOException, InterruptedException {
+    redisson.getBucket("after-batch-server-error").set("success");
+    assertErrorTypeOnLastOperation(null);
+    assertClientSideDecodeFailure("client-side-after-batch-error");
+  }
+
+  private void assertClientSideDecodeFailure(String key) throws IOException, InterruptedException {
+    assertThat(redisServer.execInContainer("redis-cli", "set", key, "value").getExitCode())
         .isZero();
     RBucket<String> bucket =
         redisson.getBucket(
-            "client-side-decode-error",
+            key,
             new StringCodec() {
               @Override
               public Decoder<Object> getValueDecoder() {
@@ -360,7 +436,7 @@ public abstract class AbstractRedissonClientTest {
                           equalTo(SERVER_PORT, port),
                           equalTo(DB_SYSTEM_NAME, REDIS),
                           equalTo(DB_NAMESPACE, dbNamespace("0")),
-                          equalTo(DB_QUERY_TEXT, "GET client-side-decode-error"),
+                          equalTo(DB_QUERY_TEXT, "GET " + key),
                           equalTo(DB_OPERATION_NAME, "GET"),
                           equalTo(ERROR_TYPE, RedisException.class.getName())));
         });
@@ -374,11 +450,30 @@ public abstract class AbstractRedissonClientTest {
                     histogram ->
                         histogram.hasPointsSatisfying(
                             point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(
-                                                ERROR_TYPE, RedisException.class.getName())))));
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertThat(attributes.asMap())
+                                                .containsEntry(
+                                                    ERROR_TYPE, RedisException.class.getName())))));
+    testing.clearData();
+  }
+
+  private static Throwable rootCause(Throwable error) {
+    while (error.getCause() != null && error.getCause() != error) {
+      error = error.getCause();
+    }
+    return error;
+  }
+
+  private static boolean isClassAvailable(String name) {
+    try {
+      Class.forName(name, false, AbstractRedissonClientTest.class.getClassLoader());
+      return true;
+    } catch (ClassNotFoundException ignored) {
+      return false;
+    }
   }
 
   private void assertScriptErrorType(
@@ -638,8 +733,8 @@ public abstract class AbstractRedissonClientTest {
                 .build()));
   }
 
-  private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
-    batch.getClass().getMethod("execute").invoke(batch);
+  private static Object invokeExecute(RBatch batch) throws ReflectiveOperationException {
+    return batch.getClass().getMethod("execute").invoke(batch);
   }
 
   @Test
