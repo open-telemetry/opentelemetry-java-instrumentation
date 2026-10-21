@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Spring Boot Java agent resource providers move from
+  `io.opentelemetry.instrumentation.spring.resources` to
+  `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
+  `otel.java.enabled.resource.providers` and `otel.java.disabled.resource.providers`.
 - Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
   Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
 - `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
