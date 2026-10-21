@@ -125,6 +125,9 @@ public abstract class AbstractRatpackErrorContextTest {
             trace -> assertRequestTrace(trace, "second"));
   }
 
+  // Regression test: with controller telemetry disabled, the server span retained for
+  // error reporting must not override the current application span as the parent of
+  // an outbound HTTP client span.
   @Test
   @EnabledIfSystemProperty(
       named = "otel.instrumentation.common.controller-telemetry.enabled",
