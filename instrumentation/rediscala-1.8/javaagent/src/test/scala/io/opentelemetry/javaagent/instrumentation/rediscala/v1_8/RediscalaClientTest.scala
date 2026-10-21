@@ -206,6 +206,26 @@ class RediscalaClientTest {
     assertErrorType("LPUSH", "WRONGTYPE")
   }
 
+  @Test def testCustomServerErrorPrefixSetsErrorType(): Unit = {
+    val result = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] =
+          redisClient.eval[String](
+            "return redis.error_reply('Custom.Code! custom message')"
+          )
+      }
+    )
+
+    assertThatThrownBy(new ThrowingCallable {
+      override def call(): Unit = {
+        Await.result(result, Duration("3 second"))
+      }
+    }).isInstanceOf(classOf[ReplyErrorException])
+
+    assertErrorType("EVAL", "Custom.Code!")
+  }
+
   @Test def testClientFailureUsesExceptionClassAsErrorType(): Unit = {
     val failedPort = PortUtils.findOpenPort()
     val client = createClient(None, JLong.valueOf(failedPort.toLong))

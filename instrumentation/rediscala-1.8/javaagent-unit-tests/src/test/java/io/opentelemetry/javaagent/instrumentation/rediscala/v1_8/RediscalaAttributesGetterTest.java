@@ -41,15 +41,33 @@ class RediscalaAttributesGetterTest {
   @Test
   void errorTypeUsesServerReplyPrefix() {
     RediscalaRequest request = request(null);
+    String prefixOver64Characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLM";
 
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("WRONGTYPE message")))
         .isEqualTo("WRONGTYPE");
+    assertThat(
+            getter.getErrorType(request, null, new ReplyErrorException("MOVED 123 127.0.0.1:6379")))
+        .isEqualTo("MOVED");
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("CUSTOMCODE message")))
         .isEqualTo("CUSTOMCODE");
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("Custom.Code! details")))
+        .isEqualTo("Custom.Code!");
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("lowercase details")))
+        .isEqualTo("lowercase");
+    assertThat(
+            getter.getErrorType(
+                request, null, new ReplyErrorException(prefixOver64Characters + " details")))
+        .isEqualTo(prefixOver64Characters);
     assertThat(getter.getErrorType(request, null, new ReplyErrorException("CUSTOMCODE")))
         .isEqualTo("CUSTOMCODE");
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("CRLFCODE\r\ntrailing")))
+        .isEqualTo("CRLFCODE");
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException("Custom\tCode details")))
+        .isEqualTo("Custom\tCode");
     assertThat(getter.getErrorType(request, null, new ReplyErrorException(""))).isNull();
     assertThat(getter.getErrorType(request, null, new ReplyErrorException(" message"))).isNull();
+    assertThat(getter.getErrorType(request, null, new ReplyErrorException(null))).isNull();
     assertThat(getter.getErrorType(request, null, new IllegalStateException("WRONGTYPE message")))
         .isNull();
   }
