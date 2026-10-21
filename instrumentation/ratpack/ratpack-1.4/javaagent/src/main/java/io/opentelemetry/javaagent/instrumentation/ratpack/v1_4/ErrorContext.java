@@ -11,8 +11,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 
 /**
- * Provides a dedicated Ratpack registry key for the span that receives request errors, keeping error
- * reporting separate from the {@link Context} entry used for HTTP client parent selection.
+ * Provides a dedicated Ratpack registry key for the span that receives request errors, keeping
+ * error reporting separate from the {@link Context} entry used for HTTP client parent selection.
  */
 public final class ErrorContext {
 
