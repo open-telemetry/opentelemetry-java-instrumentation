@@ -7,10 +7,10 @@ applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/*
 Apply these checks to executable advice and the helpers it calls. Inspect registration and
 library lifecycle before deciding whether an exception applies.
 
-## Enablement names in v3 preview
+## Enablement names
 
-Apply these rules to names registered under `otel.instrumentation.common.v3-preview=true`.
-Public enablement names describe selectable behavior, not Muzzle implementation identities.
+Apply these rules to names registered by an `InstrumentationModule`. Public enablement names
+describe selectable behavior, not Muzzle implementation identities.
 
 - The primary is the full module-directory name, including versions, except where a default-off
   feature needs a separate identity within that module. Example: `spring-webflux-5.0`.
