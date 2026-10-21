@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNativeResponseStatus;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionException;
@@ -41,25 +40,18 @@ final class DubboRpcStatus {
       };
 
   @Nullable
-  static String getStatusCode(
-      DubboRequest request, @Nullable Result response, @Nullable Throwable error) {
+  static String getStatusCode(@Nullable Result response, @Nullable Throwable error) {
     String statusCode = getStatusCodeFromException(unwrap(error));
     if (statusCode == null && response != null) {
       statusCode = getStatusCodeFromException(unwrap(response.getException()));
-    }
-    if (statusCode == null) {
-      statusCode = DubboNativeResponseStatus.getStatusCode(request.invocation());
     }
     return statusCode;
   }
 
   @Nullable
   static String getErrorType(
-      DubboRequest request,
-      @Nullable Result response,
-      @Nullable Throwable error,
-      boolean isClient) {
-    String statusCode = getStatusCode(request, response, error);
+      @Nullable Result response, @Nullable Throwable error, boolean isClient) {
+    String statusCode = getStatusCode(response, error);
     if (statusCode != null) {
       if (isError(statusCode, isClient)) {
         return statusCode;
@@ -94,11 +86,7 @@ final class DubboRpcStatus {
         || "INTERNAL".equals(statusCode)
         || "UNAVAILABLE".equals(statusCode)
         || "UNIMPLEMENTED".equals(statusCode)
-        || "UNKNOWN".equals(statusCode)
-        || "SERVER_ERROR".equals(statusCode)
-        || "SERVER_THREADPOOL_EXHAUSTED_ERROR".equals(statusCode)
-        || "SERVER_TIMEOUT".equals(statusCode)
-        || "SERVICE_ERROR".equals(statusCode);
+        || "UNKNOWN".equals(statusCode);
   }
 
   @Nullable

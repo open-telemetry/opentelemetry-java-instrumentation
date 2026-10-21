@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboInternalHelper;
-import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNativeResponseStatus;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
@@ -23,15 +22,10 @@ import org.apache.dubbo.rpc.Result;
 class DubboSingletons {
   private static final Filter clientFilter;
   private static final Filter serverFilter;
-  private static final boolean captureNativeResponseStatus;
   @Nullable private static final Instrumenter<DubboRequest, Result> serverInstrumenter;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    captureNativeResponseStatus = emitPreviewRpcSemconv(openTelemetry);
-    if (captureNativeResponseStatus) {
-      DubboNativeResponseStatus.setAccessor(DubboNativeResponseStatusAccessor.INSTANCE);
-    }
     DubboTelemetry telemetry =
         DubboTelemetry.builder(openTelemetry)
             .addAttributesExtractor(
@@ -48,10 +42,6 @@ class DubboSingletons {
 
   static Filter clientFilter() {
     return clientFilter;
-  }
-
-  static boolean captureNativeResponseStatus() {
-    return captureNativeResponseStatus;
   }
 
   static Filter serverFilter() {

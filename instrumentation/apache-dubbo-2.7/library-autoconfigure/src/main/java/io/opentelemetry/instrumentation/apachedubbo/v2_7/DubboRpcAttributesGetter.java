@@ -71,6 +71,6 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
   @Nullable
   public String getErrorType(
       DubboRequest request, @Nullable Result response, @Nullable Throwable error) {
-    return DubboRpcStatus.getErrorType(request, response, error, isClient);
+    return DubboRpcStatus.getErrorType(response, error, isClient);
   }
 }

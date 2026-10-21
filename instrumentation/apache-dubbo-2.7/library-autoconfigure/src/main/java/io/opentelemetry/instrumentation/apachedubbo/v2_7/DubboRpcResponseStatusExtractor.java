@@ -53,7 +53,7 @@ final class DubboRpcResponseStatusExtractor
     if (!semconvSelection.get().emitPreview()) {
       return;
     }
-    String statusCode = DubboRpcStatus.getStatusCode(request, response, error);
+    String statusCode = DubboRpcStatus.getStatusCode(response, error);
     if (statusCode == null) {
       return;
     }
@@ -75,7 +75,7 @@ final class DubboRpcResponseStatusExtractor
           .extract(spanStatusBuilder, request, response, error);
       return;
     }
-    String statusCode = DubboRpcStatus.getStatusCode(request, response, error);
+    String statusCode = DubboRpcStatus.getStatusCode(response, error);
     if (statusCode == null) {
       SpanStatusExtractor.<DubboRequest, Result>getDefault()
           .extract(spanStatusBuilder, request, response, error);

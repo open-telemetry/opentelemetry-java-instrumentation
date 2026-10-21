@@ -7,10 +7,8 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboNativeResponseStatus;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
@@ -43,9 +41,6 @@ final class TracingFilter implements Filter {
 
     Context parentContext = Context.current();
     DubboRequest request = DubboRequest.create((RpcInvocation) invocation, rpcContext);
-    if (!isClientSide) {
-      DubboNativeResponseStatus.associateServerInvocation(request.invocation());
-    }
 
     if (!instrumenter.shouldStart(parentContext, request)) {
       return invoker.invoke(invocation);
@@ -54,45 +49,23 @@ final class TracingFilter implements Filter {
 
     Result result;
     boolean isSynchronous = true;
-    Object clientInvocationScope =
-        isClientSide ? DubboNativeResponseStatus.enterClientInvocation(request.invocation()) : null;
     try (Scope ignored = context.makeCurrent()) {
       result = invoker.invoke(invocation);
+      if (isClientSide) {
+        CompletableFuture<Object> future = rpcContext.getCompletableFuture();
+        if (future != null) {
+          isSynchronous = false;
+          future.whenComplete(
+              (o, throwable) -> instrumenter.end(context, request, result, throwable));
+        }
+      }
     } catch (Throwable e) {
-      if (isClientSide
-          || !DubboNativeResponseStatus.deferServerCompletion(
-              request.invocation(), () -> end(context, request, null, e))) {
-        end(context, request, null, e);
-      }
+      instrumenter.end(context, request, null, e);
       throw e;
-    } finally {
-      if (clientInvocationScope != null) {
-        DubboNativeResponseStatus.exitClientInvocation(clientInvocationScope);
-      }
-    }
-    if (isClientSide) {
-      CompletableFuture<Object> future = rpcContext.getCompletableFuture();
-      if (future != null) {
-        isSynchronous = false;
-        future.whenComplete((o, throwable) -> end(context, request, result, throwable));
-      }
     }
     if (isSynchronous) {
-      if (isClientSide
-          || !DubboNativeResponseStatus.deferServerCompletion(
-              request.invocation(), () -> end(context, request, result, result.getException()))) {
-        end(context, request, result, result.getException());
-      }
+      instrumenter.end(context, request, result, result.getException());
     }
     return result;
-  }
-
-  private void end(
-      Context context, DubboRequest request, @Nullable Result response, @Nullable Throwable error) {
-    try {
-      instrumenter.end(context, request, response, error);
-    } finally {
-      DubboNativeResponseStatus.clear(request.invocation());
-    }
   }
 }

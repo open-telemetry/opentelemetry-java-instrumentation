@@ -47,9 +47,6 @@ public class DubboInstrumentationModule extends InstrumentationModule {
         new ResourceInjectingTypeInstrumentation(),
         new DubboProtocolInstrumentation(),
         new DecodeableRpcInvocationInstrumentation(),
-        new DubboNativeClientResponseInstrumentation(),
-        new DubboNativeServerRequestInstrumentation(),
-        new DubboNativeServerResponseInstrumentation(),
         new GrpcRequestHandlerMappingInstrumentation());
   }
 

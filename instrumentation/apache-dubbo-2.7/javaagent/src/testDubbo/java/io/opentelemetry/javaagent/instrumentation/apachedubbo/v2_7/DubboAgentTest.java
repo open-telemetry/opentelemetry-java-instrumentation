@@ -24,9 +24,4 @@ class DubboAgentTest extends AbstractDubboTest {
   protected boolean canCaptureUnknownServiceSpans() {
     return true;
   }
-
-  @Override
-  protected boolean canCaptureNativeResponseStatus() {
-    return true;
-  }
 }
