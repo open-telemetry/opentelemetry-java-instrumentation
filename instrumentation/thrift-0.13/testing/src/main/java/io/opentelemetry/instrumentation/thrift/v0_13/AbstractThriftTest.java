@@ -25,6 +25,7 @@ package io.opentelemetry.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -56,6 +57,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -283,6 +285,8 @@ public abstract class AbstractThriftTest {
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span, String method, int port, boolean hasError) {
     span.hasName(CustomService.class.getName() + "/" + method)
+        .satisfies(
+            hasScopeSchemaUrl(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(
             equalTo(
@@ -311,6 +315,8 @@ public abstract class AbstractThriftTest {
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, int port, String errorType) {
     return span.hasName(className + "/" + method)
+        .satisfies(
+            hasScopeSchemaUrl(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
             equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
@@ -336,6 +342,8 @@ public abstract class AbstractThriftTest {
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, String errorType) {
     return span.hasName(className + "/" + method)
+        .satisfies(
+            hasScopeSchemaUrl(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
             equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
@@ -359,6 +367,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.server.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("ms")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -377,6 +388,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.client.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("ms")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -397,6 +411,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.server.call.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("s")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -415,6 +432,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.client.call.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("s")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -543,6 +563,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.server.call.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("s")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -562,6 +585,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.client.call.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("s")
                       .hasHistogramSatisfying(
                           histogram ->
