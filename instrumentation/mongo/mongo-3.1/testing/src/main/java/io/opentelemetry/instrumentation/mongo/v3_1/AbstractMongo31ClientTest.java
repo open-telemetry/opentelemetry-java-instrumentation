@@ -206,6 +206,11 @@ public abstract class AbstractMongo31ClientTest
     collection.updateOne(new BsonDocument(), new BsonDocument());
   }
 
+  @Override
+  protected Document runCommand(String dbName, Document command) {
+    return client.getDatabase(dbName).runCommand(command);
+  }
+
   @Test
   void testClientFailure() {
     MongoClientOptions options = MongoClientOptions.builder().serverSelectionTimeout(10).build();

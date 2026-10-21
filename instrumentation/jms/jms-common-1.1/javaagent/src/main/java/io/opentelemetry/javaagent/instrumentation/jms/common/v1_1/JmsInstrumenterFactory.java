@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -55,6 +56,7 @@ public class JmsInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(operationType, SEND_OPERATION_NAME))
             .addOperationMetrics(MessagingProducerMetrics.get());
@@ -71,6 +73,7 @@ public class JmsInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME))
             .addOperationMetrics(MessagingConsumerMetrics.get());
@@ -91,6 +94,7 @@ public class JmsInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(operationType, PROCESS_OPERATION_NAME));
     if (recordConsumedMessages) {

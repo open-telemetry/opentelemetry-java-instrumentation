@@ -22,9 +22,3 @@ dependencies {
   testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
   testImplementation("org.postgresql:postgresql:42.7.2")
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-}

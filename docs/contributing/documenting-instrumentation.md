@@ -255,7 +255,7 @@ configurations:
 ```
 
 The same file's `global_configurations` section documents settings read on behalf of every
-instrumentation, such as `otel.instrumentation.common.v3-preview`. Modules don't reference those.
+instrumentation, such as semantic convention selection. Modules don't reference those.
 
 The generated `docs/declarative-configuration-example.yaml` sets each configuration to its default,
 so any entry can be copied on its own. It leaves out deprecated configurations and configurations
@@ -357,6 +357,11 @@ this field, and it will default to `library`.
 If an instrumentation is disabled by default, set `disabled_by_default: true`. This indicates that
 the instrumentation will not be active unless explicitly enabled by the user. If this field is omitted,
 it defaults to `false`, meaning the instrumentation is enabled by default.
+
+### Collecting telemetry from tests
+
+See the [telemetry collection convention](../../instrumentation-docs/readme.md#telemetry-collection)
+for task selection, configuration labels, and Gradle examples.
 
 ### Manual Telemetry Documentation (optional)
 

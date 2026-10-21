@@ -340,6 +340,7 @@ class SpringKafkaInterceptorTest {
                 span -> assertBatchSpan(span, 1, "0", failOuter ? null : error).hasNoParent()));
   }
 
+  @SuppressWarnings("removal")
   @Test
   void distinctBatchesWithSharedRecordsPreserveCardinalityAndCreationLinks() {
     ConsumerRecord<String, String> first = record(0, 1, "first", FIRST_CREATION);
@@ -347,8 +348,8 @@ class SpringKafkaInterceptorTest {
     Map<TopicPartition, List<ConsumerRecord<String, String>>> partitions = new LinkedHashMap<>();
     partitions.put(new TopicPartition("orders", 0), singletonList(first));
     partitions.put(new TopicPartition("orders", 1), singletonList(second));
-    ConsumerRecords<String, String> batch = new ConsumerRecords<>(partitions);
-    ConsumerRecords<String, String> anotherBatch = new ConsumerRecords<>(partitions);
+    ConsumerRecords<String, String> batch = records(partitions);
+    ConsumerRecords<String, String> anotherBatch = records(partitions);
     RecordInterceptor<String, String> recordInterceptor = telemetry.createRecordInterceptor();
     BatchInterceptor<String, String> batchInterceptor = telemetry.createBatchInterceptor();
     IllegalStateException error = new IllegalStateException("first batch attempt");
@@ -512,9 +513,15 @@ class SpringKafkaInterceptorTest {
   }
 
   private static ConsumerRecords<String, String> records(ConsumerRecord<String, String> record) {
-    return new ConsumerRecords<>(
+    return records(
         singletonMap(
             new TopicPartition(record.topic(), record.partition()), singletonList(record)));
+  }
+
+  @SuppressWarnings("removal")
+  private static <K, V> ConsumerRecords<K, V> records(
+      Map<TopicPartition, List<ConsumerRecord<K, V>>> recordsByPartition) {
+    return new ConsumerRecords<>(recordsByPartition);
   }
 
   private static ConsumerRecord<String, String> record(

@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 class DefaultEnablementTest extends AbstractHibernateTest {
 
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
+  private static final boolean INSTRUMENTATION_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.hibernate.enabled");
 
   @Test
   void defaultEnablement() {
@@ -26,16 +26,16 @@ class DefaultEnablementTest extends AbstractHibernateTest {
           }
         });
 
-    if (V3_PREVIEW) {
-      testing.waitAndAssertTraces(
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
-    } else {
+    if (INSTRUMENTATION_ENABLED) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"),
                   span -> span.hasName("Session.get " + Value.class.getName()),
                   span -> span.hasName("select Value")));
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
     }
   }
 }

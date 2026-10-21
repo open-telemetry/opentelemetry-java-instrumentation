@@ -48,7 +48,7 @@ the common setting it falls back to (`DeclarativeConfigValidationTest` checks th
 - `configurations`: settings that several modules expose identically. Each module that reads one,
   including through a shared helper such as `DbConfig` or `CommonConfig`, declares `- ref: <id>`.
 - `global_configurations`: settings read on behalf of every instrumentation rather than any
-  particular one (v3 preview, semantic convention selection, span suppression). No module declares
+  particular one (semantic convention selection, span suppression). No module declares
   or references them; the generator always includes them.
 
 If a setting is read on behalf of specific modules, it belongs in `configurations`, even when the
@@ -167,9 +167,7 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.experimental.span-suppression-strategy`                   | `java.common.span_suppression_strategy/development`               |
 | `otel.instrumentation.opentelemetry-annotations.exclude-methods`                | `java.opentelemetry_extension_annotations.exclude_methods`        |
 | `otel.experimental.javascript-snippet`                                          | `java.servlet.javascript_snippet/development`                     |
-| `otel.jmx.enabled`                                                              | `java.jmx.enabled`                                                |
 | `otel.jmx.config`                                                               | `java.jmx.config`                                                 |
-| `otel.jmx.target.system`                                                        | `java.jmx.target.system`                                          |
 
 ## Standard Conversion
 

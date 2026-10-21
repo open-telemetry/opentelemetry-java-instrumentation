@@ -76,8 +76,6 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)

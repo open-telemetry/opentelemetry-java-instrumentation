@@ -14,7 +14,6 @@ import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.Kafk
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -25,7 +24,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.time.Duration;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -47,7 +45,6 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         named("poll")
             .and(isPublic())
             .and(takesArguments(1))
-            .and(takesArgument(0, long.class).or(takesArgument(0, Duration.class)))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         getClass().getName() + "$PollAdvice");
   }

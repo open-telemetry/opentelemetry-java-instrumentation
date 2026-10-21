@@ -76,6 +76,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         "SemconvStability",
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
         "emit[a-zA-Z0-9]*",
+        filePattern = "^(?!Semconv(?:Rpc|Service)StabilityUtil\\.java$).*$",
       ),
       Rule(
         "TestLatestDeps",

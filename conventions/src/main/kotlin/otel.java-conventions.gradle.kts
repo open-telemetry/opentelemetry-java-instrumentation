@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+import io.opentelemetry.instrumentation.gradle.TestSuiteExecutionsPlugin
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.time.Duration
 
@@ -17,9 +18,11 @@ plugins {
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 val otelProps = the<OtelPropsExtension>()
 
+apply<TestSuiteExecutionsPlugin>()
+
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
-  if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
+  if (extra.properties["mavenGroupId"] == "io.opentelemetry.javaagent.instrumentation") {
     base.archivesName.set("opentelemetry-javaagent-$previousBaseArchiveName")
   } else if (!previousBaseArchiveName.startsWith("opentelemetry-")) {
     base.archivesName.set("opentelemetry-$previousBaseArchiveName")
@@ -160,7 +163,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.138.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.139.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -331,6 +334,8 @@ val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk
 
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
+
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // work around jvm crash on openJ9 8 after updating armeria to 1.33.1
   val testJavaVersion = otelProps.testJavaVersion

@@ -53,7 +53,6 @@ tasks {
       "otel.instrumentation.common.controller-telemetry.enabled=true," +
         "otel.instrumentation.common.view-telemetry.enabled=true"
     )
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.view-telemetry.enabled=true")
   }

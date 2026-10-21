@@ -15,8 +15,7 @@ Do not edit `CHANGELOG.md` directly; release preparation generates it from the f
 
 Name the file `<PR-number>.<type>.md`, for example `12345.bugfix.md`. Its contents should be
 a short description of the effect on users, without a bullet prefix or PR link. Towncrier
-adds those when rendering the changelog. Include migration guidance for breaking changes
-and name replacement APIs or configuration for deprecations.
+adds those when rendering the changelog. Name replacement APIs or configuration for deprecations.
 
 | Type | Changelog section |
 | --- | --- |
@@ -36,6 +35,13 @@ For example, `12345.bugfix.md` could contain:
 ```markdown
 Fix missing HTTP client spans when a request fails before receiving a response.
 ```
+
+Keep entries as short as possible without losing the user-visible change or necessary migration
+information. Omit repetition, obvious consequences, and instructions that merely restate the change.
+Include migration guidance only when users need information they cannot infer from the change
+description. Document flat properties without repeating equivalent declarative configuration;
+include declarative configuration only for different behavior, a distinct migration, or
+configuration unavailable through flat properties.
 
 ## Breaking Changes
 

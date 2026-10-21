@@ -48,8 +48,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-
-  systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
 val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->

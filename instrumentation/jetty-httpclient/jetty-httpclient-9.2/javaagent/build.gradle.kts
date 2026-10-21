@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -27,19 +30,14 @@ dependencies {
   latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+") // documented limitation
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("PreviewSemconv") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+        }
+      }
+    }
   }
 }

@@ -20,10 +20,10 @@ PREAMBLE = (
 )
 
 
-def workflow_script(name):
+def workflow_script(name, workflow=WORKFLOW):
     match = re.search(
         rf"      - name: {re.escape(name)}\n        run: \|\n((?:          [^\n]*\n|\n)+)",
-        WORKFLOW.read_text(encoding="utf-8"),
+        workflow.read_text(encoding="utf-8"),
     )
     if match is None:
         raise AssertionError(f"Could not find workflow script: {name}")
@@ -52,7 +52,7 @@ class PatchReleaseTest(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def run_step(self, name, branch="release/v2.32.x"):
+    def run_step(self, name, branch="release/v2.32.x", workflow=WORKFLOW):
         return subprocess.run(
             [
                 "bash",
@@ -60,7 +60,7 @@ class PatchReleaseTest(unittest.TestCase):
                 "-o",
                 "pipefail",
                 "-c",
-                f"GITHUB_REF_NAME={branch}\nVERSION=2.32.1\n" + workflow_script(name),
+                f"GITHUB_REF_NAME={branch}\nVERSION=2.32.1\n" + workflow_script(name, workflow),
             ],
             cwd=self.root,
             capture_output=True,
@@ -159,13 +159,30 @@ class PatchReleaseTest(unittest.TestCase):
         self.assertEqual(self.changelog.read_text(encoding="utf-8"), original)
 
     def test_towncrier_release_renders_and_consumes_fragments(self):
+        self.assert_release_renders_and_consumes_fragments(
+            WORKFLOW, "Update the change log with the approximate release date"
+        )
+
+    def test_release_branch_renders_and_consumes_fragments(self):
+        self.assert_release_renders_and_consumes_fragments(
+            ROOT / ".github/workflows/prepare-release-branch.yml",
+            "Update the change log with the approximate release date",
+        )
+
+    def test_development_branch_renders_and_consumes_fragments(self):
+        self.assert_release_renders_and_consumes_fragments(
+            ROOT / ".github/workflows/prepare-release-branch.yml",
+            "Update the change log on the development branch",
+        )
+
+    def assert_release_renders_and_consumes_fragments(self, workflow, step):
         self.enable_towncrier()
         fragments = self.root / "changelog.d"
         fragments.mkdir()
         fragment = fragments / "1.bugfix.md"
         fragment.write_text("Fix missing spans.\n", encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=self.root, check=True)
-        result = self.run_step("Update the change log with the approximate release date")
+        result = self.run_step(step, workflow=workflow)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         updated = self.changelog.read_text(encoding="utf-8")
         self.assertRegex(updated, r"## Version 2\.32\.1 \(\d{4}-\d{2}-\d{2}\)")
