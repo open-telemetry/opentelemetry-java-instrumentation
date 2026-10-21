@@ -90,7 +90,7 @@ class RediscalaClientTest {
 
   private def createClient(
       db: Option[Int],
-      clientPort: Int = port.intValue()
+      port: JLong = this.port
   ): RedisClient =
     try {
       // latest RedisClient constructor takes username as argument
@@ -99,7 +99,7 @@ class RediscalaClientTest {
         .getConstructors()(0)
         .newInstance(
           host,
-          Integer.valueOf(clientPort),
+          Integer.valueOf(port.intValue()),
           Option.apply(null),
           Option.apply(null),
           db,
@@ -115,7 +115,7 @@ class RediscalaClientTest {
           .getConstructors()(0)
           .newInstance(
             host,
-            Integer.valueOf(clientPort),
+            Integer.valueOf(port.intValue()),
             Option.apply(null),
             db,
             "RedisClient",
@@ -208,7 +208,7 @@ class RediscalaClientTest {
 
   @Test def testClientFailureUsesExceptionClassAsErrorType(): Unit = {
     val failedPort = PortUtils.findOpenPort()
-    val client = createClient(None, failedPort)
+    val client = createClient(None, JLong.valueOf(failedPort.toLong))
     try {
       val result = testing.runWithSpan(
         "parent",
