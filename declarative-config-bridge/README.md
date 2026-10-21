@@ -105,8 +105,9 @@ properties can be used. Calling `toConfigProperties()` rejects declarative-only 
 
 Keys use the same declarative config shape as `DeclarativeConfigProperties`. When producing system
 property keys, underscores are translated to hyphens, and keys ending in `/development` are
-translated using the bridge's `experimental.` convention. Custom property prefixes can be aligned
-with `DeclarativeConfigPropertiesBridgeBuilder` mappings via `defaults.addMapping(...)`.
+translated using the bridge's `experimental.` convention. `defaults.addMapping(...)` customizes
+property names only when `toConfigProperties()` exports defaults; it does not change the declarative
+path used by `applyToModel(...)` or restore custom flat-property-to-declarative mappings.
 
 The auto configuration **without declarative config** registers the defaults as a properties
 supplier, translating them to `otel.instrumentation.*` keys:

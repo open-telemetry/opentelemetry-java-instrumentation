@@ -93,12 +93,12 @@ public final class DefaultInstrumentationConfig {
   }
 
   /**
-   * Adds a property prefix mapping, mirroring {@link DeclarativeConfigPropertiesBridgeBuilder
-   * #addMapping(String, String)} in the opposite direction.
+   * Adds a mapping used when {@link #toConfigProperties()} exports defaults to flat properties.
    *
    * <p>For example, mapping {@code acme} to {@code acme.full_name} makes {@code
    * defaults.get("acme").get("full_name").setDefault("preserved", "true")} produce {@code
-   * acme.preserved=true}.
+   * acme.preserved=true}. This mapping does not change the declarative path used by {@link
+   * #applyToModel(OpenTelemetryConfigurationModel)}.
    */
   @CanIgnoreReturnValue
   public DefaultInstrumentationConfig addMapping(String propertyPrefix, String declarativePath) {
@@ -267,14 +267,19 @@ public final class DefaultInstrumentationConfig {
       return serializeServicePeerMapping(list);
     }
     for (Object item : list) {
-      if (!(item instanceof String)
-          && !(item instanceof Boolean)
-          && !(item instanceof Integer)
-          && !(item instanceof Long)
-          && !(item instanceof Double)) {
-        throw new IllegalArgumentException(
-            "structured list default has no traditional config serialization: " + declarativePath);
+      if (item instanceof String) {
+        continue;
       }
+      if (item instanceof Boolean
+          || item instanceof Integer
+          || item instanceof Long
+          || item instanceof Double) {
+        throw new IllegalArgumentException(
+            "scalar list default must contain only strings for traditional config: "
+                + declarativePath);
+      }
+      throw new IllegalArgumentException(
+          "structured list default has no traditional config serialization: " + declarativePath);
     }
     return list.stream().map(String::valueOf).collect(joining(","));
   }
@@ -294,11 +299,16 @@ public final class DefaultInstrumentationConfig {
                 throw new IllegalArgumentException(
                     "common.service_peer_mapping entries require string peer and service_name fields");
               }
+              String peerValue = (String) peer;
+              if (peerValue.indexOf(',') >= 0 || peerValue.indexOf('=') >= 0) {
+                throw new IllegalArgumentException(
+                    "common.service_peer_mapping peer must not contain ',' or '=': " + peerValue);
+              }
               if (fields.get("service_namespace") != null) {
                 throw new IllegalArgumentException(
                     "common.service_peer_mapping service_namespace is not supported by traditional configuration");
               }
-              return peer + "=" + serviceName;
+              return peerValue + "=" + serviceName;
             })
         .collect(joining(","));
   }

@@ -160,6 +160,44 @@ class DefaultInstrumentationConfigTest {
     assertThat(roundTripped.get(0).getString("service_name")).isEqualTo("checkout");
   }
 
+  private static Stream<Arguments> nonStringScalarListDefaults() {
+    return Stream.of(
+        argumentSet("numeric scalar list", "numeric", asList(42L)),
+        argumentSet("boolean scalar list", "boolean", asList(true)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("nonStringScalarListDefaults")
+  void toConfigPropertiesRejectsNonStringScalarListDefaults(String key, List<?> value) {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    String path = "acme." + key;
+    defaults.get("acme").setDefault(key, value);
+
+    assertThatThrownBy(defaults::toConfigProperties)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            "scalar list default must contain only strings for traditional config: " + path);
+  }
+
+  private static Stream<Arguments> invalidServicePeerMappingPeers() {
+    return Stream.of(
+        argumentSet("comma", "host1:5432,host2:5432"), argumentSet("equals", "host=alias"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidServicePeerMappingPeers")
+  void toConfigPropertiesRejectsServicePeerMappingPeersWithFlatDelimiters(String peer) {
+    Map<String, String> servicePeerMapping = new HashMap<>();
+    servicePeerMapping.put("peer", peer);
+    servicePeerMapping.put("service_name", "checkout");
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
+
+    assertThatThrownBy(defaults::toConfigProperties)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("common.service_peer_mapping peer must not contain ',' or '=': " + peer);
+  }
+
   @Test
   void toConfigPropertiesRejectsUnsupportedStructuredList() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
