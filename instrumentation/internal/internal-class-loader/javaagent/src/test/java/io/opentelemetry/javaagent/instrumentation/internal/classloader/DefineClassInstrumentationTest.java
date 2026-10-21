@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -96,7 +95,7 @@ class DefineClassInstrumentationTest {
           definedClass = cl.doDefineClass(className, bytecode, 0, bytecode.length, null);
           break;
         case "byteBuffer3":
-          ByteBuffer buffer = ByteBuffer.allocateDirect(bytecode.length);
+          ByteBuffer buffer = ByteBuffer.allocate(bytecode.length);
           buffer.put(bytecode);
           buffer.flip();
           definedClass = cl.doDefineClass(className, buffer, null);
@@ -110,12 +109,8 @@ class DefineClassInstrumentationTest {
 
     assertThat(definedClass.getName()).isEqualTo(className);
     assertThat(definedClass.getClassLoader()).isSameAs(cl);
-    // on openj9 the defineClass that accepts ByteBuffer delegates to the one that accepts byte
-    // array
-    VerificationMode verificationMode =
-        signature.equals("byteBuffer3") && System.getProperty("java.vm.name").contains("OpenJ9")
-            ? atLeast(1)
-            : times(1);
+    // defineClass that accepts ByteBuffer delegates to the one that accepts byte array
+    VerificationMode verificationMode = times(signature.equals("byteBuffer3") ? 2 : 1);
     verify(mockHandler, verificationMode)
         .beforeDefineClass(
             same(cl), eq(expectedClassName), eq(bytecode), eq(0), eq(bytecode.length));
