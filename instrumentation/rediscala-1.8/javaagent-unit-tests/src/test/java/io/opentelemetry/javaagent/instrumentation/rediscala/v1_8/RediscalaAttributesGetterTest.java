@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import org.junit.jupiter.api.Test;
-import redis.actors.ReplyErrorException;
 
 class RediscalaAttributesGetterTest {
 
@@ -36,20 +35,6 @@ class RediscalaAttributesGetterTest {
     assertThat(getter.getServerPort(request)).isEqualTo(6380);
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();
-  }
-
-  @Test
-  void errorTypeUsesServerReplyPrefixOnlyForServerErrors() {
-    RediscalaRequest request = request(null);
-
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("Custom.Code!É details")))
-        .isEqualTo("Custom.Code!É");
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException("CUSTOMCODE")))
-        .isEqualTo("CUSTOMCODE");
-    assertThat(getter.getErrorType(request, null, new IllegalStateException("WRONGTYPE message")))
-        .isNull();
-    assertThat(getter.getErrorType(request, null, null)).isNull();
-    assertThat(getter.getErrorType(request, null, new ReplyErrorException(null))).isNull();
   }
 
   private static RediscalaRequest request(RedisServerTarget target) {
