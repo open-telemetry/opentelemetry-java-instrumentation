@@ -35,8 +35,8 @@ import com.alipay.sofa.rpc.config.ConsumerConfig;
 import com.alipay.sofa.rpc.config.ProviderConfig;
 import com.alipay.sofa.rpc.config.ServerConfig;
 import com.alipay.sofa.rpc.context.RpcInternalContext;
+import com.alipay.sofa.rpc.core.exception.RpcErrorType;
 import com.alipay.sofa.rpc.core.exception.SofaRpcException;
-import com.alipay.sofa.rpc.core.exception.SofaRpcRuntimeException;
 import com.alipay.sofa.rpc.core.exception.SofaTimeOutException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
@@ -60,6 +60,8 @@ import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSofaRpcTest {
@@ -528,8 +530,9 @@ public abstract class AbstractSofaRpcTest {
     }
   }
 
-  @Test
-  void testSofaRpcRpcException() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testSofaRpcRpcException(boolean async) throws InterruptedException {
     int port = PortUtils.findOpenPort();
 
     ProviderConfig<ErrorService> providerConfig = configureErrorServer(port);
@@ -537,13 +540,29 @@ public abstract class AbstractSofaRpcTest {
     providerConfig.export();
 
     ConsumerConfig<ErrorService> consumerConfig = configureErrorClient(port);
+    if (async) {
+      consumerConfig.setInvokeType(RpcConstants.INVOKER_TYPE_FUTURE);
+      List<Filter> asyncFilters = new ArrayList<>(clientFilters());
+      asyncFilters.add(new ClearRpcInternalContextFilter());
+      consumerConfig.setFilterRef(asyncFilters);
+    }
     cleanup.deferCleanup(consumerConfig::unRefer);
     ErrorService errorService = consumerConfig.refer();
 
     Throwable clientException =
-        catchThrowable(() -> runWithSpan("parent", errorService::throwException));
-    assertThat(clientException).isInstanceOf(SofaRpcRuntimeException.class);
-    Throwable serverException = new SofaRpcRuntimeException("RPC error");
+        catchThrowable(
+            () ->
+                runWithSpan(
+                    "parent",
+                    () -> {
+                      if (async) {
+                        errorService.throwException();
+                        return SofaResponseFuture.getResponse(5000, false);
+                      }
+                      return errorService.throwException();
+                    }));
+    assertThat(clientException).isInstanceOf(SofaRpcException.class);
+    Throwable serverException = new SofaRpcException(RpcErrorType.SERVER_BIZ, "RPC error");
 
     testing()
         .waitAndAssertTraces(
@@ -579,11 +598,7 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? SofaRpcRuntimeException.class.getName()
-                                        : null))
+                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "160" : null))
                             .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     span ->
                         span.hasName(
@@ -610,11 +625,7 @@ public abstract class AbstractSofaRpcTest {
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? SofaRpcRuntimeException.class.getName()
-                                        : null))
+                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "160" : null))
                             .hasException(emitExceptionAsSpanEvents() ? serverException : null)));
 
     assertExceptionLogs(clientException, serverException);
@@ -687,9 +698,7 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
-                                                  equalTo(
-                                                      ERROR_TYPE,
-                                                      SofaRpcRuntimeException.class.getName()))))));
+                                                  equalTo(ERROR_TYPE, "160"))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -709,9 +718,7 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
-                                                  equalTo(
-                                                      ERROR_TYPE,
-                                                      SofaRpcRuntimeException.class.getName()),
+                                                  equalTo(ERROR_TYPE, "160"),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
