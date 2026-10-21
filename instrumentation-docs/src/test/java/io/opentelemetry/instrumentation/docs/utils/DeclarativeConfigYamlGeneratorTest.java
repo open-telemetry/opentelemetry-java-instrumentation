@@ -180,11 +180,11 @@ class DeclarativeConfigYamlGeneratorTest {
   void includesGlobalConfigurationsWithoutAnyModule() throws Exception {
     ConfigurationOption global =
         new ConfigurationOption(
-            "otel.instrumentation.common.v3-preview",
-            "java.common.v3_preview",
-            "Enables v3 preview.",
-            "false",
-            ConfigurationType.BOOLEAN,
+            "otel.instrumentation.common.span-suppression-strategy",
+            "java.common.span_suppression_strategy",
+            "Strategy for suppressing nested instrumentation spans.",
+            "semconv",
+            ConfigurationType.STRING,
             null,
             null,
             null,
@@ -194,9 +194,15 @@ class DeclarativeConfigYamlGeneratorTest {
     String output = generate(List.of(), List.of(global));
     Map<String, Object> parsed = parse(output);
 
-    assertThat(navigate(parsed, "instrumentation/development", "java", "common", "v3_preview"))
-        .isEqualTo(false);
-    assertThat(output).contains("# Enables v3 preview.");
+    assertThat(
+            navigate(
+                parsed,
+                "instrumentation/development",
+                "java",
+                "common",
+                "span_suppression_strategy"))
+        .isEqualTo("semconv");
+    assertThat(output).contains("# Strategy for suppressing nested instrumentation spans.");
   }
 
   @Test
@@ -246,8 +252,8 @@ class DeclarativeConfigYamlGeneratorTest {
                 "instrumentation/development",
                 "java",
                 "common",
-                "v3_preview"))
-        .isEqualTo(false);
+                "span_suppression_strategy"))
+        .isEqualTo("semconv");
   }
 
   @Test

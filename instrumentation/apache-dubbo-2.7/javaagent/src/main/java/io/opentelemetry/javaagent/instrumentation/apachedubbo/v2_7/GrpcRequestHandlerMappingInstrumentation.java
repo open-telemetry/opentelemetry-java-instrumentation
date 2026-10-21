@@ -43,7 +43,7 @@ public class GrpcRequestHandlerMappingInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class GetRequestHandlerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Timer onEnter() {
       if (!DubboUnknownServiceHelper.isEnabled()) {
@@ -52,7 +52,7 @@ public class GrpcRequestHandlerMappingInstrumentation implements TypeInstrumenta
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(1) Object requestObj,
         @Advice.Thrown Throwable throwable,

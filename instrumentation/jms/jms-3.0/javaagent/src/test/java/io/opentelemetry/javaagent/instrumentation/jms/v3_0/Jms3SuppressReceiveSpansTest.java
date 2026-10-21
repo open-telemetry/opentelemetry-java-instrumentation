@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.Destination;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
@@ -87,6 +89,68 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                             actualDestinationName.equals("(temporary)")
                                 ? "receive"
                                 : "receive " + actualDestinationName)
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(asRemote(publishSpan.get().getSpanContext())))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @ParameterizedTest
+  @MethodSource("jmsConsumerReceiveArguments")
+  void testJmsConsumerReceive(String queueName, JmsConsumerReceiver receiver) throws JMSException {
+
+    // given
+    Destination destination = session.createQueue(queueName);
+    TextMessage sentMessage = session.createTextMessage("hello there");
+
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer);
+
+    JMSContext context = connectionFactory.createContext("test", "test");
+    cleanup.deferCleanup(context);
+    JMSConsumer consumer = context.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    String actualDestinationName = ((ActiveMQDestination) destination).getName();
+
+    // when
+    testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
+    TextMessage receivedMessage =
+        (TextMessage) testing.runWithSpan("consumer parent", () -> receiver.receive(consumer));
+
+    // then
+    assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
+    String messageId = receivedMessage.getJMSMessageID();
+
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer parent").hasNoParent(),
+              span ->
+                  span.hasName("send " + actualDestinationName)
+                      .hasKind(PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
+                          messagingTempDestination(false)));
+          publishSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasNoParent(),
+                span ->
+                    span.hasName("receive " + actualDestinationName)
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(publishSpan.get().getSpanContext())))

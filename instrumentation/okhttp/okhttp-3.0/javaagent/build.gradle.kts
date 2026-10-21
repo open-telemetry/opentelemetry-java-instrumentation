@@ -34,6 +34,18 @@ testing {
         implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
       }
     }
+
+    register<JvmTestSuite>("okhttp4Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+      dependencies {
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+        implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+      }
+    }
   }
 }
 

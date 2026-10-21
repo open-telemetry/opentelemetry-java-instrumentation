@@ -65,6 +65,9 @@ final class ThriftRpcAttributesGetter
           return String.valueOf(errorCode);
       }
     }
+    if (error == null && response != null && response.isFailed()) {
+      return "_OTHER";
+    }
     return null;
   }
 }
