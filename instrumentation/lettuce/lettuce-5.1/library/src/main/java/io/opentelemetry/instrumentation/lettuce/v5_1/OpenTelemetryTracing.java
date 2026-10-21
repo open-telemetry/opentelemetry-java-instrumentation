@@ -216,7 +216,7 @@ final class OpenTelemetryTracing implements Tracing {
         completeableCommand.onComplete(
             (o, throwable) -> {
               Throwable error = throwable != null ? throwable : this.error;
-              // Older wrappers discard the exception, but their async result may already have it.
+              // CommandWrapper can report null even when its async delegate failed.
               if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
                 asyncCommand.whenComplete(
                     (result, terminalError) ->
