@@ -6,20 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static java.util.Collections.nCopies;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.lambdaworks.redis.RedisCommandExecutionException;
 import com.lambdaworks.redis.RedisCommandTimeoutException;
-import com.lambdaworks.redis.RedisConnectionException;
 import com.lambdaworks.redis.codec.Utf8StringCodec;
 import com.lambdaworks.redis.output.StatusOutput;
 import com.lambdaworks.redis.protocol.Command;
 import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import java.util.concurrent.CancellationException;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class LettuceDbAttributesGetterTest {
 
@@ -42,62 +43,22 @@ class LettuceDbAttributesGetterTest {
     assertThat(getter.getServerPort(command)).isEqualTo(null);
   }
 
-  @Test
-  void errorTypeUsesRedisReplyPrefixForCommandAndBatch() {
-    RedisCommand<String, String, String> command = command();
-    LettuceBatchRequest batch = LettuceBatchRequest.create(singletonList(command), null, null);
-    RedisCommandExecutionException error =
-        new RedisCommandExecutionException("WRONGTYPE Operation against a key");
-
-    assertThat(getter.getErrorType(command, null, error)).isEqualTo("WRONGTYPE");
-    assertThat(new LettuceBatchAttributesGetter().getErrorType(batch, null, error))
-        .isEqualTo("WRONGTYPE");
+  @ParameterizedTest
+  @MethodSource("errorTypes")
+  void errorType(Throwable error, String expected) {
+    assertThat(LettuceRedisErrorType.getErrorType(error)).isEqualTo(expected);
   }
 
-  @Test
-  void errorTypePreservesFallbackForClientAndUnstructuredErrors() {
-    RedisCommand<String, String, String> command = command();
-    LettuceBatchRequest batch = LettuceBatchRequest.create(singletonList(command), null, null);
-    LettuceBatchAttributesGetter batchGetter = new LettuceBatchAttributesGetter();
-
-    assertThat(getter.getErrorType(command, null, null)).isNull();
-    assertThat(batchGetter.getErrorType(batch, null, null)).isNull();
-    assertThat(getter.getErrorType(command, null, new RedisCommandExecutionException("not a code")))
-        .isNull();
-    assertThat(batchGetter.getErrorType(batch, null, new RedisCommandExecutionException(" ")))
-        .isNull();
-    assertThat(
-            getter.getErrorType(
-                command, null, new RedisCommandTimeoutException("WRONGTYPE command timed out")))
-        .isNull();
-    assertThat(
-            batchGetter.getErrorType(
-                batch, null, new RedisCommandTimeoutException("WRONGTYPE command timed out")))
-        .isNull();
-    assertThat(
-            getter.getErrorType(
-                command, null, new RedisConnectionException("WRONGTYPE connection closed")))
-        .isNull();
-    assertThat(
-            batchGetter.getErrorType(
-                batch, null, new RedisConnectionException("WRONGTYPE connection closed")))
-        .isNull();
-    assertThat(getter.getErrorType(command, null, new CancellationException("WRONGTYPE canceled")))
-        .isNull();
-    assertThat(
-            batchGetter.getErrorType(batch, null, new CancellationException("WRONGTYPE canceled")))
-        .isNull();
-    assertThat(getter.getErrorType(command, null, new IllegalStateException("WRONGTYPE client")))
-        .isNull();
-    assertThat(batchGetter.getErrorType(batch, null, new IllegalStateException("WRONGTYPE client")))
-        .isNull();
-    assertThat(
-            getter.getErrorType(command, null, new RedisCommandExecutionException((String) null)))
-        .isNull();
-    assertThat(
-            batchGetter.getErrorType(
-                batch, null, new RedisCommandExecutionException(String.join("", nCopies(65, "A")))))
-        .isNull();
+  private static Stream<Arguments> errorTypes() {
+    return Stream.of(
+        Arguments.of(
+            new RedisCommandExecutionException("WRONGTYPE Operation against a key"), "WRONGTYPE"),
+        Arguments.of(null, null),
+        Arguments.of(new RedisCommandTimeoutException("WRONGTYPE command timed out"), null),
+        Arguments.of(new RedisCommandExecutionException("wrongtype Operation against a key"), null),
+        Arguments.of(new RedisCommandExecutionException(" "), null),
+        Arguments.of(new RedisCommandExecutionException((String) null), null),
+        Arguments.of(new RedisCommandExecutionException(String.join("", nCopies(65, "A"))), null));
   }
 
   private static RedisCommand<String, String, String> command() {
