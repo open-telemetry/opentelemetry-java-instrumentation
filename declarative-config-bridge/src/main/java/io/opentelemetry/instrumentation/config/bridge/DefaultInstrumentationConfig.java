@@ -268,6 +268,10 @@ public final class DefaultInstrumentationConfig {
     }
     for (Object item : list) {
       if (item instanceof String) {
+        if (((String) item).indexOf(',') >= 0) {
+          throw new IllegalArgumentException(
+              "scalar list default must not contain ',' in an element: " + declarativePath);
+        }
         continue;
       }
       if (item instanceof Boolean
@@ -304,11 +308,17 @@ public final class DefaultInstrumentationConfig {
                 throw new IllegalArgumentException(
                     "common.service_peer_mapping peer must not contain ',' or '=': " + peerValue);
               }
+              String serviceNameValue = (String) serviceName;
+              if (serviceNameValue.indexOf(',') >= 0) {
+                throw new IllegalArgumentException(
+                    "common.service_peer_mapping service_name must not contain ',': "
+                        + serviceNameValue);
+              }
               if (fields.get("service_namespace") != null) {
                 throw new IllegalArgumentException(
                     "common.service_peer_mapping service_namespace is not supported by traditional configuration");
               }
-              return peerValue + "=" + serviceName;
+              return peerValue + "=" + serviceNameValue;
             })
         .collect(joining(","));
   }

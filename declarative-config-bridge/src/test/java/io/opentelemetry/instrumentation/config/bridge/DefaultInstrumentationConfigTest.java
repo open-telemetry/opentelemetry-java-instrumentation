@@ -139,17 +139,28 @@ class DefaultInstrumentationConfigTest {
   }
 
   @Test
+  void toConfigPropertiesRejectsCommaContainingScalarListElement() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("acme").setDefault("values", asList("alpha,beta"));
+
+    assertThatThrownBy(defaults::toConfigProperties)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("scalar list default must not contain ',' in an element: acme.values");
+  }
+
+  @Test
   void toConfigPropertiesRoundTripsServicePeerMappingThroughBridge() {
     Map<String, String> servicePeerMapping = new HashMap<>();
     servicePeerMapping.put("peer", "example.com");
-    servicePeerMapping.put("service_name", "checkout");
+    servicePeerMapping.put("service_name", "checkout=api");
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
 
     Map<String, String> properties = defaults.toConfigProperties();
 
     assertThat(properties)
-        .containsEntry("otel.instrumentation.common.peer-service-mapping", "example.com=checkout");
+        .containsEntry(
+            "otel.instrumentation.common.peer-service-mapping", "example.com=checkout=api");
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
             DefaultConfigProperties.createFromMap(properties));
@@ -157,7 +168,7 @@ class DefaultInstrumentationConfigTest {
         config.get("java").get("common").getStructuredList("service_peer_mapping");
     assertThat(roundTripped).hasSize(1);
     assertThat(roundTripped.get(0).getString("peer")).isEqualTo("example.com");
-    assertThat(roundTripped.get(0).getString("service_name")).isEqualTo("checkout");
+    assertThat(roundTripped.get(0).getString("service_name")).isEqualTo("checkout=api");
   }
 
   private static Stream<Arguments> nonStringScalarListDefaults() {
@@ -196,6 +207,20 @@ class DefaultInstrumentationConfigTest {
     assertThatThrownBy(defaults::toConfigProperties)
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("common.service_peer_mapping peer must not contain ',' or '=': " + peer);
+  }
+
+  @Test
+  void toConfigPropertiesRejectsCommaContainingServicePeerMappingServiceName() {
+    Map<String, String> servicePeerMapping = new HashMap<>();
+    servicePeerMapping.put("peer", "db");
+    servicePeerMapping.put("service_name", "checkout,api=other");
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
+
+    assertThatThrownBy(defaults::toConfigProperties)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            "common.service_peer_mapping service_name must not contain ',': checkout,api=other");
   }
 
   @Test
