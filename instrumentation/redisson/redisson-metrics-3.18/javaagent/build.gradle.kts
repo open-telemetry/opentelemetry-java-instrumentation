@@ -24,7 +24,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }

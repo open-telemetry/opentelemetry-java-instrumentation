@@ -169,7 +169,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"))));
   }
@@ -205,7 +205,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
                             equalTo(DB_OPERATION_NAME, "SADD"))
                         .hasParent(trace.getSpan(0)),
@@ -327,7 +327,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(DB_OPERATION_NAME, "MULTI SET"),
                             equalTo(DB_OPERATION_BATCH_SIZE, 2L),
                             equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
-                            equalTo(DB_NAMESPACE, dbNamespace())),
+                            equalTo(DB_NAMESPACE, dbNamespace("0"))),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -340,7 +340,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_OPERATION_NAME, "GET"),
                             equalTo(DB_QUERY_TEXT, "GET after-batch"))));
   }
@@ -418,7 +418,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(DB_OPERATION_NAME, "MULTI SET"),
                             equalTo(DB_OPERATION_BATCH_SIZE, 2L),
                             equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
-                            equalTo(DB_NAMESPACE, dbNamespace())),
+                            equalTo(DB_NAMESPACE, dbNamespace("0"))),
                 span ->
                     span.hasName("GET " + address)
                         .hasKind(CLIENT)
@@ -429,7 +429,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_OPERATION_NAME, "GET"),
                             equalTo(DB_QUERY_TEXT, "GET callback-get"))));
   }
@@ -443,8 +443,8 @@ public abstract class AbstractRedissonAsyncClientTest {
     return false;
   }
 
-  private String dbNamespace() {
-    return hasDatabaseIndex() ? "0" : null;
+  private String dbNamespace(String databaseIndex) {
+    return hasDatabaseIndex() ? databaseIndex : null;
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {

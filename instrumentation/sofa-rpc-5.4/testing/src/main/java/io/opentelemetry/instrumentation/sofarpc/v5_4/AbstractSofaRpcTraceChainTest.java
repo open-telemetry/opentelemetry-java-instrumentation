@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -45,8 +45,6 @@ public abstract class AbstractSofaRpcTraceChainTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
-
-  protected abstract boolean hasPeerService();
 
   protected String genericMethodName() {
     return "hello";
@@ -177,9 +175,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -231,9 +227,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"
                                         : "hello"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -455,9 +449,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

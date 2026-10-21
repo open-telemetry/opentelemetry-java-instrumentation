@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_STATE;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_CLIENT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -45,7 +45,7 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
         @Advice.This Object client,
         @Advice.Return @Nullable TransactionBuilder transactionBuilder) {
       if (transactionBuilder != null) {
-        TRANSACTION_STATE.set(transactionBuilder, new RediscalaTransactionState(client));
+        TRANSACTION_CLIENT.set(transactionBuilder, client);
       }
     }
   }

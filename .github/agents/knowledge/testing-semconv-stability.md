@@ -34,8 +34,7 @@ RPC and service-peer use `otel.semconv-stability.preview`. For RPC:
 To select both domains, use `otel.semconv-stability.preview=rpc,service.peer`.
 
 Legacy `opt-in` values for RPC and service-peer, including `/dup`, remain accepted and combine with
-preview values outside v3-preview. V3-preview ignores those legacy tokens for preview domains.
-Preserve tests that explicitly cover this compatibility behavior.
+preview values. Preserve tests that explicitly cover this compatibility behavior.
 
 The naming convention is `emitStable*Semconv()` for stable selection and
 `emitPreview*Semconv()` for preview selection.
@@ -74,7 +73,7 @@ the extra build-script complexity.
 For a domain with selectable stable conventions:
 
 ```kotlin
-val testStableSemconv by registering(Test::class) {
+val testStableSemconv = register<Test>("testStableSemconv") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.semconv-stability.opt-in=<domain>")
@@ -86,14 +85,14 @@ For a preview domain, use `testPreviewSemconv` and the preview property. Add the
 task only when the domain requires duplicate-mode coverage:
 
 ```kotlin
-val testPreviewSemconv by registering(Test::class) {
+val testPreviewSemconv = register<Test>("testPreviewSemconv") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.semconv-stability.preview=<domain>")
   systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
 }
 
-val testBothSemconv by registering(Test::class) {
+val testBothSemconv = register<Test>("testBothSemconv") {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.semconv-stability.preview=<domain>/dup")

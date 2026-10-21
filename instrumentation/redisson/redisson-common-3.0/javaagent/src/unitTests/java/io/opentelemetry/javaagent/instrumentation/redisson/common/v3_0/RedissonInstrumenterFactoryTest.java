@@ -17,6 +17,7 @@ import static java.util.Arrays.asList;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
@@ -63,6 +64,9 @@ class RedissonInstrumenterFactoryTest {
                           equalTo(DB_OPERATION_NAME, "MULTI SET"),
                           equalTo(DB_OPERATION_BATCH_SIZE, 2L),
                           equalTo(DB_QUERY_TEXT, "SET first ?; SET second ?")));
+      assertThat(exporter.getFinishedSpanItems())
+          .extracting(span -> span.getInstrumentationScopeInfo().getSchemaUrl())
+          .containsExactly(DbSchemaUrls.SCHEMA_URL);
     } finally {
       GlobalOpenTelemetry.resetForTest();
     }

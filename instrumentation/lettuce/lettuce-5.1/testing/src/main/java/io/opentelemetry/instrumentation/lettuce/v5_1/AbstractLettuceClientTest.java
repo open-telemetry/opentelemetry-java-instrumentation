@@ -89,25 +89,13 @@ public abstract class AbstractLettuceClientTest {
     return asList(assertions);
   }
 
-  protected static void assertCommandEncodeEvents(SpanData span) {
-    assertThat(span)
-        .hasEventsSatisfyingExactly(
-            event -> event.hasName("redis.encode.start"),
-            event -> event.hasName("redis.encode.end"));
-  }
-
   protected static void assertCommandErrorEvents(SpanData span) {
     if (testLatestDeps()) {
       assertThat(span)
           .hasException(
               new RedisCommandExecutionException(
                   "WRONGTYPE Operation against a key holding the wrong kind of value"))
-          .hasEventsSatisfyingExactly(
-              event -> event.hasName("redis.encode.start"),
-              event -> event.hasName("redis.encode.end"),
-              event -> event.hasName("exception"));
-    } else {
-      assertCommandEncodeEvents(span);
+          .hasEventsSatisfyingExactly(event -> event.hasName("exception"));
     }
   }
 

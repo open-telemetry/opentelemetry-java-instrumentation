@@ -103,8 +103,8 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns a description of a class of error the operation ended with.
    *
-   * <p>This method is only called if the request failed before response status code was sent or
-   * received.
+   * <p>This method is called if no valid response status code was sent or received, or if the
+   * request failed with an exception after a non-error response status code was sent or received.
    *
    * <p>If this method is not implemented, or if it returns {@code null}, the exception class name
    * (if any was caught) or the value {@value HttpConstants#_OTHER} will be used as error type.

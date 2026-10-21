@@ -8,9 +8,12 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -34,6 +37,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,6 +70,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -101,6 +107,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClientBuilder;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
@@ -330,7 +338,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 equalTo(RPC_SYSTEM, "aws-api"),
                 equalTo(RPC_SERVICE, service),
                 equalTo(RPC_METHOD, operation),
-                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                 equalTo(AWS_REQUEST_ID, requestId)));
 
     if (service.equals("S3")) {
@@ -385,7 +393,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     }
 
     if (service.equals("Sqs") && operation.equals("CreateQueue")) {
-      attributes.add(equalTo(stringKey("aws.queue.name"), "somequeue"));
+      attributes.add(equalTo(stringKey("aws.queue.name"), experimental("somequeue")));
     }
 
     if (service.equals("Sqs") && operation.equals("SendMessage")) {
@@ -419,14 +427,17 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       switch (operation) {
         case "GetFunction":
           attributes.add(
-              equalTo(stringKey("aws.lambda.function.name"), "lambda-function-name-foo"));
+              equalTo(
+                  stringKey("aws.lambda.function.name"), experimental("lambda-function-name-foo")));
           attributes.add(
               equalTo(
                   stringKey("aws.lambda.function.arn"),
-                  "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo"));
+                  experimental(
+                      "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo")));
           break;
         case "CreateEventSourceMapping":
-          attributes.add(equalTo(stringKey("aws.lambda.function.name"), "myFn01-Temp"));
+          attributes.add(
+              equalTo(stringKey("aws.lambda.function.name"), experimental("myFn01-Temp")));
           attributes.add(
               equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "e31def54-5e5d-4c1b-8e0f-bf1b11c137b7"));
           break;
@@ -490,19 +501,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   @MethodSource("provideS3Arguments")
   void testS3Client(String operation, String method, Function<S3Client, Object> call)
       throws ReflectiveOperationException {
-    S3ClientBuilder builder = S3Client.builder();
-    if (testLatestDeps()) {
-      Method forcePathStyleMethod =
-          S3ClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
-      forcePathStyleMethod.invoke(builder, true);
-    }
-    configureSdkClient(builder);
-    S3Client client =
-        builder
-            .endpointOverride(clientUri)
-            .region(Region.AP_NORTHEAST_1)
-            .credentialsProvider(CREDENTIALS_PROVIDER)
-            .build();
+    S3Client client = createS3Client();
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
@@ -513,6 +512,111 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             r -> assertThat(r.getClass().getSimpleName()).startsWith(operation),
             r -> assertThat(r).isInstanceOf(ResponseInputStream.class));
     clientAssertions("S3", operation, method, response, "UNKNOWN");
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = {"NoSuchBucket", "AccessDenied"})
+  void testS3ServiceError(String errorCode) throws ReflectiveOperationException {
+    S3Client client = createS3Client();
+
+    server.enqueue(
+        HttpResponse.of(
+            HttpStatus.FORBIDDEN,
+            MediaType.XML_UTF_8,
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<Error xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
+                + (errorCode == null ? "" : "<Code>" + errorCode + "</Code>")
+                + "<Message>service failure</Message>"
+                + "<RequestId>request-id</RequestId>"
+                + "<HostId>host-id</HostId>"
+                + "</Error>"));
+
+    Throwable caught =
+        catchThrowable(
+            () ->
+                client.listObjectsV2(ListObjectsV2Request.builder().bucket("somebucket").build()));
+    assertThat(caught).isInstanceOf(S3Exception.class);
+    S3Exception error = (S3Exception) caught;
+    assertThat(error.awsErrorDetails()).isNotNull();
+    if (errorCode != null) {
+      assertThat(error.awsErrorDetails().errorCode()).isEqualTo(errorCode);
+    } else {
+      assertThat(error.awsErrorDetails().errorCode()).isNull();
+    }
+
+    String expectedErrorType =
+        emitPreviewRpcSemconv()
+            ? errorCode != null ? errorCode : S3Exception.class.getName()
+            : null;
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("S3.ListObjectsV2")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                satisfies(
+                                    SERVER_ADDRESS,
+                                    value -> value.matches("somebucket.localhost|localhost")),
+                                satisfies(
+                                    URL_FULL,
+                                    value ->
+                                        value.satisfiesAnyOf(
+                                            v ->
+                                                assertThat(v)
+                                                    .startsWith(
+                                                        "http://somebucket.localhost:"
+                                                            + server.httpPort()),
+                                            v ->
+                                                assertThat(v)
+                                                    .startsWith(
+                                                        "http://localhost:"
+                                                            + server.httpPort()
+                                                            + "/somebucket"))),
+                                equalTo(SERVER_PORT, server.httpPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "aws-api" : null),
+                                equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "S3" : null),
+                                equalTo(
+                                    RPC_METHOD, emitPreviewRpcSemconv() ? null : "ListObjectsV2"),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "aws-api" : null),
+                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                                equalTo(AWS_S3_BUCKET, "somebucket"),
+                                equalTo(AWS_REQUEST_ID, null),
+                                equalTo(ERROR_TYPE, expectedErrorType))));
+
+    if (emitExceptionAsLogs()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("rpc.client.call.exception")
+                      .hasException(error)
+                      .hasTotalAttributeCount(3));
+    }
+  }
+
+  private S3Client createS3Client() throws ReflectiveOperationException {
+    S3ClientBuilder builder = S3Client.builder();
+    if (testLatestDeps()) {
+      Method forcePathStyleMethod =
+          S3ClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
+      forcePathStyleMethod.invoke(builder, true);
+    }
+    configureSdkClient(builder);
+    return builder
+        .endpointOverride(clientUri)
+        .region(Region.AP_NORTHEAST_1)
+        .credentialsProvider(CREDENTIALS_PROVIDER)
+        .build();
   }
 
   @ParameterizedTest
@@ -923,7 +1027,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                                 equalTo(AWS_S3_BUCKET, "somebucket"))));
 
     if (emitExceptionAsLogs()) {

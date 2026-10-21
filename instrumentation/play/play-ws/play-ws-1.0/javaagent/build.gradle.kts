@@ -41,10 +41,6 @@ dependencies {
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false

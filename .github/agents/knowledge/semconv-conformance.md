@@ -14,8 +14,8 @@ generated constants are available, while instrumentations may intentionally pres
 from an older convention. For a domain with multiple supported modes, resolve the effective mode
 through
 [`SemconvSelectionResolver`](../../../instrumentation-api/src/main/java/io/opentelemetry/instrumentation/api/internal/SemconvSelectionResolver.java).
-The resolver applies structured per-domain settings before stability and preview flags and accounts
-for v3-preview behavior. Use the matching released documentation rather than silently comparing
+The resolver applies structured per-domain settings before stability and preview flags. Use the
+matching released documentation rather than silently comparing
 existing telemetry with the latest conventions. If the target version cannot be established, do
 not draw a version-specific conformance conclusion. See
 [testing-semconv-stability.md](testing-semconv-stability.md) for legacy opt-in test modes.
@@ -39,6 +39,24 @@ semantic-convention attribute only when its name, type, and meaning match exactl
 the
 [general attribute naming guidance](https://opentelemetry.io/docs/specs/semconv/general/naming/)
 and this repository's experimental telemetry rules.
+
+## Select schema URLs
+
+A schema URL identifies the semantic convention defining a span, metric, or log, not every
+registered attribute attached to it. Select the version adopted by that signal and its effective
+mode, not the latest semconv dependency.
+
+Supporting attributes must not select, change, or invalidate the schema.
+
+For example:
+
+- HTTP operations use the HTTP schema.
+- GenAI operations use the GenAI schema, despite supporting RPC attributes.
+- Controller spans have no defined semantic convention, so leave their schema unset even when
+  nested under an HTTP server span.
+- Code or exception attributes alone do not justify assigning a schema to a custom operation.
+
+If no semantic convention defines the emitted signal, leave its schema URL unset.
 
 ## Weigh normative language
 

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,10 +16,7 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import io.opentelemetry.sdk.internal.SdkConfigProvider;
-import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -44,57 +40,12 @@ class ExperimentalConfigTest {
         .isTrue();
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"controller", "view"})
-  void yamlTelemetryConfig(String telemetry) {
-    String yaml = "file_format: 1.1\n" + "instrumentation/development:\n" + "  java:\n";
-    assertThat(
-            telemetryEnabled(
-                new ExperimentalConfig(yamlConfig(yaml + "    common: {}\n")), telemetry))
-        .isFalse();
-
-    String commonConfig = yaml + "    common:\n";
-    assertThat(
-            telemetryEnabled(
-                new ExperimentalConfig(
-                    yamlConfig(commonConfig + "      " + telemetry + "_telemetry: {}\n")),
-                telemetry))
-        .isFalse();
-
-    String telemetryConfig = commonConfig + "      " + telemetry + "_telemetry:\n";
-    assertThat(
-            telemetryEnabled(
-                new ExperimentalConfig(yamlConfig(telemetryConfig + "        enabled: false\n")),
-                telemetry))
-        .isFalse();
-    assertThat(
-            telemetryEnabled(
-                new ExperimentalConfig(yamlConfig(telemetryConfig + "        enabled: true\n")),
-                telemetry))
-        .isTrue();
-  }
-
   private static ExtendedOpenTelemetry flatConfig(Map<String, String> properties) {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(openTelemetry.getInstrumentationConfig("common"))
         .thenReturn(
             DeclarativeConfigBridge.createInstrumentationConfig(
                     DefaultConfigProperties.createFromMap(properties))
-                .getInstrumentationConfig()
-                .getStructured("java")
-                .getStructured("common"));
-
-    return openTelemetry;
-  }
-
-  private static ExtendedOpenTelemetry yamlConfig(String yaml) {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(openTelemetry.getInstrumentationConfig("common"))
-        .thenReturn(
-            SdkConfigProvider.create(
-                    DeclarativeConfiguration.toConfigProperties(
-                        DeclarativeConfiguration.parse(
-                            new ByteArrayInputStream(yaml.getBytes(UTF_8)))))
                 .getInstrumentationConfig()
                 .getStructured("java")
                 .getStructured("common"));

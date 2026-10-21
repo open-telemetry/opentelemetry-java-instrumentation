@@ -6,9 +6,7 @@ muzzle {
   pass {
     group.set("io.lettuce")
     module.set("lettuce-core")
-    // by default this module only applies to pre-5.1 (see classLoaderMatcher); under v3-preview it
-    // also covers 5.1+, but muzzle cannot evaluate that runtime branch
-    versions.set("[5.0.0.RELEASE,5.1.0.RELEASE)")
+    versions.set("[5.0.0.RELEASE,)")
     assertInverse.set(true)
   }
 }
@@ -23,9 +21,8 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:lettuce:lettuce-4.0:javaagent"))
-  testInstrumentation(project(":instrumentation:lettuce:lettuce-5.1:javaagent"))
 
-  latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see lettuce-5.1 module
+  latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see test suite below
 }
 
 testing {
@@ -60,7 +57,7 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("v3PreviewLettuce51Test") {
+    register<JvmTestSuite>("lettuce51Test") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -73,16 +70,9 @@ testing {
         implementation("io.lettuce:lettuce-core:$lettuceVersion")
         implementation("org.testcontainers:testcontainers")
       }
-
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-        }
-      }
     }
 
-    register<JvmTestSuite>("v3PreviewLettuce60Test") {
+    register<JvmTestSuite>("lettuce60Test") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -95,16 +85,9 @@ testing {
         implementation("io.lettuce:lettuce-core:$lettuceVersion")
         implementation("org.testcontainers:testcontainers")
       }
-
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-        }
-      }
     }
 
-    register<JvmTestSuite>("v3PreviewLettuce65Test") {
+    register<JvmTestSuite>("lettuce65Test") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java", "src/testLettuce65/java"))
@@ -117,13 +100,6 @@ testing {
         implementation("io.lettuce:lettuce-core:$lettuceVersion")
         implementation("org.testcontainers:testcontainers")
       }
-
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-        }
-      }
     }
   }
 }
@@ -131,13 +107,11 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   if (otelProps.denyUnsafe) {
     // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
-    named("v3PreviewLettuce51Test", Test::class) {
+    named("lettuce51Test", Test::class) {
       enabled = false
     }
   }
@@ -194,15 +168,6 @@ tasks {
       )
     }
 
-  // exercises the v3-preview path, where this advice-based module supersedes the SPI-based
-  // lettuce-5.1 javaagent module (which is disabled under v3-preview)
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
   check {
     dependsOn(
       testing.suites,
@@ -210,7 +175,6 @@ tasks {
       testConnectionTelemetryEnabledPreviewSemconv,
       previewSemconvSuites,
       testExperimental,
-      testV3Preview
     )
   }
 }

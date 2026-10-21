@@ -28,6 +28,7 @@ otelJava {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
+    jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
   }
 
   val testExperimental = register<Test>("testExperimental") {

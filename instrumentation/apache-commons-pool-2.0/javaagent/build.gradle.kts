@@ -24,8 +24,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.apache-commons-pool.enabled=true")
   }
 }

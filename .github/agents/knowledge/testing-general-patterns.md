@@ -16,6 +16,21 @@ for each required version. Keep tests that run on the baseline in the default `t
 place only newer-version-specific tests in a dedicated `JvmTestSuite`; do not count a unit suite
 as coverage for the missing integration runtime.
 
+## Configuration test ownership
+
+For settings available in both forms, prefer default-behavior and module-specific flat-property tests.
+The bridge exposes flat properties through the declarative API; test conversion centrally rather
+than repeating behavior assertions for equivalent YAML.
+
+Shared helpers own defaults, fallback, and precedence tests. Keep caller-specific logic covered,
+and add missing central coverage before removing a module test.
+
+Retain declarative tests for structured/YAML-only settings, distinct binding, parsing, initialization,
+or migration paths, and native configuration integration. Single-source declarative unit tests are not duplicates.
+
+Remove unused fixtures, dependencies, task registrations, and metadata-collection inputs with redundant
+variants. Keep metadata describing supported settings.
+
 ## Instrumentation enablement selectors
 
 Javaagent selectors such as `otel.instrumentation.<name>.enabled` are escape
@@ -26,7 +41,7 @@ Do not add per-instrumentation selector tests, including for new modules,
 renames, aliases, or consolidations:
 
 - No `instrumentationNames()` or name-order assertions.
-- No enable/disable matrices, precedence, fallback, legacy/v3-preview, flat/YAML
+- No enable/disable matrices, precedence, fallback, legacy-name handling, flat/YAML
   parity, or deprecation-warning checks.
 - No test projects, source sets, JVM variants, fixtures, or dependencies solely
   for those checks.
@@ -337,11 +352,12 @@ expected:
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
 
-### Read the flag through a shared static helper, not a per-class field
+### Read mode flags through helpers
 
-Each flag has a shared static accessor; static-import it and call it directly. Never call
-`Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
-site.
+Use the shared static accessors below for global test modes. Static-import them rather than reading
+properties in assertions or builder calls. Module-specific flags can use a constant when every
+fixture reads the same property, or an instance method when the configuration source varies by
+fixture.
 
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
@@ -352,6 +368,35 @@ site.
 
 Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
 and `emitPreview*Semconv()` for preview selection.
+
+### Shared agent and library fixtures
+
+Shared tests can exercise an option configured through a production property in the agent and
+through a builder in the plain library. Resolve the mode in an instance method on the shared test
+base, using the production property for agent fixtures and a test-only flag for plain-library
+fixtures. For example, the AWS SDK tests use:
+
+```java
+protected boolean captureExperimentalSpanAttributes() {
+  return testing() instanceof AgentInstrumentationExtension
+      ? EXPERIMENTAL_ATTRIBUTES
+      : Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+}
+```
+
+Here `EXPERIMENTAL_ATTRIBUTES` reads the agent's production property. Use the same method in
+library builder setup and expected-value helpers. Keep selection dependent on the concrete
+fixture instance; do not cache the resolved mode in a shared static field.
+
+Library-autoconfigure fixtures can use `LibraryInstrumentationExtension` while genuinely reading
+production properties. Override the shared method in those fixtures to select the production
+setting. Preserve overrides that intentionally force a value for a regression scenario.
+This distinction applies to builder-controlled options, not shared production settings that
+libraries actually read. See the
+[library variant example](testing-experimental-flags.md#programmatically-configured-library-tests)
+for Gradle wiring and metadata labels. For synthetic header capture in baseline fixtures and its
+metadata treatment, follow the
+[canonical collection guidance](../../../instrumentation-docs/readme.md#telemetry-collection).
 
 ### Mode-dependent expected values
 

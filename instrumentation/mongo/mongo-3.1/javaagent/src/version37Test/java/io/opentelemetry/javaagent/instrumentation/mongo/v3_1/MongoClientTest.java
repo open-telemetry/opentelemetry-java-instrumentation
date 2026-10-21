@@ -121,6 +121,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
+  protected Document runCommand(String dbName, Document command) {
+    return client.getDatabase(dbName).runCommand(command);
+  }
+
+  @Override
   protected MongoCollection<Document> setupInsert(String dbName, String collectionName) {
     MongoCollection<Document> collection =
         testing()
@@ -246,10 +251,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
                     span.satisfies(
                         spanData -> {
                           assertThat(spanData.getInstrumentationScopeInfo().getName())
-                              .isEqualTo(
-                                  Boolean.getBoolean("otel.instrumentation.common.v3-preview")
-                                      ? "io.opentelemetry.mongo-3.1"
-                                      : "io.opentelemetry.mongo-3.7");
+                              .isEqualTo("io.opentelemetry.mongo-3.1");
                           assertThat(spanData.getInstrumentationScopeInfo().getVersion())
                               .isNotEmpty();
                         })));

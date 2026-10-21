@@ -193,7 +193,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET")),
                 span ->
@@ -206,7 +206,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "GET foo"),
                             equalTo(DB_OPERATION_NAME, "GET"))));
   }
@@ -229,7 +229,7 @@ public abstract class AbstractRedissonClientTest {
                           equalTo(SERVER_ADDRESS, host),
                           equalTo(SERVER_PORT, port),
                           equalTo(DB_SYSTEM_NAME, REDIS),
-                          equalTo(DB_NAMESPACE, dbNamespace()),
+                          equalTo(DB_NAMESPACE, dbNamespace("0")),
                           equalTo(DB_QUERY_TEXT, "SET foo ?"),
                           equalTo(DB_OPERATION_NAME, "SET")));
         });
@@ -353,7 +353,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, expectedServerAddress),
                             equalTo(SERVER_PORT, expectedServerPort),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "SET configured-target ?"),
                             equalTo(DB_OPERATION_NAME, "SET"))));
   }
@@ -376,7 +376,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
@@ -390,7 +390,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "GET foo"),
                             equalTo(DB_OPERATION_NAME, "GET"))));
   }
@@ -424,7 +424,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_OPERATION_NAME, scenario.operationName),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                             equalTo(DB_QUERY_TEXT, scenario.queryText))));
@@ -494,7 +494,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
                             equalTo(DB_OPERATION_BATCH_SIZE, (long) batchSize),
                             equalTo(
@@ -538,7 +538,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(DB_OPERATION_NAME, "MULTI SET"),
                             equalTo(DB_OPERATION_BATCH_SIZE, 2L),
                             equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
-                            equalTo(DB_NAMESPACE, dbNamespace()))));
+                            equalTo(DB_NAMESPACE, dbNamespace("0")))));
   }
 
   @Test
@@ -733,7 +733,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(DB_OPERATION_BATCH_SIZE, 2L),
                             equalTo(ERROR_TYPE, error.getClass().getName()),
                             equalTo(DB_QUERY_TEXT, "HGET wrongtype field; SET after ?"),
-                            equalTo(DB_NAMESPACE, dbNamespace()))),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("SET " + address).hasKind(CLIENT).hasNoParent()));
@@ -797,7 +797,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "RPUSH list1 ?"),
                             equalTo(DB_OPERATION_NAME, "RPUSH"))
                         .hasNoParent()));
@@ -824,7 +824,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, String.format("EVAL %s 1 map1 ? ?", script)),
                             equalTo(DB_OPERATION_NAME, "EVAL"))),
         trace ->
@@ -838,7 +838,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "HGET map1 key1"),
                             equalTo(DB_OPERATION_NAME, "HGET"))));
   }
@@ -861,7 +861,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
                             equalTo(DB_OPERATION_NAME, "SADD"))));
   }
@@ -890,7 +890,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "ZADD sort_set1 ? ? ? ? ? ?"),
                             equalTo(DB_OPERATION_NAME, "ZADD"))));
   }
@@ -918,7 +918,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_QUERY_TEXT, "INCR AtomicLong"),
                             equalTo(DB_OPERATION_NAME, "INCR"))));
   }
@@ -946,7 +946,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_OPERATION_NAME, "EVAL"),
                             satisfies(DB_QUERY_TEXT, val -> val.startsWith("EVAL")))));
     traceAsserts.add(
@@ -961,7 +961,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
                             equalTo(DB_OPERATION_NAME, "EVAL"),
                             satisfies(DB_QUERY_TEXT, val -> val.startsWith("EVAL")))));
     if (lockHas3Traces()) {
@@ -977,7 +977,7 @@ public abstract class AbstractRedissonClientTest {
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, port),
                               equalTo(DB_SYSTEM_NAME, REDIS),
-                              equalTo(DB_NAMESPACE, dbNamespace()),
+                              equalTo(DB_NAMESPACE, dbNamespace("0")),
                               equalTo(DB_OPERATION_NAME, "DEL"),
                               satisfies(DB_QUERY_TEXT, val -> val.startsWith("DEL")))));
     }
@@ -996,10 +996,6 @@ public abstract class AbstractRedissonClientTest {
   /** Whether the instrumented redisson version can report the Redis database index. */
   protected boolean hasDatabaseIndex() {
     return false;
-  }
-
-  private String dbNamespace() {
-    return dbNamespace("0");
   }
 
   private String dbNamespace(String databaseIndex) {

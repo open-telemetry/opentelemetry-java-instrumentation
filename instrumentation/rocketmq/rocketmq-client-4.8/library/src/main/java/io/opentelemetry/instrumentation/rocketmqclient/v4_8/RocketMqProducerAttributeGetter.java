@@ -97,6 +97,9 @@ final class RocketMqProducerAttributeGetter
     if (!isBatch(request)) {
       return null;
     }
+    if (request instanceof RocketMqProducerWrapper.BatchSendContext) {
+      return ((RocketMqProducerWrapper.BatchSendContext) request).messageCount;
+    }
     if (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
       return RocketMqBatchSendSpanLinksExtractor.getBatchMessageCount(request);
     }
@@ -109,6 +112,7 @@ final class RocketMqProducerAttributeGetter
 
   private static boolean isBatch(SendMessageContext request) {
     return RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)
+        || request instanceof RocketMqProducerWrapper.BatchSendContext
         || RocketMqMessageUtil.isBatch(request.getMessage());
   }
 

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertNoMessagingMetrics;
@@ -64,6 +65,7 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -184,6 +186,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     testing.clearData();
     recoveringChannel.queueDeclare();
+    String recoveredPeerAddress = recoveringChannel.getConnection().getAddress().getHostAddress();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -191,7 +194,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 span ->
                     span.hasAttributesSatisfyingExactly(
                         equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                        satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
+                        satisfies(
+                            NETWORK_PEER_ADDRESS, val -> val.isIn(recoveredPeerAddress, null)),
                         satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                         satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
                         equalTo(stringKey("rabbitmq.command"), experimental("queue.declare")),
@@ -288,6 +292,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       exchangeName,
                       trace.getSpan(0));
                   producerSpan.set(trace.getSpan(4));
+                  span.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0));
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(
