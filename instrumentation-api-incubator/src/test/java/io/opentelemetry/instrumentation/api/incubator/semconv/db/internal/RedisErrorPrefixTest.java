@@ -43,6 +43,6 @@ class RedisErrorPrefixTest {
         argumentSet("tab only", "\t", "\t"),
         argumentSet("spaces before tab", "  \tERR detail", "\tERR"),
         argumentSet("Unicode space", "ERR\u2003custom detail", "ERR\u2003custom"),
-        argumentSet("Unicode text", "ERR\u00e9\u4e2d detail", "ERR\u00e9\u4e2d"));
+        argumentSet("Unicode text", "ERRé中 detail", "ERRé中"));
   }
 }
