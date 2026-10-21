@@ -92,11 +92,13 @@ class ServiceErrorTest {
         arguments.add(
             Arguments.of(
                 operation, async, 429, error("\"insufficient_quota\""), "insufficient_quota"));
-        for (String code : new String[] {"null", "\"\"", "\"   \"", "42", "{}"}) {
+        for (String code : new String[] {"null", "42", "{}"}) {
           arguments.add(
               Arguments.of(
                   operation, async, 400, error(code), BadRequestException.class.getName()));
         }
+        arguments.add(Arguments.of(operation, async, 400, error("\"\""), ""));
+        arguments.add(Arguments.of(operation, async, 400, error("\"   \""), "   "));
         arguments.add(
             Arguments.of(
                 operation,

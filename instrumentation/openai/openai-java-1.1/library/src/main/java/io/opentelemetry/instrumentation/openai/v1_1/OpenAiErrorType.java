@@ -17,18 +17,12 @@ final class OpenAiErrorType {
       return null;
     }
 
-    String code;
     try {
-      code = ((OpenAIServiceException) error).code().orElse("");
+      return ((OpenAIServiceException) error).code().orElse(null);
     } catch (OpenAIInvalidDataException ignored) {
       // Typed SDK accessors can throw for an unexpected JSON field type.
       return null;
     }
-
-    if (code.codePoints().allMatch(Character::isWhitespace)) {
-      return null;
-    }
-    return code;
   }
 
   private OpenAiErrorType() {}
