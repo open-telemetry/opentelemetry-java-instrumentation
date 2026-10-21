@@ -295,6 +295,9 @@
 
 - The `TracingSqsMessageHandler` customization constructor now accepts an
   `Instrumenter<SQSMessage, Boolean>`.
+- Remove `setSanitizeQuery(boolean)` and `setAddOperationNameToSpanName(boolean)` from the GraphQL
+  Java 12.0 and 20.0 library builders. Use `setQuerySanitizationEnabled(boolean)` and
+  `setOperationNameInSpanNameEnabled(boolean)` instead.
 - In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency
   helpers are private.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
