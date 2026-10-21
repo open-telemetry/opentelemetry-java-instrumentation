@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
+  Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
+- `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
+  (which didn't work properly anyways).
 - Kotlin suspend function `@WithSpan` instrumentation now uses only the
   `kotlinx-coroutines-annotations` selector and is disabled by default. Use
   `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true` instead of the
@@ -291,8 +295,19 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove deprecated `DeclarativeConfigPropertiesBridge` and
+  `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
+  `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.
+- In `opentelemetry-instrumentation-api-incubator`, custom
+  `MessagingAttributesGetter` implementations must implement `getMessageHeaderNames`, returning
+  supported header names or an empty iterable for carriers without supported headers.
+- Remove deprecated `ProcessResource.get()`. Replace it with `ProcessResource.create()` to omit
+  command-line attributes, or `ProcessResource.create(true)` to retain them.
 - The `TracingSqsMessageHandler` customization constructor now accepts an
   `Instrumenter<SQSMessage, Boolean>`.
+- Remove `setSanitizeQuery(boolean)` and `setAddOperationNameToSpanName(boolean)` from the GraphQL
+  Java 12.0 and 20.0 library builders. Use `setQuerySanitizationEnabled(boolean)` and
+  `setOperationNameInSpanNameEnabled(boolean)` instead.
 - In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency
   helpers are private.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
