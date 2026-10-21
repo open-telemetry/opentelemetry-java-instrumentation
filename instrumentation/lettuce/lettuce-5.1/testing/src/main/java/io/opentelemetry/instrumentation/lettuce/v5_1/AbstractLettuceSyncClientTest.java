@@ -28,6 +28,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.RedisException;
+import io.lettuce.core.RedisNoScriptException;
 import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -297,6 +298,40 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
     assertCommandErrorMetric("WRONGTYPE");
+  }
+
+  @Test
+  void testEvalshaNoScriptError() {
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                syncCommands.evalsha(
+                    "0000000000000000000000000000000000000000", ScriptOutputType.VALUE));
+
+    assertThat(thrown).isInstanceOf(RedisNoScriptException.class);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("EVALSHA"))
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(DB_SYSTEM_NAME, REDIS),
+                                    equalTo(
+                                        DB_QUERY_TEXT,
+                                        "EVALSHA 0000000000000000000000000000000000000000 0"),
+                                    equalTo(DB_OPERATION_NAME, "EVALSHA"),
+                                    equalTo(ERROR_TYPE, "NOSCRIPT")))));
+
+    assertCommandErrorMetric("NOSCRIPT");
   }
 
   @Test
