@@ -25,6 +25,26 @@ public class AwsLambdaSqsMetricsAssertions {
       long processCount,
       long consumedMessageCount,
       String errorType) {
+    assertMetrics(
+        testing,
+        instrumentationName,
+        destination,
+        processCount,
+        consumedMessageCount,
+        errorType,
+        0,
+        null);
+  }
+
+  public static void assertMetrics(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String destination,
+      long processCount,
+      long consumedMessageCount,
+      String errorType,
+      long failedProcessCount,
+      String failedProcessErrorType) {
     testing.waitAndAssertMetrics(
         instrumentationName,
         "messaging.process.duration",
@@ -35,7 +55,8 @@ public class AwsLambdaSqsMetricsAssertions {
                         .hasUnit("s")
                         .hasDescription("Duration of processing operation.")
                         .hasHistogramSatisfying(
-                            histogram ->
+                            histogram -> {
+                              if (failedProcessCount == 0) {
                                 histogram.hasPointsSatisfying(
                                     point ->
                                         point
@@ -48,7 +69,35 @@ public class AwsLambdaSqsMetricsAssertions {
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(ERROR_TYPE, errorType))))));
+                                                equalTo(ERROR_TYPE, errorType)));
+                              } else {
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .satisfies(
+                                                data ->
+                                                    assertThat(data.getCount())
+                                                        .isEqualTo(processCount))
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                                equalTo(ERROR_TYPE, errorType)),
+                                    point ->
+                                        point
+                                            .satisfies(
+                                                data ->
+                                                    assertThat(data.getCount())
+                                                        .isEqualTo(failedProcessCount))
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                                equalTo(ERROR_TYPE, failedProcessErrorType)));
+                              }
+                            })));
     testing.waitAndAssertMetrics(
         instrumentationName,
         "messaging.client.consumed.messages",

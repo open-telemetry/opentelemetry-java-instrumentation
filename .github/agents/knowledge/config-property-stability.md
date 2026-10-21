@@ -59,7 +59,6 @@ Examples:
 - `otel.instrumentation.http.client.capture-request-headers` ↔ `request_captured_headers` — **stable**
 - `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` ↔ `sqlcommenter/development: { enabled: true }` — **experimental**
 - `otel.instrumentation.http.client.emit-experimental-telemetry` ↔ `emit_experimental_telemetry/development: true` — **experimental**
-- `otel.instrumentation.common.v3-preview` — **preview**
 
 ## Deprecation Communication
 
@@ -87,45 +86,37 @@ Boolean value = config.getBoolean("new_key");
 if (value != null) {
   return value;
 }
-if (!v3Preview) { // stable names only; see below
-  Boolean deprecatedValue = config.getBoolean("old_key");
-  if (deprecatedValue != null) {
-    warnOnce();
-    return deprecatedValue;
-  }
+Boolean deprecatedValue = config.getBoolean("old_key");
+if (deprecatedValue != null) {
+  warnOnce();
+  return deprecatedValue;
 }
 return defaultValue;
 ```
 
 The nullable reads are intentional: migration code must detect absence before applying the default.
-Keep the deprecated read inside the `!v3Preview` branch rather than reading it eagerly and
-discarding it later.
 
 Replacement-first lookup also supports warning-free upgrades with centralized configuration:
 operators can publish both names while old versions use the deprecated property and new versions use
 the replacement, then remove the deprecated property after rollout. A warning then identifies a
 deployment that still depends on the deprecated value, not one merely carrying it for compatibility.
 
-The `!v3Preview` guard applies only to **stable** property names, whose deprecated spelling must
-survive until 3.0. Preview mode must reproduce 3.0 behavior: 3.0 will no longer know about the
-deprecated property, so it will not read, apply, or warn about it, while preceding minor releases
-still warn outside preview mode. An `experimental`- or `preview`-marked property can be removed in
-the next minor release, so there is nothing for preview mode to reproduce: drop the guard, the
-`v3Preview` parameter, and the v3-preview test variant, and keep only the warning.
+Stable property names remain supported until the next major version, so keep reading the deprecated
+name as a fallback and warn only when that value is applied. An `experimental`- or `preview`-marked
+property can be removed in the next minor release; it does not need a separate compatibility mode.
 
 These hypothetical deprecated names illustrate the two treatments:
 
 | Hypothetical deprecated property                         | Marker         | Treatment                                 |
 | -------------------------------------------------------- | -------------- | ----------------------------------------- |
-| `otel.instrumentation.<module>.old-setting`              | none (stable)  | v3-preview gated, removed in 3.0          |
-| `otel.instrumentation.<module>.experimental.old-setting` | `experimental` | ungated, may be removed in the next minor |
-| `otel.instrumentation.<module>.preview-old-setting`      | `preview`      | ungated, may be removed in the next minor |
+| `otel.instrumentation.<module>.old-setting`              | none (stable)  | retained as fallback until the next major |
+| `otel.instrumentation.<module>.experimental.old-setting` | `experimental` | may be removed in the next minor          |
+| `otel.instrumentation.<module>.preview-old-setting`      | `preview`      | may be removed in the next minor          |
 
 Instrumentation enablement name aliases are an exception. Enablement resolves across an ordered list
 of equivalent names, while the warning is driven by explicit legacy-key presence, so the replacement
-alias can determine the result while the legacy alias still warns. Under v3 preview the legacy alias
-is dropped from resolution and its key silently ignored. Do not copy this behavior into ordinary
-property fallback.
+alias can determine the result while the legacy alias still warns. Do not copy this behavior into
+ordinary property fallback.
 
 ## Naming Conventions
 

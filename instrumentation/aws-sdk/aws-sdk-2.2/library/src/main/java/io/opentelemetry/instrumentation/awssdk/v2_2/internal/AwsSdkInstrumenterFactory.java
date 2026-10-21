@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -29,12 +28,15 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.internal.GenAiSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -44,6 +46,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -54,7 +57,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -128,8 +130,6 @@ public final class AwsSdkInstrumenterFactory {
     };
   }
 
-  private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
 
@@ -162,21 +162,24 @@ public final class AwsSdkInstrumenterFactory {
       httpClientSuppressionAttributesExtractor =
           new AwsSdkHttpClientSuppressionAttributesExtractor();
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
+      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
+
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultAttributesExtractors =
           asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedAttributesExtractors =
           asList(
               rpcAttributesExtractor,
               experimentalAttributesExtractor,
               httpClientSuppressionAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultConsumerAttributesExtractors = asList(rpcAttributesExtractor, httpAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedConsumerAttributesExtractors =
           asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
 
@@ -255,7 +258,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.get());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingReceiveExceptionEventExtractor(builder);
           builder.addSpanLinksExtractor(
               (spanLinks, parentContext, request) -> {
@@ -282,7 +285,7 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractor(
                 messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME))
             .addOperationMetrics(processMetrics)
-            .setSchemaUrl(messagingSchemaUrl());
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
     if (!messagingReceiveInstrumentationEnabled) {
       builder.addContextCustomizer(
           (context, request, startAttributes) ->
@@ -366,7 +369,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingProducerMetrics.get());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingSendExceptionEventExtractor(builder);
           builder.addSpanLinksExtractor(
               (spanLinks, parentContext, request) -> {
@@ -389,7 +392,7 @@ public final class AwsSdkInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
         .addAttributesExtractor(
             messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
-        .setSchemaUrl(messagingSchemaUrl())
+        .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
         .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
@@ -407,13 +410,14 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.get());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingSettleExceptionEventExtractor(builder);
         },
         true);
   }
 
   public Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter() {
+    DynamoDbAttributesGetter getter = new DynamoDbAttributesGetter();
     return createInstrumenter(
         openTelemetry,
         AwsSdkInstrumenterFactory::spanName,
@@ -421,9 +425,9 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractors(),
         builder -> {
           builder
-              .addAttributesExtractor(new DynamoDbAttributesExtractor())
+              .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(SchemaUrls.V1_44_0);
+              .setSchemaUrl(DbSchemaUrls.SCHEMA_URL);
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -442,7 +446,7 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(SqlClientAttributesExtractor.create(getter))
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(SchemaUrls.V1_44_0);
+              .setSchemaUrl(DbSchemaUrls.SCHEMA_URL);
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -459,14 +463,19 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
               .addAttributesExtractor(new BedrockRuntimeAttributesExtractor())
-              .addOperationMetrics(GenAiClientMetrics.get());
+              .addOperationMetrics(GenAiClientMetrics.get())
+              .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL);
           setGenAiClientExceptionEventExtractor(builder);
         },
         true);
   }
 
   public Logger eventLogger() {
-    return openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
+    return openTelemetry
+        .getLogsBridge()
+        .loggerBuilder(INSTRUMENTATION_NAME)
+        .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
+        .build();
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(

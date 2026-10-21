@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -80,6 +81,7 @@ import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,7 +106,9 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
       "Answer in up to 3 words: Which ocean contains Bouvet Island?";
 
   protected static SpanDataAssert assertChatSpan(SpanDataAssert span) {
-    return span.hasName("chat " + TEST_CHAT_MODEL).hasKind(SpanKind.CLIENT);
+    return span.hasName("chat " + TEST_CHAT_MODEL)
+        .hasKind(SpanKind.CLIENT)
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0));
   }
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -220,6 +224,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -235,6 +240,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -268,11 +274,13 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
             log -> {
               log.hasAttributesSatisfyingExactly(
                       equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                   .hasSpanContext(spanCtx)
+                  .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                   .hasBody(
                       Value.of(
                           KeyValue.of("finish_reason", Value.of("stop")),

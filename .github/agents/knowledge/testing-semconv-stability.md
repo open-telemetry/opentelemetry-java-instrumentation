@@ -34,8 +34,7 @@ RPC and service-peer use `otel.semconv-stability.preview`. For RPC:
 To select both domains, use `otel.semconv-stability.preview=rpc,service.peer`.
 
 Legacy `opt-in` values for RPC and service-peer, including `/dup`, remain accepted and combine with
-preview values outside v3-preview. V3-preview ignores those legacy tokens for preview domains.
-Preserve tests that explicitly cover this compatibility behavior.
+preview values. Preserve tests that explicitly cover this compatibility behavior.
 
 The naming convention is `emitStable*Semconv()` for stable selection and
 `emitPreview*Semconv()` for preview selection.

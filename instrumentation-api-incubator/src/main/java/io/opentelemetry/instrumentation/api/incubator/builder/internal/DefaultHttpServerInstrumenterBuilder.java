@@ -31,7 +31,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -272,7 +272,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get())
-            .setSchemaUrl(SchemaUrls.V1_41_0);
+            .setSchemaUrl(HttpSchemaUrls.SCHEMA_URL);
     Experimental.setExceptionEventExtractor(
         builder,
         (logRecordBuilder, context, request) -> {

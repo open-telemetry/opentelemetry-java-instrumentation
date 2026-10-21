@@ -16,7 +16,9 @@ public abstract class AbstractAwsSdkTest {
   // Plain library fixtures enable capture through the builder. Agent fixtures use the property.
   // Library-autoconfigure fixtures override this method because they also use the property.
   protected boolean captureExperimentalSpanAttributes() {
-    return !(testing() instanceof AgentInstrumentationExtension) || EXPERIMENTAL_ATTRIBUTES;
+    return testing() instanceof AgentInstrumentationExtension
+        ? EXPERIMENTAL_ATTRIBUTES
+        : Boolean.getBoolean("test.captureExperimentalSpanAttributes");
   }
 
   protected final String experimental(String value) {
