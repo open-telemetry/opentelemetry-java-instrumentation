@@ -341,6 +341,33 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
+  void carriedContextIsNotCapturedAsContextDataAttribute() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("*")).build())
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("key", "value");
+    contextData.putValue(
+        OTEL_CONTEXT_DATA_KEY, Context.root().with(TEST_CONTEXT_KEY, "context-value"));
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord -> logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "value")));
+  }
+
+  @Test
   void configurationFileContextDataSelector() {
     Logger selectorLogger = LogManager.getLogger("ContextDataSelectorTestLogger");
     ThreadContext.put("selector-included", "captured");
