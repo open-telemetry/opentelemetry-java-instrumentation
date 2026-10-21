@@ -7,11 +7,9 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,22 +18,6 @@ import java.util.Map;
  * any time.
  */
 public final class SemconvStability {
-
-  private static final boolean v3Preview = v3Preview(GlobalOpenTelemetry.getOrNoop());
-
-  public static boolean v3Preview(OpenTelemetry openTelemetry) {
-    Boolean value = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview");
-    if (value != null) {
-      return value;
-    }
-    // Library instrumentation tests configure this mode using JVM system properties, so a direct
-    // system-property fallback is needed.
-    return SystemProperty.getBoolean("otel.instrumentation.common.v3-preview", false);
-  }
-
-  public static boolean v3Preview() { // to be removed in 3.0
-    return v3Preview;
-  }
 
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()
@@ -53,10 +35,6 @@ public final class SemconvStability {
 
   public static boolean emitPreviewRpcSemconv(OpenTelemetry openTelemetry) {
     return emitStable(selectionResolver(openTelemetry).rpc());
-  }
-
-  public static String rpcSchemaUrl(OpenTelemetry openTelemetry) {
-    return emitPreviewRpcSemconv(openTelemetry) ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
   }
 
   private static SemconvSelectionResolver selectionResolver(OpenTelemetry openTelemetry) {
@@ -95,10 +73,6 @@ public final class SemconvStability {
 
   private static boolean emitStable(SemconvMode mode) {
     return mode.version() >= 1;
-  }
-
-  public static String messagingSchemaUrl() {
-    return SchemaUrls.V1_43_0;
   }
 
   private SemconvStability() {}
