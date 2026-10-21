@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
+  Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
 - `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
   (which didn't work properly anyways).
 - Kotlin suspend function `@WithSpan` instrumentation now uses only the
@@ -293,6 +295,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove deprecated `DeclarativeConfigPropertiesBridge` and
+  `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
+  `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.
 - In `opentelemetry-instrumentation-api-incubator`, custom
   `MessagingAttributesGetter` implementations must implement `getMessageHeaderNames`, returning
   supported header names or an empty iterable for carriers without supported headers.

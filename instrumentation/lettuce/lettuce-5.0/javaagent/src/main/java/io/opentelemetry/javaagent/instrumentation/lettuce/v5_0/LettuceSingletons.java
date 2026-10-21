@@ -47,6 +47,7 @@ public class LettuceSingletons {
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 
@@ -59,6 +60,7 @@ public class LettuceSingletons {
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(batchAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(batchBuilder);
     batchInstrumenter = batchBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());

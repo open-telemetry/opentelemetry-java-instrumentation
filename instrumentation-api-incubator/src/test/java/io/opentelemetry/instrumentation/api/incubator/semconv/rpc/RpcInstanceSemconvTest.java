@@ -316,6 +316,7 @@ class RpcInstanceSemconvTest {
       instrumenter =
           Instrumenter.<String, Void>builder(
                   openTelemetry, "test", RpcSpanNameExtractor.create(getter))
+              .setSchemaUrl(selection.schemaUrl())
               .addAttributesExtractor(
                   client
                       ? RpcClientAttributesExtractor.create(getter)

@@ -5,16 +5,16 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.Collections.emptyEnumeration;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.enumeration;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,16 +41,15 @@ class ServiceLoaderUtilTest {
   }
 
   @Test
-  void preservesContextClassLoader() throws IOException {
-    ClassLoader contextClassLoader = mock(ClassLoader.class);
-    when(contextClassLoader.getResources("META-INF/services/java.lang.Runnable"))
-        .thenReturn(enumeration(emptyList()));
+  void preservesContextClassLoader() {
+    TestClassLoader contextClassLoader = new TestClassLoader();
     Thread.currentThread().setContextClassLoader(contextClassLoader);
     Runnable provider = () -> {};
 
     assertThat(ServiceLoaderUtil.load(Runnable.class, () -> singletonList(provider))).isEmpty();
 
-    verify(contextClassLoader).getResources("META-INF/services/java.lang.Runnable");
+    assertThat(contextClassLoader.resourcesRequests)
+        .containsExactly("META-INF/services/java.lang.Runnable");
   }
 
   @ParameterizedTest
@@ -58,7 +57,7 @@ class ServiceLoaderUtilTest {
   void customLoaderTakesPrecedence(boolean sameClassLoader) {
     Thread.currentThread()
         .setContextClassLoader(
-            sameClassLoader ? Runnable.class.getClassLoader() : mock(ClassLoader.class));
+            sameClassLoader ? Runnable.class.getClassLoader() : new TestClassLoader());
     Runnable provider = () -> {};
     ServiceLoaderUtil.setLoadFunction(
         clazz -> {
@@ -81,15 +80,14 @@ class ServiceLoaderUtilTest {
   }
 
   @Test
-  void originalLoadMethodUsesContextClassLoader() throws IOException {
-    ClassLoader contextClassLoader = mock(ClassLoader.class);
-    when(contextClassLoader.getResources("META-INF/services/java.lang.Runnable"))
-        .thenReturn(enumeration(emptyList()));
+  void originalLoadMethodUsesContextClassLoader() {
+    TestClassLoader contextClassLoader = new TestClassLoader();
     Thread.currentThread().setContextClassLoader(contextClassLoader);
 
     assertThat(ServiceLoaderUtil.load(Runnable.class)).isEmpty();
 
-    verify(contextClassLoader).getResources("META-INF/services/java.lang.Runnable");
+    assertThat(contextClassLoader.resourcesRequests)
+        .containsExactly("META-INF/services/java.lang.Runnable");
   }
 
   @Test
@@ -110,5 +108,15 @@ class ServiceLoaderUtilTest {
 
     assertThatThrownBy(() -> ServiceLoaderUtil.load(Runnable.class, () -> emptyList()))
         .isSameAs(failure);
+  }
+
+  private static class TestClassLoader extends ClassLoader {
+    final List<String> resourcesRequests = new ArrayList<>();
+
+    @Override
+    public Enumeration<URL> getResources(String name) {
+      resourcesRequests.add(name);
+      return emptyEnumeration();
+    }
   }
 }
