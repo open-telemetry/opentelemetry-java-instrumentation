@@ -12,6 +12,13 @@ convention not caught by CI.
 
 ## Behavior coverage
 
+- Prefer integration tests for instrumentation behavior. Exercise the library through its normal
+  API, use a real service when relevant, and assert emitted telemetry. For javaagent changes, use
+  the installed agent against the required library versions to exercise class transformation and
+  library compatibility.
+- Use focused unit tests for nontrivial standalone logic and shared infrastructure when they add
+  coverage beyond integration tests. Choose cases for distinct behavior and important edge cases,
+  not to enumerate every implementation branch or combination of mocked responses.
 - Test supported behavior. Do not add or request tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted
@@ -37,11 +44,6 @@ convention not caught by CI.
   absence assertions in unrelated integration or smoke tests. Keep focused
   coverage for supported settings, changed defaults, explicit opt-in/opt-out,
   and default enablement, as well as exact assertions of supported telemetry.
-- For a javaagent change supporting multiple runtime library versions,
-  look for tests with the installed agent against the required versions.
-  Direct helper tests and `javaagent-unit-tests` do not exercise class
-  transformation or the actual library; do not count them as integration
-  coverage.
 - For a module whose default enablement changes, the same representative
   operation must emit instrumentation telemetry in an enabled JVM and no
   instrumentation telemetry in a disabled JVM. A `DefaultEnablementTest`
@@ -52,7 +54,7 @@ convention not caught by CI.
   are escape hatches for buggy instrumentation, not general telemetry-tuning
   settings. Do not add or request per-instrumentation selector tests for new
   modules, aliases, renames, or consolidations. This includes module name-list
-  assertions, enable/disable matrices, precedence, legacy/v3-preview handling,
+  assertions, enable/disable matrices, precedence, legacy-name handling,
   flat/YAML parity, warning checks, and dedicated JVM variants or test projects.
   Test shared enablement or alias-helper changes centrally. Keep coverage for
   actual default-enablement changes as described above, feature settings, and

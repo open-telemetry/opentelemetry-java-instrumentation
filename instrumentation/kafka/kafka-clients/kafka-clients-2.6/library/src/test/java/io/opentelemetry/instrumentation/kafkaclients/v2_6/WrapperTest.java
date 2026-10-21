@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
@@ -30,6 +31,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,50 +55,73 @@ import org.junit.jupiter.api.Test;
 class WrapperTest extends AbstractWrapperTest {
 
   @Override
-  void configure(KafkaTelemetryBuilder builder) {
-    builder.setMessagingReceiveTelemetryEnabled(true);
-  }
-
-  @Override
   void assertTraces(boolean testHeaders, boolean testExperimental) {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName("send " + SHARED_TOPIC)
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(testHeaders, testExperimental)),
-              span ->
-                  span.hasName("process " + SHARED_TOPIC)
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
-                      .hasAttributesSatisfyingExactly(
-                          processAttributes(greeting, testHeaders, testExperimental)),
-              span ->
-                  span.hasName("process child")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(2)),
-              span ->
-                  span.hasName("producer callback")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(0)));
-          producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
-        },
-        trace ->
+    if (MESSAGING_RECEIVE_TELEMETRY_ENABLED) {
+      testing.waitAndAssertTraces(
+          trace -> {
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("poll " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
-                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
-    assertMessagingMetrics();
+                    span.hasName("send " + SHARED_TOPIC)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(testHeaders, testExperimental)),
+                span ->
+                    span.hasName("process " + SHARED_TOPIC)
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(greeting, testHeaders, testExperimental)),
+                span ->
+                    span.hasName("process child")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2)),
+                span ->
+                    span.hasName("producer callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)));
+            producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
+          },
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
+                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+      assertMessagingMetrics();
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      span.hasName("send " + SHARED_TOPIC)
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              sendAttributes(testHeaders, testExperimental)),
+                  span ->
+                      span.hasName("process " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes(greeting, testHeaders, testExperimental)),
+                  span ->
+                      span.hasName("process child")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(2)),
+                  span ->
+                      span.hasName("producer callback")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))));
+      assertMessagingMetricsWithoutReceiveTelemetry();
+    }
   }
 
   private static void assertMessagingMetrics() {
@@ -104,6 +129,14 @@ class WrapperTest extends AbstractWrapperTest {
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
     assertReceiveMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, 1, null);
     assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
+  }
+
+  private static void assertMessagingMetricsWithoutReceiveTelemetry() {
+    String instrumentationName = "io.opentelemetry.kafka-clients-2.6";
+    assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
+    assertProcessMetricsWithConsumedMessages(
+        testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, 1, null);
     assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
@@ -196,9 +229,9 @@ class WrapperTest extends AbstractWrapperTest {
 
   @Test
   void testConsumerError() {
-    KafkaTelemetryBuilder telemetryBuilder = KafkaTelemetry.builder(testing.getOpenTelemetry());
-    configure(telemetryBuilder);
-    KafkaTelemetry telemetry = telemetryBuilder.build();
+    assumeTrue(MESSAGING_RECEIVE_TELEMETRY_ENABLED);
+
+    KafkaTelemetry telemetry = kafkaTelemetryBuilder().build();
 
     Consumer<?, ?> mockConsumer = mock();
     IllegalStateException error = new IllegalStateException("test");

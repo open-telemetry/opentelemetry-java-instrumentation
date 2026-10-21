@@ -868,7 +868,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return bootstrap;
   }
 
-  protected void assertHighConcurrency(int count) {
+  private void assertHighConcurrency(int count) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
@@ -906,7 +906,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     testing.waitAndAssertTraces(assertions);
   }
 
-  protected void assertHighConcurrencyWithRequestBody(int count) {
+  private void assertHighConcurrencyWithRequestBody(int count) {
     ServerEndpoint endpoint = INDEXED_CHILD_FROM_REQUEST_BODY;
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
@@ -946,7 +946,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     testing.waitAndAssertTraces(assertions);
   }
 
-  protected String assertResponseHasCustomizedHeaders(
+  protected final String assertResponseHasCustomizedHeaders(
       AggregatedHttpResponse response, ServerEndpoint endpoint, String expectedTraceId) {
     if (!options.hasResponseCustomizer.test(endpoint)) {
       return null;
@@ -967,7 +967,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   // NOTE: this method does not currently implement asserting all the span types that groovy
   // HttpServerTest does
-  protected void assertTheTraces(
+  protected final void assertTheTraces(
       int size,
       String traceId,
       String parentId,
@@ -1081,7 +1081,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertControllerSpan(SpanDataAssert span, Throwable expectedException) {
+  protected final SpanDataAssert assertControllerSpan(
+      SpanDataAssert span, Throwable expectedException) {
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (expectedException != null) {
       span.hasStatus(StatusData.error())
@@ -1090,7 +1091,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
-  protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+  protected final void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
     Awaitility.await()
         .untilAsserted(
             () -> {
@@ -1172,7 +1173,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertServerSpan(
+  protected final SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint, int statusCode) {
     return assertServerSpan(
         span, method, endpoint, statusCode, options.sockPeerAddr.apply(endpoint), TEST_CLIENT_IP);
@@ -1291,7 +1292,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
+  private SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     String method = "GET";
     return assertServerSpan(span, method, endpoint, endpoint.status)
@@ -1301,7 +1302,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
+  private static SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
@@ -1310,7 +1311,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedBodyServerSpan(SpanDataAssert span) {
+  private SpanDataAssert assertIndexedBodyServerSpan(SpanDataAssert span) {
     ServerEndpoint endpoint = INDEXED_CHILD_FROM_REQUEST_BODY;
     String method = "POST";
     return assertServerSpan(span, method, endpoint, endpoint.status)
@@ -1318,7 +1319,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
+  private static SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         // The request id belongs on the nested body-consumer span only, not on the controller.
@@ -1330,7 +1331,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedBodyConsumerSpan(SpanDataAssert span, int requestId) {
+  private static SpanDataAssert assertIndexedBodyConsumerSpan(SpanDataAssert span, int requestId) {
     span.hasName("body-consumer")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(

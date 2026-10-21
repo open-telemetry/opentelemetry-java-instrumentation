@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder
 import io.opentelemetry.instrumentation.api.internal.LoggerUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import javax.annotation.Nullable;
@@ -24,7 +24,7 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
   private static final Logger logger =
       LoggerUtil.createLogger(
-          GlobalOpenTelemetry.get(), "io.opentelemetry.vertx-web-3.0", SchemaUrls.V1_41_0);
+          GlobalOpenTelemetry.get(), "io.opentelemetry.vertx-web-3.0", HttpSchemaUrls.SCHEMA_URL);
 
   private final Handler<RoutingContext> handler;
 

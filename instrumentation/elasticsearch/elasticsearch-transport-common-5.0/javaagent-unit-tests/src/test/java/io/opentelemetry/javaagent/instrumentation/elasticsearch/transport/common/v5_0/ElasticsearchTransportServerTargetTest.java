@@ -43,6 +43,28 @@ class ElasticsearchTransportServerTargetTest {
   }
 
   @Test
+  void multipleAddressesOmitTheirSharedDefaultPort() {
+    DbServerTarget target =
+        ElasticsearchTransportServerTarget.of(
+            asList(new Endpoint("10.0.0.1", 9300), new Endpoint("10.0.0.2", 9300)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("10.0.0.1,10.0.0.2");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void multipleAddressesIncludeTheirSharedNonDefaultPort() {
+    DbServerTarget target =
+        ElasticsearchTransportServerTarget.of(
+            asList(new Endpoint("10.0.0.1", 9400), new Endpoint("10.0.0.2", 9400)));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("10.0.0.1:9400,10.0.0.2:9400");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
   void configuredTransportAddressOrderDoesNotChangeTarget() {
     DbServerTarget first =
         ElasticsearchTransportServerTarget.of(

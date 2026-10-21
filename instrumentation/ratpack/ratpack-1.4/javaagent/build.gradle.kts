@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -59,7 +62,7 @@ listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
   }
 }
 
-val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
+testing.suites.register<JvmTestSuite>("version17Test") {
   dependencies {
     implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
     implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
@@ -72,50 +75,52 @@ val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("otel.instrumentation.common.controller-telemetry.enabled", true)
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
-  }
-
-  test {
-    systemProperty("ratpack14Test", true)
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-    systemProperty("ratpack14Test", true)
-  }
-
-  val version17TestPreviewSemconv = register<Test>("version17TestPreviewSemconv") {
-    testClassesDirs = version17Test.get().sources.output.classesDirs
-    classpath = version17Test.get().sources.runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*server.RatpackHttpServerTest.requestWithException")
-    }
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv.exception.signal.preview=logs"
-    )
-    systemProperty("ratpack14Test", true)
-  }
-
-  check {
-    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv, testExceptionSignalLogs)
   }
 
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
+    }
+  }
+
+  testing.suites.withType<JvmTestSuite>().configureEach {
+    val ratpack14Test = name == "test"
+    executions {
+      configureEach {
+        if (ratpack14Test) {
+          systemProperty("ratpack14Test", true)
+        }
+      }
+      register("PreviewSemconv") {
+        telemetryConfig("otel.semconv-stability.preview", "service.peer")
+      }
+      register("ExceptionSignalLogs") {
+        telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+        telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+        filter {
+          includeTestsMatching("*server.RatpackHttpServerTest.requestWithException")
+          includeTestsMatching("*server.RatpackErrorContextTest.errorsUseRequestContext")
+        }
+      }
+      register("ControllerTelemetryDisabledExceptionSignalLogs") {
+        filter {
+          includeTestsMatching("*server.RatpackErrorContextTest.errorsUseRequestContext")
+        }
+        systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
+        systemProperty("otel.semconv.exception.signal.preview", "logs")
+        systemProperties.remove("metadataConfig")
+      }
+      register("ControllerTelemetryDisabled") {
+        filter {
+          includeTestsMatching(
+            "io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server.RatpackErrorContextTest"
+          )
+        }
+        systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
+        systemProperties.remove("metadataConfig")
+      }
     }
   }
 }

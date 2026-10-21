@@ -64,6 +64,10 @@ tasks {
     filter {
       includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
       includeTestsMatching("*ArmeriaHttp2ServerTest.requestWithException")
+      includeTestsMatching("*ArmeriaHttpServerTest.responseException*")
+      includeTestsMatching("*ArmeriaHttp2ServerTest.responseException*")
+      includeTestsMatching("*ArmeriaHttpServerTest.wrappedResponseExceptionIsReported")
+      includeTestsMatching("*ArmeriaHttp2ServerTest.wrappedResponseExceptionIsReported")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
