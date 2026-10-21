@@ -16,6 +16,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.TransactionFraming;
 import javax.annotation.Nullable;
@@ -44,6 +45,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
     public static class AdviceState {
       @Nullable private final Context context;
       @Nullable private final JedisRequest request;
+      @Nullable private JedisRequestContext<JedisRequest> replyContext;
       @Nullable public Scope scope;
       @Nullable public TransactionFraming previousTransactionFraming;
 
@@ -57,7 +59,9 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
           scope.close();
         }
         if (context != null && request != null) {
-          instrumenter().end(context, request, null, throwable);
+          Throwable completionThrowable =
+              replyContext != null ? replyContext.detachAndEnd(throwable) : throwable;
+          instrumenter().end(context, request, null, completionThrowable);
         }
       }
     }
@@ -85,7 +89,13 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       if (context != null) {
         try {
           adviceState.scope = context.makeCurrent();
+          if (request != null) {
+            adviceState.replyContext = JedisRequestContext.attachForBatch(request);
+          }
         } catch (Throwable t) {
+          if (adviceState.replyContext != null) {
+            adviceState.replyContext.detachAndEnd(null);
+          }
           currentTransactionFraming().restore(adviceState.previousTransactionFraming);
           throw t;
         }

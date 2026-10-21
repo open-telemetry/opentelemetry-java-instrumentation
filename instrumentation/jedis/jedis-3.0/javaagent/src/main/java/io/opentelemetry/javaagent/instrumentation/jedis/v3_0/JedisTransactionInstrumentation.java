@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -40,12 +41,17 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final JedisRequest request;
+      @Nullable private final JedisRequestContext<JedisRequest> replyContext;
 
       private AdviceScope(
-          @Nullable Context context, @Nullable Scope scope, @Nullable JedisRequest request) {
+          @Nullable Context context,
+          @Nullable Scope scope,
+          @Nullable JedisRequest request,
+          @Nullable JedisRequestContext<JedisRequest> replyContext) {
         this.context = context;
         this.scope = scope;
         this.request = request;
+        this.replyContext = replyContext;
       }
 
       public static AdviceScope start(Transaction transaction) {
@@ -57,22 +63,25 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
           // An empty transaction sends nothing for the batch, and with no captured request there
           // is no connection to derive server attributes from, so it is not reported as a batch
           // span.
-          return new AdviceScope(null, null, null);
+          return new AdviceScope(null, null, null, null);
         }
         JedisRequest request = JedisRequest.createTransaction(requests);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
-          return new AdviceScope(null, null, null);
+          return new AdviceScope(null, null, null, null);
         }
         Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(context, context.makeCurrent(), request);
+        return new AdviceScope(
+            context, context.makeCurrent(), request, JedisRequestContext.attachForBatch(request));
       }
 
       public void end(@Nullable Throwable throwable) {
         JedisPipelineContext.exitTransactionFraming();
         if (scope != null) {
           scope.close();
-          instrumenter().end(context, request, null, throwable);
+          Throwable completionThrowable =
+              replyContext != null ? replyContext.detachAndEnd(throwable) : throwable;
+          instrumenter().end(context, request, null, completionThrowable);
         }
       }
     }

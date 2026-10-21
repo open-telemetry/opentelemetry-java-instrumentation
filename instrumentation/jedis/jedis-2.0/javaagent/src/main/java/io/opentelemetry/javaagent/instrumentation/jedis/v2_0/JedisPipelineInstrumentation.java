@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -78,11 +79,17 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
       private final JedisRequest request;
+      @Nullable private final JedisRequestContext<JedisRequest> replyContext;
 
-      private AdviceScope(Context context, Scope scope, JedisRequest request) {
+      private AdviceScope(
+          Context context,
+          Scope scope,
+          JedisRequest request,
+          @Nullable JedisRequestContext<JedisRequest> replyContext) {
         this.context = context;
         this.scope = scope;
         this.request = request;
+        this.replyContext = replyContext;
       }
 
       @Nullable
@@ -99,12 +106,15 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(context, context.makeCurrent(), request);
+        return new AdviceScope(
+            context, context.makeCurrent(), request, JedisRequestContext.attachForBatch(request));
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        instrumenter().end(context, request, null, throwable);
+        Throwable completionThrowable =
+            replyContext != null ? replyContext.detachAndEnd(throwable) : throwable;
+        instrumenter().end(context, request, null, completionThrowable);
       }
     }
 

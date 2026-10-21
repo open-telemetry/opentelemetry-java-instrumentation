@@ -43,6 +43,13 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   @Nullable
+  public String getErrorType(
+      JedisRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    return request.getErrorType();
+  }
+
+  @Override
+  @Nullable
   public String getServerAddress(JedisRequest request) {
     RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
     return target != null ? target.getAddress() : null;

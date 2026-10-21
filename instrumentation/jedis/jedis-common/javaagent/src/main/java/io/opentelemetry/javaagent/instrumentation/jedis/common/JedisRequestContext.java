@@ -11,11 +11,16 @@ import javax.annotation.Nullable;
 
 public class JedisRequestContext<T> {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
+  private static final ThreadLocal<Boolean> processingServerErrorReply = new ThreadLocal<>();
 
   @Nullable private Instrumenter<T, Void> instrumenter;
   @Nullable private T request;
   @Nullable private Context context;
   @Nullable private Throwable throwable;
+  @Nullable private Throwable serverErrorThrowable;
+  @Nullable private String serverErrorReply;
+  private boolean captureServerErrors;
+  private boolean serverErrorReplyCaptured;
 
   private JedisRequestContext() {}
 
@@ -31,10 +36,64 @@ public class JedisRequestContext<T> {
     return requestContext;
   }
 
-  public void detachAndEnd() {
+  @Nullable
+  public static <T> JedisRequestContext<T> attachForBatch(T request) {
+    JedisRequestContext<T> requestContext = attach();
+    if (requestContext != null) {
+      requestContext.request = request;
+      requestContext.captureServerErrors = true;
+    }
+    return requestContext;
+  }
+
+  @Nullable
+  public Throwable detachAndEnd(@Nullable Throwable methodThrowable) {
     contextThreadLocal.remove();
+    Throwable completionThrowable = methodThrowable;
+    if (completionThrowable == null) {
+      completionThrowable = captureServerErrors ? serverErrorThrowable : throwable;
+    }
+    if (serverErrorReplyCaptured
+        && serverErrorReply != null
+        && serverErrorThrowable != null
+        && (captureServerErrors || methodThrowable == serverErrorThrowable)
+        && request instanceof JedisServerErrorRequest) {
+      ((JedisServerErrorRequest) request).setServerErrorReply(serverErrorReply);
+    }
     if (request != null && instrumenter != null && context != null) {
-      endSpan(instrumenter, context, request, throwable);
+      endSpan(instrumenter, context, request, completionThrowable);
+    }
+    return completionThrowable;
+  }
+
+  public static boolean beginServerErrorReply() {
+    boolean previous = Boolean.TRUE.equals(processingServerErrorReply.get());
+    processingServerErrorReply.set(true);
+    return previous;
+  }
+
+  public static void captureServerErrorReply(String reply) {
+    if (!Boolean.TRUE.equals(processingServerErrorReply.get())) {
+      return;
+    }
+    JedisRequestContext<?> requestContext = current();
+    if (requestContext != null && !requestContext.serverErrorReplyCaptured) {
+      requestContext.serverErrorReply = reply;
+      requestContext.serverErrorReplyCaptured = true;
+    }
+  }
+
+  public static void endServerErrorReply(boolean previous, @Nullable Throwable throwable) {
+    if (previous) {
+      processingServerErrorReply.set(true);
+    } else {
+      processingServerErrorReply.remove();
+    }
+    JedisRequestContext<?> requestContext = current();
+    if (requestContext != null
+        && requestContext.serverErrorReplyCaptured
+        && requestContext.serverErrorThrowable == null) {
+      requestContext.serverErrorThrowable = throwable;
     }
   }
 

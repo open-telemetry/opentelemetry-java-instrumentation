@@ -13,12 +13,15 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -41,6 +44,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class JedisClientTest {
@@ -109,6 +113,86 @@ class JedisClientTest {
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
+    assertNoErrorTypeMetric();
+  }
+
+  @Test
+  void wrongTypeErrorType() {
+    jedis.lpush("wrong-type", "value");
+    testing.clearData();
+
+    assertThatThrownBy(() -> jedis.get("wrong-type")).hasMessageStartingWith("WRONGTYPE");
+
+    assertErrorType("WRONGTYPE");
+  }
+
+  @Test
+  void clientFailureUsesExceptionClassAndDoesNotLeak() {
+    Jedis broken = new Jedis("127.0.0.1", 0);
+    cleanup.deferCleanup(broken::disconnect);
+
+    Throwable error = catchThrowable(() -> broken.get("key"));
+
+    assertThat(error).isInstanceOf(JedisConnectionException.class);
+    assertErrorType(error.getClass().getName());
+
+    testing.clearData();
+    jedis.set("after-error", "value");
+    assertNoErrorTypeMetric();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData ->
+                            assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+  }
+
+  @Test
+  void pipelineAndTransactionErrorsCompleteBatchSpans() {
+    jedis.lpush("wrong-type", "value");
+    testing.clearData();
+
+    Pipeline pipeline = jedis.pipelined();
+    pipeline.get("wrong-type");
+    assertThatThrownBy(pipeline::syncAndReturnAll).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType("WRONGTYPE");
+
+    testing.clearData();
+    Transaction transaction = jedis.multi();
+    transaction.get("wrong-type");
+    assertThatThrownBy(transaction::exec).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType("WRONGTYPE");
+  }
+
+  private static void assertErrorType(String errorType) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-2.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .anySatisfy(
+                            point ->
+                                assertThat(point.getAttributes().get(ERROR_TYPE))
+                                    .isEqualTo(errorType))));
+  }
+
+  private static void assertNoErrorTypeMetric() {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-2.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .anySatisfy(
+                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
   }
 
   @Test

@@ -32,6 +32,7 @@ public class JedisInstrumentationModule extends InstrumentationModule {
     return asList(
         new DefaultJedisSocketFactoryInstrumentation(),
         new JedisConnectionInstrumentation(),
+        new JedisServerErrorInstrumentation(),
         new JedisConnectionProviderInstrumentation(),
         new JedisSentinelPoolInstrumentation(),
         new JedisInstrumentation(),
