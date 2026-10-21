@@ -48,12 +48,8 @@ public final class ProcessRuntimeResource {
       if (name == null || version == null) {
         AttributesBuilder attributes =
             Attributes.builder().put(PROCESS_RUNTIME_DESCRIPTION, description);
-        if (name != null) {
-          attributes.put(PROCESS_RUNTIME_NAME, name);
-        }
-        if (version != null) {
-          attributes.put(PROCESS_RUNTIME_VERSION, version);
-        }
+        attributes.put(PROCESS_RUNTIME_NAME, name);
+        attributes.put(PROCESS_RUNTIME_VERSION, version);
         return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
       }
       Attributes descriptive = Attributes.of(PROCESS_RUNTIME_DESCRIPTION, description);
