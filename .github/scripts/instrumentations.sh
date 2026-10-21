@@ -288,6 +288,8 @@ readonly INSTRUMENTATIONS=(
   "restlet:restlet-1.1:library:test"
   "restlet:restlet-2.0:library:test"
   "rmi:javaagent:test"
+  "rmi:javaagent:testBothSemconv"
+  "rmi:javaagent:testPreviewSemconv"
   "rocketmq:rocketmq-client-4.8:javaagent:test"
   "rocketmq:rocketmq-client-4.8:javaagent:testExperimental"
   "rocketmq:rocketmq-client-5.0:javaagent:test"
