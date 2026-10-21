@@ -38,10 +38,10 @@ the stated exception before reporting a repository convention.
   intentional deprecated API use.
 - **Attribute setters**: `AttributesBuilder.put`, `Span.setAttribute`,
   `SpanBuilder.setAttribute`, and `LogRecordBuilder.setAttribute` ignore a
-  null value. A guard around a directly passed boxed value is redundant,
-  except when an `Integer` passed for `AttributeKey<Long>` selects the
-  `int` overload and would unbox null. Retain a guard protecting a
-  dereference or derived computation.
+  null value. A guard around a directly passed nullable value, such as a
+  `String` or boxed primitive, is redundant, except when an `Integer`
+  passed for `AttributeKey<Long>` selects the `int` overload and would
+  unbox null. Retain a guard protecting a dereference or derived computation.
 - **Reflection**: cache reflective method lookups that may repeat on a
   production path. For a fixed declaring class or stable interface,
   resolve once; use `ClassValue` only when lookup metadata actually varies
