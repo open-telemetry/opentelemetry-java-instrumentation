@@ -38,22 +38,20 @@ testing {
         }
       }
     }
-    mapOf("testDubbo27" to "2.7.0", "testDubbo272" to "2.7.2").forEach { (suiteName, version) ->
-      register<JvmTestSuite>(suiteName) {
-        sources {
-          java {
-            setSrcDirs(listOf("src/testDubbo/java"))
-            include("**/DubboAgentAsyncTest.java")
-          }
+    register<JvmTestSuite>("testDubbo272") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/testDubbo/java"))
+          include("**/DubboAgentAsyncTest.java")
         }
-        dependencies {
-          implementation(project(":instrumentation:apache-dubbo-2.7:testing")) {
-            exclude(group = "org.apache.dubbo")
-          }
-          // Keep both early completion APIs covered even when testing latest dependencies.
-          implementation("org.apache.dubbo:dubbo:$version")
-          implementation("org.apache.dubbo:dubbo-config-api:$version")
+      }
+      dependencies {
+        implementation(project(":instrumentation:apache-dubbo-2.7:testing")) {
+          exclude(group = "org.apache.dubbo")
         }
+        val version = baseVersion("2.7.2").orLatest()
+        implementation("org.apache.dubbo:dubbo:$version")
+        implementation("org.apache.dubbo:dubbo-config-api:$version")
       }
     }
   }
