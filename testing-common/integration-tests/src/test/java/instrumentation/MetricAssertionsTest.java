@@ -17,6 +17,26 @@ class MetricAssertionsTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
+  void repeatedObservableGaugeExportsHaveOneMetricIdentity() {
+    testing
+        .getOpenTelemetry()
+        .getMeter("test-exhaustive-metric-pre-read")
+        .gaugeBuilder("repeated.gauge")
+        .ofLongs()
+        .buildWithCallback(measurement -> measurement.record(1));
+
+    testing.metrics();
+
+    testing.waitAndAssertMetricsExactly(
+        "test-exhaustive-metric-pre-read",
+        metric ->
+            metric
+                .hasName("repeated.gauge")
+                .hasLongGaugeSatisfying(
+                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(1))));
+  }
+
+  @Test
   void retriesAssertionsAcrossRepeatedObservableGaugeExports() {
     AtomicBoolean emitExpectedValue = new AtomicBoolean();
     testing

@@ -86,6 +86,27 @@ class InstrumentationTestRunnerTest {
   }
 
   @Test
+  void repeatedSnapshotsOfOneMetricIdentityCannotSatisfyMultipleAssertions() {
+    InstrumentationTestRunner runner =
+        runner(
+            asList(
+                histogramData("test", "duration", "s", point(1)),
+                histogramData("test", "duration", "s", point(2))));
+
+    assertThatThrownBy(
+            () ->
+                runner.waitAndAssertMetricsExactly(
+                    "test",
+                    histogram(
+                        metric -> metric.hasName("duration").hasUnit("s"),
+                        pointAssert -> pointAssert.hasCount(1).hasSum(1)),
+                    histogram(
+                        metric -> metric.hasName("duration").hasUnit("s"),
+                        pointAssert -> pointAssert.hasCount(1).hasSum(2))))
+        .isInstanceOf(AssertionError.class);
+  }
+
+  @Test
   void rejectsMissingMetrics() {
     InstrumentationTestRunner runner =
         runner(singletonList(histogramData("test", "duration", "s", point(1))));

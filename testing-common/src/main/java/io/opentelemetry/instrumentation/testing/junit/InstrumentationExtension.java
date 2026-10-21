@@ -116,8 +116,11 @@ public abstract class InstrumentationExtension
   }
 
   /**
-   * Waits for all metrics from the given instrumentation to satisfy the supplied assertions,
-   * matching each assertion to a distinct metric in any order.
+   * Waits for the supplied assertions to match all distinct metric identities from the given
+   * instrumentation exactly once, in any order. A metric identity consists of its resource, full
+   * instrumentation scope, name, description, unit, and data type. Each assertion may match any
+   * historical snapshot for its identity, including snapshots from different collections; it need
+   * not match the latest value, and measurements are not aggregated across snapshots.
    */
   @SafeVarargs
   @SuppressWarnings("varargs")
