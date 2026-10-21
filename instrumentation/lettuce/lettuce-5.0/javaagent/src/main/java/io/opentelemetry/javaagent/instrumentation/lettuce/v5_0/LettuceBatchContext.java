@@ -96,18 +96,15 @@ public final class LettuceBatchContext {
   public static final class BatchScope {
     private final Context context;
     private final LettuceBatchRequest request;
-    private final List<AsyncCommand<?, ?, ?>> asyncCommands;
     private final AtomicInteger remaining;
     private final Throwable[] commandErrors;
     private final AtomicReference<Throwable> terminalError = new AtomicReference<>();
 
-    private BatchScope(
-        Context context, LettuceBatchRequest request, List<AsyncCommand<?, ?, ?>> asyncCommands) {
+    private BatchScope(Context context, LettuceBatchRequest request, int commandCount) {
       this.context = context;
       this.request = request;
-      this.asyncCommands = asyncCommands;
-      this.remaining = new AtomicInteger(asyncCommands.size());
-      this.commandErrors = new Throwable[asyncCommands.size()];
+      this.remaining = new AtomicInteger(commandCount);
+      this.commandErrors = new Throwable[commandCount];
     }
 
     @Nullable
@@ -127,7 +124,7 @@ public final class LettuceBatchContext {
         batchInstrumenter().end(context, request, null, null);
         return null;
       }
-      BatchScope scope = new BatchScope(context, request, asyncCommands);
+      BatchScope scope = new BatchScope(context, request, asyncCommands.size());
       // Redis executes batch commands in order, but the individual async command futures can
       // complete in a different order. Observe every future so an earlier failure or cancellation
       // is captured; the remaining counter decides when all responses have completed.
@@ -163,16 +160,6 @@ public final class LettuceBatchContext {
       }
       if (remaining.getAndDecrement() == 1) {
         Throwable error = getError(terminalError.get(), commandErrors);
-        boolean selected = false;
-        for (int i = 0; i < asyncCommands.size(); i++) {
-          String errorType =
-              LettuceRedisErrorType.getErrorType(
-                  asyncCommands.get(i).getOutput(), commandErrors[i]);
-          if (error != null && !selected && commandErrors[i] == error) {
-            request.setErrorType(errorType);
-            selected = true;
-          }
-        }
         batchInstrumenter().end(context, request, null, error);
       }
     }

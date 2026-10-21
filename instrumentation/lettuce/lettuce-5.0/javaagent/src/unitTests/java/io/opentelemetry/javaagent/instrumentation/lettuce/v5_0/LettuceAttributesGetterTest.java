@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -26,7 +25,6 @@ import io.lettuce.core.protocol.CommandType;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import org.junit.jupiter.api.Test;
@@ -57,59 +55,6 @@ class LettuceAttributesGetterTest {
 
     assertThat(getter.getServerAddress(request)).isEqualTo(null);
     assertThat(getter.getServerPort(request)).isEqualTo(null);
-  }
-
-  @Test
-  void wirePrefixPreservesClientBufferAndMessage() {
-    RedisCommand<String, String, String> command = command();
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    ByteBuffer bytes = ByteBuffer.wrap("xéchec中 detailsy".getBytes(UTF_8));
-    bytes.position(1);
-    bytes.limit(bytes.capacity() - 1);
-    String prefix = LettuceRedisErrorType.readPrefix(bytes);
-    assertThat(prefix).isEqualTo("échec中");
-    assertThat(bytes.position()).isEqualTo(1);
-    assertThat(bytes.limit()).isEqualTo(bytes.capacity() - 1);
-
-    command.getOutput().setError(bytes);
-    String clientMessage = command.getOutput().getError();
-    LettuceRedisErrorType.capture(command.getOutput(), prefix);
-    Throwable error = new RedisCommandExecutionException(clientMessage);
-
-    assertThat(getter.getErrorType(command, null, error)).isEqualTo("échec中");
-    assertThat(error).hasMessage(clientMessage);
-    assertThat(command.getOutput().getError()).isEqualTo(clientMessage);
-    assertThat(getter.getErrorType(command, null, error))
-        .isEqualTo(LettuceRedisErrorType.getErrorType(error));
-
-    LettuceRedisErrorType.capture(command.getOutput(), prefix);
-    assertThat(getter.getErrorType(command, null, new RedisCommandTimeoutException(clientMessage)))
-        .isNull();
-    LettuceRedisErrorType.capture(command.getOutput(), prefix);
-    assertThat(
-            getter.getErrorType(command, null, new RedisCommandExecutionException("OTHER details")))
-        .isEqualTo("OTHER");
-  }
-
-  @Test
-  void decoderScopeRestoresPreviousPrefixAndClearsAfterCompletion() {
-    RedisCommand<String, String, String> command = command();
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    LettuceRedisErrorType.ErrorDecode outer =
-        LettuceRedisErrorType.startErrorDecode(ByteBuffer.wrap("échec中 details".getBytes(UTF_8)));
-    LettuceRedisErrorType.ErrorDecode inner =
-        LettuceRedisErrorType.startErrorDecode(ByteBuffer.wrap("OTHER details".getBytes(UTF_8)));
-    LettuceRedisErrorType.endErrorDecode(command.getOutput(), inner);
-
-    command.getOutput().setError("decoded details");
-    LettuceRedisErrorType.captureDecoded(command.getOutput());
-    Throwable error = new RedisCommandExecutionException("decoded details");
-    assertThat(getter.getErrorType(command, null, error)).isEqualTo("échec中");
-    LettuceRedisErrorType.endErrorDecode(command.getOutput(), outer);
-    assertThat(getter.getErrorType(command, null, error)).isEqualTo("échec中");
-
-    LettuceRedisErrorType.captureDecoded(command.getOutput());
-    assertThat(getter.getErrorType(command, null, error)).isEqualTo("decoded");
   }
 
   @Test

@@ -222,72 +222,19 @@ class LettuceAsyncClientTest {
     assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", "WRONGTYPE", 1);
   }
 
-  @ParameterizedTest
-  @MethodSource("customServerErrors")
-  void testCustomServerErrorPrefixAcrossCompletionPaths(
-      String prefix, String errorType, String clientMessage) throws Exception {
-    String script = "return redis.error_reply('" + prefix + " details')";
-
-    Throwable syncError =
-        catchThrowable(() -> connection.sync().eval(script, ScriptOutputType.VALUE));
-    Throwable asyncError =
-        catchThrowable(() -> asyncCommands.eval(script, ScriptOutputType.VALUE).get(10, SECONDS));
-    Throwable reactiveError =
-        catchThrowable(
-            () -> connection.reactive().eval(script, ScriptOutputType.VALUE).toBlocking().single());
-
-    assertThat(syncError)
-        .isInstanceOf(RedisCommandExecutionException.class)
-        .hasMessage(clientMessage);
-    assertThat(asyncError)
-        .isInstanceOf(ExecutionException.class)
-        .hasCauseInstanceOf(RedisCommandExecutionException.class);
-    assertThat(asyncError.getCause()).hasMessage(clientMessage);
-    assertThat(reactiveError)
-        .isInstanceOf(RedisCommandExecutionException.class)
-        .hasMessage(clientMessage);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("EVAL " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("EVAL " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("EVAL " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))));
-
-    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", errorType, 3);
-  }
-
-  @ParameterizedTest
-  @MethodSource("customServerErrors")
-  void testCustomServerErrorPrefixInTransaction(
-      String prefix, String errorType, String clientMessage) throws Exception {
+  @Test
+  void testTransactionServerErrorUsesRedisErrorType() throws Exception {
     asyncCommands.multi().get(10, SECONDS);
     RedisFuture<Object> failedCommand =
         asyncCommands.eval(
-            "return redis.error_reply('" + prefix + " details')", ScriptOutputType.VALUE);
+            "return redis.error_reply('ERR transaction failure')", ScriptOutputType.VALUE);
     assertThat(asyncCommands.exec().get(10, SECONDS)).isNotNull();
 
     Throwable error = catchThrowable(() -> failedCommand.get(10, SECONDS));
     assertThat(error)
         .isInstanceOf(ExecutionException.class)
         .hasCauseInstanceOf(RedisCommandExecutionException.class);
-    assertThat(error.getCause()).hasMessage(clientMessage);
+    assertThat(error.getCause()).hasMessage("ERR transaction failure");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -298,7 +245,7 @@ class LettuceAsyncClientTest {
                 span ->
                     span.hasName("EVAL " + host + ":" + port)
                         .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))),
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, "ERR"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("EXEC " + host + ":" + port).hasStatus(StatusData.unset())));
@@ -320,20 +267,8 @@ class LettuceAsyncClientTest {
                                         point -> {
                                           assertThat(point.getCount()).isEqualTo(1);
                                           assertThat(point.getAttributes().get(ERROR_TYPE))
-                                              .isEqualTo(errorType);
+                                              .isEqualTo("ERR");
                                         }))));
-  }
-
-  private static Stream<Arguments> customServerErrors() {
-    return Stream.of(
-        argumentSet("custom prefix", "Custom.Code!", "Custom.Code!", "Custom.Code! details"),
-        argumentSet(
-            "leading spaces and tab",
-            "  lower.case!\tCode",
-            "lower.case!\tCode",
-            "  lower.case!\tCode details"),
-        argumentSet(
-            "UTF-8 prefix", "\\195\\169chec\\228\\184\\173", "échec中", "ￃﾩchec￤ﾸﾭ details"));
   }
 
   @Test
@@ -921,38 +856,6 @@ class LettuceAsyncClientTest {
                 .batchSize(2)
                 .exceptionType("com.lambdaworks.redis.RedisCommandExecutionException")
                 .errorType("ERR")
-                .build()),
-        argumentSet(
-            "customErrorPrefix",
-            BatchScenario.builder()
-                .addCommand(
-                    commands ->
-                        commands.eval(
-                            "return redis.error_reply('Custom.Code! details')",
-                            ScriptOutputType.VALUE))
-                .addCommand(commands -> commands.set("batch-after-custom-error", "v1"))
-                .operationName("PIPELINE")
-                .batchSize(2)
-                .exceptionType("com.lambdaworks.redis.RedisCommandExecutionException")
-                .errorType("Custom.Code!")
-                .build()),
-        argumentSet(
-            "twoServerErrors",
-            BatchScenario.builder()
-                .addCommand(
-                    commands ->
-                        commands.eval(
-                            "return redis.error_reply('\\195\\169chec\\228\\184\\173 details')",
-                            ScriptOutputType.VALUE))
-                .addCommand(
-                    commands ->
-                        commands.eval(
-                            "return redis.error_reply('Second.Code! details')",
-                            ScriptOutputType.VALUE))
-                .operationName("PIPELINE EVAL")
-                .batchSize(2)
-                .exceptionType("com.lambdaworks.redis.RedisCommandExecutionException")
-                .errorType("échec中")
                 .build()));
   }
 

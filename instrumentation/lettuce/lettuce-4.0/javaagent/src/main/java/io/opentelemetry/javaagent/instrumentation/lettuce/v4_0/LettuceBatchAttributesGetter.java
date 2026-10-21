@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import com.lambdaworks.redis.RedisCommandExecutionException;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -47,10 +46,7 @@ final class LettuceBatchAttributesGetter
   @Override
   public String getErrorType(
       LettuceBatchRequest request, @Nullable Void response, @Nullable Throwable error) {
-    String errorType = request.getErrorType();
-    return error instanceof RedisCommandExecutionException && errorType != null
-        ? errorType
-        : LettuceRedisErrorType.getErrorType(error);
+    return LettuceRedisErrorType.getErrorType(error);
   }
 
   @Nullable
