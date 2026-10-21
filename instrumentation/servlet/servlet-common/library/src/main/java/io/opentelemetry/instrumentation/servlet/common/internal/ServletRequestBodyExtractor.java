@@ -96,6 +96,7 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     }
 
     buffer.flip();
+    ByteBuffer original = buffer.duplicate();
     try {
       // malformed input must be reported, not silently replaced, so that a body that is not valid
       // text in the expected charset is captured as binary
@@ -109,9 +110,8 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     } catch (CharacterCodingException e) {
       // TODO: create a dedicated Value<ByteBuffer> implementation that avoids doing any copy
       // we can do that because we know the buffer will not be modified anymore.
-      byte[] bytes = new byte[buffer.remaining()];
-      buffer.get(bytes);
-      return Value.of(bytes);
+      original.arrayOffset(); // ensure array is accessible
+      return Value.of(original.array());
     }
   }
 
