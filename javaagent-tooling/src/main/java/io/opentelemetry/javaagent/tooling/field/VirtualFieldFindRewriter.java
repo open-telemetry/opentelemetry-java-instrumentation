@@ -10,7 +10,6 @@ import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
@@ -137,12 +136,10 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
                           "Incorrect VirtualField usage detected. Cannot find mapping for VirtualField<%s, %s>. Was that field registered in %s#registerMuzzleVirtualFields()?",
                           typeName, fieldTypeName, instrumentationModuleClass.getName()));
                 }
-                if (SemconvStability.v3Preview()) {
-                  logger.log(
-                      WARNING,
-                      "Rewriting VirtualField#find(Class, Class) access in {0}. This rewriting is deprecated and may be removed in a future version.",
-                      instrumentationModuleClass.getName());
-                }
+                logger.log(
+                    WARNING,
+                    "Rewriting VirtualField#find(Class, Class) access in {0}. This rewriting is deprecated and may be removed in a future version.",
+                    instrumentationModuleClass.getName());
                 // stack: fieldType | type
                 mv.visitMethodInsn(
                     Opcodes.INVOKESTATIC,

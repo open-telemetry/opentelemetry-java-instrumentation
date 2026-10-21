@@ -15,10 +15,6 @@ class TracedWithSpan {
 
   TracedWithSpan() {}
 
-  // used to verify that constructor with @WithSpan annotation doesn't break instrumentation
-  @WithSpan
-  TracedWithSpan(String unused) {}
-
   @WithSpan
   String otel() {
     return "hello!";

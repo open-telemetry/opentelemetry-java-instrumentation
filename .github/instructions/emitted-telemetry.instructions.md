@@ -24,8 +24,18 @@ Comment only on a changed line and only for a supported issue.
   incubating constants locally rather than importing them. Tests may import both
   stable and incubating constants directly.
 
-## Database response status codes
+## Schema URLs
 
-This repository intentionally omits `db.response.status_code` when it would only duplicate the database error code recorded in `error.type`, despite the database semantic conventions conditionally requiring it for failed operations. Do not report that omission as a conformance defect or request adding the redundant attribute.
+Select the schema URL from the semantic convention defining the emitted span, metric, or log.
+Its version follows the convention adopted by that signal and its effective mode, not the latest
+semconv dependency. Registered attributes alone do not establish a signal
+convention; supporting attributes must not select, change, or invalidate its schema.
+If no semantic convention defines the emitted signal, leave its schema URL unset.
 
-See <a href="https://github.com/open-telemetry/semantic-conventions/issues/3478">open-telemetry/semantic-conventions#3478</a> and the <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16276#discussion_r2850538387">original discussion</a> for rationale. This is a repository policy, not an upstream semantic-convention exception.
+## Database and RPC response status codes
+
+This repository intentionally omits `db.response.status_code` and `rpc.response.status_code` when an instrumentation obtains status codes only from failures and the attribute would merely duplicate the code recorded in `error.type`. Do not flag this omission or request adding the redundant attribute.
+
+Apply this rule to the instrumentation as a whole, not individual calls. If it already captures statuses for both successes and failures, keep them on both, even when a failure status matches `error.type`. Do not invent successful statuses to justify adding a response-status attribute. Preserve status-based error classification and exception-type fallback.
+
+This repository policy applies despite the semantic conventions' conditional inclusion requirements.

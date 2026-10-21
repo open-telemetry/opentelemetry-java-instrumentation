@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -19,22 +18,6 @@ import java.util.Map;
  * any time.
  */
 public final class SemconvStability {
-
-  private static final boolean v3Preview = v3Preview(GlobalOpenTelemetry.getOrNoop());
-
-  public static boolean v3Preview(OpenTelemetry openTelemetry) {
-    Boolean value = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview");
-    if (value != null) {
-      return value;
-    }
-    // Library instrumentation tests configure this mode using JVM system properties, so a direct
-    // system-property fallback is needed.
-    return SystemProperty.getBoolean("otel.instrumentation.common.v3-preview", false);
-  }
-
-  public static boolean v3Preview() { // to be removed in 3.0
-    return v3Preview;
-  }
 
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()
