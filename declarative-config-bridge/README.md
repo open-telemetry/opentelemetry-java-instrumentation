@@ -1,16 +1,7 @@
 # Declarative Config Bridge
 
-> [!WARNING]
-> `DeclarativeConfigPropertiesBridgeBuilder` is deprecated and will be removed in 3.0. Read
-> declarative component configuration through `DeclarativeConfigProperties` directly. To expose
-> `ConfigProperties` through the declarative configuration API, use
-> `DeclarativeConfigBridge`.
-
-Declarative Config Bridge allows instrumentation authors to access configuration in a uniform way,
-regardless of the configuration source.
-
-The bridge lets callers expose either the complete flat instrumentation configuration or a
-component's flat property namespace through the declarative configuration API.
+`DeclarativeConfigBridge` exposes flat `ConfigProperties` through the declarative configuration API,
+allowing instrumentation to use `DeclarativeConfigProperties` regardless of the configuration source.
 
 ## Example
 

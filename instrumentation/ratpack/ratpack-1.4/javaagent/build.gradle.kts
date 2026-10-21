@@ -62,22 +62,13 @@ listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
   }
 }
 
-val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
+testing.suites.register<JvmTestSuite>("version17Test") {
   dependencies {
     implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
     implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
     val ratpackVersion = baseVersion("1.7.0").orLatest()
     implementation("io.ratpack:ratpack-core:$ratpackVersion")
     implementation("io.ratpack:ratpack-test:$ratpackVersion")
-  }
-  executions {
-    register("WithPeerServiceMapping") {
-      telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-    }
-    register("PreviewSemconvWithPeerServiceMapping") {
-      telemetryConfig("otel.semconv-stability.preview", "service.peer")
-      telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
-    }
   }
 }
 
@@ -87,17 +78,38 @@ tasks {
     telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
   }
 
-  test {
-    systemProperty("ratpack14Test", true)
-  }
-
-  check {
-    dependsOn(testing.suites)
-  }
-
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
+    }
+  }
+
+  testing.suites.withType<JvmTestSuite>().configureEach {
+    val suiteName = name
+    executions {
+      configureEach {
+        if (suiteName == "test") {
+          systemProperty("ratpack14Test", true)
+        }
+      }
+      if (suiteName == "version17Test") {
+        register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+      }
+      register("ControllerTelemetryDisabled") {
+        filter {
+          includeTestsMatching(
+            "io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server.RatpackErrorContextTest"
+          )
+        }
+        systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
+        systemProperties.remove("metadataConfig")
+      }
     }
   }
 }

@@ -1,8 +1,8 @@
 # [Testing] Default instrumentation enablement
 
-Use this article when testing instrumentation that is disabled by default
-or becomes disabled in v3-preview. The examples run one operation in
-enabled and disabled JVMs and verify its observable telemetry.
+Use this article when testing instrumentation that is disabled by default. The
+examples run one operation in enabled and disabled JVMs and verify its observable
+telemetry.
 
 This coverage checks which instrumentation runs by default, not the generic
 `otel.instrumentation.<name>.enabled` escape hatch. Do not use this pattern to
@@ -19,46 +19,11 @@ and installation details.
 The operation must produce an instrumentation span when the module is enabled. A negative-only test
 can pass even when its operation never reaches instrumented code.
 
-## Use one test in both modes
+## Use one test in both configurations
 
 Put the coverage in a dedicated `DefaultEnablementTest`. Run the same test method under the normal
-test task and a `testDisabled` task. Read the startup property into a class constant and use it only
-to select the expected trace shape.
-
-For instrumentation that becomes disabled under v3 preview:
-
-```java
-class DefaultEnablementTest {
-
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
-
-  @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  @Test
-  void defaultEnablement() {
-    testing.runWithSpan("parent", () -> runRepresentativeOperation());
-
-    if (V3_PREVIEW) {
-      testing.waitAndAssertTraces(
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
-    } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span -> span.hasName("expected instrumentation span")));
-    }
-  }
-}
-```
-
-Keep the `if` around the complete `waitAndAssertTraces(...)` calls. Do not put it inside the trace
-assertion callback. Separate calls make each mode's complete expected output visible.
-
-Do not use `@EnabledIfSystemProperty` or separate positive and negative test methods. One method
-must execute the same operation in both JVM configurations.
+test task and a `testDisabled` task. Use a startup property only to select the expected trace shape;
+do not use separate positive and negative test methods.
 
 ## The parent span is a completion signal
 
@@ -83,38 +48,7 @@ In both branches, assert only span names. The exact trace assertion still checks
 spans, and the names are enough to prove the enablement contract. Leave span kinds, parentage,
 status, attributes, and other behavior coverage in the instrumentation's ordinary tests.
 
-## Gradle task for a v3-preview default change
-
-Run `DefaultEnablementTest` normally for the positive case. Add a filtered task that starts a new
-test JVM with v3 preview enabled for the negative case:
-
-```kotlin
-val testDisabled = register<Test>("testDisabled") {
-  testClassesDirs = sourceSets.test.get().output.classesDirs
-  classpath = sourceSets.test.get().runtimeClasspath
-  filter {
-    includeTestsMatching("*DefaultEnablementTest")
-  }
-  jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-}
-
-check {
-  dependsOn(testDisabled)
-}
-```
-
-Set configuration through Gradle JVM arguments because the agent decides which instrumentation to
-install during JVM startup. Setting a system property inside the test method is too late.
-
-Add JVM arguments that disable unrelated instrumentation only when the representative operation
-would otherwise create extra spans. For example, a Hibernate operation may need JDBC
-instrumentation disabled in `testDisabled`.
-
-Do not set `metadataConfig` on `testDisabled` and do not add the task to
-`.github/scripts/instrumentations.sh`. The task intentionally produces no telemetry for the target
-instrumentation, so it cannot contribute instrumentation metadata.
-
-## Instrumentation that is already disabled by default
+## Instrumentation that is disabled by default
 
 Existing tests for an always-disabled module usually enable it explicitly:
 

@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSe
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
-import io.opentelemetry.semconv.SchemaUrls;
 import javax.annotation.Nullable;
 
 abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
@@ -88,6 +87,6 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public final String internalGetSchemaUrl() {
-    return selection.get().emitPreview() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+    return selection.get().schemaUrl();
   }
 }
