@@ -41,11 +41,11 @@ public final class Experimental {
   }
 
   /**
-   * Enables the "Prometheus mode" - this will simulate the behavior of Micrometer's {@code
-   * PrometheusMeterRegistry}. The instruments will be renamed to match Micrometer instrument
-   * naming, and the base time unit will be set to seconds.
+   * Sets the optional "Prometheus mode", which approximates Micrometer's {@code
+   * PrometheusMeterRegistry} naming for compatibility and forces the base time unit to seconds.
    *
-   * <p>Set this to {@code true} if you are using the Prometheus metrics exporter.
+   * <p>This mode is disabled by default and is not required to use the OpenTelemetry Prometheus
+   * exporter.
    */
   public static void setPrometheusMode(
       OpenTelemetryMeterRegistryBuilder builder, boolean prometheusMode) {
