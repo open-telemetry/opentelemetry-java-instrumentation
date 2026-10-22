@@ -17,10 +17,10 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -37,65 +37,61 @@ class SpringIntegrationAmqp41Test {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void shouldDeliverThroughAmqpAdapter(boolean withRabbitProcessing) throws Throwable {
-    try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
-      context.setId("application");
-      context.register(AbstractSpringIntegration41Test.Channels.class);
-      context.refresh();
-      DirectChannel output = context.getBean("directChannel", DirectChannel.class);
-      AtomicReference<org.springframework.messaging.Message<?>> captured = new AtomicReference<>();
-      output.subscribe(
-          message -> {
-            captured.set(message);
-            testing.runWithSpan("handler", () -> {});
-          });
+    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+    cleanup.deferCleanup(context);
+    context.setId("application");
+    context.register(AbstractSpringIntegration41Test.Channels.class);
+    context.refresh();
+    DirectChannel output = context.getBean("directChannel", DirectChannel.class);
+    CapturingMessageHandler captured = new CapturingMessageHandler();
+    output.subscribe(captured);
 
-      TestContainer container = new TestContainer();
-      AmqpInboundChannelAdapter adapter = new AmqpInboundChannelAdapter(container);
-      adapter.setBeanFactory(context.getBeanFactory());
-      adapter.setOutputChannel(output);
-      adapter.afterPropertiesSet();
-      adapter.start();
-      try {
-        MessageProperties properties = new MessageProperties();
-        properties.setReceivedRoutingKey("input");
-        properties.setContentType(MessageProperties.CONTENT_TYPE_TEXT_PLAIN);
-        Message message = new Message("test".getBytes(UTF_8), properties);
+    TestContainer container = new TestContainer();
+    cleanup.deferCleanup(container::destroy);
+    AmqpInboundChannelAdapter adapter = new AmqpInboundChannelAdapter(container);
+    cleanup.deferCleanup(adapter::stop);
+    adapter.setBeanFactory(context.getBeanFactory());
+    adapter.setOutputChannel(output);
+    adapter.afterPropertiesSet();
+    adapter.start();
 
-        Context before = Context.current();
-        if (withRabbitProcessing) {
-          container.deliver(message);
-        } else {
-          ((ChannelAwareMessageListener) container.getMessageListener())
-              .onMessage(message, newChannel());
-        }
-        assertThat(Context.current()).isSameAs(before);
-        assertThat(captured.get().getPayload()).isEqualTo("test");
+    MessageProperties properties = new MessageProperties();
+    properties.setReceivedRoutingKey("input");
+    properties.setContentType(MessageProperties.CONTENT_TYPE_TEXT_PLAIN);
+    Message message = new Message("test".getBytes(UTF_8), properties);
 
-        testing.waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName(
-                              withRabbitProcessing
-                                  ? "process input"
-                                  : "process application.directChannel")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasNoParent();
-                      assertPropagation(captured.get(), trace.getSpan(0));
-                    },
-                    span -> span.hasName("handler").hasParent(trace.getSpan(0))));
-        if (withRabbitProcessing) {
-          assertNoMetrics(testing);
-        } else {
-          assertProcessMetrics(testing, "application.directChannel", false);
-        }
-      } finally {
-        adapter.stop();
-        container.destroy();
-      }
+    Context before = Context.current();
+    if (withRabbitProcessing) {
+      container.deliver(message);
+    } else {
+      ((ChannelAwareMessageListener) container.getMessageListener())
+          .onMessage(message, newChannel());
+    }
+    assertThat(Context.current()).isSameAs(before);
+    assertThat(captured.join().getPayload()).isEqualTo("test");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  span.hasName(
+                          withRabbitProcessing
+                              ? "process input"
+                              : "process application.directChannel")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasNoParent();
+                  assertPropagation(captured.join(), trace.getSpan(0));
+                },
+                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
+    if (withRabbitProcessing) {
+      assertNoMetrics(testing);
+    } else {
+      assertProcessMetrics(testing, "application.directChannel", false);
     }
   }
 

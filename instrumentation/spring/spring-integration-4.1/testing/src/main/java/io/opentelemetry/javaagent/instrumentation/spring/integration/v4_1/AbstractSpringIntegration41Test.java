@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -71,12 +71,8 @@ abstract class AbstractSpringIntegration41Test {
   void shouldRegisterGlobalInterceptorAndPropagateContext(String channelName) {
     SubscribableChannel channel =
         applicationContext.getBean(channelName, SubscribableChannel.class);
-    AtomicReference<Message<?>> captured = new AtomicReference<>();
-    channel.subscribe(
-        message -> {
-          captured.set(message);
-          testing.runWithSpan("handler", () -> {});
-        });
+    CapturingMessageHandler captured = new CapturingMessageHandler();
+    channel.subscribe(captured);
 
     Context before = Context.current();
     testing.runWithSpan("parent", () -> channel.send(MessageBuilder.withPayload("test").build()));
@@ -92,7 +88,7 @@ abstract class AbstractSpringIntegration41Test {
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(messagingAttributes("process", destination));
-                  assertPropagation(captured.get(), trace.getSpan(1));
+                  assertPropagation(captured.join(), trace.getSpan(1));
                 },
                 span -> span.hasName("handler").hasParent(trace.getSpan(1))));
     assertProcessMetrics(testing, destination, false);
@@ -136,9 +132,7 @@ abstract class AbstractSpringIntegration41Test {
         });
 
     Context before = Context.current();
-    Throwable failure =
-        catchThrowable(() -> channel.send(MessageBuilder.withPayload("test").build()));
-    assertThat(failure)
+    assertThatThrownBy(() -> channel.send(MessageBuilder.withPayload("test").build()))
         .isInstanceOf(MessageDeliveryException.class)
         .hasRootCauseMessage("failed handler");
     assertThat(Context.current()).isSameAs(before);
