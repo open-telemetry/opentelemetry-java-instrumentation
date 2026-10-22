@@ -21,6 +21,12 @@ class RedisErrorPrefixTest {
     assertThat(RedisErrorPrefix.extract(serverErrorLine)).isEqualTo(expected);
   }
 
+  @ParameterizedTest
+  @MethodSource("asciiServerErrorLines")
+  void extractsAsciiPrefix(String serverErrorLine, String expected) {
+    assertThat(RedisErrorPrefix.extractAscii(serverErrorLine)).isEqualTo(expected);
+  }
+
   private static Stream<Arguments> serverErrorLines() {
     return Stream.of(
         argumentSet("wrong type", "WRONGTYPE Operation against a key", "WRONGTYPE"),
@@ -52,5 +58,26 @@ class RedisErrorPrefixTest {
         argumentSet("Unicode space", "ERR\u2003custom detail", "ERR\u2003custom"),
         argumentSet("leading non-breaking space", "\u00a0CODE detail", "\u00a0CODE"),
         argumentSet("Unicode text", "ERRé中 detail", "ERRé中"));
+  }
+
+  private static Stream<Arguments> asciiServerErrorLines() {
+    return Stream.of(
+        argumentSet("ordinary ASCII prefix", "  WRONGTYPE Operation against a key", "WRONGTYPE"),
+        argumentSet(
+            "ASCII punctuation and case", "err.custom-code:42! detail", "err.custom-code:42!"),
+        argumentSet(
+            "ASCII tabs and line breaks", "Code\tpart\r\nsuffix detail", "Code\tpart\r\nsuffix"),
+        argumentSet(
+            "long ASCII prefix",
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ detail",
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+        argumentSet("non-ASCII prefix", "éCODE detail", null),
+        argumentSet("non-ASCII prefix after spaces", "   \u00a0CODE detail", null),
+        argumentSet("non-ASCII details", "WRONGTYPE é中 details", "WRONGTYPE"),
+        argumentSet("U+007F", "\u007fCODE details", "\u007fCODE"),
+        argumentSet("U+0080", "\u0080CODE details", null),
+        argumentSet("null", null, null),
+        argumentSet("empty", "", null),
+        argumentSet("spaces only", "   ", null));
   }
 }
