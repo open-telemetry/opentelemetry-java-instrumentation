@@ -24,7 +24,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -100,49 +99,6 @@ class InfluxDbClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
                             equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
-  }
-
-  @Test
-  void testFailedQueryStartupDoesNotAffectSubsequentCalls() {
-    Query queryThatFailsOnCommandAccess =
-        new Query("SELECT * FROM cpu_load", DATABASE_NAME) {
-          @Override
-          public String getCommand() {
-            throw new IllegalStateException();
-          }
-        };
-    influxDb.query(queryThatFailsOnCommandAccess);
-    assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
-
-    influxDb.query(new Query("SELECT * FROM cpu_load", DATABASE_NAME));
-    List<String> records = new ArrayList<>();
-    records.add("cpu_load,atag=test idle=100,usertime=10,system=1 1485273600");
-    influxDb.write(DATABASE_NAME, "autogen", InfluxDB.ConsistencyLevel.ONE, records);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT cpu_load")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("write " + DATABASE_NAME)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_OPERATION_NAME, "write"))));
   }
 
   @Test

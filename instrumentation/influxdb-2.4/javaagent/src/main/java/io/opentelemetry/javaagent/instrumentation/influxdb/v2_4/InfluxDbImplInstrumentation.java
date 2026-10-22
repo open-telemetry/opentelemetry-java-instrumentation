@@ -24,7 +24,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.HttpUrl;
 import org.influxdb.dto.BatchPoints;
@@ -43,51 +42,51 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("query")
-            .and(takesArgument(0, named("org.influxdb.dto.Query")))
-            .and(takesArguments(1).or(takesArguments(2).and(takesArgument(1, TimeUnit.class)))),
+            .and(takesArguments(1).or(takesArguments(2).and(takesArgument(1, TimeUnit.class))))
+            .and(takesArgument(0, named("org.influxdb.dto.Query"))),
         getClass().getName() + "$InfluxDbQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
-            .and(takesArgument(0, named("org.influxdb.dto.Query")))
             .and(takesArguments(3))
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
             .and(takesArgument(1, Consumer.class))
             .and(takesArgument(2, Consumer.class)),
         getClass().getName() + "$InfluxDbAsyncQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
+            .and(takesArguments(3))
             .and(takesArgument(0, named("org.influxdb.dto.Query")))
             .and(takesArgument(1, int.class))
-            .and(takesArguments(3))
             .and(takesArgument(2, Consumer.class)),
         getClass().getName() + "$InfluxDbChunkedConsumerQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
+            .and(takesArguments(3))
             .and(takesArgument(0, named("org.influxdb.dto.Query")))
             .and(takesArgument(1, int.class))
-            .and(takesArguments(3))
             .and(takesArgument(2, BiConsumer.class)),
         getClass().getName() + "$InfluxDbChunkedBiConsumerQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
+            .and(takesArguments(4))
             .and(takesArgument(0, named("org.influxdb.dto.Query")))
             .and(takesArgument(1, int.class))
-            .and(takesArguments(4))
             .and(takesArgument(2, Consumer.class))
             .and(takesArgument(3, Runnable.class)),
         getClass().getName() + "$InfluxDbChunkedConsumerCompletionQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
+            .and(takesArguments(4))
             .and(takesArgument(0, named("org.influxdb.dto.Query")))
             .and(takesArgument(1, int.class))
-            .and(takesArguments(4))
             .and(takesArgument(2, BiConsumer.class))
             .and(takesArgument(3, Runnable.class)),
         getClass().getName() + "$InfluxDbChunkedBiConsumerCompletionQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
+            .and(takesArguments(5))
             .and(takesArgument(0, named("org.influxdb.dto.Query")))
             .and(takesArgument(1, int.class))
-            .and(takesArguments(5))
             .and(takesArgument(2, BiConsumer.class))
             .and(takesArgument(3, Runnable.class))
             .and(takesArgument(4, Consumer.class)),
@@ -141,8 +140,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbAsyncQueryAdvice {
 
     @AssignReturned.ToArguments({
-      @ToArgument(value = 1, index = 1, typing = Assigner.Typing.DYNAMIC),
-      @ToArgument(value = 2, index = 2, typing = Assigner.Typing.DYNAMIC)
+      @ToArgument(value = 1, index = 1),
+      @ToArgument(value = 2, index = 2)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
@@ -176,7 +175,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InfluxDbChunkedConsumerQueryAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1, typing = Assigner.Typing.DYNAMIC))
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Object[] onEnter(
@@ -205,7 +204,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InfluxDbChunkedBiConsumerQueryAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1, typing = Assigner.Typing.DYNAMIC))
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Object[] onEnter(
@@ -235,8 +234,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbChunkedConsumerCompletionQueryAdvice {
 
     @AssignReturned.ToArguments({
-      @ToArgument(value = 2, index = 1, typing = Assigner.Typing.DYNAMIC),
-      @ToArgument(value = 3, index = 2, typing = Assigner.Typing.DYNAMIC)
+      @ToArgument(value = 2, index = 1),
+      @ToArgument(value = 3, index = 2)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
@@ -270,8 +269,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbChunkedBiConsumerCompletionQueryAdvice {
 
     @AssignReturned.ToArguments({
-      @ToArgument(value = 2, index = 1, typing = Assigner.Typing.DYNAMIC),
-      @ToArgument(value = 3, index = 2, typing = Assigner.Typing.DYNAMIC)
+      @ToArgument(value = 2, index = 1),
+      @ToArgument(value = 3, index = 2)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
@@ -305,9 +304,9 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbChunkedBiConsumerCompletionErrorQueryAdvice {
 
     @AssignReturned.ToArguments({
-      @ToArgument(value = 2, index = 1, typing = Assigner.Typing.DYNAMIC),
-      @ToArgument(value = 3, index = 2, typing = Assigner.Typing.DYNAMIC),
-      @ToArgument(value = 4, index = 3, typing = Assigner.Typing.DYNAMIC)
+      @ToArgument(value = 2, index = 1),
+      @ToArgument(value = 3, index = 2),
+      @ToArgument(value = 4, index = 3)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable

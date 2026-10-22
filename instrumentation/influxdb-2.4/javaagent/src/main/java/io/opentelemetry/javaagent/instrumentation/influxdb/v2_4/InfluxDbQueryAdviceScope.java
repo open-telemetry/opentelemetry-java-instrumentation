@@ -35,24 +35,19 @@ public class InfluxDbQueryAdviceScope {
       return new InfluxDbQueryAdviceScope(callDepth, null, null);
     }
 
-    try {
-      Context parentContext = Context.current();
-      HttpUrl httpUrl = retrofit.baseUrl();
-      InfluxDbQuery influxDbQuery =
-          InfluxDbQuery.create(
-              httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
-      if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
-        return new InfluxDbQueryAdviceScope(callDepth, null, null);
-      }
-
-      return new InfluxDbQueryAdviceScope(
-          callDepth,
-          parentContext,
-          InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery));
-    } catch (Throwable t) {
-      callDepth.decrementAndGet();
-      throw t;
+    Context parentContext = Context.current();
+    HttpUrl httpUrl = retrofit.baseUrl();
+    InfluxDbQuery influxDbQuery =
+        InfluxDbQuery.create(
+            httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
+    if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
+      return new InfluxDbQueryAdviceScope(callDepth, null, null);
     }
+
+    return new InfluxDbQueryAdviceScope(
+        callDepth,
+        parentContext,
+        InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery));
   }
 
   @Nullable
