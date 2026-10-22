@@ -99,7 +99,7 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
           }
         };
     container.setMessageListener(listener);
-    cleanup.deferCleanup(container::stop);
+    cleanup.deferCleanup(container::destroy);
     container.afterPropertiesSet();
     container.start();
     assertThat(consumerCreated.await(10, SECONDS)).isTrue();
