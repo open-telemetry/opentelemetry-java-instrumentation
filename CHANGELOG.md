@@ -298,6 +298,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `otel.instrumentation.experimental.span-suppression-strategy` and
+  `java.common.span_suppression_strategy/development` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` and
+  `java.common.span_suppression_strategy`.
 - Remove deprecated `DeclarativeConfigPropertiesBridge` and
   `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
   `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.
