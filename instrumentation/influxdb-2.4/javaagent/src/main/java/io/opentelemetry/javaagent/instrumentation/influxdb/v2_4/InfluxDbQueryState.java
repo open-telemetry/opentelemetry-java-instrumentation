@@ -18,6 +18,8 @@ import retrofit2.Retrofit;
 public final class InfluxDbQueryState {
   public static final ContextKey<InfluxDbQueryState> KEY =
       ContextKey.named("opentelemetry-influxdb-query");
+  public static final ContextKey<InfluxDbQueryState> RESPONSE_PROCESSING_STATE =
+      ContextKey.named("opentelemetry-influxdb-response-processing");
 
   private final InfluxDbQuery request;
   private final Context context;

@@ -54,7 +54,8 @@ public class InfluxDbQueryAdviceScope {
       return new InfluxDbQueryAdviceScope(callDepth, null, null, null);
     }
 
-    Context parentContext = Context.current();
+    Context parentContext =
+        Context.current().with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null);
     HttpUrl httpUrl = retrofit.baseUrl();
     InfluxDbQuery influxDbQuery =
         InfluxDbQuery.create(

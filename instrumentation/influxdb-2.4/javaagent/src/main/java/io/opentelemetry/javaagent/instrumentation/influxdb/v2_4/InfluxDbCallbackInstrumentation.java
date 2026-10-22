@@ -64,7 +64,10 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
       InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(callback);
       if (state != null) {
         state.setCall(call);
-        return state.getContext().makeCurrent();
+        return state
+            .getContext()
+            .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, state)
+            .makeCurrent();
       }
       return null;
     }

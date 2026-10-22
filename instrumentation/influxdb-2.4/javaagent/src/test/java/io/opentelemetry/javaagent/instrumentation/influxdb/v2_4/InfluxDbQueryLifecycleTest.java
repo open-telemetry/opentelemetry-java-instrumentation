@@ -18,7 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
+import com.squareup.moshi.Moshi;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -120,6 +122,28 @@ class InfluxDbQueryLifecycleTest {
       assertThatThrownBy(() -> client.query(QUERY)).isInstanceOf(InfluxDBIOException.class);
     }
     assertQuery(InfluxDBIOException.class.getName());
+  }
+
+  @Test
+  void unrelatedInterceptorMoshiFailureIsNotRecorded() {
+    AtomicReference<JsonDataException> caughtError = new AtomicReference<>();
+    JsonAdapter<Integer> adapter = new Moshi.Builder().build().adapter(Integer.class);
+    try (InfluxDB client =
+        client(
+            chain -> {
+              try {
+                adapter.fromJson(new Buffer().writeUtf8("\"not an integer\""));
+              } catch (JsonDataException error) {
+                caughtError.set(error);
+              }
+              return response(chain, SUCCESS);
+            })) {
+      assertThat(client.query(QUERY)).isNotNull();
+    }
+    assertThat(caughtError.get()).isInstanceOf(JsonDataException.class);
+    assertQuery(null);
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasEventsSatisfyingExactly()));
   }
 
   @Test

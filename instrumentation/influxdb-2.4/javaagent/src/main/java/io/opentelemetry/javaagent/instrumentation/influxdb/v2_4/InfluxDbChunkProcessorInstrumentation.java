@@ -50,7 +50,8 @@ class InfluxDbChunkProcessorInstrumentation implements TypeInstrumentation {
   public static class ReadAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Thrown @Nullable Throwable error) {
-      InfluxDbQueryState state = Context.current().get(InfluxDbQueryState.KEY);
+      InfluxDbQueryState state =
+          Context.current().get(InfluxDbQueryState.RESPONSE_PROCESSING_STATE);
       if (state != null && error != null && !(error instanceof EOFException)) {
         state.onFailure(error);
       }
