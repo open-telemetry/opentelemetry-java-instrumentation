@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetryBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcConfig;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -76,7 +77,7 @@ public class GrpcSingletons {
   }
 
   public static void addClientInterceptor(ManagedChannelBuilder<?> builder) {
-    telemetry.addClientInterceptor(builder);
+    Experimental.addClientInterceptor(telemetry, builder);
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {

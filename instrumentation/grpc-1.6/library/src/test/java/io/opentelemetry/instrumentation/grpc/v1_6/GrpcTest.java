@@ -10,14 +10,21 @@ import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabi
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import example.GreeterGrpc;
 import example.Helloworld;
 import io.grpc.BindableService;
+import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
@@ -32,12 +39,14 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class GrpcTest extends AbstractGrpcTest {
@@ -62,13 +71,14 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
-    GrpcTelemetry.builder(testing.getOpenTelemetry())
-        .setClientRequestMetadata(
-            IncludeExclude.builder()
-                .setIncluded(singletonList(CLIENT_REQUEST_METADATA_KEY))
-                .build())
-        .build()
-        .addClientInterceptor(client);
+    Experimental.addClientInterceptor(
+        GrpcTelemetry.builder(testing.getOpenTelemetry())
+            .setClientRequestMetadata(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList(CLIENT_REQUEST_METADATA_KEY))
+                    .build())
+            .build(),
+        client);
     return client;
   }
 
@@ -80,6 +90,70 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = {"", "dns:///"})
+  void clientAddressFromTargetOrAuthority(String targetPrefix) throws Exception {
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public void sayHello(
+              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
+            responseObserver.onNext(
+                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build());
+            responseObserver.onCompleted();
+          }
+        };
+    Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GrpcTelemetry telemetry = GrpcTelemetry.create(testing.getOpenTelemetry());
+    String target =
+        (targetPrefix == null ? "dns:///" : targetPrefix) + "localhost:" + server.getPort();
+    ManagedChannel channel =
+        createChannel(
+            ManagedChannelBuilder.forTarget(target)
+                .overrideAuthority("fallback.invalid:1234")
+                .intercept(
+                    targetPrefix == null
+                        ? telemetry.createClientInterceptor()
+                        : telemetry.createClientInterceptor(target)));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+
+    Helloworld.Response response =
+        testing.runWithSpan(
+            "parent",
+            () ->
+                GreeterGrpc.newBlockingStub(channel)
+                    .sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+
+    assertThat(response.getMessage()).isEqualTo("Hello test");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("example.Greeter/SayHello")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttribute(
+                            SERVER_ADDRESS, targetPrefix == null ? "fallback.invalid" : "localhost")
+                        .hasAttribute(SERVER_PORT, targetPrefix == null ? 1234L : server.getPort()),
+                span ->
+                    span.hasName("example.Greeter/SayHello")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(1))));
+  }
+
+  @Test
+  void automaticTargetCaptureFallsBackForUnsupportedBuilder() {
+    ManagedChannelBuilder<?> builder = mock(ManagedChannelBuilder.class, CALLS_REAL_METHODS);
+
+    Experimental.addClientInterceptor(GrpcTelemetry.create(testing.getOpenTelemetry()), builder);
+
+    verify(builder).intercept(isA(ClientInterceptor.class));
   }
 
   @ParameterizedTest
@@ -227,11 +301,12 @@ class GrpcTest extends AbstractGrpcTest {
 
     ManagedChannelBuilder<?> channelBuilder =
         ManagedChannelBuilder.forAddress("localhost", server.getPort());
-    GrpcTelemetry.builder(testing.getOpenTelemetry())
-        .addAttributesExtractor(new CustomAttributesExtractor())
-        .addClientAttributeExtractor(new CustomAttributesExtractorV2("clientSideValue"))
-        .build()
-        .addClientInterceptor(channelBuilder);
+    channelBuilder.intercept(
+        GrpcTelemetry.builder(testing.getOpenTelemetry())
+            .addAttributesExtractor(new CustomAttributesExtractor())
+            .addClientAttributeExtractor(new CustomAttributesExtractorV2("clientSideValue"))
+            .build()
+            .createClientInterceptor());
     ManagedChannel channel = createChannel(channelBuilder);
 
     closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));

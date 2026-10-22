@@ -24,9 +24,8 @@ class GrpcStreamingTest extends AbstractGrpcStreamingTest {
 
   @Override
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
-    GrpcTelemetry grpcTelemetry = GrpcTelemetry.create(testing.getOpenTelemetry());
-    grpcTelemetry.addClientInterceptor(client);
-    return client;
+    return client.intercept(
+        GrpcTelemetry.create(testing.getOpenTelemetry()).createClientInterceptor());
   }
 
   @Override

@@ -5,55 +5,23 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static java.util.logging.Level.FINE;
+import static java.util.Objects.requireNonNull;
 
 import io.grpc.ClientInterceptor;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting gRPC servers or clients. */
 public final class GrpcTelemetry {
 
-  private static final Logger logger = Logger.getLogger(GrpcTelemetry.class.getName());
-
-  // Reflective access to InternalManagedChannelBuilder.interceptWithTarget (available since gRPC
-  // 1.64.0). Uses the public static accessor instead of the protected method on
-  // ManagedChannelBuilder to avoid needing setAccessible(true).
-  @Nullable private static final Method interceptWithTargetMethod;
-  @Nullable private static final Class<?> interceptorFactoryClass;
-
   static {
-    Method method = null;
-    Class<?> factoryClass = null;
-    try {
-      ClassLoader classLoader = ManagedChannelBuilder.class.getClassLoader();
-      Class<?> internalBuilder =
-          Class.forName("io.grpc.InternalManagedChannelBuilder", false, classLoader);
-      factoryClass =
-          Class.forName(
-              "io.grpc.InternalManagedChannelBuilder$InternalInterceptorFactory",
-              false,
-              classLoader);
-      method =
-          internalBuilder.getMethod(
-              "interceptWithTarget", ManagedChannelBuilder.class, factoryClass);
-    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-      // gRPC version < 1.64.0, interceptWithTarget not available
-    }
-    interceptWithTargetMethod = method;
-    interceptorFactoryClass = factoryClass;
-
     Internal.setClientInterceptorFactory(
-        (telemetry, target) -> telemetry.newTracingClientInterceptor(target));
+        (telemetry, target) -> telemetry.newTracingClientInterceptor(target, true));
   }
 
   private final Instrumenter<GrpcRequest, Status> serverInstrumenter;
@@ -86,65 +54,31 @@ public final class GrpcTelemetry {
   }
 
   /**
-   * Configures the given {@link ManagedChannelBuilder} with OpenTelemetry tracing instrumentation.
-   *
-   * <p>On gRPC 1.64.0+, this method captures the channel's target string for populating {@code
-   * server.address} and {@code server.port} attributes when the builder supports target-aware
-   * interception. Custom builders that do not support it, and older gRPC versions, fall back to
-   * using the channel's authority.
-   *
-   * <p>This is the recommended way to instrument a gRPC channel, instead of calling {@link
-   * #createClientInterceptor()} and adding the interceptor manually.
-   *
-   * @param builder the channel builder to configure
-   */
-  public void addClientInterceptor(ManagedChannelBuilder<?> builder) {
-    if (interceptWithTargetMethod != null && interceptorFactoryClass != null) {
-      try {
-        interceptWithTargetMethod.invoke(null, builder, newInterceptorFactory());
-        return;
-      } catch (Exception e) {
-        logger.log(FINE, "Failed to use interceptWithTarget, falling back", e);
-      }
-    }
-
-    // Fallback for gRPC < 1.64.0 or builders without target interception: omit target info
-    builder.intercept(newTracingClientInterceptor(null));
-  }
-
-  private Object newInterceptorFactory() {
-    // Proxies InternalManagedChannelBuilder$InternalInterceptorFactory, which inherits its only
-    // method, newInterceptor(String target), from ManagedChannelBuilder$InterceptorFactory. Object
-    // methods get identity semantics — we have no natural delegate to forward them to.
-    return Proxy.newProxyInstance(
-        ManagedChannelBuilder.class.getClassLoader(),
-        new Class<?>[] {interceptorFactoryClass},
-        (proxy, method, args) -> {
-          if ("newInterceptor".equals(method.getName())) {
-            return newTracingClientInterceptor((String) args[0], true);
-          }
-          switch (method.getName()) {
-            case "equals":
-              return proxy == args[0];
-            case "hashCode":
-              return System.identityHashCode(proxy);
-            case "toString":
-              return "GrpcInterceptorFactory";
-            default:
-              throw new UnsupportedOperationException(method.toString());
-          }
-        });
-  }
-
-  /**
    * Returns a new {@link ClientInterceptor} for use with methods like {@link
    * io.grpc.ManagedChannelBuilder#intercept(ClientInterceptor...)}.
    *
-   * <p>When configuring a {@link ManagedChannelBuilder} directly, prefer {@link
-   * #addClientInterceptor(ManagedChannelBuilder)} so the channel target can be captured.
+   * <p>Uses the channel's authority for {@code server.address} and {@code server.port}. Use {@link
+   * #createClientInterceptor(String)} when the configured channel target is available.
    */
   public ClientInterceptor createClientInterceptor() {
-    return newTracingClientInterceptor(null);
+    return newTracingClientInterceptor(null, false);
+  }
+
+  /**
+   * Returns a new {@link ClientInterceptor} that uses the configured channel target for {@code
+   * server.address} and {@code server.port}.
+   *
+   * <p>Pass the same target used to configure the channel, not an authority override. For custom
+   * name resolvers, use an explicit {@code scheme://...} target to distinguish it from a {@code
+   * host:port} address. If the target does not identify a usable endpoint, the interceptor falls
+   * back to the channel's authority.
+   *
+   * <p>This method does not depend on gRPC's internal target-aware interception API.
+   *
+   * @param target the configured gRPC channel target, for example {@code dns:///host:8443}
+   */
+  public ClientInterceptor createClientInterceptor(String target) {
+    return newTracingClientInterceptor(requireNonNull(target, "target"), false);
   }
 
   /**
@@ -154,10 +88,6 @@ public final class GrpcTelemetry {
   public ServerInterceptor createServerInterceptor() {
     return new TracingServerInterceptor(
         serverInstrumenter, captureExperimentalSpanAttributes, emitMessageEvents);
-  }
-
-  private TracingClientInterceptor newTracingClientInterceptor(@Nullable String target) {
-    return newTracingClientInterceptor(target, false);
   }
 
   private TracingClientInterceptor newTracingClientInterceptor(

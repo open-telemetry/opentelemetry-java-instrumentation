@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 import io.grpc.ClientInterceptor;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import java.util.function.BiFunction;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -24,8 +23,8 @@ public class Internal {
     clientInterceptorFactory = factory;
   }
 
-  public static ClientInterceptor createClientInterceptor(
-      GrpcTelemetry telemetry, @Nullable String target) {
+  /** Creates an interceptor using the target already resolved by gRPC's channel builder. */
+  public static ClientInterceptor createClientInterceptor(GrpcTelemetry telemetry, String target) {
     return clientInterceptorFactory.apply(telemetry, target);
   }
 
