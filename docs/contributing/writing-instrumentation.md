@@ -164,6 +164,14 @@ instrumented library: some of them expose interceptor/listener interfaces that c
 into the library, some others have a library interface that you can use to implement a decorator that
 emits telemetry when used.
 
+When a factory or builder returns an instrumented implementation of an existing underlying-library
+type that application code already uses, return the library's application-facing interface or base
+class rather than the OpenTelemetry implementation class when that library contract is the complete
+intended caller-facing contract. This applies to the instrumented library object, not the OpenTelemetry
+`*Telemetry` entry point or its configuration builder. Concrete types needed for supported
+instrumentation setup or framework integration are not automatic violations. This guidance does not
+apply to OpenTelemetry-defined types or SPIs.
+
 Consider the following builder class:
 
 ```java
