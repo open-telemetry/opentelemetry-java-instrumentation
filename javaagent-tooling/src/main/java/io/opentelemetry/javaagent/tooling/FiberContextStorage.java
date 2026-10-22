@@ -17,17 +17,15 @@ import javax.annotation.Nullable;
 
 final class FiberContextStorage implements ContextStorage, AutoCloseable {
 
-  private static final boolean STRICT_CONTEXT_ENABLED =
-      Boolean.getBoolean(ContextStorage.class.getPackage().getName() + ".enableStrictContext");
-
   private final ContextStorage delegate;
   private final boolean strictContextEnabled;
   private final AtomicInteger openFiberScopes = new AtomicInteger();
 
   FiberContextStorage(ContextStorage delegate) {
-    this(delegate, STRICT_CONTEXT_ENABLED);
+    this(delegate, isStrictContextEnabled());
   }
 
+  // visible for testing
   FiberContextStorage(ContextStorage delegate, boolean strictContextEnabled) {
     this.delegate = delegate;
     this.strictContextEnabled = strictContextEnabled;
@@ -41,7 +39,7 @@ final class FiberContextStorage implements ContextStorage, AutoCloseable {
     }
 
     Context previousContext = requireNonNull((Context) contextState.getContext());
-    if (toAttach == previousContext) {
+    if (toAttach == previousContext && !strictContextEnabled) {
       return Scope.noop();
     }
 
@@ -83,6 +81,10 @@ final class FiberContextStorage implements ContextStorage, AutoCloseable {
   @Nullable
   private static ContextState currentFiberContext() {
     return FiberContextStorageHolder.isEnabled() ? FiberContextStorageHolder.current() : null;
+  }
+
+  private static boolean isStrictContextEnabled() {
+    return Boolean.getBoolean(ContextStorage.class.getPackage().getName() + ".enableStrictContext");
   }
 
   private final class FiberScope implements Scope {

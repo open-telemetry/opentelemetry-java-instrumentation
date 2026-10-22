@@ -35,7 +35,7 @@ class FiberContextStorageTest {
     try {
       Scope parentScope = storage.attach(parentContext);
       Scope redundantScope = storage.attach(parentContext);
-      assertThat(redundantScope).isSameAs(Scope.noop());
+      assertThat(redundantScope).isNotSameAs(Scope.noop());
       redundantScope.close();
       assertThat(storage.current()).isSameAs(parentContext);
 
@@ -190,6 +190,51 @@ class FiberContextStorageTest {
 
     assertThatCode(storage::close).doesNotThrowAnyException();
     assertThat(delegate.closeCount).isEqualTo(1);
+  }
+
+  @Test
+  void readsStrictModeFromContextStorageProperty() throws Exception {
+    String strictContextProperty =
+        ContextStorage.class.getPackage().getName() + ".enableStrictContext";
+    String originalValue = System.getProperty(strictContextProperty);
+    try {
+      assertWrongOwnerCloseBehavior(strictContextProperty, "true", true);
+      assertWrongOwnerCloseBehavior(strictContextProperty, "false", false);
+    } finally {
+      if (originalValue == null) {
+        System.clearProperty(strictContextProperty);
+      } else {
+        System.setProperty(strictContextProperty, originalValue);
+      }
+    }
+  }
+
+  private static void assertWrongOwnerCloseBehavior(
+      String strictContextProperty, String strictContextValue, boolean strict) throws Exception {
+    System.setProperty(strictContextProperty, strictContextValue);
+    ContextStateImpl owner = new ContextStateImpl(Context.root());
+    FiberContextStorage storage = new FiberContextStorage(new TestStorage());
+
+    Activation ownerActivation = FiberContextStorageHolder.activate(owner, null);
+    try {
+      Scope scope = storage.attach(context("owner"));
+      ContextStateImpl otherFiber = new ContextStateImpl(context("other"));
+      Activation otherActivation = FiberContextStorageHolder.activate(otherFiber, ownerActivation);
+      try {
+        if (strict) {
+          assertThatThrownBy(scope::close).isInstanceOf(IllegalStateException.class);
+        } else {
+          assertThatCode(scope::close).doesNotThrowAnyException();
+        }
+      } finally {
+        FiberContextStorageHolder.deactivate(otherActivation);
+      }
+
+      scope.close();
+      storage.close();
+    } finally {
+      FiberContextStorageHolder.deactivate(ownerActivation);
+    }
   }
 
   private static Context context(String value) {
