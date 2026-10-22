@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
-import java.lang.reflect.Constructor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
 
@@ -41,10 +40,11 @@ class SpringRmiServerRequestTest {
   @Test
   void distinguishesOverloadsAndCopiesParameterTypes() throws Exception {
     Class<?>[] parameterTypes = {String.class};
-    Object request = createRequest(DuplicateService.class, "overloaded", parameterTypes);
+    SpringRmiServerRequest request =
+        createRequest(DuplicateService.class, "overloaded", parameterTypes);
     parameterTypes[0] = Integer.class;
 
-    assertThat(rpcMethod(request)).isEqualTo(FirstService.class.getName() + "/overloaded");
+    assertThat(request.rpcMethod()).isEqualTo(FirstService.class.getName() + "/overloaded");
     assertThat(rpcMethod(DuplicateService.class, "overloaded", Integer.class))
         .isEqualTo(SecondService.class.getName() + "/overloaded");
   }
@@ -59,30 +59,16 @@ class SpringRmiServerRequestTest {
   }
 
   private static String rpcMethod(
-      Class<?> serviceInterface, String methodName, Class<?>... parameterTypes) throws Exception {
-    return rpcMethod(createRequest(serviceInterface, methodName, parameterTypes));
+      Class<?> serviceInterface, String methodName, Class<?>... parameterTypes) {
+    return createRequest(serviceInterface, methodName, parameterTypes).rpcMethod();
   }
 
-  private static String rpcMethod(Object request) throws Exception {
-    Class<?> requestClass = request.getClass();
-    Method rpcMethod = requestClass.getDeclaredMethod("rpcMethod");
-    rpcMethod.setAccessible(true);
-    return (String) rpcMethod.invoke(request);
-  }
-
-  private static Object createRequest(
-      Class<?> serviceInterface, String methodName, Class<?>... parameterTypes) throws Exception {
-    Class<?> requestClass =
-        AgentClassLoaderAccess.loadClass(
-            "io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server."
-                + "SpringRmiServerRequest");
-    Constructor<?> constructor = requestClass.getDeclaredConstructors()[0];
-    Class<?> classAndMethodClass = constructor.getParameterTypes()[0];
-    constructor.setAccessible(true);
-    Object legacyRequest =
-        classAndMethodClass
-            .getMethod("create", Class.class, String.class)
-            .invoke(null, Object.class, methodName);
-    return constructor.newInstance(legacyRequest, serviceInterface, methodName, parameterTypes);
+  private static SpringRmiServerRequest createRequest(
+      Class<?> serviceInterface, String methodName, Class<?>... parameterTypes) {
+    return new SpringRmiServerRequest(
+        ClassAndMethod.create(Object.class, methodName),
+        serviceInterface,
+        methodName,
+        parameterTypes);
   }
 }

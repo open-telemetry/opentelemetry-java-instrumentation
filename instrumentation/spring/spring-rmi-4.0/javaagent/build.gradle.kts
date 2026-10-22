@@ -27,6 +27,16 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot:2.+") // documented limitation
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
+}
+
 otelJava {
   // due to security manager deprecation this test does not work on jdk 24 with default configuration
   maxJavaVersionForTests.set(JavaVersion.VERSION_23)
@@ -52,7 +62,7 @@ tasks {
   }
 
   check {
-    dependsOn(testPreviewSemconv, testBothSemconv)
+    dependsOn(testing.suites, testPreviewSemconv, testBothSemconv)
   }
 }
 
