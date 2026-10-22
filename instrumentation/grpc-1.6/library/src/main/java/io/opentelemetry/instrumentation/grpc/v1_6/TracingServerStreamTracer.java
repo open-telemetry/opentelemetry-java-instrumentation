@@ -14,7 +14,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcServerStreamTracerState;
 import java.net.SocketAddress;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,8 +30,8 @@ import javax.annotation.Nullable;
 final class TracingServerStreamTracer extends ServerStreamTracer {
 
   private static final String UNKNOWN_METHOD_SPAN_NAME = "_OTHER";
-  private static final io.grpc.Context.Key<AtomicBoolean> STREAM_TRACER_STATE_KEY =
-      GrpcServerStreamTracerState.getKey();
+  private static final io.grpc.Context.Key<CallState> STREAM_TRACER_STATE_KEY =
+      io.grpc.Context.key("otel-grpc-stream-tracer-state");
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final ContextPropagators propagators;
@@ -41,7 +40,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
   private final Context parentContext;
   private final Instant startTime;
 
-  private volatile AtomicBoolean callState = new AtomicBoolean();
+  private volatile CallState callState = new CallState();
   @Nullable private volatile SocketAddress peerAddress;
 
   TracingServerStreamTracer(
@@ -59,15 +58,15 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
   }
 
   static void markCurrentCallHandled() {
-    AtomicBoolean callState = STREAM_TRACER_STATE_KEY.get();
+    CallState callState = STREAM_TRACER_STATE_KEY.get();
     if (callState != null) {
-      callState.set(true);
+      callState.markHandled();
     }
   }
 
   @Override
   public io.grpc.Context filterContext(io.grpc.Context context) {
-    AtomicBoolean callState = STREAM_TRACER_STATE_KEY.get(context);
+    CallState callState = STREAM_TRACER_STATE_KEY.get(context);
     if (callState == null) {
       return context.withValue(STREAM_TRACER_STATE_KEY, this.callState);
     }
@@ -79,7 +78,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
   public void serverCallStarted(ServerCall<?, ?> call) {
     // gRPC creates a ServerCall only after resolving a registered method. Mark it handled here in
     // case another interceptor short-circuits the call before the tracing interceptor runs.
-    callState.set(true);
+    callState.markHandled();
     if (peerAddress == null) {
       SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
       if (addr != null) {
@@ -93,7 +92,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
     // A ServerCall starts only for a method that is registered on the server, and gRPC closes a
     // stream whose method it could not find with a specific UNIMPLEMENTED status. Requiring both
     // keeps other failures that occur before the ServerCall is created from being reported here.
-    if (!isUnknownMethod(status) || callState.get()) {
+    if (!isUnknownMethod(status) || callState.isHandledOrSpanStarted()) {
       return;
     }
     GrpcRequest request = new GrpcRequest(UNKNOWN_METHOD_SPAN_NAME, fullMethodName, headers);
@@ -105,7 +104,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
         propagators
             .getTextMapPropagator()
             .extract(parentContext, request, GrpcRequestGetter.INSTANCE);
-    if (instrumenter.shouldStart(extracted, request) && callState.compareAndSet(false, true)) {
+    if (instrumenter.shouldStart(extracted, request) && callState.tryMarkSpanStarted()) {
       InstrumenterUtil.startAndEnd(
           instrumenter, extracted, request, status, status.getCause(), startTime, Instant.now());
     }
@@ -114,5 +113,21 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
   private boolean isUnknownMethod(Status status) {
     return status.getCode() == Status.Code.UNIMPLEMENTED
         && ("Method not found: " + fullMethodName).equals(status.getDescription());
+  }
+
+  private static final class CallState {
+    private final AtomicBoolean handledOrSpanStarted = new AtomicBoolean();
+
+    void markHandled() {
+      handledOrSpanStarted.set(true);
+    }
+
+    boolean isHandledOrSpanStarted() {
+      return handledOrSpanStarted.get();
+    }
+
+    boolean tryMarkSpanStarted() {
+      return handledOrSpanStarted.compareAndSet(false, true);
+    }
   }
 }

@@ -24,6 +24,6 @@ public class GrpcInstrumentationModule extends InstrumentationModule {
         new GrpcClientBuilderBuildInstrumentation(),
         new GrpcContextInstrumentation(),
         new GrpcServerBuilderInstrumentation(),
-        new GrpcServerStreamTracerStateInstrumentation());
+        new GrpcServerStreamTracerFactoryInstrumentation());
   }
 }
