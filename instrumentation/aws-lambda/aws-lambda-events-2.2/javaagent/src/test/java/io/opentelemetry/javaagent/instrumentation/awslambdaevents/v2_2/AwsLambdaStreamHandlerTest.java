@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,7 +88,9 @@ class AwsLambdaStreamHandlerTest {
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getCanonicalName()),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   private static class RequestStreamHandlerTestImpl implements RequestStreamHandler {

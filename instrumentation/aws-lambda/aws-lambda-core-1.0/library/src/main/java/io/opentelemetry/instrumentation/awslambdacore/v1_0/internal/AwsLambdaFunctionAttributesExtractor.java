@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -68,7 +70,12 @@ public final class AwsLambdaFunctionAttributesExtractor
       io.opentelemetry.context.Context context,
       AwsLambdaRequest request,
       @Nullable Object response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    if (error != null) {
+      String errorType = error.getClass().getCanonicalName();
+      attributes.put(ERROR_TYPE, errorType != null ? errorType : error.getClass().getName());
+    }
+  }
 
   @Nullable
   private static String getFunctionArn(Context awsContext) {

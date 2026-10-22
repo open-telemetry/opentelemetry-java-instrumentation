@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -25,6 +27,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,6 +41,14 @@ public abstract class AbstractAwsLambdaTest {
   protected static String doHandleRequest(String input, Context context) {
     if (input.equals("hello")) {
       return "world";
+    }
+    if (input.equals("handled")) {
+      try {
+        throw new IllegalArgumentException("handled");
+      } catch (IllegalArgumentException e) {
+        Span.current().recordException(e);
+        return "world";
+      }
     }
     throw new IllegalArgumentException("bad argument");
   }
@@ -60,9 +72,10 @@ public abstract class AbstractAwsLambdaTest {
     return context;
   }
 
-  @Test
-  void handlerTraced() {
-    String result = handler().handleRequest("hello", context);
+  @ParameterizedTest
+  @ValueSource(strings = {"hello", "handled"})
+  void handlerTraced(String input) {
+    String result = handler().handleRequest(input, context);
     assertThat(result).isEqualTo("world");
 
     testing()
@@ -73,6 +86,7 @@ public abstract class AbstractAwsLambdaTest {
                         span.hasName("my_function")
                             .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasKind(SpanKind.SERVER)
+                            .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
@@ -93,6 +107,8 @@ public abstract class AbstractAwsLambdaTest {
                             .hasStatus(StatusData.error())
                             .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                             .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    ERROR_TYPE, IllegalArgumentException.class.getCanonicalName()),
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
 
     if (emitExceptionAsLogs()) {

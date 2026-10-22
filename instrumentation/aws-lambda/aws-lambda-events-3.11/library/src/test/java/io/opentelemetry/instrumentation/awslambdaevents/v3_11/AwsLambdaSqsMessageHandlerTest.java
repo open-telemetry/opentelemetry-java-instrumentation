@@ -193,6 +193,19 @@ class AwsLambdaSqsMessageHandlerTest {
             () -> new FailingHandler(testing.getOpenTelemetrySdk()).handleRequest(event, context))
         .isInstanceOf(IllegalStateException.class);
 
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("my_function")
+                        .hasKind(SpanKind.SERVER)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(ERROR_TYPE, IllegalStateException.class.getCanonicalName())),
+                span -> span.hasName("process queue1").hasStatus(StatusData.error()),
+                span -> span.hasName("process queue1").hasStatus(StatusData.error())));
+
     assertMetrics(
         testing,
         TracingSqsEventHandler.INSTRUMENTATION_NAME,

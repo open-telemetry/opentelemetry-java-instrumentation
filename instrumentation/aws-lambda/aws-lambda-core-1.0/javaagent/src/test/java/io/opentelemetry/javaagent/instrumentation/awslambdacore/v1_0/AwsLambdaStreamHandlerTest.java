@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -90,7 +91,9 @@ class AwsLambdaStreamHandlerTest {
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
                         .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getCanonicalName()),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
       testing.waitAndAssertLogRecords(

@@ -28,6 +28,7 @@ dependencies {
   // in public API.
   library("com.amazonaws:aws-lambda-java-events:2.2.1")
 
+  testImplementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing"))
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing"))
   testInstrumentation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent"))
 }

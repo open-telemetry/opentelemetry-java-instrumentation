@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
@@ -101,6 +102,7 @@ class AwsLambdaWrapperTest {
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getCanonicalName()),
                             equalTo(
                                 CLOUD_RESOURCE_ID,
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()

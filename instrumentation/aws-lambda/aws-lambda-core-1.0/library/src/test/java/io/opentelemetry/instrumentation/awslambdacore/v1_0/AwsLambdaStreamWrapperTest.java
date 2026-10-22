@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
@@ -117,6 +118,7 @@ class AwsLambdaStreamWrapperTest {
                         .hasStatus(StatusData.error())
                         .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getCanonicalName()),
                             equalTo(
                                 CLOUD_RESOURCE_ID,
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
