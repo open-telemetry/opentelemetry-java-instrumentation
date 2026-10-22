@@ -9,12 +9,17 @@ import static java.util.Collections.singletonList;
 
 import com.rabbitmq.client.Channel;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
-public class SpringRabbitRequest {
+public class SpringRabbitRequest implements ImplicitContextKeyed {
+
+  private static final ContextKey<SpringRabbitRequest> KEY =
+      ContextKey.named("opentelemetry-spring-rabbit-request");
 
   private static final VirtualField<Message, Context> PROCESSING_CONTEXT =
       VirtualField.find(Message.class, Context.class);
@@ -22,6 +27,8 @@ public class SpringRabbitRequest {
   private final Channel channel;
   private final List<Message> messages;
   private final int batchMessageCount;
+  private int deliveredMessageCount;
+  private int nestedExecutionDepth;
   @Nullable private ProcessingContextInstallation processingContextInstallation;
 
   public SpringRabbitRequest(Channel channel, Message message) {
@@ -49,11 +56,42 @@ public class SpringRabbitRequest {
   }
 
   boolean isBatch() {
-    return batchMessageCount > 0;
+    return batchMessageCount > 0 || deliveredMessageCount > 1;
   }
 
   int getBatchMessageCount() {
-    return batchMessageCount;
+    return batchMessageCount > 0 ? batchMessageCount : deliveredMessageCount;
+  }
+
+  static void enterExecution() {
+    SpringRabbitRequest request = Context.current().get(KEY);
+    if (request != null) {
+      // A suppressed nested executeListener must not add deliveries to the outer request.
+      request.nestedExecutionDepth++;
+    }
+  }
+
+  static void exitExecution() {
+    SpringRabbitRequest request = Context.current().get(KEY);
+    if (request != null) {
+      request.nestedExecutionDepth--;
+    }
+  }
+
+  static void recordDelivery(Object data) {
+    SpringRabbitRequest request = Context.current().get(KEY);
+    if (request != null
+        && request.nestedExecutionDepth == 0
+        && request.batchMessageCount == 0
+        && data instanceof Message) {
+      // Producer batches are debatched inside executeListener, once per invokeListener call.
+      request.deliveredMessageCount++;
+    }
+  }
+
+  @Override
+  public Context storeInContext(Context context) {
+    return context.with(KEY, this);
   }
 
   void installProcessingContext(Context context) {

@@ -144,6 +144,7 @@ class SpringRabbitProcessTest {
                   AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
                       container, channel, inner))
               .isNull();
+          AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(null, null);
           assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
         });
     process(inner, () -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
@@ -186,6 +187,7 @@ class SpringRabbitProcessTest {
                   AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
                       container, channel, message))
               .isNull();
+          AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(null, null);
           assertThat(PROCESSING_CONTEXT.get(message)).isSameAs(outerContext);
         });
 
@@ -202,6 +204,43 @@ class SpringRabbitProcessTest {
                 new SimpleMessageListenerContainer(), channel, message))
         .isNull();
     assertThat(PROCESSING_CONTEXT.get(message)).isNull();
+    AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(null, null);
+  }
+
+  @Test
+  void nestedDeliveryDoesNotInflateProducerBatchCount() {
+    Message packed = message();
+    process(
+        packed,
+        () -> {
+          AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(message());
+          assertThat(
+                  AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
+                      container, channel, packed))
+              .isNull();
+          try {
+            AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(message());
+          } finally {
+            AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(
+                null, null);
+          }
+          AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(message());
+        });
+    process(
+        packed,
+        () -> AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(packed));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasAttribute(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasAttribute(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, null))));
+    assertConsumedMessages(3);
+    assertProcessAttempts(2);
+    assertThat(PROCESSING_CONTEXT.get(packed)).isNull();
+    assertThat(Context.current()).isSameAs(Context.root());
   }
 
   private void process(Object message, Runnable callback) {

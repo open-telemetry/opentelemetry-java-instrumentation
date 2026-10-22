@@ -39,7 +39,11 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
                     .or(takesArgument(1, named("org.springframework.amqp.core.Message")))),
         getClass().getName() + "$ExecuteListenerAdvice");
     transformer.applyAdviceToMethod(
-        named("invokeListener"), getClass().getName() + "$InvokeListenerAdvice");
+        named("invokeListener")
+            .and(
+                takesArgument(1, Object.class)
+                    .or(takesArgument(1, named("org.springframework.amqp.core.Message")))),
+        getClass().getName() + "$InvokeListenerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -83,7 +87,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         // Span-start callbacks should not observe an ambient RabbitMQ process context.
         // The Spring process span still uses the captured parentContext.
         try (Scope ignored = Context.root().makeCurrent()) {
-          context = instrumenter().start(parentContext, request);
+          context = instrumenter().start(parentContext, request).with(request);
         }
         request.installProcessingContext(context);
         return new AdviceScope(context, request);
@@ -109,6 +113,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Argument(0) Channel channel,
         @Advice.Argument(1) Object data) {
+      SpringRabbitRequest.enterExecution();
       return AdviceScope.start(container, channel, data);
     }
 
@@ -116,15 +121,23 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope == null) {
-        return;
+      try {
+        if (adviceScope != null) {
+          adviceScope.end(throwable);
+        }
+      } finally {
+        SpringRabbitRequest.exitExecution();
       }
-      adviceScope.end(throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class InvokeListenerAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.Argument(1) Object data) {
+      SpringRabbitRequest.recordDelivery(data);
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {
