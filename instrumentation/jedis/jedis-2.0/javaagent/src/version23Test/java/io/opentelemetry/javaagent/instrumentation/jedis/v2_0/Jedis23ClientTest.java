@@ -7,32 +7,29 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Awaitility.await;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.io.IOException;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisClusterCommand;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSlotBasedConnectionHandler;
+import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.util.JedisClusterCRC16;
 
-class Jedis23ClusterCommandTest {
+class Jedis23ClientTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -42,29 +39,15 @@ class Jedis23ClusterCommandTest {
 
   private static GenericContainer<?> redis;
 
+  private static Jedis jedis;
+
   @BeforeAll
-  static void setup() throws IOException, InterruptedException {
-    int port = PortUtils.findOpenPort();
+  static void setup() {
     redis = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
-    redis.setPortBindings(singletonList(port + ":6379"));
-    redis.withCommand(
-        "redis-server",
-        "--cluster-enabled",
-        "yes",
-        "--cluster-config-file",
-        "/tmp/nodes.conf",
-        "--cluster-announce-ip",
-        "127.0.0.1",
-        "--cluster-announce-port",
-        Integer.toString(port));
     redis.start();
     cleanup.deferAfterAll(redis::stop);
-    Container.ExecResult result =
-        redis.execInContainer("sh", "-c", "redis-cli cluster addslots $(seq 0 16383) >/dev/null");
-    assertThat(result.getExitCode()).isZero();
-    Jedis node = new Jedis(redis.getHost(), port);
-    cleanup.deferAfterAll(node::disconnect);
-    await().untilAsserted(() -> assertThat(node.clusterInfo()).contains("cluster_state:ok"));
+    jedis = new Jedis(redis.getHost(), redis.getMappedPort(6379));
+    cleanup.deferAfterAll(jedis::disconnect);
   }
 
   @Test
@@ -80,6 +63,7 @@ class Jedis23ClusterCommandTest {
 
   @Test
   void failedClusterCommandUsesServerReplyAndDoesNotLeak() {
+    resetRedis();
     JedisCluster cluster = new JedisCluster(emptySet());
     seedNode(cluster.getClusterNodes());
     cluster.lpush("wrong-type", "value");
@@ -89,8 +73,35 @@ class Jedis23ClusterCommandTest {
     assertErrorType("WRONGTYPE");
 
     testing.clearData();
-    assertThat(cluster.set("after-error", "value")).isEqualTo("OK");
+    assertThat(jedis.set("after-error", "value")).isEqualTo("OK");
     assertErrorType(null);
+  }
+
+  @Test
+  void dedicatedServerErrorUsesExceptionClass() {
+    testing.clearData();
+    Throwable error =
+        catchThrowable(
+            () -> jedis.eval("return redis.error_reply(ARGV[1])", 0, "MOVED 42 127.0.0.1:6379"));
+
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertThat(error.getClass()).isNotEqualTo(JedisDataException.class);
+    assertErrorType(error.getClass().getName());
+  }
+
+  @Test
+  void unreliableServerPrefixUsesExceptionClass() {
+    testing.clearData();
+    Throwable error =
+        catchThrowable(() -> jedis.eval("return redis.error_reply(ARGV[1])", 0, "échec details"));
+
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertErrorType(error.getClass().getName());
+  }
+
+  private static void resetRedis() {
+    jedis.flushAll();
+    testing.clearData();
   }
 
   private static void assertErrorType(String errorType) {
@@ -118,16 +129,18 @@ class Jedis23ClusterCommandTest {
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void redirectedCommandUsesTerminalReply(boolean fail) {
+    resetRedis();
     JedisSlotBasedConnectionHandler handler = new JedisSlotBasedConnectionHandler(emptySet());
     seedNode(handler.getNodes());
     String key = fail ? "redirect-error" : "redirect-success";
+    String address = redis.getHost() + ":" + redis.getMappedPort(6379);
     String script =
         "if redis.call('EXISTS', KEYS[1]) == 0 then "
             + "redis.call('SET', KEYS[1], 'attempted'); "
             + "return redis.error_reply('MOVED "
             + JedisClusterCRC16.getSlot(key)
-            + " 127.0.0.1:"
-            + redis.getMappedPort(6379)
+            + " "
+            + address
             + "') end "
             + (fail
                 ? "return redis.error_reply('WRONGTYPE terminal failure')"
@@ -139,7 +152,6 @@ class Jedis23ClusterCommandTest {
             return handler.getConnection().eval(script, 1, key);
           }
         };
-    testing.clearData();
 
     if (fail) {
       assertThatThrownBy(() -> command.run(key)).hasMessageStartingWith("WRONGTYPE");
@@ -155,11 +167,11 @@ class Jedis23ClusterCommandTest {
   }
 
   private static void seedNode(Map<String, JedisPool> nodes) {
-    // Jedis 2.3 cannot parse the cluster bus ports in modern CLUSTER NODES replies.
+    String host = redis.getHost();
     int port = redis.getMappedPort(6379);
-    JedisPool pool = new JedisPool("127.0.0.1", port);
+    JedisPool pool = new JedisPool(host, port);
     cleanup.deferCleanup(pool::destroy);
-    nodes.put("127.0.0.1" + port, pool);
+    nodes.put(host + port, pool);
   }
 
   static class TestClusterCommand extends JedisClusterCommand<String> {

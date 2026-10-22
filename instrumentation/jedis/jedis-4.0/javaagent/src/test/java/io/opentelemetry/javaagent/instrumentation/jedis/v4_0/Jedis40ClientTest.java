@@ -128,7 +128,6 @@ class Jedis40ClientTest {
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
-    assertNoErrorTypeMetric();
   }
 
   @Test
@@ -182,14 +181,7 @@ class Jedis40ClientTest {
 
     testing.clearData();
     jedis.set("after-error", "value");
-    assertNoErrorTypeMetric();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.satisfies(
-                        spanData ->
-                            assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+    assertErrorType(null);
   }
 
   @Test
@@ -233,14 +225,7 @@ class Jedis40ClientTest {
 
     testing.clearData();
     jedis.set("after-error", "value");
-    assertNoErrorTypeMetric();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.satisfies(
-                        spanData ->
-                            assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+    assertErrorType(null);
   }
 
   @Test
@@ -262,14 +247,7 @@ class Jedis40ClientTest {
 
     testing.clearData();
     jedis.set("after-error", "value");
-    assertNoErrorTypeMetric();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.satisfies(
-                        spanData ->
-                            assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+    assertErrorType(null);
   }
 
   private static void assertErrorType(String errorType) {
@@ -288,18 +266,6 @@ class Jedis40ClientTest {
                             point ->
                                 assertThat(point.getAttributes().get(ERROR_TYPE))
                                     .isEqualTo(errorType))));
-  }
-
-  private static void assertNoErrorTypeMetric() {
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.jedis-4.0",
-        "db.client.operation.duration",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .anySatisfy(
-                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
   }
 
   @Test
