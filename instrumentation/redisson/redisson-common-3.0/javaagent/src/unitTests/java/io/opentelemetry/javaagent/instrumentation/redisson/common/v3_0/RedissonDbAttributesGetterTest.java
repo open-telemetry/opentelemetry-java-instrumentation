@@ -145,6 +145,26 @@ class RedissonDbAttributesGetterTest {
   }
 
   @Test
+  void capturedPrefixIsConsumedBeforeCompletionCallbacks() {
+    RedisException serverError = new RedisException("CUSTOM diagnostic details");
+    RedisException clientError = new RedisException("client-side failure");
+    String previous = RedissonErrorCapture.currentServerErrorType().set("CUSTOM");
+    try {
+      RedissonErrorCapture.captureServerError(serverError);
+      // a callback issuing a new, client-side failing command within the decoder frame
+      RedissonErrorCapture.captureServerError(clientError);
+      assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
+      // a repeated capture, as with BatchCommandData calling super.tryFailure, keeps the prefix
+      RedissonErrorCapture.captureServerError(serverError);
+    } finally {
+      RedissonErrorCapture.currentServerErrorType().restore(previous);
+    }
+
+    assertThat(extractedErrorType(serverError)).isEqualTo("CUSTOM");
+    assertThat(extractedErrorType(clientError)).isEqualTo(RedisException.class.getName());
+  }
+
+  @Test
   void connectionExceptionIsNotClassifiedAsServerError() {
     RedisConnectionException error = new RedisConnectionException("ERR connection refused");
 

@@ -74,6 +74,8 @@ public final class RedissonErrorCapture {
     String errorType = currentServerErrorType.get();
     if (errorType != null) {
       SERVER_ERROR.set((RedisException) error, new RedisServerError(errorType));
+      // consume so completion callbacks run by tryFailure cannot attribute it to another command
+      currentServerErrorType.set(null);
     }
   }
 
