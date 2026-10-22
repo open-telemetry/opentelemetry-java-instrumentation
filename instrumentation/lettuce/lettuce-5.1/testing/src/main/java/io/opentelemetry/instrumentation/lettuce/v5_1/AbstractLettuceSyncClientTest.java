@@ -454,9 +454,105 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @Test
   void testTransactionWithThrowableValue()
       throws ExecutionException, InterruptedException, TimeoutException {
-    if (!testLatestDeps()) {
-      return;
-    }
+    String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
+    boolean queuedAcknowledgements = !testLatestDeps() || "6.0.0.RELEASE".equals(lettuceVersion);
+    StatefulRedisConnection<String, Object> throwableConnection = connectThrowableValueCodec();
+    RedisCommands<String, Object> commands = throwableConnection.sync();
+    commands.multi();
+    RedisFuture<Object> get = throwableConnection.async().get("transaction-key");
+
+    testing().waitForTraces(queuedAcknowledgements ? 2 : 1);
+    assertThat(get.toCompletableFuture()).isNotDone();
+
+    TransactionResult result = commands.exec();
+
+    assertThat(result).hasSize(1);
+    assertThat(result.<Throwable>get(0))
+        .isInstanceOf(RedisCommandExecutionException.class)
+        .hasMessage("decoded value");
+    assertThat((Throwable) get.get(10, SECONDS))
+        .isInstanceOf(RedisCommandExecutionException.class)
+        .hasMessage("decoded value");
+
+    testing()
+        .waitAndAssertTraces(
+            transactionSpan("MULTI", "MULTI", StatusData.unset(), null, lettuceVersion),
+            transactionSpan("GET", "GET transaction-key", StatusData.unset(), null, lettuceVersion),
+            transactionSpan("EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
+
+    assertCommandMetric("MULTI", null);
+    assertCommandMetric("GET", null);
+    assertCommandMetric("EXEC", null);
+  }
+
+  @Test
+  void testTransactionWithThrowableValueBeforeFailure()
+      throws ExecutionException, InterruptedException, TimeoutException {
+    String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
+    boolean queuedAcknowledgements = !testLatestDeps() || "6.0.0.RELEASE".equals(lettuceVersion);
+    String errorMessage = "ERR transaction failed";
+    String script = "return redis.error_reply(ARGV[1])";
+    StatefulRedisConnection<String, Object> throwableConnection = connectThrowableValueCodec();
+    RedisCommands<String, Object> commands = throwableConnection.sync();
+    commands.multi();
+    RedisFuture<Object> get = throwableConnection.async().get("transaction-key");
+    RedisFuture<Object> evaluated =
+        throwableConnection
+            .async()
+            .eval(script, ScriptOutputType.VALUE, new String[0], errorMessage);
+
+    testing().waitForTraces(queuedAcknowledgements ? 3 : 1);
+    assertThat(get.toCompletableFuture()).isNotDone();
+    assertThat(evaluated.toCompletableFuture()).isNotDone();
+
+    TransactionResult result = commands.exec();
+
+    assertThat(result).hasSize(2);
+    assertThat(result.<Throwable>get(0))
+        .isInstanceOf(RedisCommandExecutionException.class)
+        .hasMessage("decoded value");
+    assertThat(result.<Throwable>get(1))
+        .isInstanceOf(RedisCommandExecutionException.class)
+        .hasMessage(errorMessage);
+    assertThat((Throwable) get.get(10, SECONDS))
+        .isInstanceOf(RedisCommandExecutionException.class)
+        .hasMessage("decoded value");
+    assertThatThrownBy(() -> evaluated.get(10, SECONDS))
+        .hasCauseInstanceOf(RedisCommandExecutionException.class)
+        .cause()
+        .hasMessage(errorMessage);
+
+    String encodedScript = Base64.getEncoder().encodeToString(script.getBytes(UTF_8));
+    testing()
+        .waitAndAssertTraces(
+            transactionSpan("MULTI", "MULTI", StatusData.unset(), null, lettuceVersion),
+            transactionSpan("GET", "GET transaction-key", StatusData.unset(), null, lettuceVersion),
+            transactionSpan(
+                "EVAL",
+                "EVAL " + encodedScript + " 0 ?",
+                testLatestDeps() && !queuedAcknowledgements
+                    ? StatusData.error()
+                    : StatusData.unset(),
+                testLatestDeps() && !queuedAcknowledgements
+                    ? RedisCommandExecutionException.class.getName()
+                    : null,
+                lettuceVersion),
+            transactionSpan("EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
+
+    assertCommandMetric("MULTI", null);
+    assertCommandMetric("GET", null);
+    assertCommandMetric(
+        "EVAL",
+        testLatestDeps() && !queuedAcknowledgements
+            ? RedisCommandExecutionException.class.getName()
+            : null);
+    assertCommandMetric("EXEC", null);
+  }
+
+  private StatefulRedisConnection<String, Object> connectThrowableValueCodec() {
+    syncCommands.set("transaction-key", "value");
+    testing().waitForTraces(1);
+    testing().clearData();
 
     RedisCodec<String, Object> codec =
         new RedisCodec<String, Object>() {
@@ -467,7 +563,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
           @Override
           public Object decodeValue(ByteBuffer bytes) {
-            return new IllegalStateException("decoded value");
+            return new RedisCommandExecutionException("decoded value");
           }
 
           @Override
@@ -482,29 +578,11 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         };
     StatefulRedisConnection<String, Object> throwableConnection = redisClient.connect(codec);
     cleanup.deferCleanup(throwableConnection);
-    RedisCommands<String, Object> commands = throwableConnection.sync();
-    commands.multi();
-    RedisFuture<Object> get = throwableConnection.async().get("transaction-key");
-    TransactionResult result = commands.exec();
-
-    assertThat(result).hasSize(1);
-    assertThat(result.<Throwable>get(0))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("decoded value");
-    assertThat((Throwable) get.get(10, SECONDS))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("decoded value");
-
-    String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
-    testing()
-        .waitAndAssertTraces(
-            transactionSpan("MULTI", "MULTI", StatusData.unset(), null, lettuceVersion),
-            transactionSpan("GET", "GET transaction-key", StatusData.unset(), null, lettuceVersion),
-            transactionSpan("EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
-
-    assertCommandMetric("MULTI", null);
-    assertCommandMetric("GET", null);
-    assertCommandMetric("EXEC", null);
+    if (testLatestDeps()) {
+      testing().waitForTraces(3);
+      testing().clearData();
+    }
+    return throwableConnection;
   }
 
   @Test
