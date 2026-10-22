@@ -17,11 +17,20 @@ import javax.annotation.Nullable;
 
 final class FiberContextStorage implements ContextStorage, AutoCloseable {
 
+  private static final boolean STRICT_CONTEXT_ENABLED =
+      Boolean.getBoolean(ContextStorage.class.getPackage().getName() + ".enableStrictContext");
+
   private final ContextStorage delegate;
+  private final boolean strictContextEnabled;
   private final AtomicInteger openFiberScopes = new AtomicInteger();
 
   FiberContextStorage(ContextStorage delegate) {
+    this(delegate, STRICT_CONTEXT_ENABLED);
+  }
+
+  FiberContextStorage(ContextStorage delegate, boolean strictContextEnabled) {
     this.delegate = delegate;
+    this.strictContextEnabled = strictContextEnabled;
   }
 
   @Override
@@ -32,11 +41,17 @@ final class FiberContextStorage implements ContextStorage, AutoCloseable {
     }
 
     Context previousContext = requireNonNull((Context) contextState.getContext());
+    if (toAttach == previousContext) {
+      return Scope.noop();
+    }
+
     Object previousScope = contextState.getScope();
     FiberScope scope = new FiberScope(contextState, previousContext, previousScope);
     contextState.setContext(toAttach);
     contextState.setScope(scope);
-    openFiberScopes.incrementAndGet();
+    if (strictContextEnabled) {
+      openFiberScopes.incrementAndGet();
+    }
     return scope;
   }
 
@@ -90,16 +105,24 @@ final class FiberContextStorage implements ContextStorage, AutoCloseable {
         return;
       }
       if (FiberContextStorageHolder.current() != owner) {
-        throw new IllegalStateException("Fiber context scope closed by a different fiber");
+        if (strictContextEnabled) {
+          throw new IllegalStateException("Fiber context scope closed by a different fiber");
+        }
+        return;
       }
       if (owner.getScope() != this) {
-        throw new IllegalStateException("Fiber context scopes must be closed in reverse order");
+        if (strictContextEnabled) {
+          throw new IllegalStateException("Fiber context scopes must be closed in reverse order");
+        }
+        return;
       }
 
       owner.setContext(previousContext);
       owner.setScope(previousScope);
       closed = true;
-      openFiberScopes.decrementAndGet();
+      if (strictContextEnabled) {
+        openFiberScopes.decrementAndGet();
+      }
     }
   }
 }
