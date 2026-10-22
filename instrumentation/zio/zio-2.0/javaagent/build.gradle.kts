@@ -31,9 +31,3 @@ dependencies {
   library("dev.zio:zio_$scalaVersion:$zioVersion")
   testCompileOnly("org.scala-lang:scala-library:2.12.20")
 }
-
-tasks {
-  test {
-    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-  }
-}
