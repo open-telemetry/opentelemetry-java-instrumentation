@@ -57,7 +57,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -107,14 +106,14 @@ public abstract class AbstractJdbcInstrumentationTest {
   private static final Map<String, Map<String, DataSource>> cpDatasources = new HashMap<>();
 
   static {
-    Map<String, String> jdbcUrls = new LinkedHashMap<>();
+    Map<String, String> jdbcUrls = new HashMap<>();
     jdbcUrls.put("h2", "jdbc:h2:mem:" + DATABASE_NAME);
     jdbcUrls.put("derby", "jdbc:derby:memory:" + DATABASE_NAME);
     jdbcUrls.put("hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
     jdbcUrls.put("sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
     JDBC_URLS = Collections.unmodifiableMap(jdbcUrls);
 
-    Map<String, String> jdbcDriverClassNames = new LinkedHashMap<>();
+    Map<String, String> jdbcDriverClassNames = new HashMap<>();
     jdbcDriverClassNames.put("h2", "org.h2.Driver");
     jdbcDriverClassNames.put("derby", "org.apache.derby.jdbc.EmbeddedDriver");
     jdbcDriverClassNames.put("hsqldb", "org.hsqldb.jdbc.JDBCDriver");
