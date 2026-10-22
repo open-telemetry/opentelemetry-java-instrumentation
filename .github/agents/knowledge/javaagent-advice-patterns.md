@@ -61,20 +61,9 @@ public void onEnter(/* ... */) { /* ... */ }
 
 Advice classes should also have **no instance fields** — they are never instantiated.
 
-## Keep Production Advice Non-inlined
+## Keep production advice non-inlined
 
-`AdviceInspector` selects isolated indy loading automatically when every advice annotation in a
-module explicitly sets `inline = false`. If an ordinary module adds default-inlined advice, the
-module becomes mixed: automatic selection falls back to injecting helpers into the application
-classloader. This automatic fallback is distinct from an explicit
-`ExperimentalInstrumentationModule.helperClassStrategy()` override, which is checked first and can
-select either loading strategy.
-
-Do not work around a mixed module by adding its existing non-inlined advice classes to
-`getAdditionalHelperClassNames()`. Keep production advice non-inlined instead. For `VirtualField`
-lookups from non-inlined advice, keep a cached `static final` handle on a non-advice helper or
-singleton rather than calling `VirtualField.find(...)` in annotated methods; see
-[VirtualField lookup placement](javaagent-virtual-fields.md#lookup-placement).
+Use `inline = false` consistently throughout each production module. Mixing inlined and non-inlined advice disables automatic indy isolation.
 
 ## `Java8BytecodeBridge`
 
