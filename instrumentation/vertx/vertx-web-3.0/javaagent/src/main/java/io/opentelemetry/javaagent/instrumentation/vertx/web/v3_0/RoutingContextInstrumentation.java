@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.ext.web.RoutingContext;
@@ -46,7 +46,7 @@ class RoutingContextInstrumentation implements TypeInstrumentation {
       // restore remembered route to remove currently matched route from it
       String previousRoute = RoutingContextUtil.getRoute(routingContext);
       if (previousRoute != null) {
-        RouteHolder.set(Java8BytecodeBridge.currentContext(), previousRoute);
+        RouteHolder.set(Context.current(), previousRoute);
       }
     }
   }

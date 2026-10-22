@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.REACTIVE_DISPATCHER_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
@@ -46,7 +45,7 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ReactiveCommandDispatcher<?, ?, ?> dispatcher) {
-      REACTIVE_DISPATCHER_CONTEXT.set(dispatcher, currentContext());
+      REACTIVE_DISPATCHER_CONTEXT.set(dispatcher, Context.current());
     }
   }
 

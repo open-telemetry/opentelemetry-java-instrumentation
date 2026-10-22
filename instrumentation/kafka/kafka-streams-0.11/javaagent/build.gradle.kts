@@ -23,7 +23,6 @@ dependencies {
   // Include kafka-clients instrumentation for tests.
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
-  testImplementation("com.google.guava:guava")
   testImplementation("org.testcontainers:testcontainers-kafka")
 }
 
