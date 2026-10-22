@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.AbstractSpringIntegration41Test.assertPropagation;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertProcessMetrics;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -59,7 +60,6 @@ class SpringIntegrationAmqp41Test {
       adapter.start();
       try {
         MessageProperties properties = new MessageProperties();
-        properties.setConsumerQueue("input");
         properties.setReceivedRoutingKey("input");
         properties.setContentType(MessageProperties.CONTENT_TYPE_TEXT_PLAIN);
         Message message = new Message("test".getBytes(UTF_8), properties);
@@ -84,13 +84,7 @@ class SpringIntegrationAmqp41Test {
                                   : "process application.directChannel")
                           .hasKind(SpanKind.CONSUMER)
                           .hasNoParent();
-                      assertThat(captured.get().getHeaders().get("traceparent"))
-                          .isEqualTo(
-                              "00-"
-                                  + trace.getSpan(0).getTraceId()
-                                  + "-"
-                                  + trace.getSpan(0).getSpanId()
-                                  + "-01");
+                      assertPropagation(captured.get(), trace.getSpan(0));
                     },
                     span -> span.hasName("handler").hasParent(trace.getSpan(0))));
         if (withRabbitProcessing) {

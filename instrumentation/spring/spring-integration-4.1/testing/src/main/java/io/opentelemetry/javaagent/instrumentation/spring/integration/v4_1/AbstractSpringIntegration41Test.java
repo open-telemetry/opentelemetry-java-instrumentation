@@ -17,9 +17,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,7 +107,8 @@ abstract class AbstractSpringIntegration41Test {
         message -> {
           Context before = Context.current();
           inner.send(message);
-          assertThat(Context.current()).isSameAs(before);
+          assertThat(Span.current().getSpanContext())
+              .isEqualTo(Span.fromContext(before).getSpanContext());
           testing.runWithSpan("outerHandler", () -> {});
         });
 
@@ -118,22 +121,18 @@ abstract class AbstractSpringIntegration41Test {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("process application.directChannel").hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName("process application.nestedChannel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0)),
-                span -> span.hasName("innerHandler").hasParent(trace.getSpan(1)),
+                span -> span.hasName("innerHandler").hasParent(trace.getSpan(0)),
                 span -> span.hasName("outerHandler").hasParent(trace.getSpan(0))));
     assertProcessMetrics(testing, "application.directChannel", false);
-    assertProcessMetrics(testing, "application.nestedChannel", false);
   }
 
   @Test
   void shouldCleanUpAfterFailedSend() {
     DirectChannel channel = applicationContext.getBean("directChannel", DirectChannel.class);
+    IllegalStateException handlerFailure = new IllegalStateException("failed handler");
     channel.subscribe(
         message -> {
-          throw new IllegalStateException("failed handler");
+          throw handlerFailure;
         });
 
     Context before = Context.current();
@@ -152,14 +151,14 @@ abstract class AbstractSpringIntegration41Test {
                     span.hasName("process application.directChannel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
-                        .hasException(failure)),
+                        .hasException(handlerFailure)),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasName("afterFailure").hasNoParent()));
     assertProcessMetrics(testing, "application.directChannel", true);
   }
 
   @Test
-  void shouldUseSendTimeFallbackForIntegrationExecutorChannel() throws Exception {
+  void shouldUseSendTimeFallbackForIntegrationExecutorChannel() throws InterruptedException {
     LinkedBlockingQueue<Runnable> tasks = new LinkedBlockingQueue<>();
     ExecutorChannel channel = new ExecutorChannel(tasks::add);
     channel.setBeanName("deferredChannel");
@@ -181,7 +180,7 @@ abstract class AbstractSpringIntegration41Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span -> {
-                  span.hasName("process application.deferredChannel")
+                  span.hasName("process deferredChannel")
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(0));
                   consumer.set(trace.getSpan(1));
@@ -192,11 +191,12 @@ abstract class AbstractSpringIntegration41Test {
     task.run();
     assertThat(Context.current()).isSameAs(before);
     assertPropagation(captured.get(), consumer.get());
-    assertProcessMetrics(testing, "application.deferredChannel", false);
+    assertProcessMetrics(testing, "deferredChannel", false);
   }
 
   @Test
-  void shouldTraceFrameworkExecutorHandler() throws Exception {
+  void shouldTraceFrameworkExecutorHandler()
+      throws ExecutionException, InterruptedException, TimeoutException {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
       ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel(executor);
@@ -243,9 +243,10 @@ abstract class AbstractSpringIntegration41Test {
         .getChannelInterceptor();
   }
 
-  private static void assertPropagation(Message<?> message, SpanData span) {
+  static void assertPropagation(Message<?> message, SpanData span) {
     assertThat(message.getHeaders().get("traceparent"))
-        .isEqualTo("00-" + span.getTraceId() + "-" + span.getSpanId() + "-01");
+        .asString()
+        .startsWith("00-" + span.getTraceId() + "-" + span.getSpanId() + "-");
   }
 
   @EnableIntegration

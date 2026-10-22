@@ -55,6 +55,8 @@ testing {
       }
       targets.all {
         testTask.configure {
+          // Exercise channel propagation independently of executor instrumentation.
+          jvmArgs("-Dotel.instrumentation.executors.enabled=false")
           jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
           jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
         }
