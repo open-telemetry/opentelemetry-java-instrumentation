@@ -314,7 +314,7 @@
     `network.io.direction` (`in` and `out` become `receive` and `transmit`) and
     `kafka.isr.operation`. Request type values are now lowercase.
   - `kafka.server.message.count`, `kafka.server.request.count`, `kafka.server.request.failed` and
-    `kafka.server.network.io` now have a `kafka.topic` attribute instead of a broker-wide value.
+    `kafka.server.network.io` now have a `kafka.topic.name` attribute instead of a broker-wide value.
   - `kafka.server.isr.operation.count` is now a counter instead of an updowncounter.
 
 ### ⚠️ Breaking changes to non-stable APIs

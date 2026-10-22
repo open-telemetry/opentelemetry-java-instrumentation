@@ -4,17 +4,17 @@ Here is the list of metrics based on MBeans exposed by Kafka broker.
 
 ## Server metrics
 
-| Metric Name                             | Type          | Unit        | Attributes                        | Description                                                  |
-| --------------------------------------- | ------------- | ----------- | --------------------------------- | ------------------------------------------------------------ |
-| kafka.server.message.count              | Counter       | {message}   | kafka.topic                       | The number of messages received by the broker                |
-| kafka.server.request.count              | Counter       | {request}   | kafka.request.type, kafka.topic   | The number of requests received by the broker                |
-| kafka.server.request.failed             | Counter       | {request}   | kafka.request.type, kafka.topic   | The number of requests to the broker resulting in a failure  |
-| kafka.server.network.io                 | Counter       | By          | kafka.topic, network.io.direction | The bytes received or sent by the broker                     |
-| kafka.server.purgatory.size             | UpDownCounter | {request}   | kafka.request.type                | The number of requests waiting in purgatory                  |
-| kafka.server.partition.count            | UpDownCounter | {partition} |                                   | The number of partitions on the broker                       |
-| kafka.server.partition.under_replicated | UpDownCounter | {partition} |                                   | The number of under-replicated partitions                    |
-| kafka.server.isr.operation.count        | Counter       | {operation} | kafka.isr.operation               | The number of in-sync replica operations                     |
-| kafka.server.lag.max                    | Gauge         | {message}   |                                   | The max lag in messages between follower and leader replicas |
+| Metric Name                             | Type          | Unit        | Attributes                             | Description                                                  |
+| --------------------------------------- | ------------- | ----------- | -------------------------------------- | ------------------------------------------------------------ |
+| kafka.server.message.count              | Counter       | {message}   | kafka.topic.name                       | The number of messages received by the broker                |
+| kafka.server.request.count              | Counter       | {request}   | kafka.request.type, kafka.topic.name   | The number of requests received by the broker                |
+| kafka.server.request.failed             | Counter       | {request}   | kafka.request.type, kafka.topic.name   | The number of requests to the broker resulting in a failure  |
+| kafka.server.network.io                 | Counter       | By          | kafka.topic.name, network.io.direction | The bytes received or sent by the broker                     |
+| kafka.server.purgatory.size             | UpDownCounter | {request}   | kafka.request.type                     | The number of requests waiting in purgatory                  |
+| kafka.server.partition.count            | UpDownCounter | {partition} |                                        | The number of partitions on the broker                       |
+| kafka.server.partition.under_replicated | UpDownCounter | {partition} |                                        | The number of under-replicated partitions                    |
+| kafka.server.isr.operation.count        | Counter       | {operation} | kafka.isr.operation                    | The number of in-sync replica operations                     |
+| kafka.server.lag.max                    | Gauge         | {message}   |                                        | The max lag in messages between follower and leader replicas |
 
 ## Network metrics
 

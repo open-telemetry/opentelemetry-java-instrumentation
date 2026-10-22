@@ -29,7 +29,7 @@ groups:
           - "produce"
           - "fetchconsumer"
           - "fetchfollower"
-      - id: kafka.topic
+      - id: kafka.topic.name
         type: string
         stability: development
         brief: Kafka topic name.
@@ -60,7 +60,7 @@ groups:
     unit: "{message}"
     instrument: counter
     attributes:
-      - ref: kafka.topic
+      - ref: kafka.topic.name
 
   - id: metric.kafka.server.request.count
     metric_name: kafka.server.request.count
@@ -71,7 +71,7 @@ groups:
     instrument: counter
     attributes:
       - ref: kafka.request.type
-      - ref: kafka.topic
+      - ref: kafka.topic.name
 
   - id: metric.kafka.server.request.failed
     metric_name: kafka.server.request.failed
@@ -82,7 +82,7 @@ groups:
     instrument: counter
     attributes:
       - ref: kafka.request.type
-      - ref: kafka.topic
+      - ref: kafka.topic.name
 
   - id: metric.kafka.server.network.io
     metric_name: kafka.server.network.io
@@ -92,7 +92,7 @@ groups:
     unit: "By"
     instrument: counter
     attributes:
-      - ref: kafka.topic
+      - ref: kafka.topic.name
       - ref: network.io.direction
 
   - id: metric.kafka.server.purgatory.size

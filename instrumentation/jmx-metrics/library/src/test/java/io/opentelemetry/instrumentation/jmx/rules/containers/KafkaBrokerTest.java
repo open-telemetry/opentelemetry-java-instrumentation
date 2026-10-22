@@ -61,7 +61,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                     optionalMetrics(zookeeperImage != null))
                 .checkRegisteredAttributes(
                     "kafka.",
-                    asList("kafka.request.type", "kafka.topic", "kafka.isr.operation"),
+                    asList("kafka.request.type", "kafka.topic.name", "kafka.isr.operation"),
                     emptyList()));
 
     List<GenericContainer<?>> dependencies = emptyList();
@@ -121,11 +121,11 @@ class KafkaBrokerTest extends TargetSystemTest {
   private static MetricsVerifier createMetricsVerifier(boolean useZookeeper) {
 
     // topic used to send and consume the sample message
-    AttributeMatcher sampleTopic = attribute("kafka.topic", "my-topic");
+    AttributeMatcher sampleTopic = attribute("kafka.topic.name", "my-topic");
     // internal topic written by the broker when the sample consumer joins a consumer group
-    AttributeMatcher offsetsTopic = attribute("kafka.topic", "__consumer_offsets");
+    AttributeMatcher offsetsTopic = attribute("kafka.topic.name", "__consumer_offsets");
     // compacted topic used to trigger a failed produce request
-    AttributeMatcher compactedTopic = attribute("kafka.topic", "my-compacted-topic");
+    AttributeMatcher compactedTopic = attribute("kafka.topic.name", "my-compacted-topic");
 
     AttributeMatcherGroup requestTypeProduce =
         attributeGroup(attribute("kafka.request.type", "produce"));

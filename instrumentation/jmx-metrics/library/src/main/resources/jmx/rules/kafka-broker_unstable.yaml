@@ -7,7 +7,7 @@ rules:
 
   - bean: kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*
     metricAttribute:
-      kafka.topic: param(topic)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
         metric: kafka.server.message.count
@@ -18,7 +18,7 @@ rules:
   - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec,topic=*
     metricAttribute:
       kafka.request.type: const(fetch)
-      kafka.topic: param(topic)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
         metric: kafka.server.request.count
@@ -29,7 +29,7 @@ rules:
   - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec,topic=*
     metricAttribute:
       kafka.request.type: const(produce)
-      kafka.topic: param(topic)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
         metric: kafka.server.request.count
@@ -40,7 +40,7 @@ rules:
   - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec,topic=*
     metricAttribute:
       kafka.request.type: const(fetch)
-      kafka.topic: param(topic)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
         metric: kafka.server.request.failed
@@ -51,7 +51,7 @@ rules:
   - bean: kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec,topic=*
     metricAttribute:
       kafka.request.type: const(produce)
-      kafka.topic: param(topic)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
         metric: kafka.server.request.failed
@@ -62,7 +62,7 @@ rules:
   - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=*
     metricAttribute:
       network.io.direction: const(receive)
-      kafka.topic: param(topic)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
         metric: kafka.server.network.io
@@ -73,7 +73,7 @@ rules:
   - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=*
     metricAttribute:
       network.io.direction: const(transmit)
-      kafka.topic: param(topic)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
         metric: kafka.server.network.io
