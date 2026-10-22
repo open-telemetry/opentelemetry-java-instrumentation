@@ -255,7 +255,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testCommandServerErrorUsesRedisErrorType() throws Exception {
-    connection.sync().hmset("TESTHM", testHashMap);
+    connection.sync().hmset("TESTHM", TEST_HASH_MAP);
     testing.waitForTraces(1);
     testing.clearData();
 
