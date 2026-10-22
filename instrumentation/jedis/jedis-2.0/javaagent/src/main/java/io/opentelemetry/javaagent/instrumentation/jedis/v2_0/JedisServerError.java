@@ -15,6 +15,8 @@ public final class JedisServerError {
     if (error == null || error.getClass() != JedisDataException.class) {
       return null;
     }
+    // Jedis's byte-by-byte decoding can corrupt non-ASCII server-error prefixes.
+    // Fall back to the exception class rather than report a corrupted prefix.
     return RedisErrorPrefix.extractAscii(error.getMessage());
   }
 
