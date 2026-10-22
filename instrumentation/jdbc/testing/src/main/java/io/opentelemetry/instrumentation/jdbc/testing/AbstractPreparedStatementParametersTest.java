@@ -31,7 +31,6 @@ import java.sql.Types;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -65,7 +64,7 @@ public abstract class AbstractPreparedStatementParametersTest {
   private static final Properties connectionProps = new Properties();
 
   static {
-    Map<String, String> jdbcUrls = new LinkedHashMap<>();
+    Map<String, String> jdbcUrls = new HashMap<>();
     jdbcUrls.put("h2", "jdbc:h2:mem:" + DATABASE_NAME);
     jdbcUrls.put("derby", "jdbc:derby:memory:" + DATABASE_NAME);
     jdbcUrls.put("hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
