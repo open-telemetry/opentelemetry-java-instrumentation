@@ -36,6 +36,10 @@ describe selectable behavior, not Muzzle implementation identities.
 
 ## Advice and matching
 
+- For production javaagent advice (not test fixtures), explicitly set `inline = false` on both
+  `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` in every module. The only exceptions are
+  `instrumentation/internal/internal-class-loader` and `instrumentation/internal/internal-lambda`;
+  do not add other production exceptions.
 - A new `InstrumentationModule` needs SPI registration and a compatible `TypeInstrumentation`;
   public names distinguish independently selectable behavior, not implementation classes.
   Multiple classes may share all public names; Muzzle supports name-based exclusions and precise
@@ -89,10 +93,10 @@ describe selectable behavior, not Muzzle implementation identities.
   restriction. `isMethod()` is redundant after a non-empty `named(...)` or
   `namedOneOf(...)` matcher. Keep it when the name can be empty, because `named("")`
   can match constructors and class initializers.
-- Use the normal OpenTelemetry API in non-inlined advice and helper methods. Inlined advice
-  targeting pre-Java-8 class files must call static interface methods through a Java-8-compiled
-  helper, or switch to non-inlined advice; do not introduce calls to `Java8BytecodeBridge`. Add a
-  `classLoaderMatcher()` only for a real version boundary Muzzle cannot distinguish.
+- Use normal OpenTelemetry APIs in non-inlined advice and ordinary helpers. Do not introduce
+  calls to the deprecated `Java8BytecodeBridge`. Inlined advice in the two internal exceptions
+  must use a Java-8-compiled helper for static interface calls targeting pre-Java-8 class files.
+  Add a `classLoaderMatcher()` only for a real version boundary Muzzle cannot distinguish.
   Verify every version-landmark class against the artifact versions and keep its role explicit:
   a positive floor uses `// added in X.Y`, a positive ceiling uses `// removed in X.Y`, and a
   negated exclusion class uses `// added in X.Y`. A positive class that supplies both bounds
