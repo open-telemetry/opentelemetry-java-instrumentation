@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### 📈 Enhancements
+
+- Support OpenTelemetry SDK 1.67.0 declarative configuration type checks in the Java agent and
+  Spring Boot starter.
+  ([#20598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20598))
+
+### 🛠️ Bug fixes
+
+- Preserve repeated baggage header values when extracting context through the Java agent's
+  OpenTelemetry API bridge.
+  ([#20598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20598))
+- Avoid converting lists and maps to strings in Spring Boot declarative configuration.
+  ([#20598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20598))
+- Improve SQL parsing.
+  ([#20864](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20864))
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.
