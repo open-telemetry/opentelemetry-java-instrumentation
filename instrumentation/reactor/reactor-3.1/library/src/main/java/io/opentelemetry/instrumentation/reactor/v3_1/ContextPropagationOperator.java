@@ -35,6 +35,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -86,11 +87,18 @@ public final class ContextPropagationOperator {
           Class<?> current = type;
           while (current != null) {
             try {
-              Method method = current.getDeclaredMethod("markDownstreamOfContextBoundary");
+              Method method =
+                  current.getDeclaredMethod("markDownstreamOfContextBoundary", Consumer.class);
               method.setAccessible(true);
               return method;
             } catch (NoSuchMethodException ignored) {
-              current = current.getSuperclass();
+              try {
+                Method method = current.getDeclaredMethod("markDownstreamOfContextBoundary");
+                method.setAccessible(true);
+                return method;
+              } catch (NoSuchMethodException ignore) {
+                current = current.getSuperclass();
+              }
             }
           }
           throw new IllegalStateException(type.getName());
@@ -394,7 +402,7 @@ public final class ContextPropagationOperator {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-      markDownstreamOfContextBoundary(actual);
+      markDownstreamOfContextBoundary(actual, applicationContext);
       try (Scope ignored = operationContext.makeCurrent()) {
         source.subscribe(
             new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
@@ -423,7 +431,7 @@ public final class ContextPropagationOperator {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-      markDownstreamOfContextBoundary(actual);
+      markDownstreamOfContextBoundary(actual, applicationContext);
       try (Scope ignored = operationContext.makeCurrent()) {
         source.subscribe(
             new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
@@ -524,15 +532,26 @@ public final class ContextPropagationOperator {
     }
   }
 
-  private static void markDownstreamOfContextBoundary(CoreSubscriber<?> actual) {
+  private static void markDownstreamOfContextBoundary(
+      CoreSubscriber<?> actual, Context applicationContext) {
     Scannable scannable = Scannable.from(actual);
-    markDownstreamOfContextBoundary(scannable);
-    scannable.actuals().forEach(ContextPropagationOperator::markDownstreamOfContextBoundary);
+    Consumer<Runnable> applicationContextScope =
+        callback -> {
+          try (Scope ignored = enterApplicationContextBoundary(applicationContext)) {
+            callback.run();
+          }
+        };
+    markDownstreamOfContextBoundary(scannable, applicationContextScope);
+    scannable
+        .actuals()
+        .forEach(
+            subscriber -> markDownstreamOfContextBoundary(subscriber, applicationContextScope));
   }
 
-  private static void markDownstreamOfContextBoundary(Scannable scannable) {
+  private static void markDownstreamOfContextBoundary(
+      Scannable scannable, Consumer<Runnable> applicationContextScope) {
     if (scannable instanceof TracingSubscriber) {
-      ((TracingSubscriber<?>) scannable).markDownstreamOfContextBoundary();
+      ((TracingSubscriber<?>) scannable).markDownstreamOfContextBoundary(applicationContextScope);
     } else if (scannable
             .getClass()
             .getName()
@@ -544,7 +563,12 @@ public final class ContextPropagationOperator {
                 ".instrumentation.reactor.v3_1.TracingSubscriber$ScannableTracingSubscriber")) {
       // The javaagent can have a second, shaded copy in the same subscriber chain.
       try {
-        TRACING_SUBSCRIBER_MARK_METHOD.get(scannable.getClass()).invoke(scannable);
+        Method method = TRACING_SUBSCRIBER_MARK_METHOD.get(scannable.getClass());
+        if (method.getParameterTypes().length == 0) {
+          method.invoke(scannable);
+        } else {
+          method.invoke(scannable, applicationContextScope);
+        }
       } catch (IllegalAccessException | InvocationTargetException e) {
         throw new IllegalStateException(e);
       }

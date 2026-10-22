@@ -18,6 +18,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
@@ -375,6 +377,94 @@ class ContextBoundaryTest {
       scheduler.dispose();
     }
     assertThat(observed.get()).isSameAs(application);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void keepsApplicationContextForDelayedDownstreamDemand(boolean rootApplication)
+      throws InterruptedException {
+    operator.registerOnEachOperator();
+    Context application = rootApplication ? Context.root() : APPLICATION;
+    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
+    AtomicReference<Subscription> subscription = new AtomicReference<>();
+    AtomicReference<Context> callbackContext = new AtomicReference<>();
+    AtomicReference<Context> independentContext = new AtomicReference<>();
+    AtomicReference<Context> callbackContextAfterIndependentSignal = new AtomicReference<>();
+    AtomicReference<Thread> callbackThread = new AtomicReference<>();
+    AtomicReference<Thread> reusedWorkerThread = new AtomicReference<>();
+    AtomicReference<MonoSink<String>> sink = new AtomicReference<>();
+    CountDownLatch callbackFinished = new CountDownLatch(1);
+    CountDownLatch initialDrainFinished = new CountDownLatch(1);
+    CountDownLatch workerReused = new CountDownLatch(1);
+    try {
+      try (Scope ignored = INNER.makeCurrent()) {
+        Mono.<String>create(sink::set)
+            .map(
+                value -> {
+                  independentContext.set(Context.current());
+                  return value;
+                })
+            .subscribe();
+      }
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, application)
+            .publishOn(scheduler)
+            .doOnNext(
+                value -> {
+                  callbackContext.set(Context.current());
+                  callbackThread.set(Thread.currentThread());
+                  sink.get().success("independent");
+                  callbackContextAfterIndependentSignal.set(Context.current());
+                  scheduler.schedule(
+                      () -> {
+                        reusedWorkerThread.set(Thread.currentThread());
+                        workerReused.countDown();
+                      });
+                  callbackFinished.countDown();
+                })
+            .subscribe(
+                new CoreSubscriber<String>() {
+                  @Override
+                  public reactor.util.context.Context currentContext() {
+                    return reactor.util.context.Context.empty();
+                  }
+
+                  @Override
+                  public void onSubscribe(Subscription actualSubscription) {
+                    subscription.set(actualSubscription);
+                  }
+
+                  @Override
+                  public void onNext(String value) {}
+
+                  @Override
+                  public void onError(Throwable error) {
+                    throw new AssertionError(error);
+                  }
+
+                  @Override
+                  public void onComplete() {}
+                });
+        assertThat(Context.current()).isSameAs(UNRELATED);
+      }
+
+      scheduler.schedule(initialDrainFinished::countDown);
+      assertThat(initialDrainFinished.await(10, SECONDS)).isTrue();
+      assertThat(subscription.get()).isNotNull();
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        subscription.get().request(1);
+        assertThat(Context.current()).isSameAs(UNRELATED);
+      }
+      assertThat(callbackFinished.await(10, SECONDS)).isTrue();
+      assertThat(workerReused.await(10, SECONDS)).isTrue();
+      assertThat(callbackContext.get()).isSameAs(application);
+      assertThat(independentContext.get()).isSameAs(INNER);
+      assertThat(callbackContextAfterIndependentSignal.get()).isSameAs(application);
+      assertThat(reusedWorkerThread.get()).isSameAs(callbackThread.get());
+    } finally {
+      scheduler.dispose();
+      operator.resetOnEachOperator();
+    }
   }
 
   @ParameterizedTest

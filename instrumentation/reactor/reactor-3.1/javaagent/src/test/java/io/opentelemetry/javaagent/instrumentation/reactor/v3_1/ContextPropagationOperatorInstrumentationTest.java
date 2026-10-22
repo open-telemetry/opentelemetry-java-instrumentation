@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.lang.invoke.MethodType.methodType;
 import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -27,6 +28,7 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
@@ -357,6 +359,99 @@ class ContextPropagationOperatorInstrumentationTest {
       operator.resetOnEachOperator();
     }
     assertThat(observed.get()).isEqualTo(rootApplicationContext ? null : "application");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void delayedDownstreamDemandKeepsApplicationContext(boolean rootApplicationContext)
+      throws InterruptedException {
+    Context applicationContext =
+        rootApplicationContext
+            ? Context.root()
+            : Context.root().with(APPLICATION_KEY, "application");
+    Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
+    Context subscriptionContext = Context.root().with(APPLICATION_KEY, "subscription");
+    Context independentContext = Context.root().with(APPLICATION_KEY, "independent");
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
+    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
+    AtomicReference<Subscription> subscription = new AtomicReference<>();
+    AtomicReference<String> callbackContext = new AtomicReference<>();
+    AtomicReference<String> independentSignalContext = new AtomicReference<>();
+    AtomicReference<String> callbackContextAfterIndependentSignal = new AtomicReference<>();
+    AtomicReference<Thread> callbackThread = new AtomicReference<>();
+    AtomicReference<Thread> reusedWorkerThread = new AtomicReference<>();
+    AtomicReference<MonoSink<String>> sink = new AtomicReference<>();
+    CountDownLatch initialDrainFinished = new CountDownLatch(1);
+    CountDownLatch callbackFinished = new CountDownLatch(1);
+    CountDownLatch workerReused = new CountDownLatch(1);
+    try {
+      try (Scope ignored = independentContext.makeCurrent()) {
+        Mono.<String>create(sink::set)
+            .map(
+                value -> {
+                  independentSignalContext.set(Context.current().get(APPLICATION_KEY));
+                  return value;
+                })
+            .subscribe();
+      }
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        ContextPropagationOperator.runWithContext(
+                Flux.just("value"), operationContext, applicationContext)
+            .publishOn(scheduler)
+            .doOnNext(
+                value -> {
+                  callbackContext.set(Context.current().get(APPLICATION_KEY));
+                  callbackThread.set(Thread.currentThread());
+                  sink.get().success("independent");
+                  callbackContextAfterIndependentSignal.set(Context.current().get(APPLICATION_KEY));
+                  scheduler.schedule(
+                      () -> {
+                        reusedWorkerThread.set(Thread.currentThread());
+                        workerReused.countDown();
+                      });
+                  callbackFinished.countDown();
+                })
+            .subscribe(
+                new Subscriber<String>() {
+                  @Override
+                  public void onSubscribe(Subscription actualSubscription) {
+                    subscription.set(actualSubscription);
+                  }
+
+                  @Override
+                  public void onNext(String value) {}
+
+                  @Override
+                  public void onError(Throwable error) {
+                    throw new AssertionError(error);
+                  }
+
+                  @Override
+                  public void onComplete() {}
+                });
+        assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+      }
+
+      scheduler.schedule(initialDrainFinished::countDown);
+      assertThat(initialDrainFinished.await(10, SECONDS)).isTrue();
+      assertThat(subscription.get()).isNotNull();
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        subscription.get().request(1);
+        assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+      }
+      assertThat(callbackFinished.await(10, SECONDS)).isTrue();
+      assertThat(workerReused.await(10, SECONDS)).isTrue();
+      String expectedApplication = rootApplicationContext ? null : "application";
+      assertThat(callbackContext.get()).isEqualTo(expectedApplication);
+      assertThat(independentSignalContext.get()).isEqualTo("independent");
+      assertThat(callbackContextAfterIndependentSignal.get()).isEqualTo(expectedApplication);
+      assertThat(reusedWorkerThread.get()).isSameAs(callbackThread.get());
+    } finally {
+      operator.resetOnEachOperator();
+      scheduler.dispose();
+    }
   }
 
   @ParameterizedTest

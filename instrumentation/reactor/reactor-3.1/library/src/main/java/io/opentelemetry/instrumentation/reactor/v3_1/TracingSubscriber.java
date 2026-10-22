@@ -21,6 +21,7 @@
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
 import io.opentelemetry.context.Scope;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.reactivestreams.Subscriber;
@@ -43,6 +44,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   private final Subscriber<? super T> subscriber;
   private final Context context;
   private boolean downstreamOfContextBoundary;
+  @Nullable private Consumer<Runnable> applicationContextScope;
   private final boolean hasExplicitContext;
   private final boolean hasContextToPropagate;
 
@@ -88,39 +90,55 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
 
   @Override
   public void onSubscribe(Subscription subscription) {
-    try (Scope ignore = openScope()) {
-      subscriber.onSubscribe(subscription);
+    if (!hasExplicitContext && applicationContextScope != null) {
+      runInBoundaryScope(applicationContextScope, () -> subscriber.onSubscribe(subscription));
+    } else {
+      try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
+        subscriber.onSubscribe(subscription);
+      }
     }
   }
 
   @Override
   public void onNext(T o) {
-    try (Scope ignore = openScope()) {
-      subscriber.onNext(o);
+    if (!hasExplicitContext && applicationContextScope != null) {
+      runInBoundaryScope(applicationContextScope, () -> subscriber.onNext(o));
+    } else {
+      try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
+        subscriber.onNext(o);
+      }
     }
   }
 
   @Override
   public void onError(Throwable throwable) {
-    Supplier<Scope> scopeSupplier;
-    if (!hasContextToPropagate
-        && (fluxRetrySubscriberClass == subscriber.getClass()
-            || fluxRetryWhenSubscriberClass == subscriber.getClass())) {
-      // clear context for retry to avoid having retried operations run with currently active
-      // context as parent context
-      scopeSupplier = () -> openScope(io.opentelemetry.context.Context.root());
+    if (!hasExplicitContext && applicationContextScope != null) {
+      runInBoundaryScope(applicationContextScope, () -> subscriber.onError(throwable));
     } else {
-      scopeSupplier = () -> openScope();
-    }
-    try (Scope ignore = scopeSupplier.get()) {
-      subscriber.onError(throwable);
+      Supplier<Scope> scopeSupplier;
+      if (!hasContextToPropagate
+          && (fluxRetrySubscriberClass == subscriber.getClass()
+              || fluxRetryWhenSubscriberClass == subscriber.getClass())) {
+        // clear context for retry to avoid having retried operations run with currently active
+        // context as parent context
+        scopeSupplier = () -> openScope(io.opentelemetry.context.Context.root());
+      } else {
+        scopeSupplier = () -> openScope(hasContextToPropagate ? traceContext : null);
+      }
+      try (Scope ignore = scopeSupplier.get()) {
+        subscriber.onError(throwable);
+      }
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope ignore = openScope()) {
-      subscriber.onComplete();
+    if (!hasExplicitContext && applicationContextScope != null) {
+      runInBoundaryScope(applicationContextScope, subscriber::onComplete);
+    } else {
+      try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
+        subscriber.onComplete();
+      }
     }
   }
 
@@ -140,9 +158,17 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
     downstreamOfContextBoundary = true;
   }
 
-  @Nullable
-  private Scope openScope() {
-    return openScope(hasContextToPropagate ? traceContext : null);
+  void markDownstreamOfContextBoundary(Consumer<Runnable> applicationContextScope) {
+    downstreamOfContextBoundary = true;
+    this.applicationContextScope = applicationContextScope;
+  }
+
+  private static void runInBoundaryScope(Consumer<Runnable> scope, Runnable callback) {
+    if (ContextPropagationOperator.isApplicationContextBoundaryActive()) {
+      callback.run();
+    } else {
+      scope.accept(callback);
+    }
   }
 
   @Nullable
