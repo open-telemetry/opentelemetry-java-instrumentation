@@ -10,10 +10,8 @@ import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAss
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-    .MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-    .MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -58,7 +56,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 import org.springframework.jms.listener.SessionAwareMessageListener;
 
-class SpringJms20BaselineTest extends AbstractJmsTest {
+class SpringJmsBaselineTest extends AbstractJmsTest {
 
   private static final String DESTINATION_NAME = "SpringListenerJms2";
   private static final String SUBSCRIPTION_NAME = "durable-subscription";
@@ -91,14 +89,16 @@ class SpringJms20BaselineTest extends AbstractJmsTest {
     container.setSubscriptionDurable(true);
     container.setClientId("spring-jms-2-test");
     container.setDurableSubscriptionName(SUBSCRIPTION_NAME);
-    container.setMessageListener(
+    @SuppressWarnings("rawtypes")
+    SessionAwareMessageListener listener =
         new SessionAwareMessageListener() {
           @Override
           public void onMessage(Message message, Session session) {
             listenerContext.set(Span.current().getSpanContext());
             messageReceived.countDown();
           }
-        });
+        };
+    container.setMessageListener(listener);
     cleanup.deferCleanup(container::stop);
     container.afterPropertiesSet();
     container.start();
@@ -106,8 +106,7 @@ class SpringJms20BaselineTest extends AbstractJmsTest {
 
     JmsTemplate template = new JmsTemplate(connectionFactory);
     template.setPubSubDomain(true);
-    testing.runWithSpan(
-        "parent", () -> template.convertAndSend(DESTINATION_NAME, "a message"));
+    testing.runWithSpan("parent", () -> template.convertAndSend(DESTINATION_NAME, "a message"));
 
     assertThat(messageReceived.await(10, SECONDS)).isTrue();
     assertThat(listenerContext.get()).isNotNull();
@@ -128,10 +127,7 @@ class SpringJms20BaselineTest extends AbstractJmsTest {
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span
-                        .hasName("send " + DESTINATION_NAME)
-                        .hasParent(trace.getSpan(0)),
+                span -> span.hasName("send " + DESTINATION_NAME).hasParent(trace.getSpan(0)),
                 span ->
                     assertConsumerSpan(
                         span,
@@ -161,10 +157,7 @@ class SpringJms20BaselineTest extends AbstractJmsTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasNoParent(),
-                  span ->
-                      span
-                          .hasName("send " + DESTINATION_NAME)
-                          .hasParent(trace.getSpan(0)),
+                  span -> span.hasName("send " + DESTINATION_NAME).hasParent(trace.getSpan(0)),
                   span ->
                       assertConsumerSpan(
                           span,
