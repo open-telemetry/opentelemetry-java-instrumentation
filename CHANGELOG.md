@@ -302,6 +302,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
+
 - Remove `otel.instrumentation.experimental.span-suppression-strategy` and
   `java.common.span_suppression_strategy/development` in favor of
   `otel.instrumentation.common.span-suppression-strategy` and

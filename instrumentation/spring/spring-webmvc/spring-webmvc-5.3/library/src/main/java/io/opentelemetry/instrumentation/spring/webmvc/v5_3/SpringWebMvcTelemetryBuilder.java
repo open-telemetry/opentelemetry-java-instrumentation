@@ -48,7 +48,8 @@ public final class SpringWebMvcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<HttpServletRequest, HttpServletResponse> attributesExtractor) {
+      AttributesExtractor<? super HttpServletRequest, ? super HttpServletResponse>
+          attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }

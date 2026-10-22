@@ -40,7 +40,7 @@ public final class JettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<Request, Response> attributesExtractor) {
+      AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }

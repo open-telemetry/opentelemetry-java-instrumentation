@@ -46,7 +46,7 @@ public final class SpringWebfluxClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<ClientRequest, ClientResponse> attributesExtractor) {
+      AttributesExtractor<? super ClientRequest, ? super ClientResponse> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }

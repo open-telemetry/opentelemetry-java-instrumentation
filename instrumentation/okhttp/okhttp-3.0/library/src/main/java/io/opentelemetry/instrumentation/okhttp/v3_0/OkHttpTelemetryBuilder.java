@@ -41,7 +41,7 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<Interceptor.Chain, Response> attributesExtractor) {
+      AttributesExtractor<? super Interceptor.Chain, ? super Response> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
