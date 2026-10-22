@@ -124,7 +124,7 @@ class NacosClientAgentInstrumentationTest {
                     span.hasName("naming/notifySubscribeChange")
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(failedResponse ? StatusData.error() : StatusData.unset())
-                        .hasNoEvents()
+                        .hasEventsSatisfyingExactly()
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
