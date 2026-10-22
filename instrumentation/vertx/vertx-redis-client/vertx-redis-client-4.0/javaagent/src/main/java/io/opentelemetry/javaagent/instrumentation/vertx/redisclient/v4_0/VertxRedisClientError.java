@@ -14,14 +14,8 @@ import io.vertx.redis.client.impl.types.ErrorType;
 import javax.annotation.Nullable;
 
 public final class VertxRedisClientError {
-  private static final VirtualField<ErrorType, VertxRedisClientError> SERVER_ERROR =
-      VirtualField.find(ErrorType.class, VertxRedisClientError.class);
-
-  @Nullable private final String errorType;
-
-  private VertxRedisClientError(@Nullable String errorType) {
-    this.errorType = errorType;
-  }
+  private static final VirtualField<ErrorType, String> SERVER_ERROR =
+      VirtualField.find(ErrorType.class, String.class);
 
   public static void captureServerError(ErrorType error) {
     String reply = error.getMessage();
@@ -29,16 +23,13 @@ public final class VertxRedisClientError {
       // ReadableBuffer.readLine maps wire bytes to ISO-8859-1, preserving them for UTF-8 decoding.
       reply = new String(reply.getBytes(ISO_8859_1), UTF_8);
     }
-    SERVER_ERROR.set(error, new VertxRedisClientError(RedisErrorPrefix.extract(reply)));
+    SERVER_ERROR.set(error, RedisErrorPrefix.extract(reply));
   }
 
   @Nullable
-  static VertxRedisClientError get(@Nullable Throwable error) {
+  static String getErrorType(@Nullable Throwable error) {
     return error instanceof ErrorType ? SERVER_ERROR.get((ErrorType) error) : null;
   }
 
-  @Nullable
-  String getErrorType() {
-    return errorType;
-  }
+  private VertxRedisClientError() {}
 }

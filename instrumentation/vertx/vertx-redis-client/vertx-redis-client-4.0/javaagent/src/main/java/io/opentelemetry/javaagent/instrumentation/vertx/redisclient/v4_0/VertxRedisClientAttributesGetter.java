@@ -13,13 +13,19 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import io.vertx.redis.client.Response;
 import io.vertx.redis.client.ResponseType;
 import io.vertx.redis.client.impl.types.ErrorType;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class VertxRedisClientAttributesGetter
-    implements DbClientAttributesGetter<VertxRedisClientRequest, Object> {
+    implements DbClientAttributesGetter<VertxRedisClientRequest, Void> {
 
   private static final Logger logger =
       Logger.getLogger(VertxRedisClientAttributesGetter.class.getName());
@@ -76,69 +82,90 @@ final class VertxRedisClientAttributesGetter
 
   @Override
   @Nullable
-  public String getNetworkPeerAddress(VertxRedisClientRequest request, @Nullable Object unused) {
+  public String getNetworkPeerAddress(VertxRedisClientRequest request, @Nullable Void unused) {
     return request.getPeerAddress();
   }
 
   @Override
   @Nullable
-  public Integer getNetworkPeerPort(VertxRedisClientRequest request, @Nullable Object unused) {
+  public Integer getNetworkPeerPort(VertxRedisClientRequest request, @Nullable Void unused) {
     return request.getPeerPort();
   }
 
   @Override
   @Nullable
   public String getErrorType(
-      VertxRedisClientRequest request, @Nullable Object response, @Nullable Throwable error) {
+      VertxRedisClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     return getRedisErrorType(error);
   }
 
   // visible for testing
   @Nullable
   static String getRedisErrorType(@Nullable Throwable error) {
-    VertxRedisClientError serverError = VertxRedisClientError.get(error);
-    return serverError == null ? null : serverError.getErrorType();
+    return VertxRedisClientError.getErrorType(error);
   }
 
   @Nullable
   static Throwable getResponseError(@Nullable Object response) {
-    if (response instanceof ErrorType) {
-      return (ErrorType) response;
+    if (response == null) {
+      return null;
     }
-    if (response instanceof List<?>) {
-      for (Object item : (List<?>) response) {
-        Throwable error = getResponseError(item);
-        if (error != null) {
-          return error;
-        }
+
+    Deque<Object> pending = new ArrayDeque<>();
+    pending.addFirst(response);
+    while (!pending.isEmpty()) {
+      Object item = pending.removeFirst();
+      if (item instanceof ErrorType) {
+        return (ErrorType) item;
       }
-    } else if (response instanceof Response && ((Response) response).type() == ResponseType.MULTI) {
-      Response multi = (Response) response;
-      if (IS_MAP != null) {
-        try {
-          if (Boolean.TRUE.equals(IS_MAP.invoke(multi))) {
-            // These map iterators yield single-entry maps, so traverse their values directly.
-            for (String key : multi.getKeys()) {
-              Throwable error = getResponseError(multi.get(key));
-              if (error != null) {
-                return error;
+      if (item instanceof List<?>) {
+        List<?> list = (List<?>) item;
+        ListIterator<?> iterator = list.listIterator(list.size());
+        while (iterator.hasPrevious()) {
+          addFirst(pending, iterator.previous());
+        }
+      } else if (item.getClass().isArray()) {
+        for (int i = Array.getLength(item) - 1; i >= 0; i--) {
+          addFirst(pending, Array.get(item, i));
+        }
+      } else if (item instanceof Map<?, ?>) {
+        List<?> values = new ArrayList<>(((Map<?, ?>) item).values());
+        for (int i = values.size() - 1; i >= 0; i--) {
+          addFirst(pending, values.get(i));
+        }
+      } else if (item instanceof Response && ((Response) item).type() == ResponseType.MULTI) {
+        Response multi = (Response) item;
+        if (IS_MAP != null) {
+          try {
+            if (Boolean.TRUE.equals(IS_MAP.invoke(multi))) {
+              // These map iterators yield single-entry maps, so traverse their values directly.
+              List<String> keys = new ArrayList<>(multi.getKeys());
+              for (int i = keys.size() - 1; i >= 0; i--) {
+                addFirst(pending, multi.get(keys.get(i)));
               }
+              continue;
             }
-            return null;
+          } catch (ReflectiveOperationException e) {
+            logger.log(FINE, "Failed to inspect the Vert.x Redis response collection", e);
+            continue;
           }
-        } catch (ReflectiveOperationException e) {
-          logger.log(FINE, "Failed to inspect the Vert.x Redis response collection", e);
-          return null;
         }
-      }
-      for (Response item : multi) {
-        Throwable error = getResponseError(item);
-        if (error != null) {
-          return error;
+        List<Response> children = new ArrayList<>();
+        for (Response child : multi) {
+          children.add(child);
+        }
+        for (int i = children.size() - 1; i >= 0; i--) {
+          addFirst(pending, children.get(i));
         }
       }
     }
     return null;
+  }
+
+  private static void addFirst(Deque<Object> pending, @Nullable Object response) {
+    if (response != null) {
+      pending.addFirst(response);
+    }
   }
 
   @Nullable

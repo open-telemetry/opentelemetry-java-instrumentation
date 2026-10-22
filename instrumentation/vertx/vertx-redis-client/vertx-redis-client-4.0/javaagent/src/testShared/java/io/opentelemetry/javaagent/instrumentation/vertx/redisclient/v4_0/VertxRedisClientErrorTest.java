@@ -279,6 +279,33 @@ class VertxRedisClientErrorTest {
     assertTelemetry(null, 2);
   }
 
+  @Test
+  void deeplyNestedSuccessCompletesApplicationFuture()
+      throws ExecutionException, IOException, InterruptedException, TimeoutException {
+    int nesting = 10_000;
+    StringBuilder reply = new StringBuilder(nesting * 5 + 5);
+    for (int i = 0; i < nesting; i++) {
+      reply.append("*1\r\n");
+    }
+    reply.append("+OK\r\n");
+
+    RedisConnection connection =
+        connect(new RedisOptions().setMaxNestedArrays(nesting), reply.toString());
+
+    Response response =
+        connection
+            .send(Request.cmd(Command.GET).arg("key0"))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(30, SECONDS);
+    for (int i = 0; i < nesting; i++) {
+      response = response.get(0);
+    }
+
+    assertThat(response.toString()).isEqualTo("OK");
+    assertTelemetry(null, 1);
+  }
+
   private RedisConnection connect(String... replies)
       throws ExecutionException, IOException, InterruptedException, TimeoutException {
     return connect(new RedisOptions(), replies);

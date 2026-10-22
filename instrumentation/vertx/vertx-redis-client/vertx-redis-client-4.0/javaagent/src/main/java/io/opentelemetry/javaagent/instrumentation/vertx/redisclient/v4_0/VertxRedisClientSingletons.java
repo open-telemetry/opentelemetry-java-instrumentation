@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -25,11 +26,13 @@ import io.vertx.redis.client.Command;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
-  private static final Instrumenter<VertxRedisClientRequest, Object> instrumenter;
+  private static final Logger logger = Logger.getLogger(VertxRedisClientSingletons.class.getName());
+  private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
 
   private static final ScopedThreadValue<RedisURI> currentRedisUri = new ScopedThreadValue<>();
   private static final VirtualField<Command, String> COMMAND_NAME =
@@ -40,8 +43,8 @@ public class VertxRedisClientSingletons {
   static {
     VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
 
-    InstrumenterBuilder<VertxRedisClientRequest, Object> builder =
-        Instrumenter.<VertxRedisClientRequest, Object>builder(
+    InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
+        Instrumenter.<VertxRedisClientRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(getter))
@@ -55,7 +58,7 @@ public class VertxRedisClientSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<VertxRedisClientRequest, Object> instrumenter() {
+  public static Instrumenter<VertxRedisClientRequest, Void> instrumenter() {
     return instrumenter;
   }
 
@@ -67,16 +70,22 @@ public class VertxRedisClientSingletons {
         .toCompletionStage()
         .whenComplete(
             (value, throwable) -> {
-              Throwable error =
-                  throwable != null
-                      ? throwable
-                      : VertxRedisClientAttributesGetter.getResponseError(value);
-              instrumenter().end(context, request, value, error);
-              try (Scope ignore = parentContext.makeCurrent()) {
-                if (throwable != null) {
-                  result.completeExceptionally(throwable);
-                } else {
-                  result.complete(value);
+              try {
+                Throwable error =
+                    throwable != null
+                        ? throwable
+                        : VertxRedisClientAttributesGetter.getResponseError(value);
+                instrumenter().end(context, request, null, error);
+              } catch (Throwable t) {
+                logger.log(
+                    WARNING, "Failed to inspect the Vert.x Redis response or end its span", t);
+              } finally {
+                try (Scope ignore = parentContext.makeCurrent()) {
+                  if (throwable != null) {
+                    result.completeExceptionally(throwable);
+                  } else {
+                    result.complete(value);
+                  }
                 }
               }
             });
