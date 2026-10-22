@@ -120,7 +120,7 @@ class AwsLambdaEventsInstrumenterFactoryTest {
           Duration.ofSeconds(1),
           AwsLambdaEventsInstrumenterFactory.createInstrumenter(
               testing.getOpenTelemetrySdk(),
-              "io.opentelemetry.aws-lambda-events",
+              "io.opentelemetry.aws-lambda-events-common-2.2",
               HttpConstants.KNOWN_METHODS,
               HttpConstants.SENSITIVE_QUERY_PARAMETERS));
     }
