@@ -7,13 +7,25 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.vertx.redis.client.Response;
+import io.vertx.redis.client.ResponseType;
 import io.vertx.redis.client.impl.types.ErrorType;
+import java.lang.reflect.Method;
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public final class VertxRedisClientError {
+  private static final Logger logger = Logger.getLogger(VertxRedisClientError.class.getName());
+  @Nullable private static final Method IS_MAP = findIsMap();
   private static final VirtualField<ErrorType, String> SERVER_ERROR =
       VirtualField.find(ErrorType.class, String.class);
 
@@ -29,6 +41,64 @@ public final class VertxRedisClientError {
   @Nullable
   static String getErrorType(@Nullable Throwable error) {
     return error instanceof ErrorType ? SERVER_ERROR.get((ErrorType) error) : null;
+  }
+
+  @Nullable
+  static Throwable findResponseError(@Nullable Object response) {
+    if (response == null) {
+      return null;
+    }
+    Deque<Iterator<?>> stack = new ArrayDeque<>();
+    stack.push(Collections.singletonList(response).iterator());
+    try {
+      while (!stack.isEmpty()) {
+        Iterator<?> iterator = stack.peek();
+        if (!iterator.hasNext()) {
+          stack.pop();
+          continue;
+        }
+        Object item = iterator.next();
+        if (item instanceof ErrorType) {
+          return (ErrorType) item;
+        }
+        if (item instanceof List<?>) {
+          stack.push(((List<?>) item).iterator());
+        } else if (item instanceof Response && ((Response) item).type() == ResponseType.MULTI) {
+          stack.push(children((Response) item));
+        }
+      }
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to inspect the Vert.x Redis response collection", e);
+    }
+    return null;
+  }
+
+  private static Iterator<?> children(Response multi) throws ReflectiveOperationException {
+    if (IS_MAP != null && Boolean.TRUE.equals(IS_MAP.invoke(multi))) {
+      // Native map iterators yield single-entry maps, so enumerate the values through the keys.
+      Iterator<String> keys = multi.getKeys().iterator();
+      return new Iterator<Response>() {
+        @Override
+        public boolean hasNext() {
+          return keys.hasNext();
+        }
+
+        @Override
+        public Response next() {
+          return multi.get(keys.next());
+        }
+      };
+    }
+    return multi.iterator();
+  }
+
+  @Nullable
+  private static Method findIsMap() {
+    try {
+      return Response.class.getMethod("isMap");
+    } catch (NoSuchMethodException ignored) {
+      return null;
+    }
   }
 
   private VertxRedisClientError() {}

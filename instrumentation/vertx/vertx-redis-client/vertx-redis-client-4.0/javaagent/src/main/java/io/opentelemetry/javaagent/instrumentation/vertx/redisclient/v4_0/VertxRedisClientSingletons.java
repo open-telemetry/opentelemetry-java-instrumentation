@@ -74,7 +74,7 @@ public class VertxRedisClientSingletons {
                 Throwable error = throwable;
                 if (error == null) {
                   try {
-                    error = VertxRedisClientAttributesGetter.getResponseError(value);
+                    error = VertxRedisClientError.findResponseError(value);
                   } catch (Throwable t) {
                     logger.log(WARNING, "Failed to inspect the Vert.x Redis response", t);
                   }
