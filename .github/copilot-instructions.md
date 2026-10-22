@@ -13,6 +13,13 @@ formatter. Path-specific `.github/instructions/*.instructions.md` files contain 
 applicable repository review rules; use their stated conditions and exceptions. The longer
 `.github/agents/knowledge/` articles are optional reference, not a required loading step.
 
+## Release-note fragments
+
+For user-visible changes, check that release-note fragments follow
+[CONTRIBUTING.md](../CONTRIBUTING.md#changelog) and accurately describe the changed behavior.
+Report missing fragments with `[General]` on a changed line responsible for that behavior.
+Changes with no user-visible effect need no fragment.
+
 ## Correctness and compatibility
 
 - Check changes for lifecycle leaks, reentrancy, concurrency under supported library usage,
@@ -31,9 +38,9 @@ applicable repository review rules; use their stated conditions and exceptions. 
   alpha artifacts may remove deprecated symbols in a later minor release. Do not mistake a 3.0
   behavior migration for an alpha API that should be removed immediately. A replacement must be
   at least as stable as the old API; deprecated methods delegate to their replacements, not vice
-  versa. Include replacement and removal timing in `@deprecated` Javadoc and a deprecation
-  CHANGELOG entry. Document a breaking change to a published alpha API under the appropriate
-  CHANGELOG heading.
+  versa. Include replacement and removal timing in `@deprecated` Javadoc and a `deprecation`
+  release-note fragment. Document a breaking change to a published alpha API in an
+  `alpha-breaking` fragment.
 - User-facing configuration names and outgoing telemetry identities also have compatibility
   contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
   alias and emitted `otel.scope.name`, including scope-version lookup.
@@ -63,7 +70,7 @@ of where its implementation lives.
   On rename, retain the old name until the next major version: read the replacement first,
   fall back to the old name, and log a `WARN` once at startup *when
   the old value is applied*, naming the old and replacement flat properties (or declarative
-  paths if there is no flat form). Add the deprecation to the CHANGELOG. Experimental/preview
+  paths if there is no flat form). Add a `deprecation` fragment in `changelog.d`. Experimental/preview
   names may be removed after a subsequent minor release.
   Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
   replacement-first warning logic to them.
@@ -85,9 +92,8 @@ of where its implementation lives.
 - Document flat properties without repeating equivalent declarative configuration.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
-- Add hand-written changelog entries only for deprecations or breaking changes, as specified in
-  CONTRIBUTING.md; normal changes rely on the generated changelog. Review changelog entries for
-  unnecessary verbosity. Redundant explanations and obvious migration instructions violate the
+- Add release-note fragments for user-visible changes, as specified in CONTRIBUTING.md.
+  Review fragments for unnecessary verbosity. Redundant explanations and obvious migration instructions violate the
   changelog guidance, even when technically correct. Flag concrete redundancy, not personal wording
   preferences.
   Describe the released behavior directly, without
@@ -105,7 +111,7 @@ of where its implementation lives.
   metadata and generated catalogs for telemetry inventories when they already cover the detail.
   Targeted source comments and contributor documentation remain appropriate for non-obvious
   implementation rationale or development workflows.
-- Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
+- Keep migration notes in `changelog.d` fragments, not READMEs or other documentation.
   READMEs and usage documentation should describe current supported behavior without migration
   sections or historical comparisons. PR descriptions may include migration guidance, old/new
   examples, and removed properties or APIs.

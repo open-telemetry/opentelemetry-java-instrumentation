@@ -355,9 +355,11 @@ class WorkflowTest(unittest.TestCase):
     def test_preparation_prerequisites(self):
         bash = shutil.which("bash")
         self.assertIsNotNone(bash, "Git Bash or bash is required")
+        pending = "## Unreleased\n\n<!-- towncrier release notes start -->\n"
         for version, changelog, succeeds in (
-            ("2.33.0-SNAPSHOT", "## Unreleased\n", True),
-            ("3.0.0-SNAPSHOT", "## Unreleased\n", False),
+            ("2.33.0-SNAPSHOT", pending, True),
+            ("3.0.0-SNAPSHOT", pending, False),
+            ("2.33.0-SNAPSHOT", "## Unreleased\n", False),
             ("2.33.0-SNAPSHOT", "## Version 2.32.0 (2026-10-03)\n", False),
         ):
             with self.subTest(version=version, changelog=changelog), tempfile.TemporaryDirectory() as directory:
@@ -432,11 +434,10 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
                         "before\n",
                     )
 
-    def test_post_release_and_notes_targets(self):
-        for filename in ("release.yml", "draft-release-notes.yml"):
-            script = workflow_script(filename, "Create pull request against the development branch")
-            self.assertIn('--base "$DEVELOPMENT_BRANCH"', script)
-            self.assertNotIn("--base main", script)
+    def test_post_release_targets(self):
+        script = workflow_script("release.yml", "Create pull request against the development branch")
+        self.assertIn('--base "$DEVELOPMENT_BRANCH"', script)
+        self.assertNotIn("--base main", script)
         release = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
         self.assertEqual(release.count("ref: ${{ env.DEVELOPMENT_BRANCH }}"), 2)
         self.assertIn("DEVELOPMENT_BRANCH: ${{ needs.release.outputs.development-branch }}", release)
