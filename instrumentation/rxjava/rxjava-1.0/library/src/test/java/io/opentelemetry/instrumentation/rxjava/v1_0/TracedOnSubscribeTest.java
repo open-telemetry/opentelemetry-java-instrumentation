@@ -44,7 +44,8 @@ class TracedOnSubscribeTest {
   void perSubscriptionReturnsOnSubscribe() {
     when(instrumenter.start(Context.root(), "request")).thenReturn(Context.root());
     Observable.OnSubscribe<String> onSubscribe =
-        TracedOnSubscribe.perSubscription(Observable.just("response"), instrumenter, () -> "request");
+        TracedOnSubscribe.perSubscription(
+            Observable.just("response"), instrumenter, () -> "request");
     Observable<String> result = Observable.create(onSubscribe);
     TestSubscriber<String> observer = new TestSubscriber<>();
 
