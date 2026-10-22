@@ -209,14 +209,6 @@ global_configurations:
     type: string
     default: semconv
 
-  span-suppression-strategy.deprecated:
-    name: otel.instrumentation.experimental.span-suppression-strategy
-    declarative_name: java.common.span_suppression_strategy/development
-    description: "Deprecated: use `otel.instrumentation.common.span-suppression-strategy` or `java.common.span_suppression_strategy` instead. This setting will be removed in 3.0."
-    type: string
-    deprecated: true
-    replaced_by: otel.instrumentation.common.span-suppression-strategy
-
   rpc.semconv.version:
     declarative_name: general.rpc.semconv.version
     description: "RPC semantic convention version to emit: `0` for the current conventions or `1` together with `experimental: true` for the preview conventions. Takes precedence over the semantic convention opt-in settings; when unset, those settings select the conventions."

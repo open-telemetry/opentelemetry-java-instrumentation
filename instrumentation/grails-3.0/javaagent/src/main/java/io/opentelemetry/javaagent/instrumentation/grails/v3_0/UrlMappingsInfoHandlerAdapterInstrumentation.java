@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -45,7 +44,7 @@ class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentatio
     public static void nameSpan(@Advice.Argument(2) Object handler) {
 
       if (handler instanceof GrailsControllerUrlMappingInfo) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
 
         HttpServerRoute.update(
             parentContext,
