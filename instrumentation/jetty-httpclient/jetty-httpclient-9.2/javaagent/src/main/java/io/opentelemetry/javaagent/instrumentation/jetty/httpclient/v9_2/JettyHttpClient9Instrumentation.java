@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
 import static io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -59,7 +58,7 @@ class JettyHttpClient9Instrumentation implements TypeInstrumentation {
     public static Object[] addTracingEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(1) List<Response.ResponseListener> listeners) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       Context context =
           JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
       if (context == null) {
