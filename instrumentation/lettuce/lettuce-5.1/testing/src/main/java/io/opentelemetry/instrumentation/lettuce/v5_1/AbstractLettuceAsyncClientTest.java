@@ -218,8 +218,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
     assertCommandMetric(
-        "LPUSH",
-        testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
+        "LPUSH", testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
   }
 
   @Test

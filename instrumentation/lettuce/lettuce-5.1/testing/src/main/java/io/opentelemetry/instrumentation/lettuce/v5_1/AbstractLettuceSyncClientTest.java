@@ -314,8 +314,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
     assertCommandMetric(
-        "LPUSH",
-        testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
+        "LPUSH", testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
   }
 
   @Test
@@ -409,8 +408,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   void testSuccessfulTransactionResults()
       throws ExecutionException, InterruptedException, TimeoutException {
     String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
-    boolean queuedAcknowledgements =
-        !testLatestDeps() || "6.0.0.RELEASE".equals(lettuceVersion);
+    boolean queuedAcknowledgements = !testLatestDeps() || "6.0.0.RELEASE".equals(lettuceVersion);
     String script = "return ARGV[1]";
     assertThat(syncCommands.multi()).isEqualTo("OK");
     RedisFuture<String> successful = connection.async().set("transaction-key", "value");
@@ -435,20 +433,13 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     String encodedScript = Base64.getEncoder().encodeToString(script.getBytes(UTF_8));
     testing()
         .waitAndAssertTraces(
-            transactionSpan(
-                "MULTI", "MULTI", StatusData.unset(), null, lettuceVersion),
+            transactionSpan("MULTI", "MULTI", StatusData.unset(), null, lettuceVersion),
             transactionSpan(
                 "SET", "SET transaction-key ?", StatusData.unset(), null, lettuceVersion),
             transactionSpan(
-                "EVAL",
-                "EVAL " + encodedScript + " 0 ?",
-                StatusData.unset(),
-                null,
-                lettuceVersion),
-            transactionSpan(
-                "GET", "GET transaction-key", StatusData.unset(), null, lettuceVersion),
-            transactionSpan(
-                "EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
+                "EVAL", "EVAL " + encodedScript + " 0 ?", StatusData.unset(), null, lettuceVersion),
+            transactionSpan("GET", "GET transaction-key", StatusData.unset(), null, lettuceVersion),
+            transactionSpan("EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
 
     assertCommandMetric("MULTI", null);
     assertCommandMetric("SET", null);
@@ -461,16 +452,13 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   void testTransactionResultsWithFailures()
       throws ExecutionException, InterruptedException, TimeoutException {
     String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
-    boolean queuedAcknowledgements =
-        !testLatestDeps() || "6.0.0.RELEASE".equals(lettuceVersion);
+    boolean queuedAcknowledgements = !testLatestDeps() || "6.0.0.RELEASE".equals(lettuceVersion);
     String errorMessage = "ERR transaction failed";
     String script = "return redis.error_reply(ARGV[1])";
     assertThat(syncCommands.multi()).isEqualTo("OK");
     RedisFuture<String> successful = connection.async().set("transaction-key", "value");
     RedisFuture<Object> evaluated =
-        connection
-            .async()
-            .eval(script, ScriptOutputType.VALUE, new String[0], errorMessage);
+        connection.async().eval(script, ScriptOutputType.VALUE, new String[0], errorMessage);
     RedisFuture<?> last = connection.async().evalsha("00000000", ScriptOutputType.VALUE);
 
     testing().waitForTraces(queuedAcknowledgements ? 4 : 1);
@@ -535,10 +523,11 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
             : null);
     assertCommandMetric(
         "EVALSHA",
-        testLatestDeps() && !queuedAcknowledgements ? RedisNoScriptException.class.getName() : null);
+        testLatestDeps() && !queuedAcknowledgements
+            ? RedisNoScriptException.class.getName()
+            : null);
     assertCommandMetric(
-        "EXEC",
-        testLatestDeps() ? RedisCommandExecutionException.class.getName() : null);
+        "EXEC", testLatestDeps() ? RedisCommandExecutionException.class.getName() : null);
   }
 
   private Consumer<TraceAssert> transactionSpan(
@@ -708,7 +697,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(DB_QUERY_TEXT, "CLIENT SETINFO lib-name Lettuce"),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
                                       equalTo(
-                                          ERROR_TYPE, RedisCommandExecutionException.class.getName())))),
+                                          ERROR_TYPE,
+                                          RedisCommandExecutionException.class.getName())))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -726,7 +716,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                           val -> val.startsWith("CLIENT SETINFO lib-ver")),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
                                       equalTo(
-                                          ERROR_TYPE, RedisCommandExecutionException.class.getName())))),
+                                          ERROR_TYPE,
+                                          RedisCommandExecutionException.class.getName())))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -744,7 +735,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                           val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
                                       equalTo(
-                                          ERROR_TYPE, RedisCommandExecutionException.class.getName())))),
+                                          ERROR_TYPE,
+                                          RedisCommandExecutionException.class.getName())))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
