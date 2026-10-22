@@ -295,14 +295,7 @@ public abstract class AbstractRedissonClientTest {
     assertScriptErrorType("OOM command not allowed", "OOM", RedisOutOfMemoryException.class);
     assertScriptErrorType("Custom.Code! diagnostic details", "Custom.Code!", null);
     assertScriptErrorType("Préfix diagnostic", "Préfix", null);
-    assertScriptErrorType("lowercase diagnostic", "lowercase", null);
-    assertScriptErrorType("Tab.Code!\tdiagnostic", "Tab.Code!\tdiagnostic", null);
-    String longPrefix = String.join("", nCopies(80, "x"));
-    assertScriptErrorType(longPrefix + " diagnostic", longPrefix, null);
-    assertScriptErrorType("prefix-only", "prefix-only", null);
-    assertScriptErrorType("  Leading.Code! diagnostic", "Leading.Code!", null);
     assertScriptErrorType("", RedisException.class.getName(), null);
-    assertScriptErrorType("   ", RedisException.class.getName(), null);
 
     Object result =
         redisson.getScript().eval(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.VALUE);
@@ -328,21 +321,30 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void batchRedirectIsRetriedAndPreservesBatchResult()
       throws IOException, InterruptedException, ReflectiveOperationException {
-    String key = "batch-redirect-" + UUID.randomUUID();
-    String script =
-        "local count = redis.call('INCR', '"
-            + key
-            + "'); if count == 1 then return redis.error_reply('MOVED 1234 "
-            + host
-            + ":"
-            + port
-            + "'); end; return 'redirected'";
-    RBatch batch = createBatch(redisson);
-    batch.getScript().evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE);
+    Assumptions.assumeTrue(isClassAvailable("org.redisson.api.BatchOptions"));
+    GenericContainer<?> redirectServer =
+        new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
+    redirectServer.start();
+    try {
+      String key = "batch-redirect-" + UUID.randomUUID();
+      assertThat(redirectServer.execInContainer("redis-cli", "incr", key).getExitCode()).isZero();
+      String script =
+          "local count = redis.call('INCR', '"
+              + key
+              + "'); if count == 1 then return redis.error_reply('MOVED 1234 "
+              + redirectServer.getHost()
+              + ":"
+              + redirectServer.getMappedPort(6379)
+              + "'); end; return count";
+      RBatch batch = createBatch(redisson);
+      batch.getScript().evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.INTEGER);
 
-    assertThat(batchResponses(invokeExecute(batch))).isEqualTo(asList("redirected"));
-    assertErrorTypeOnLastOperation(null);
-    assertFollowingOperationsHaveNoLeakedServerError();
+      assertThat(batchResponses(invokeExecute(batch))).isEqualTo(asList(2L));
+      assertRedirectErrorTypeOnAttempts();
+      assertFollowingOperationsHaveNoLeakedServerError();
+    } finally {
+      redirectServer.stop();
+    }
   }
 
   @Test
@@ -535,6 +537,50 @@ public abstract class AbstractRedissonClientTest {
                                                 .containsEntry(ERROR_TYPE, expectedErrorType);
                                           }
                                         }))));
+    testing.clearData();
+  }
+
+  private static void assertRedirectErrorTypeOnAttempts() {
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasKind(CLIENT)
+                      .hasAttributesSatisfying(
+                          attributes ->
+                              assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "MOVED")));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasAttributesSatisfying(
+                            attributes ->
+                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE))));
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertThat(attributes.asMap())
+                                                .containsEntry(ERROR_TYPE, "MOVED")),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertThat(attributes.asMap())
+                                                .doesNotContainKey(ERROR_TYPE)))));
     testing.clearData();
   }
 

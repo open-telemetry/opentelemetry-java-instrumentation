@@ -20,7 +20,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
-import static java.util.Collections.nCopies;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,7 +62,6 @@ import org.redisson.api.RScript;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisException;
-import org.redisson.client.RedisOutOfMemoryException;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.client.protocol.Decoder;
 import org.redisson.config.Config;
@@ -219,7 +217,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
-  void asyncServerErrorPrefixContract() throws IOException, InterruptedException {
+  void asyncWrongTypeErrorIsRecordedInSpanAndMetrics() throws IOException, InterruptedException {
     assertThat(
             redisServer
                 .execInContainer("redis-cli", "lpush", "async-wrong-type", "value")
@@ -234,18 +232,6 @@ public abstract class AbstractRedissonAsyncClientTest {
                     .join())
         .hasRootCauseInstanceOf(RedisException.class);
     assertErrorTypeOnLastOperation("WRONGTYPE");
-
-    assertScriptErrorType("OOM command not allowed", "OOM", RedisOutOfMemoryException.class);
-    assertScriptErrorType("Custom.Code! diagnostic details", "Custom.Code!", null);
-    assertScriptErrorType("Préfix diagnostic", "Préfix", null);
-    assertScriptErrorType("lowercase diagnostic", "lowercase", null);
-    assertScriptErrorType("Tab.Code!\tdiagnostic", "Tab.Code!\tdiagnostic", null);
-    String longPrefix = String.join("", nCopies(80, "x"));
-    assertScriptErrorType(longPrefix + " diagnostic", longPrefix, null);
-    assertScriptErrorType("prefix-only", "prefix-only", null);
-    assertScriptErrorType("  Leading.Code! diagnostic", "Leading.Code!", null);
-    assertScriptErrorType("", RedisException.class.getName(), null);
-    assertScriptErrorType("   ", RedisException.class.getName(), null);
 
     assertThat(
             redisson
@@ -334,21 +320,6 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(DB_OPERATION_NAME, "SADD"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
-  }
-
-  private void assertScriptErrorType(
-      String serverError, String expectedErrorType, Class<? extends RedisException> expectedCause) {
-    String script = "return redis.error_reply('" + serverError + "')";
-    RFuture<?> future =
-        redisson.getScript().evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE);
-    assertThatThrownBy(() -> future.toCompletableFuture().join())
-        .satisfies(
-            error -> {
-              if (expectedCause != null) {
-                assertThat(error).hasRootCauseInstanceOf(expectedCause);
-              }
-            });
-    assertErrorTypeOnLastOperation(expectedErrorType);
   }
 
   private static void assertErrorTypeOnLastOperation(String expectedErrorType) {

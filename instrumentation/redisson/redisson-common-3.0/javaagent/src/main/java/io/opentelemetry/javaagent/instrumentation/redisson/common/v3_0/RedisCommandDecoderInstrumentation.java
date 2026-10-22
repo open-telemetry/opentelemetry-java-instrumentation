@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
+package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonErrorCapture.currentServerErrorType;
 import static io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonErrorCapture.parseServerErrorType;
@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class RedisCommandDecoderInstrumentation implements TypeInstrumentation {
+public class RedisCommandDecoderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

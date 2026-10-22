@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
@@ -57,7 +59,7 @@ public final class RedissonErrorCapture {
         return null;
       }
 
-      return RedisErrorPrefix.extract(input.nioBuffer(start, replyEnd - start));
+      return RedisErrorPrefix.extract(input.toString(start, replyEnd - start, UTF_8));
     } catch (Throwable ignored) {
       // ReplayingDecoder retries incomplete replies; leave buffer handling to Redisson.
       return null;
