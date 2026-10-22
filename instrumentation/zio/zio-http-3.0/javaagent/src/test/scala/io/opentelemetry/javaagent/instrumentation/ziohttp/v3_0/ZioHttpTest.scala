@@ -17,4 +17,9 @@ class ZioHttpTest extends AbstractZioHttpTest {
   def yieldingRoute(): Unit = {
     assertRoute("greet-async")
   }
+
+  @Test
+  def delegatedRoute(): Unit = {
+    assertDelegatedRoute()
+  }
 }

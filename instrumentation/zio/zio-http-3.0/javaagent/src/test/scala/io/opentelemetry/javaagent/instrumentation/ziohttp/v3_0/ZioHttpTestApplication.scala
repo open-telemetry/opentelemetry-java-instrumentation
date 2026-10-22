@@ -11,6 +11,13 @@ import zio.http._
 import java.util.concurrent.CountDownLatch
 
 class ZioHttpTestApplication(port: Int) {
+  private val delegatedRoutes =
+    Routes(
+      Method.GET / "delegate" / "test" -> handler { (_: Request) =>
+        Response.text("Inner test")
+      }
+    )
+
   private val routes =
     Routes(
       Method.GET / "greet" / string("name") -> handler {
@@ -20,6 +27,10 @@ class ZioHttpTestApplication(port: Int) {
       Method.GET / "greet-async" / string("name") -> handler {
         (name: String, _: Request) =>
           ZIO.yieldNow *> ZIO.succeed(Response.text(s"Hello $name"))
+      },
+      Method.GET / "delegate" / string("name") -> handler {
+        (_: String, request: Request) =>
+          delegatedRoutes.runZIO(request)
       }
     )
 

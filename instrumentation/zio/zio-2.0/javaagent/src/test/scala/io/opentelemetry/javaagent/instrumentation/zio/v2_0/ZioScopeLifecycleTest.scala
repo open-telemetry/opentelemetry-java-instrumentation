@@ -16,7 +16,13 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.{Test, TestInstance}
 import zio._
 
-import java.util.concurrent.{ExecutorService, Executors, TimeUnit}
+import java.util.concurrent.{
+  CountDownLatch,
+  ExecutorService,
+  Executors,
+  TimeUnit
+}
+import java.util.concurrent.atomic.AtomicReference
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ZioScopeLifecycleTest {
@@ -156,6 +162,62 @@ class ZioScopeLifecycleTest {
       }
     } finally {
       span.end()
+    }
+  }
+
+  @Test
+  def completionObserverSeesInheritedContextAfterFiberYields(): Unit = {
+    val worker = Executors.newSingleThreadExecutor()
+    val executor = Executor.fromJavaExecutor(worker)
+    val span = testing.getOpenTelemetry
+      .getTracer("test")
+      .spanBuilder("application")
+      .startSpan()
+    val observedSpanContext =
+      new AtomicReference[io.opentelemetry.api.trace.SpanContext]()
+    val observerCalled = new CountDownLatch(1)
+    val scope = span.makeCurrent()
+    var scopeClosed = false
+    try {
+      run {
+        (for {
+          release <- Promise.make[Nothing, Unit]
+          fiber <- (release.await *> ZIO.yieldNow *> ZIO.fail(
+            new RuntimeException("failure")
+          )).fork
+          _ <- ZIO.succeed {
+            Unsafe.unsafe { implicit unsafe =>
+              fiber
+                .asInstanceOf[Fiber.Runtime[Throwable, Nothing]]
+                .unsafe
+                .addObserver(_ => {
+                  observedSpanContext.set(Span.current().getSpanContext)
+                  observerCalled.countDown()
+                })
+            }
+          }
+          _ <- release.succeed(())
+          _ <- fiber.await
+        } yield ()).onExecutor(executor)
+      }
+
+      assertThat(observerCalled.await(10, TimeUnit.SECONDS)).isTrue()
+      assertThat(observedSpanContext.get()).isEqualTo(span.getSpanContext)
+      assertThat(Span.current().getSpanContext).isEqualTo(span.getSpanContext)
+      scope.close()
+      scopeClosed = true
+      worker
+        .submit(new Runnable {
+          override def run(): Unit =
+            assertThat(Span.current().getSpanContext.isValid).isFalse()
+        })
+        .get(10, TimeUnit.SECONDS)
+    } finally {
+      if (!scopeClosed) {
+        scope.close()
+      }
+      span.end()
+      shutdown(worker)
     }
   }
 

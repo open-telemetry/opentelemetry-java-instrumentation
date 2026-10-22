@@ -17,6 +17,7 @@ class FiberContext implements ContextState {
   private Context context;
   @Nullable private Object scope;
   @Nullable private Activation activation;
+  private boolean ended;
 
   private FiberContext(Context context) {
     this.context = context;
@@ -26,10 +27,17 @@ class FiberContext implements ContextState {
     return new FiberContext(Context.current());
   }
 
-  void onSuspend() {
+  boolean onSuspend() {
+    if (ended) {
+      while (activation != null) {
+        activation = FiberContextStorageHolder.deactivate(activation);
+      }
+      return true;
+    }
     if (activation != null) {
       activation = FiberContextStorageHolder.deactivate(activation);
     }
+    return false;
   }
 
   void onResume() {
@@ -37,9 +45,7 @@ class FiberContext implements ContextState {
   }
 
   void onEnd() {
-    while (activation != null) {
-      activation = FiberContextStorageHolder.deactivate(activation);
-    }
+    ended = true;
   }
 
   @Override

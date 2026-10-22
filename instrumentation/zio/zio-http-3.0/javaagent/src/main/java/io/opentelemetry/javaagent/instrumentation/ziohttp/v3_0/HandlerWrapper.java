@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.ziohttp.v3_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import scala.runtime.AbstractFunction1;
@@ -31,7 +32,13 @@ public class HandlerWrapper {
   }
 
   private static void updateRoute(String route) {
-    HttpServerRoute.update(Context.current(), HttpServerRouteSource.CONTROLLER, route);
+    Context context = Context.current();
+    HttpRouteState routeState = HttpRouteState.fromContextOrNull(context);
+    HttpServerRouteSource source =
+        routeState != null && routeState.getRoute() != null
+            ? HttpServerRouteSource.NESTED_CONTROLLER
+            : HttpServerRouteSource.CONTROLLER;
+    HttpServerRoute.update(context, source, route);
   }
 
   private HandlerWrapper() {}

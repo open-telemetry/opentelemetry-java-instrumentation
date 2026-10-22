@@ -68,6 +68,29 @@ abstract class AbstractZioHttpTest {
   }
 
   protected def assertRoute(route: String): Unit = {
+    assertRoute(
+      s"/$route/test",
+      s"GET /$route/{name}",
+      s"/$route/{name}",
+      "Hello test"
+    )
+  }
+
+  protected def assertDelegatedRoute(): Unit = {
+    assertRoute(
+      "/delegate/test",
+      "GET /delegate/test",
+      "/delegate/test",
+      "Inner test"
+    )
+  }
+
+  private def assertRoute(
+      path: String,
+      spanName: String,
+      httpRoute: String,
+      responseBody: String
+  ): Unit = {
     val parent = testing.getOpenTelemetry
       .getTracer("test")
       .spanBuilder("parent")
@@ -76,7 +99,7 @@ abstract class AbstractZioHttpTest {
       val context = parent.getSpanContext
       val response = client
         .prepare()
-        .get(s"/$route/test")
+        .get(path)
         .header(
           "traceparent",
           s"00-${context.getTraceId}-${context.getSpanId}-01"
@@ -84,7 +107,7 @@ abstract class AbstractZioHttpTest {
         .execute()
         .aggregate
         .join
-      assertThat(response.contentUtf8).isEqualTo("Hello test")
+      assertThat(response.contentUtf8).isEqualTo(responseBody)
     } finally {
       parent.end()
     }
@@ -99,12 +122,12 @@ abstract class AbstractZioHttpTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit =
               span
-                .hasName(s"GET /$route/{name}")
+                .hasName(spanName)
                 .hasKind(SpanKind.SERVER)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
                   equalTo(URL_SCHEME, "http"),
-                  equalTo(URL_PATH, s"/$route/test"),
+                  equalTo(URL_PATH, path),
                   equalTo(HTTP_REQUEST_METHOD, "GET"),
                   equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                   satisfies(
@@ -116,7 +139,7 @@ abstract class AbstractZioHttpTest {
                         value.isInstanceOf(classOf[String])
                     }
                   ),
-                  equalTo(HTTP_ROUTE, s"/$route/{name}"),
+                  equalTo(HTTP_ROUTE, httpRoute),
                   equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                   equalTo(SERVER_ADDRESS, "localhost"),
                   equalTo(SERVER_PORT, port),
