@@ -22,4 +22,14 @@ class ZioHttpTest extends AbstractZioHttpTest {
   def delegatedRoute(): Unit = {
     assertDelegatedRoute()
   }
+
+  @Test
+  def deeplyDelegatedRoute(): Unit = {
+    assertDeeplyDelegatedRoute()
+  }
+
+  @Test
+  def failedRoute(): Unit = {
+    assertFailedRoute()
+  }
 }

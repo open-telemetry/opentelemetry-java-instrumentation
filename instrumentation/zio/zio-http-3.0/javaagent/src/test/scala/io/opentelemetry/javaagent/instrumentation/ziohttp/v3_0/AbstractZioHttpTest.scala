@@ -85,11 +85,63 @@ abstract class AbstractZioHttpTest {
     )
   }
 
+  protected def assertDeeplyDelegatedRoute(): Unit = {
+    assertRoute(
+      "/delegate/test",
+      "GET /delegate/test",
+      "/delegate/test",
+      "Inner test",
+      deepDelegation = true
+    )
+  }
+
+  protected def assertFailedRoute(): Unit = {
+    val parent = testing.getOpenTelemetry
+      .getTracer("test")
+      .spanBuilder("parent")
+      .startSpan()
+    try {
+      val context = parent.getSpanContext
+      val response = client
+        .prepare()
+        .get("/failure/test")
+        .header(
+          "traceparent",
+          s"00-${context.getTraceId}-${context.getSpanId}-01"
+        )
+        .execute
+        .aggregate
+        .join
+      assertThat(response.status.code).isEqualTo(500)
+    } finally {
+      parent.end()
+    }
+
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit =
+              span.hasName("parent").hasNoParent
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit =
+              span
+                .hasName("GET /failure/{name}")
+                .hasKind(SpanKind.SERVER)
+                .hasParent(trace.getSpan(0))
+                .hasAttribute(HTTP_ROUTE, "/failure/{name}")
+          }
+        )
+    })
+  }
+
   private def assertRoute(
       path: String,
       spanName: String,
       httpRoute: String,
-      responseBody: String
+      responseBody: String,
+      deepDelegation: Boolean = false
   ): Unit = {
     val parent = testing.getOpenTelemetry
       .getTracer("test")
@@ -104,6 +156,7 @@ abstract class AbstractZioHttpTest {
           "traceparent",
           s"00-${context.getTraceId}-${context.getSpanId}-01"
         )
+        .header("x-test-deep-delegation", deepDelegation.toString)
         .execute()
         .aggregate
         .join

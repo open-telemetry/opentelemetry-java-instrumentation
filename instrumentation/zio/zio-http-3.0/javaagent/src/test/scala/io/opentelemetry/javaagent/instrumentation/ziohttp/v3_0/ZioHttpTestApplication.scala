@@ -18,6 +18,14 @@ class ZioHttpTestApplication(port: Int) {
       }
     )
 
+  private val middleDelegatedRoutes =
+    Routes(
+      Method.GET / "delegate" / string("middle") -> handler {
+        (_: String, request: Request) =>
+          delegatedRoutes.runZIO(request)
+      }
+    )
+
   private val routes =
     Routes(
       Method.GET / "greet" / string("name") -> handler {
@@ -30,7 +38,13 @@ class ZioHttpTestApplication(port: Int) {
       },
       Method.GET / "delegate" / string("name") -> handler {
         (_: String, request: Request) =>
-          delegatedRoutes.runZIO(request)
+          if (request.rawHeader("x-test-deep-delegation").contains("true"))
+            middleDelegatedRoutes.runZIO(request)
+          else delegatedRoutes.runZIO(request)
+      },
+      Method.GET / "failure" / string("name") -> handler {
+        (_: String, _: Request) =>
+          ZIO.yieldNow *> ZIO.fail(Response.internalServerError)
       }
     )
 
