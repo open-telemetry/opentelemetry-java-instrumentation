@@ -118,6 +118,40 @@ class FiberContextStorageTest {
   }
 
   @Test
+  void nonStrictInvalidCloseDoesNotPropagateLoggingFailures() throws Exception {
+    ContextStateImpl owner = new ContextStateImpl(Context.root());
+    FiberContextStorage storage = new FiberContextStorage(new TestStorage(), false);
+    Logger logger = Logger.getLogger(FiberContextStorage.class.getName());
+    Level previousLevel = logger.getLevel();
+    LoggingHandler handler = new LoggingHandler();
+    handler.failure = new IllegalStateException("handler failure");
+    logger.setLevel(FINE);
+    logger.addHandler(handler);
+
+    Activation ownerActivation = FiberContextStorageHolder.activate(owner, null);
+    try {
+      Context ownerContext = context("owner");
+      Scope scope = storage.attach(ownerContext);
+      ContextStateImpl otherFiber = new ContextStateImpl(context("other"));
+      Activation otherActivation = FiberContextStorageHolder.activate(otherFiber, ownerActivation);
+      try {
+        assertThatCode(scope::close).doesNotThrowAnyException();
+        assertThat(storage.current()).isSameAs(otherFiber.getContext());
+      } finally {
+        FiberContextStorageHolder.deactivate(otherActivation);
+      }
+
+      assertThat(storage.current()).isSameAs(ownerContext);
+      scope.close();
+      assertThat(storage.current()).isSameAs(Context.root());
+    } finally {
+      FiberContextStorageHolder.deactivate(ownerActivation);
+      logger.removeHandler(handler);
+      logger.setLevel(previousLevel);
+    }
+  }
+
+  @Test
   void scopeSurvivesDeactivationAndClosesAfterWorkerMigration() throws Exception {
     Context attachedContext = context("attached");
     ContextStateImpl state = new ContextStateImpl(Context.root());
@@ -332,11 +366,15 @@ class FiberContextStorageTest {
     private final List<LogRecord> records = new ArrayList<>();
     private final AtomicReference<Object> scopeToCheck = new AtomicReference<>();
     private boolean scopeWasMonitored;
+    private RuntimeException failure;
 
     @Override
     public void publish(LogRecord record) {
       records.add(record);
       scopeWasMonitored |= Thread.holdsLock(scopeToCheck.get());
+      if (failure != null) {
+        throw failure;
+      }
     }
 
     @Override

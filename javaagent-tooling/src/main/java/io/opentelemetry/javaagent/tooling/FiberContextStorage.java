@@ -133,7 +133,11 @@ final class FiberContextStorage implements ContextStorage, AutoCloseable {
       }
 
       if (invalidCloseMessage != null) {
-        logger.log(FINE, invalidCloseMessage + " Ignoring the call.");
+        try {
+          logger.log(FINE, invalidCloseMessage + " Ignoring the call.");
+        } catch (RuntimeException ignored) {
+          // Logging must not change the non-throwing behavior of invalid closes.
+        }
       }
     }
   }
