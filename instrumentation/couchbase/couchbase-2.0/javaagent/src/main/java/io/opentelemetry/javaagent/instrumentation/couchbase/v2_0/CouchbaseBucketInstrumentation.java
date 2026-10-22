@@ -16,10 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.CouchbaseCluster;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
@@ -64,7 +64,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
       CouchbaseRequestInfo request =
           CouchbaseRequestInfo.create(
               bucket, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName);
-      return CouchbaseRequestInfo.init(Context.current(), request).makeCurrent();
+      return CouchbaseRequestInfo.init(Java8BytecodeBridge.currentContext(), request).makeCurrent();
     }
 
     @AssignReturned.ToReturned
@@ -74,7 +74,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         @Advice.Return Observable<?> result, @Advice.Enter Scope scope) {
       CouchbaseRequestInfo request;
       try {
-        request = CouchbaseRequestInfo.get(Context.current());
+        request = CouchbaseRequestInfo.get(Java8BytecodeBridge.currentContext());
       } finally {
         if (scope != null) {
           scope.close();
@@ -109,7 +109,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
               ? CouchbaseRequestInfo.create(
                   bucket, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName)
               : CouchbaseRequestInfo.create(bucket, COUCHBASE_SERVER_TARGET.get(core), query);
-      return CouchbaseRequestInfo.init(Context.current(), request).makeCurrent();
+      return CouchbaseRequestInfo.init(Java8BytecodeBridge.currentContext(), request).makeCurrent();
     }
 
     @AssignReturned.ToReturned
@@ -119,7 +119,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         @Advice.Return Observable<?> result, @Advice.Enter Scope scope) {
       CouchbaseRequestInfo request;
       try {
-        request = CouchbaseRequestInfo.get(Context.current());
+        request = CouchbaseRequestInfo.get(Java8BytecodeBridge.currentContext());
       } finally {
         if (scope != null) {
           scope.close();
