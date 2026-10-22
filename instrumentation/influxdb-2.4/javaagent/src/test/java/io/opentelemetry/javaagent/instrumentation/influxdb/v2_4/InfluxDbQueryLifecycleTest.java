@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import com.squareup.moshi.JsonDataException;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -26,6 +27,10 @@ import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -115,6 +120,69 @@ class InfluxDbQueryLifecycleTest {
       assertThatThrownBy(() -> client.query(QUERY)).isInstanceOf(InfluxDBIOException.class);
     }
     assertQuery(InfluxDBIOException.class.getName());
+  }
+
+  @Test
+  void reentrantAsyncQueryDoesNotEndSynchronousQuery() throws InterruptedException {
+    CountDownLatch nestedRequestStarted = new CountDownLatch(1);
+    CountDownLatch nestedCallback = new CountDownLatch(1);
+    CountDownLatch nestedCallCompleted = new CountDownLatch(1);
+    CountDownLatch releaseOuter = new CountDownLatch(1);
+    ThreadPoolExecutor nestedExecutor =
+        new ThreadPoolExecutor(
+            0,
+            Integer.MAX_VALUE,
+            60,
+            SECONDS,
+            new SynchronousQueue<>(),
+            Executors.defaultThreadFactory()) {
+          @Override
+          protected void afterExecute(Runnable runnable, Throwable error) {
+            nestedCallCompleted.countDown();
+          }
+        };
+    Dispatcher nestedDispatcher = new Dispatcher(nestedExecutor);
+    OkHttpClient.Builder nestedClientBuilder =
+        new OkHttpClient.Builder()
+            .dispatcher(nestedDispatcher)
+            .addInterceptor(
+                chain -> {
+                  nestedRequestStarted.countDown();
+                  return response(chain, SUCCESS);
+                });
+    try (InfluxDB nestedClient =
+            InfluxDBFactory.connect("http://localhost:8086", nestedClientBuilder);
+        InfluxDB outerClient =
+            client(
+                chain -> {
+                  nestedClient.query(
+                      QUERY,
+                      result -> nestedCallback.countDown(),
+                      error -> nestedCallback.countDown());
+                  await(releaseOuter);
+                  throw new IOException("outer transport failure");
+                })) {
+      FutureTask<Void> outerQuery =
+          new FutureTask<>(
+              () -> {
+                outerClient.query(QUERY);
+                return null;
+              });
+      new Thread(outerQuery).start();
+      try {
+        assertThat(nestedRequestStarted.await(10, SECONDS)).isTrue();
+        assertThat(nestedCallback.await(10, SECONDS)).isTrue();
+        assertThat(nestedCallCompleted.await(10, SECONDS)).isTrue();
+        assertThat(testing.spans()).isEmpty();
+        assertNoDuration();
+      } finally {
+        releaseOuter.countDown();
+        nestedExecutor.shutdownNow();
+      }
+      assertThatThrownBy(() -> outerQuery.get(10, SECONDS))
+          .hasCauseInstanceOf(InfluxDBIOException.class);
+      assertQuery(InfluxDBIOException.class.getName());
+    }
   }
 
   @ParameterizedTest
@@ -425,6 +493,60 @@ class InfluxDbQueryLifecycleTest {
   void asynchronousDecodingFailureWithoutFailureConsumer() {
     try (InfluxDB client = client(chain -> response(chain, "{\"results\":{}}"))) {
       client.query(QUERY, result -> {}, null);
+      assertQuery("com.squareup.moshi.JsonDataException");
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void canceledCallWithDecodingFailure(boolean hasFailureConsumer) throws InterruptedException {
+    CountDownLatch readStarted = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    CountDownLatch failureCallback = new CountDownLatch(1);
+    AtomicReference<Throwable> receivedFailure = new AtomicReference<>();
+    BufferedSource source =
+        Okio.buffer(
+            new ForwardingSource(new Buffer()) {
+              private boolean read;
+
+              @Override
+              public long read(Buffer sink, long byteCount) {
+                if (read) {
+                  return -1;
+                }
+                read = true;
+                readStarted.countDown();
+                await(release);
+                return sink.writeUtf8("{\"results\":{}}").size();
+              }
+            });
+    Dispatcher dispatcher = new Dispatcher();
+    OkHttpClient.Builder builder =
+        new OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .addInterceptor(
+                chain ->
+                    response(chain, SUCCESS)
+                        .newBuilder()
+                        .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
+                        .build());
+    try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
+      Consumer<Throwable> failure =
+          error -> {
+            receivedFailure.set(error);
+            failureCallback.countDown();
+          };
+      client.query(QUERY, result -> {}, hasFailureConsumer ? failure : null);
+      try {
+        assertThat(readStarted.await(10, SECONDS)).isTrue();
+        dispatcher.cancelAll();
+      } finally {
+        release.countDown();
+      }
+      if (hasFailureConsumer) {
+        assertThat(failureCallback.await(10, SECONDS)).isTrue();
+        assertThat(receivedFailure.get()).isInstanceOf(JsonDataException.class);
+      }
       assertQuery("com.squareup.moshi.JsonDataException");
     }
   }

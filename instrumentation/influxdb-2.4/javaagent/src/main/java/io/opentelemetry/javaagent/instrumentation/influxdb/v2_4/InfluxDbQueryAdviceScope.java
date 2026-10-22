@@ -25,17 +25,33 @@ public class InfluxDbQueryAdviceScope {
   private InfluxDbQueryAdviceScope(
       CallDepth callDepth,
       @Nullable Context parentContext,
-      @Nullable InfluxDbQueryState queryState) {
+      @Nullable InfluxDbQueryState queryState,
+      @Nullable Scope scope) {
     this.callDepth = callDepth;
     this.parentContext = parentContext;
     this.queryState = queryState;
-    scope = queryState == null ? null : queryState.getContext().makeCurrent();
+    this.scope = scope;
   }
 
-  public static InfluxDbQueryAdviceScope start(@Nullable Query query, Retrofit retrofit) {
+  public static InfluxDbQueryAdviceScope start(
+      @Nullable Query query, Retrofit retrofit, boolean asynchronous) {
     CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
-    if (callDepth.getAndIncrement() > 0 || query == null) {
-      return new InfluxDbQueryAdviceScope(callDepth, null, null);
+    if (callDepth.getAndIncrement() > 0) {
+      try {
+        Context current = Context.current();
+        InfluxDbQueryState currentState = current.get(InfluxDbQueryState.KEY);
+        Scope scope =
+            currentState != null && !(asynchronous && currentState.belongsToAsyncQuery(retrofit))
+                ? current.with(InfluxDbQueryState.KEY, null).makeCurrent()
+                : null;
+        return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
+      } catch (Throwable t) {
+        callDepth.decrementAndGet();
+        throw t;
+      }
+    }
+    if (query == null) {
+      return new InfluxDbQueryAdviceScope(callDepth, null, null, null);
     }
 
     Context parentContext = Context.current();
@@ -44,11 +60,13 @@ public class InfluxDbQueryAdviceScope {
         InfluxDbQuery.create(
             httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
     if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
-      return new InfluxDbQueryAdviceScope(callDepth, null, null);
+      return new InfluxDbQueryAdviceScope(callDepth, null, null, null);
     }
 
+    InfluxDbQueryState queryState =
+        new InfluxDbQueryState(parentContext, influxDbQuery, retrofit, asynchronous);
     return new InfluxDbQueryAdviceScope(
-        callDepth, parentContext, new InfluxDbQueryState(parentContext, influxDbQuery));
+        callDepth, parentContext, queryState, queryState.getContext().makeCurrent());
   }
 
   @Nullable
@@ -62,19 +80,21 @@ public class InfluxDbQueryAdviceScope {
   }
 
   public void end(@Nullable Throwable throwable) {
-    if (callDepth.decrementAndGet() > 0 || queryState == null || scope == null) {
-      return;
+    int depth = callDepth.decrementAndGet();
+    if (scope != null) {
+      scope.close();
     }
-    scope.close();
-    queryState.end(throwable);
+    if (depth == 0 && queryState != null) {
+      queryState.end(throwable);
+    }
   }
 
   public void endAsync(@Nullable Throwable throwable) {
-    if (callDepth.decrementAndGet() > 0 || queryState == null || scope == null) {
-      return;
+    int depth = callDepth.decrementAndGet();
+    if (scope != null) {
+      scope.close();
     }
-    scope.close();
-    if (throwable != null) {
+    if (depth == 0 && queryState != null && throwable != null) {
       queryState.end(throwable);
     }
   }

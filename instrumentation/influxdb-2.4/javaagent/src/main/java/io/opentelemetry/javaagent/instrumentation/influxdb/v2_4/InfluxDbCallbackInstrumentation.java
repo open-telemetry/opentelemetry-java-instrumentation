@@ -90,10 +90,13 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
   public static class FailureAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
-        @Advice.This Callback<?> callback, @Advice.Argument(0) Call<?> call) {
+        @Advice.This Callback<?> callback,
+        @Advice.Argument(0) Call<?> call,
+        @Advice.Argument(1) Throwable error) {
       InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(callback);
       if (state != null) {
         state.setCall(call);
+        state.onFailure(error);
       }
     }
 
