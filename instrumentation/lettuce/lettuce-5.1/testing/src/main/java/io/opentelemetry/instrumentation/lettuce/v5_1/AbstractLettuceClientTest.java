@@ -111,7 +111,7 @@ public abstract class AbstractLettuceClientTest {
                         assertThat(metric)
                             .hasHistogramSatisfying(
                                 histogram ->
-                                    histogram.hasPointsSatisfying(
+                                    histogram.containsPointsSatisfying(
                                         point ->
                                             point
                                                 .hasCount(1)
