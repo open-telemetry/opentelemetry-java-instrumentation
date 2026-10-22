@@ -302,7 +302,7 @@ For telemetry-producing instrumentations, both methods follow this pattern:
 public static void onEnter(@Advice.Argument(1) Object request,
                            @Advice.Local("otelContext") Context context,
                            @Advice.Local("otelScope") Scope scope) {
-  Context parentContext = Java8BytecodeBridge.currentContext();
+  Context parentContext = MyJava8Helper.currentContext();
 
   if (!instrumenter().shouldStart(parentContext, request)) {
     return;
@@ -326,15 +326,20 @@ public static void onExit(@Advice.Argument(1) Object request,
 }
 ```
 
-Notice that the example above doesn't use `Context.current()`, but a `Java8BytecodeBridge` method
-instead. This is intentional: if you are instrumenting a pre-Java 8 library, inlining Java 8 default
-method calls (or static methods in an interface) into that library results in a `java.lang.VerifyError`
-at runtime, since Java 8 default method invocations aren't legal in Java 7 (and prior) bytecode.
+The inlined example uses a helper because static interface calls such as `Context.current()` cannot
+be copied into pre-Java-8 class files without causing a `java.lang.VerifyError`. Compile the helper
+with a Java 8 bytecode target:
 
-Since the OpenTelemetry API has many common default/static interface methods, like `Span.current()`,
-the `javaagent-extension-api` artifact has a class `Java8BytecodeBridge` which provides static
-methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
-in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
+```java
+public final class MyJava8Helper {
+  public static Context currentContext() {
+    return Context.current();
+  }
+}
+```
+
+Non-inlined advice (`inline = false`) can call `Context.current()`, `Context.root()`,
+`Span.current()`, `Span.fromContext(context)`, and `Baggage.fromContext(context)` directly.
 
 [suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
 

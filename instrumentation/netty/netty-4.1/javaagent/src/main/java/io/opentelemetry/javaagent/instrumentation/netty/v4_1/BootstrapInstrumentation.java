@@ -17,7 +17,6 @@ import io.netty.resolver.AddressResolverGroup;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.NettyScope;
@@ -79,7 +78,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
     @Nullable
     public static NettyScope startConnect(@Advice.Argument(0) SocketAddress remoteAddress) {
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       NettyConnectionRequest request = NettyConnectionRequest.connect(remoteAddress);
       if (!connectionInstrumenter().shouldStart(parentContext, request)) {
         return null;

@@ -398,6 +398,13 @@
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
 
+### 🚫 Deprecations
+
+- Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
+  in favor of direct `Context`, `Span`, and `Baggage` APIs. They may be removed in a subsequent
+  minor release. Inlined advice targeting pre-Java-8 classes must use non-inlined advice or a
+  Java-8-compiled helper for static interface calls.
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.

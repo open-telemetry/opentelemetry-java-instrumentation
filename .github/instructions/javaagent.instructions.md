@@ -89,8 +89,9 @@ describe selectable behavior, not Muzzle implementation identities.
   restriction. `isMethod()` is redundant after a non-empty `named(...)` or
   `namedOneOf(...)` matcher. Keep it when the name can be empty, because `named("")`
   can match constructors and class initializers.
-- Use `Java8BytecodeBridge` only for supported API calls directly in annotated advice;
-  helper methods use the normal API even when nested inside the advice class. Add a
+- Use the normal OpenTelemetry API in non-inlined advice and helper methods. Inlined advice
+  targeting pre-Java-8 class files must call static interface methods through a Java-8-compiled
+  helper, or switch to non-inlined advice; do not introduce calls to `Java8BytecodeBridge`. Add a
   `classLoaderMatcher()` only for a real version boundary Muzzle cannot distinguish.
   Verify every version-landmark class against the artifact versions and keep its role explicit:
   a positive floor uses `// added in X.Y`, a positive ceiling uses `// removed in X.Y`, and a

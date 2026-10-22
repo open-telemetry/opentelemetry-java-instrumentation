@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.rabbitmq.client.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
@@ -130,7 +129,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {
       if (throwable != null) {
-        SpringRabbitErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);
+        SpringRabbitErrorHolder.set(Context.current(), throwable);
       }
     }
   }

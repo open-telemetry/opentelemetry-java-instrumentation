@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -54,7 +53,7 @@ class HttpCodecFilterInstrumentation implements TypeInstrumentation {
 
       Context parentContext = GrizzlyStateStorage.getContext(ctx);
       if (parentContext == null) {
-        parentContext = Java8BytecodeBridge.currentContext();
+        parentContext = Context.current();
       }
 
       // don't create a span if the request hasn't been parsed yet
