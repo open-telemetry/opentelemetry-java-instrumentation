@@ -66,7 +66,7 @@ class GrpcTest extends AbstractGrpcTest {
                     .build())
             .build();
     telemetry.configureServerBuilder(server);
-    // A server can receive both application and Java agent configuration.
+    // A server can be configured more than once.
     telemetry.configureServerBuilder(server);
     return server;
   }

@@ -23,6 +23,7 @@ public class GrpcInstrumentationModule extends InstrumentationModule {
     return asList(
         new GrpcClientBuilderBuildInstrumentation(),
         new GrpcContextInstrumentation(),
-        new GrpcServerBuilderInstrumentation());
+        new GrpcServerBuilderInstrumentation(),
+        new GrpcServerStreamTracerStateInstrumentation());
   }
 }

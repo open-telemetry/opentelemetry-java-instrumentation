@@ -937,6 +937,30 @@ public abstract class AbstractGrpcTest {
               }
               trace.hasSpansSatisfyingExactly(allAsserts);
             });
+
+    if (emitPreviewRpcSemconv()) {
+      testing()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.grpc-1.6",
+              metric ->
+                  metric
+                      .hasName("rpc.server.call.duration")
+                      .hasUnit("s")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point ->
+                                      point
+                                          .hasCount(1)
+                                          .hasAttributesSatisfyingExactly(
+                                              equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                              equalTo(RPC_METHOD, "_OTHER"),
+                                              equalTo(
+                                                  RPC_RESPONSE_STATUS_CODE,
+                                                  Status.Code.UNIMPLEMENTED.name()),
+                                              equalTo(
+                                                  ERROR_TYPE, Status.Code.UNIMPLEMENTED.name())))));
+    }
   }
 
   @Test
