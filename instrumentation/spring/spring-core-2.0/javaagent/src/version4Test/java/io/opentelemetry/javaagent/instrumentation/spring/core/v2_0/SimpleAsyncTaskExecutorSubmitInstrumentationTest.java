@@ -5,23 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.core.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.core.v2_0.AsyncTaskTestUtil.executeTwoTasks;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
-class SimpleAsyncTaskExecutorSubmitInstrumentationTest {
-
-  @RegisterExtension
-  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  private static final SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor();
+class SimpleAsyncTaskExecutorSubmitInstrumentationTest
+    extends SimpleAsyncTaskExecutorInstrumentationTest {
 
   private static final Method submitListenableRunnable;
   private static final Method submitListenableCallable;
@@ -42,23 +34,23 @@ class SimpleAsyncTaskExecutorSubmitInstrumentationTest {
 
   @Test
   void submitRunnable() {
-    executeTwoTasks(testing, task -> executor.submit((Runnable) task));
+    executeTwoTasks(task -> executor.submit((Runnable) task));
   }
 
   @Test
   void submitCallable() {
-    executeTwoTasks(testing, task -> executor.submit((Callable<?>) task));
+    executeTwoTasks(task -> executor.submit((Callable<?>) task));
   }
 
   @Test
   void submitListenableRunnable() {
     assumeTrue(submitListenableRunnable != null);
-    executeTwoTasks(testing, task -> submitListenableRunnable.invoke(executor, task));
+    executeTwoTasks(task -> submitListenableRunnable.invoke(executor, task));
   }
 
   @Test
   void submitListenableCallable() {
     assumeTrue(submitListenableCallable != null);
-    executeTwoTasks(testing, task -> submitListenableCallable.invoke(executor, task));
+    executeTwoTasks(task -> submitListenableCallable.invoke(executor, task));
   }
 }
