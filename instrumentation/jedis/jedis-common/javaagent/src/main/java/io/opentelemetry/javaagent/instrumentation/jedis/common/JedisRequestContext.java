@@ -22,6 +22,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
   @Nullable private List<Throwable> serverErrors;
   @Nullable private Throwable firstServerErrorThrowable;
   @Nullable private JedisRequestContext<?> previousContext;
+  @Nullable private Object transactionOwner;
   private boolean captureServerErrors;
 
   private JedisRequestContext() {}
@@ -47,6 +48,11 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
 
   public static <T> JedisRequestContext<T> startBatch(
       Instrumenter<T, Void> instrumenter, T request) {
+    return startBatch(instrumenter, request, null);
+  }
+
+  public static <T> JedisRequestContext<T> startBatch(
+      Instrumenter<T, Void> instrumenter, T request, @Nullable Object transactionOwner) {
     Context parentContext = Context.current();
     Context context = null;
     Scope scope = null;
@@ -55,7 +61,8 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
       scope = context.makeCurrent();
     }
 
-    JedisRequestContext<T> requestContext = attachForBatch();
+    JedisRequestContext<T> requestContext =
+        transactionOwner == null ? attachForBatch() : attachForBatch(transactionOwner);
     requestContext.request = request;
     requestContext.associateServerErrorContext(request);
     requestContext.scope = scope;
@@ -72,6 +79,21 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     requestContext.captureServerErrors = true;
     contextThreadLocal.set(requestContext);
     return requestContext;
+  }
+
+  public static <T> JedisRequestContext<T> attachForBatch(Object transactionOwner) {
+    JedisRequestContext<T> requestContext = attachForBatch();
+    requestContext.transactionOwner = transactionOwner;
+    return requestContext;
+  }
+
+  @Nullable
+  public static <T> JedisRequestContext<T> attachForTransaction(Object transaction) {
+    JedisRequestContext<?> requestContext = contextThreadLocal.get();
+    if (requestContext != null && requestContext.transactionOwner == transaction) {
+      return null;
+    }
+    return attachForBatch(transaction);
   }
 
   @Nullable

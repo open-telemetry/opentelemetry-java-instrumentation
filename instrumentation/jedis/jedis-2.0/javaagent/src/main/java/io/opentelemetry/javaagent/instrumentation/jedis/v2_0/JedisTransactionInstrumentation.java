@@ -61,13 +61,14 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       }
 
       // Suppress the EXEC framing command's own span; the transaction is reported as a single
-      // batch span here. An empty transaction has no peer to report, so it has no batch span.
+      // batch span here. An empty transaction still sends EXEC but has no batch span.
       AdviceState adviceState = new AdviceState();
       adviceState.previousTransactionFraming =
           currentTransactionFraming().set(transactionFraming(request));
       if (request != null) {
         try {
-          adviceState.requestContext = JedisRequestContext.startBatch(instrumenter(), request);
+          adviceState.requestContext =
+              JedisRequestContext.startBatch(instrumenter(), request, transaction);
         } catch (Throwable t) {
           if (adviceState.requestContext != null) {
             adviceState.requestContext.detachAndEnd(null);
@@ -75,6 +76,8 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
           currentTransactionFraming().restore(adviceState.previousTransactionFraming);
           throw t;
         }
+      } else {
+        adviceState.requestContext = JedisRequestContext.attachForTransaction(transaction);
       }
       return adviceState;
     }
@@ -118,8 +121,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       JedisPipelineContext.clear(transaction);
       TransactionFraming previousTransactionFraming =
           currentTransactionFraming().set(transactionFraming(null));
-      return new DiscardState(
-          JedisRequestContext.attachForBatch(), previousTransactionFraming);
+      return new DiscardState(JedisRequestContext.attachForBatch(), previousTransactionFraming);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

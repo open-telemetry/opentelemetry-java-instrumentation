@@ -163,7 +163,8 @@ class Jedis40ClientTest {
   @Test
   void localCommandBuilderFailureUsesExceptionClass() {
     JedisDataException localFailure = new JedisDataException("WRONGTYPE local conversion failure");
-    try (UnifiedJedis client = new UnifiedJedis(new HostAndPort(host, port))) {
+    try (UnifiedJedis client =
+        new UnifiedJedis(new DefaultJedisSocketFactory(new HostAndPort(host, port)))) {
       jedis.ping();
       testing.waitForTraces(1);
       testing.clearData();
@@ -297,6 +298,71 @@ class Jedis40ClientTest {
     assertThat(nestedResults).hasSize(1);
     assertThat(nestedResults.get(0)).isInstanceOf(JedisDataException.class);
     assertThat((Throwable) nestedResults.get(0)).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType(null);
+  }
+
+  @Test
+  void nestedEmptyTransactionServerErrorDoesNotFailSuccessfulOuterPipeline() throws Exception {
+    String username = "jedis-no-exec";
+    String password = "password";
+    assertThat(
+            redisServer
+                .execInContainer(
+                    "redis-cli",
+                    "ACL",
+                    "SETUSER",
+                    username,
+                    "on",
+                    ">" + password,
+                    "allkeys",
+                    "+@all",
+                    "-exec")
+                .getStdout()
+                .trim())
+        .isEqualTo("OK");
+    cleanup.deferCleanup(
+        () -> redisServer.execInContainer("redis-cli", "ACL", "DELUSER", username));
+    JedisClientConfig clientConfig =
+        DefaultJedisClientConfig.builder().user(username).password(password).build();
+    Jedis nestedClient = new Jedis(new HostAndPort(host, port), clientConfig);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .anySatisfy(
+                            point ->
+                                assertThat(point.getAttributes().get(DB_OPERATION_NAME))
+                                    .isEqualTo("PING"))));
+    testing.clearData();
+
+    List<JedisDataException> nestedErrors = new ArrayList<>();
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                Transaction nested = nestedClient.multi();
+                try {
+                  nested.exec();
+                } catch (JedisDataException error) {
+                  nestedErrors.add(error);
+                }
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertThat(nestedErrors).hasSize(1);
+    assertThat(nestedErrors.get(0)).hasMessageContaining("NOPERM");
     assertErrorType(null);
   }
 
