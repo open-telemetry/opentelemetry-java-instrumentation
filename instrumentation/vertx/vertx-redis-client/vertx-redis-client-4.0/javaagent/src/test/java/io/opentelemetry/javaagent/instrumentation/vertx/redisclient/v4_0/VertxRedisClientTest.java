@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -240,7 +241,10 @@ class VertxRedisClientTest {
 
     assertThat(result).isInstanceOf(ErrorType.class);
     assertErrorTypeTelemetry(
-        "WRONGTYPE", "PIPELINE GET", "GET batch-wrong-type; GET batch-wrong-type", 2L);
+        testLatestDeps() ? ErrorType.class.getName() : "WRONGTYPE",
+        "PIPELINE GET",
+        "GET batch-wrong-type; GET batch-wrong-type",
+        2L);
   }
 
   @Test
