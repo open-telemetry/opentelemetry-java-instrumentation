@@ -32,8 +32,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -57,7 +55,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -99,24 +99,28 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   private static final String DATABASE_NAME = "jdbcUnitTest";
   private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
-  private static final Map<String, String> JDBC_URLS =
-      ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + DATABASE_NAME,
-          "derby", "jdbc:derby:memory:" + DATABASE_NAME,
-          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME,
-          "sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
-  private static final Map<String, String> JDBC_DRIVER_CLASS_NAMES =
-      ImmutableMap.of(
-          "h2", "org.h2.Driver",
-          "derby", "org.apache.derby.jdbc.EmbeddedDriver",
-          "hsqldb", "org.hsqldb.jdbc.JDBCDriver",
-          "sqlite", "org.sqlite.JDBC");
-  private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
+  private static final Map<String, String> JDBC_URLS;
+  private static final Map<String, String> JDBC_DRIVER_CLASS_NAMES;
+  private static final Map<String, String> jdbcUserNames = new HashMap<>();
   private static final Properties connectionProps = new Properties();
   // JDBC Connection pool name (i.e. HikariCP) -> Map<databaseName, Datasource>
-  private static final Map<String, Map<String, DataSource>> cpDatasources = Maps.newHashMap();
+  private static final Map<String, Map<String, DataSource>> cpDatasources = new HashMap<>();
 
   static {
+    Map<String, String> jdbcUrls = new LinkedHashMap<>();
+    jdbcUrls.put("h2", "jdbc:h2:mem:" + DATABASE_NAME);
+    jdbcUrls.put("derby", "jdbc:derby:memory:" + DATABASE_NAME);
+    jdbcUrls.put("hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
+    jdbcUrls.put("sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
+    JDBC_URLS = Collections.unmodifiableMap(jdbcUrls);
+
+    Map<String, String> jdbcDriverClassNames = new LinkedHashMap<>();
+    jdbcDriverClassNames.put("h2", "org.h2.Driver");
+    jdbcDriverClassNames.put("derby", "org.apache.derby.jdbc.EmbeddedDriver");
+    jdbcDriverClassNames.put("hsqldb", "org.hsqldb.jdbc.JDBCDriver");
+    jdbcDriverClassNames.put("sqlite", "org.sqlite.JDBC");
+    JDBC_DRIVER_CLASS_NAMES = Collections.unmodifiableMap(jdbcDriverClassNames);
+
     jdbcUserNames.put("derby", "APP");
     jdbcUserNames.put("h2", null);
     jdbcUserNames.put("hsqldb", "SA");
