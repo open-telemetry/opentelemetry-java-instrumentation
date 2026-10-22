@@ -27,6 +27,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -37,6 +38,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -44,6 +46,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -65,6 +69,7 @@ import org.redisson.api.BatchOptions;
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RBatch;
 import org.redisson.api.RBucket;
+import org.redisson.api.RFuture;
 import org.redisson.api.RList;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
@@ -301,6 +306,177 @@ public abstract class AbstractRedissonClientTest {
         redisson.getScript().eval(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.VALUE);
     assertThat(result).isEqualTo(1L);
     assertErrorTypeOnLastOperation(null);
+  }
+
+  @Test
+  void reentrantFailureCallbackKeepsClientErrorFallback() throws InterruptedException {
+    Assumptions.assumeTrue(isClassAvailable("org.redisson.config.CommandMapper"));
+
+    Class<?> commandMapperType = loadCommandMapperType();
+    Config config;
+    try {
+      config = createConfig(0, null);
+    } catch (ReflectiveOperationException e) {
+      throw new AssertionError(e);
+    }
+    config.useSingleServer().setConnectionPoolSize(1).setConnectionMinimumIdleSize(1);
+
+    CountDownLatch evalMappingStarted = new CountDownLatch(1);
+    CountDownLatch allowEvalMapping = new CountDownLatch(1);
+    AtomicBoolean failureCallbackActive = new AtomicBoolean();
+    AtomicBoolean getMappedInFailureCallback = new AtomicBoolean();
+    Object commandMapper =
+        Proxy.newProxyInstance(
+            commandMapperType.getClassLoader(),
+            new Class<?>[] {commandMapperType},
+            (proxy, method, args) -> {
+              if (method.getName().equals("map")) {
+                String command = (String) args[0];
+                if (command.equals("EVAL") || command.equals("EVALSHA")) {
+                  evalMappingStarted.countDown();
+                  try {
+                    if (!allowEvalMapping.await(30, SECONDS)) {
+                      throw new RedisException("timed out waiting to release command mapping");
+                    }
+                  } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RedisException("interrupted while mapping command", e);
+                  }
+                } else if (command.equals("GET")) {
+                  getMappedInFailureCallback.set(failureCallbackActive.get());
+                  throw new RedisException("client-side command mapper failure");
+                }
+                return command;
+              }
+              return null;
+            });
+    setCommandMapper(config, commandMapperType, commandMapper);
+
+    RedissonClient callbackClient = Redisson.create(config);
+    testing.clearData();
+    try {
+      testing.runWithSpan(
+          "parent",
+          () -> {
+            RFuture<?> serverError =
+                callbackClient
+                    .getScript()
+                    .evalAsync(
+                        RScript.Mode.READ_WRITE,
+                        "return redis.error_reply('Custom.Callback! diagnostic details')",
+                        RScript.ReturnType.VALUE);
+            assertThat(evalMappingStarted.await(30, SECONDS)).isTrue();
+
+            AtomicBoolean failureCallbackCalled = new AtomicBoolean();
+            AtomicReference<RFuture<?>> clientError = new AtomicReference<>();
+            serverError.whenComplete(
+                (result, error) -> {
+                  failureCallbackCalled.set(true);
+                  failureCallbackActive.set(true);
+                  try {
+                    clientError.set(callbackClient.getBucket("callback-client-error").getAsync());
+                  } finally {
+                    failureCallbackActive.set(false);
+                  }
+                });
+            allowEvalMapping.countDown();
+
+            assertThatThrownBy(serverError::join).hasRootCauseInstanceOf(RedisException.class);
+            assertThat(failureCallbackCalled).isTrue();
+            assertThat(getMappedInFailureCallback).isTrue();
+            assertThat(clientError.get()).isNotNull();
+            assertThatThrownBy(() -> clientError.get().join())
+                .hasRootCauseInstanceOf(RedisException.class);
+            callbackClient.getBucket("callback-success").set("success");
+          });
+    } finally {
+      allowEvalMapping.countDown();
+      callbackClient.shutdown();
+    }
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(1).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName("EVAL " + address)
+                      .hasKind(CLIENT)
+                      .hasAttributesSatisfying(
+                          attributes ->
+                              assertThat(attributes.asMap())
+                                  .containsEntry(ERROR_TYPE, "Custom.Callback!")),
+              span ->
+                  span.hasName("GET " + address)
+                      .hasKind(CLIENT)
+                      .hasAttributesSatisfying(
+                          attributes ->
+                              assertThat(attributes.asMap())
+                                  .containsEntry(ERROR_TYPE, RedisException.class.getName())),
+              span ->
+                  span.hasName("SET " + address)
+                      .hasKind(CLIENT)
+                      .hasAttributesSatisfying(
+                          attributes ->
+                              assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE)));
+        });
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram
+                            .satisfies(data -> assertThat(data.getPoints()).hasSize(3))
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasCount(1)
+                                        .hasAttributesSatisfying(
+                                            attributes ->
+                                                assertThat(attributes.asMap())
+                                                    .containsEntry(ERROR_TYPE, "Custom.Callback!")),
+                                point ->
+                                    point
+                                        .hasCount(1)
+                                        .hasAttributesSatisfying(
+                                            attributes ->
+                                                assertThat(attributes.asMap())
+                                                    .containsEntry(
+                                                        ERROR_TYPE,
+                                                        RedisException.class.getName())),
+                                point ->
+                                    point
+                                        .hasCount(1)
+                                        .hasAttributesSatisfying(
+                                            attributes ->
+                                                assertThat(attributes.asMap())
+                                                    .doesNotContainKey(ERROR_TYPE)))));
+  }
+
+  private static Class<?> loadCommandMapperType() {
+    try {
+      return Class.forName(
+          "org.redisson.config.CommandMapper",
+          false,
+          AbstractRedissonClientTest.class.getClassLoader());
+    } catch (ClassNotFoundException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  private static void setCommandMapper(
+      Config config, Class<?> commandMapperType, Object commandMapper) {
+    try {
+      config
+          .getClass()
+          .getMethod("setCommandMapper", commandMapperType)
+          .invoke(config, commandMapper);
+    } catch (ReflectiveOperationException e) {
+      throw new AssertionError(e);
+    }
   }
 
   @Test
