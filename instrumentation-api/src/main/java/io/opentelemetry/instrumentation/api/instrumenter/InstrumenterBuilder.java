@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
-import static java.util.logging.Level.WARNING;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -33,14 +32,11 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -55,8 +51,6 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
-  private static final AtomicBoolean spanSuppressionConfigWarningLogged = new AtomicBoolean();
-  private static final AtomicBoolean spanSuppressionPropertyWarningLogged = new AtomicBoolean();
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -126,6 +120,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   /**
    * Sets the OpenTelemetry schema URL that will be associated with all telemetry produced by this
    * {@link Instrumenter}.
+   *
+   * <p>The schema URL identifies the semantic conventions followed by the spans, metrics, and logs.
+   * If this method is not called, the telemetry has no schema URL.
    */
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setSchemaUrl(String schemaUrl) {
@@ -330,7 +327,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     if (instrumentationVersion != null) {
       tracerBuilder.setInstrumentationVersion(instrumentationVersion);
     }
-    String schemaUrl = getSchemaUrl();
     if (schemaUrl != null) {
       tracerBuilder.setSchemaUrl(schemaUrl);
     }
@@ -342,7 +338,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     if (instrumentationVersion != null) {
       loggerBuilder.setInstrumentationVersion(instrumentationVersion);
     }
-    String schemaUrl = getSchemaUrl();
     if (schemaUrl != null) {
       loggerBuilder.setSchemaUrl(schemaUrl);
     }
@@ -363,7 +358,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     if (instrumentationVersion != null) {
       meterBuilder.setInstrumentationVersion(instrumentationVersion);
     }
-    String schemaUrl = getSchemaUrl();
     if (schemaUrl != null) {
       meterBuilder.setSchemaUrl(schemaUrl);
     }
@@ -373,36 +367,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
 
     return listeners;
-  }
-
-  @Nullable
-  private String getSchemaUrl() {
-    // url set explicitly overrides url computed using attributes extractors
-    if (schemaUrl != null) {
-      return schemaUrl;
-    }
-    Set<String> computedSchemaUrls =
-        attributesExtractors.stream()
-            .filter(SchemaUrlProvider.class::isInstance)
-            .map(SchemaUrlProvider.class::cast)
-            .flatMap(
-                provider -> {
-                  String url = provider.internalGetSchemaUrl();
-                  return url == null ? Stream.of() : Stream.of(url);
-                })
-            .collect(toSet());
-    switch (computedSchemaUrls.size()) {
-      case 0:
-        return null;
-      case 1:
-        return computedSchemaUrls.iterator().next();
-      default:
-        logger.log(
-            WARNING,
-            "Multiple schemaUrls were detected: {0}. The built Instrumenter will have no schemaUrl assigned.",
-            computedSchemaUrls);
-        return null;
-    }
   }
 
   SpanSuppressor buildSpanSuppressor() {
@@ -423,29 +387,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getInstrumentationConfig("common");
     }
 
-    String result = commonConfig.getString("span_suppression_strategy");
-    if (result == null) {
-      // Deprecated declarative and flat names remain available until 3.0.
-      result = commonConfig.getString("span_suppression_strategy/development");
-      if (result != null && spanSuppressionConfigWarningLogged.compareAndSet(false, true)) {
-        logger.warning(
-            "The otel.instrumentation.experimental.span-suppression-strategy setting and the"
-                + " equivalent declarative configuration property are deprecated and will be removed"
-                + " in 3.0. Use otel.instrumentation.common.span-suppression-strategy or equivalent"
-                + " declarative configuration instead.");
-      }
-      if (result == null) {
-        result =
-            SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
-        if (result != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
-          logger.warning(
-              "The otel.instrumentation.experimental.span-suppression-strategy setting is"
-                  + " deprecated and will be removed in 3.0. Use the programmatic API or equivalent"
-                  + " declarative instrumentation configuration instead.");
-        }
-      }
-    }
-    return SpanSuppressionStrategy.fromConfig(result);
+    return SpanSuppressionStrategy.fromConfig(commonConfig.getString("span_suppression_strategy"));
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
