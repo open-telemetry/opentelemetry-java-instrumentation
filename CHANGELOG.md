@@ -302,6 +302,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
+  `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
 - Remove `otel.instrumentation.experimental.span-suppression-strategy` and
   `java.common.span_suppression_strategy/development` in favor of
   `otel.instrumentation.common.span-suppression-strategy` and
