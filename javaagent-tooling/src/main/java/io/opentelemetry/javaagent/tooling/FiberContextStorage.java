@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
@@ -13,9 +14,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.FiberContextStorageHolder;
 import io.opentelemetry.javaagent.bootstrap.FiberContextStorageHolder.ContextState;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class FiberContextStorage implements ContextStorage, AutoCloseable {
+
+  private static final Logger logger = Logger.getLogger(FiberContextStorage.class.getName());
 
   private final ContextStorage delegate;
   private final boolean strictContextEnabled;
@@ -102,28 +106,34 @@ final class FiberContextStorage implements ContextStorage, AutoCloseable {
     }
 
     @Override
-    public synchronized void close() {
-      if (closed) {
-        return;
-      }
-      if (FiberContextStorageHolder.current() != owner) {
-        if (strictContextEnabled) {
-          throw new IllegalStateException("Fiber context scope closed by a different fiber");
+    public void close() {
+      String invalidCloseMessage = null;
+      synchronized (this) {
+        if (closed) {
+          return;
         }
-        return;
-      }
-      if (owner.getScope() != this) {
-        if (strictContextEnabled) {
-          throw new IllegalStateException("Fiber context scopes must be closed in reverse order");
+        if (FiberContextStorageHolder.current() != owner) {
+          if (strictContextEnabled) {
+            throw new IllegalStateException("Fiber context scope closed by a different fiber");
+          }
+          invalidCloseMessage = "Trying to close fiber context scope from a different fiber.";
+        } else if (owner.getScope() != this) {
+          if (strictContextEnabled) {
+            throw new IllegalStateException("Fiber context scopes must be closed in reverse order");
+          }
+          invalidCloseMessage = "Trying to close fiber context scope out of order.";
+        } else {
+          owner.setContext(previousContext);
+          owner.setScope(previousScope);
+          closed = true;
+          if (strictContextEnabled) {
+            openFiberScopes.decrementAndGet();
+          }
         }
-        return;
       }
 
-      owner.setContext(previousContext);
-      owner.setScope(previousScope);
-      closed = true;
-      if (strictContextEnabled) {
-        openFiberScopes.decrementAndGet();
+      if (invalidCloseMessage != null) {
+        logger.log(FINE, invalidCloseMessage + " Ignoring the call.");
       }
     }
   }

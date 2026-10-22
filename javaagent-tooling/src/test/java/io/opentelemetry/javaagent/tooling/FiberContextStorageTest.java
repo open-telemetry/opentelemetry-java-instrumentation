@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.logging.Level.FINE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,9 +18,15 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.FiberContextStorageHolder;
 import io.opentelemetry.javaagent.bootstrap.FiberContextStorageHolder.Activation;
 import io.opentelemetry.javaagent.bootstrap.FiberContextStorageHolder.ContextState;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 class FiberContextStorageTest {
@@ -68,6 +75,11 @@ class FiberContextStorageTest {
     Context nestedContext = context("nested");
     ContextStateImpl owner = new ContextStateImpl(Context.root());
     FiberContextStorage storage = new FiberContextStorage(new TestStorage(), false);
+    Logger logger = Logger.getLogger(FiberContextStorage.class.getName());
+    Level previousLevel = logger.getLevel();
+    LoggingHandler handler = new LoggingHandler();
+    logger.setLevel(FINE);
+    logger.addHandler(handler);
 
     Activation ownerActivation = FiberContextStorageHolder.activate(owner, null);
     try {
@@ -75,12 +87,14 @@ class FiberContextStorageTest {
       assertThat(storage.attach(parentContext)).isSameAs(Scope.noop());
       Scope nestedScope = storage.attach(nestedContext);
 
+      handler.scopeToCheck.set(parentScope);
       assertThatCode(parentScope::close).doesNotThrowAnyException();
       assertThat(storage.current()).isSameAs(nestedContext);
 
       ContextStateImpl otherFiber = new ContextStateImpl(context("other-fiber"));
       Activation otherActivation = FiberContextStorageHolder.activate(otherFiber, ownerActivation);
       try {
+        handler.scopeToCheck.set(nestedScope);
         assertThatCode(nestedScope::close).doesNotThrowAnyException();
         assertThat(storage.current()).isSameAs(otherFiber.getContext());
       } finally {
@@ -88,11 +102,18 @@ class FiberContextStorageTest {
       }
 
       assertThat(storage.current()).isSameAs(nestedContext);
+      assertThat(handler.records).hasSize(2);
+      assertThat(handler.records).extracting(LogRecord::getLevel).containsExactly(FINE, FINE);
+      assertThat(handler.records.get(0).getMessage()).contains("out of order");
+      assertThat(handler.records.get(1).getMessage()).contains("different fiber");
+      assertThat(handler.scopeWasMonitored).isFalse();
       assertThatCode(storage::close).doesNotThrowAnyException();
       nestedScope.close();
       parentScope.close();
     } finally {
       FiberContextStorageHolder.deactivate(ownerActivation);
+      logger.removeHandler(handler);
+      logger.setLevel(previousLevel);
     }
   }
 
@@ -304,5 +325,24 @@ class FiberContextStorageTest {
     public void close() {
       closeCount++;
     }
+  }
+
+  private static final class LoggingHandler extends Handler {
+
+    private final List<LogRecord> records = new ArrayList<>();
+    private final AtomicReference<Object> scopeToCheck = new AtomicReference<>();
+    private boolean scopeWasMonitored;
+
+    @Override
+    public void publish(LogRecord record) {
+      records.add(record);
+      scopeWasMonitored |= Thread.holdsLock(scopeToCheck.get());
+    }
+
+    @Override
+    public void flush() {}
+
+    @Override
+    public void close() {}
   }
 }
