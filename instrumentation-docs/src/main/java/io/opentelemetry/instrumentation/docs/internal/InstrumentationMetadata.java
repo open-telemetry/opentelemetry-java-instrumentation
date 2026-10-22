@@ -35,10 +35,6 @@ public class InstrumentationMetadata {
   @Nullable
   private String displayName;
 
-  @JsonProperty("scope_name")
-  @Nullable
-  private String scopeName;
-
   private List<ConfigurationOption> configurations = emptyList();
 
   @JsonProperty("semantic_conventions")
@@ -87,15 +83,6 @@ public class InstrumentationMetadata {
   @Nullable
   public String getDisplayName() {
     return displayName;
-  }
-
-  @Nullable
-  public String getScopeName() {
-    return scopeName;
-  }
-
-  public void setScopeName(@Nullable String scopeName) {
-    this.scopeName = scopeName;
   }
 
   @Nonnull
@@ -181,7 +168,6 @@ public class InstrumentationMetadata {
     @Nullable private String classification;
     @Nullable private String libraryLink;
     @Nullable private String displayName;
-    @Nullable private String scopeName;
     private List<ConfigurationOption> configurations = emptyList();
     private List<SemanticConvention> semanticConventions = emptyList();
     private List<ManualTelemetryEntry> additionalTelemetry = emptyList();
@@ -215,12 +201,6 @@ public class InstrumentationMetadata {
     @CanIgnoreReturnValue
     public Builder displayName(@Nullable String displayName) {
       this.displayName = displayName;
-      return this;
-    }
-
-    @CanIgnoreReturnValue
-    public Builder scopeName(@Nullable String scopeName) {
-      this.scopeName = scopeName;
       return this;
     }
 
@@ -269,7 +249,6 @@ public class InstrumentationMetadata {
       metadata.setAdditionalTelemetry(additionalTelemetry);
       metadata.setOverrideTelemetry(overrideTelemetry);
       metadata.setFeatures(features);
-      metadata.setScopeName(scopeName);
       return metadata;
     }
   }

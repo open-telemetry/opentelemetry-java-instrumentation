@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Spark Java instrumentation now uses the `spark-2.4` selector and
+  `io.opentelemetry.spark-2.4` scope. Replace the `spark-2.3` selector and update scope filters.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in

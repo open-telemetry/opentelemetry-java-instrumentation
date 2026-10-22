@@ -159,33 +159,4 @@ class InstrumentationAnalyzerTest {
         .extracting(EmittedMetrics.Metric::getName)
         .containsExactly("system.memory.usage");
   }
-
-  @Test
-  void testAnalyzePreservesConfiguredScopeNameAndLooksUpScopeMetadata(@TempDir Path tempDir)
-      throws IOException {
-    Path instrumentationDir = tempDir.resolve("instrumentation").resolve("spark-2.4");
-    Files.createDirectories(instrumentationDir.resolve("javaagent"));
-    Files.writeString(
-        instrumentationDir.resolve("metadata.yaml"), "scope_name: io.opentelemetry.spark-2.3\n");
-    Path telemetryDir = instrumentationDir.resolve(".telemetry");
-    Files.createDirectories(telemetryDir);
-    Files.writeString(
-        telemetryDir.resolve("scope-abc123.yaml"),
-        """
-        scopes:
-          - name: io.opentelemetry.spark-2.3
-            version: 3.0.0
-            schemaUrl: https://opentelemetry.io/schemas/1.41.0
-        """);
-
-    List<InstrumentationModule> modules =
-        new InstrumentationAnalyzer(new FileManager(tempDir)).analyze();
-
-    assertThat(modules).hasSize(1);
-    InstrumentationModule module = modules.get(0);
-    assertThat(module.getInstrumentationName()).isEqualTo("spark-2.4");
-    assertThat(module.getScopeInfo().getName()).isEqualTo("io.opentelemetry.spark-2.3");
-    assertThat(module.getScopeInfo().getSchemaUrl())
-        .isEqualTo("https://opentelemetry.io/schemas/1.41.0");
-  }
 }

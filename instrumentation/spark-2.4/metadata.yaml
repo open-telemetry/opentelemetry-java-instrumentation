@@ -1,5 +1,4 @@
 display_name: Spark Web Framework
-scope_name: io.opentelemetry.spark-2.3
 description: > 
   This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and
   attaches it to HTTP server spans and HTTP server metrics.

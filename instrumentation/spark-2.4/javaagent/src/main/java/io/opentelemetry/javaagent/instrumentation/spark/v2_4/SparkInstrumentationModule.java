@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SparkInstrumentationModule extends InstrumentationModule {
 
   public SparkInstrumentationModule() {
-    super("spark-2.4", "spark-2.3", "spark");
+    super("spark-2.4", "spark");
   }
 
   @Override

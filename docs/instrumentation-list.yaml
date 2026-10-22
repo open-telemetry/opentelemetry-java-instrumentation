@@ -18934,19 +18934,19 @@ libraries:
     event_refs:
     - rpc.client.call.exception-fadee4e0
     - rpc.server.call.exception-738e89fe
-- name: spark-2.3
+- name: spark-2.4
   display_name: Spark Web Framework
   description: |
     This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to HTTP server spans and HTTP server metrics.
   library_link: https://sparkjava.com/
   features:
   - HTTP_ROUTE
-  source_path: instrumentation/spark-2.3
+  source_path: instrumentation/spark-2.4
   scope:
-    name: io.opentelemetry.spark-2.3
+    name: io.opentelemetry.spark-2.4
   has_javaagent: true
   javaagent_target_versions:
-  - com.sparkjava:spark-core:[2.3,)
+  - com.sparkjava:spark-core:[2.4,)
 - name: spring-ai-1.0
   display_name: Spring AI
   description: |
