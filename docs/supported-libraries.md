@@ -177,7 +177,7 @@ These are the supported libraries and frameworks:
 | [Vibur DBCP](https://www.vibur.org/)                                                                                                        | 11.0+                                              | [opentelemetry-vibur-dbcp-11.0](../instrumentation/vibur-dbcp-11.0/library)                                                                                                                                                                                                                                                                                                             | [Database Pool Metrics]                                                                                                                           |
 | [XXL-JOB](https://www.xuxueli.com/xxl-job/en/)                                                                                              | 1.9.2+                                             | N/A                                                                                                                                                                                                                                                                                                                                                                                     | none                                                                                                                                              |
 | [ZIO](https://zio.dev/)                                                                                                                     | 2.0+ (disabled by default)                         | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Context propagation                                                                                                                               |
-| [ZIO HTTP](https://ziohttp.com/)                                                                                                            | 3.0+                                               | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Provides `http.route` [2]                                                                                                                         |
+| [ZIO HTTP](https://ziohttp.com/)                                                                                                            | 3.0+ (disabled by default)                         | N/A                                                                                                                                                                                                                                                                                                                                                                                     | Provides `http.route` [2]                                                                                                                         |
 
 **[1]** Standalone library instrumentation refers to instrumentation that can be used without the Java agent.
 
@@ -267,8 +267,10 @@ The following instrumentations are disabled by default:
 - `zio` which propagates context across ZIO fibers. Application OpenTelemetry scopes spanning
   fiber suspension can leak or close on a different thread
   ([#14938](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14938)).
-  Opting in accepts these unresolved limitations. ZIO HTTP route enrichment is independently
-  enabled by default through `zio-http`.
+  Opting in accepts these unresolved limitations.
+- `zio-http` which enriches HTTP server telemetry with routes. Reliable enrichment across fiber
+  suspension requires also enabling `zio` runtime propagation, accepting its scope-lifecycle
+  limitations.
 
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:
 
@@ -280,3 +282,4 @@ To enable them, add the `otel.instrumentation.<name>.enabled` system property:
 - `-Dotel.instrumentation.hystrix.enabled=true`
 - `-Dotel.instrumentation.twilio.enabled=true`
 - `-Dotel.instrumentation.zio.enabled=true` (or `zio-2.0`)
+- `-Dotel.instrumentation.zio-http.enabled=true` (or `zio-http-3.0`)

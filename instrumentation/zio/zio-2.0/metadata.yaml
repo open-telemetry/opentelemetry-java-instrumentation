@@ -1,7 +1,8 @@
 display_name: ZIO
 description: >
   This instrumentation provides context propagation for ZIO fibers, it does not emit any telemetry
-  on its own. It is disabled by default due to unresolved scope-lifecycle issues.
+  on its own. It is disabled by default due to unresolved scope-lifecycle issues. ZIO HTTP route
+  enrichment requires runtime propagation across fiber suspension.
 library_link: https://zio.dev/
 disabled_by_default: true
 features:

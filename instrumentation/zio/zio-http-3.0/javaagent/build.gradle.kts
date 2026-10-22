@@ -47,19 +47,30 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.zio-http.enabled=true")
+    }
+    if (name != "testRuntimeDisabled") {
+      jvmArgs("-Dotel.instrumentation.zio.enabled=true")
+      exclude("**/ZioHttpRuntimeDisabledTest*")
+    }
+  }
+
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*DefaultEnablementTest") }
+  }
+
   val testRuntimeDisabled = register<Test>("testRuntimeDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.zio.enabled=false")
-  }
-
-  val testRuntimeEnabled = register<Test>("testRuntimeEnabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.zio.enabled=true")
+    filter { includeTestsMatching("*ZioHttpRuntimeDisabledTest") }
   }
 
   check {
-    dependsOn(testRuntimeDisabled, testRuntimeEnabled)
+    dependsOn(testDisabled, testRuntimeDisabled)
   }
 }

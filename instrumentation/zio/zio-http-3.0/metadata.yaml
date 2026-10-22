@@ -1,7 +1,9 @@
 display_name: ZIO HTTP
 description: >
   This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and
-  attaches it to HTTP server spans and HTTP server metrics.
+  attaches it to HTTP server spans and HTTP server metrics. It is disabled by default and requires
+  ZIO runtime context propagation for reliable enrichment across fiber suspension.
 library_link: https://ziohttp.com/
+disabled_by_default: true
 features:
   - HTTP_ROUTE

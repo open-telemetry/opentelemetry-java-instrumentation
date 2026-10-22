@@ -32,11 +32,11 @@ class DefaultEnablementTest {
     val scope = parent.makeCurrent()
     try {
       val propagated = ZioTestFixtures.currentSpanAfterSuspension()
-      val expected =
+      assertThat(propagated).isEqualTo(
         if (java.lang.Boolean.getBoolean("otel.instrumentation.zio.enabled"))
           parent.getSpanContext
         else SpanContext.getInvalid
-      assertThat(propagated).isEqualTo(expected)
+      )
     } finally {
       scope.close()
       parent.end()
