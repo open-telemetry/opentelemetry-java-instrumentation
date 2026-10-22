@@ -374,6 +374,7 @@ public final class ContextPropagationOperator {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
+      markDownstreamOfContextBoundary(actual);
       try (Scope ignored = operationContext.makeCurrent()) {
         source.subscribe(
             new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
@@ -402,6 +403,7 @@ public final class ContextPropagationOperator {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
+      markDownstreamOfContextBoundary(actual);
       try (Scope ignored = operationContext.makeCurrent()) {
         source.subscribe(
             new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
@@ -498,21 +500,20 @@ public final class ContextPropagationOperator {
 
     @Override
     public CoreSubscriber<? super T> apply(Scannable publisher, CoreSubscriber<? super T> sub) {
-      return new TracingSubscriber<>(
-          sub, sub.currentContext(), isContextBoundaryDownstream(publisher));
+      return new TracingSubscriber<>(sub, sub.currentContext());
     }
   }
 
-  private static boolean isContextBoundaryDownstream(Scannable publisher) {
-    return isContextBoundary(publisher)
-        || publisher.parents().anyMatch(ContextPropagationOperator::isContextBoundary);
+  private static void markDownstreamOfContextBoundary(CoreSubscriber<?> actual) {
+    Scannable scannable = Scannable.from(actual);
+    markDownstreamOfContextBoundary(scannable);
+    scannable.actuals().forEach(ContextPropagationOperator::markDownstreamOfContextBoundary);
   }
 
-  private static boolean isContextBoundary(Scannable scannable) {
-    // The javaagent relocates this class but preserves the nested class suffix.
-    String className = scannable.getClass().getName();
-    return className.endsWith("ContextPropagationOperator$ContextBoundaryMono")
-        || className.endsWith("ContextPropagationOperator$ContextBoundaryFlux");
+  private static void markDownstreamOfContextBoundary(Scannable scannable) {
+    if (scannable instanceof TracingSubscriber) {
+      ((TracingSubscriber<?>) scannable).markDownstreamOfContextBoundary();
+    }
   }
 
   static void subscribeInActiveSpan(CoreSubscriber<? super Object> actual, Object value) {

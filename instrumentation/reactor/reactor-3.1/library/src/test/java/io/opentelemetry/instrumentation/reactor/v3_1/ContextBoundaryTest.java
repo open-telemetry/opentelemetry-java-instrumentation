@@ -86,6 +86,19 @@ class ContextBoundaryTest {
                     .map(application -> Arguments.of(mono, application)));
   }
 
+  private static Stream<Arguments> deferredBoundaries() {
+    return Stream.of(false, true)
+        .flatMap(
+            mono ->
+                Stream.of(false, true)
+                    .flatMap(
+                        schedulerHop ->
+                            Stream.of(Context.root(), APPLICATION)
+                                .map(
+                                    application ->
+                                        Arguments.of(mono, schedulerHop, application))));
+  }
+
   private static Stream<Arguments> nestedPublisherBoundaries() {
     return Stream.of(false, true)
         .flatMap(mono -> Stream.of(Context.root(), INNER).map(inner -> Arguments.of(mono, inner)));
@@ -184,6 +197,62 @@ class ContextBoundaryTest {
             .block();
       }
       assertThat(Context.current()).isSameAs(UNRELATED);
+    }
+    assertThat(observed.get()).isSameAs(application);
+  }
+
+  @ParameterizedTest
+  @MethodSource("deferredBoundaries")
+  void keepsApplicationContextForDeferredBoundary(
+      boolean mono, boolean schedulerHop, Context application) {
+    assumeTrue(!schedulerHop || schedulerHooksSupported());
+    operator.registerOnEachOperator();
+    AtomicReference<Context> observed = new AtomicReference<>();
+    Scheduler scheduler = schedulerHop ? Schedulers.newSingle("context-boundary-test") : null;
+    try {
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        if (mono) {
+          Mono<String> boundary =
+              Mono.defer(
+                  () ->
+                      ContextPropagationOperator.runWithContext(
+                          Mono.just("value"), OPERATION, application));
+          if (schedulerHop) {
+            boundary = boundary.publishOn(scheduler);
+          }
+          boundary
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    observed.set(Context.current());
+                    assertThat(Context.current()).isSameAs(application);
+                  })
+              .block();
+        } else {
+          Flux<String> boundary =
+              Flux.defer(
+                  () ->
+                      ContextPropagationOperator.runWithContext(
+                          Flux.just("value"), OPERATION, application));
+          if (schedulerHop) {
+            boundary = boundary.publishOn(scheduler);
+          }
+          boundary
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    observed.set(Context.current());
+                    assertThat(Context.current()).isSameAs(application);
+                  })
+              .collectList()
+              .block();
+        }
+        assertThat(Context.current()).isSameAs(UNRELATED);
+      }
+    } finally {
+      if (scheduler != null) {
+        scheduler.dispose();
+      }
     }
     assertThat(observed.get()).isSameAs(application);
   }

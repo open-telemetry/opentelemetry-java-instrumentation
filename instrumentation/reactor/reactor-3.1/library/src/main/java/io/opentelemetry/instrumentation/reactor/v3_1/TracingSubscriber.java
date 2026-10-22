@@ -26,13 +26,14 @@ import javax.annotation.Nullable;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
+import reactor.core.Scannable;
 import reactor.util.context.Context;
 
 /**
  * Based on OpenTracing code.
  * https://github.com/opentracing-contrib/java-reactor/blob/master/src/main/java/io/opentracing/contrib/reactor/TracedSubscriber.java
  */
-public class TracingSubscriber<T> implements CoreSubscriber<T> {
+public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   @Nullable private static final Class<?> fluxRetrySubscriberClass = getFluxRetrySubscriberClass();
 
   @Nullable
@@ -41,7 +42,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
-  private final boolean downstreamOfContextBoundary;
+  private volatile boolean downstreamOfContextBoundary;
   private final boolean hasExplicitContext;
   private final boolean hasContextToPropagate;
 
@@ -64,16 +65,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
       Context ctx,
       io.opentelemetry.context.Context contextToPropagate) {
     this(subscriber, ctx, contextToPropagate, true, false);
-  }
-
-  TracingSubscriber(
-      Subscriber<? super T> subscriber, Context ctx, boolean downstreamOfContextBoundary) {
-    this(
-        subscriber,
-        ctx,
-        io.opentelemetry.context.Context.current(),
-        false,
-        downstreamOfContextBoundary);
   }
 
   private TracingSubscriber(
@@ -136,6 +127,17 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   @Override
   public Context currentContext() {
     return context;
+  }
+
+  void markDownstreamOfContextBoundary() {
+    downstreamOfContextBoundary = true;
+  }
+
+  @Override
+  @Nullable
+  @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
+  public Object scanUnsafe(Scannable.Attr attr) {
+    return attr == Scannable.Attr.ACTUAL ? subscriber : null;
   }
 
   @Nullable
