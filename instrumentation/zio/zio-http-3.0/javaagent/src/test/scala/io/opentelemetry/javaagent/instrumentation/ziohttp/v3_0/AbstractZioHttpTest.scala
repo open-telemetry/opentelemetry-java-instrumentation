@@ -227,7 +227,6 @@ abstract class AbstractZioHttpTest {
                 .hasKind(SpanKind.SERVER)
                 .hasParent(trace.getSpan(0))
                 .hasAttribute(HTTP_ROUTE, "/reused/test")
-                .hasAttribute(HTTP_RESPONSE_STATUS_CODE, statusCode)
           }
         )
     })

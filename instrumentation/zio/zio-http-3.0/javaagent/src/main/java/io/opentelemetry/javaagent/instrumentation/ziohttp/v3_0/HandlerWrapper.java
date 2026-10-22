@@ -38,7 +38,8 @@ public class HandlerWrapper {
 
               @Override
               public ZIO<R, ERR, OUT> apply(IN input) {
-                RouteContext routeContext = contextFor(input);
+                RouteInvocation invocation = contextFor(input);
+                RouteContext routeContext = invocation.routeContext;
                 Handler<R, ERR, IN, OUT> result =
                     handler
                         .map(
@@ -62,7 +63,7 @@ public class HandlerWrapper {
                             },
                             Trace$.MODULE$.empty());
                 ZIO<R, ERR, OUT> effect = result.apply(input);
-                Request request = routeContext.request;
+                Request request = invocation.request;
                 if (request == null) {
                   return effect;
                 }
@@ -78,22 +79,22 @@ public class HandlerWrapper {
             });
   }
 
-  private static RouteContext contextFor(Object input) {
+  private static RouteInvocation contextFor(Object input) {
     Request request = findRequest(input);
     if (request == null) {
-      return new RouteContext(null, Context.current());
+      return new RouteInvocation(null, new RouteContext(Context.current()));
     }
 
     Context context = Context.current();
     synchronized (request) {
       RouteContext routeContext = REQUEST_CONTEXT.get(request);
       if (routeContext == null) {
-        routeContext = new RouteContext(request, context);
+        routeContext = new RouteContext(context);
         REQUEST_CONTEXT.set(request, routeContext);
       } else {
         routeContext.activeHandlers++;
       }
-      return routeContext;
+      return new RouteInvocation(request, routeContext);
     }
   }
 
@@ -144,13 +145,21 @@ public class HandlerWrapper {
   }
 
   private static class RouteContext {
-    @Nullable private final Request request;
     private final Context context;
     private int activeHandlers = 1;
 
-    private RouteContext(@Nullable Request request, Context context) {
-      this.request = request;
+    private RouteContext(Context context) {
       this.context = context;
+    }
+  }
+
+  private static class RouteInvocation {
+    @Nullable private final Request request;
+    private final RouteContext routeContext;
+
+    private RouteInvocation(@Nullable Request request, RouteContext routeContext) {
+      this.request = request;
+      this.routeContext = routeContext;
     }
   }
 
