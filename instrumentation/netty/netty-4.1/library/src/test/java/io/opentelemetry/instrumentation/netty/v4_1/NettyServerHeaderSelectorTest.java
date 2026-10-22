@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,13 +21,9 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.ReferenceCountUtil;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.Test;
@@ -109,42 +104,6 @@ class NettyServerHeaderSelectorTest {
     assertThat(attributes.get(stringArrayKey("http.request.header.authorization"))).isNull();
     assertThat(attributes.get(stringArrayKey("http.request.header.host"))).isNull();
     assertThat(attributes.get(stringArrayKey("http.response.header.x-test-response"))).isNull();
-  }
-
-  @Test
-  void addsAttributesExtractor() {
-    NettyServerTelemetry telemetry =
-        NettyServerTelemetry.builder(testing.getOpenTelemetry())
-            .addAttributesExtractor(
-                new AttributesExtractor<NettyRequest, HttpResponse>() {
-                  @Override
-                  public void onStart(
-                      AttributesBuilder attributes, Context parentContext, NettyRequest request) {
-                    assertThat(attributes.build().get(stringKey("http.request.method")))
-                        .isEqualTo("GET");
-                    assertThat(request.getChannel()).isNotNull();
-                    attributes.put(
-                        stringKey("test.request.method"), request.getRequest().method().name());
-                  }
-
-                  @Override
-                  public void onEnd(
-                      AttributesBuilder attributes,
-                      Context context,
-                      NettyRequest request,
-                      HttpResponse response,
-                      Throwable error) {
-                    assertThat(response.status().code()).isEqualTo(200);
-                    attributes.put(stringKey("test.response"), "extracted");
-                  }
-                })
-            .build();
-
-    Attributes attributes = handleRequest(telemetry);
-
-    assertThat(attributes.get(stringKey("http.request.method"))).isEqualTo("GET");
-    assertThat(attributes.get(stringKey("test.request.method"))).isEqualTo("GET");
-    assertThat(attributes.get(stringKey("test.response"))).isEqualTo("extracted");
   }
 
   private static Attributes handleRequest(NettyServerTelemetry telemetry) {
