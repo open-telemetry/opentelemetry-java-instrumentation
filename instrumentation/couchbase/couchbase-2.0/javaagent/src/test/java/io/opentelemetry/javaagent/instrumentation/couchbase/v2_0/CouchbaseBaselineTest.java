@@ -39,6 +39,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import rx.Observable;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CouchbaseBaselineTest {
@@ -80,7 +81,7 @@ class CouchbaseBaselineTest {
             .disconnectTimeout(SECONDS.toMillis(20))
             .kvTimeout(SECONDS.toMillis(20))
             .build();
-    cleanup.deferAfterAll(environment::shutdown);
+    cleanup.deferAfterAll(() -> shutdownEnvironment(environment));
 
     CouchbaseCluster cluster = CouchbaseCluster.create(environment, "127.0.0.1");
     cleanup.deferAfterAll(cluster::disconnect);
@@ -92,6 +93,14 @@ class CouchbaseBaselineTest {
     asyncBucket =
         asyncCluster.openBucket(BUCKET_NAME, PASSWORD).timeout(20, SECONDS).toBlocking().single();
     testing.waitForTraces(2);
+  }
+
+  private static void shutdownEnvironment(CouchbaseEnvironment environment) {
+    Object shutdownResult = environment.shutdown();
+    if (shutdownResult instanceof Observable) {
+      shutdownResult = ((Observable<?>) shutdownResult).timeout(20, SECONDS).toBlocking().single();
+    }
+    assertThat(shutdownResult).isEqualTo(true);
   }
 
   @Test
