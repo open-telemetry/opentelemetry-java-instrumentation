@@ -33,7 +33,7 @@ import reactor.util.context.Context;
  * Based on OpenTracing code.
  * https://github.com/opentracing-contrib/java-reactor/blob/master/src/main/java/io/opentracing/contrib/reactor/TracedSubscriber.java
  */
-public class TracingSubscriber<T> implements CoreSubscriber<T> {
+public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   @Nullable private static final Class<?> fluxRetrySubscriberClass = getFluxRetrySubscriberClass();
 
   @Nullable
@@ -129,6 +129,13 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     return context;
   }
 
+  @Override
+  @Nullable
+  @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
+  public Object scanUnsafe(Scannable.Attr attr) {
+    return attr == Scannable.Attr.ACTUAL ? subscriber : null;
+  }
+
   void markDownstreamOfContextBoundary() {
     downstreamOfContextBoundary = true;
   }
@@ -166,18 +173,10 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     }
   }
 
-  static final class ScannableTracingSubscriber<T> extends TracingSubscriber<T>
-      implements Scannable {
+  static final class ScannableTracingSubscriber<T> extends TracingSubscriber<T> {
 
     ScannableTracingSubscriber(Subscriber<? super T> subscriber, Context context) {
       super(subscriber, context);
-    }
-
-    @Override
-    @Nullable
-    @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
-    public Object scanUnsafe(Scannable.Attr attr) {
-      return attr == Scannable.Attr.ACTUAL ? ((TracingSubscriber<?>) this).subscriber : null;
     }
   }
 }

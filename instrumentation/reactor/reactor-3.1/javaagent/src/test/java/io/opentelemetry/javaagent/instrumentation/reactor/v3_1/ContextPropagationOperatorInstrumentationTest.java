@@ -648,6 +648,65 @@ class ContextPropagationOperatorInstrumentationTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("ambient").hasNoParent()));
   }
 
+  @ParameterizedTest
+  @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+  void runWithContextsMarksApplicationTracingSubscriber(
+      boolean flux, boolean rootApplicationContext) {
+    Context capturedContext = Context.root().with(APPLICATION_KEY, "captured");
+    Context applicationContext =
+        rootApplicationContext
+            ? Context.root()
+            : Context.root().with(APPLICATION_KEY, "application");
+    Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
+    List<String> observed = new ArrayList<>();
+    Subscriber<String> actual =
+        new Subscriber<String>() {
+          @Override
+          public void onSubscribe(Subscription subscription) {
+            observed.add(Context.current().get(APPLICATION_KEY));
+            subscription.request(1);
+          }
+
+          @Override
+          public void onNext(String value) {
+            observed.add(Context.current().get(APPLICATION_KEY));
+          }
+
+          @Override
+          public void onError(Throwable error) {
+            observed.add(Context.current().get(APPLICATION_KEY));
+          }
+
+          @Override
+          public void onComplete() {
+            observed.add(Context.current().get(APPLICATION_KEY));
+          }
+        };
+    TracingSubscriber<String> subscriber;
+    try (Scope ignored = capturedContext.makeCurrent()) {
+      subscriber = new TracingSubscriber<>(actual, reactor.util.context.Context.empty());
+      Mono<String> source =
+          Mono.fromCallable(
+              () -> {
+                assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("operation");
+                return "value";
+              });
+      if (flux) {
+        ContextPropagationOperator.runWithContext(
+                Flux.from(source), operationContext, applicationContext)
+            .subscribe(subscriber);
+      } else {
+        ContextPropagationOperator.runWithContext(source, operationContext, applicationContext)
+            .subscribe(subscriber);
+      }
+      assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("captured");
+    }
+
+    String expectedApplication = rootApplicationContext ? null : "application";
+    assertThat(observed)
+        .containsExactly(expectedApplication, expectedApplication, expectedApplication);
+  }
+
   private static void assertRootContext(AgentContextState agentState) {
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
     assertThat(Context.current().get(APPLICATION_KEY)).isNull();

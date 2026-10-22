@@ -95,8 +95,18 @@ class ContextBoundaryTest {
                         schedulerHop ->
                             Stream.of(Context.root(), APPLICATION)
                                 .map(
-                                    application ->
-                                        Arguments.of(mono, schedulerHop, application))));
+                                    application -> Arguments.of(mono, schedulerHop, application))));
+  }
+
+  private static Stream<Arguments> directSubscriberBoundaries() {
+    return Stream.of(false, true)
+        .flatMap(
+            mono ->
+                Stream.of(false, true)
+                    .flatMap(
+                        rootApplication ->
+                            Stream.of(false, true)
+                                .map(wrapped -> Arguments.of(mono, rootApplication, wrapped))));
   }
 
   private static Stream<Arguments> nestedPublisherBoundaries() {
@@ -365,6 +375,34 @@ class ContextBoundaryTest {
       scheduler.dispose();
     }
     assertThat(observed.get()).isSameAs(application);
+  }
+
+  @ParameterizedTest
+  @MethodSource("directSubscriberBoundaries")
+  void marksDirectlyConstructedTracingSubscribers(
+      boolean mono, boolean rootApplication, boolean wrapped) {
+    Context application = rootApplication ? Context.root() : APPLICATION;
+    RecordingSubscriber recording = new RecordingSubscriber(application);
+    TracingSubscriber<String> subscriber;
+    try (Scope ignored = UNRELATED.makeCurrent()) {
+      subscriber = new TracingSubscriber<>(recording, reactor.util.context.Context.empty());
+      if (wrapped) {
+        subscriber = new TracingSubscriber<>(subscriber, reactor.util.context.Context.empty());
+      }
+
+      if (mono) {
+        ContextPropagationOperator.runWithContext(Mono.just("value"), OPERATION, application)
+            .subscribe(subscriber);
+      } else {
+        ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, application)
+            .subscribe(subscriber);
+      }
+    }
+    recording.subscription.request(1);
+
+    assertThat(recording.contexts).containsExactly(application, application, application);
+    assertThat(recording.values).containsExactly("value");
+    assertThat(recording.complete).isTrue();
   }
 
   @ParameterizedTest

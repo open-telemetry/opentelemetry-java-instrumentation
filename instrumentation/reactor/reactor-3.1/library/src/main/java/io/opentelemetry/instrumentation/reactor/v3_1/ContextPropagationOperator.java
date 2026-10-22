@@ -534,9 +534,14 @@ public final class ContextPropagationOperator {
     if (scannable instanceof TracingSubscriber) {
       ((TracingSubscriber<?>) scannable).markDownstreamOfContextBoundary();
     } else if (scannable
-        .getClass()
-        .getName()
-        .endsWith(".instrumentation.reactor.v3_1.TracingSubscriber$ScannableTracingSubscriber")) {
+            .getClass()
+            .getName()
+            .endsWith(".instrumentation.reactor.v3_1.TracingSubscriber")
+        || scannable
+            .getClass()
+            .getName()
+            .endsWith(
+                ".instrumentation.reactor.v3_1.TracingSubscriber$ScannableTracingSubscriber")) {
       // The javaagent can have a second, shaded copy in the same subscriber chain.
       try {
         TRACING_SUBSCRIBER_MARK_METHOD.get(scannable.getClass()).invoke(scannable);
