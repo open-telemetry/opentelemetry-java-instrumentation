@@ -26,7 +26,6 @@ class ResourceProviderRegistrationTest {
         .extracting(provider -> provider.getClass().getSimpleName())
         .containsExactlyInAnyOrder(
             "ContainerResourceProvider",
-            "HostIdResourceProvider",
             "HostResourceProvider",
             "JarServiceNameDetector",
             "ManifestResourceProvider",

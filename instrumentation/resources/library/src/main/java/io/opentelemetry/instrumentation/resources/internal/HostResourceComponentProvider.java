@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.resources.internal;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.resources.HostIdResource;
 import io.opentelemetry.instrumentation.resources.HostResource;
 import io.opentelemetry.instrumentation.resources.OsResource;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
@@ -21,6 +20,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 @AutoService(ComponentProvider.class)
 public class HostResourceComponentProvider extends ResourceComponentProvider {
   public HostResourceComponentProvider() {
-    super("host", p -> HostResource.get().merge(HostIdResource.get()).merge(OsResource.get()));
+    super("host", p -> HostResource.create(true).merge(OsResource.get()));
   }
 }
