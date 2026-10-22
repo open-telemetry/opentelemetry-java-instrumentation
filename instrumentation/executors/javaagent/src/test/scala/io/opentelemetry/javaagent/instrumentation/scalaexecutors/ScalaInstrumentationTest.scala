@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.scalaexecutors
 
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
 }
-import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.function.Consumer
@@ -36,7 +36,7 @@ class ScalaInstrumentationTest {
   def scalaFuturesAndCallbacks(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       val goodFuture = Future {
         tracedChild("goodFuture")
@@ -105,7 +105,7 @@ class ScalaInstrumentationTest {
   def propagatesAcrossFuturesWithNoTraces(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       val goodFuture = Future { 1 }
       goodFuture.onSuccess { case _ =>
@@ -143,7 +143,7 @@ class ScalaInstrumentationTest {
   def eitherPromiseCompletion(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       val keptPromise = Promise[Boolean]()
       val brokenPromise = Promise[Boolean]()
@@ -217,7 +217,7 @@ class ScalaInstrumentationTest {
   def firstCompletedFuture(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       val completedVal = Future.firstCompletedOf(
         List(

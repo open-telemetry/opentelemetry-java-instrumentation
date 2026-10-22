@@ -5268,21 +5268,6 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-c22f308d:
-      name: rpc.client.call.duration
-      description: Measures the duration of outbound remote procedure calls (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     rpc.client.duration-29bce004:
       name: rpc.client.duration
       description: The duration of an outbound RPC invocation.
@@ -5406,17 +5391,6 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.call.duration-b95d8012:
-      name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
     rpc.server.call.duration-f7f75ef6:
       name: rpc.server.call.duration
       description: Measures the duration of inbound remote procedure calls (RPC).
@@ -6067,8 +6041,8 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
-    - rpc.client.call.duration-c22f308d
-    - rpc.server.call.duration-b95d8012
+    - rpc.client.call.duration-620a9e42
+    - rpc.server.call.duration-a87cce7a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -6102,9 +6076,9 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup,service.peer
     metric_refs:
-    - rpc.client.call.duration-c22f308d
+    - rpc.client.call.duration-620a9e42
     - rpc.client.duration-8ed5ac0d
-    - rpc.server.call.duration-b95d8012
+    - rpc.server.call.duration-a87cce7a
     - rpc.server.duration-3caa4b9d
     spans:
     - span_kind: CLIENT
@@ -10184,8 +10158,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033

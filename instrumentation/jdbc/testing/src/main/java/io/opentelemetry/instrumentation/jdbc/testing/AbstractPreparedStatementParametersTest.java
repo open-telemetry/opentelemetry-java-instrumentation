@@ -15,8 +15,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -31,6 +29,8 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -59,16 +59,18 @@ public abstract class AbstractPreparedStatementParametersTest {
   private static final String DATABASE_NAME = "jdbcUnitTest";
   private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
 
-  private static final Map<String, String> JDBC_URLS =
-      ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + DATABASE_NAME,
-          "derby", "jdbc:derby:memory:" + DATABASE_NAME,
-          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME,
-          "sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
-  private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
+  private static final Map<String, String> JDBC_URLS;
+  private static final Map<String, String> jdbcUserNames = new HashMap<>();
   private static final Properties connectionProps = new Properties();
 
   static {
+    Map<String, String> jdbcUrls = new HashMap<>();
+    jdbcUrls.put("h2", "jdbc:h2:mem:" + DATABASE_NAME);
+    jdbcUrls.put("derby", "jdbc:derby:memory:" + DATABASE_NAME);
+    jdbcUrls.put("hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
+    jdbcUrls.put("sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
+    JDBC_URLS = Collections.unmodifiableMap(jdbcUrls);
+
     jdbcUserNames.put("derby", "APP");
     jdbcUserNames.put("h2", null);
     jdbcUserNames.put("hsqldb", "SA");
