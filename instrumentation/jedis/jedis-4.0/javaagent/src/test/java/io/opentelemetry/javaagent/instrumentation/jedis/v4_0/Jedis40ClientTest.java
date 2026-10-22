@@ -163,8 +163,7 @@ class Jedis40ClientTest {
   @Test
   void localCommandBuilderFailureUsesExceptionClass() {
     JedisDataException localFailure = new JedisDataException("WRONGTYPE local conversion failure");
-    try (UnifiedJedis client =
-        new UnifiedJedis(new DefaultJedisSocketFactory(new HostAndPort(host, port)))) {
+    try (UnifiedJedis client = new UnifiedJedis(new HostAndPort(host, port))) {
       jedis.ping();
       testing.waitForTraces(1);
       testing.clearData();

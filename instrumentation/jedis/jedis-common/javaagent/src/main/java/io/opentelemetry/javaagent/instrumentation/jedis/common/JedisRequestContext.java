@@ -8,12 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.jedis.common;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
 public class JedisRequestContext<T> implements JedisServerErrorContext {
-  private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
+  private static final ScopedThreadValue<JedisRequestContext<?>> currentRequestContext =
+      new ScopedThreadValue<>();
 
   @Nullable private Instrumenter<T, Void> instrumenter;
   @Nullable private T request;
@@ -29,17 +31,16 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
 
   @Nullable
   public static <T> JedisRequestContext<T> attach() {
-    JedisRequestContext<?> requestContext = contextThreadLocal.get();
+    JedisRequestContext<?> requestContext = currentRequestContext.get();
     if (requestContext == null) {
       JedisRequestContext<T> newContext = new JedisRequestContext<>();
-      contextThreadLocal.set(newContext);
+      currentRequestContext.set(newContext);
       return newContext;
     }
     // An independent command inside a batch must not put a handled error in the batch.
     if (requestContext.captureServerErrors) {
       JedisRequestContext<T> nestedContext = new JedisRequestContext<>();
-      nestedContext.previousContext = requestContext;
-      contextThreadLocal.set(nestedContext);
+      nestedContext.previousContext = currentRequestContext.set(nestedContext);
       return nestedContext;
     }
     // Do not start another context for a command delegated by an active ordinary command.
@@ -75,9 +76,8 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
 
   public static <T> JedisRequestContext<T> attachForBatch() {
     JedisRequestContext<T> requestContext = new JedisRequestContext<>();
-    requestContext.previousContext = contextThreadLocal.get();
+    requestContext.previousContext = currentRequestContext.set(requestContext);
     requestContext.captureServerErrors = true;
-    contextThreadLocal.set(requestContext);
     return requestContext;
   }
 
@@ -89,7 +89,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
 
   @Nullable
   public static <T> JedisRequestContext<T> attachForTransaction(Object transaction) {
-    JedisRequestContext<?> requestContext = contextThreadLocal.get();
+    JedisRequestContext<?> requestContext = currentRequestContext.get();
     if (requestContext != null && requestContext.transactionOwner == transaction) {
       return null;
     }
@@ -101,12 +101,8 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     if (scope != null) {
       scope.close();
     }
-    if (contextThreadLocal.get() == this) {
-      if (previousContext == null) {
-        contextThreadLocal.remove();
-      } else {
-        contextThreadLocal.set(previousContext);
-      }
+    if (currentRequestContext.get() == this) {
+      currentRequestContext.restore(previousContext);
     }
     Throwable completionThrowable = methodThrowable;
     if (completionThrowable == null && captureServerErrors) {
@@ -122,7 +118,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     if (throwable == null) {
       return;
     }
-    JedisRequestContext<?> requestContext = contextThreadLocal.get();
+    JedisRequestContext<?> requestContext = currentRequestContext.get();
     if (requestContext != null) {
       requestContext.addServerError(throwable);
       if (requestContext.captureServerErrors && requestContext.firstServerErrorThrowable == null) {
@@ -186,7 +182,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
   private static <T> JedisRequestContext<T> current() {
     // A context's instrumenter, request, and OpenTelemetry context are set together by the same
     // generic operation and remain paired until that context is completed.
-    return (JedisRequestContext<T>) contextThreadLocal.get();
+    return (JedisRequestContext<T>) currentRequestContext.get();
   }
 
   private static <T> void endSpan(

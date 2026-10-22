@@ -22,6 +22,17 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class JedisTransactionInstrumentation implements TypeInstrumentation {
+  public static class TransactionState {
+    @Nullable private JedisRequestContext<?> requestContext;
+    @Nullable private TransactionFraming previousTransactionFraming;
+
+    public void complete(@Nullable Throwable throwable) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
+    }
+  }
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // exec()/discard() are declared on BinaryTransaction in jedis 2.0.x and on Transaction in later
@@ -39,19 +50,8 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecAdvice {
 
-    public static class AdviceState {
-      @Nullable private JedisRequestContext<JedisRequest> requestContext;
-      @Nullable public TransactionFraming previousTransactionFraming;
-
-      public void end(@Nullable Throwable throwable) {
-        if (requestContext != null) {
-          requestContext.detachAndEnd(throwable);
-        }
-      }
-    }
-
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceState onEnter(@Advice.This Object transaction) {
+    public static TransactionState onEnter(@Advice.This Object transaction) {
       BatchState batchState = JedisPipelineContext.takeBatchState(transaction);
       @Nullable JedisRequest request = null;
       if (batchState != null && !batchState.getRequests().isEmpty()) {
@@ -62,72 +62,66 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
 
       // Suppress the EXEC framing command's own span; the transaction is reported as a single
       // batch span here. An empty transaction still sends EXEC but has no batch span.
-      AdviceState adviceState = new AdviceState();
-      adviceState.previousTransactionFraming =
+      TransactionState state = new TransactionState();
+      state.previousTransactionFraming =
           currentTransactionFraming().set(transactionFraming(request));
       if (request != null) {
         try {
-          adviceState.requestContext =
+          state.requestContext =
               JedisRequestContext.startBatch(instrumenter(), request, transaction);
         } catch (Throwable t) {
-          if (adviceState.requestContext != null) {
-            adviceState.requestContext.detachAndEnd(null);
+          currentTransactionFraming().restore(state.previousTransactionFraming);
+          if (state.requestContext != null) {
+            state.requestContext.detachAndEnd(null);
           }
-          currentTransactionFraming().restore(adviceState.previousTransactionFraming);
           throw t;
         }
       } else {
-        adviceState.requestContext = JedisRequestContext.attachForTransaction(transaction);
+        state.requestContext = JedisRequestContext.attachForTransaction(transaction);
       }
-      return adviceState;
+      return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceState adviceState) {
-      if (adviceState == null) {
+        @Advice.Enter @Nullable TransactionState state) {
+      if (state == null) {
         return;
       }
-      currentTransactionFraming().restore(adviceState.previousTransactionFraming);
-      adviceState.end(throwable);
+      currentTransactionFraming().restore(state.previousTransactionFraming);
+      state.complete(throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class DiscardAdvice {
 
-    public static class DiscardState {
-      private final JedisRequestContext<?> requestContext;
-      @Nullable private final TransactionFraming previousTransactionFraming;
-
-      private DiscardState(
-          JedisRequestContext<?> requestContext,
-          @Nullable TransactionFraming previousTransactionFraming) {
-        this.requestContext = requestContext;
-        this.previousTransactionFraming = previousTransactionFraming;
-      }
-
-      public void end(@Nullable Throwable throwable) {
-        currentTransactionFraming().restore(previousTransactionFraming);
-        requestContext.detachAndEnd(throwable);
-      }
-    }
-
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static DiscardState onEnter(@Advice.This Object transaction) {
+    public static TransactionState onEnter(@Advice.This Object transaction) {
       // A discarded transaction is abandoned, so drop its captured commands without reporting a
       // batch span, and suppress the DISCARD framing command's own span.
       JedisPipelineContext.clear(transaction);
-      TransactionFraming previousTransactionFraming =
-          currentTransactionFraming().set(transactionFraming(null));
-      return new DiscardState(JedisRequestContext.attachForBatch(), previousTransactionFraming);
+      TransactionState state = new TransactionState();
+      state.previousTransactionFraming = currentTransactionFraming().set(transactionFraming(null));
+      try {
+        state.requestContext = JedisRequestContext.attachForBatch();
+      } catch (Throwable t) {
+        currentTransactionFraming().restore(state.previousTransactionFraming);
+        state.complete(null);
+        throw t;
+      }
+      return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter DiscardState discardState) {
-      discardState.end(throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable TransactionState state) {
+      if (state != null) {
+        currentTransactionFraming().restore(state.previousTransactionFraming);
+        state.complete(throwable);
+      }
     }
   }
 }

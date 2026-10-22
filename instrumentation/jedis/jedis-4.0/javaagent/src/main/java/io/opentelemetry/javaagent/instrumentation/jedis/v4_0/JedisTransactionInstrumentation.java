@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.transactionFramingSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -19,6 +20,17 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class JedisTransactionInstrumentation implements TypeInstrumentation {
+  public static class TransactionState {
+    @Nullable private JedisRequestContext<?> requestContext;
+    private boolean acquiredTransactionFramingSuppression;
+
+    public void complete(@Nullable Throwable throwable) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
+    }
+  }
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // exec()/discard() are declared on different transaction base types across the jedis range.
@@ -38,95 +50,75 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecAdvice {
 
-    public static class AdviceState {
-      @Nullable private final JedisRequestContext<JedisRequest> requestContext;
-      private final boolean previousTransactionFraming;
-
-      private AdviceState(
-          @Nullable JedisRequestContext<JedisRequest> requestContext,
-          boolean previousTransactionFraming) {
-        this.requestContext = requestContext;
-        this.previousTransactionFraming = previousTransactionFraming;
-      }
-
-      public static AdviceState start(Object transaction) {
-        List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(transaction);
-        boolean previousTransactionFraming = JedisPipelineContext.inTransactionFraming();
-        // Suppress the EXEC framing command's own span; the transaction is reported as a single
-        // batch span here.
-        JedisPipelineContext.enterTransactionFraming();
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static TransactionState onEnter(@Advice.This Object transaction) {
+      List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(transaction);
+      TransactionState state = new TransactionState();
+      state.acquiredTransactionFramingSuppression = transactionFramingSuppression().tryAcquire();
+      try {
         if (requests.isEmpty()) {
           // EXEC still runs, but without queued requests there is no batch span to report.
-          return new AdviceState(
-              JedisRequestContext.attachForTransaction(transaction), previousTransactionFraming);
-        }
-        JedisRequest request = JedisRequest.createTransaction(requests);
-        return new AdviceState(
-            JedisRequestContext.startBatch(instrumenter(), request, transaction),
-            previousTransactionFraming);
-      }
-
-      public void end(@Nullable Throwable throwable) {
-        if (previousTransactionFraming) {
-          JedisPipelineContext.enterTransactionFraming();
+          state.requestContext = JedisRequestContext.attachForTransaction(transaction);
         } else {
-          JedisPipelineContext.exitTransactionFraming();
+          JedisRequest request = JedisRequest.createTransaction(requests);
+          state.requestContext =
+              JedisRequestContext.startBatch(instrumenter(), request, transaction);
         }
-        if (requestContext != null) {
-          requestContext.detachAndEnd(throwable);
+        return state;
+      } catch (Throwable t) {
+        if (state.acquiredTransactionFramingSuppression) {
+          transactionFramingSuppression().release();
         }
+        state.complete(null);
+        throw t;
       }
-    }
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceState onEnter(@Advice.This Object transaction) {
-      return AdviceState.start(transaction);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceState adviceState) {
-      adviceState.end(throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable TransactionState state) {
+      if (state != null) {
+        if (state.acquiredTransactionFramingSuppression) {
+          transactionFramingSuppression().release();
+        }
+        state.complete(throwable);
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class DiscardAdvice {
 
-    public static class DiscardState {
-      private final JedisRequestContext<?> requestContext;
-      private final boolean previousTransactionFraming;
-
-      private DiscardState(
-          JedisRequestContext<?> requestContext, boolean previousTransactionFraming) {
-        this.requestContext = requestContext;
-        this.previousTransactionFraming = previousTransactionFraming;
-      }
-
-      public void end(@Nullable Throwable throwable) {
-        if (previousTransactionFraming) {
-          JedisPipelineContext.enterTransactionFraming();
-        } else {
-          JedisPipelineContext.exitTransactionFraming();
-        }
-        requestContext.detachAndEnd(throwable);
-      }
-    }
-
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static DiscardState onEnter(@Advice.This Object transaction) {
+    public static TransactionState onEnter(@Advice.This Object transaction) {
       // A discarded transaction is abandoned, so drop its captured commands without reporting a
       // batch span, and suppress the DISCARD framing command's own span.
       JedisPipelineContext.getAndClearCapturedRequests(transaction);
-      boolean previousTransactionFraming = JedisPipelineContext.inTransactionFraming();
-      JedisPipelineContext.enterTransactionFraming();
-      return new DiscardState(JedisRequestContext.attachForBatch(), previousTransactionFraming);
+      TransactionState state = new TransactionState();
+      state.acquiredTransactionFramingSuppression = transactionFramingSuppression().tryAcquire();
+      try {
+        state.requestContext = JedisRequestContext.attachForBatch();
+        return state;
+      } catch (Throwable t) {
+        if (state.acquiredTransactionFramingSuppression) {
+          transactionFramingSuppression().release();
+        }
+        state.complete(null);
+        throw t;
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter DiscardState discardState) {
-      discardState.end(throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable TransactionState state) {
+      if (state != null) {
+        if (state.acquiredTransactionFramingSuppression) {
+          transactionFramingSuppression().release();
+        }
+        state.complete(throwable);
+      }
     }
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.transactionFramingSuppression;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -16,7 +17,6 @@ import redis.clients.jedis.Transaction;
 
 public final class JedisPipelineContext {
   private static final ThreadLocal<PipelineBase> currentPipeline = new ThreadLocal<>();
-  private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
   private static final VirtualField<PipelineBase, List<JedisRequest>> CAPTURED_REQUESTS =
       VirtualField.find(PipelineBase.class, List.class);
 
@@ -34,16 +34,8 @@ public final class JedisPipelineContext {
     currentPipeline.remove();
   }
 
-  public static void enterTransactionFraming() {
-    inTransactionFraming.set(Boolean.TRUE);
-  }
-
-  public static void exitTransactionFraming() {
-    inTransactionFraming.remove();
-  }
-
   public static boolean inTransactionFraming() {
-    return Boolean.TRUE.equals(inTransactionFraming.get());
+    return transactionFramingSuppression().isActive();
   }
 
   public static boolean capture(JedisRequest request) {

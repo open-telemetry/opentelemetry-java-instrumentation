@@ -527,7 +527,7 @@ class JedisNetworkAttributesGetterTest {
       JedisInstrumentation.MultiAdvice.onExit(transaction, previous);
     }
 
-    JedisTransactionInstrumentation.ExecAdvice.AdviceState adviceState =
+    JedisTransactionInstrumentation.TransactionState adviceState =
         JedisTransactionInstrumentation.ExecAdvice.onEnter(transaction);
     try {
       assertThat(JedisPipelineContext.takeBatchState(transaction)).isNull();
