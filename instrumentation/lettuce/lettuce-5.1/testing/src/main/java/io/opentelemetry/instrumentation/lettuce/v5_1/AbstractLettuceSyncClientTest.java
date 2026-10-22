@@ -318,10 +318,16 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(DB_OPERATION_NAME, "LPUSH"),
-                                    equalTo(ERROR_TYPE, testLatestDeps() ? "WRONGTYPE" : "_OTHER")))
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        testLatestDeps()
+                                            ? RedisCommandExecutionException.class.getName()
+                                            : "_OTHER")))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
-    assertCommandMetric("LPUSH", testLatestDeps() ? "WRONGTYPE" : "_OTHER");
+    assertCommandMetric(
+        "LPUSH",
+        testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
   }
 
   @Test
@@ -354,9 +360,13 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                         "EVALSHA 0000000000000000000000000000000000000000 0"),
                                     equalTo(DB_OPERATION_NAME, "EVALSHA"),
                                     equalTo(
-                                        ERROR_TYPE, testLatestDeps() ? "NOSCRIPT" : "_OTHER")))));
+                                        ERROR_TYPE,
+                                        testLatestDeps()
+                                            ? RedisNoScriptException.class.getName()
+                                            : "_OTHER")))));
 
-    assertCommandMetric("EVALSHA", testLatestDeps() ? "NOSCRIPT" : "_OTHER");
+    assertCommandMetric(
+        "EVALSHA", testLatestDeps() ? RedisNoScriptException.class.getName() : "_OTHER");
   }
 
   @Test
@@ -705,7 +715,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(DB_SYSTEM_NAME, REDIS),
                                       equalTo(DB_QUERY_TEXT, "CLIENT SETINFO lib-name Lettuce"),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(ERROR_TYPE, "ERR")))),
+                                      equalTo(
+                                          ERROR_TYPE, RedisCommandExecutionException.class.getName())))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -722,7 +733,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                           DB_QUERY_TEXT,
                                           val -> val.startsWith("CLIENT SETINFO lib-ver")),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(ERROR_TYPE, "ERR")))),
+                                      equalTo(
+                                          ERROR_TYPE, RedisCommandExecutionException.class.getName())))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -739,7 +751,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                           DB_QUERY_TEXT,
                                           val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(ERROR_TYPE, "ERR")))),
+                                      equalTo(
+                                          ERROR_TYPE, RedisCommandExecutionException.class.getName())))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->

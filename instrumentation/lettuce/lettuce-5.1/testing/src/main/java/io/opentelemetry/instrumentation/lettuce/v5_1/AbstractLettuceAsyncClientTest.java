@@ -210,10 +210,16 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(DB_OPERATION_NAME, "LPUSH"),
-                                    equalTo(ERROR_TYPE, testLatestDeps() ? "WRONGTYPE" : "_OTHER")))
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        testLatestDeps()
+                                            ? RedisCommandExecutionException.class.getName()
+                                            : "_OTHER")))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
-    assertCommandMetric("LPUSH", testLatestDeps() ? "WRONGTYPE" : "_OTHER");
+    assertCommandMetric(
+        "LPUSH",
+        testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
   }
 
   @Test
