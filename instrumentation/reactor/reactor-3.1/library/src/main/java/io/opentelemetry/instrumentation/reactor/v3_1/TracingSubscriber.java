@@ -131,7 +131,9 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
 
   @Nullable
   private static Scope openScope(@Nullable io.opentelemetry.context.Context context) {
-    return context != null ? context.makeCurrent() : null;
+    return context != null && !ContextPropagationOperator.isApplicationContextBoundaryActive()
+        ? context.makeCurrent()
+        : null;
   }
 
   @Nullable

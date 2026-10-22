@@ -28,6 +28,7 @@ import static java.util.logging.Level.WARNING;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import io.opentelemetry.instrumentation.reactor.v3_1.internal.ContextBoundaryState;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -157,6 +158,14 @@ public final class ContextPropagationOperator {
 
   static boolean isSubscriptionContextCaptureDisabled(reactor.util.context.Context context) {
     return context.hasKey(NO_SUBSCRIPTION_CONTEXT_CAPTURE_KEY);
+  }
+
+  static Scope enterApplicationContextBoundary(Context context) {
+    return ContextBoundaryState.enter(context);
+  }
+
+  static boolean isApplicationContextBoundaryActive() {
+    return ContextBoundaryState.isActive();
   }
 
   /**
@@ -417,28 +426,32 @@ public final class ContextPropagationOperator {
     @Override
     public void onSubscribe(Subscription subscription) {
       this.subscription = subscription;
-      try (Scope ignored = applicationContext.makeCurrent()) {
+      try (Scope ignored =
+          ContextPropagationOperator.enterApplicationContextBoundary(applicationContext)) {
         actual.onSubscribe(this);
       }
     }
 
     @Override
     public void onNext(T value) {
-      try (Scope ignored = applicationContext.makeCurrent()) {
+      try (Scope ignored =
+          ContextPropagationOperator.enterApplicationContextBoundary(applicationContext)) {
         actual.onNext(value);
       }
     }
 
     @Override
     public void onError(Throwable error) {
-      try (Scope ignored = applicationContext.makeCurrent()) {
+      try (Scope ignored =
+          ContextPropagationOperator.enterApplicationContextBoundary(applicationContext)) {
         actual.onError(error);
       }
     }
 
     @Override
     public void onComplete() {
-      try (Scope ignored = applicationContext.makeCurrent()) {
+      try (Scope ignored =
+          ContextPropagationOperator.enterApplicationContextBoundary(applicationContext)) {
         actual.onComplete();
       }
     }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.lang.invoke.MethodType.methodType;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
@@ -16,18 +17,24 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
+import io.opentelemetry.instrumentation.reactor.v3_1.TracingSubscriber;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
@@ -168,6 +175,115 @@ class ContextPropagationOperatorInstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("signal").hasNoParent(),
                 span -> span.hasName("TracedWithSpan.mono").hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void noCaptureIsSharedWithApplicationTracingSubscriber() {
+    reactor.util.context.Context noCapture =
+        ContextPropagationOperator.withoutSubscriptionContextCapture(
+            reactor.util.context.Context.of("retained", "value"));
+    assertThat(noCapture.<String>get("retained")).isEqualTo("value");
+    assertThat(ContextPropagationOperator.getOpenTelemetryContext(noCapture, null)).isNull();
+
+    Context ambient = Context.root().with(APPLICATION_KEY, "ambient");
+    Context signal = Context.root().with(APPLICATION_KEY, "signal");
+    assertApplicationSubscriberContext(noCapture, ambient, signal, "signal");
+
+    Context explicit = Context.root();
+    reactor.util.context.Context stored =
+        ContextPropagationOperator.storeOpenTelemetryContext(noCapture, explicit);
+    assertThat(stored.<String>get("retained")).isEqualTo("value");
+    Context storedContext =
+        requireNonNull(ContextPropagationOperator.getOpenTelemetryContext(stored, null));
+    assertThat(Span.fromContext(storedContext).getSpanContext().isValid()).isFalse();
+    assertApplicationSubscriberContext(stored, ambient, signal, null);
+  }
+
+  private static void assertApplicationSubscriberContext(
+      reactor.util.context.Context reactorContext,
+      Context subscriptionContext,
+      Context signalContext,
+      String expectedApplicationValue) {
+    List<String> observed = new ArrayList<>();
+    Subscriber<String> actual =
+        new Subscriber<String>() {
+          @Override
+          public void onSubscribe(Subscription subscription) {
+            observed.add(Context.current().get(APPLICATION_KEY));
+          }
+
+          @Override
+          public void onNext(String value) {
+            observed.add(Context.current().get(APPLICATION_KEY));
+          }
+
+          @Override
+          public void onError(Throwable error) {
+            observed.add(Context.current().get(APPLICATION_KEY));
+          }
+
+          @Override
+          public void onComplete() {
+            observed.add(Context.current().get(APPLICATION_KEY));
+          }
+        };
+    TracingSubscriber<String> subscriber;
+    try (Scope ignored = subscriptionContext.makeCurrent()) {
+      subscriber = new TracingSubscriber<>(actual, reactorContext);
+    }
+    try (Scope ignored = signalContext.makeCurrent()) {
+      subscriber.onSubscribe(
+          new Subscription() {
+            @Override
+            public void request(long count) {}
+
+            @Override
+            public void cancel() {}
+          });
+      subscriber.onNext("value");
+      subscriber.onComplete();
+      assertThat(Context.current().get(APPLICATION_KEY))
+          .isEqualTo(signalContext.get(APPLICATION_KEY));
+    }
+    assertThat(observed)
+        .containsExactly(
+            expectedApplicationValue, expectedApplicationValue, expectedApplicationValue);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+  void hookedDownstreamChainKeepsApplicationContext(boolean flux, boolean rootApplicationContext) {
+    Context applicationContext =
+        rootApplicationContext
+            ? Context.root()
+            : Context.root().with(APPLICATION_KEY, "application");
+    Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
+    AtomicReference<String> observed = new AtomicReference<>();
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
+    try {
+      try (Scope ignored =
+          Context.root().with(APPLICATION_KEY, "ambient-subscription").makeCurrent()) {
+        if (flux) {
+          ContextPropagationOperator.runWithContext(
+                  Flux.just("value"), operationContext, applicationContext)
+              .map(value -> value)
+              .doOnNext(value -> observed.set(Context.current().get(APPLICATION_KEY)))
+              .blockLast();
+        } else {
+          ContextPropagationOperator.runWithContext(
+                  Mono.just("value"), operationContext, applicationContext)
+              .map(value -> value)
+              .doOnNext(value -> observed.set(Context.current().get(APPLICATION_KEY)))
+              .block();
+        }
+      }
+    } finally {
+      operator.resetOnEachOperator();
+    }
+    assertThat(observed.get())
+        .isEqualTo(rootApplicationContext ? null : applicationContext.get(APPLICATION_KEY));
   }
 
   @ParameterizedTest

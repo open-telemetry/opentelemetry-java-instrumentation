@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
@@ -42,6 +43,7 @@ class ContextBoundaryTest {
   @AfterEach
   void resetHooks() {
     operator.resetOnEachOperator();
+    assertThat(ContextPropagationOperator.isApplicationContextBoundaryActive()).isFalse();
   }
 
   private static Stream<Arguments> boundaries() {
@@ -67,6 +69,14 @@ class ContextBoundaryTest {
         Arguments.of(false, false, Context.root(), APPLICATION),
         Arguments.of(true, true, Context.root(), APPLICATION),
         Arguments.of(false, true, OPERATION, Context.root()));
+  }
+
+  private static Stream<Arguments> hookedChainBoundaries() {
+    return Stream.of(false, true)
+        .flatMap(
+            mono ->
+                Stream.of(Context.root(), APPLICATION)
+                    .map(application -> Arguments.of(mono, application)));
   }
 
   private static Stream<Arguments> terminalCallbacks() {
@@ -124,6 +134,46 @@ class ContextBoundaryTest {
     assertThat(actual.contexts).containsExactly(application, application, application);
     assertThat(actual.complete).isTrue();
     assertThat(probe.sourceSignalContexts).containsExactly(hooks ? operation : UNRELATED);
+  }
+
+  @ParameterizedTest
+  @MethodSource("hookedChainBoundaries")
+  void keepsApplicationContextAcrossHookedDownstreamChain(boolean mono, Context application) {
+    operator.registerOnEachOperator();
+    AtomicReference<Context> observed = new AtomicReference<>();
+    try (Scope ignored = UNRELATED.makeCurrent()) {
+      if (mono) {
+        ContextPropagationOperator.runWithContext(Mono.just("value"), OPERATION, application)
+            .map(value -> value)
+            .doOnNext(
+                value -> {
+                  ContextPropagationOperator.runWithContext(
+                          Mono.just(value), OPERATION, APPLICATION)
+                      .doOnNext(unused -> assertThat(Context.current()).isSameAs(APPLICATION))
+                      .block();
+                  assertThat(Context.current()).isSameAs(application);
+                  observed.set(Context.current());
+                })
+            .block();
+      } else {
+        ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, application)
+            .map(value -> value)
+            .doOnNext(
+                value -> {
+                  ContextPropagationOperator.runWithContext(
+                          Flux.just(value), OPERATION, APPLICATION)
+                      .doOnNext(unused -> assertThat(Context.current()).isSameAs(APPLICATION))
+                      .collectList()
+                      .block();
+                  assertThat(Context.current()).isSameAs(application);
+                  observed.set(Context.current());
+                })
+            .collectList()
+            .block();
+      }
+      assertThat(Context.current()).isSameAs(UNRELATED);
+    }
+    assertThat(observed.get()).isSameAs(application);
   }
 
   @ParameterizedTest
@@ -608,6 +658,7 @@ class ContextBoundaryTest {
     }
 
     private void recordContext() {
+      assertThat(ContextPropagationOperator.isApplicationContextBoundaryActive()).isTrue();
       assertThat(Context.current()).isSameAs(application);
       contexts.add(Context.current());
     }
