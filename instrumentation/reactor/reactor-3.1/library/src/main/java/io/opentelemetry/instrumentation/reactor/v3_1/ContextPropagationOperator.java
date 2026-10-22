@@ -32,6 +32,8 @@ import io.opentelemetry.instrumentation.reactor.v3_1.internal.ContextBoundarySta
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -76,6 +78,24 @@ public final class ContextPropagationOperator {
       };
 
   private static final Object NO_SUBSCRIPTION_CONTEXT_CAPTURE_KEY = new Object();
+
+  private static final ClassValue<Method> TRACING_SUBSCRIBER_MARK_METHOD =
+      new ClassValue<Method>() {
+        @Override
+        protected Method computeValue(Class<?> type) {
+          Class<?> current = type;
+          while (current != null) {
+            try {
+              Method method = current.getDeclaredMethod("markDownstreamOfContextBoundary");
+              method.setAccessible(true);
+              return method;
+            } catch (NoSuchMethodException ignored) {
+              current = current.getSuperclass();
+            }
+          }
+          throw new IllegalStateException(type.getName());
+        }
+      };
 
   private static final Object lock = new Object();
 
@@ -500,7 +520,7 @@ public final class ContextPropagationOperator {
 
     @Override
     public CoreSubscriber<? super T> apply(Scannable publisher, CoreSubscriber<? super T> sub) {
-      return new TracingSubscriber<>(sub, sub.currentContext());
+      return new TracingSubscriber.ScannableTracingSubscriber<>(sub, sub.currentContext());
     }
   }
 
@@ -513,6 +533,16 @@ public final class ContextPropagationOperator {
   private static void markDownstreamOfContextBoundary(Scannable scannable) {
     if (scannable instanceof TracingSubscriber) {
       ((TracingSubscriber<?>) scannable).markDownstreamOfContextBoundary();
+    } else if (scannable
+        .getClass()
+        .getName()
+        .endsWith(".instrumentation.reactor.v3_1.TracingSubscriber$ScannableTracingSubscriber")) {
+      // The javaagent can have a second, shaded copy in the same subscriber chain.
+      try {
+        TRACING_SUBSCRIBER_MARK_METHOD.get(scannable.getClass()).invoke(scannable);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        throw new IllegalStateException(e);
+      }
     }
   }
 

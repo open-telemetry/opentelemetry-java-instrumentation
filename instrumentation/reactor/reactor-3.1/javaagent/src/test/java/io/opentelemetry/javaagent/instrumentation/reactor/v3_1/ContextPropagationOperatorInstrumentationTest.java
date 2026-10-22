@@ -370,6 +370,81 @@ class ContextPropagationOperatorInstrumentationTest {
     "true,true,false",
     "true,true,true"
   })
+  void deferredBoundaryKeepsApplicationContext(
+      boolean flux, boolean rootApplicationContext, boolean schedulerHop) {
+    assumeTrue(!schedulerHop || schedulerHooksSupported());
+    Context applicationContext =
+        rootApplicationContext
+            ? Context.root()
+            : Context.root().with(APPLICATION_KEY, "application");
+    Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
+    Context subscriptionContext = Context.root().with(APPLICATION_KEY, "subscription");
+    AtomicReference<String> observed = new AtomicReference<>();
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
+    Scheduler scheduler = schedulerHop ? Schedulers.newSingle("context-boundary-test") : null;
+    try {
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        if (flux) {
+          Flux<String> boundary =
+              Flux.defer(
+                  () ->
+                      ContextPropagationOperator.runWithContext(
+                          Flux.just("value"), operationContext, applicationContext));
+          if (schedulerHop) {
+            boundary = boundary.publishOn(scheduler);
+          }
+          boundary
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    observed.set(Context.current().get(APPLICATION_KEY));
+                    assertThat(Context.current().get(APPLICATION_KEY))
+                        .isEqualTo(rootApplicationContext ? null : "application");
+                  })
+              .blockLast();
+        } else {
+          Mono<String> boundary =
+              Mono.defer(
+                  () ->
+                      ContextPropagationOperator.runWithContext(
+                          Mono.just("value"), operationContext, applicationContext));
+          if (schedulerHop) {
+            boundary = boundary.publishOn(scheduler);
+          }
+          boundary
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    observed.set(Context.current().get(APPLICATION_KEY));
+                    assertThat(Context.current().get(APPLICATION_KEY))
+                        .isEqualTo(rootApplicationContext ? null : "application");
+                  })
+              .block();
+        }
+        assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+      }
+    } finally {
+      operator.resetOnEachOperator();
+      if (scheduler != null) {
+        scheduler.dispose();
+      }
+    }
+    assertThat(observed.get()).isEqualTo(rootApplicationContext ? null : "application");
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "false,false,false",
+    "false,false,true",
+    "false,true,false",
+    "false,true,true",
+    "true,false,false",
+    "true,false,true",
+    "true,true,false",
+    "true,true,true"
+  })
   void capturedContextForPreviouslySubscribedPublisher(
       boolean flux, boolean schedulerHop, boolean sameContext) {
     assumeTrue(!schedulerHop || schedulerHooksSupported());

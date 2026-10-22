@@ -33,7 +33,7 @@ import reactor.util.context.Context;
  * Based on OpenTracing code.
  * https://github.com/opentracing-contrib/java-reactor/blob/master/src/main/java/io/opentracing/contrib/reactor/TracedSubscriber.java
  */
-public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
+public class TracingSubscriber<T> implements CoreSubscriber<T> {
   @Nullable private static final Class<?> fluxRetrySubscriberClass = getFluxRetrySubscriberClass();
 
   @Nullable
@@ -42,7 +42,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
-  private volatile boolean downstreamOfContextBoundary;
+  private boolean downstreamOfContextBoundary;
   private final boolean hasExplicitContext;
   private final boolean hasContextToPropagate;
 
@@ -133,13 +133,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
     downstreamOfContextBoundary = true;
   }
 
-  @Override
-  @Nullable
-  @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
-  public Object scanUnsafe(Scannable.Attr attr) {
-    return attr == Scannable.Attr.ACTUAL ? subscriber : null;
-  }
-
   @Nullable
   private Scope openScope() {
     return openScope(hasContextToPropagate ? traceContext : null);
@@ -170,6 +163,21 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
       return Class.forName("reactor.core.publisher.FluxRetryWhen$RetryWhenMainSubscriber");
     } catch (ClassNotFoundException ignored) {
       return null;
+    }
+  }
+
+  static final class ScannableTracingSubscriber<T> extends TracingSubscriber<T>
+      implements Scannable {
+
+    ScannableTracingSubscriber(Subscriber<? super T> subscriber, Context context) {
+      super(subscriber, context);
+    }
+
+    @Override
+    @Nullable
+    @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
+    public Object scanUnsafe(Scannable.Attr attr) {
+      return attr == Scannable.Attr.ACTUAL ? ((TracingSubscriber<?>) this).subscriber : null;
     }
   }
 }
