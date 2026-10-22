@@ -43,4 +43,25 @@ dependencies {
   testCompileOnly("org.scala-lang:scala-library:2.12.20")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:zio:zio-2.0:javaagent"))
+}
+
+tasks {
+  withType<Test>().configureEach {
+    if (name != "testRuntimeDisabled") {
+      exclude("**/ZioHttpRuntimeDisabledTest*")
+    }
+  }
+
+  val testRuntimeDisabled = register<Test>("testRuntimeDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.zio-2.0.enabled=false")
+    jvmArgs("-Dotel.instrumentation.zio-http.enabled=true")
+    filter { includeTestsMatching("*ZioHttpRuntimeDisabledTest") }
+  }
+
+  check {
+    dependsOn(testRuntimeDisabled)
+  }
 }

@@ -19,30 +19,15 @@ public class HandlerWrapper {
     String s = routePattern.pathCodec().render();
     String route = s.isEmpty() ? "/" : s;
 
-    Handler<?, ERR, IN, OUT> result =
-        handler.map(
-            new AbstractFunction1<OUT, OUT>() {
+    return handler.contramap(
+        new AbstractFunction1<IN, IN>() {
 
-              @Override
-              public OUT apply(OUT out) {
-                updateRoute(route);
-                return out;
-              }
-            },
-            null);
-    result =
-        result.mapError(
-            new AbstractFunction1<ERR, ERR>() {
-
-              @Override
-              public ERR apply(ERR error) {
-                updateRoute(route);
-                return error;
-              }
-            },
-            null);
-
-    return result;
+          @Override
+          public IN apply(IN input) {
+            updateRoute(route);
+            return input;
+          }
+        });
   }
 
   private static void updateRoute(String route) {

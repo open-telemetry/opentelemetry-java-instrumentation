@@ -25,7 +25,8 @@ class ZioScopeLifecycleTest {
   val testing: InstrumentationExtension = AgentInstrumentationExtension.create()
 
   @Test
-  def suspensionWhileApplicationScopeIsOpenDoesNotLeakRestorationScope(): Unit = {
+  def suspensionWhileApplicationScopeIsOpenDoesNotLeakRestorationScope()
+      : Unit = {
     val worker = Executors.newSingleThreadExecutor()
     val executor = Executor.fromJavaExecutor(worker)
     val span = testing.getOpenTelemetry
@@ -77,7 +78,9 @@ class ZioScopeLifecycleTest {
           } { case (scope, openingThread) =>
             (ZIO.yieldNow *> ZIO.succeed {
               assertThat(Thread.currentThread()).isNotSameAs(openingThread)
-              assertThat(Span.current().getSpanContext).isEqualTo(span.getSpanContext)
+              assertThat(Span.current().getSpanContext).isEqualTo(
+                span.getSpanContext
+              )
               scope.close()
             }).onExecutor(closingExecutor)
           }

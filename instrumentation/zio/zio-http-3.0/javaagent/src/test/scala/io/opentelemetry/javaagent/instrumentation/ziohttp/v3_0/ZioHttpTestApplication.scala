@@ -10,20 +10,23 @@ import zio.http._
 
 import java.util.concurrent.CountDownLatch
 
-object ZioHttpTestApplication extends ZIOAppDefault {
+class ZioHttpTestApplication(port: Int) {
   private val routes =
     Routes(
       Method.GET / "greet" / string("name") -> handler {
         (name: String, _: Request) =>
           Response.text(s"Hello $name")
+      },
+      Method.GET / "greet-async" / string("name") -> handler {
+        (name: String, _: Request) =>
+          ZIO.yieldNow *> ZIO.succeed(Response.text(s"Hello $name"))
       }
     )
 
-  var port = -1
   val started = new CountDownLatch(1)
 
-  override def run = Server
-    .serve(routes)
+  def run = Server
+    .install(routes)
     .flatMap { _ =>
       started.countDown()
       ZIO.never
