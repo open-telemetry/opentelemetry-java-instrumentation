@@ -62,8 +62,16 @@ public class HandlerWrapper {
                               }
                             },
                             Trace$.MODULE$.empty());
-                ZIO<R, ERR, OUT> effect = result.apply(input);
                 Request request = invocation.request;
+                ZIO<R, ERR, OUT> effect;
+                try {
+                  effect = result.apply(input);
+                } catch (RuntimeException | Error e) {
+                  if (request != null) {
+                    release(request, routeContext);
+                  }
+                  throw e;
+                }
                 if (request == null) {
                   return effect;
                 }
