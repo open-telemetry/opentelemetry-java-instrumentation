@@ -12,6 +12,8 @@ import redis.clients.jedis.exceptions.JedisDataException;
 public final class JedisServerError {
   @Nullable
   public static String errorType(@Nullable Throwable error) {
+    // Preserve exception-class classification for dedicated Jedis exceptions.
+    // Only generic JedisDataException messages are parsed for Redis error prefixes.
     if (error == null || error.getClass() != JedisDataException.class) {
       return null;
     }
