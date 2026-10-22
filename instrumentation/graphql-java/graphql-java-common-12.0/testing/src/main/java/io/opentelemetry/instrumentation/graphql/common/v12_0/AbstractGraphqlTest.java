@@ -13,20 +13,29 @@ import static io.opentelemetry.instrumentation.testing.util.InstrumentationScope
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import graphql.ErrorClassification;
 import graphql.ErrorType;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
+import graphql.ExecutionResultImpl;
 import graphql.GraphQL;
 import graphql.GraphqlErrorBuilder;
+import graphql.execution.AsyncExecutionStrategy;
 import graphql.execution.DataFetcherResult;
+import graphql.execution.ExecutionContext;
+import graphql.execution.ExecutionStrategyParameters;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
@@ -51,6 +60,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -145,7 +155,13 @@ public abstract class AbstractGraphqlTest {
                   }
                   DataFetcherResult.Builder<Map<String, String>> builder =
                       DataFetcherResult.newResult();
-                  if ("book-exception".equals(bookId)) {
+                  if ("book-handled-exception".equals(bookId)) {
+                    try {
+                      throw new IllegalStateException("fetching book failed");
+                    } catch (IllegalStateException e) {
+                      return builder.data(books.get(0)).build();
+                    }
+                  } else if ("book-exception".equals(bookId)) {
                     throw new IllegalStateException("fetching book failed");
                   } else if ("book-graphql-error".equals(bookId)) {
                     return builder
@@ -176,13 +192,16 @@ public abstract class AbstractGraphqlTest {
     };
   }
 
-  @Test
-  void successfulQuery() {
+  @ParameterizedTest
+  @ValueSource(strings = {"book-1", "book-handled-exception"})
+  void successfulQuery(String bookId) {
     ExecutionResult result =
         graphql.execute(
             ""
                 + "  query findBookById {\n"
-                + "    bookById(id: \"book-1\") {\n"
+                + "    bookById(id: \""
+                + bookId
+                + "\") {\n"
                 + "      name\n"
                 + "    }\n"
                 + "  }");
@@ -285,7 +304,7 @@ public abstract class AbstractGraphqlTest {
                       span.hasName("GraphQL Operation")
                           .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
-                          .hasTotalAttributeCount(0)
+                          .hasAttributesSatisfyingExactly(equalTo(ERROR_TYPE, "InvalidSyntax"))
                           .hasStatus(StatusData.error());
                       assertStructuredError(
                           span, "InvalidSyntax", result.getErrors().get(0).getMessage());
@@ -320,7 +339,7 @@ public abstract class AbstractGraphqlTest {
                       span.hasName("GraphQL Operation")
                           .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
-                          .hasTotalAttributeCount(0)
+                          .hasAttributesSatisfyingExactly(equalTo(ERROR_TYPE, "ValidationError"))
                           .hasStatus(StatusData.error());
                       assertStructuredError(
                           span, "ValidationError", result.getErrors().get(0).getMessage());
@@ -390,6 +409,7 @@ public abstract class AbstractGraphqlTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, "DataFetchingException"),
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                             equalTo(GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
@@ -447,6 +467,124 @@ public abstract class AbstractGraphqlTest {
     } else {
       assertThat(getTesting().logRecords()).isEmpty();
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void terminalOperationFailure(boolean asynchronous) {
+    IllegalStateException failure = new IllegalStateException("operation failed");
+    CompletableFuture<ExecutionResult> strategyResult = new CompletableFuture<>();
+    GraphQL.Builder builder =
+        GraphQL.newGraphQL(graphqlSchema)
+            .queryExecutionStrategy(
+                new AsyncExecutionStrategy() {
+                  @Override
+                  public CompletableFuture<ExecutionResult> execute(
+                      ExecutionContext context, ExecutionStrategyParameters parameters) {
+                    if (!asynchronous) {
+                      return CompletableFuture.<ExecutionResult>completedFuture(null)
+                          .thenApply(
+                              result -> {
+                                throw failure;
+                              });
+                    }
+                    return strategyResult;
+                  }
+                });
+    configure(builder);
+    GraphQL graphql = builder.build();
+
+    if (asynchronous) {
+      CompletableFuture<ExecutionResult> execution =
+          graphql.executeAsync(
+              ExecutionInput.newExecutionInput()
+                  .query("query findBookById { bookById(id: \"book-1\") { name } }"));
+      assertThat(execution).isNotDone();
+      assertThat(getTesting().spans()).isEmpty();
+      CompletableFuture.runAsync(
+              () -> strategyResult.completeExceptionally(new CompletionException(failure)))
+          .join();
+      assertThatThrownBy(execution::join).hasCause(failure);
+    } else {
+      assertThatThrownBy(
+              () -> graphql.execute("query findBookById { bookById(id: \"book-1\") { name } }"))
+          .isSameAs(failure);
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("query findBookById")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? failure : null)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, IllegalStateException.class.getCanonicalName()),
+                                equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
+                                equalTo(GRAPHQL_OPERATION_TYPE, "query"),
+                                normalizedQueryEqualsTo(
+                                    GRAPHQL_DOCUMENT,
+                                    "query findBookById { bookById(id: ?) { name } }"))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void partialResult(boolean customClassification) {
+    ErrorClassification classification =
+        customClassification
+            ? new ErrorClassification() {
+              @Override
+              public String toString() {
+                return "unbounded application error";
+              }
+            }
+            : ErrorType.DataFetchingException;
+    ExecutionResult partialResult =
+        new ExecutionResultImpl(
+            singletonMap("bookById", singletonMap("name", "First Book")),
+            singletonList(
+                GraphqlErrorBuilder.newError()
+                    .errorType(classification)
+                    .message("partial result")
+                    .build()));
+    GraphQL.Builder builder =
+        GraphQL.newGraphQL(graphqlSchema)
+            .queryExecutionStrategy(
+                new AsyncExecutionStrategy() {
+                  @Override
+                  public CompletableFuture<ExecutionResult> execute(
+                      ExecutionContext context, ExecutionStrategyParameters parameters) {
+                    return CompletableFuture.completedFuture(partialResult);
+                  }
+                });
+    configure(builder);
+
+    ExecutionResult result =
+        builder.build().execute("query findBookById { bookById(id: \"book-1\") { name } }");
+    assertThat(result.<Object>getData()).isEqualTo(partialResult.getData());
+    assertThat(result.getErrors()).isEqualTo(partialResult.getErrors());
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("query findBookById")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    ERROR_TYPE,
+                                    customClassification ? "_OTHER" : "DataFetchingException"),
+                                equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
+                                equalTo(GRAPHQL_OPERATION_TYPE, "query"),
+                                normalizedQueryEqualsTo(
+                                    GRAPHQL_DOCUMENT,
+                                    "query findBookById { bookById(id: ?) { name } }"))));
   }
 
   private static void assertStructuredError(SpanDataAssert span, String type, String message) {

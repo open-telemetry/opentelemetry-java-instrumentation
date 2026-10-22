@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.graphql.common.v12_0.internal;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+
+import graphql.ErrorClassification;
+import graphql.ErrorType;
 import graphql.ExecutionResult;
 import graphql.language.OperationDefinition.Operation;
 import io.opentelemetry.api.common.AttributeKey;
@@ -46,5 +50,18 @@ final class GraphqlAttributesExtractor
     String operationType = operation == null ? null : operation.name().toLowerCase(Locale.ROOT);
     attributes.put(GRAPHQL_OPERATION_TYPE, operationType);
     attributes.put(GRAPHQL_DOCUMENT, request.getQuery());
+
+    if (error != null) {
+      String canonicalName = error.getClass().getCanonicalName();
+      attributes.put(
+          ERROR_TYPE, canonicalName != null ? canonicalName : error.getClass().getName());
+    } else if (response != null && !response.getErrors().isEmpty()) {
+      // Match the operation status policy, which also treats partial results with errors as
+      // failures.
+      ErrorClassification classification = response.getErrors().get(0).getErrorType();
+      attributes.put(
+          ERROR_TYPE,
+          classification instanceof ErrorType ? ((ErrorType) classification).name() : "_OTHER");
+    }
   }
 }
