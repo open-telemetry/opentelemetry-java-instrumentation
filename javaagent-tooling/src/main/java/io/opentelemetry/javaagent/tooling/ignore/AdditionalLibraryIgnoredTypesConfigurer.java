@@ -264,6 +264,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("com.google.common.util.concurrent.")
         .allowClass("com.google.common.base.internal.Finalizer")
         .allowClass("com.google.common.base.Java8Usage$$Lambda")
+        .allowClass("com.google.common.eventbus.AsyncEventBus$1")
         .allowClass("com.google.common.eventbus.Subscriber$");
 
     builder

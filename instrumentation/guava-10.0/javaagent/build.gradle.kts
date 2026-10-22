@@ -3,6 +3,15 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
+// Override the enforced Guava BOM only when testing the supported baseline.
+if (!otelProps.testLatestDeps) {
+  configurations
+    .matching { it.name == "compileClasspath" || it.name == "testCompileClasspath" || it.name == "testRuntimeClasspath" }
+    .configureEach {
+      resolutionStrategy.force("com.google.guava:guava:10.0")
+    }
+}
+
 muzzle {
   pass {
     group.set("com.google.guava")
