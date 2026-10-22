@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -23,7 +22,7 @@ public class MetricConfiguration {
 
   private final Collection<MetricDef> currentSet = new ArrayList<>();
   private final Set<MetricDef> unstableSet = Collections.newSetFromMap(new IdentityHashMap<>());
-  private final Map<MetricDef, String> schemaUrls = new IdentityHashMap<>();
+  private final IdentityHashMap<MetricDef, String> schemaUrls = new IdentityHashMap<>();
 
   public MetricConfiguration() {}
 
