@@ -31,13 +31,15 @@ public final class AwsLambdaEventsInstrumenterFactory {
       Set<String> sensitiveQueryParameters) {
     ApiGatewayProxyAttributesExtractor apiGatewayExtractor =
         new ApiGatewayProxyAttributesExtractor(knownMethods, sensitiveQueryParameters);
+    ApiGatewayProxySpanStatusExtractor apiGatewaySpanStatusExtractor =
+        new ApiGatewayProxySpanStatusExtractor();
     InstrumenterBuilder<AwsLambdaRequest, Object> builder =
         Instrumenter.<AwsLambdaRequest, Object>builder(
                 openTelemetry, instrumentationName, AwsLambdaEventsInstrumenterFactory::spanName)
             .setSchemaUrl(SchemaUrls.V1_44_0)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
             .addAttributesExtractor(apiGatewayExtractor)
-            .setSpanStatusExtractor(apiGatewayExtractor);
+            .setSpanStatusExtractor(apiGatewaySpanStatusExtractor);
     setFaasInvocationExceptionEventExtractor(builder);
 
     return new AwsLambdaFunctionInstrumenter(

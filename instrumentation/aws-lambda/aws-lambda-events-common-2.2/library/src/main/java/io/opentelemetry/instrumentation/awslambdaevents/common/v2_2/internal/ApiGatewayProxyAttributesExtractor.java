@@ -24,11 +24,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
@@ -39,8 +36,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 final class ApiGatewayProxyAttributesExtractor
-    implements AttributesExtractor<AwsLambdaRequest, Object>,
-        SpanStatusExtractor<AwsLambdaRequest, Object> {
+    implements AttributesExtractor<AwsLambdaRequest, Object> {
 
   // copied from FaasIncubatingAttributes
   private static final AttributeKey<String> FAAS_TRIGGER = AttributeKey.stringKey("faas.trigger");
@@ -150,7 +146,7 @@ final class ApiGatewayProxyAttributesExtractor
       Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
       if (statusCode != null) {
         attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
-        if (isErrorStatusCode(statusCode)) {
+        if (statusCode >= 500 || statusCode < 100) {
           attributes.put(ERROR_TYPE, statusCode.toString());
           return;
         }
@@ -159,26 +155,5 @@ final class ApiGatewayProxyAttributesExtractor
     if (error != null) {
       attributes.put(ERROR_TYPE, error.getClass().getName());
     }
-  }
-
-  @Override
-  public void extract(
-      SpanStatusBuilder spanStatusBuilder,
-      AwsLambdaRequest request,
-      @Nullable Object response,
-      @Nullable Throwable error) {
-    if (request.getInput() instanceof APIGatewayProxyRequestEvent
-        && response instanceof APIGatewayProxyResponseEvent) {
-      Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
-      if (statusCode != null && isErrorStatusCode(statusCode)) {
-        spanStatusBuilder.setStatus(StatusCode.ERROR);
-        return;
-      }
-    }
-    SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
-  }
-
-  private static boolean isErrorStatusCode(int statusCode) {
-    return statusCode >= 500 || statusCode < 100;
   }
 }

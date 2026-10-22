@@ -93,11 +93,13 @@ class ApiGatewayProxyAttributesExtractorTest {
     Object response =
         statusCode == null ? null : new APIGatewayProxyResponseEvent().withStatusCode(statusCode);
     ApiGatewayProxyAttributesExtractor extractor = extractor();
+    ApiGatewayProxySpanStatusExtractor spanStatusExtractor =
+        new ApiGatewayProxySpanStatusExtractor();
     AttributesBuilder attributes = Attributes.builder();
     SpanStatusBuilder spanStatusBuilder = mock(SpanStatusBuilder.class);
 
     extractor.onEnd(attributes, Context.root(), request, response, null);
-    extractor.extract(spanStatusBuilder, request, response, null);
+    spanStatusExtractor.extract(spanStatusBuilder, request, response, null);
 
     Attributes extractedAttributes = attributes.build();
     assertThat(extractedAttributes.get(HTTP_RESPONSE_STATUS_CODE))
@@ -117,11 +119,13 @@ class ApiGatewayProxyAttributesExtractorTest {
     AwsLambdaRequest request = awsRequest(new APIGatewayProxyRequestEvent());
     Throwable error = new IllegalStateException("handler failed");
     ApiGatewayProxyAttributesExtractor extractor = extractor();
+    ApiGatewayProxySpanStatusExtractor spanStatusExtractor =
+        new ApiGatewayProxySpanStatusExtractor();
     AttributesBuilder attributes = Attributes.builder();
     SpanStatusBuilder spanStatusBuilder = mock(SpanStatusBuilder.class);
 
     extractor.onEnd(attributes, Context.root(), request, null, error);
-    extractor.extract(spanStatusBuilder, request, null, error);
+    spanStatusExtractor.extract(spanStatusBuilder, request, null, error);
 
     assertThat(attributes.build().get(ERROR_TYPE)).isEqualTo(IllegalStateException.class.getName());
     verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
