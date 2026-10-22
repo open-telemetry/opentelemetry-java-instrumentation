@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -751,7 +752,7 @@ class CassandraClientTest {
                 .spanName("BATCH")
                 .querySummary("BATCH")
                 .batchSize(0)
-                .idempotent(true)
+                .idempotent(testLatestDeps())
                 .build()),
         argumentSet(
             "single",
