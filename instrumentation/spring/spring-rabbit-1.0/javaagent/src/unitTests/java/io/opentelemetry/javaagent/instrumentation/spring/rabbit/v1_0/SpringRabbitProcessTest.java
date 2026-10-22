@@ -236,7 +236,11 @@ class SpringRabbitProcessTest {
                 span -> span.hasAttribute(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2))),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttribute(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, null))));
+                span ->
+                    span.satisfies(
+                        spanData ->
+                            assertThat(spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                                .isNull())));
     assertConsumedMessages(3);
     assertProcessAttempts(2);
     assertThat(PROCESSING_CONTEXT.get(packed)).isNull();
