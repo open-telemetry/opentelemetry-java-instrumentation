@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
@@ -64,7 +63,7 @@ class CriteriaInstrumentation implements TypeInstrumentation {
 
       SessionInfo sessionInfo = CRITERIA_SESSION_INFO.get(criteria);
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       HibernateOperation hibernateOperation =
           new HibernateOperation("Criteria." + name, entityName, sessionInfo);
 

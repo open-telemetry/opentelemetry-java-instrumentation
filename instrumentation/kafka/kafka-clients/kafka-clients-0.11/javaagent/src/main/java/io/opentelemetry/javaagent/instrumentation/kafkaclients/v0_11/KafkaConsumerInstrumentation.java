@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.recordTelemetry;
@@ -68,7 +67,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
+      Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
       Context spanSuppressionContext =
           KafkaConsumerContextUtil.spanSuppressionContext(parentContext);
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
