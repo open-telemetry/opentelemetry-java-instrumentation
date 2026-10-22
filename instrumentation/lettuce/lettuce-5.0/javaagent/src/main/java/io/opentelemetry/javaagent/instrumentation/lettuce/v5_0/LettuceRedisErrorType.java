@@ -18,6 +18,7 @@ public final class LettuceRedisErrorType {
     }
 
     // Lettuce versions before 6.5.4 decode server errors byte-by-byte instead of as UTF-8.
+    // Fall back to the exception class rather than report a corrupted non-ASCII prefix.
     // See https://github.com/redis/lettuce/pull/3188.
     return RedisErrorPrefix.extractAscii(error.getMessage());
   }
