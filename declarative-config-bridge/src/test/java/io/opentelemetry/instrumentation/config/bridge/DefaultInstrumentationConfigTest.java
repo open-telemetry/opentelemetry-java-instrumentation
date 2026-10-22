@@ -268,6 +268,43 @@ class DefaultInstrumentationConfigTest {
         .hasMessage("list default must not be empty: " + path);
   }
 
+  private static Stream<Arguments> emptyStringScalarListDefaults() {
+    return Stream.of(
+        argumentSet(
+            "java instrumentation scalar list",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults
+                        .get("common")
+                        .get("http")
+                        .setDefault("known_methods", singletonList("")),
+            "common.http.known_methods"),
+        argumentSet(
+            "general instrumentation scalar list",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults.customizeGeneral(
+                        general ->
+                            general.setHttp(
+                                new ExperimentalHttpInstrumentationModel()
+                                    .setClient(
+                                        new ExperimentalHttpClientInstrumentationModel()
+                                            .setRequestCapturedHeaders(singletonList(""))))),
+            "general.http.client.request_captured_headers"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("emptyStringScalarListDefaults")
+  void toConfigPropertiesRejectsEmptyStringScalarListDefaults(
+      Consumer<DefaultInstrumentationConfig> customizer, String path) {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    customizer.accept(defaults);
+
+    assertThatThrownBy(defaults::toConfigProperties)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("scalar list default must not contain empty strings: " + path);
+  }
+
   @Test
   void toConfigPropertiesRoundTripsGeneralDefaultThroughBridge() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();

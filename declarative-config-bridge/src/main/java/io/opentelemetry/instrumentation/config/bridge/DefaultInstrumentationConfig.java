@@ -268,7 +268,12 @@ public final class DefaultInstrumentationConfig {
     }
     for (Object item : list) {
       if (item instanceof String) {
-        if (((String) item).indexOf(',') >= 0) {
+        String stringItem = (String) item;
+        if (stringItem.isEmpty()) {
+          throw new IllegalArgumentException(
+              "scalar list default must not contain empty strings: " + declarativePath);
+        }
+        if (stringItem.indexOf(',') >= 0) {
           throw new IllegalArgumentException(
               "scalar list default must not contain ',' in an element: " + declarativePath);
         }
