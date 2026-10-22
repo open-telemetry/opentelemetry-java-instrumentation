@@ -38,6 +38,8 @@ import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.TransactionResult;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.codec.StringCodec;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -45,6 +47,7 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -449,6 +452,62 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   }
 
   @Test
+  void testTransactionWithThrowableValue()
+      throws ExecutionException, InterruptedException, TimeoutException {
+    if (!testLatestDeps()) {
+      return;
+    }
+
+    RedisCodec<String, Object> codec =
+        new RedisCodec<String, Object>() {
+          @Override
+          public String decodeKey(ByteBuffer bytes) {
+            return StringCodec.UTF8.decodeKey(bytes);
+          }
+
+          @Override
+          public Object decodeValue(ByteBuffer bytes) {
+            return new IllegalStateException("decoded value");
+          }
+
+          @Override
+          public ByteBuffer encodeKey(String key) {
+            return StringCodec.UTF8.encodeKey(key);
+          }
+
+          @Override
+          public ByteBuffer encodeValue(Object value) {
+            return StringCodec.UTF8.encodeValue(value.toString());
+          }
+        };
+    StatefulRedisConnection<String, Object> throwableConnection = redisClient.connect(codec);
+    cleanup.deferCleanup(throwableConnection);
+    RedisCommands<String, Object> commands = throwableConnection.sync();
+    commands.multi();
+    RedisFuture<Object> get = throwableConnection.async().get("transaction-key");
+    TransactionResult result = commands.exec();
+
+    assertThat(result).hasSize(1);
+    assertThat(result.<Throwable>get(0))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("decoded value");
+    assertThat((Throwable) get.get(10, SECONDS))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("decoded value");
+
+    String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
+    testing()
+        .waitAndAssertTraces(
+            transactionSpan("MULTI", "MULTI", StatusData.unset(), null, lettuceVersion),
+            transactionSpan("GET", "GET transaction-key", StatusData.unset(), null, lettuceVersion),
+            transactionSpan("EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
+
+    assertCommandMetric("MULTI", null);
+    assertCommandMetric("GET", null);
+    assertCommandMetric("EXEC", null);
+  }
+
+  @Test
   void testTransactionResultsWithFailures()
       throws ExecutionException, InterruptedException, TimeoutException {
     String lettuceVersion = RedisClient.class.getPackage().getImplementationVersion();
@@ -507,12 +566,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                     ? RedisNoScriptException.class.getName()
                     : null,
                 lettuceVersion),
-            transactionSpan(
-                "EXEC",
-                "EXEC",
-                testLatestDeps() ? StatusData.error() : StatusData.unset(),
-                testLatestDeps() ? RedisCommandExecutionException.class.getName() : null,
-                lettuceVersion));
+            transactionSpan("EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
 
     assertCommandMetric("MULTI", null);
     assertCommandMetric("SET", null);
@@ -526,8 +580,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         testLatestDeps() && !queuedAcknowledgements
             ? RedisNoScriptException.class.getName()
             : null);
-    assertCommandMetric(
-        "EXEC", testLatestDeps() ? RedisCommandExecutionException.class.getName() : null);
+    assertCommandMetric("EXEC", null);
   }
 
   private Consumer<TraceAssert> transactionSpan(

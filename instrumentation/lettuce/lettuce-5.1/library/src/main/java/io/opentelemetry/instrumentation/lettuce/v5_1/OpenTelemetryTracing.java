@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.lettuce.core.TransactionResult;
 import io.lettuce.core.output.CommandOutput;
-import io.lettuce.core.output.MultiOutput;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.CompleteableCommand;
@@ -318,16 +316,6 @@ final class OpenTelemetryTracing implements Tracing {
       if (error != null) {
         end(null, error);
       } else {
-        if (output instanceof MultiOutput && output.getError() == null) {
-          TransactionResult result = ((MultiOutput<?, ?>) output).get();
-          for (Object value : result) {
-            if (value instanceof Throwable) {
-              Throwable failure = (Throwable) value;
-              end(null, failure);
-              return;
-            }
-          }
-        }
         end(LettuceResponse.fromCommandOutput(output), null);
       }
     }
