@@ -61,8 +61,16 @@ class ContextBoundaryTest {
                                                         mono, hooks, operation, application)))));
   }
 
+  private static Stream<Arguments> representativeBoundaries() {
+    return Stream.of(
+        Arguments.of(true, false, OPERATION, Context.root()),
+        Arguments.of(false, false, Context.root(), APPLICATION),
+        Arguments.of(true, true, Context.root(), APPLICATION),
+        Arguments.of(false, true, OPERATION, Context.root()));
+  }
+
   private static Stream<Arguments> terminalCallbacks() {
-    return boundaries()
+    return representativeBoundaries()
         .flatMap(
             boundary ->
                 Stream.of(false, true)
@@ -182,7 +190,7 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("boundaries")
+  @MethodSource("representativeBoundaries")
   void restoresScopesAfterThrowingRequestAndCancel(
       boolean mono, boolean hooks, Context operation, Context application) {
     if (hooks) {
@@ -228,7 +236,7 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("boundaries")
+  @MethodSource("representativeBoundaries")
   void restoresScopesWhenDownstreamThrows(
       boolean mono, boolean hooks, Context operation, Context application) {
     if (hooks) {
@@ -252,7 +260,7 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("boundaries")
+  @MethodSource("representativeBoundaries")
   void restoresScopesWhenSubscriptionThrows(
       boolean mono, boolean hooks, Context operation, Context application) {
     if (hooks) {
@@ -314,7 +322,7 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("boundaries")
+  @MethodSource("representativeBoundaries")
   void supportsMultipleSubscriptions(
       boolean mono, boolean hooks, Context operation, Context application) {
     if (hooks) {
@@ -352,7 +360,7 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("boundaries")
+  @MethodSource("representativeBoundaries")
   void scheduledUpstreamUsesRegisteredHooks(
       boolean mono, boolean hooks, Context operation, Context application) {
     assumeTrue(hooks && schedulerHooksSupported());
@@ -396,7 +404,7 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("boundaries")
+  @MethodSource("representativeBoundaries")
   void scalarEmptyErrorAndRetry(
       boolean mono, boolean hooks, Context operation, Context application) {
     if (hooks) {

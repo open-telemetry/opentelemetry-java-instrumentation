@@ -69,7 +69,9 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
                   // no response and no error means that the request has been cancelled
                   () -> instrumenter.end(context, request, null, null));
       ContextPropagationOperator.runWithContext(response, context, parentContext)
-          .subscribe(new TraceWebClientSubscriber(instrumenter, request, subscriber, context));
+          .doOnNext(result -> instrumenter.end(context, request, result, null))
+          .doOnError(error -> instrumenter.end(context, request, null, error))
+          .subscribe(subscriber);
     }
   }
 }

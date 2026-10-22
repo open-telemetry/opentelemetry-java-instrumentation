@@ -393,10 +393,12 @@ public final class ContextPropagationOperator {
     }
   }
 
-  private static final class ContextBoundarySubscriber<T> implements CoreSubscriber<T> {
+  private static final class ContextBoundarySubscriber<T>
+      implements CoreSubscriber<T>, Subscription {
     private final CoreSubscriber<? super T> actual;
     private final Context operationContext;
     private final Context applicationContext;
+    private Subscription subscription;
 
     private ContextBoundarySubscriber(
         CoreSubscriber<? super T> actual, Context operationContext, Context applicationContext) {
@@ -414,8 +416,9 @@ public final class ContextPropagationOperator {
 
     @Override
     public void onSubscribe(Subscription subscription) {
+      this.subscription = subscription;
       try (Scope ignored = applicationContext.makeCurrent()) {
-        actual.onSubscribe(new ContextBoundarySubscription(subscription, operationContext));
+        actual.onSubscribe(this);
       }
     }
 
@@ -438,16 +441,6 @@ public final class ContextPropagationOperator {
       try (Scope ignored = applicationContext.makeCurrent()) {
         actual.onComplete();
       }
-    }
-  }
-
-  private static final class ContextBoundarySubscription implements Subscription {
-    private final Subscription subscription;
-    private final Context operationContext;
-
-    private ContextBoundarySubscription(Subscription subscription, Context operationContext) {
-      this.subscription = subscription;
-      this.operationContext = operationContext;
     }
 
     @Override
