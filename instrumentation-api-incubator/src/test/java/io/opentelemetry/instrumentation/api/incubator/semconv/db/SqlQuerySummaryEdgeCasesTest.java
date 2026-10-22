@@ -729,8 +729,8 @@ class SqlQuerySummaryEdgeCasesTest {
 
   private static Stream<Arguments> lexicalEdgeCasesArgs() {
     return Stream.of(
-        // Nested-looking block comment
-        Arguments.of("SELECT /* outer /* inner */ still comment */ * FROM users", "SELECT users"),
+        // Ambiguous comment boundaries prevent further summary extraction.
+        Arguments.of("SELECT /* outer /* inner */ still comment */ * FROM users", "SELECT"),
         // Dollar-quoted strings (PostgreSQL) - unterminated
         Arguments.of("SELECT * FROM users WHERE name = $tag$unterminated", "SELECT users"));
   }

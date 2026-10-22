@@ -34,6 +34,14 @@ public final class SqlQueryAnalyzer {
     this.querySanitizationEnabled = querySanitizationEnabled;
   }
 
+  /**
+   * Returns sanitized query text and operation and target names.
+   *
+   * <p>When quote or comment boundaries are ambiguous across dialects or connection settings, the
+   * remaining query text is replaced with {@code ?} and analysis stops.
+   *
+   * <p>When sanitization is disabled, returns the original query text without analysis.
+   */
   public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {
     if (SemconvStability.v3Preview()) {
       return analyzeWithSummary(query, dialect);
@@ -57,6 +65,14 @@ public final class SqlQueryAnalyzer {
   }
 
   // To be removed in 3.0 (or rather, inlined into analyze() above)
+  /**
+   * Returns sanitized query text, a low-cardinality summary, and operation and target names.
+   *
+   * <p>When quote or comment boundaries are ambiguous across dialects or connection settings, the
+   * remaining query text is replaced with {@code ?} and summary extraction stops.
+   *
+   * <p>When sanitization is disabled, returns the original query text without analysis.
+   */
   public SqlQuery analyzeWithSummary(@Nullable String query, SqlDialect dialect) {
     if (!querySanitizationEnabled || query == null) {
       return SqlQuery.createWithSummary(query, null, null);
