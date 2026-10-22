@@ -37,6 +37,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -806,6 +807,53 @@ class InfluxDbQueryLifecycleTest {
       assertQuery(EOFException.class.getName());
     } finally {
       callbackWorker.shutdownNow();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void rejectedCallbackExecutorCompletesQuery(boolean failTransport) throws InterruptedException {
+    CountDownLatch requestStarted = new CountDownLatch(1);
+    CountDownLatch releaseRequest = new CountDownLatch(1);
+    CountDownLatch rejected = new CountDownLatch(1);
+    AtomicBoolean callbackInvoked = new AtomicBoolean();
+    Executor callbackExecutor =
+        command -> {
+          rejected.countDown();
+          throw new RejectedExecutionException("callback executor rejected dispatch");
+        };
+    OkHttpClient.Builder builder =
+        new OkHttpClient.Builder()
+            .addInterceptor(
+                chain -> {
+                  requestStarted.countDown();
+                  await(releaseRequest);
+                  if (failTransport) {
+                    throw new IOException("transport failure");
+                  }
+                  return response(chain, SUCCESS);
+                });
+    try (InfluxDB client =
+        new InfluxDBImpl(
+            "http://localhost:8086",
+            null,
+            null,
+            builder,
+            new Retrofit.Builder().callbackExecutor(callbackExecutor),
+            InfluxDB.ResponseFormat.JSON)) {
+      client.query(QUERY, result -> callbackInvoked.set(true), error -> callbackInvoked.set(true));
+      try {
+        assertThat(requestStarted.await(10, SECONDS)).isTrue();
+        assertThat(testing.spans()).isEmpty();
+        assertNoDuration();
+        releaseRequest.countDown();
+        assertThat(rejected.await(10, SECONDS)).isTrue();
+        assertQuery(RejectedExecutionException.class.getName());
+        assertException(RejectedExecutionException.class.getName());
+        assertThat(callbackInvoked.get()).isFalse();
+      } finally {
+        releaseRequest.countDown();
+      }
     }
   }
 

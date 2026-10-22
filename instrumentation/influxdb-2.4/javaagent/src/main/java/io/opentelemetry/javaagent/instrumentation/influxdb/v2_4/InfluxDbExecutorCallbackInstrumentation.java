@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,6 +33,9 @@ class InfluxDbExecutorCallbackInstrumentation implements TypeInstrumentation {
         isConstructor().and(takesArgument(1, named("retrofit2.Callback"))),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
+        named("onResponse").and(takesArgument(1, named("retrofit2.Response"))),
+        getClass().getName() + "$ResponseAdvice");
+    transformer.applyAdviceToMethod(
         named("onFailure").and(takesArgument(1, Throwable.class)),
         getClass().getName() + "$FailureAdvice");
   }
@@ -49,11 +53,37 @@ class InfluxDbExecutorCallbackInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class ResponseAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Callback<?> executorCallback,
+        @Advice.FieldValue("val$callback") Callback<?> callback,
+        @Advice.Thrown @Nullable Throwable error) {
+      InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(executorCallback);
+      if (state != null) {
+        CALLBACK_QUERY_STATE.set(executorCallback, null);
+        if (error != null) {
+          CALLBACK_QUERY_STATE.set(callback, null);
+          state.end(error);
+        }
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class FailureAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Callback<?> executorCallback) {
-      if (CALLBACK_QUERY_STATE.get(executorCallback) != null) {
+    public static void onExit(
+        @Advice.This Callback<?> executorCallback,
+        @Advice.FieldValue("val$callback") Callback<?> callback,
+        @Advice.Thrown @Nullable Throwable error) {
+      InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(executorCallback);
+      if (state != null) {
         CALLBACK_QUERY_STATE.set(executorCallback, null);
+        if (error != null) {
+          CALLBACK_QUERY_STATE.set(callback, null);
+          state.end(error);
+        }
       }
     }
   }
