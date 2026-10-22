@@ -4,8 +4,7 @@
 
 ### 📈 Enhancements
 
-- Support OpenTelemetry SDK 1.67.0 declarative configuration type checks in the Java agent and
-  Spring Boot starter.
+- Update the OpenTelemetry SDK version to 1.67.0.
   ([#20598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20598))
 
 ### 🛠️ Bug fixes
