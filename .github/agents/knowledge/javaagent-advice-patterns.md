@@ -44,13 +44,14 @@ suppressions to a single advice method.
 ## Advice Methods Must Be Static
 
 All `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` methods **must be `static`**. ByteBuddy
-inlines advice code directly into the instrumented method by default — there is no advice object
-instance. Do not add or remove `inline = false` as cleanup; it is a semantic signal used by
-muzzle/indy tooling.
+defaults to inlining advice code directly into the instrumented method — there is no advice object
+instance. For production javaagent advice, explicitly set `inline = false` on both annotations in
+every module except `instrumentation/internal/internal-class-loader` and
+`instrumentation/internal/internal-lambda`.
 
 ```java
 // ✅ Correct
-@Advice.OnMethodEnter(suppress = Throwable.class)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 public static void onEnter(/* ... */) { /* ... */ }
 
 // ❌ Wrong — instance method
@@ -60,15 +61,30 @@ public void onEnter(/* ... */) { /* ... */ }
 
 Advice classes should also have **no instance fields** — they are never instantiated.
 
+## Keep Production Advice Non-inlined
+
+`AdviceInspector` selects isolated indy loading automatically when every advice annotation in a
+module explicitly sets `inline = false`. If an ordinary module adds default-inlined advice, the
+module becomes mixed: automatic selection falls back to injecting helpers into the application
+classloader. This automatic fallback is distinct from an explicit
+`ExperimentalInstrumentationModule.helperClassStrategy()` override, which is checked first and can
+select either loading strategy.
+
+Do not work around a mixed module by adding its existing non-inlined advice classes to
+`getAdditionalHelperClassNames()`. Keep production advice non-inlined instead. For `VirtualField`
+lookups from non-inlined advice, keep a cached `static final` handle on a non-advice helper or
+singleton rather than calling `VirtualField.find(...)` in annotated methods; see
+[VirtualField lookup placement](javaagent-virtual-fields.md#lookup-placement).
+
 ## `Java8BytecodeBridge`
 
 When changing advice, inspect both the annotated advice bodies and every helper they
 call for `Java8BytecodeBridge` usage.
 
 Use the bridge only for supported OpenTelemetry API calls written directly in
-`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` methods, which classic mode may copy into
-pre-Java-8 bytecode. Everywhere else, use the direct OpenTelemetry API, for example
-`Context.current()` instead of `Java8BytecodeBridge.currentContext()` and
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` methods in the two inline exceptions, which may
+copy those calls into pre-Java-8 bytecode. Everywhere else, use the direct OpenTelemetry API, for
+example `Context.current()` instead of `Java8BytecodeBridge.currentContext()` and
 `Span.fromContext(context)` instead of `Java8BytecodeBridge.spanFromContext(context)`.
 
 Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
