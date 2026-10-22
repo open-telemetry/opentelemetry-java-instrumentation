@@ -25,6 +25,10 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
   static {
+    Experimental.internalSetBaseTimeUnit(
+        (builder, baseTimeUnit) -> builder.baseTimeUnit = baseTimeUnit);
+    Experimental.internalSetPrometheusMode(
+        (builder, prometheusMode) -> builder.prometheusMode = prometheusMode);
     Experimental.internalSetMicrometerHistogramGaugesEnabled(
         (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
     Internal.internalSetMetersHiddenFromSearch(
@@ -46,26 +50,6 @@ public final class OpenTelemetryMeterRegistryBuilder {
   @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setClock(Clock clock) {
     this.clock = clock;
-    return this;
-  }
-
-  /** Sets the base time unit. */
-  @CanIgnoreReturnValue
-  public OpenTelemetryMeterRegistryBuilder setBaseTimeUnit(TimeUnit baseTimeUnit) {
-    this.baseTimeUnit = baseTimeUnit;
-    return this;
-  }
-
-  /**
-   * Enables the "Prometheus mode" - this will simulate the behavior of Micrometer's {@code
-   * PrometheusMeterRegistry}. The instruments will be renamed to match Micrometer instrument
-   * naming, and the base time unit will be set to seconds.
-   *
-   * <p>Set this to {@code true} if you are using the Prometheus metrics exporter.
-   */
-  @CanIgnoreReturnValue
-  public OpenTelemetryMeterRegistryBuilder setPrometheusMode(boolean prometheusMode) {
-    this.prometheusMode = prometheusMode;
     return this;
   }
 

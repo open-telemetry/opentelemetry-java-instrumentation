@@ -68,7 +68,13 @@ Timer and distribution summary maximum values are available from their OpenTelem
 
 Base units are used verbatim rather than translated to [UCUM](https://ucum.org/), so a base unit of
 `bytes` stays `bytes` rather than becoming `By`. The base time unit defaults to seconds and can be
-changed with `OpenTelemetryMeterRegistryBuilder.setBaseTimeUnit(TimeUnit)`.
+changed with the experimental `Experimental#setBaseTimeUnit` helper:
+
+```java
+OpenTelemetryMeterRegistryBuilder builder = OpenTelemetryMeterRegistry.builder(openTelemetry);
+Experimental.setBaseTimeUnit(builder, TimeUnit.MILLISECONDS);
+MeterRegistry meterRegistry = builder.build();
+```
 
 ### Descriptions
 
@@ -144,8 +150,9 @@ Encoding the unit in the metric name is contrary to the OpenTelemetry naming rul
 disabled by default and should only be enabled for Prometheus compatibility.
 
 ```java
-MeterRegistry meterRegistry =
-    OpenTelemetryMeterRegistry.builder(openTelemetry).setPrometheusMode(true).build();
+OpenTelemetryMeterRegistryBuilder builder = OpenTelemetryMeterRegistry.builder(openTelemetry);
+Experimental.setPrometheusMode(builder, true);
+MeterRegistry meterRegistry = builder.build();
 ```
 
 For [custom meters](#custom-meters), the naming convention is applied to the base name before the
