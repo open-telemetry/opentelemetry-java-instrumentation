@@ -41,6 +41,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
+  private final boolean downstreamOfContextBoundary;
   private final boolean hasExplicitContext;
   private final boolean hasContextToPropagate;
 
@@ -50,7 +51,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
    * leaves the context active during signals unchanged.
    */
   public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
-    this(subscriber, ctx, io.opentelemetry.context.Context.current(), false);
+    this(subscriber, ctx, io.opentelemetry.context.Context.current(), false, false);
   }
 
   /**
@@ -62,16 +63,28 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
       Subscriber<? super T> subscriber,
       Context ctx,
       io.opentelemetry.context.Context contextToPropagate) {
-    this(subscriber, ctx, contextToPropagate, true);
+    this(subscriber, ctx, contextToPropagate, true, false);
+  }
+
+  TracingSubscriber(
+      Subscriber<? super T> subscriber, Context ctx, boolean downstreamOfContextBoundary) {
+    this(
+        subscriber,
+        ctx,
+        io.opentelemetry.context.Context.current(),
+        false,
+        downstreamOfContextBoundary);
   }
 
   private TracingSubscriber(
       Subscriber<? super T> subscriber,
       Context ctx,
       io.opentelemetry.context.Context contextToPropagate,
-      boolean explicitFallback) {
+      boolean explicitFallback,
+      boolean downstreamOfContextBoundary) {
     this.subscriber = subscriber;
     this.context = ctx;
+    this.downstreamOfContextBoundary = downstreamOfContextBoundary;
     io.opentelemetry.context.Context storedContext =
         ContextPropagationOperator.getOpenTelemetryContext(ctx, null);
     this.traceContext = storedContext != null ? storedContext : contextToPropagate;
@@ -133,7 +146,8 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   @Nullable
   private Scope openScope(@Nullable io.opentelemetry.context.Context context) {
     return context != null
-            && (!ContextPropagationOperator.isApplicationContextBoundaryActive()
+            && (!downstreamOfContextBoundary
+                || !ContextPropagationOperator.isApplicationContextBoundaryActive()
                 || hasExplicitContext)
         ? context.makeCurrent()
         : null;

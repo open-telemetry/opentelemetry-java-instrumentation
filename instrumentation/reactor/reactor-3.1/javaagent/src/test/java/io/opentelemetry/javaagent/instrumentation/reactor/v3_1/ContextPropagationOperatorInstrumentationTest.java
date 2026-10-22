@@ -39,6 +39,7 @@ import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
@@ -356,6 +357,86 @@ class ContextPropagationOperatorInstrumentationTest {
       operator.resetOnEachOperator();
     }
     assertThat(observed.get()).isEqualTo(rootApplicationContext ? null : "application");
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "false,false,false",
+    "false,false,true",
+    "false,true,false",
+    "false,true,true",
+    "true,false,false",
+    "true,false,true",
+    "true,true,false",
+    "true,true,true"
+  })
+  void capturedContextForPreviouslySubscribedPublisher(
+      boolean flux, boolean schedulerHop, boolean sameContext) {
+    assumeTrue(!schedulerHop || schedulerHooksSupported());
+    Context applicationContext = Context.root().with(APPLICATION_KEY, "application");
+    Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
+    Context subscriptionContext = Context.root().with(APPLICATION_KEY, "subscription");
+    Context independentContext =
+        sameContext ? subscriptionContext : Context.root().with(APPLICATION_KEY, "independent");
+    AtomicReference<MonoSink<String>> sink = new AtomicReference<>();
+    AtomicReference<String> independentValue = new AtomicReference<>();
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
+    Scheduler scheduler = schedulerHop ? Schedulers.newSingle("context-boundary-test") : null;
+    try {
+      try (Scope ignored = independentContext.makeCurrent()) {
+        Mono.<String>create(sink::set)
+            .map(
+                value -> {
+                  independentValue.set(Context.current().get(APPLICATION_KEY));
+                  return value;
+                })
+            .subscribe();
+      }
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        if (flux) {
+          Flux<String> boundary =
+              ContextPropagationOperator.runWithContext(
+                  Flux.just("boundary"), operationContext, applicationContext);
+          if (schedulerHop) {
+            boundary = boundary.publishOn(scheduler);
+          }
+          boundary
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("application");
+                    sink.get().success("independent");
+                    assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("application");
+                  })
+              .blockLast();
+        } else {
+          Mono<String> boundary =
+              ContextPropagationOperator.runWithContext(
+                  Mono.just("boundary"), operationContext, applicationContext);
+          if (schedulerHop) {
+            boundary = boundary.publishOn(scheduler);
+          }
+          boundary
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("application");
+                    sink.get().success("independent");
+                    assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("application");
+                  })
+              .block();
+        }
+        assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+      }
+    } finally {
+      operator.resetOnEachOperator();
+      if (scheduler != null) {
+        scheduler.dispose();
+      }
+    }
+    assertThat(independentValue.get()).isEqualTo(sameContext ? "subscription" : "independent");
   }
 
   @Test

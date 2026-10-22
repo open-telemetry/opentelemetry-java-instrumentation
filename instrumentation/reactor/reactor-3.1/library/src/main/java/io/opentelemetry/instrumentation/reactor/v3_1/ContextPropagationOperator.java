@@ -360,7 +360,7 @@ public final class ContextPropagationOperator {
     return !(publisher instanceof Fuseable.ScalarCallable);
   }
 
-  private static final class ContextBoundaryMono<T> extends Mono<T> {
+  private static final class ContextBoundaryMono<T> extends Mono<T> implements Scannable {
     private final Mono<T> source;
     private final Context operationContext;
     private final Context applicationContext;
@@ -379,9 +379,16 @@ public final class ContextPropagationOperator {
             new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
       }
     }
+
+    @Override
+    @Nullable
+    @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
+    public Object scanUnsafe(Attr attr) {
+      return attr == Attr.PARENT ? source : null;
+    }
   }
 
-  private static final class ContextBoundaryFlux<T> extends Flux<T> {
+  private static final class ContextBoundaryFlux<T> extends Flux<T> implements Scannable {
     private final Flux<T> source;
     private final Context operationContext;
     private final Context applicationContext;
@@ -399,6 +406,13 @@ public final class ContextPropagationOperator {
         source.subscribe(
             new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
       }
+    }
+
+    @Override
+    @Nullable
+    @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
+    public Object scanUnsafe(Attr attr) {
+      return attr == Attr.PARENT ? source : null;
     }
   }
 
@@ -484,8 +498,21 @@ public final class ContextPropagationOperator {
 
     @Override
     public CoreSubscriber<? super T> apply(Scannable publisher, CoreSubscriber<? super T> sub) {
-      return new TracingSubscriber<>(sub, sub.currentContext());
+      return new TracingSubscriber<>(
+          sub, sub.currentContext(), isContextBoundaryDownstream(publisher));
     }
+  }
+
+  private static boolean isContextBoundaryDownstream(Scannable publisher) {
+    return isContextBoundary(publisher)
+        || publisher.parents().anyMatch(ContextPropagationOperator::isContextBoundary);
+  }
+
+  private static boolean isContextBoundary(Scannable scannable) {
+    // The javaagent relocates this class but preserves the nested class suffix.
+    String className = scannable.getClass().getName();
+    return className.endsWith("ContextPropagationOperator$ContextBoundaryMono")
+        || className.endsWith("ContextPropagationOperator$ContextBoundaryFlux");
   }
 
   static void subscribeInActiveSpan(CoreSubscriber<? super Object> actual, Object value) {

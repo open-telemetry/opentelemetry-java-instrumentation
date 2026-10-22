@@ -33,6 +33,7 @@ import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoSink;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -295,6 +296,71 @@ class ContextBoundaryTest {
       scheduler.dispose();
     }
     assertThat(observed.get()).isSameAs(application);
+  }
+
+  @ParameterizedTest
+  @MethodSource("publisherKindsAndSchedulerHops")
+  void preservesCapturedContextForIndependentPublisher(
+      boolean mono, boolean schedulerHop, boolean sameContext) {
+    assumeTrue(!schedulerHop || schedulerHooksSupported());
+    operator.registerOnEachOperator();
+    Context independentSubscriptionContext = sameContext ? UNRELATED : INNER;
+    AtomicReference<MonoSink<String>> sink = new AtomicReference<>();
+    AtomicReference<Context> independentContext = new AtomicReference<>();
+    try (Scope ignored = independentSubscriptionContext.makeCurrent()) {
+      Mono.<String>create(sink::set)
+          .map(
+              value -> {
+                independentContext.set(Context.current());
+                return value;
+              })
+          .subscribe();
+    }
+
+    Scheduler scheduler = schedulerHop ? Schedulers.newSingle("context-boundary-test") : null;
+    try {
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        if (mono) {
+          Mono<String> boundary =
+              ContextPropagationOperator.runWithContext(
+                  Mono.just("boundary"), OPERATION, APPLICATION);
+          if (schedulerHop) {
+            boundary = boundary.publishOn(scheduler);
+          }
+          boundary
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    assertThat(Context.current()).isSameAs(APPLICATION);
+                    sink.get().success("independent");
+                    assertThat(Context.current()).isSameAs(APPLICATION);
+                  })
+              .block();
+        } else {
+          Flux<String> boundary =
+              ContextPropagationOperator.runWithContext(
+                  Flux.just("boundary"), OPERATION, APPLICATION);
+          if (schedulerHop) {
+            boundary = boundary.publishOn(scheduler);
+          }
+          boundary
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    assertThat(Context.current()).isSameAs(APPLICATION);
+                    sink.get().success("independent");
+                    assertThat(Context.current()).isSameAs(APPLICATION);
+                  })
+              .blockLast();
+        }
+        assertThat(Context.current()).isSameAs(UNRELATED);
+      }
+    } finally {
+      if (scheduler != null) {
+        scheduler.dispose();
+      }
+    }
+    assertThat(independentContext.get()).isSameAs(independentSubscriptionContext);
   }
 
   @ParameterizedTest
@@ -572,6 +638,17 @@ class ContextBoundaryTest {
     } catch (NoSuchMethodException ignored) {
       return false;
     }
+  }
+
+  private static Stream<Arguments> publisherKindsAndSchedulerHops() {
+    return Stream.of(false, true)
+        .flatMap(
+            schedulerHop ->
+                Stream.of(false, true)
+                    .flatMap(
+                        sameContext ->
+                            Stream.of(true, false)
+                                .map(mono -> Arguments.of(mono, schedulerHop, sameContext))));
   }
 
   private static MethodHandle getMonoContextWriteMethod() {
