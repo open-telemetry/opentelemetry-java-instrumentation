@@ -13,6 +13,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.LoggerBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
@@ -38,7 +39,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -49,8 +49,6 @@ import javax.annotation.Nullable;
  * appropriate for that library and delegate to this class to create the {@link Instrumenter}.
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
-
-  private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -333,7 +331,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return tracerBuilder.build();
   }
 
-  io.opentelemetry.api.logs.Logger buildLogger() {
+  Logger buildLogger() {
     LoggerBuilder loggerBuilder = openTelemetry.getLogsBridge().loggerBuilder(instrumentationName);
     if (instrumentationVersion != null) {
       loggerBuilder.setInstrumentationVersion(instrumentationVersion);
