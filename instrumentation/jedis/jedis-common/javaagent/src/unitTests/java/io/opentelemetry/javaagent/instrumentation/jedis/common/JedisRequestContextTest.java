@@ -44,9 +44,10 @@ class JedisRequestContextTest {
   @Test
   void nestedBatchCaptureRestoresEnclosingContext() {
     JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
+    assertThat(JedisRequestContext.attach()).isNull();
     Throwable firstServerFailure = new IllegalStateException("first server failure");
     Throwable laterServerFailure = new IllegalStateException("later server failure");
-    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch(new Object());
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
 
     JedisRequestContext.captureServerError(firstServerFailure);
     JedisRequestContext.captureServerError(laterServerFailure);
@@ -54,13 +55,25 @@ class JedisRequestContextTest {
     assertThat(JedisRequestContext.attach()).isNull();
 
     Throwable nextServerFailure = new IllegalStateException("next server failure");
-    batchContext = JedisRequestContext.attachForBatch(new Object());
+    batchContext = JedisRequestContext.attachForBatch();
     JedisRequestContext.captureServerError(nextServerFailure);
     Throwable terminalClientFailure = new IllegalStateException("terminal client failure");
     assertThat(batchContext.detachAndEnd(terminalClientFailure)).isSameAs(terminalClientFailure);
     assertThat(JedisRequestContext.attach()).isNull();
 
     assertThat(outerContext.detachAndEnd(null)).isNull();
+    assertDetached();
+  }
+
+  @Test
+  void nestedCommandCaptureDoesNotFailEnclosingBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    JedisRequestContext<Object> nestedContext = JedisRequestContext.attach();
+    Throwable nestedServerFailure = new IllegalStateException("nested server failure");
+
+    JedisRequestContext.captureServerError(nestedServerFailure);
+    assertThat(nestedContext.detachAndEnd(null)).isNull();
+    assertThat(batchContext.detachAndEnd(null)).isNull();
     assertDetached();
   }
 
@@ -81,7 +94,7 @@ class JedisRequestContextTest {
       Throwable laterServerFailure,
       Throwable terminalFailure,
       Throwable expectedFailure) {
-    JedisRequestContext<Object> context = JedisRequestContext.attachForBatch(new Object());
+    JedisRequestContext<Object> context = JedisRequestContext.attachForBatch();
     try {
       JedisRequestContext.captureServerError(firstServerFailure);
       JedisRequestContext.captureServerError(laterServerFailure);

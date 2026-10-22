@@ -9,8 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSinglet
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
@@ -62,65 +60,25 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SyncAdvice {
 
-    public static class AdviceScope {
-      @Nullable private final Context context;
-      @Nullable private final Scope scope;
-      private final JedisRequest request;
-      @Nullable private final JedisRequestContext<JedisRequest> requestContext;
-
-      private AdviceScope(
-          @Nullable Context context,
-          @Nullable Scope scope,
-          JedisRequest request,
-          @Nullable JedisRequestContext<JedisRequest> requestContext) {
-        this.context = context;
-        this.scope = scope;
-        this.request = request;
-        this.requestContext = requestContext;
-      }
-
-      @Nullable
-      public static AdviceScope start(Object pipeline) {
-        List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
-        if (requests.isEmpty()) {
-          // An empty pipeline sends nothing to the server, and with no captured request there is no
-          // connection to derive server attributes from, so it is not reported as a batch span.
-          return null;
-        }
-        JedisRequest request = JedisRequest.createPipeline(requests);
-        Context parentContext = Context.current();
-        if (!instrumenter().shouldStart(parentContext, request)) {
-          return new AdviceScope(null, null, request, JedisRequestContext.attachForBatch(request));
-        }
-        Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(
-            context, context.makeCurrent(), request, JedisRequestContext.attachForBatch(request));
-      }
-
-      public void end(@Nullable Throwable throwable) {
-        if (scope != null) {
-          scope.close();
-        }
-        Throwable completionThrowable =
-            requestContext != null ? requestContext.detachAndEnd(throwable) : throwable;
-        if (context != null) {
-          instrumenter().end(context, request, null, completionThrowable);
-        }
-      }
-    }
-
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.This Object pipeline) {
-      return AdviceScope.start(pipeline);
+    public static JedisRequestContext<JedisRequest> onEnter(@Advice.This Object pipeline) {
+      List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
+      if (requests.isEmpty()) {
+        // An empty pipeline sends nothing to the server, and with no captured request there is no
+        // connection to derive server attributes from, so it is not reported as a batch span.
+        return null;
+      }
+      JedisRequest request = JedisRequest.createPipeline(requests);
+      return JedisRequestContext.startBatch(instrumenter(), request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope != null) {
-        adviceScope.end(throwable);
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
       }
     }
   }

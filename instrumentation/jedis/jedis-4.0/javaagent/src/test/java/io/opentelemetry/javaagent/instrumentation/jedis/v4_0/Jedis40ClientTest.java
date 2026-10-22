@@ -242,6 +242,67 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void nestedTransactionServerErrorDoesNotFailSuccessfulOuterPipeline() {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    testing.clearData();
+
+    List<Object> nestedResults = new ArrayList<>();
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                Transaction nested = nestedClient.multi();
+                nested.get("nested-wrong-type");
+                nestedResults.addAll(nested.exec());
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertThat(nestedResults).hasSize(1);
+    assertThat(nestedResults.get(0)).isInstanceOf(JedisDataException.class);
+    assertThat((Throwable) nestedResults.get(0)).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType(null);
+  }
+
+  @Test
+  void caughtNestedCommandServerErrorDoesNotFailSuccessfulOuterPipeline() {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    testing.clearData();
+
+    List<JedisDataException> nestedErrors = new ArrayList<>();
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                try {
+                  nestedClient.get("nested-wrong-type");
+                } catch (JedisDataException error) {
+                  nestedErrors.add(error);
+                }
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertThat(nestedErrors).hasSize(1);
+    assertThat(nestedErrors.get(0)).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType(null);
+  }
+
+  @Test
   void terminalTransactionServerFailureWinsOverQueuedError() {
     Jedis client = new Jedis(host, port);
     cleanup.deferCleanup(client::disconnect);

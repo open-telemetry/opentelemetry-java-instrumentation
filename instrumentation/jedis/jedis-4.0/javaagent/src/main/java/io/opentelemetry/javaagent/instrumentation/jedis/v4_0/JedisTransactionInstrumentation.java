@@ -9,8 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSinglet
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
@@ -40,24 +38,14 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecAdvice {
 
-    public static class AdviceScope {
-      @Nullable private final Context context;
-      @Nullable private final Scope scope;
-      @Nullable private final JedisRequest request;
+    public static class AdviceState {
       @Nullable private final JedisRequestContext<JedisRequest> requestContext;
 
-      private AdviceScope(
-          @Nullable Context context,
-          @Nullable Scope scope,
-          @Nullable JedisRequest request,
-          @Nullable JedisRequestContext<JedisRequest> requestContext) {
-        this.context = context;
-        this.scope = scope;
-        this.request = request;
+      private AdviceState(@Nullable JedisRequestContext<JedisRequest> requestContext) {
         this.requestContext = requestContext;
       }
 
-      public static AdviceScope start(Object transaction) {
+      public static AdviceState start(Object transaction) {
         List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(transaction);
         // Suppress the EXEC framing command's own span; the transaction is reported as a single
         // batch span here.
@@ -66,38 +54,29 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
           // An empty transaction sends nothing for the batch, and with no captured request there
           // is no connection to derive server attributes from, so it is not reported as a batch
           // span.
-          return new AdviceScope(null, null, null, null);
+          return new AdviceState(null);
         }
         JedisRequest request = JedisRequest.createTransaction(requests);
-        Context parentContext = Context.current();
-        if (!instrumenter().shouldStart(parentContext, request)) {
-          return new AdviceScope(null, null, null, null);
-        }
-        Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(
-            context, context.makeCurrent(), request, JedisRequestContext.attachForBatch(request));
+        return new AdviceState(JedisRequestContext.startBatch(instrumenter(), request));
       }
 
       public void end(@Nullable Throwable throwable) {
         JedisPipelineContext.exitTransactionFraming();
-        if (scope != null) {
-          scope.close();
-          Throwable completionThrowable =
-              requestContext != null ? requestContext.detachAndEnd(throwable) : throwable;
-          instrumenter().end(context, request, null, completionThrowable);
+        if (requestContext != null) {
+          requestContext.detachAndEnd(throwable);
         }
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.This Object transaction) {
-      return AdviceScope.start(transaction);
+    public static AdviceState onEnter(@Advice.This Object transaction) {
+      return AdviceState.start(transaction);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
-      adviceScope.end(throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceState adviceState) {
+      adviceState.end(throwable);
     }
   }
 

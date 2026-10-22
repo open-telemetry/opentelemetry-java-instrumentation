@@ -6,38 +6,63 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.common;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
 public class JedisRequestContext<T> {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
 
-  @Nullable private Instrumenter<T, Void> instrumenter;
-  @Nullable private T request;
-  @Nullable private Context context;
+  @Nullable private Operation<?> operation;
+  @Nullable private Scope scope;
   @Nullable private Throwable firstServerErrorThrowable;
   @Nullable private JedisRequestContext<?> previousContext;
+  private boolean hasRequest;
   private boolean captureServerErrors;
 
   private JedisRequestContext() {}
 
   @Nullable
   public static <T> JedisRequestContext<T> attach() {
-    JedisRequestContext<T> requestContext = current();
-    // if there already is an active request context don't start a new one
-    if (requestContext != null) {
-      return null;
+    JedisRequestContext<?> requestContext = contextThreadLocal.get();
+    if (requestContext == null) {
+      JedisRequestContext<T> newContext = new JedisRequestContext<>();
+      contextThreadLocal.set(newContext);
+      return newContext;
     }
-    requestContext = new JedisRequestContext<>();
-    contextThreadLocal.set(requestContext);
+    // An independent command inside a batch must not put a handled error in the batch.
+    if (requestContext.captureServerErrors) {
+      JedisRequestContext<T> nestedContext = new JedisRequestContext<>();
+      nestedContext.previousContext = requestContext;
+      contextThreadLocal.set(nestedContext);
+      return nestedContext;
+    }
+    // Do not start another context for a command delegated by an active ordinary command.
+    return null;
+  }
+
+  public static <T> JedisRequestContext<T> startBatch(
+      Instrumenter<T, Void> instrumenter, T request) {
+    Context parentContext = Context.current();
+    Context context = null;
+    Scope scope = null;
+    if (instrumenter.shouldStart(parentContext, request)) {
+      context = instrumenter.start(parentContext, request);
+      scope = context.makeCurrent();
+    }
+
+    JedisRequestContext<T> requestContext = attachForBatch();
+    requestContext.scope = scope;
+    if (context != null) {
+      requestContext.operation = new Operation<>(instrumenter, context, request);
+    }
     return requestContext;
   }
 
-  @Nullable
-  public static <T> JedisRequestContext<T> attachForBatch(T request) {
+  static <T> JedisRequestContext<T> attachForBatch() {
     JedisRequestContext<T> requestContext = new JedisRequestContext<>();
     requestContext.previousContext = contextThreadLocal.get();
-    requestContext.request = request;
+    requestContext.hasRequest = true;
     requestContext.captureServerErrors = true;
     contextThreadLocal.set(requestContext);
     return requestContext;
@@ -45,6 +70,9 @@ public class JedisRequestContext<T> {
 
   @Nullable
   public Throwable detachAndEnd(@Nullable Throwable methodThrowable) {
+    if (scope != null) {
+      scope.close();
+    }
     if (contextThreadLocal.get() == this) {
       if (previousContext == null) {
         contextThreadLocal.remove();
@@ -56,8 +84,8 @@ public class JedisRequestContext<T> {
     if (completionThrowable == null && captureServerErrors) {
       completionThrowable = firstServerErrorThrowable;
     }
-    if (request != null && instrumenter != null && context != null) {
-      endSpan(instrumenter, context, request, completionThrowable);
+    if (operation != null) {
+      operation.end(completionThrowable);
     }
     return completionThrowable;
   }
@@ -66,7 +94,7 @@ public class JedisRequestContext<T> {
     if (throwable == null) {
       return;
     }
-    JedisRequestContext<?> requestContext = current();
+    JedisRequestContext<?> requestContext = contextThreadLocal.get();
     if (requestContext != null
         && requestContext.captureServerErrors
         && requestContext.firstServerErrorThrowable == null) {
@@ -82,21 +110,14 @@ public class JedisRequestContext<T> {
       Context context,
       T request,
       @Nullable Throwable throwable) {
-    JedisRequestContext<T> requestContext = current();
-    if (requestContext == null || requestContext.request != null) {
-      // end the span immediately if we are already tracking a request
+    JedisRequestContext<?> requestContext = contextThreadLocal.get();
+    if (requestContext == null || requestContext.hasRequest) {
+      // End immediately when there is no enclosing operation or a batch is tracking the request.
       endSpan(instrumenter, context, request, throwable);
     } else {
-      requestContext.instrumenter = instrumenter;
-      requestContext.context = context;
-      requestContext.request = request;
+      requestContext.operation = new Operation<>(instrumenter, context, request);
+      requestContext.hasRequest = true;
     }
-  }
-
-  @Nullable
-  @SuppressWarnings("unchecked") // we lose the generic type in ThreadLocal
-  private static <T> JedisRequestContext<T> current() {
-    return (JedisRequestContext<T>) contextThreadLocal.get();
   }
 
   private static <T> void endSpan(
@@ -105,5 +126,21 @@ public class JedisRequestContext<T> {
       T request,
       @Nullable Throwable throwable) {
     instrumenter.end(context, request, null, throwable);
+  }
+
+  private static final class Operation<T> {
+    private final Instrumenter<T, Void> instrumenter;
+    private final Context context;
+    private final T request;
+
+    private Operation(Instrumenter<T, Void> instrumenter, Context context, T request) {
+      this.instrumenter = instrumenter;
+      this.context = context;
+      this.request = request;
+    }
+
+    private void end(@Nullable Throwable throwable) {
+      endSpan(instrumenter, context, request, throwable);
+    }
   }
 }
