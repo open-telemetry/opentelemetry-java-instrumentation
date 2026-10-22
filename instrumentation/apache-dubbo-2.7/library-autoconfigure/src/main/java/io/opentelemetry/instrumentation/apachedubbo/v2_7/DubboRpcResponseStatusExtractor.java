@@ -46,16 +46,19 @@ final class DubboRpcResponseStatusExtractor
       DubboRequest request,
       @Nullable Result response,
       @Nullable Throwable error) {
-    if (!semconvSelection.get().emitPreview() || isClient) {
+    if (!semconvSelection.get().emitPreview()) {
       return;
     }
     String statusCode = DubboRpcStatus.getStatusCode(response, error);
-    if (statusCode == null) {
-      return;
-    }
-    if (!DubboRpcStatus.isError(statusCode, isClient)
-        && (!"OK".equals(statusCode) || !DubboRpcStatus.hasException(response, error))) {
+    if (statusCode != null && DubboRpcStatus.isError(statusCode, isClient)) {
+      attributes.put(ERROR_TYPE, statusCode);
+    } else if (statusCode != null && !"OK".equals(statusCode)) {
       attributes.remove(ERROR_TYPE);
+    } else {
+      String errorType = DubboRpcStatus.getExceptionType(response, error);
+      if (errorType != null) {
+        attributes.put(ERROR_TYPE, errorType);
+      }
     }
   }
 
@@ -65,22 +68,13 @@ final class DubboRpcResponseStatusExtractor
       DubboRequest request,
       @Nullable Result response,
       @Nullable Throwable error) {
-    if (!semconvSelection.get().emitPreview()) {
+    String statusCode =
+        semconvSelection.get().emitPreview() ? DubboRpcStatus.getStatusCode(response, error) : null;
+    if (statusCode == null || "OK".equals(statusCode)) {
       SpanStatusExtractor.<DubboRequest, Result>getDefault()
           .extract(spanStatusBuilder, request, response, error);
-      return;
-    }
-    String statusCode = DubboRpcStatus.getStatusCode(response, error);
-    if (statusCode == null) {
-      SpanStatusExtractor.<DubboRequest, Result>getDefault()
-          .extract(spanStatusBuilder, request, response, error);
-      return;
-    }
-    if (DubboRpcStatus.isError(statusCode, isClient)) {
+    } else if (DubboRpcStatus.isError(statusCode, isClient)) {
       spanStatusBuilder.setStatus(StatusCode.ERROR);
-    } else if ("OK".equals(statusCode) && DubboRpcStatus.hasException(response, error)) {
-      SpanStatusExtractor.<DubboRequest, Result>getDefault()
-          .extract(spanStatusBuilder, request, response, error);
     } else {
       spanStatusBuilder.setStatus(StatusCode.UNSET);
     }

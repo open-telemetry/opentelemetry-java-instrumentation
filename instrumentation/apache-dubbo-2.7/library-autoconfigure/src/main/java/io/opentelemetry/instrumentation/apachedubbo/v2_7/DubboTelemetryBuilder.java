@@ -85,14 +85,13 @@ public final class DubboTelemetryBuilder {
    */
   @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   public DubboTelemetry build() {
-    DubboRpcAttributesGetter clientRpcAttributesGetter = new DubboRpcAttributesGetter(true);
-    DubboRpcAttributesGetter serverRpcAttributesGetter = new DubboRpcAttributesGetter(false);
+    DubboRpcAttributesGetter rpcAttributesGetter = new DubboRpcAttributesGetter();
     DubboRpcResponseStatusExtractor clientStatusExtractor =
         new DubboRpcResponseStatusExtractor(true);
     DubboRpcResponseStatusExtractor serverStatusExtractor =
         new DubboRpcResponseStatusExtractor(false);
     SpanNameExtractor<DubboRequest> spanNameExtractor =
-        RpcSpanNameExtractor.create(clientRpcAttributesGetter);
+        RpcSpanNameExtractor.create(rpcAttributesGetter);
     // Initialize before customization: a user-provided wrapper may hide the RPC extractor
     // from InstrumenterBuilder's automatic initialization.
     ((OpenTelemetryConfigurable) spanNameExtractor).internalInitialize(openTelemetry);
@@ -109,21 +108,21 @@ public final class DubboTelemetryBuilder {
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
             .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(serverRpcAttributesGetter))
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(serverStatusExtractor)
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(attributesExtractors)
             .setSpanStatusExtractor(serverStatusExtractor)
             .addOperationMetrics(RpcServerMetrics.get())
             .addContextCustomizer(
-                RpcMetricsContextCustomizers.dualEmitContextCustomizer(serverRpcAttributesGetter));
+                RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
 
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor)
             .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
-            .addAttributesExtractor(RpcClientAttributesExtractor.create(clientRpcAttributesGetter))
+            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(clientStatusExtractor)
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
@@ -131,7 +130,7 @@ public final class DubboTelemetryBuilder {
             .setSpanStatusExtractor(clientStatusExtractor)
             .addOperationMetrics(RpcClientMetrics.get())
             .addContextCustomizer(
-                RpcMetricsContextCustomizers.dualEmitContextCustomizer(clientRpcAttributesGetter));
+                RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return new DubboTelemetry(

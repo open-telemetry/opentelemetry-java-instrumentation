@@ -15,29 +15,10 @@ final class DubboRpcStatus {
 
   private static final String STATUS_RPC_EXCEPTION = "org.apache.dubbo.rpc.StatusRpcException";
 
-  private static final ClassValue<StatusRpcExceptionAccessor> STATUS_RPC_EXCEPTION_ACCESSORS =
-      new ClassValue<StatusRpcExceptionAccessor>() {
-        @Override
-        protected StatusRpcExceptionAccessor computeValue(Class<?> type) {
-          try {
-            return new StatusRpcExceptionAccessor(type.getMethod("getStatus"));
-          } catch (NoSuchMethodException e) {
-            return new StatusRpcExceptionAccessor(null);
-          }
-        }
-      };
+  @Nullable private static final Method GET_STATUS = findMethod(STATUS_RPC_EXCEPTION, "getStatus");
 
-  private static final ClassValue<StatusCodeAccessor> STATUS_CODE_ACCESSORS =
-      new ClassValue<StatusCodeAccessor>() {
-        @Override
-        protected StatusCodeAccessor computeValue(Class<?> type) {
-          try {
-            return new StatusCodeAccessor(type.getField("code"));
-          } catch (NoSuchFieldException e) {
-            return new StatusCodeAccessor(null);
-          }
-        }
-      };
+  @Nullable
+  private static final Field STATUS_CODE = findField("org.apache.dubbo.rpc.TriRpcStatus", "code");
 
   @Nullable
   static String getStatusCode(@Nullable Result response, @Nullable Throwable error) {
@@ -49,32 +30,12 @@ final class DubboRpcStatus {
   }
 
   @Nullable
-  static String getErrorType(
-      @Nullable Result response, @Nullable Throwable error, boolean isClient) {
-    String statusCode = getStatusCode(response, error);
-    if (statusCode != null) {
-      if (isError(statusCode, isClient)) {
-        return statusCode;
-      }
-      if (!"OK".equals(statusCode)) {
-        return null;
-      }
-    }
-    Throwable exception = getException(response, error);
-    return exception == null ? null : exception.getClass().getName();
-  }
-
-  static boolean hasException(@Nullable Result response, @Nullable Throwable error) {
-    return getException(response, error) != null;
-  }
-
-  @Nullable
-  private static Throwable getException(@Nullable Result response, @Nullable Throwable error) {
+  static String getExceptionType(@Nullable Result response, @Nullable Throwable error) {
     Throwable exception = unwrap(error);
     if (exception == null && response != null) {
       exception = unwrap(response.getException());
     }
-    return exception;
+    return exception == null ? null : exception.getClass().getName();
   }
 
   static boolean isError(String statusCode, boolean isClient) {
@@ -103,37 +64,37 @@ final class DubboRpcStatus {
       return null;
     }
     try {
-      Method getStatus = STATUS_RPC_EXCEPTION_ACCESSORS.get(error.getClass()).getStatus;
-      if (getStatus == null) {
+      if (GET_STATUS == null) {
         return null;
       }
-      Object status = getStatus.invoke(error);
-      if (status == null) {
+      Object status = GET_STATUS.invoke(error);
+      if (status == null || STATUS_CODE == null) {
         return null;
       }
-      Field code = STATUS_CODE_ACCESSORS.get(status.getClass()).code;
-      Object statusCode = code == null ? null : code.get(status);
+      Object statusCode = STATUS_CODE.get(status);
       return statusCode instanceof Enum ? ((Enum<?>) statusCode).name() : null;
     } catch (ReflectiveOperationException | RuntimeException e) {
       return null;
     }
   }
 
-  private static final class StatusRpcExceptionAccessor {
-
-    @Nullable private final Method getStatus;
-
-    private StatusRpcExceptionAccessor(@Nullable Method getStatus) {
-      this.getStatus = getStatus;
+  @Nullable
+  private static Method findMethod(String className, String methodName) {
+    try {
+      Class<?> type = Class.forName(className, false, DubboRpcStatus.class.getClassLoader());
+      return type.getMethod(methodName);
+    } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+      return null;
     }
   }
 
-  private static final class StatusCodeAccessor {
-
-    @Nullable private final Field code;
-
-    private StatusCodeAccessor(@Nullable Field code) {
-      this.code = code;
+  @Nullable
+  private static Field findField(String className, String fieldName) {
+    try {
+      Class<?> type = Class.forName(className, false, DubboRpcStatus.class.getClassLoader());
+      return type.getField(fieldName);
+    } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+      return null;
     }
   }
 
