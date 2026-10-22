@@ -44,10 +44,6 @@ public class MetricConfiguration {
     }
   }
 
-  public void addUnstableMetricDef(MetricDef def) {
-    addMetricDef(def, true, null);
-  }
-
   boolean isUnstable(MetricDef def) {
     return unstableSet.contains(def);
   }

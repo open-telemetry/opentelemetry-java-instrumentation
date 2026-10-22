@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -40,8 +39,6 @@ class MetricRegistrar implements AutoCloseable {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationScope;
   @Nullable private final String version;
-  private final Map<String, Meter> meters = new ConcurrentHashMap<>();
-  private final Map<String, Meter> unstableMeters = new ConcurrentHashMap<>();
   private final Collection<AutoCloseable> instruments = ConcurrentHashMap.newKeySet();
   private final IncludeExclude metrics;
   private final IncludeExclude unstableMetrics;
@@ -277,22 +274,16 @@ class MetricRegistrar implements AutoCloseable {
   }
 
   private Meter getMeter(boolean unstable, @Nullable String schemaUrl) {
-    return (unstable ? unstableMeters : meters)
-        .computeIfAbsent(
-            schemaUrl == null ? "" : schemaUrl,
-            schema -> {
-              MeterBuilder builder =
-                  openTelemetry.getMeterProvider().meterBuilder(instrumentationScope);
-              if (version != null) {
-                builder.setInstrumentationVersion(version);
-              }
-              if (!schema.isEmpty()) {
-                builder.setSchemaUrl(schema);
-              }
-              return new FilteringMeter(
-                  builder.build(),
-                  name -> metrics.matches(name) && (!unstable || unstableMetrics.matches(name)));
-            });
+    MeterBuilder builder = openTelemetry.getMeterProvider().meterBuilder(instrumentationScope);
+    if (version != null) {
+      builder.setInstrumentationVersion(version);
+    }
+    if (schemaUrl != null) {
+      builder.setSchemaUrl(schemaUrl);
+    }
+    return new FilteringMeter(
+        builder.build(),
+        name -> metrics.matches(name) && (!unstable || unstableMetrics.matches(name)));
   }
 
   private void register(AutoCloseable instrument) {

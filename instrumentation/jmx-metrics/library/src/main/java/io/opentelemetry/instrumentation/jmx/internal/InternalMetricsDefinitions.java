@@ -108,22 +108,6 @@ public class InternalMetricsDefinitions {
     return result;
   }
 
-  /**
-   * Get internal metrics definitions for a given stability.
-   *
-   * @param stable true to get stable metrics, false to get unstable metrics
-   * @return list of metric definitions, may be empty
-   */
-  public List<MetricDef> getMetricDefs(boolean stable) {
-    List<MetricDef> result = new ArrayList<>();
-    for (RuleSet ruleSet : loadedRules) {
-      if (ruleSet.stable == stable) {
-        result.addAll(ruleSet.metricDefs);
-      }
-    }
-    return result;
-  }
-
   public void addMetricDefsTo(MetricConfiguration configuration) {
     for (RuleSet ruleSet : loadedRules) {
       for (MetricDef def : ruleSet.metricDefs) {
