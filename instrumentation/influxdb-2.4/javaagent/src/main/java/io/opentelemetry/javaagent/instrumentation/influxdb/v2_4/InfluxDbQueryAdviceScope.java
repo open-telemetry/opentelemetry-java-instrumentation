@@ -61,7 +61,16 @@ public class InfluxDbQueryAdviceScope {
         InfluxDbQuery.create(
             httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
     if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
-      return new InfluxDbQueryAdviceScope(callDepth, null, null, null);
+      Context current = Context.current();
+      Scope scope =
+          current.get(InfluxDbQueryState.KEY) != null
+                  || current.get(InfluxDbQueryState.RESPONSE_PROCESSING_STATE) != null
+              ? current
+                  .with(InfluxDbQueryState.KEY, null)
+                  .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null)
+                  .makeCurrent()
+              : null;
+      return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
     }
 
     InfluxDbQueryState queryState =

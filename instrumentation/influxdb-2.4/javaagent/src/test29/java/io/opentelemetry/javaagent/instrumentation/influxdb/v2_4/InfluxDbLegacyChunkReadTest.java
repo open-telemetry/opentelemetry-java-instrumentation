@@ -81,6 +81,28 @@ class InfluxDbLegacyChunkReadTest {
     }
   }
 
+  @Test
+  void whitespaceOnlyEndOfStreamIsNotRecordedAsFailure() {
+    InfluxDB client = client(new Buffer().writeUtf8(" \n\t"));
+    try {
+      client.query(QUERY, 1, result -> {});
+      assertTelemetry(null);
+    } finally {
+      client.close();
+    }
+  }
+
+  @Test
+  void truncatedJsonIsRecordedBeforeClientSwallowsIt() {
+    InfluxDB client = client(new Buffer().writeUtf8("{\"results\":["));
+    try {
+      client.query(QUERY, 1, result -> {});
+      assertTelemetry(EOFException.class.getName());
+    } finally {
+      client.close();
+    }
+  }
+
   private static InfluxDB client(Source source) {
     BufferedSource bufferedSource = Okio.buffer(source);
     OkHttpClient.Builder builder =

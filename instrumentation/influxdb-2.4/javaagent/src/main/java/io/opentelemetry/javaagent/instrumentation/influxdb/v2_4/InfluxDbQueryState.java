@@ -20,6 +20,8 @@ public final class InfluxDbQueryState {
       ContextKey.named("opentelemetry-influxdb-query");
   public static final ContextKey<InfluxDbQueryState> RESPONSE_PROCESSING_STATE =
       ContextKey.named("opentelemetry-influxdb-response-processing");
+  public static final ContextKey<ResponseDecodeState> RESPONSE_DECODE_STATE =
+      ContextKey.named("opentelemetry-influxdb-response-decode");
 
   private final InfluxDbQuery request;
   private final Context context;
@@ -54,12 +56,34 @@ public final class InfluxDbQueryState {
   }
 
   public void onFailure(Throwable error) {
-    boolean readFailure =
-        error instanceof IOException
+    boolean jsonEncodingFailure =
+        error.getClass().getName().equals("com.squareup.moshi.JsonEncodingException")
             || (error.getClass().getName().equals("org.influxdb.InfluxDBException")
-                && error.getCause() instanceof IOException);
+                && error.getCause() != null
+                && error
+                    .getCause()
+                    .getClass()
+                    .getName()
+                    .equals("com.squareup.moshi.JsonEncodingException"));
+    boolean readFailure =
+        !jsonEncodingFailure
+            && (error instanceof IOException
+                || (error.getClass().getName().equals("org.influxdb.InfluxDBException")
+                    && error.getCause() instanceof IOException));
     if (!readFailure || call == null || !call.isCanceled()) {
       callbackError = error;
+    }
+  }
+
+  public static final class ResponseDecodeState {
+    private boolean valueStarted;
+
+    public void markValueStarted() {
+      valueStarted = true;
+    }
+
+    public boolean valueStarted() {
+      return valueStarted;
     }
   }
 

@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.EOFException;
@@ -24,7 +25,8 @@ class InfluxDbChunkProcessorInstrumentation implements TypeInstrumentation {
     return namedOneOf(
         "org.influxdb.impl.InfluxDBImpl$JSONChunkProccesor",
         "org.influxdb.impl.InfluxDBImpl$MessagePackChunkProccesor",
-        "com.squareup.moshi.JsonAdapter");
+        "com.squareup.moshi.JsonAdapter",
+        "com.squareup.moshi.JsonUtf8Reader");
   }
 
   @Override
@@ -33,6 +35,8 @@ class InfluxDbChunkProcessorInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("fromJson").and(takesArgument(0, named("okio.BufferedSource"))),
         getClass().getName() + "$ReadAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("beginArray", "beginObject"), getClass().getName() + "$JsonReadAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -48,12 +52,48 @@ class InfluxDbChunkProcessorInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ReadAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Scope onEnter() {
+      Context current = Context.current();
+      if (current.get(InfluxDbQueryState.RESPONSE_PROCESSING_STATE) == null) {
+        return null;
+      }
+      return current
+          .with(
+              InfluxDbQueryState.RESPONSE_DECODE_STATE,
+              new InfluxDbQueryState.ResponseDecodeState())
+          .makeCurrent();
+    }
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Thrown @Nullable Throwable error) {
+    public static void onExit(
+        @Advice.Enter @Nullable Scope scope, @Advice.Thrown @Nullable Throwable error) {
+      if (scope == null) {
+        return;
+      }
       InfluxDbQueryState state =
           Context.current().get(InfluxDbQueryState.RESPONSE_PROCESSING_STATE);
-      if (state != null && error != null && !(error instanceof EOFException)) {
+      InfluxDbQueryState.ResponseDecodeState decodeState =
+          Context.current().get(InfluxDbQueryState.RESPONSE_DECODE_STATE);
+      scope.close();
+      if (state != null
+          && error != null
+          && (!(error instanceof EOFException)
+              || (decodeState != null && decodeState.valueStarted()))) {
         state.onFailure(error);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class JsonReadAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit() {
+      InfluxDbQueryState.ResponseDecodeState decodeState =
+          Context.current().get(InfluxDbQueryState.RESPONSE_DECODE_STATE);
+      if (decodeState != null) {
+        decodeState.markValueStarted();
       }
     }
   }
