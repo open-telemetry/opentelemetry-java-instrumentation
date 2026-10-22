@@ -295,6 +295,16 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `HostIdResource` and `HostIdResourceProvider`. Replace
+  `HostIdResource.get()` with `HostResource.create(true)`. In
+  `otel.java.enabled.resource.providers` and
+  `otel.java.disabled.resource.providers`, replace
+  `io.opentelemetry.instrumentation.resources.HostIdResourceProvider` with
+  `io.opentelemetry.instrumentation.resources.HostResourceProvider`. Disabling
+  the consolidated provider also disables host name and architecture collection.
+  Standalone SDK autoconfiguration now requires
+  `otel.resource.providers.host-id.enabled=true` to detect host IDs, matching
+  the Java agent and Spring Boot starter.
 - Remove deprecated `DeclarativeConfigPropertiesBridge` and
   `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
   `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.

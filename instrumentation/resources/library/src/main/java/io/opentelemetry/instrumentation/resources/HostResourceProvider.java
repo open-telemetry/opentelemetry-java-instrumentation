@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.resources;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
@@ -19,20 +20,26 @@ public final class HostResourceProvider implements ConditionalResourceProvider {
   // copied from HostIncubatingAttributes
   private static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
 
-  private boolean hasHostId;
+  private Attributes existingAttributes = Attributes.empty();
 
   @Override
   public boolean shouldApply(ConfigProperties config, Resource existing) {
-    hasHostId = existing.getAttribute(HOST_ID) != null;
+    existingAttributes = existing.getAttributes();
     return true;
   }
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    return HostResource.create(
-        config.getBoolean("otel.resource.providers.host-id.enabled", false)
-            && !config.getMap("otel.resource.attributes").containsKey(HOST_ID.getKey())
-            && !hasHostId);
+    Resource detected =
+        HostResource.create(
+            config.getBoolean("otel.resource.providers.host-id.enabled", false)
+                && !config.getMap("otel.resource.attributes").containsKey(HOST_ID.getKey())
+                && existingAttributes.get(HOST_ID) == null);
+    return Resource.create(
+        detected.getAttributes().toBuilder()
+            .removeIf(key -> existingAttributes.get(key) != null)
+            .build(),
+        detected.getSchemaUrl());
   }
 
   @Override

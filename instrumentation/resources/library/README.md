@@ -31,9 +31,9 @@ Implemented attributes:
 - `host.arch`
 - `host.id` (opt-in)
 
-Host ID detection is disabled by default in property-based configuration. Enable it with `otel.resource.providers.host-id.enabled=true`. This now also applies to standalone SDK autoconfiguration, which previously detected IDs by default. Host name and architecture collection are unaffected by this setting. The declarative `host` detector continues to include ID detection.
+Host ID detection is disabled by default in property-based configuration. Enable it with `otel.resource.providers.host-id.enabled=true`. Host name and architecture collection are unaffected by this setting. The declarative `host` detector includes ID detection.
 
-Replace `HostIdResource.get()` with `HostResource.create(true)`; `HostResource.get()` still omits ID detection. Replace `HostIdResourceProvider` with `HostResourceProvider` in resource-provider allowlists or denylists. Disabling the consolidated provider also disables host name and architecture collection.
+For programmatic use, `HostResource.create(true)` includes host ID detection, while `HostResource.get()` omits it.
 
 ### Operating System
 
