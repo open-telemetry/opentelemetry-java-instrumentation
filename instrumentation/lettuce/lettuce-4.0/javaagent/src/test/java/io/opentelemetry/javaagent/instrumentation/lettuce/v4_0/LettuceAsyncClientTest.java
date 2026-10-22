@@ -223,6 +223,60 @@ class LettuceAsyncClientTest {
   }
 
   @Test
+  void testNonAsciiServerErrorUsesExceptionTypeFallback() throws Exception {
+    Throwable error =
+        catchThrowable(
+            () ->
+                asyncCommands
+                    .eval(
+                        "return redis.error_reply('\\195\\169chec\\228\\184\\173 details')",
+                        ScriptOutputType.VALUE)
+                    .get(10, SECONDS));
+    assertThat(error)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+    assertThat(error.getCause()).hasMessage("\uffc3\uffa9chec\uffe4\uffb8\uffad details");
+
+    String exceptionType = RedisCommandExecutionException.class.getName();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasStatus(StatusData.error())
+                        .hasException(error.getCause())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "EVAL"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(ERROR_TYPE, exceptionType))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", exceptionType, 1);
+    testing.clearData();
+
+    assertThat(asyncCommands.set("UNICODE_ERROR_TEST_KEY", "value").get(10, SECONDS))
+        .isEqualTo("OK");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+  }
+
+  @Test
   void testTransactionServerErrorUsesRedisErrorType() throws Exception {
     asyncCommands.multi().get(10, SECONDS);
     RedisFuture<Object> failedCommand =
