@@ -18,10 +18,6 @@ import retrofit2.Retrofit;
 public final class InfluxDbQueryState {
   public static final ContextKey<InfluxDbQueryState> KEY =
       ContextKey.named("opentelemetry-influxdb-query");
-  public static final ContextKey<InfluxDbQueryState> RESPONSE_PROCESSING_STATE =
-      ContextKey.named("opentelemetry-influxdb-response-processing");
-  public static final ContextKey<ResponseDecodeState> RESPONSE_DECODE_STATE =
-      ContextKey.named("opentelemetry-influxdb-response-decode");
 
   private final InfluxDbQuery request;
   private final Context context;
@@ -44,6 +40,10 @@ public final class InfluxDbQueryState {
     return asynchronous && this.retrofit == retrofit && !callbackAssociated.get();
   }
 
+  boolean isAsynchronous() {
+    return asynchronous;
+  }
+
   public boolean associateCallback() {
     return asynchronous && callbackAssociated.compareAndSet(false, true);
   }
@@ -57,10 +57,6 @@ public final class InfluxDbQueryState {
   }
 
   void onCallbackError(Throwable error) {
-    callbackError = error;
-  }
-
-  public void onDecodeError(Throwable error) {
     callbackError = error;
   }
 
@@ -79,39 +75,8 @@ public final class InfluxDbQueryState {
             && (error instanceof IOException
                 || (error.getClass().getName().equals("org.influxdb.InfluxDBException")
                     && error.getCause() instanceof IOException));
-    if (!readFailure || call == null || !call.isCanceled()) {
+    if (callbackError == null && (!readFailure || call == null || !call.isCanceled())) {
       callbackError = error;
-    }
-  }
-
-  public static final class ResponseDecodeState {
-    private boolean valueStarted;
-    @Nullable private Object source;
-    private boolean exhausted;
-
-    public ResponseDecodeState() {}
-
-    public ResponseDecodeState(Object source, boolean valueStarted) {
-      this.source = source;
-      this.valueStarted = valueStarted;
-    }
-
-    public void onRequest(Object source, boolean exhausted) {
-      if (this.source == source) {
-        this.exhausted = exhausted;
-      }
-    }
-
-    public boolean incompleteValue() {
-      return valueStarted && exhausted;
-    }
-
-    public void markValueStarted() {
-      valueStarted = true;
-    }
-
-    public boolean valueStarted() {
-      return valueStarted;
     }
   }
 

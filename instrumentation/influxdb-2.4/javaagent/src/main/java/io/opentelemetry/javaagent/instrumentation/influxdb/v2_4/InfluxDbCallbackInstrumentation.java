@@ -64,27 +64,21 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
       InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(callback);
       if (state != null) {
         state.setCall(call);
-        return state
-            .getContext()
-            .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, state)
-            .makeCurrent();
+        return state.getContext().makeCurrent();
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Callback<?> callback,
-        @Advice.Argument(0) Call<?> call,
-        @Advice.Enter @Nullable Scope scope,
-        @Advice.Thrown @Nullable Throwable error) {
+        @Advice.This Callback<?> callback, @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
       InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(callback);
       if (state != null) {
         CALLBACK_QUERY_STATE.set(callback, null);
-        state.end(call.isCanceled() ? null : error);
+        state.end(null);
       }
     }
   }
@@ -104,14 +98,11 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This Callback<?> callback,
-        @Advice.Argument(0) Call<?> call,
-        @Advice.Argument(1) Throwable error) {
+    public static void onExit(@Advice.This Callback<?> callback) {
       InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(callback);
       if (state != null) {
         CALLBACK_QUERY_STATE.set(callback, null);
-        state.end(call.isCanceled() ? null : error);
+        state.end(null);
       }
     }
   }

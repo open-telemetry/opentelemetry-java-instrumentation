@@ -30,11 +30,9 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.io.EOFException;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
@@ -652,14 +650,6 @@ class InfluxDbQueryLifecycleTest {
     }
   }
 
-  @Test
-  void asynchronousDecodingFailureWithoutFailureConsumer() {
-    try (InfluxDB client = client(chain -> response(chain, "{\"results\":{}}"))) {
-      client.query(QUERY, result -> {}, null);
-      assertQuery("com.squareup.moshi.JsonDataException");
-    }
-  }
-
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void canceledCallWithDecodingFailure(boolean hasFailureConsumer) throws InterruptedException {
@@ -714,17 +704,12 @@ class InfluxDbQueryLifecycleTest {
     }
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void callbackExecutorRetainsCanceledDecoderFailure(boolean hasFailureConsumer)
-      throws InterruptedException {
+  @Test
+  void canceledCallWithJsonEncodingFailure() throws InterruptedException {
     CountDownLatch readStarted = new CountDownLatch(1);
-    CountDownLatch releaseSource = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
     CountDownLatch failureCallback = new CountDownLatch(1);
-    CountDownLatch releaseCallback = new CountDownLatch(1);
-    CountDownLatch callbackCompleted = new CountDownLatch(1);
     AtomicReference<Throwable> receivedFailure = new AtomicReference<>();
-    AtomicReference<Throwable> callbackError = new AtomicReference<>();
     BufferedSource source =
         Okio.buffer(
             new ForwardingSource(new Buffer()) {
@@ -737,29 +722,11 @@ class InfluxDbQueryLifecycleTest {
                 }
                 read = true;
                 readStarted.countDown();
-                await(releaseSource);
-                return sink.writeUtf8("{\"results\":[").size();
+                await(release);
+                return sink.writeUtf8("{\"results\":@}").size();
               }
             });
     Dispatcher dispatcher = new Dispatcher();
-    ExecutorService callbackWorker = Executors.newSingleThreadExecutor();
-    Executor callbackExecutor =
-        command ->
-            callbackWorker.execute(
-                () -> {
-                  try {
-                    command.run();
-                  } catch (NullPointerException e) {
-                    if (hasFailureConsumer) {
-                      throw e;
-                    }
-                    // influxdb-java 2.14 dereferences the absent failure consumer after this
-                    // callback.
-                    callbackError.set(e);
-                  } finally {
-                    callbackCompleted.countDown();
-                  }
-                });
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
             .dispatcher(dispatcher)
@@ -769,44 +736,23 @@ class InfluxDbQueryLifecycleTest {
                         .newBuilder()
                         .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
                         .build());
-    try (InfluxDB client =
-        new InfluxDBImpl(
-            "http://localhost:8086",
-            null,
-            null,
-            builder,
-            new Retrofit.Builder().callbackExecutor(callbackExecutor),
-            InfluxDB.ResponseFormat.JSON)) {
-      Consumer<Throwable> failure =
+    try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
+      client.query(
+          QUERY,
+          result -> {},
           error -> {
             receivedFailure.set(error);
             failureCallback.countDown();
-            await(releaseCallback);
-          };
-      client.query(QUERY, result -> {}, hasFailureConsumer ? failure : null);
+          });
       try {
         assertThat(readStarted.await(10, SECONDS)).isTrue();
         dispatcher.cancelAll();
-        releaseSource.countDown();
-        if (hasFailureConsumer) {
-          assertThat(failureCallback.await(10, SECONDS)).isTrue();
-          assertThat(testing.spans()).isEmpty();
-          assertNoDuration();
-          releaseCallback.countDown();
-        }
-        assertThat(callbackCompleted.await(10, SECONDS)).isTrue();
       } finally {
-        releaseSource.countDown();
-        releaseCallback.countDown();
+        release.countDown();
       }
-      if (hasFailureConsumer) {
-        assertThat(receivedFailure.get()).isInstanceOf(EOFException.class);
-      } else {
-        assertThat(callbackError.get()).isInstanceOf(NullPointerException.class);
-      }
-      assertQuery(EOFException.class.getName());
-    } finally {
-      callbackWorker.shutdownNow();
+      assertThat(failureCallback.await(10, SECONDS)).isTrue();
+      assertThat(receivedFailure.get()).isInstanceOf(JsonEncodingException.class);
+      assertQuery(JsonEncodingException.class.getName());
     }
   }
 
@@ -854,220 +800,6 @@ class InfluxDbQueryLifecycleTest {
       } finally {
         releaseRequest.countDown();
       }
-    }
-  }
-
-  @ParameterizedTest
-  @MethodSource("canceledJsonResponses")
-  void canceledCallWithMalformedJson(
-      String json,
-      Class<? extends Throwable> errorType,
-      boolean chunked,
-      boolean hasFailureConsumer,
-      IOException sourceFailure)
-      throws InterruptedException {
-    CountDownLatch readStarted = new CountDownLatch(1);
-    CountDownLatch release = new CountDownLatch(1);
-    CountDownLatch failureCallback = new CountDownLatch(1);
-    AtomicReference<Throwable> receivedFailure = new AtomicReference<>();
-    BufferedSource source =
-        Okio.buffer(
-            new ForwardingSource(new Buffer()) {
-              private boolean read;
-
-              @Override
-              public long read(Buffer sink, long byteCount) throws IOException {
-                if (read) {
-                  if (sourceFailure != null) {
-                    throw sourceFailure;
-                  }
-                  return -1;
-                }
-                read = true;
-                readStarted.countDown();
-                await(release);
-                return sink.writeUtf8(json).size();
-              }
-            });
-    Dispatcher dispatcher = new Dispatcher();
-    OkHttpClient.Builder builder =
-        new OkHttpClient.Builder()
-            .dispatcher(dispatcher)
-            .addInterceptor(
-                chain ->
-                    response(chain, SUCCESS)
-                        .newBuilder()
-                        .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
-                        .build());
-    try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
-      Consumer<Throwable> failure =
-          error -> {
-            receivedFailure.set(error);
-            failureCallback.countDown();
-          };
-      if (chunked) {
-        client.query(
-            QUERY, 1, (cancellable, result) -> {}, () -> {}, hasFailureConsumer ? failure : null);
-      } else {
-        client.query(QUERY, result -> {}, hasFailureConsumer ? failure : null);
-      }
-      try {
-        assertThat(readStarted.await(10, SECONDS)).isTrue();
-        dispatcher.cancelAll();
-      } finally {
-        release.countDown();
-      }
-      Class<? extends Throwable> failureType =
-          sourceFailure == null ? errorType : sourceFailure.getClass();
-      if (hasFailureConsumer && (!chunked || failureType != EOFException.class)) {
-        assertThat(failureCallback.await(10, SECONDS)).isTrue();
-        assertThat(receivedFailure.get()).isInstanceOf(failureType);
-      }
-      String expectedError = errorType == null ? null : errorType.getName();
-      assertQuery(expectedError);
-      assertException(expectedError);
-    }
-  }
-
-  private static Stream<Arguments> canceledJsonResponses() {
-    return Stream.of(false, true)
-        .flatMap(
-            chunked ->
-                Stream.of(false, true)
-                    .flatMap(
-                        failureConsumer ->
-                            Stream.of(
-                                Arguments.of(
-                                    "{\"results\":@}",
-                                    JsonEncodingException.class,
-                                    chunked,
-                                    failureConsumer,
-                                    null),
-                                Arguments.of(
-                                    "{\"results\":[",
-                                    EOFException.class,
-                                    chunked,
-                                    failureConsumer,
-                                    null),
-                                Arguments.of(
-                                    "{\"results\":[{\"error\":\"\\u12",
-                                    EOFException.class,
-                                    chunked,
-                                    failureConsumer,
-                                    null),
-                                Arguments.of(
-                                    "{\"results\":[",
-                                    null,
-                                    chunked,
-                                    failureConsumer,
-                                    new EOFException()),
-                                Arguments.of(
-                                    "{\"results\":[",
-                                    null,
-                                    chunked,
-                                    failureConsumer,
-                                    new IOException("canceled source read")))));
-  }
-
-  @Test
-  void chunkedDecodingFailureWithoutFailureConsumer() {
-    try (InfluxDB client = client(chain -> response(chain, "{\"results\":{}}\n"))) {
-      client.query(QUERY, 1, result -> {});
-      assertQuery("com.squareup.moshi.JsonDataException");
-    }
-  }
-
-  @Test
-  void messagePackDecodingFailureWithoutFailureConsumer() {
-    try (InfluxDB client =
-        messagePackClient(
-            chain ->
-                response(chain, SUCCESS)
-                    .newBuilder()
-                    .body(
-                        ResponseBody.create(
-                            MediaType.parse("application/x-msgpack"), new byte[] {(byte) 0xc1}))
-                    .build())) {
-      client.query(QUERY, 1, result -> {});
-      assertQuery("org.msgpack.core.MessageFormatException");
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void chunkedReadFailure(boolean hasFailureConsumer) {
-    BufferedSource source =
-        Okio.buffer(
-            new ForwardingSource(new Buffer()) {
-              @Override
-              public long read(Buffer sink, long byteCount) throws IOException {
-                throw new IOException("read failure");
-              }
-            });
-    try (InfluxDB client =
-        client(
-            chain ->
-                response(chain, SUCCESS)
-                    .newBuilder()
-                    .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
-                    .build())) {
-      if (hasFailureConsumer) {
-        client.query(QUERY, 1, (cancellable, result) -> {}, () -> {}, error -> {});
-      } else {
-        client.query(QUERY, 1, result -> {});
-      }
-      assertQuery(IOException.class.getName());
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void cancellationDuringMessagePackRead(boolean hasFailureConsumer) throws InterruptedException {
-    CountDownLatch readStarted = new CountDownLatch(1);
-    CountDownLatch release = new CountDownLatch(1);
-    BufferedSource source =
-        Okio.buffer(
-            new ForwardingSource(new Buffer()) {
-              @Override
-              public long read(Buffer sink, long byteCount) throws IOException {
-                readStarted.countDown();
-                await(release);
-                throw new IOException("Canceled");
-              }
-            });
-    Dispatcher dispatcher = new Dispatcher();
-    OkHttpClient.Builder builder =
-        new OkHttpClient.Builder()
-            .dispatcher(dispatcher)
-            .addInterceptor(
-                chain ->
-                    response(chain, SUCCESS)
-                        .newBuilder()
-                        .body(
-                            ResponseBody.create(
-                                MediaType.parse("application/x-msgpack"), -1, source))
-                        .build());
-    try (InfluxDB client =
-        InfluxDBFactory.connect(
-            "http://localhost:8086",
-            "user",
-            "password",
-            builder,
-            InfluxDB.ResponseFormat.MSGPACK)) {
-      if (hasFailureConsumer) {
-        client.query(QUERY, 1, (cancellable, result) -> {}, () -> {}, error -> {});
-      } else {
-        client.query(QUERY, 1, result -> {});
-      }
-      try {
-        assertThat(readStarted.await(10, SECONDS)).isTrue();
-        assertThat(testing.spans()).isEmpty();
-        assertNoDuration();
-        dispatcher.cancelAll();
-      } finally {
-        release.countDown();
-      }
-      assertQuery(null);
     }
   }
 
@@ -1156,15 +888,6 @@ class InfluxDbQueryLifecycleTest {
               ? InfluxDBException.class.getName()
               : IllegalStateException.class.getName());
     }
-  }
-
-  private static InfluxDB messagePackClient(Interceptor interceptor) {
-    return InfluxDBFactory.connect(
-        "http://localhost:8086",
-        "user",
-        "password",
-        new OkHttpClient.Builder().addInterceptor(interceptor),
-        InfluxDB.ResponseFormat.MSGPACK);
   }
 
   private static InfluxDB client(Interceptor interceptor) {

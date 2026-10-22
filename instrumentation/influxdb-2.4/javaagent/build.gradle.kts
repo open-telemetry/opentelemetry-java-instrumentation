@@ -32,12 +32,6 @@ testing {
         implementation("org.testcontainers:testcontainers")
       }
     }
-    register<JvmTestSuite>("test29") {
-      dependencies {
-        implementation(project())
-        implementation("org.influxdb:influxdb-java:2.9")
-      }
-    }
   }
 }
 

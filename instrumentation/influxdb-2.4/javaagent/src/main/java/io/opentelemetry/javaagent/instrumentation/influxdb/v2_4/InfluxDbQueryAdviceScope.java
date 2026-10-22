@@ -42,11 +42,7 @@ public class InfluxDbQueryAdviceScope {
         InfluxDbQueryState currentState = current.get(InfluxDbQueryState.KEY);
         Scope scope =
             currentState != null && !(asynchronous && currentState.belongsToAsyncQuery(retrofit))
-                ? current
-                    .with(InfluxDbQueryState.KEY, null)
-                    .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null)
-                    .with(InfluxDbQueryState.RESPONSE_DECODE_STATE, null)
-                    .makeCurrent()
+                ? current.with(InfluxDbQueryState.KEY, null).makeCurrent()
                 : null;
         return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
       } catch (Throwable t) {
@@ -58,10 +54,7 @@ public class InfluxDbQueryAdviceScope {
       return new InfluxDbQueryAdviceScope(callDepth, null, null, null);
     }
 
-    Context parentContext =
-        Context.current()
-            .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null)
-            .with(InfluxDbQueryState.RESPONSE_DECODE_STATE, null);
+    Context parentContext = Context.current();
     HttpUrl httpUrl = retrofit.baseUrl();
     InfluxDbQuery influxDbQuery =
         InfluxDbQuery.create(
@@ -70,12 +63,7 @@ public class InfluxDbQueryAdviceScope {
       Context current = Context.current();
       Scope scope =
           current.get(InfluxDbQueryState.KEY) != null
-                  || current.get(InfluxDbQueryState.RESPONSE_PROCESSING_STATE) != null
-              ? current
-                  .with(InfluxDbQueryState.KEY, null)
-                  .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null)
-                  .with(InfluxDbQueryState.RESPONSE_DECODE_STATE, null)
-                  .makeCurrent()
+              ? current.with(InfluxDbQueryState.KEY, null).makeCurrent()
               : null;
       return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
     }
@@ -101,17 +89,7 @@ public class InfluxDbQueryAdviceScope {
     if (scope != null) {
       scope.close();
     }
-    if (depth == 0 && queryState != null) {
-      queryState.end(throwable);
-    }
-  }
-
-  public void endAsync(@Nullable Throwable throwable) {
-    int depth = callDepth.decrementAndGet();
-    if (scope != null) {
-      scope.close();
-    }
-    if (depth == 0 && queryState != null && throwable != null) {
+    if (depth == 0 && queryState != null && (!queryState.isAsynchronous() || throwable != null)) {
       queryState.end(throwable);
     }
   }

@@ -168,7 +168,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).endAsync(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
       }
     }
   }
@@ -198,7 +198,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).endAsync(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
       }
     }
   }
@@ -228,7 +228,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).endAsync(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
       }
     }
   }
@@ -264,7 +264,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).endAsync(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
       }
     }
   }
@@ -300,7 +300,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).endAsync(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
       }
     }
   }
@@ -339,7 +339,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).endAsync(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
       }
     }
   }
