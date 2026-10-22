@@ -65,15 +65,8 @@ Advice classes should also have **no instance fields** — they are never instan
 
 Use `inline = false` consistently throughout each production module. Mixing inlined and non-inlined advice disables automatic indy isolation.
 
-## `Java8BytecodeBridge`
-
-When changing advice, inspect both the annotated advice bodies and every helper they
-call for `Java8BytecodeBridge` usage.
-
-`Java8BytecodeBridge` is deprecated; do not introduce calls to it. Use the direct OpenTelemetry API
-in non-inlined advice and ordinary helpers, for example
-`Context.current()` instead of `Java8BytecodeBridge.currentContext()` and
-`Span.fromContext(context)` instead of `Java8BytecodeBridge.spanFromContext(context)`.
+Use OpenTelemetry APIs directly in non-inlined advice and ordinary helpers, for example
+`Context.current()` and `Span.fromContext(context)`.
 
 In genuinely inlined advice in the two internal exceptions, static interface calls cannot be
 copied into pre-Java-8 class files. Call them through a Java-8-compiled helper instead.
