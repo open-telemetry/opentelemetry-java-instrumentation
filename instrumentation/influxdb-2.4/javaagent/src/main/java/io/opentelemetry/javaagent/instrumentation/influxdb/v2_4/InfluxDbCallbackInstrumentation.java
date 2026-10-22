@@ -23,6 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Response;
 
 class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
   @Override
@@ -72,6 +73,7 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Callback<?> callback,
+        @Advice.Argument(1) Response<?> response,
         @Advice.Enter @Nullable Scope scope,
         @Advice.Thrown @Nullable Throwable error) {
       if (scope != null) {
@@ -80,10 +82,7 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
       InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(callback);
       if (state != null) {
         CALLBACK_QUERY_STATE.set(callback, null);
-        if (error != null) {
-          state.onFailure(error);
-        }
-        state.end(null);
+        state.endResponse(response, error);
       }
     }
   }
