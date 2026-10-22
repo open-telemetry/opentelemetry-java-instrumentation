@@ -25,4 +25,9 @@ final class RmiClientAttributesGetter implements RpcAttributesGetter<Method, Voi
   public String getMethod(Method method) {
     return method.getName();
   }
+
+  @Override
+  public String getRpcMethod(Method method) {
+    return method.getDeclaringClass().getName() + "/" + method.getName();
+  }
 }
