@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -29,12 +30,14 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -208,6 +211,64 @@ class InfluxDbQueryLifecycleTest {
       assertThatThrownBy(() -> outerQuery.get(10, SECONDS))
           .hasCauseInstanceOf(InfluxDBIOException.class);
       assertQuery(InfluxDBIOException.class.getName());
+    }
+  }
+
+  @Test
+  void sameClientReentrantEnqueueDoesNotEndOuterQuery() throws Exception {
+    CountDownLatch outerBlocked = new CountDownLatch(1);
+    CountDownLatch releaseOuter = new CountDownLatch(1);
+    AtomicReference<InfluxDB> clientReference = new AtomicReference<>();
+    AtomicBoolean enqueueingOuter = new AtomicBoolean(true);
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, SECONDS, new SynchronousQueue<>()) {
+          @Override
+          public void execute(Runnable command) {
+            if (enqueueingOuter.compareAndSet(true, false)) {
+              clientReference
+                  .get()
+                  .query(new Query("SELECT * FROM nested", "mydb"), result -> {}, error -> {});
+              outerBlocked.countDown();
+              await(releaseOuter);
+              super.execute(command);
+            } else {
+              command.run();
+            }
+          }
+        };
+    try (InfluxDB client =
+        InfluxDBFactory.connect(
+            "http://localhost:8086",
+            new OkHttpClient.Builder()
+                .dispatcher(new Dispatcher(executor))
+                .addInterceptor(
+                    chain -> {
+                      if (chain.request().url().queryParameter("q").contains("nested")) {
+                        return response(chain, SUCCESS);
+                      }
+                      throw new IOException("outer transport failure");
+                    }))) {
+      clientReference.set(client);
+      FutureTask<Void> outerQuery =
+          new FutureTask<>(
+              () -> {
+                client.query(QUERY, result -> {}, error -> {});
+                return null;
+              });
+      new Thread(outerQuery).start();
+      try {
+        assertThat(outerBlocked.await(10, SECONDS)).isTrue();
+        assertThat(testing.spans()).isEmpty();
+        assertNoDuration();
+      } finally {
+        releaseOuter.countDown();
+      }
+      outerQuery.get(10, SECONDS);
+      assertQuery(IOException.class.getName());
+      assertException(IOException.class.getName());
+    } finally {
+      releaseOuter.countDown();
+      executor.shutdownNow();
     }
   }
 
@@ -649,8 +710,14 @@ class InfluxDbQueryLifecycleTest {
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void canceledCallWithMalformedJson(boolean hasFailureConsumer) throws InterruptedException {
+  @MethodSource("canceledJsonResponses")
+  void canceledCallWithMalformedJson(
+      String json,
+      Class<? extends Throwable> errorType,
+      boolean chunked,
+      boolean hasFailureConsumer,
+      IOException sourceFailure)
+      throws InterruptedException {
     CountDownLatch readStarted = new CountDownLatch(1);
     CountDownLatch release = new CountDownLatch(1);
     CountDownLatch failureCallback = new CountDownLatch(1);
@@ -661,14 +728,17 @@ class InfluxDbQueryLifecycleTest {
               private boolean read;
 
               @Override
-              public long read(Buffer sink, long byteCount) {
+              public long read(Buffer sink, long byteCount) throws IOException {
                 if (read) {
+                  if (sourceFailure != null) {
+                    throw sourceFailure;
+                  }
                   return -1;
                 }
                 read = true;
                 readStarted.countDown();
                 await(release);
-                return sink.writeUtf8("{\"results\":@}").size();
+                return sink.writeUtf8(json).size();
               }
             });
     Dispatcher dispatcher = new Dispatcher();
@@ -687,19 +757,68 @@ class InfluxDbQueryLifecycleTest {
             receivedFailure.set(error);
             failureCallback.countDown();
           };
-      client.query(QUERY, result -> {}, hasFailureConsumer ? failure : null);
+      if (chunked) {
+        client.query(
+            QUERY, 1, (cancellable, result) -> {}, () -> {}, hasFailureConsumer ? failure : null);
+      } else {
+        client.query(QUERY, result -> {}, hasFailureConsumer ? failure : null);
+      }
       try {
         assertThat(readStarted.await(10, SECONDS)).isTrue();
         dispatcher.cancelAll();
       } finally {
         release.countDown();
       }
-      if (hasFailureConsumer) {
+      Class<? extends Throwable> failureType =
+          sourceFailure == null ? errorType : sourceFailure.getClass();
+      if (hasFailureConsumer && (!chunked || failureType != EOFException.class)) {
         assertThat(failureCallback.await(10, SECONDS)).isTrue();
-        assertThat(receivedFailure.get()).isInstanceOf(JsonEncodingException.class);
+        assertThat(receivedFailure.get()).isInstanceOf(failureType);
       }
-      assertQuery(JsonEncodingException.class.getName());
+      String expectedError = errorType == null ? null : errorType.getName();
+      assertQuery(expectedError);
+      assertException(expectedError);
     }
+  }
+
+  private static Stream<Arguments> canceledJsonResponses() {
+    return Stream.of(false, true)
+        .flatMap(
+            chunked ->
+                Stream.of(false, true)
+                    .flatMap(
+                        failureConsumer ->
+                            Stream.of(
+                                Arguments.of(
+                                    "{\"results\":@}",
+                                    JsonEncodingException.class,
+                                    chunked,
+                                    failureConsumer,
+                                    null),
+                                Arguments.of(
+                                    "{\"results\":[",
+                                    EOFException.class,
+                                    chunked,
+                                    failureConsumer,
+                                    null),
+                                Arguments.of(
+                                    "{\"results\":[{\"error\":\"\\u12",
+                                    EOFException.class,
+                                    chunked,
+                                    failureConsumer,
+                                    null),
+                                Arguments.of(
+                                    "{\"results\":[",
+                                    null,
+                                    chunked,
+                                    failureConsumer,
+                                    new EOFException()),
+                                Arguments.of(
+                                    "{\"results\":[",
+                                    null,
+                                    chunked,
+                                    failureConsumer,
+                                    new IOException("canceled source read")))));
   }
 
   @Test
@@ -969,5 +1088,15 @@ class InfluxDbQueryLifecycleTest {
     assertThat(testing.metrics())
         .filteredOn(metric -> metric.getName().equals("db.client.operation.duration"))
         .isEmpty();
+  }
+
+  private static void assertException(String errorType) {
+    if (errorType == null) {
+      assertThat(testing.spans().get(0).getEvents()).isEmpty();
+    } else {
+      assertThat(testing.spans().get(0).getEvents())
+          .extracting(event -> event.getAttributes().get(EXCEPTION_TYPE))
+          .containsExactly(errorType);
+    }
   }
 }

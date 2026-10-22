@@ -42,7 +42,11 @@ public class InfluxDbQueryAdviceScope {
         InfluxDbQueryState currentState = current.get(InfluxDbQueryState.KEY);
         Scope scope =
             currentState != null && !(asynchronous && currentState.belongsToAsyncQuery(retrofit))
-                ? current.with(InfluxDbQueryState.KEY, null).makeCurrent()
+                ? current
+                    .with(InfluxDbQueryState.KEY, null)
+                    .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null)
+                    .with(InfluxDbQueryState.RESPONSE_DECODE_STATE, null)
+                    .makeCurrent()
                 : null;
         return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
       } catch (Throwable t) {
@@ -55,7 +59,9 @@ public class InfluxDbQueryAdviceScope {
     }
 
     Context parentContext =
-        Context.current().with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null);
+        Context.current()
+            .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null)
+            .with(InfluxDbQueryState.RESPONSE_DECODE_STATE, null);
     HttpUrl httpUrl = retrofit.baseUrl();
     InfluxDbQuery influxDbQuery =
         InfluxDbQuery.create(
@@ -68,6 +74,7 @@ public class InfluxDbQueryAdviceScope {
               ? current
                   .with(InfluxDbQueryState.KEY, null)
                   .with(InfluxDbQueryState.RESPONSE_PROCESSING_STATE, null)
+                  .with(InfluxDbQueryState.RESPONSE_DECODE_STATE, null)
                   .makeCurrent()
               : null;
       return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);

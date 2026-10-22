@@ -27,6 +27,7 @@ public final class InfluxDbQueryState {
   private final Context context;
   private final Retrofit retrofit;
   private final boolean asynchronous;
+  private final AtomicBoolean callbackAssociated = new AtomicBoolean();
   private final AtomicBoolean ended = new AtomicBoolean();
   @Nullable private Call<?> call;
   @Nullable private Throwable callbackError;
@@ -40,7 +41,11 @@ public final class InfluxDbQueryState {
   }
 
   boolean belongsToAsyncQuery(Retrofit retrofit) {
-    return asynchronous && this.retrofit == retrofit;
+    return asynchronous && this.retrofit == retrofit && !callbackAssociated.get();
+  }
+
+  public boolean associateCallback() {
+    return asynchronous && callbackAssociated.compareAndSet(false, true);
   }
 
   public Context getContext() {
@@ -52,6 +57,10 @@ public final class InfluxDbQueryState {
   }
 
   void onCallbackError(Throwable error) {
+    callbackError = error;
+  }
+
+  public void onDecodeError(Throwable error) {
     callbackError = error;
   }
 
@@ -77,6 +86,25 @@ public final class InfluxDbQueryState {
 
   public static final class ResponseDecodeState {
     private boolean valueStarted;
+    @Nullable private Object source;
+    private boolean exhausted;
+
+    public ResponseDecodeState() {}
+
+    public ResponseDecodeState(Object source, boolean valueStarted) {
+      this.source = source;
+      this.valueStarted = valueStarted;
+    }
+
+    public void onRequest(Object source, boolean exhausted) {
+      if (this.source == source) {
+        this.exhausted = exhausted;
+      }
+    }
+
+    public boolean incompleteValue() {
+      return valueStarted && exhausted;
+    }
 
     public void markValueStarted() {
       valueStarted = true;

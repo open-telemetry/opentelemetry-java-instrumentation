@@ -49,7 +49,7 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Callback<?> callback) {
       InfluxDbQueryState state = Context.current().get(InfluxDbQueryState.KEY);
-      if (state != null) {
+      if (state != null && state.associateCallback()) {
         CALLBACK_QUERY_STATE.set(callback, state);
       }
     }

@@ -11,8 +11,11 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -20,6 +23,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import okhttp3.Dispatcher;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -36,6 +41,8 @@ import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation")
 class InfluxDbLegacyChunkReadTest {
@@ -103,10 +110,53 @@ class InfluxDbLegacyChunkReadTest {
     }
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"{\"results\":[", "{\"results\":[{\"error\":\"\\u12", "", " \n\t"})
+  void cancellationRetainsOnlyIncompleteValueFailure(String json) throws InterruptedException {
+    CountDownLatch readStarted = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    Dispatcher dispatcher = new Dispatcher();
+    Source source =
+        new ForwardingSource(new Buffer().writeUtf8(json)) {
+          @Override
+          public long read(Buffer sink, long byteCount) throws IOException {
+            readStarted.countDown();
+            try {
+              if (!release.await(10, SECONDS)) {
+                throw new IOException("release timed out");
+              }
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+              throw new IOException(e);
+            }
+            return super.read(sink, byteCount);
+          }
+        };
+    InfluxDB client = client(source, dispatcher);
+    try {
+      client.query(QUERY, 1, result -> {});
+      try {
+        assertThat(readStarted.await(10, SECONDS)).isTrue();
+        dispatcher.cancelAll();
+      } finally {
+        release.countDown();
+      }
+      assertTelemetry(json.startsWith("{") ? EOFException.class.getName() : null);
+    } finally {
+      release.countDown();
+      client.close();
+    }
+  }
+
   private static InfluxDB client(Source source) {
+    return client(source, new Dispatcher());
+  }
+
+  private static InfluxDB client(Source source, Dispatcher dispatcher) {
     BufferedSource bufferedSource = Okio.buffer(source);
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
+            .dispatcher(dispatcher)
             .addInterceptor(
                 chain -> {
                   Response.Builder response = response(chain);
@@ -168,5 +218,12 @@ class InfluxDbLegacyChunkReadTest {
                                         equalTo(SERVER_ADDRESS, "localhost"),
                                         equalTo(SERVER_PORT, 8086),
                                         equalTo(ERROR_TYPE, errorType)))));
+    if (errorType == null) {
+      assertThat(testing.spans().get(0).getEvents()).isEmpty();
+    } else {
+      assertThat(testing.spans().get(0).getEvents())
+          .extracting(event -> event.getAttributes().get(EXCEPTION_TYPE))
+          .containsExactly(errorType);
+    }
   }
 }
