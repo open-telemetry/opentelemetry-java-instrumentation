@@ -6,17 +6,25 @@
 package io.opentelemetry.javaagent.instrumentation.spark.v2_3;
 
 import static java.util.Collections.singletonList;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class SparkInstrumentationModule extends InstrumentationModule {
 
   public SparkInstrumentationModule() {
-    super("spark-2.3", "spark");
+    super("spark-2.4", "spark-2.3", "spark");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 2.4
+    return hasClassesNamed("spark.route.Routes");
   }
 
   @Override
