@@ -49,7 +49,7 @@ public final class SpringWebTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super HttpRequest, ? super ClientHttpResponse> attributesExtractor) {
+      AttributesExtractor<HttpRequest, ClientHttpResponse> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }

@@ -83,8 +83,7 @@ public final class ServletTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super HttpServletRequest, ? super HttpServletResponse>
-          attributesExtractor) {
+      AttributesExtractor<HttpServletRequest, HttpServletResponse> attributesExtractor) {
     builder.addAttributesExtractor(
         convertAttributesExtractor(
             attributesExtractor, ServletRequestContext::request, ServletResponseContext::response));

@@ -37,7 +37,7 @@ public final class RatpackClientTelemetryBuilder {
 
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
+      AttributesExtractor<RequestSpec, HttpResponse> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }

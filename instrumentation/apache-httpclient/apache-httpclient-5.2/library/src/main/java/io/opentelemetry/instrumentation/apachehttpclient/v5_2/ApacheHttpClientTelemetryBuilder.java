@@ -42,8 +42,7 @@ public final class ApacheHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
-          attributesExtractor) {
+      AttributesExtractor<ApacheHttpClientRequest, HttpResponse> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }

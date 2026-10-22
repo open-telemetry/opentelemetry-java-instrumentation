@@ -56,7 +56,7 @@ public final class JavaHttpServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super HttpExchange, ? super HttpExchange> attributesExtractor) {
+      AttributesExtractor<HttpExchange, HttpExchange> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }

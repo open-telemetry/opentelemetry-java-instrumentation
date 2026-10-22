@@ -131,7 +131,7 @@ public final class InstrumenterUtil {
 
   public static <REQUESTFROM, RESPONSEFROM, REQUESTTO, RESPONSETO>
       AttributesExtractor<REQUESTTO, RESPONSETO> convertAttributesExtractor(
-          AttributesExtractor<? super REQUESTFROM, ? super RESPONSEFROM> extractor,
+          AttributesExtractor<REQUESTFROM, RESPONSEFROM> extractor,
           Function<REQUESTTO, REQUESTFROM> requestConverter,
           Function<RESPONSETO, RESPONSEFROM> responseConverter) {
     return new AttributesExtractor<REQUESTTO, RESPONSETO>() {

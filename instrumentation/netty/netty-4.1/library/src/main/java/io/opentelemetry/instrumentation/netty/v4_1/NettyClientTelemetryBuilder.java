@@ -83,7 +83,7 @@ public final class NettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super NettyRequest, ? super HttpResponse> attributesExtractor) {
+      AttributesExtractor<NettyRequest, HttpResponse> attributesExtractor) {
     builder.addAttributesExtractor(new AttributesExtractorAdapter(attributesExtractor));
     return this;
   }

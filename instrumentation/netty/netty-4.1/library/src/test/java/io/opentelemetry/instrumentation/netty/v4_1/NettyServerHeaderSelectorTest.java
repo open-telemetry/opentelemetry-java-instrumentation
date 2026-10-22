@@ -112,32 +112,29 @@ class NettyServerHeaderSelectorTest {
   }
 
   @Test
-  void acceptsBroadAttributesExtractor() {
+  void addsAttributesExtractor() {
     NettyServerTelemetry telemetry =
         NettyServerTelemetry.builder(testing.getOpenTelemetry())
             .addAttributesExtractor(
-                new AttributesExtractor<Object, Object>() {
+                new AttributesExtractor<NettyRequest, HttpResponse>() {
                   @Override
                   public void onStart(
-                      AttributesBuilder attributes, Context parentContext, Object request) {
-                    assertThat(request).isInstanceOf(NettyRequest.class);
+                      AttributesBuilder attributes, Context parentContext, NettyRequest request) {
                     assertThat(attributes.build().get(stringKey("http.request.method")))
                         .isEqualTo("GET");
-                    NettyRequest nettyRequest = (NettyRequest) request;
-                    assertThat(nettyRequest.getChannel()).isNotNull();
+                    assertThat(request.getChannel()).isNotNull();
                     attributes.put(
-                        stringKey("test.request.method"),
-                        nettyRequest.getRequest().method().name());
+                        stringKey("test.request.method"), request.getRequest().method().name());
                   }
 
                   @Override
                   public void onEnd(
                       AttributesBuilder attributes,
                       Context context,
-                      Object request,
-                      Object response,
+                      NettyRequest request,
+                      HttpResponse response,
                       Throwable error) {
-                    assertThat(response).isInstanceOf(HttpResponse.class);
+                    assertThat(response.status().code()).isEqualTo(200);
                     attributes.put(stringKey("test.response"), "extracted");
                   }
                 })

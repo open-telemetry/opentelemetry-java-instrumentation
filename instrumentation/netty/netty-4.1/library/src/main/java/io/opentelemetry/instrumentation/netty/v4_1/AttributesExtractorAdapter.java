@@ -22,10 +22,9 @@ import javax.annotation.Nullable;
 final class AttributesExtractorAdapter
     implements AttributesExtractor<NettyCommonRequest, HttpResponse> {
 
-  private final AttributesExtractor<? super NettyRequest, ? super HttpResponse> delegate;
+  private final AttributesExtractor<NettyRequest, HttpResponse> delegate;
 
-  AttributesExtractorAdapter(
-      AttributesExtractor<? super NettyRequest, ? super HttpResponse> delegate) {
+  AttributesExtractorAdapter(AttributesExtractor<NettyRequest, HttpResponse> delegate) {
     this.delegate = delegate;
   }
 

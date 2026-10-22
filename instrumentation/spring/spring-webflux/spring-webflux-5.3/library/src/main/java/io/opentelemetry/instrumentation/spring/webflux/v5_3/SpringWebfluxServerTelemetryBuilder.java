@@ -45,8 +45,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super ServerWebExchange, ? super ServerWebExchange>
-          attributesExtractor) {
+      AttributesExtractor<ServerWebExchange, ServerWebExchange> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }

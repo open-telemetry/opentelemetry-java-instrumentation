@@ -50,7 +50,7 @@ public final class ArmeriaClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
+      AttributesExtractor<ClientRequestContext, RequestLog> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
