@@ -80,8 +80,8 @@ class ApiGatewayProxyAttributesExtractorTest {
         new APIGatewayProxyRequestEvent()
             .withHttpMethod("GET")
             .withPath("/hello")
-            .withQueryStringParameters(query)
             .withHeaders(headers);
+    request.setQueryStringParameters(query);
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onRequest(attributes, request);
