@@ -301,6 +301,32 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void nestedDiscardServerErrorDoesNotFailSuccessfulOuterPipeline() {
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    testing.clearData();
+
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                Transaction nested = nestedClient.multi();
+                String[] noKeys = {};
+                nested.del(noKeys);
+                nested.discard();
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertErrorType(null);
+  }
+
+  @Test
   void caughtNestedCommandServerErrorDoesNotFailSuccessfulOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
     Jedis nestedClient = new Jedis(host, port);

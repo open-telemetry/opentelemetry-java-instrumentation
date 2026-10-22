@@ -66,7 +66,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     return requestContext;
   }
 
-  static <T> JedisRequestContext<T> attachForBatch() {
+  public static <T> JedisRequestContext<T> attachForBatch() {
     JedisRequestContext<T> requestContext = new JedisRequestContext<>();
     requestContext.previousContext = contextThreadLocal.get();
     requestContext.captureServerErrors = true;

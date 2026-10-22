@@ -94,18 +94,38 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DiscardAdvice {
 
-    @Nullable
+    public static class DiscardState {
+      private final JedisRequestContext<?> requestContext;
+      @Nullable private final TransactionFraming previousTransactionFraming;
+
+      private DiscardState(
+          JedisRequestContext<?> requestContext,
+          @Nullable TransactionFraming previousTransactionFraming) {
+        this.requestContext = requestContext;
+        this.previousTransactionFraming = previousTransactionFraming;
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        currentTransactionFraming().restore(previousTransactionFraming);
+        requestContext.detachAndEnd(throwable);
+      }
+    }
+
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static TransactionFraming onEnter(@Advice.This Object transaction) {
+    public static DiscardState onEnter(@Advice.This Object transaction) {
       // A discarded transaction is abandoned, so drop its captured commands without reporting a
       // batch span, and suppress the DISCARD framing command's own span.
       JedisPipelineContext.clear(transaction);
-      return currentTransactionFraming().set(transactionFraming(null));
+      TransactionFraming previousTransactionFraming =
+          currentTransactionFraming().set(transactionFraming(null));
+      return new DiscardState(
+          JedisRequestContext.attachForBatch(), previousTransactionFraming);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable TransactionFraming previous) {
-      currentTransactionFraming().restore(previous);
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter DiscardState discardState) {
+      discardState.end(throwable);
     }
   }
 }
