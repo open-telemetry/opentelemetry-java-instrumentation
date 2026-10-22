@@ -42,6 +42,29 @@ class JedisRequestContextTest {
   }
 
   @Test
+  void nestedBatchCaptureRestoresEnclosingContext() {
+    JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
+    Throwable firstServerFailure = new IllegalStateException("first server failure");
+    Throwable laterServerFailure = new IllegalStateException("later server failure");
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch(new Object());
+
+    JedisRequestContext.captureServerError(firstServerFailure);
+    JedisRequestContext.captureServerError(laterServerFailure);
+    assertThat(batchContext.detachAndEnd(null)).isSameAs(firstServerFailure);
+    assertThat(JedisRequestContext.attach()).isNull();
+
+    Throwable nextServerFailure = new IllegalStateException("next server failure");
+    batchContext = JedisRequestContext.attachForBatch(new Object());
+    JedisRequestContext.captureServerError(nextServerFailure);
+    Throwable terminalClientFailure = new IllegalStateException("terminal client failure");
+    assertThat(batchContext.detachAndEnd(terminalClientFailure)).isSameAs(terminalClientFailure);
+    assertThat(JedisRequestContext.attach()).isNull();
+
+    assertThat(outerContext.detachAndEnd(null)).isNull();
+    assertDetached();
+  }
+
+  @Test
   void propagatesCommandFailure() {
     JedisRequestContext<Object> context = JedisRequestContext.attach();
     Throwable clientFailure = new IllegalStateException("WRONGTYPE client failure");

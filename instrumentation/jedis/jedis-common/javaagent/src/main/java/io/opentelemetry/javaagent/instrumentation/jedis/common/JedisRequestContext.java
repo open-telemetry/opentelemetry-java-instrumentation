@@ -16,6 +16,7 @@ public class JedisRequestContext<T> {
   @Nullable private T request;
   @Nullable private Context context;
   @Nullable private Throwable firstServerErrorThrowable;
+  @Nullable private JedisRequestContext<?> previousContext;
   private boolean captureServerErrors;
 
   private JedisRequestContext() {}
@@ -34,17 +35,23 @@ public class JedisRequestContext<T> {
 
   @Nullable
   public static <T> JedisRequestContext<T> attachForBatch(T request) {
-    JedisRequestContext<T> requestContext = attach();
-    if (requestContext != null) {
-      requestContext.request = request;
-      requestContext.captureServerErrors = true;
-    }
+    JedisRequestContext<T> requestContext = new JedisRequestContext<>();
+    requestContext.previousContext = contextThreadLocal.get();
+    requestContext.request = request;
+    requestContext.captureServerErrors = true;
+    contextThreadLocal.set(requestContext);
     return requestContext;
   }
 
   @Nullable
   public Throwable detachAndEnd(@Nullable Throwable methodThrowable) {
-    contextThreadLocal.remove();
+    if (contextThreadLocal.get() == this) {
+      if (previousContext == null) {
+        contextThreadLocal.remove();
+      } else {
+        contextThreadLocal.set(previousContext);
+      }
+    }
     Throwable completionThrowable = methodThrowable;
     if (completionThrowable == null && captureServerErrors) {
       completionThrowable = firstServerErrorThrowable;

@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,8 @@ import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisClusterCommand;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSlotBasedConnectionHandler;
+import redis.clients.jedis.PipelineBlock;
+import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.util.JedisClusterCRC16;
 
 class Jedis23ClusterCommandTest {
@@ -72,6 +75,32 @@ class Jedis23ClusterCommandTest {
 
     testing.clearData();
     assertThat(jedis.set("after-error", "value")).isEqualTo("OK");
+    assertErrorType(null);
+  }
+
+  @Test
+  void callbackPipelineCapturesReturnedServerFailure() {
+    resetRedis();
+    jedis.lpush("callback-wrong-type", "value");
+    testing.clearData();
+
+    List<Object> results =
+        jedis.pipelined(
+            new PipelineBlock() {
+              @Override
+              public void execute() {
+                set("callback-success", "value");
+                get("callback-wrong-type");
+              }
+            });
+
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0)).isEqualTo("OK");
+    assertThat(results.get(1)).isInstanceOf(JedisDataException.class);
+    assertErrorType("WRONGTYPE");
+
+    testing.clearData();
+    assertThat(jedis.set("after-callback-pipeline", "value")).isEqualTo("OK");
     assertErrorType(null);
   }
 
