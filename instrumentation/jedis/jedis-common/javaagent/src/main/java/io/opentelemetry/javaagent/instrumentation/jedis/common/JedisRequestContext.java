@@ -13,11 +13,12 @@ import javax.annotation.Nullable;
 public class JedisRequestContext<T> {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
 
-  @Nullable private Operation<?> operation;
+  @Nullable private Instrumenter<T, Void> instrumenter;
+  @Nullable private T request;
+  @Nullable private Context context;
   @Nullable private Scope scope;
   @Nullable private Throwable firstServerErrorThrowable;
   @Nullable private JedisRequestContext<?> previousContext;
-  private boolean hasRequest;
   private boolean captureServerErrors;
 
   private JedisRequestContext() {}
@@ -52,9 +53,11 @@ public class JedisRequestContext<T> {
     }
 
     JedisRequestContext<T> requestContext = attachForBatch();
+    requestContext.request = request;
     requestContext.scope = scope;
     if (context != null) {
-      requestContext.operation = new Operation<>(instrumenter, context, request);
+      requestContext.instrumenter = instrumenter;
+      requestContext.context = context;
     }
     return requestContext;
   }
@@ -62,7 +65,6 @@ public class JedisRequestContext<T> {
   static <T> JedisRequestContext<T> attachForBatch() {
     JedisRequestContext<T> requestContext = new JedisRequestContext<>();
     requestContext.previousContext = contextThreadLocal.get();
-    requestContext.hasRequest = true;
     requestContext.captureServerErrors = true;
     contextThreadLocal.set(requestContext);
     return requestContext;
@@ -84,8 +86,8 @@ public class JedisRequestContext<T> {
     if (completionThrowable == null && captureServerErrors) {
       completionThrowable = firstServerErrorThrowable;
     }
-    if (operation != null) {
-      operation.end(completionThrowable);
+    if (instrumenter != null && context != null && request != null) {
+      endSpan(instrumenter, context, request, completionThrowable);
     }
     return completionThrowable;
   }
@@ -110,14 +112,23 @@ public class JedisRequestContext<T> {
       Context context,
       T request,
       @Nullable Throwable throwable) {
-    JedisRequestContext<?> requestContext = contextThreadLocal.get();
-    if (requestContext == null || requestContext.hasRequest) {
+    JedisRequestContext<T> requestContext = current();
+    if (requestContext == null || requestContext.request != null) {
       // End immediately when there is no enclosing operation or a batch is tracking the request.
       endSpan(instrumenter, context, request, throwable);
     } else {
-      requestContext.operation = new Operation<>(instrumenter, context, request);
-      requestContext.hasRequest = true;
+      requestContext.instrumenter = instrumenter;
+      requestContext.context = context;
+      requestContext.request = request;
     }
+  }
+
+  @Nullable
+  @SuppressWarnings("unchecked")
+  private static <T> JedisRequestContext<T> current() {
+    // A context's instrumenter, request, and OpenTelemetry context are set together by the same
+    // generic operation and remain paired until that context is completed.
+    return (JedisRequestContext<T>) contextThreadLocal.get();
   }
 
   private static <T> void endSpan(
@@ -126,21 +137,5 @@ public class JedisRequestContext<T> {
       T request,
       @Nullable Throwable throwable) {
     instrumenter.end(context, request, null, throwable);
-  }
-
-  private static final class Operation<T> {
-    private final Instrumenter<T, Void> instrumenter;
-    private final Context context;
-    private final T request;
-
-    private Operation(Instrumenter<T, Void> instrumenter, Context context, T request) {
-      this.instrumenter = instrumenter;
-      this.context = context;
-      this.request = request;
-    }
-
-    private void end(@Nullable Throwable throwable) {
-      endSpan(instrumenter, context, request, throwable);
-    }
   }
 }
