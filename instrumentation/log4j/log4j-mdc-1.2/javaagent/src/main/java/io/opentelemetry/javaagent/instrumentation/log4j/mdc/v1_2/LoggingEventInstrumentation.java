@@ -9,9 +9,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -60,7 +60,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
       if (context == null) {
         return null;
       }
-      SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+      SpanContext spanContext = Span.fromContext(context).getSpanContext();
       if (!spanContext.isValid()) {
         return null;
       }

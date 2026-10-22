@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.queryInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.requestInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
@@ -83,7 +82,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
       if (query == null) {
         return null;
       }
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
 
       HttpUrl httpUrl = retrofit.baseUrl();
       InfluxDbQuery influxDbQuery =
@@ -134,7 +133,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
 
       HttpUrl httpUrl = retrofit.baseUrl();
       String database =
