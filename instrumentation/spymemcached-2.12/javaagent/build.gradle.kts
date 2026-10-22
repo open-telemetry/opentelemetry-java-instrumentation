@@ -16,8 +16,6 @@ dependencies {
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-
-  testImplementation("com.google.guava:guava")
 }
 
 tasks {

@@ -23,9 +23,13 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MEMCACHED;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.TEXT;
 import static net.spy.memcached.FailureMode.Redistribute;
@@ -33,7 +37,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
-import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -51,11 +54,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -130,6 +137,63 @@ class SpymemcachedTest {
             secondMemcachedContainer.getHost(), secondMemcachedContainer.getMappedPort(11211));
   }
 
+  @Test
+  void directExecutorServiceRunsTasksOnTheCallingThreadAndRejectsAfterShutdown()
+      throws InterruptedException {
+    DirectExecutorService executor = new DirectExecutorService();
+    Thread caller = Thread.currentThread();
+    AtomicReference<Thread> executionThread = new AtomicReference<>();
+    executor.execute(() -> executionThread.set(Thread.currentThread()));
+    assertThat(executionThread.get()).isSameAs(caller);
+
+    Future<?> failedTask =
+        executor.submit(
+            () -> {
+              throw new IllegalStateException();
+            });
+    assertThat(failedTask.isDone()).isTrue();
+    assertThatThrownBy(failedTask::get)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(IllegalStateException.class);
+
+    executor.shutdown();
+    assertThat(executor.isTerminated()).isTrue();
+    assertThat(executor.awaitTermination(0, MILLISECONDS)).isTrue();
+    assertThatThrownBy(() -> executor.execute(() -> {}))
+        .isInstanceOf(RejectedExecutionException.class);
+  }
+
+  @Test
+  void directExecutorServiceWaitsForRunningTasksToTerminate() throws InterruptedException {
+    DirectExecutorService executor = new DirectExecutorService();
+    CountDownLatch taskStarted = new CountDownLatch(1);
+    CountDownLatch taskMayFinish = new CountDownLatch(1);
+    Thread listenerThread =
+        new Thread(
+            () ->
+                executor.execute(
+                    () -> {
+                      taskStarted.countDown();
+                      try {
+                        taskMayFinish.await();
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                      }
+                    }));
+    listenerThread.start();
+
+    try {
+      assertThat(taskStarted.await(10, SECONDS)).isTrue();
+      executor.shutdown();
+      assertThat(executor.isTerminated()).isFalse();
+    } finally {
+      taskMayFinish.countDown();
+      listenerThread.join();
+    }
+
+    assertThat(executor.awaitTermination(0, MILLISECONDS)).isTrue();
+  }
+
   private static MemcachedClient getMemcached() {
     return getMemcached(emptyMap(), builder -> {});
   }
@@ -141,19 +205,27 @@ class SpymemcachedTest {
   private static MemcachedClient getMemcached(
       Map<String, String> testData, Consumer<ConnectionFactoryBuilder> customizer) {
     // Use direct executor service so our listeners finish in deterministic order
-    ExecutorService listenerExecutorService = MoreExecutors.newDirectExecutorService();
-
-    ConnectionFactoryBuilder connectionFactoryBuilder =
-        new ConnectionFactoryBuilder()
-            .setListenerExecutorService(listenerExecutorService)
-            .setProtocol(BINARY);
-    customizer.accept(connectionFactoryBuilder);
-
-    ConnectionFactory connectionFactory = connectionFactoryBuilder.build();
+    ExecutorService listenerExecutorService = new DirectExecutorService();
+    boolean clientCreated = false;
     try {
+      ConnectionFactoryBuilder connectionFactoryBuilder =
+          new ConnectionFactoryBuilder()
+              .setListenerExecutorService(listenerExecutorService)
+              .setProtocol(BINARY);
+      customizer.accept(connectionFactoryBuilder);
+
+      ConnectionFactory connectionFactory = connectionFactoryBuilder.build();
       MemcachedClient memcached =
           new MemcachedClient(connectionFactory, singletonList(memcachedAddress));
-      cleanup.deferCleanup(memcached::shutdown);
+      cleanup.deferCleanup(
+          () -> {
+            try {
+              memcached.shutdown();
+            } finally {
+              listenerExecutorService.shutdown();
+            }
+          });
+      clientCreated = true;
 
       testing.runWithSpan(
           "setup",
@@ -170,6 +242,10 @@ class SpymemcachedTest {
       return memcached;
     } catch (Exception e) {
       throw new IllegalStateException(e);
+    } finally {
+      if (!clientCreated) {
+        listenerExecutorService.shutdown();
+      }
     }
   }
 
@@ -179,18 +255,32 @@ class SpymemcachedTest {
 
   private static MemcachedClient getMemcached(
       List<InetSocketAddress> nodes, Consumer<ConnectionFactoryBuilder> customizer) {
-    ConnectionFactoryBuilder connectionFactoryBuilder =
-        new ConnectionFactoryBuilder()
-            .setListenerExecutorService(MoreExecutors.newDirectExecutorService())
-            .setProtocol(BINARY);
-    customizer.accept(connectionFactoryBuilder);
-    ConnectionFactory connectionFactory = connectionFactoryBuilder.build();
+    ExecutorService listenerExecutorService = new DirectExecutorService();
+    boolean clientCreated = false;
     try {
+      ConnectionFactoryBuilder connectionFactoryBuilder =
+          new ConnectionFactoryBuilder()
+              .setListenerExecutorService(listenerExecutorService)
+              .setProtocol(BINARY);
+      customizer.accept(connectionFactoryBuilder);
+      ConnectionFactory connectionFactory = connectionFactoryBuilder.build();
       MemcachedClient memcached = new MemcachedClient(connectionFactory, nodes);
-      cleanup.deferCleanup(memcached::shutdown);
+      cleanup.deferCleanup(
+          () -> {
+            try {
+              memcached.shutdown();
+            } finally {
+              listenerExecutorService.shutdown();
+            }
+          });
+      clientCreated = true;
       return memcached;
     } catch (IOException e) {
       throw new IllegalStateException(e);
+    } finally {
+      if (!clientCreated) {
+        listenerExecutorService.shutdown();
+      }
     }
   }
 
@@ -1680,5 +1770,70 @@ class SpymemcachedTest {
         }
       }
     };
+  }
+
+  private static final class DirectExecutorService extends AbstractExecutorService {
+    private int runningTasks;
+    private boolean shutdown;
+
+    @Override
+    public synchronized void shutdown() {
+      shutdown = true;
+      if (runningTasks == 0) {
+        notifyAll();
+      }
+    }
+
+    @Override
+    public synchronized List<Runnable> shutdownNow() {
+      shutdown();
+      return emptyList();
+    }
+
+    @Override
+    public synchronized boolean isShutdown() {
+      return shutdown;
+    }
+
+    @Override
+    public synchronized boolean isTerminated() {
+      return shutdown && runningTasks == 0;
+    }
+
+    @Override
+    public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+      long remainingNanos = unit.toNanos(timeout);
+      synchronized (this) {
+        while (!isTerminated()) {
+          if (remainingNanos <= 0) {
+            return false;
+          }
+          long start = System.nanoTime();
+          NANOSECONDS.timedWait(this, remainingNanos);
+          remainingNanos -= System.nanoTime() - start;
+        }
+        return true;
+      }
+    }
+
+    @Override
+    public void execute(Runnable command) {
+      synchronized (this) {
+        if (shutdown) {
+          throw new RejectedExecutionException("Executor already shutdown");
+        }
+        runningTasks++;
+      }
+      try {
+        command.run();
+      } finally {
+        synchronized (this) {
+          runningTasks--;
+          if (shutdown && runningTasks == 0) {
+            notifyAll();
+          }
+        }
+      }
+    }
   }
 }
