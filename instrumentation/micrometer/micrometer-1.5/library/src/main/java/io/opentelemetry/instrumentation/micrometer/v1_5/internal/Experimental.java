@@ -41,11 +41,13 @@ public final class Experimental {
   }
 
   /**
-   * Sets the optional "Prometheus mode", which approximates Micrometer's {@code
-   * PrometheusMeterRegistry} naming for compatibility and forces the base time unit to seconds.
+   * Sets the optional "Prometheus mode". When enabled, appends base-unit suffixes to counter,
+   * distribution summary, and gauge names, uses a {@code .seconds} suffix for timer and long-task
+   * timer names, and forces the base time unit to seconds.
    *
-   * <p>This mode is disabled by default and is not required to use the OpenTelemetry Prometheus
-   * exporter.
+   * <p>This mode is typically used with the OpenTelemetry Prometheus exporter, which handles
+   * Prometheus-specific name translation, such as replacing dots with underscores and adding the
+   * {@code _total} suffix to counter names.
    */
   public static void setPrometheusMode(
       OpenTelemetryMeterRegistryBuilder builder, boolean prometheusMode) {
