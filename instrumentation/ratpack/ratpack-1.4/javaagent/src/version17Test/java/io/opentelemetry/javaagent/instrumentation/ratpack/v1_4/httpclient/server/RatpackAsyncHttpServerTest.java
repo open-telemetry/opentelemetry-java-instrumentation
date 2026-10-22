@@ -24,6 +24,7 @@ class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest {
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
 
+    options.setExceptionLogOnHandlerSpan(true);
     options.setHasResponseCustomizer(endpoint -> true);
   }
 }

@@ -24,6 +24,7 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest {
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
 
+    options.setExceptionLogOnHandlerSpan(true);
     options.setHasResponseCustomizer(endpoint -> true);
     options.setTestHttpPipelining(false);
   }

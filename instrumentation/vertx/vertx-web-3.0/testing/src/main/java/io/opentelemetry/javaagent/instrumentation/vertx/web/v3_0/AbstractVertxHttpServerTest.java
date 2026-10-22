@@ -53,7 +53,6 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setExceptionLogInstrumentationName("io.opentelemetry.vertx-web-3.0");
-    options.setExceptionLogOnHandlerSpan(false);
     options.setTestPathParam(true);
     options.setTestHttpBodyPipelining(true);
     // server spans are ended inside of the controller spans

@@ -36,7 +36,6 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
 
     options.setHasHandlerSpan(endpoint -> false);
     options.setExceptionLogInstrumentationName("io.opentelemetry.ratpack-1.7");
-    options.setExceptionLogOnHandlerSpan(false);
     options.setTestClientAddressFromSocketPeer(false);
   }
 }
