@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
-import io.opentelemetry.instrumentation.api.internal.LoggerUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
@@ -22,8 +21,8 @@ import javax.annotation.Nullable;
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
 public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
-  private static final Logger logger =
-      LoggerUtil.createLogger(
+  private static final HttpServerExceptionRecorder exceptionRecorder =
+      HttpServerExceptionRecorder.create(
           GlobalOpenTelemetry.get(), "io.opentelemetry.vertx-web-3.0", HttpSchemaUrls.SCHEMA_URL);
 
   private final Handler<RoutingContext> handler;
@@ -47,8 +46,10 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     try (Scope ignored = routeContext.makeCurrent()) {
       handler.handle(context);
     } catch (Throwable t) {
-      HttpServerExceptionRecorder.recordException(
-          otelContext, LocalRootSpan.fromContextOrNull(otelContext), t, logger);
+      exceptionRecorder.recordException(
+          otelContext,
+          LocalRootSpan.fromContextOrNull(otelContext),
+          ErrorCauseExtractor.getDefault().extract(t));
       throw t;
     }
   }

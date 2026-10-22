@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.LoggerBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -23,10 +24,23 @@ public final class HttpServerExceptionRecorder {
       (log, context, unused) ->
           log.setEventName("http.server.request.exception").setSeverity(Severity.ERROR);
 
-  /** Immediately records the observed exception using default cause extraction. */
-  public static void recordException(
-      Context context, @Nullable Span eventSpan, Throwable error, @Nullable Logger logger) {
-    recordException(context, eventSpan, error, ErrorCauseExtractor.getDefault(), logger);
+  private final Logger logger;
+
+  public static HttpServerExceptionRecorder create(
+      OpenTelemetry openTelemetry, String instrumentationName, @Nullable String schemaUrl) {
+    LoggerBuilder builder = openTelemetry.getLogsBridge().loggerBuilder(instrumentationName);
+    String version = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+    if (version != null) {
+      builder.setInstrumentationVersion(version);
+    }
+    if (schemaUrl != null) {
+      builder.setSchemaUrl(schemaUrl);
+    }
+    return new HttpServerExceptionRecorder(builder.build());
+  }
+
+  private HttpServerExceptionRecorder(Logger logger) {
+    this.logger = logger;
   }
 
   /**
@@ -34,21 +48,10 @@ public final class HttpServerExceptionRecorder {
    *
    * @param context the reporting context for the exception log
    * @param eventSpan the span receiving exception events, or {@code null} if unavailable
-   * @param error the observed exception
-   * @param causeExtractor extracts the exception once before either signal is emitted; replaces,
-   *     rather than supplements, default extraction
-   * @param logger the framework logger, or {@code null} if log emission is unavailable
+   * @param error the already-extracted exception, emitted without further cause extraction
    */
-  public static void recordException(
-      Context context,
-      @Nullable Span eventSpan,
-      Throwable error,
-      ErrorCauseExtractor causeExtractor,
-      @Nullable Logger logger) {
-    error = causeExtractor.extract(error);
+  public void recordException(Context context, @Nullable Span eventSpan, Throwable error) {
     ExceptionRecorder.recordException(
         context, eventSpan, error, logger, serverExceptionEventExtractor, error, null);
   }
-
-  private HttpServerExceptionRecorder() {}
 }

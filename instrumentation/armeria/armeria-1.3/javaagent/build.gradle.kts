@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -26,6 +29,21 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionSignalLogs") {
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+          filter {
+            includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
+            includeTestsMatching("*ArmeriaHttp2ServerTest.requestWithException")
+            includeTestsMatching("*ArmeriaHttpServerTest.responseException*")
+            includeTestsMatching("*ArmeriaHttp2ServerTest.responseException*")
+            includeTestsMatching("*ArmeriaHttpServerTest.wrappedResponseExceptionIsReported")
+            includeTestsMatching("*ArmeriaHttp2ServerTest.wrappedResponseExceptionIsReported")
+          }
+        }
+      }
+    }
     register<JvmTestSuite>("testArmeria19") {
       sources {
         java {
@@ -58,23 +76,8 @@ tasks {
       }
     }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*ArmeriaHttpServerTest.requestWithException")
-      includeTestsMatching("*ArmeriaHttp2ServerTest.requestWithException")
-      includeTestsMatching("*ArmeriaHttpServerTest.responseException*")
-      includeTestsMatching("*ArmeriaHttp2ServerTest.responseException*")
-      includeTestsMatching("*ArmeriaHttpServerTest.wrappedResponseExceptionIsReported")
-      includeTestsMatching("*ArmeriaHttp2ServerTest.wrappedResponseExceptionIsReported")
-    }
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites, testExceptionSignalLogs)
+    dependsOn(testing.suites, previewSemconvSuites)
   }
 
   if (otelProps.denyUnsafe) {

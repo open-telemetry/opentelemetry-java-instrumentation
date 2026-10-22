@@ -12,20 +12,19 @@ import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.HttpServerExceptionRecorder;
-import io.opentelemetry.instrumentation.api.internal.LoggerUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 
 class ServerDecorator extends SimpleDecoratingHttpService {
-  private static final Logger logger =
-      LoggerUtil.createLogger(
+  private static final HttpServerExceptionRecorder exceptionRecorder =
+      HttpServerExceptionRecorder.create(
           GlobalOpenTelemetry.get(), "io.opentelemetry.armeria-1.3", HttpSchemaUrls.SCHEMA_URL);
 
   private final HttpService libraryDelegate;
@@ -72,7 +71,8 @@ class ServerDecorator extends SimpleDecoratingHttpService {
       }
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      HttpServerExceptionRecorder.recordException(otelContext, span, error, logger);
+      exceptionRecorder.recordException(
+          otelContext, span, ErrorCauseExtractor.getDefault().extract(error));
 
       throw t;
     }

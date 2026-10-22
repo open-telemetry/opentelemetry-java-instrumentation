@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -22,6 +25,18 @@ dependencies {
 
 testing {
   suites {
+    withType<JvmTestSuite>().matching { it.name in listOf("version3Test", "version41Test") }.configureEach {
+      executions {
+        register("ExceptionSignalLogs") {
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+          filter {
+            includeTestsMatching("*HttpServerTest.requestWithException")
+            includeTestsMatching("*HttpServerTest.recoveredException")
+            includeTestsMatching("*HttpServerTest.nestedHandlerExceptions")
+          }
+        }
+      }
+    }
     register<JvmTestSuite>("version3Test") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
@@ -59,24 +74,6 @@ testing {
 }
 
 tasks {
-  val exceptionSignalLogsTests = listOf("version3Test", "version41Test").map { suiteName ->
-    register<Test>("${suiteName}ExceptionSignalLogs") {
-      val suite = testing.suites.named<JvmTestSuite>(suiteName).get()
-      val sourceTest = named<Test>(suiteName).get()
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-      javaLauncher.set(sourceTest.javaLauncher)
-      jvmArgs(sourceTest.jvmArgs)
-      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-      filter {
-        includeTestsMatching("*HttpServerTest.requestWithException")
-        includeTestsMatching("*HttpServerTest.recoveredException")
-        includeTestsMatching("*HttpServerTest.nestedHandlerExceptions")
-      }
-    }
-  }
-
   named("compileVersion5TestJava", JavaCompile::class).configure {
     options.release.set(11)
   }
@@ -89,6 +86,5 @@ tasks {
 
   check {
     dependsOn(testing.suites)
-    dependsOn(exceptionSignalLogsTests)
   }
 }

@@ -239,6 +239,7 @@ class InstrumenterTest {
         (logRecordBuilder, context, request) -> {
           logRecordBuilder.setEventName("http.server.request.exception");
           logRecordBuilder.setSeverity(Severity.ERROR);
+          logRecordBuilder.setAttribute(stringKey("request"), request.get("req1"));
         });
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         builder.buildServerInstrumenter(new MapGetter());
@@ -265,7 +266,9 @@ class InstrumenterTest {
       assertThat(logs.get(0))
           .hasSeverity(Severity.ERROR)
           .hasEventName("http.server.request.exception")
+          .hasSpanContext(Span.fromContext(context).getSpanContext())
           .hasAttributesSatisfyingExactly(
+              equalTo(stringKey("request"), "req1_value"),
               equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
               equalTo(EXCEPTION_MESSAGE, "test"),
               satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
@@ -454,6 +457,9 @@ class InstrumenterTest {
     instrumenter.startAndEnd(
         Context.root(), REQUEST, RESPONSE, error, Instant.ofEpochSecond(100), endTime);
 
+    assertThat(otelTesting.getSpans())
+        .singleElement()
+        .satisfies(span -> assertThat(span.getEndEpochNanos()).isEqualTo(123_000_000_456L));
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
       assertThat(logs).hasSize(1);

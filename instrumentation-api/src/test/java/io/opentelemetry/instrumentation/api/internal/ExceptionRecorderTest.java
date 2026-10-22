@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -17,7 +16,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -29,12 +27,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.time.Instant;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.assertj.core.api.AbstractAssert;
@@ -45,6 +41,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 class ExceptionRecorderTest {
   @RegisterExtension static final OpenTelemetryExtension testing = OpenTelemetryExtension.create();
+
+  private final HttpServerExceptionRecorder recorder =
+      HttpServerExceptionRecorder.create(testing.getOpenTelemetry(), "framework", null);
 
   @Test
   void frameworkScopeAndReportingContextAreIndependentOfSpanEventTarget() {
@@ -57,16 +56,15 @@ class ExceptionRecorderTest {
             .buildInstrumenter();
     Context serverContext = server.start(Context.root(), "request");
     Context controllerContext = controller.start(serverContext, "request");
-    Logger logger =
-        LoggerUtil.createLogger(
+    HttpServerExceptionRecorder scopedRecorder =
+        HttpServerExceptionRecorder.create(
             testing.getOpenTelemetry(),
             "test-instrumentation",
             "https://opentelemetry.io/schemas/1.30.0");
     IllegalStateException error = new IllegalStateException("failure");
 
     try (Scope ignored = controllerContext.makeCurrent()) {
-      HttpServerExceptionRecorder.recordException(
-          Context.current(), Span.fromContext(serverContext), error, logger);
+      scopedRecorder.recordException(Context.current(), Span.fromContext(serverContext), error);
     }
 
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
@@ -125,65 +123,12 @@ class ExceptionRecorderTest {
       assertThat(testing.getLogRecords().get(0).getInstrumentationScopeInfo())
           .isEqualTo(InstrumentationScopeInfo.create("operation"));
       assertThat(testing.getLogRecords().get(0))
-          .hasEventName("exception")
-          .hasSeverity(
-              kind == SpanKind.SERVER || kind == SpanKind.CONSUMER ? Severity.ERROR : Severity.WARN)
           .hasSpanContext(Span.fromContext(context).getSpanContext());
     }
   }
 
   @Test
-  void instrumenterRetainsExtractionCustomAttributesAndExplicitTimestamp() {
-    InstrumenterBuilder<String, Void> builder =
-        Instrumenter.<String, Void>builder(
-                testing.getOpenTelemetry(), "operation", unused -> "request")
-            .setErrorCauseExtractor(
-                error -> error instanceof CompletionException ? error.getCause() : error);
-    Experimental.setExceptionEventExtractor(
-        builder,
-        (log, context, request) ->
-            log.setEventName("custom.exception")
-                .setSeverity(Severity.WARN)
-                .setAttribute(stringKey("request"), request));
-    Instrumenter<String, Void> instrumenter = builder.buildInstrumenter();
-    IllegalStateException error = new IllegalStateException("failure");
-    Instant start = Instant.parse("2020-01-01T00:00:00Z");
-    Instant end = start.plusSeconds(1);
-
-    InstrumenterUtil.startAndEnd(
-        instrumenter,
-        Context.root(),
-        "original request",
-        null,
-        new CompletionException(error),
-        start,
-        end);
-
-    assertThat(testing.getSpans())
-        .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span)
-                    .hasStatus(StatusData.error())
-                    .hasException(emitExceptionAsSpanEvents() ? error : null));
-    assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
-    if (emitExceptionAsLogs()) {
-      assertThat(testing.getLogRecords().get(0))
-          .hasEventName("custom.exception")
-          .hasSeverity(Severity.WARN)
-          .hasAttributesSatisfyingExactly(
-              equalTo(stringKey("request"), "original request"),
-              equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-              equalTo(EXCEPTION_MESSAGE, "failure"),
-              satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
-      assertThat(testing.getLogRecords().get(0).getTimestampEpochNanos())
-          .isEqualTo(end.getEpochSecond() * 1_000_000_000L);
-    }
-  }
-
-  @Test
   void frameworkLogsDoNotRequireLocalRootOrRecordingSpan() {
-    Logger logger = LoggerUtil.createLogger(testing.getOpenTelemetry(), "framework", null);
     Span nonRecording =
         Span.wrap(
             SpanContext.create(
@@ -193,9 +138,8 @@ class ExceptionRecorderTest {
                 TraceState.getDefault()));
     IllegalStateException error = new IllegalStateException("failure");
 
-    HttpServerExceptionRecorder.recordException(Context.root(), null, error, logger);
-    HttpServerExceptionRecorder.recordException(
-        Context.root().with(nonRecording), nonRecording, error, logger);
+    recorder.recordException(Context.root(), null, error);
+    recorder.recordException(Context.root().with(nonRecording), nonRecording, error);
 
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 2 : 0);
     if (emitExceptionAsLogs()) {
@@ -211,11 +155,9 @@ class ExceptionRecorderTest {
                 testing.getOpenTelemetry(), "server", unused -> "request")
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
     Context context = instrumenter.start(Context.root(), "request");
-    Logger logger = LoggerUtil.createLogger(testing.getOpenTelemetry(), "framework", null);
     IllegalStateException error = new IllegalStateException("failure");
 
-    HttpServerExceptionRecorder.recordException(
-        context, Span.fromContext(context), new CompletionException(error), logger);
+    recorder.recordException(context, Span.fromContext(context), error);
 
     assertThat(testing.getSpans()).isEmpty();
     assertThat(testing.getLogRecords()).hasSize(emitExceptionAsLogs() ? 1 : 0);
@@ -237,12 +179,11 @@ class ExceptionRecorderTest {
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
     Context context = instrumenter.start(Context.root(), "request");
     Span span = Span.fromContext(context);
-    Logger logger = LoggerUtil.createLogger(testing.getOpenTelemetry(), "framework", null);
     IllegalStateException first = new IllegalStateException("first");
     IllegalStateException second = new IllegalStateException("second");
 
-    for (Throwable reported : asList(new CompletionException(first), first, second)) {
-      HttpServerExceptionRecorder.recordException(context, span, reported, logger);
+    for (Throwable reported : asList(first, first, second)) {
+      recorder.recordException(context, span, reported);
     }
     instrumenter.end(context, "request", null, null);
 
@@ -263,29 +204,16 @@ class ExceptionRecorderTest {
   }
 
   @Test
-  void serverCustomExtractorReplacesDefaultExtraction() {
+  void frameworkRecordsAlreadyExtractedExceptionWithoutUnwrapping() {
     Instrumenter<String, Void> instrumenter =
         Instrumenter.<String, Void>builder(
                 testing.getOpenTelemetry(), "server", unused -> "request")
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
     Context context = instrumenter.start(Context.root(), "request");
     CompletionException extracted = new CompletionException(new IllegalStateException("cause"));
-    IllegalArgumentException observed = new IllegalArgumentException("observed");
-    AtomicInteger calls = new AtomicInteger();
-
-    HttpServerExceptionRecorder.recordException(
-        context,
-        Span.fromContext(context),
-        observed,
-        error -> {
-          assertThat(error).isSameAs(observed);
-          calls.incrementAndGet();
-          return extracted;
-        },
-        LoggerUtil.createLogger(testing.getOpenTelemetry(), "framework", null));
+    recorder.recordException(context, Span.fromContext(context), extracted);
     instrumenter.end(context, "request", null, null);
 
-    assertThat(calls.get()).isEqualTo(1);
     assertThat(testing.getSpans())
         .singleElement()
         .satisfies(
