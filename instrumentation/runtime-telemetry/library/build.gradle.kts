@@ -4,9 +4,18 @@ plugins {
 
 val mrJarVersions = listOf(17)
 
+// Stable library instrumentation must not publish the incubator dependency added by the convention.
+configurations.implementation {
+  dependencies.removeIf {
+    it.group == "io.opentelemetry.instrumentation" &&
+      it.name == "opentelemetry-instrumentation-api-incubator"
+  }
+}
+
 dependencies {
   implementation(project(":instrumentation-api"))
-  implementation(project(":instrumentation-api-incubator"))
+  implementation("io.opentelemetry:opentelemetry-api-incubator")
+  implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.github.netmikey.logunit:logunit-jul")
