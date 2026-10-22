@@ -32,7 +32,7 @@ public final class SpringRmiServerRequest {
                   serviceInterface.getMethod(signature.name, signature.parameterTypes);
               rpcMethod =
                   resolvedMethod.getDeclaringClass().getName() + "/" + resolvedMethod.getName();
-            } catch (NoSuchMethodException e) {
+            } catch (NoSuchMethodException ignored) {
               // A method returned by getMethods() should always be resolvable by its signature.
             }
             methods.put(signature, rpcMethod);
