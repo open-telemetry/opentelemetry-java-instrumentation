@@ -12,7 +12,9 @@ import io.opentelemetry.context.ContextKey;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
+import org.influxdb.dto.QueryResult;
 import retrofit2.Call;
+import retrofit2.Response;
 
 public final class InfluxDbQueryState {
   public static final ContextKey<InfluxDbQueryState> KEY =
@@ -25,6 +27,7 @@ public final class InfluxDbQueryState {
   private final AtomicBoolean ended = new AtomicBoolean();
   @Nullable private Call<?> call;
   @Nullable private Throwable callbackError;
+  @Nullable private volatile String errorType;
 
   public InfluxDbQueryState(Context parentContext, InfluxDbQuery request, boolean asynchronous) {
     this.request = request;
@@ -46,6 +49,15 @@ public final class InfluxDbQueryState {
 
   public void setCall(Call<?> call) {
     this.call = call;
+  }
+
+  public void observe(@Nullable QueryResult result) {
+    if (callbackError == null
+        && errorType == null
+        && (call == null || !call.isCanceled())
+        && InfluxDbResponse.hasError(result)) {
+      errorType = "_OTHER";
+    }
   }
 
   void onCallbackError(Throwable error) {
@@ -73,11 +85,29 @@ public final class InfluxDbQueryState {
     callbackError = error;
   }
 
+  public void endResponse(Response<?> response, @Nullable Throwable error) {
+    if (!response.isSuccessful()) {
+      errorType = Integer.toString(response.code());
+    }
+    Object body = response.body();
+    if (body instanceof QueryResult) {
+      observe((QueryResult) body);
+    }
+    if (error != null) {
+      onFailure(error);
+    }
+    end(null);
+  }
+
   public void end(@Nullable Throwable error) {
     if (ended.compareAndSet(false, true)) {
       call = null;
       queryInstrumenter()
-          .end(context, request, null, callbackError != null ? callbackError : error);
+          .end(
+              context,
+              request,
+              new InfluxDbResponse(errorType),
+              callbackError != null ? callbackError : error);
     }
   }
 }

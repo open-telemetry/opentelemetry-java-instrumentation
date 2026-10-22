@@ -102,6 +102,27 @@ class InfluxDbQueryLifecycleTest {
     assertQuery(null);
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "{\"error\":\"private query text\"}",
+        "{\"results\":[{}, {\"error\":\"private query text\"}]}"
+      })
+  void synchronousQueryResultError(String body) {
+    try (InfluxDB client = client(chain -> response(chain, body))) {
+      assertThat(client.query(QUERY)).isNotNull();
+    }
+    assertQuery("_OTHER");
+  }
+
+  @Test
+  void doneMarkerIsNotAQueryError() {
+    try (InfluxDB client = client(chain -> response(chain, "{\"error\":\"DONE\"}"))) {
+      assertThat(client.query(QUERY)).isNotNull();
+    }
+    assertQuery(null);
+  }
+
   @Test
   void synchronousException() {
     try (InfluxDB client =

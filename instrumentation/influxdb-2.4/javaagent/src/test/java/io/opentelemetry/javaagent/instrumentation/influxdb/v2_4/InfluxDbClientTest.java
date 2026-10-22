@@ -535,7 +535,7 @@ class InfluxDbClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_QUERY_TEXT, "SELECT MEAN(water_level) FROM;"),
                             equalTo(DB_QUERY_SUMMARY, "SELECT"),
-                            equalTo(ERROR_TYPE, "org.influxdb.InfluxDBException"))
+                            equalTo(ERROR_TYPE, "400"))
                         .hasStatus(StatusData.error()),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
