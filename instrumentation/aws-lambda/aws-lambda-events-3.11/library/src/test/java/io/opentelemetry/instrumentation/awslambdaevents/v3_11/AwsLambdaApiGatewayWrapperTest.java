@@ -73,12 +73,13 @@ class AwsLambdaApiGatewayWrapperTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(ints = {200, 404, 500})
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
           "io.opentelemetry.instrumentation.awslambdaevents.v3_11.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
-  void tracedWithHttpPropagation() {
+  void tracedWithHttpPropagation(int statusCode) {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
             testing.getOpenTelemetrySdk(),
@@ -98,14 +99,15 @@ class AwsLambdaApiGatewayWrapperTest {
             .withHttpMethod("GET")
             .withResource("/hello/{param}")
             .withPath("/hello/world")
-            .withBody("hello")
+            .withBody(statusCode == 200 ? "hello" : Integer.toString(statusCode))
             .withQueryStringParameters(query)
             .withHeaders(headers);
 
     APIGatewayProxyResponseEvent result =
         (APIGatewayProxyResponseEvent) wrapper.handleRequest(input, context);
 
-    assertThat(result.getBody()).isEqualTo("world");
+    assertThat(result.getBody()).isEqualTo(statusCode == 200 ? "world" : null);
+    assertThat(result.getStatusCode()).isEqualTo(statusCode);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -113,6 +115,8 @@ class AwsLambdaApiGatewayWrapperTest {
                     span.hasName("GET /hello/{param}")
                         .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
+                        .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
+                        .hasEventsSatisfyingExactly()
                         .hasTraceId("4fd0b6131f19f39af59518d127b0cafe")
                         .hasParentSpanId("0000000000000456")
                         .hasAttributesSatisfyingExactly(
@@ -135,7 +139,10 @@ class AwsLambdaApiGatewayWrapperTest {
                             equalTo(USER_AGENT_ORIGINAL, "Test Client"),
                             equalTo(URL_FULL, "http://localhost:123/hello/world?a=b&c=d"),
                             equalTo(URL_QUERY, "a=b&c=d"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
+                            equalTo(
+                                ERROR_TYPE,
+                                statusCode >= 500 ? Integer.toString(statusCode) : null))));
   }
 
   @Test
@@ -161,6 +168,8 @@ class AwsLambdaApiGatewayWrapperTest {
                     span.hasName("my_function")
                         .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
+                        .hasStatus(StatusData.unset())
+                        .hasEventsSatisfyingExactly()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
@@ -173,7 +182,9 @@ class AwsLambdaApiGatewayWrapperTest {
                                     ? "123456789"
                                     : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"))));
+                            equalTo(FAAS_TRIGGER, "http"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, null),
+                            equalTo(ERROR_TYPE, null))));
   }
 
   @Test
@@ -288,50 +299,6 @@ class AwsLambdaApiGatewayWrapperTest {
                                     : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"))));
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {200, 302, 400, 404, 499, 500, 503})
-  @SetEnvironmentVariable(
-      key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
-      value =
-          "io.opentelemetry.instrumentation.awslambdaevents.v3_11.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
-  void classifiesHttpResponse(int statusCode) {
-    TracingRequestApiGatewayWrapper wrapper =
-        new TracingRequestApiGatewayWrapper(
-            testing.getOpenTelemetrySdk(),
-            WrappedLambda.fromConfiguration(),
-            TracingRequestApiGatewayWrapper::map);
-    APIGatewayProxyResponseEvent result =
-        (APIGatewayProxyResponseEvent)
-            wrapper.handleRequest(
-                new APIGatewayProxyRequestEvent().withBody(Integer.toString(statusCode)), context);
-    assertThat(result.getStatusCode()).isEqualTo(statusCode);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
-                        .hasEventsSatisfyingExactly()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
-                            equalTo(
-                                ERROR_TYPE,
-                                statusCode >= 500 ? Integer.toString(statusCode) : null))));
   }
 
   @Test

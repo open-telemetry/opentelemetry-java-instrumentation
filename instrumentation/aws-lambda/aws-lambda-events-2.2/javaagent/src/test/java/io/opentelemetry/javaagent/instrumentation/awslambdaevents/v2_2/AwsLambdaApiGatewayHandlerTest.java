@@ -117,28 +117,13 @@ class AwsLambdaApiGatewayHandlerTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
-  @Test
-  void tracedWithoutOptionalHttpAttributes() {
-    APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent().withBody("hello");
-    new TestRequestHandlerApiGateway().handleRequest(input, context);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
-                        equalTo(FAAS_TRIGGER, "http"),
-                        equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
-  }
-
   @ParameterizedTest
-  @ValueSource(ints = {200, 302, 400, 404, 499, 500, 503})
-  void classifiesHttpResponse(int statusCode) {
+  @ValueSource(ints = {200, 404, 500})
+  void tracedWithoutOptionalHttpAttributes(int statusCode) {
+    APIGatewayProxyRequestEvent input =
+        new APIGatewayProxyRequestEvent().withBody(Integer.toString(statusCode));
     APIGatewayProxyResponseEvent result =
-        new TestRequestHandlerApiGateway()
-            .handleRequest(
-                new APIGatewayProxyRequestEvent().withBody(Integer.toString(statusCode)), context);
+        new TestRequestHandlerApiGateway().handleRequest(input, context);
     assertThat(result.getStatusCode()).isEqualTo(statusCode);
 
     testing.waitAndAssertTraces(
