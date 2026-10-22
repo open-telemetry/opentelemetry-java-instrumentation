@@ -21,8 +21,8 @@ public final class LettuceRedisErrorType {
     if (errorType == null) {
       return null;
     }
-    // Older Lettuce versions decode server errors byte-by-byte instead of as UTF-8.
-    // See https://github.com/redis/lettuce/blob/5.0.0.RELEASE/src/main/java/io/lettuce/core/output/CommandOutput.java#L83-L133.
+    // Lettuce versions before 6.5.4 decode server errors byte-by-byte instead of as UTF-8.
+    // See https://github.com/redis/lettuce/pull/3188.
     for (int i = 0; i < errorType.length(); i++) {
       if (errorType.charAt(i) > 0x7f) {
         return null;
