@@ -38,7 +38,7 @@ abstract class AbstractRabbitMqTest {
   protected static int rabbitMqPort;
 
   @BeforeAll
-  static void startRabbit() throws IOException, InterruptedException {
+  static void startRabbit() throws IOException, InterruptedException, ReflectiveOperationException {
     rabbitMqContainer =
         new GenericContainer<>("rabbitmq:4.2")
             .withExposedPorts(5672)
@@ -57,7 +57,13 @@ abstract class AbstractRabbitMqTest {
     connectionFactory = new ConnectionFactory();
     connectionFactory.setHost(rabbitMqContainer.getHost());
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
-    connectionFactory.setAutomaticRecoveryEnabled(false);
+    try {
+      ConnectionFactory.class
+          .getMethod("setAutomaticRecoveryEnabled", boolean.class)
+          .invoke(connectionFactory, false);
+    } catch (NoSuchMethodException ignored) {
+      // Automatic recovery is not available in the minimum supported client.
+    }
     connectionFactory.setVirtualHost("otel-test");
 
     rabbitMqHost = rabbitMqContainer.getHost();
