@@ -58,10 +58,8 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<? extends Future<?>> wrapListener(
-        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
 
-      // TODO remove this extra variable when migrating to "indy only" instrumentation.
-      GenericFutureListener<? extends Future<?>> listener = listenerArg;
       if (FutureListenerWrappers.shouldWrap(listener)) {
         listener = FutureListenerWrappers.wrap(Context.current(), listener);
       }

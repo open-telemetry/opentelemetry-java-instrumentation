@@ -84,11 +84,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Connection> onEnter(
-        @Advice.Argument(0)
-            BiConsumer<? super HttpClientRequest, ? super Connection> originalCallBack) {
-
-      // intermediate variable needed for inlined instrumentation
-      BiConsumer<? super HttpClientRequest, ? super Connection> callback = originalCallBack;
+        @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         // perform the callback with the client span active (instead of the parent) since this
@@ -105,11 +101,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Connection> onEnter(
-        @Advice.Argument(0)
-            BiConsumer<? super HttpClientRequest, ? super Connection> originalCallBack) {
-
-      // intermediate variable needed for inlined instrumentation
-      BiConsumer<? super HttpClientRequest, ? super Connection> callback = originalCallBack;
+        @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         // use client context after request is sent
@@ -125,11 +117,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientRequest, ? super Throwable> onEnter(
-        @Advice.Argument(0)
-            BiConsumer<? super HttpClientRequest, ? super Throwable> originalCallBack) {
-
-      // using an intermediate variable is required to keep the advice when inlined
-      BiConsumer<? super HttpClientRequest, ? super Throwable> callback = originalCallBack;
+        @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback =
@@ -145,11 +133,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Connection> onEnter(
-        @Advice.Argument(0)
-            BiConsumer<? super HttpClientResponse, ? super Connection> originalCallBack) {
-
-      // intermediate variable needed for inlined instrumentation
-      BiConsumer<? super HttpClientResponse, ? super Connection> callback = originalCallBack;
+        @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         // use client context just when response status & headers are received
@@ -165,11 +149,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Connection> onEnter(
-        @Advice.Argument(0)
-            BiConsumer<? super HttpClientResponse, ? super Connection> originalCallback) {
-
-      // intermediate variable needed for inlined instrumentation
-      BiConsumer<? super HttpClientResponse, ? super Connection> callback = originalCallback;
+        @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback = new DecoratorFunctions.OnMessageDecorator<>(callback, PropagatedContext.PARENT);
@@ -184,11 +164,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static BiConsumer<? super HttpClientResponse, ? super Throwable> onEnter(
-        @Advice.Argument(0)
-            BiConsumer<? super HttpClientResponse, ? super Throwable> originalCallback) {
-
-      // intermediate variable needed for inlined instrumentation
-      BiConsumer<? super HttpClientResponse, ? super Throwable> callback = originalCallback;
+        @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
 
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         callback =
@@ -208,15 +184,9 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0)
-            BiConsumer<? super HttpClientRequest, ? super Throwable> originalRequestCallback,
+            BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
         @Advice.Argument(1)
-            BiConsumer<? super HttpClientResponse, ? super Throwable> originalResponseCallback) {
-
-      // intermediate variables needed for inlined instrumentation
-      BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback =
-          originalRequestCallback;
-      BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback =
-          originalResponseCallback;
+            BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
 
       if (DecoratorFunctions.shouldDecorate(requestCallback.getClass())) {
         requestCallback =
