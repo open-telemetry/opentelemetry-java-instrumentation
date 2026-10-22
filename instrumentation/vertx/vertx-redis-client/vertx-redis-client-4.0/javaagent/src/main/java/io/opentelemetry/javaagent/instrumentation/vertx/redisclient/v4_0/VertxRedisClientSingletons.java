@@ -71,14 +71,19 @@ public class VertxRedisClientSingletons {
         .whenComplete(
             (value, throwable) -> {
               try {
-                Throwable error =
-                    throwable != null
-                        ? throwable
-                        : VertxRedisClientAttributesGetter.getResponseError(value);
-                instrumenter().end(context, request, null, error);
-              } catch (Throwable t) {
-                logger.log(
-                    WARNING, "Failed to inspect the Vert.x Redis response or end its span", t);
+                Throwable error = throwable;
+                if (error == null) {
+                  try {
+                    error = VertxRedisClientAttributesGetter.getResponseError(value);
+                  } catch (Throwable t) {
+                    logger.log(WARNING, "Failed to inspect the Vert.x Redis response", t);
+                  }
+                }
+                try {
+                  instrumenter().end(context, request, null, error);
+                } catch (Throwable t) {
+                  logger.log(WARNING, "Failed to end the Vert.x Redis span", t);
+                }
               } finally {
                 try (Scope ignore = parentContext.makeCurrent()) {
                   if (throwable != null) {
