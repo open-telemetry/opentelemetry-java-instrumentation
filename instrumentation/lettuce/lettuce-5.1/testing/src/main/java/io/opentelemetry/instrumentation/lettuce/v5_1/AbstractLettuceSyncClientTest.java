@@ -23,7 +23,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisConnectionException;
@@ -39,6 +38,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,11 +50,15 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   private String dbUriNonExistent;
 
-  private static final ImmutableMap<String, String> TEST_HASH_MAP =
-      ImmutableMap.of(
-          "firstname", "John",
-          "lastname", "Doe",
-          "age", "53");
+  private static final Map<String, String> TEST_HASH_MAP;
+
+  static {
+    Map<String, String> map = new LinkedHashMap<>();
+    map.put("firstname", "John");
+    map.put("lastname", "Doe");
+    map.put("age", "53");
+    TEST_HASH_MAP = Collections.unmodifiableMap(map);
+  }
 
   private RedisCommands<String, String> syncCommands;
 
@@ -388,7 +393,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testMsetCommand() {
-    String result = syncCommands.mset(ImmutableMap.of("key1", "value1", "key2", "value2"));
+    Map<String, String> values = new LinkedHashMap<>();
+    values.put("key1", "value1");
+    values.put("key2", "value2");
+    String result = syncCommands.mset(values);
 
     assertThat(result).isEqualTo("OK");
 

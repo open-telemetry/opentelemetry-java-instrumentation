@@ -21,7 +21,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisCommandExecutionException;
@@ -41,6 +40,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -57,11 +58,15 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   private String dbUriNonExistent;
   private int incorrectPort;
 
-  private static final ImmutableMap<String, String> TEST_HASH_MAP =
-      ImmutableMap.of(
-          "firstname", "John",
-          "lastname", "Doe",
-          "age", "53");
+  private static final Map<String, String> TEST_HASH_MAP;
+
+  static {
+    Map<String, String> map = new LinkedHashMap<>();
+    map.put("firstname", "John");
+    map.put("lastname", "Doe");
+    map.put("age", "53");
+    TEST_HASH_MAP = Collections.unmodifiableMap(map);
+  }
 
   private RedisAsyncCommands<String, String> asyncCommands;
 
