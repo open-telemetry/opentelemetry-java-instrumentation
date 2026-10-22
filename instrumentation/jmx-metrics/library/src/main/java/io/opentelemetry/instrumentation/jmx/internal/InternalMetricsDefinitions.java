@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
@@ -82,7 +83,10 @@ public class InternalMetricsDefinitions {
     try (InputStream input = classLoader.getResourceAsStream(path)) {
       logger.log(FINE, "loading embedded JMX rules from {0}", path);
       List<MetricDef> metricDefs = RuleParser.get().parseMetricDefs(input);
-      loadedRules.add(new RuleSet(metricDefs, stable, handlerRegistry));
+      // Only the bundled JVM rules import the upstream OpenTelemetry convention.
+      String schemaUrl =
+          systemName.equals("jvm") ? "https://opentelemetry.io/schemas/1.44.0" : null;
+      loadedRules.add(new RuleSet(metricDefs, stable, schemaUrl, handlerRegistry));
     } catch (IOException e) {
       throw new IllegalStateException("unable to load resource " + path, e);
     }
@@ -104,20 +108,12 @@ public class InternalMetricsDefinitions {
     return result;
   }
 
-  /**
-   * Get internal metrics definitions for a given stability.
-   *
-   * @param stable true to get stable metrics, false to get unstable metrics
-   * @return list of metric definitions, may be empty
-   */
-  public List<MetricDef> getMetricDefs(boolean stable) {
-    List<MetricDef> result = new ArrayList<>();
+  public void addMetricDefsTo(MetricConfiguration configuration) {
     for (RuleSet ruleSet : loadedRules) {
-      if (ruleSet.stable == stable) {
-        result.addAll(ruleSet.metricDefs);
+      for (MetricDef def : ruleSet.metricDefs) {
+        configuration.addMetricDef(def, !ruleSet.stable, ruleSet.schemaUrl);
       }
     }
-    return result;
   }
 
   /**
@@ -145,12 +141,18 @@ public class InternalMetricsDefinitions {
 
   private static class RuleSet {
     private final boolean stable;
+    @Nullable private final String schemaUrl;
     private final List<MetricDef> metricDefs;
     private final Set<String> metricNames = new HashSet<>();
 
-    RuleSet(List<MetricDef> metricDefs, boolean stable, HandlerRegistry handlerRegistry) {
+    RuleSet(
+        List<MetricDef> metricDefs,
+        boolean stable,
+        @Nullable String schemaUrl,
+        HandlerRegistry handlerRegistry) {
       this.metricDefs = metricDefs;
       this.stable = stable;
+      this.schemaUrl = schemaUrl;
       for (MetricDef def : metricDefs) {
         metricNames.addAll(def.getMetricNames());
         for (String handlerName : def.getHandlerNames()) {

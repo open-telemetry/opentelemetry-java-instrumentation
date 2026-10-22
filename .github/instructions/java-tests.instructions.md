@@ -19,6 +19,11 @@ convention not caught by CI.
 - Use focused unit tests for nontrivial standalone logic and shared infrastructure when they add
   coverage beyond integration tests. Choose cases for distinct behavior and important edge cases,
   not to enumerate every implementation branch or combination of mocked responses.
+- Tests that exercise javaagent helper classes directly, without requiring installed-agent behavior,
+  belong in a `JvmTestSuite` named `unitTests` under `src/unitTests/java`. Prefer direct same-package
+  access over `AgentClassLoaderAccess` or reflection used solely to bypass integration-test
+  classloader isolation. Reflection or classloader access remains appropriate when that behavior
+  is itself under test.
 - Test supported behavior. Do not add or request tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted

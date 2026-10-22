@@ -40,8 +40,7 @@ The bootstrap class loader contains several modules:
   the `@WithSpan` annotation. This module is internal and its APIs are considered unstable.
 - **The `io.opentelemetry.javaagent.bootstrap` package from the `javaagent-extension-api` module**:
   this package contains several instrumentation utilities that are only usable when an application
-  is instrumented with the javaagent; for example, the `Java8BytecodeBridge` that should be used
-  inside advice classes.
+  is instrumented with the javaagent. Non-inlined advice can call the OpenTelemetry API directly.
 - All modules using the `otel.javaagent-bootstrap` Gradle plugin:
   these modules contain instrumentation-specific classes that must be globally available in the
   bootstrap class loader. For example, classes that are used to coordinate

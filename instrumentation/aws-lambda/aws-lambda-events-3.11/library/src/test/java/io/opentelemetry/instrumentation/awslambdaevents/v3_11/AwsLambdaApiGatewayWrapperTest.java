@@ -57,8 +57,7 @@ class AwsLambdaApiGatewayWrapperTest {
   void setUp() {
     when(context.getFunctionName()).thenReturn("my_function");
     when(context.getAwsRequestId()).thenReturn("1-22-333");
-    when(context.getInvokedFunctionArn())
-        .thenReturn("arn:aws:lambda:us-east-1:123456789:function:test");
+    AwsLambdaTestUtils.stubInvokedFunctionArn(context);
   }
 
   @AfterEach
@@ -111,8 +110,14 @@ class AwsLambdaApiGatewayWrapperTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                    : null),
+                            equalTo(
+                                CLOUD_ACCOUNT_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "123456789"
+                                    : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -151,8 +156,14 @@ class AwsLambdaApiGatewayWrapperTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                    : null),
+                            equalTo(
+                                CLOUD_ACCOUNT_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "123456789"
+                                    : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"))));
   }
@@ -182,8 +193,14 @@ class AwsLambdaApiGatewayWrapperTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                    : null),
+                            equalTo(
+                                CLOUD_ACCOUNT_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "123456789"
+                                    : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"))));
   }
@@ -213,8 +230,14 @@ class AwsLambdaApiGatewayWrapperTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                    : null),
+                            equalTo(
+                                CLOUD_ACCOUNT_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "123456789"
+                                    : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"))));
   }
@@ -247,8 +270,14 @@ class AwsLambdaApiGatewayWrapperTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                    : null),
+                            equalTo(
+                                CLOUD_ACCOUNT_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "123456789"
+                                    : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"))));
   }
