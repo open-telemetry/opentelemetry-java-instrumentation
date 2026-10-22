@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.queryInstrumenter;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
@@ -18,15 +19,17 @@ import retrofit2.Retrofit;
 public class InfluxDbQueryAdviceScope {
   private final CallDepth callDepth;
   @Nullable private final Context parentContext;
-  @Nullable private final InfluxDbScope<InfluxDbQuery> scope;
+  @Nullable private final InfluxDbQueryState queryState;
+  @Nullable private final Scope scope;
 
   private InfluxDbQueryAdviceScope(
       CallDepth callDepth,
       @Nullable Context parentContext,
-      @Nullable InfluxDbScope<InfluxDbQuery> scope) {
+      @Nullable InfluxDbQueryState queryState) {
     this.callDepth = callDepth;
     this.parentContext = parentContext;
-    this.scope = scope;
+    this.queryState = queryState;
+    scope = queryState == null ? null : queryState.getContext().makeCurrent();
   }
 
   public static InfluxDbQueryAdviceScope start(@Nullable Query query, Retrofit retrofit) {
@@ -45,9 +48,7 @@ public class InfluxDbQueryAdviceScope {
     }
 
     return new InfluxDbQueryAdviceScope(
-        callDepth,
-        parentContext,
-        InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery));
+        callDepth, parentContext, new InfluxDbQueryState(parentContext, influxDbQuery));
   }
 
   @Nullable
@@ -55,10 +56,26 @@ public class InfluxDbQueryAdviceScope {
     return parentContext;
   }
 
+  @Nullable
+  public InfluxDbQueryState queryState() {
+    return queryState;
+  }
+
   public void end(@Nullable Throwable throwable) {
-    if (callDepth.decrementAndGet() > 0 || scope == null) {
+    if (callDepth.decrementAndGet() > 0 || queryState == null || scope == null) {
       return;
     }
-    scope.end(throwable);
+    scope.close();
+    queryState.end(throwable);
+  }
+
+  public void endAsync(@Nullable Throwable throwable) {
+    if (callDepth.decrementAndGet() > 0 || queryState == null || scope == null) {
+      return;
+    }
+    scope.close();
+    if (throwable != null) {
+      queryState.end(throwable);
+    }
   }
 }
