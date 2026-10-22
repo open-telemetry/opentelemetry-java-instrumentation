@@ -33,7 +33,8 @@ class SerializationUtilTest {
   @Test
   void sqsEventDeserializedFromInputStreamJson() {
     assertSqsEvent(
-        SerializationUtil.fromJson(new ByteArrayInputStream(EVENT.getBytes(UTF_8)), SQSEvent.class));
+        SerializationUtil.fromJson(
+            new ByteArrayInputStream(EVENT.getBytes(UTF_8)), SQSEvent.class));
   }
 
   private static void assertSqsEvent(SQSEvent event) {
@@ -41,8 +42,7 @@ class SerializationUtilTest {
     assertThat(event.getRecords()).hasSize(1);
     SQSEvent.SQSMessage record = event.getRecords().get(0);
     assertThat(record.getEventSource()).isEqualTo("aws:sqs");
-    assertThat(record.getEventSourceArn())
-        .isEqualTo("arn:aws:sqs:us-east-2:123456789012:my-queue");
+    assertThat(record.getEventSourceArn()).isEqualTo("arn:aws:sqs:us-east-2:123456789012:my-queue");
     assertThat(record.getMessageId()).isEqualTo("059f36b4-87a3-44ab-83d2-661975830a7d");
     assertThat(record.getBody()).isEqualTo("Test message.");
     assertThat(record.getReceiptHandle()).isEqualTo("receipt-handle");

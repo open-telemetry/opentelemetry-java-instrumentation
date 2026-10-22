@@ -84,8 +84,7 @@ class AwsLambdaStreamWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.expectedCloudResourceId()),
+                                CLOUD_RESOURCE_ID, AwsLambdaTestUtils.expectedCloudResourceId()),
                             equalTo(CLOUD_ACCOUNT_ID, AwsLambdaTestUtils.expectedCloudAccountId()),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
@@ -112,8 +111,7 @@ class AwsLambdaStreamWrapperTest {
                         .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.expectedCloudResourceId()),
+                                CLOUD_RESOURCE_ID, AwsLambdaTestUtils.expectedCloudResourceId()),
                             equalTo(CLOUD_ACCOUNT_ID, AwsLambdaTestUtils.expectedCloudAccountId()),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
 

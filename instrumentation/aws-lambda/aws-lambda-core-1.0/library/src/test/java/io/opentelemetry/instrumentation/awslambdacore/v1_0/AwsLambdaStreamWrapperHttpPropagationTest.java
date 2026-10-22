@@ -94,8 +94,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
                         .hasParentSpanId("0000000000000456")
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.expectedCloudResourceId()),
+                                CLOUD_RESOURCE_ID, AwsLambdaTestUtils.expectedCloudResourceId()),
                             equalTo(CLOUD_ACCOUNT_ID, AwsLambdaTestUtils.expectedCloudAccountId()),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
@@ -131,8 +130,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
                         .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.expectedCloudResourceId()),
+                                CLOUD_RESOURCE_ID, AwsLambdaTestUtils.expectedCloudResourceId()),
                             equalTo(CLOUD_ACCOUNT_ID, AwsLambdaTestUtils.expectedCloudAccountId()),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
 

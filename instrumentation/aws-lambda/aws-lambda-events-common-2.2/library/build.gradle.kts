@@ -30,7 +30,6 @@ dependencies {
   // TODO: Switch to aws-lambda-java-serialization to more robustly follow Lambda's serialization logic.
   implementation("com.fasterxml.jackson.core:jackson-databind")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
-
 }
 
 testing {
