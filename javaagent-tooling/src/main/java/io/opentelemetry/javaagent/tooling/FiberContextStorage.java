@@ -96,7 +96,7 @@ final class FiberContextStorage implements ContextStorage, AutoCloseable {
     private final ContextState owner;
     private final Context previousContext;
     @Nullable private final Object previousScope;
-    private boolean closed;
+    private volatile boolean closed;
 
     private FiberScope(
         ContextState owner, Context previousContext, @Nullable Object previousScope) {
@@ -107,37 +107,37 @@ final class FiberContextStorage implements ContextStorage, AutoCloseable {
 
     @Override
     public void close() {
-      String invalidCloseMessage = null;
-      synchronized (this) {
-        if (closed) {
-          return;
+      if (closed) {
+        return;
+      }
+      if (FiberContextStorageHolder.current() != owner) {
+        if (strictContextEnabled) {
+          throw new IllegalStateException("Fiber context scope closed by a different fiber");
         }
-        if (FiberContextStorageHolder.current() != owner) {
-          if (strictContextEnabled) {
-            throw new IllegalStateException("Fiber context scope closed by a different fiber");
-          }
-          invalidCloseMessage = "Trying to close fiber context scope from a different fiber.";
-        } else if (owner.getScope() != this) {
-          if (strictContextEnabled) {
-            throw new IllegalStateException("Fiber context scopes must be closed in reverse order");
-          }
-          invalidCloseMessage = "Trying to close fiber context scope out of order.";
-        } else {
-          owner.setContext(previousContext);
-          owner.setScope(previousScope);
-          closed = true;
-          if (strictContextEnabled) {
-            openFiberScopes.decrementAndGet();
-          }
+        logIgnoredInvalidClose("Trying to close fiber context scope from a different fiber.");
+        return;
+      }
+      if (owner.getScope() != this) {
+        if (strictContextEnabled) {
+          throw new IllegalStateException("Fiber context scopes must be closed in reverse order");
         }
+        logIgnoredInvalidClose("Trying to close fiber context scope out of order.");
+        return;
       }
 
-      if (invalidCloseMessage != null) {
-        try {
-          logger.log(FINE, invalidCloseMessage + " Ignoring the call.");
-        } catch (RuntimeException ignored) {
-          // Logging must not change the non-throwing behavior of invalid closes.
-        }
+      owner.setContext(previousContext);
+      owner.setScope(previousScope);
+      closed = true;
+      if (strictContextEnabled) {
+        openFiberScopes.decrementAndGet();
+      }
+    }
+
+    private void logIgnoredInvalidClose(String message) {
+      try {
+        logger.log(FINE, message + " Ignoring the call.");
+      } catch (RuntimeException ignored) {
+        // Logging must not change the non-throwing behavior of invalid closes.
       }
     }
   }

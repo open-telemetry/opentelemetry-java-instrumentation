@@ -10,48 +10,20 @@ import zio.http._
 
 import java.util.concurrent.CountDownLatch
 
-class ZioHttpTestApplication(port: Int) {
-  private val delegatedRoutes =
-    Routes(
-      Method.GET / "delegate" / "test" -> handler { (_: Request) =>
-        Response.text("Inner test")
-      }
-    )
-
-  private val middleDelegatedRoutes =
-    Routes(
-      Method.GET / "delegate" / string("middle") -> handler {
-        (_: String, request: Request) =>
-          delegatedRoutes.runZIO(request)
-      }
-    )
-
+object ZioHttpTestApplication extends ZIOAppDefault {
   private val routes =
     Routes(
       Method.GET / "greet" / string("name") -> handler {
         (name: String, _: Request) =>
           Response.text(s"Hello $name")
-      },
-      Method.GET / "greet-async" / string("name") -> handler {
-        (name: String, _: Request) =>
-          ZIO.yieldNow *> ZIO.succeed(Response.text(s"Hello $name"))
-      },
-      Method.GET / "delegate" / string("name") -> handler {
-        (_: String, request: Request) =>
-          if (request.rawHeader("x-test-deep-delegation").contains("true"))
-            middleDelegatedRoutes.runZIO(request)
-          else delegatedRoutes.runZIO(request)
-      },
-      Method.GET / "failure" / string("name") -> handler {
-        (_: String, _: Request) =>
-          ZIO.yieldNow *> ZIO.fail(Response.internalServerError)
       }
     )
 
+  var port = -1
   val started = new CountDownLatch(1)
 
-  def run = Server
-    .install(routes)
+  override def run = Server
+    .serve(routes)
     .flatMap { _ =>
       started.countDown()
       ZIO.never

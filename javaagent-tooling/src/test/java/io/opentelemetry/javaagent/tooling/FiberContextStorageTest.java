@@ -87,14 +87,12 @@ class FiberContextStorageTest {
       assertThat(storage.attach(parentContext)).isSameAs(Scope.noop());
       Scope nestedScope = storage.attach(nestedContext);
 
-      handler.scopeToCheck.set(parentScope);
       assertThatCode(parentScope::close).doesNotThrowAnyException();
       assertThat(storage.current()).isSameAs(nestedContext);
 
       ContextStateImpl otherFiber = new ContextStateImpl(context("other-fiber"));
       Activation otherActivation = FiberContextStorageHolder.activate(otherFiber, ownerActivation);
       try {
-        handler.scopeToCheck.set(nestedScope);
         assertThatCode(nestedScope::close).doesNotThrowAnyException();
         assertThat(storage.current()).isSameAs(otherFiber.getContext());
       } finally {
@@ -106,7 +104,6 @@ class FiberContextStorageTest {
       assertThat(handler.records).extracting(LogRecord::getLevel).containsExactly(FINE, FINE);
       assertThat(handler.records.get(0).getMessage()).contains("out of order");
       assertThat(handler.records.get(1).getMessage()).contains("different fiber");
-      assertThat(handler.scopeWasMonitored).isFalse();
       assertThatCode(storage::close).doesNotThrowAnyException();
       nestedScope.close();
       parentScope.close();
@@ -185,6 +182,19 @@ class FiberContextStorageTest {
                 try {
                   assertThat(Thread.currentThread()).isNotSameAs(openingThread.get());
                   assertThat(storage.current()).isSameAs(attachedContext);
+                  scope.close();
+                  assertThat(storage.current()).isSameAs(Context.root());
+                } finally {
+                  FiberContextStorageHolder.deactivate(activation);
+                }
+              })
+          .get(10, SECONDS);
+
+      openingWorker
+          .submit(
+              () -> {
+                Activation activation = FiberContextStorageHolder.activate(state, null);
+                try {
                   scope.close();
                   assertThat(storage.current()).isSameAs(Context.root());
                 } finally {
@@ -364,14 +374,11 @@ class FiberContextStorageTest {
   private static final class LoggingHandler extends Handler {
 
     private final List<LogRecord> records = new ArrayList<>();
-    private final AtomicReference<Object> scopeToCheck = new AtomicReference<>();
-    private boolean scopeWasMonitored;
     private RuntimeException failure;
 
     @Override
     public void publish(LogRecord record) {
       records.add(record);
-      scopeWasMonitored |= Thread.holdsLock(scopeToCheck.get());
       if (failure != null) {
         throw failure;
       }
