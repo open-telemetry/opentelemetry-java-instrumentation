@@ -235,7 +235,7 @@ class LettuceAsyncClientTest {
     assertThat(error)
         .isInstanceOf(ExecutionException.class)
         .hasCauseInstanceOf(RedisCommandExecutionException.class);
-    assertThat(error.getCause()).hasMessage("\uffc3\uffa9chec\uffe4\uffb8\uffad details");
+    assertThat(error.getCause()).hasMessage("ￃﾩchec￤ﾸﾭ details");
 
     String exceptionType = RedisCommandExecutionException.class.getName();
     testing.waitAndAssertTraces(
