@@ -563,16 +563,24 @@ public final class ContextPropagationOperator {
   static class RunnableWrapper implements Runnable {
     private final Runnable delegate;
     private final Context context;
+    @Nullable private final Context applicationContextBoundary;
 
     RunnableWrapper(Runnable delegate) {
       this.delegate = delegate;
       context = Context.current();
+      applicationContextBoundary = isApplicationContextBoundaryActive() ? context : null;
     }
 
     @Override
     public void run() {
-      try (Scope ignore = context.makeCurrent()) {
-        delegate.run();
+      if (applicationContextBoundary != null) {
+        try (Scope ignore = ContextBoundaryState.enter(applicationContextBoundary)) {
+          delegate.run();
+        }
+      } else {
+        try (Scope ignore = context.makeCurrent()) {
+          delegate.run();
+        }
       }
     }
   }

@@ -13,6 +13,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +33,7 @@ import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 class ContextBoundaryTest {
@@ -37,6 +41,8 @@ class ContextBoundaryTest {
   private static final Context OPERATION = Context.root().with(KEY, "operation");
   private static final Context APPLICATION = Context.root().with(KEY, "application");
   private static final Context UNRELATED = Context.root().with(KEY, "unrelated");
+  private static final Context INNER = Context.root().with(KEY, "inner");
+  private static final MethodHandle MONO_CONTEXT_WRITE_METHOD = getMonoContextWriteMethod();
 
   private final ContextPropagationOperator operator = ContextPropagationOperator.create();
 
@@ -77,6 +83,11 @@ class ContextBoundaryTest {
             mono ->
                 Stream.of(Context.root(), APPLICATION)
                     .map(application -> Arguments.of(mono, application)));
+  }
+
+  private static Stream<Arguments> nestedPublisherBoundaries() {
+    return Stream.of(false, true)
+        .flatMap(mono -> Stream.of(Context.root(), INNER).map(inner -> Arguments.of(mono, inner)));
   }
 
   private static Stream<Arguments> terminalCallbacks() {
@@ -172,6 +183,116 @@ class ContextBoundaryTest {
             .block();
       }
       assertThat(Context.current()).isSameAs(UNRELATED);
+    }
+    assertThat(observed.get()).isSameAs(application);
+  }
+
+  @ParameterizedTest
+  @MethodSource("nestedPublisherBoundaries")
+  void keepsExplicitContextForIndependentPublisher(boolean mono, Context inner) {
+    operator.registerOnEachOperator();
+    AtomicReference<Context> observed = new AtomicReference<>();
+    try (Scope ignored = UNRELATED.makeCurrent()) {
+      if (mono) {
+        ContextPropagationOperator.runWithContext(Mono.just("value"), OPERATION, APPLICATION)
+            .map(value -> value)
+            .doOnNext(
+                value -> {
+                  withStoredContext(
+                          Mono.just(value)
+                              .map(
+                                  innerValue -> {
+                                    assertThat(Context.current()).isSameAs(inner);
+                                    return innerValue;
+                                  }),
+                          inner)
+                      .block();
+                  assertThat(Context.current()).isSameAs(APPLICATION);
+                  observed.set(Context.current());
+                })
+            .block();
+      } else {
+        ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, APPLICATION)
+            .map(value -> value)
+            .doOnNext(
+                value -> {
+                  withStoredContext(
+                          Mono.just(value)
+                              .map(
+                                  innerValue -> {
+                                    assertThat(Context.current()).isSameAs(inner);
+                                    return innerValue;
+                                  }),
+                          inner)
+                      .block();
+                  assertThat(Context.current()).isSameAs(APPLICATION);
+                  observed.set(Context.current());
+                })
+            .collectList()
+            .block();
+      }
+      assertThat(Context.current()).isSameAs(UNRELATED);
+    }
+    assertThat(observed.get()).isSameAs(APPLICATION);
+  }
+
+  @ParameterizedTest
+  @MethodSource("hookedChainBoundaries")
+  void keepsApplicationContextAcrossDownstreamSchedulerHop(boolean mono, Context application) {
+    assumeTrue(schedulerHooksSupported());
+    operator.registerOnEachOperator();
+    AtomicReference<Context> observed = new AtomicReference<>();
+    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
+    try {
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        if (mono) {
+          ContextPropagationOperator.runWithContext(
+                  Mono.fromCallable(
+                      () -> {
+                        assertThat(Context.current()).isSameAs(OPERATION);
+                        return "value";
+                      }),
+                  OPERATION,
+                  application)
+              .publishOn(scheduler)
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    assertThat(Context.current()).isSameAs(application);
+                    observed.set(Context.current());
+                  })
+              .block();
+        } else {
+          ContextPropagationOperator.runWithContext(
+                  Flux.from(
+                      Mono.fromCallable(
+                          () -> {
+                            assertThat(Context.current()).isSameAs(OPERATION);
+                            return "value";
+                          })),
+                  OPERATION,
+                  application)
+              .publishOn(scheduler)
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    assertThat(Context.current()).isSameAs(application);
+                    observed.set(Context.current());
+                  })
+              .collectList()
+              .block();
+        }
+        assertThat(Context.current()).isSameAs(UNRELATED);
+      }
+      try (Scope ignored = INNER.makeCurrent()) {
+        Mono.just("independent")
+            .publishOn(scheduler)
+            .doOnNext(value -> assertThat(Context.current()).isSameAs(INNER))
+            .block();
+        assertThat(Context.current()).isSameAs(INNER);
+      }
+    } finally {
+      scheduler.dispose();
     }
     assertThat(observed.get()).isSameAs(application);
   }
@@ -453,6 +574,22 @@ class ContextBoundaryTest {
     }
   }
 
+  private static MethodHandle getMonoContextWriteMethod() {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      return lookup.findVirtual(
+          Mono.class, "contextWrite", MethodType.methodType(Mono.class, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      // ignore
+    }
+    try {
+      return lookup.findVirtual(
+          Mono.class, "subscriberContext", MethodType.methodType(Mono.class, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      return null;
+    }
+  }
+
   @ParameterizedTest
   @MethodSource("representativeBoundaries")
   void scalarEmptyErrorAndRetry(
@@ -568,6 +705,21 @@ class ContextBoundaryTest {
           ContextPropagationOperator.runWithContext(source, operation, application);
       assertThat(boundary).isNotInstanceOf(Fuseable.class);
       boundary.subscribe(actual);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> Mono<T> withStoredContext(Mono<T> source, Context context) {
+    try {
+      return (Mono<T>)
+          MONO_CONTEXT_WRITE_METHOD.invoke(
+              source,
+              (Function<reactor.util.context.Context, reactor.util.context.Context>)
+                  reactorContext ->
+                      ContextPropagationOperator.storeOpenTelemetryContext(
+                          reactorContext, context));
+    } catch (Throwable t) {
+      throw new AssertionError(t);
     }
   }
 

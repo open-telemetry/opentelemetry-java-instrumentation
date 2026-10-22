@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static java.lang.invoke.MethodType.methodType;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -38,6 +39,7 @@ import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 class ContextPropagationOperatorInstrumentationTest {
@@ -61,6 +63,15 @@ class ContextPropagationOperatorInstrumentationTest {
       // ignore
     }
     return null;
+  }
+
+  private static boolean schedulerHooksSupported() {
+    try {
+      Schedulers.class.getMethod("onScheduleHook", String.class, Function.class);
+      return true;
+    } catch (NoSuchMethodException ignored) {
+      return false;
+    }
   }
 
   @Test
@@ -284,6 +295,102 @@ class ContextPropagationOperatorInstrumentationTest {
     }
     assertThat(observed.get())
         .isEqualTo(rootApplicationContext ? null : applicationContext.get(APPLICATION_KEY));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+  void hookedDownstreamSchedulerHopKeepsApplicationContext(
+      boolean flux, boolean rootApplicationContext) {
+    assumeTrue(schedulerHooksSupported());
+    Context applicationContext =
+        rootApplicationContext
+            ? Context.root()
+            : Context.root().with(APPLICATION_KEY, "application");
+    Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
+    Context subscriptionContext = Context.root().with(APPLICATION_KEY, "subscription");
+    AtomicReference<String> observed = new AtomicReference<>();
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
+    try {
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        if (flux) {
+          ContextPropagationOperator.runWithContext(
+                  Flux.just("value"), operationContext, applicationContext)
+              .publishOn(Schedulers.single())
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    observed.set(Context.current().get(APPLICATION_KEY));
+                    assertThat(Context.current().get(APPLICATION_KEY))
+                        .isEqualTo(rootApplicationContext ? null : "application");
+                  })
+              .blockLast();
+        } else {
+          ContextPropagationOperator.runWithContext(
+                  Mono.just("value"), operationContext, applicationContext)
+              .publishOn(Schedulers.single())
+              .map(value -> value)
+              .doOnNext(
+                  value -> {
+                    observed.set(Context.current().get(APPLICATION_KEY));
+                    assertThat(Context.current().get(APPLICATION_KEY))
+                        .isEqualTo(rootApplicationContext ? null : "application");
+                  })
+              .block();
+        }
+        assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+      }
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        Mono.just("independent")
+            .publishOn(Schedulers.single())
+            .map(
+                value -> {
+                  assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+                  return value;
+                })
+            .block();
+        assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+      }
+    } finally {
+      operator.resetOnEachOperator();
+    }
+    assertThat(observed.get()).isEqualTo(rootApplicationContext ? null : "application");
+  }
+
+  @Test
+  void explicitRootContextOverridesApplicationBoundary() {
+    Context applicationContext = Context.root().with(APPLICATION_KEY, "application");
+    Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
+    reactor.util.context.Context innerReactorContext =
+        ContextPropagationOperator.storeOpenTelemetryContext(
+            reactor.util.context.Context.of("retained", "value"), Context.root());
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
+    try {
+      try (Scope ignored = Context.root().with(APPLICATION_KEY, "subscription").makeCurrent()) {
+        ContextPropagationOperator.runWithContext(
+                Mono.just("value"), operationContext, applicationContext)
+            .map(value -> value)
+            .doOnNext(
+                value -> {
+                  writeContext(
+                          Mono.just(value)
+                              .map(
+                                  innerValue -> {
+                                    assertThat(Context.current().get(APPLICATION_KEY)).isNull();
+                                    return innerValue;
+                                  }),
+                          innerReactorContext)
+                      .block();
+                  assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("application");
+                })
+            .block();
+      }
+    } finally {
+      operator.resetOnEachOperator();
+    }
   }
 
   @ParameterizedTest

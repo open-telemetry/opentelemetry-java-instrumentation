@@ -41,6 +41,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
+  private final boolean hasExplicitContext;
   private final boolean hasContextToPropagate;
 
   /**
@@ -74,9 +75,9 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     io.opentelemetry.context.Context storedContext =
         ContextPropagationOperator.getOpenTelemetryContext(ctx, null);
     this.traceContext = storedContext != null ? storedContext : contextToPropagate;
+    this.hasExplicitContext = storedContext != null || explicitFallback;
     this.hasContextToPropagate =
-        storedContext != null
-            || explicitFallback
+        hasExplicitContext
             || (!ContextPropagationOperator.isSubscriptionContextCaptureDisabled(ctx)
                 && traceContext != io.opentelemetry.context.Context.root());
   }
@@ -130,8 +131,10 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   }
 
   @Nullable
-  private static Scope openScope(@Nullable io.opentelemetry.context.Context context) {
-    return context != null && !ContextPropagationOperator.isApplicationContextBoundaryActive()
+  private Scope openScope(@Nullable io.opentelemetry.context.Context context) {
+    return context != null
+            && (!ContextPropagationOperator.isApplicationContextBoundaryActive()
+                || hasExplicitContext)
         ? context.makeCurrent()
         : null;
   }
