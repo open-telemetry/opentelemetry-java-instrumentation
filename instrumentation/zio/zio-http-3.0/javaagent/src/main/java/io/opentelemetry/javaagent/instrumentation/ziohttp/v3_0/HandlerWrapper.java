@@ -66,11 +66,11 @@ public class HandlerWrapper {
                 ZIO<R, ERR, OUT> effect;
                 try {
                   effect = result.apply(input);
-                } catch (RuntimeException | Error e) {
+                } catch (Throwable t) {
                   if (request != null) {
                     release(request, routeContext);
                   }
-                  throw e;
+                  throw sneakyThrow(t);
                 }
                 if (request == null) {
                   return effect;
@@ -112,6 +112,12 @@ public class HandlerWrapper {
         REQUEST_CONTEXT.set(request, null);
       }
     }
+  }
+
+  // Preserve Scala's unchecked exception behavior while releasing the request state.
+  @SuppressWarnings("unchecked")
+  private static <T extends Throwable> RuntimeException sneakyThrow(Throwable t) throws T {
+    throw (T) t;
   }
 
   // ZIO is contravariant in its environment, so this no-environment effect is safe for any R.
