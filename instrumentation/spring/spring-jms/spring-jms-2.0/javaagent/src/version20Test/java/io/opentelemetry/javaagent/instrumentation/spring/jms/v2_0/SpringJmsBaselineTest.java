@@ -25,11 +25,14 @@ import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -80,8 +83,7 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     cleanup.deferCleanup(connectionFactory::close);
 
     CountDownLatch consumerCreated = new CountDownLatch(1);
-    CountDownLatch messageReceived = new CountDownLatch(1);
-    AtomicReference<SpanContext> listenerContext = new AtomicReference<>();
+    CompletableFuture<SpanContext> listenerContext = new CompletableFuture<>();
     BaselineListenerContainer container = new BaselineListenerContainer(consumerCreated);
     container.setConnectionFactory(connectionFactory);
     container.setDestinationName(DESTINATION_NAME);
@@ -94,8 +96,7 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
         new SessionAwareMessageListener() {
           @Override
           public void onMessage(Message message, Session session) {
-            listenerContext.set(Span.current().getSpanContext());
-            messageReceived.countDown();
+            listenerContext.complete(Span.current().getSpanContext());
           }
         };
     container.setMessageListener(listener);
@@ -108,36 +109,39 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     template.setPubSubDomain(true);
     testing.runWithSpan("parent", () -> template.convertAndSend(DESTINATION_NAME, "a message"));
 
-    assertThat(messageReceived.await(10, SECONDS)).isTrue();
-    assertThat(listenerContext.get()).isNotNull();
-    assertThat(listenerContext.get().isValid()).isTrue();
+    SpanContext processContext = listenerContext.get(10, SECONDS);
+    assertThat(processContext.isValid()).isTrue();
 
-    SpanData producerSpan = assertListenerSpans();
-    SpanContext processContext = findProcessSpan(producerSpan).getSpanContext();
-    assertThat(listenerContext.get().getTraceId()).isEqualTo(processContext.getTraceId());
-    assertThat(listenerContext.get().getSpanId()).isEqualTo(processContext.getSpanId());
+    assertListenerSpans(processContext);
     assertMetrics();
   }
 
-  private SpanData assertListenerSpans() {
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    if (Boolean.getBoolean(RECEIVE_TELEMETRY_PROPERTY)) {
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanName("parent", "receive " + DESTINATION_NAME),
-          trace -> {
+  private void assertListenerSpans(SpanContext processContext) {
+    Consumer<TraceAssert> parentTraceAssertion =
+        trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span -> span.hasName("send " + DESTINATION_NAME).hasParent(trace.getSpan(0)),
-                span ->
-                    assertConsumerSpan(
-                        span,
-                        trace.getSpan(1),
-                        trace.getSpan(1),
-                        DESTINATION_NAME,
-                        "process",
-                        false,
-                        null,
-                        SUBSCRIPTION_NAME));
+                span -> {
+                  assertConsumerSpan(
+                      span,
+                      trace.getSpan(1),
+                      trace.getSpan(1),
+                      DESTINATION_NAME,
+                      "process",
+                      false,
+                      null,
+                      SUBSCRIPTION_NAME);
+                  assertThat(processContext.getTraceId()).isEqualTo(trace.getSpan(2).getTraceId());
+                  assertThat(processContext.getSpanId()).isEqualTo(trace.getSpan(2).getSpanId());
+                });
+
+    if (Boolean.getBoolean(RECEIVE_TELEMETRY_PROPERTY)) {
+      AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("parent", "receive " + DESTINATION_NAME),
+          trace -> {
+            parentTraceAssertion.accept(trace);
             producerSpan.set(trace.getSpan(1));
           },
           trace ->
@@ -153,36 +157,8 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
                           null,
                           SUBSCRIPTION_NAME)));
     } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasNoParent(),
-                  span -> span.hasName("send " + DESTINATION_NAME).hasParent(trace.getSpan(0)),
-                  span ->
-                      assertConsumerSpan(
-                          span,
-                          trace.getSpan(1),
-                          trace.getSpan(1),
-                          DESTINATION_NAME,
-                          "process",
-                          false,
-                          null,
-                          SUBSCRIPTION_NAME)));
-      producerSpan.set(
-          testing.spans().stream()
-              .filter(span -> span.getName().equals("send " + DESTINATION_NAME))
-              .findFirst()
-              .orElseThrow(IllegalStateException::new));
+      testing.waitAndAssertTraces(parentTraceAssertion);
     }
-    return producerSpan.get();
-  }
-
-  private static SpanData findProcessSpan(SpanData producerSpan) {
-    return testing.spans().stream()
-        .filter(span -> span.getName().equals("process " + DESTINATION_NAME))
-        .filter(span -> span.getParentSpanId().equals(producerSpan.getSpanId()))
-        .findFirst()
-        .orElseThrow(IllegalStateException::new);
   }
 
   private static void assertMetrics() {

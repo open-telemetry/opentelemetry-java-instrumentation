@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -67,6 +69,11 @@ testing {
           exclude("org.jboss.naming", "jnpserver")
         }
       }
+      executions {
+        register("ReceiveTelemetryEnabled") {
+          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+        }
+      }
     }
 
     register<JvmTestSuite>("version30Test") {
@@ -97,20 +104,6 @@ testing {
     }
   }
 }
-
-configurations
-  .matching {
-    it.name.startsWith("version20Test") || it.name.startsWith("version30Test")
-  }
-  .configureEach {
-    exclude(group = "org.springframework.boot")
-    val springVersion = if (name.startsWith("version20Test")) "2.0" else "3.0.0.RELEASE"
-    resolutionStrategy.eachDependency {
-      if (requested.group == "org.springframework") {
-        useVersion(springVersion)
-      }
-    }
-  }
 
 configurations {
   named("testReceiveSpansDisabledImplementation") {
@@ -149,19 +142,7 @@ tasks {
     )
   }
 
-  val version20Test = testing.suites.named<JvmTestSuite>("version20Test")
-  val version20TestReceiveTelemetryEnabled =
-    register<Test>("version20TestReceiveTelemetryEnabled") {
-      testClassesDirs = version20Test.get().sources.output.classesDirs
-      classpath = version20Test.get().sources.runtimeClasspath
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    }
-
   check {
-    dependsOn(
-      testing.suites,
-      testJmsDisabled,
-      version20TestReceiveTelemetryEnabled,
-    )
+    dependsOn(testing.suites, testJmsDisabled)
   }
 }
