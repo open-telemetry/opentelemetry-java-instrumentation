@@ -38,7 +38,15 @@ class ZioHttpTestApplication(port: Int) {
       },
       Method.GET / "delegate" / string("name") -> handler {
         (_: String, request: Request) =>
-          if (request.rawHeader("x-test-deep-delegation").contains("true"))
+          if (
+            request.rawHeader("x-test-yield-before-delegation").contains("true")
+          )
+            ZIO.yieldNow *> ZIO.suspendSucceed {
+              if (request.rawHeader("x-test-deep-delegation").contains("true"))
+                middleDelegatedRoutes.runZIO(request)
+              else delegatedRoutes.runZIO(request)
+            }
+          else if (request.rawHeader("x-test-deep-delegation").contains("true"))
             middleDelegatedRoutes.runZIO(request)
           else delegatedRoutes.runZIO(request)
       },

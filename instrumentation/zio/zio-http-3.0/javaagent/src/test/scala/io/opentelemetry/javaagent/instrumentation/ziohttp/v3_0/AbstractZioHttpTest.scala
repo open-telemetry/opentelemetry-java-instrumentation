@@ -77,6 +77,26 @@ abstract class AbstractZioHttpTest {
     assertRoute("greet-async")
   }
 
+  @Test
+  def delegatedRoute(): Unit = {
+    assertDelegatedRoute()
+  }
+
+  @Test
+  def yieldingDelegatedRoute(): Unit = {
+    assertYieldingDelegatedRoute()
+  }
+
+  @Test
+  def deeplyDelegatedRoute(): Unit = {
+    assertDeeplyDelegatedRoute()
+  }
+
+  @Test
+  def failedRoute(): Unit = {
+    assertFailedRoute()
+  }
+
   protected def assertRoute(route: String): Unit = {
     assertRoute(
       s"/$route/test",
@@ -95,12 +115,23 @@ abstract class AbstractZioHttpTest {
     )
   }
 
+  protected def assertYieldingDelegatedRoute(): Unit = {
+    assertRoute(
+      "/delegate/test",
+      "GET /delegate/test",
+      "/delegate/test",
+      "Inner test",
+      yieldBeforeDelegation = true
+    )
+  }
+
   protected def assertDeeplyDelegatedRoute(): Unit = {
     assertRoute(
       "/delegate/test",
       "GET /delegate/test",
       "/delegate/test",
       "Inner test",
+      yieldBeforeDelegation = true,
       deepDelegation = true
     )
   }
@@ -151,6 +182,7 @@ abstract class AbstractZioHttpTest {
       spanName: String,
       httpRoute: String,
       responseBody: String,
+      yieldBeforeDelegation: Boolean = false,
       deepDelegation: Boolean = false
   ): Unit = {
     val parent = testing.getOpenTelemetry
@@ -167,6 +199,10 @@ abstract class AbstractZioHttpTest {
           s"00-${context.getTraceId}-${context.getSpanId}-01"
         )
         .header("x-test-deep-delegation", deepDelegation.toString)
+        .header(
+          "x-test-yield-before-delegation",
+          yieldBeforeDelegation.toString
+        )
         .execute()
         .aggregate
         .join
