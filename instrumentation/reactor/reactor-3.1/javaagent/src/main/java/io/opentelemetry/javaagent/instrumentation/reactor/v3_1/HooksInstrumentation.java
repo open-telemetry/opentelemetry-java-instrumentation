@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -31,8 +32,11 @@ class HooksInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isTypeInitializer().or(named("resetOnEachOperator")),
+        isTypeInitializer().or(named("resetOnEachOperator").and(takesArguments(1))),
         getClass().getName() + "$ResetOnEachOperatorAdvice");
+    transformer.applyAdviceToMethod(
+        named("resetOnEachOperator").and(takesArguments(0)),
+        getClass().getName() + "$ResetAllOnEachOperatorAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -46,6 +50,25 @@ class HooksInstrumentation implements TypeInstrumentation {
                   .getBoolean("experimental_span_attributes/development", false))
           .build()
           .registerOnEachOperator();
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ResetAllOnEachOperatorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void postResetAll() {
+      // Hooks.resetOnEachOperator() has removed our hook without telling the operator, which
+      // still considers it registered and would ignore a plain registration.
+      ContextPropagationOperator operator =
+          ContextPropagationOperator.builder()
+              .setCaptureExperimentalSpanAttributes(
+                  DeclarativeConfigUtil.getInstrumentationConfig(
+                          GlobalOpenTelemetry.get(), "reactor")
+                      .getBoolean("experimental_span_attributes/development", false))
+              .build();
+      operator.resetOnEachOperator();
+      operator.registerOnEachOperator();
     }
   }
 }
