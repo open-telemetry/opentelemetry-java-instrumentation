@@ -24,6 +24,7 @@ public class InfluxDbInstrumentationModule extends InstrumentationModule {
     return asList(
         new InfluxDbImplInstrumentation(),
         new InfluxDbCallbackInstrumentation(),
+        new InfluxDbExecutorCallbackInstrumentation(),
         new InfluxDbResponseInstrumentation(),
         new InfluxDbChunkProcessorInstrumentation());
   }

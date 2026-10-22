@@ -33,6 +33,8 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
@@ -58,12 +60,14 @@ import org.influxdb.InfluxDBFactory;
 import org.influxdb.InfluxDBIOException;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
+import org.influxdb.impl.InfluxDBImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import retrofit2.Retrofit;
 
 @SuppressWarnings("deprecation") // Query callbacks and QueryResult use the legacy client API.
 class InfluxDbQueryLifecycleTest {
@@ -706,6 +710,102 @@ class InfluxDbQueryLifecycleTest {
         assertThat(receivedFailure.get()).isInstanceOf(JsonDataException.class);
       }
       assertQuery("com.squareup.moshi.JsonDataException");
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void callbackExecutorRetainsCanceledDecoderFailure(boolean hasFailureConsumer)
+      throws InterruptedException {
+    CountDownLatch readStarted = new CountDownLatch(1);
+    CountDownLatch releaseSource = new CountDownLatch(1);
+    CountDownLatch failureCallback = new CountDownLatch(1);
+    CountDownLatch releaseCallback = new CountDownLatch(1);
+    CountDownLatch callbackCompleted = new CountDownLatch(1);
+    AtomicReference<Throwable> receivedFailure = new AtomicReference<>();
+    AtomicReference<Throwable> callbackError = new AtomicReference<>();
+    BufferedSource source =
+        Okio.buffer(
+            new ForwardingSource(new Buffer()) {
+              private boolean read;
+
+              @Override
+              public long read(Buffer sink, long byteCount) {
+                if (read) {
+                  return -1;
+                }
+                read = true;
+                readStarted.countDown();
+                await(releaseSource);
+                return sink.writeUtf8("{\"results\":[").size();
+              }
+            });
+    Dispatcher dispatcher = new Dispatcher();
+    ExecutorService callbackWorker = Executors.newSingleThreadExecutor();
+    Executor callbackExecutor =
+        command ->
+            callbackWorker.execute(
+                () -> {
+                  try {
+                    command.run();
+                  } catch (NullPointerException e) {
+                    if (hasFailureConsumer) {
+                      throw e;
+                    }
+                    // influxdb-java 2.14 dereferences the absent failure consumer after this
+                    // callback.
+                    callbackError.set(e);
+                  } finally {
+                    callbackCompleted.countDown();
+                  }
+                });
+    OkHttpClient.Builder builder =
+        new OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .addInterceptor(
+                chain ->
+                    response(chain, SUCCESS)
+                        .newBuilder()
+                        .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
+                        .build());
+    try (InfluxDB client =
+        new InfluxDBImpl(
+            "http://localhost:8086",
+            null,
+            null,
+            builder,
+            new Retrofit.Builder().callbackExecutor(callbackExecutor),
+            InfluxDB.ResponseFormat.JSON)) {
+      Consumer<Throwable> failure =
+          error -> {
+            receivedFailure.set(error);
+            failureCallback.countDown();
+            await(releaseCallback);
+          };
+      client.query(QUERY, result -> {}, hasFailureConsumer ? failure : null);
+      try {
+        assertThat(readStarted.await(10, SECONDS)).isTrue();
+        dispatcher.cancelAll();
+        releaseSource.countDown();
+        if (hasFailureConsumer) {
+          assertThat(failureCallback.await(10, SECONDS)).isTrue();
+          assertThat(testing.spans()).isEmpty();
+          assertNoDuration();
+          releaseCallback.countDown();
+        }
+        assertThat(callbackCompleted.await(10, SECONDS)).isTrue();
+      } finally {
+        releaseSource.countDown();
+        releaseCallback.countDown();
+      }
+      if (hasFailureConsumer) {
+        assertThat(receivedFailure.get()).isInstanceOf(EOFException.class);
+      } else {
+        assertThat(callbackError.get()).isInstanceOf(NullPointerException.class);
+      }
+      assertQuery(EOFException.class.getName());
+    } finally {
+      callbackWorker.shutdownNow();
     }
   }
 

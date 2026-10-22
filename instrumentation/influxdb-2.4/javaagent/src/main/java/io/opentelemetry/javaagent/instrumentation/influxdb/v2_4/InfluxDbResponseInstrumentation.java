@@ -51,9 +51,12 @@ class InfluxDbResponseInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+    public static void onExit(
+        @Advice.FieldValue("val$callback") Callback<?> callback,
+        @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
+        CALLBACK_QUERY_STATE.set(callback, null);
       }
     }
   }
