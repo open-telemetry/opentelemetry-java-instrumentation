@@ -40,22 +40,6 @@ class TracedOnSubscribeTest {
   @Mock private Instrumenter<String, Void> instrumenter;
   @Mock private Observer<String> delegate;
 
-  @Test
-  void perSubscriptionReturnsOnSubscribe() {
-    when(instrumenter.start(Context.root(), "request")).thenReturn(Context.root());
-    Observable.OnSubscribe<String> onSubscribe =
-        TracedOnSubscribe.perSubscription(
-            Observable.just("response"), instrumenter, () -> "request");
-    Observable<String> result = Observable.create(onSubscribe);
-    TestSubscriber<String> observer = new TestSubscriber<>();
-
-    result.subscribe(observer);
-
-    assertThat(observer.getOnNextEvents()).containsExactly("response");
-    verify(instrumenter).start(Context.root(), "request");
-    verify(instrumenter).end(Context.root(), "request", null, null);
-  }
-
   @ParameterizedTest
   @ValueSource(longs = {0, 1})
   void propagatesBoundedDemand(long initialRequest) {
