@@ -38,6 +38,43 @@ testing {
         }
       }
     }
+    if (!otelProps.testLatestDeps) {
+      // The shared testing project brings in Dubbo 2.7.5, which wins over testDubbo's direct 2.7.0
+      // request. Exclude it here to exercise the earlier completion APIs without loading tests that
+      // depend on DubboBootstrap.
+      register<JvmTestSuite>("testDubbo270") {
+        sources {
+          java {
+            setSrcDirs(listOf("src/testDubbo/java"))
+            include("**/DubboAgentAsyncTest.java")
+          }
+        }
+        dependencies {
+          implementation(project(":instrumentation:apache-dubbo-2.7:testing")) {
+            exclude(group = "org.apache.dubbo")
+          }
+          val version = baseVersion("2.7.0").orLatest()
+          implementation("org.apache.dubbo:dubbo:$version")
+          implementation("org.apache.dubbo:dubbo-config-api:$version")
+        }
+      }
+      register<JvmTestSuite>("testDubbo272") {
+        sources {
+          java {
+            setSrcDirs(listOf("src/testDubbo/java"))
+            include("**/DubboAgentAsyncTest.java")
+          }
+        }
+        dependencies {
+          implementation(project(":instrumentation:apache-dubbo-2.7:testing")) {
+            exclude(group = "org.apache.dubbo")
+          }
+          val version = baseVersion("2.7.2").orLatest()
+          implementation("org.apache.dubbo:dubbo:$version")
+          implementation("org.apache.dubbo:dubbo-config-api:$version")
+        }
+      }
+    }
   }
 }
 
