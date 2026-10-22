@@ -10,6 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -45,8 +46,7 @@ public class NacosClientSingletons {
       return;
     }
     contextAndScope.closeScope();
-    clientInstrumenter.end(
-        contextAndScope.getContext(), request, response, selectError(response, error));
+    clientInstrumenter.end(contextAndScope.getContext(), request, response, error);
   }
 
   public static ContextAndScope startServerSpan(NacosClientRequest request) {
@@ -67,8 +67,7 @@ public class NacosClientSingletons {
       return;
     }
     contextAndScope.closeScope();
-    serverInstrumenter.end(
-        contextAndScope.getContext(), request, response, selectError(response, error));
+    serverInstrumenter.end(contextAndScope.getContext(), request, response, error);
   }
 
   private static Instrumenter<NacosClientRequest, Response> createClientInstrumenter() {
@@ -77,11 +76,14 @@ public class NacosClientSingletons {
         new NacosClientNetworkAttributesGetter();
     InstrumenterBuilder<NacosClientRequest, Response> builder =
         Instrumenter.<NacosClientRequest, Response>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NacosClientRequest::spanName)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                RpcSpanNameExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(networkAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(networkAttributesGetter))
-            .addAttributesExtractor(new NacosClientAttributesExtractor());
+            .addAttributesExtractor(new NacosClientAttributesExtractor())
+            .setSpanStatusExtractor(new NacosClientSpanStatusExtractor());
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
@@ -91,27 +93,14 @@ public class NacosClientSingletons {
         new NacosClientNetworkAttributesGetter();
     InstrumenterBuilder<NacosClientRequest, Response> builder =
         Instrumenter.<NacosClientRequest, Response>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NacosClientRequest::spanName)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                RpcSpanNameExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(networkAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(networkAttributesGetter))
-            .addAttributesExtractor(new NacosClientAttributesExtractor());
+            .addAttributesExtractor(new NacosClientAttributesExtractor())
+            .setSpanStatusExtractor(new NacosClientSpanStatusExtractor());
     return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
-  }
-
-  @Nullable
-  private static Throwable selectError(@Nullable Response response, @Nullable Throwable error) {
-    if (error != null) {
-      return error;
-    }
-    if (response != null && !response.isSuccess()) {
-      String message = response.getMessage();
-      int errorCode = response.getErrorCode();
-      return new IllegalStateException(
-          "Nacos request failed"
-              + (errorCode != 0 ? " with code " + errorCode : "")
-              + (message != null && !message.isEmpty() ? ": " + message : ""));
-    }
-    return null;
   }
 }

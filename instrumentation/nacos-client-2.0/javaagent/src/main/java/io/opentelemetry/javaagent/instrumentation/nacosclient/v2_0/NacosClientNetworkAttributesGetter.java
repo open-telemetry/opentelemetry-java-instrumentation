@@ -38,16 +38,4 @@ class NacosClientNetworkAttributesGetter
   public String getNetworkProtocolName(NacosClientRequest request, @Nullable Response response) {
     return "grpc";
   }
-
-  @Override
-  @Nullable
-  public String getNetworkPeerAddress(NacosClientRequest request, @Nullable Response response) {
-    return request.peerHost();
-  }
-
-  @Override
-  @Nullable
-  public Integer getNetworkPeerPort(NacosClientRequest request, @Nullable Response response) {
-    return request.peerPort();
-  }
 }

@@ -27,6 +27,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class NacosClientInstrumentationTest {
 
@@ -51,7 +53,6 @@ class NacosClientInstrumentationTest {
         InstanceRequest.class,
         "naming",
         "registerInstance",
-        "Nacos/registerInstance",
         "127.0.0.1",
         8848);
 
@@ -62,7 +63,6 @@ class NacosClientInstrumentationTest {
         ServiceQueryRequest.class,
         "naming",
         "queryService",
-        "Nacos/queryService",
         "2001:db8::1",
         9848);
 
@@ -74,7 +74,6 @@ class NacosClientInstrumentationTest {
         SubscribeServiceRequest.class,
         "naming",
         "subscribeService",
-        "Nacos/subscribeService",
         "nacos.example.com",
         null);
 
@@ -86,7 +85,6 @@ class NacosClientInstrumentationTest {
         SubscribeServiceRequest.class,
         "naming",
         "unsubscribeService",
-        "Nacos/unsubscribeService",
         "nacos.example.com",
         null);
 
@@ -96,7 +94,6 @@ class NacosClientInstrumentationTest {
         ServiceListRequest.class,
         "naming",
         "getServiceList",
-        "Nacos/getServiceList",
         "127.0.0.1",
         8848);
   }
@@ -109,7 +106,6 @@ class NacosClientInstrumentationTest {
         ConfigQueryRequest.class,
         "config",
         "queryConfig",
-        "Nacos/queryConfig",
         "127.0.0.1",
         8848);
 
@@ -120,7 +116,6 @@ class NacosClientInstrumentationTest {
         ConfigPublishRequest.class,
         "config",
         "publishConfig",
-        "Nacos/publishConfig",
         "127.0.0.1",
         8848);
 
@@ -131,7 +126,6 @@ class NacosClientInstrumentationTest {
         ConfigRemoveRequest.class,
         "config",
         "removeConfig",
-        "Nacos/removeConfig",
         "127.0.0.1",
         8848);
   }
@@ -147,7 +141,6 @@ class NacosClientInstrumentationTest {
         NotifySubscriberRequest.class,
         "naming",
         "notifySubscribeChange",
-        "Nacos/notifySubscribeChange",
         "127.0.0.1",
         9848);
 
@@ -158,7 +151,6 @@ class NacosClientInstrumentationTest {
         ConfigChangeNotifyRequest.class,
         "config",
         "notifyConfigChange",
-        "Nacos/notifyConfigChange",
         "127.0.0.1",
         9848);
   }
@@ -239,19 +231,20 @@ class NacosClientInstrumentationTest {
     assertThat(getter.getErrorType(request, null, new IllegalStateException("boom"))).isNull();
   }
 
-  @Test
-  void getsNetworkAttributes() {
+  @ParameterizedTest
+  @ValueSource(strings = {"127.0.0.1", "nacos.example.com", "[2001:db8::1]"})
+  void getsNetworkAttributes(String host) {
     NacosClientNetworkAttributesGetter getter = new NacosClientNetworkAttributesGetter();
     NacosClientRequest request =
         NacosRequestMapper.mapClientRequest(
-            ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"), "127.0.0.1:8848");
+            ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"), host + ":8848");
 
-    assertThat(getter.getServerAddress(request)).isEqualTo("127.0.0.1");
+    assertThat(getter.getServerAddress(request)).isEqualTo(host.replace("[", "").replace("]", ""));
     assertThat(getter.getServerPort(request)).isEqualTo(8848);
     assertThat(getter.getNetworkTransport(request, null)).isEqualTo("tcp");
     assertThat(getter.getNetworkProtocolName(request, null)).isEqualTo("grpc");
-    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("127.0.0.1");
-    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(8848);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @Test
@@ -300,14 +293,12 @@ class NacosClientInstrumentationTest {
       Class<? extends Request> requestClass,
       String category,
       String operation,
-      String spanName,
       String peerHost,
       Integer peerPort) {
     assertThat(request).isNotNull();
     assertThat(request.request()).isInstanceOf(requestClass);
     assertThat(request.category()).isEqualTo(category);
     assertThat(request.operation()).isEqualTo(operation);
-    assertThat(request.spanName()).isEqualTo(spanName);
     assertThat(request.peerHost()).isEqualTo(peerHost);
     assertThat(request.peerPort()).isEqualTo(peerPort);
   }

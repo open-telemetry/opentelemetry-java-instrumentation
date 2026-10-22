@@ -16,7 +16,7 @@ import java.util.List;
 public class NacosClientInstrumentationModule extends InstrumentationModule {
 
   public NacosClientInstrumentationModule() {
-    super("nacos-client", "nacos-client-2.0");
+    super("nacos-client-2.0", "nacos-client");
   }
 
   @Override

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nacosclient.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -15,6 +16,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,6 +38,7 @@ import com.alibaba.nacos.shaded.io.grpc.MethodDescriptor;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -44,6 +47,8 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class NacosClientAgentInstrumentationTest {
 
@@ -56,40 +61,48 @@ class NacosClientAgentInstrumentationTest {
         new GrpcConnection(new RpcClient.ServerInfo("127.0.0.1", 9848), Runnable::run);
     connection.setChannel(new TestManagedChannel("127.0.0.1:9848"));
 
-    try {
-      testing.runWithSpan(
-          "parent",
-          () ->
-              connection.request(
-                  ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"), 1000));
-    } catch (Throwable expected) {
-      // expected
-    }
+    Throwable error =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () ->
+                        connection.request(
+                            ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"),
+                            1000)));
+    assertThat(error).isNotNull();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Nacos/queryConfig")
+                    span.hasName("config/queryConfig")
                         .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasException(emitExceptionAsSpanEvents() ? error : null)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, 9848),
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_PROTOCOL_NAME, "grpc"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, 9848),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(stringKey("nacos.category"), "config"),
                             equalTo(stringKey("nacos.request.type"), "ConfigQueryRequest"))));
   }
 
-  @Test
-  void instrumentsRpcClientHandleServerRequestAdvice() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void instrumentsRpcClientHandleServerRequestAdvice(boolean failedResponse) throws Exception {
+    NotifySubscriberResponse serverResponse = new NotifySubscriberResponse();
+    if (failedResponse) {
+      serverResponse.setErrorInfo(500, "failed");
+    }
     RpcClient rpcClient = mock(RpcClient.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
     ArrayList<ServerRequestHandler> serverRequestHandlers = new ArrayList<>();
-    serverRequestHandlers.add(serverRequestHandler());
+    serverRequestHandlers.add(serverRequestHandler(serverResponse));
     setField(rpcClient, "serverRequestHandlers", serverRequestHandlers);
     setRpcClientConfigIfPresent(rpcClient);
     when(rpcClient.getCurrentServer()).thenReturn(new RpcClient.ServerInfo("127.0.0.1", 9848));
@@ -108,16 +121,18 @@ class NacosClientAgentInstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Nacos/notifySubscribeChange")
+                    span.hasName("naming/notifySubscribeChange")
                         .hasKind(SpanKind.SERVER)
+                        .hasStatus(failedResponse ? StatusData.error() : StatusData.unset())
+                        .hasNoEvents()
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, 9848),
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_PROTOCOL_NAME, "grpc"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, 9848),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
                             equalTo(stringKey("nacos.category"), "naming"),
                             equalTo(stringKey("nacos.request.type"), "NotifySubscriberRequest"),
                             equalTo(stringKey("nacos.group"), "DEFAULT_GROUP"),
@@ -130,7 +145,7 @@ class NacosClientAgentInstrumentationTest {
     return request;
   }
 
-  private static ServerRequestHandler serverRequestHandler() {
+  private static ServerRequestHandler serverRequestHandler(Response response) {
     InvocationHandler handler =
         (proxy, method, args) -> {
           if (method.getDeclaringClass() == Object.class) {
@@ -144,7 +159,7 @@ class NacosClientAgentInstrumentationTest {
               return proxy == args[0];
             }
           }
-          return new NotifySubscriberResponse();
+          return response;
         };
     return (ServerRequestHandler)
         Proxy.newProxyInstance(

@@ -43,10 +43,6 @@ public class NacosClientRequest {
     return operation;
   }
 
-  public String spanName() {
-    return "Nacos/" + operation;
-  }
-
   public String peerAddress() {
     return peerAddress;
   }
