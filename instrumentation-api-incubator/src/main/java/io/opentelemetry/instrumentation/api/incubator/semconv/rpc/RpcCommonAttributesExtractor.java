@@ -14,13 +14,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import javax.annotation.Nullable;
 
 abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>,
-        OpenTelemetryConfigurable,
-        SchemaUrlProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, OpenTelemetryConfigurable {
 
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
   private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
@@ -83,10 +80,5 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       }
       attributes.put(ERROR_TYPE, errorType);
     }
-  }
-
-  @Override
-  public final String internalGetSchemaUrl() {
-    return selection.get().schemaUrl();
   }
 }

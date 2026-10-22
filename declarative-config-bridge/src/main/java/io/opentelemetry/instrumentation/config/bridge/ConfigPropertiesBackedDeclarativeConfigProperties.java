@@ -74,10 +74,6 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "otel.instrumentation.genai.capture-message-content");
     SPECIAL_MAPPINGS.put(
         JAVA_COMMON_SERVICE_PEER_MAPPING, "otel.instrumentation.common.peer-service-mapping");
-    // top-level common configs
-    SPECIAL_MAPPINGS.put(
-        "java.common.span_suppression_strategy/development",
-        "otel.instrumentation.experimental.span-suppression-strategy");
     // renaming to match instrumentation module name
     SPECIAL_MAPPINGS.put(
         "java.opentelemetry_extension_annotations.exclude_methods",
