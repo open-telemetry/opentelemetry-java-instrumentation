@@ -41,6 +41,11 @@ testing {
   }
 }
 
+val test225RuntimeClasspath = configurations.create("test225RuntimeClasspath") {
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  resolutionStrategy.force("org.influxdb:influxdb-java:2.25")
+}
+
 tasks {
   withType<Test>().configureEach {
     // we disable the okhttp instrumentation, so we don't need to assert on the okhttp spans
@@ -72,7 +77,16 @@ tasks {
     jvmArgs("-Dotel.instrumentation.influxdb.query-sanitization.enabled=false")
   }
 
+  val test225 = register<Test>("test225") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().output + test225RuntimeClasspath
+
+    filter {
+      includeTestsMatching("InfluxDbQueryLifecycleTest")
+    }
+  }
+
   check {
-    dependsOn(testQuerySanitizationDisabled)
+    dependsOn(testQuerySanitizationDisabled, test225)
   }
 }

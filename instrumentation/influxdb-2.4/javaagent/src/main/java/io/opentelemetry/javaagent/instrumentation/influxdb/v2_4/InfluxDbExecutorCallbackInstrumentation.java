@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.CALLBACK_QUERY_STATE;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -20,7 +21,9 @@ import retrofit2.Callback;
 class InfluxDbExecutorCallbackInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("retrofit2.ExecutorCallAdapterFactory$ExecutorCallbackCall$1");
+    return namedOneOf(
+        "retrofit2.ExecutorCallAdapterFactory$ExecutorCallbackCall$1",
+        "retrofit2.DefaultCallAdapterFactory$ExecutorCallbackCall$1");
   }
 
   @Override
