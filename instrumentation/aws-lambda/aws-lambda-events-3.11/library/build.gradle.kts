@@ -35,13 +35,13 @@ testing {
 
       configurations.configureEach {
         when (name) {
-          "version12TestImplementation" -> extendsFrom(configurations.testImplementation.get())
-          "version12TestRuntimeOnly" -> extendsFrom(configurations.testRuntimeOnly.get())
+          "core12TestImplementation" -> extendsFrom(configurations.testImplementation.get())
+          "core12TestRuntimeOnly" -> extendsFrom(configurations.testRuntimeOnly.get())
         }
       }
     }
 
-    register<JvmTestSuite>("version12Test") {
+    register<JvmTestSuite>("core12Test") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
