@@ -276,6 +276,69 @@ class InfluxDbQueryLifecycleTest {
   }
 
   @Test
+  void sameClientReentrantQueryDuringCommandEncodingDoesNotEndOuterQuery() throws Exception {
+    CountDownLatch nestedCallCompleted = new CountDownLatch(1);
+    CountDownLatch outerBlocked = new CountDownLatch(1);
+    CountDownLatch releaseOuter = new CountDownLatch(1);
+    AtomicReference<InfluxDB> clientReference = new AtomicReference<>();
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, SECONDS, new SynchronousQueue<>()) {
+          @Override
+          protected void afterExecute(Runnable runnable, Throwable error) {
+            nestedCallCompleted.countDown();
+          }
+        };
+    Dispatcher dispatcher = new Dispatcher(executor);
+    Query outerQuery =
+        new Query("SELECT * FROM cpu", "mydb") {
+          @Override
+          public String getCommandWithUrlEncoded() {
+            clientReference
+                .get()
+                .query(new Query("SELECT * FROM nested", "mydb"), result -> {}, error -> {});
+            await(nestedCallCompleted);
+            outerBlocked.countDown();
+            await(releaseOuter);
+            return super.getCommandWithUrlEncoded();
+          }
+        };
+    try (InfluxDB client =
+        InfluxDBFactory.connect(
+            "http://localhost:8086",
+            new OkHttpClient.Builder()
+                .dispatcher(dispatcher)
+                .addInterceptor(
+                    chain -> {
+                      if (chain.request().url().queryParameter("q").contains("nested")) {
+                        return response(chain, SUCCESS);
+                      }
+                      throw new IOException("outer transport failure");
+                    }))) {
+      clientReference.set(client);
+      FutureTask<Void> outerQueryTask =
+          new FutureTask<>(
+              () -> {
+                client.query(outerQuery, result -> {}, error -> {});
+                return null;
+              });
+      new Thread(outerQueryTask).start();
+      try {
+        assertThat(outerBlocked.await(10, SECONDS)).isTrue();
+        assertThat(testing.spans()).isEmpty();
+        assertNoDuration();
+      } finally {
+        releaseOuter.countDown();
+      }
+      outerQueryTask.get(10, SECONDS);
+      assertQuery(IOException.class.getName());
+      assertException(IOException.class.getName());
+    } finally {
+      releaseOuter.countDown();
+      executor.shutdownNow();
+    }
+  }
+
+  @Test
   void propagatedAsyncContextDoesNotEndOuterQuery() throws InterruptedException {
     CountDownLatch nestedCallback = new CountDownLatch(1);
     CountDownLatch nestedCallCompleted = new CountDownLatch(1);

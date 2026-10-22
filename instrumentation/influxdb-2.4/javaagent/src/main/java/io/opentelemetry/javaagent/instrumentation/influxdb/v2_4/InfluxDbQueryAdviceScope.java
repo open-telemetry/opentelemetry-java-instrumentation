@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbS
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
@@ -17,10 +18,15 @@ import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
 public class InfluxDbQueryAdviceScope {
+  private static final ScopedThreadValue<QueryDelegation> currentQueryDelegation =
+      new ScopedThreadValue<>();
+
   private final CallDepth callDepth;
   @Nullable private final Context parentContext;
   @Nullable private final InfluxDbQueryState queryState;
   @Nullable private final Scope scope;
+  @Nullable private QueryDelegation previousDelegation;
+  private boolean delegationInstalled;
 
   private InfluxDbQueryAdviceScope(
       CallDepth callDepth,
@@ -34,16 +40,38 @@ public class InfluxDbQueryAdviceScope {
   }
 
   public static InfluxDbQueryAdviceScope start(
-      @Nullable Query query, Retrofit retrofit, boolean asynchronous) {
+      @Nullable Query query, Retrofit retrofit, boolean asynchronous, boolean overloadDelegation) {
     CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
     if (callDepth.getAndIncrement() > 0) {
       try {
         Context current = Context.current();
         InfluxDbQueryState currentState = current.get(InfluxDbQueryState.KEY);
+        QueryDelegation delegation = currentQueryDelegation.get();
+        boolean delegated = false;
+        if (delegation != null && !delegation.consumed) {
+          delegation.consumed = true;
+          delegated = delegation.matches(query, retrofit, currentState);
+        }
+        if (delegated) {
+          InfluxDbQueryAdviceScope adviceScope =
+              new InfluxDbQueryAdviceScope(callDepth, null, null, null);
+          if (overloadDelegation && currentState != null) {
+            adviceScope.installDelegation(query, retrofit, currentState);
+          }
+          return adviceScope;
+        }
         Scope scope =
-            currentState != null && !(asynchronous && currentState.belongsToAsyncQuery(retrofit))
-                ? current.with(InfluxDbQueryState.KEY, null).makeCurrent()
-                : null;
+            currentState != null ? current.with(InfluxDbQueryState.KEY, null).makeCurrent() : null;
+        return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
+      } catch (Throwable t) {
+        callDepth.decrementAndGet();
+        throw t;
+      }
+    }
+    Context current = Context.current();
+    if (current.get(InfluxDbQueryState.KEY) != null) {
+      try {
+        Scope scope = current.with(InfluxDbQueryState.KEY, null).makeCurrent();
         return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
       } catch (Throwable t) {
         callDepth.decrementAndGet();
@@ -54,13 +82,12 @@ public class InfluxDbQueryAdviceScope {
       return new InfluxDbQueryAdviceScope(callDepth, null, null, null);
     }
 
-    Context parentContext = Context.current();
+    Context parentContext = current;
     HttpUrl httpUrl = retrofit.baseUrl();
     InfluxDbQuery influxDbQuery =
         InfluxDbQuery.create(
             httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
     if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
-      Context current = Context.current();
       Scope scope =
           current.get(InfluxDbQueryState.KEY) != null
               ? current.with(InfluxDbQueryState.KEY, null).makeCurrent()
@@ -69,9 +96,21 @@ public class InfluxDbQueryAdviceScope {
     }
 
     InfluxDbQueryState queryState =
-        new InfluxDbQueryState(parentContext, influxDbQuery, retrofit, asynchronous);
-    return new InfluxDbQueryAdviceScope(
-        callDepth, parentContext, queryState, queryState.getContext().makeCurrent());
+        new InfluxDbQueryState(parentContext, influxDbQuery, asynchronous);
+    InfluxDbQueryAdviceScope adviceScope =
+        new InfluxDbQueryAdviceScope(
+            callDepth, parentContext, queryState, queryState.getContext().makeCurrent());
+    if (overloadDelegation) {
+      adviceScope.installDelegation(query, retrofit, queryState);
+    }
+    return adviceScope;
+  }
+
+  private void installDelegation(
+      @Nullable Query query, Retrofit retrofit, InfluxDbQueryState queryState) {
+    previousDelegation =
+        currentQueryDelegation.set(new QueryDelegation(query, retrofit, queryState));
+    delegationInstalled = true;
   }
 
   @Nullable
@@ -89,8 +128,30 @@ public class InfluxDbQueryAdviceScope {
     if (scope != null) {
       scope.close();
     }
+    if (delegationInstalled) {
+      currentQueryDelegation.restore(previousDelegation);
+    }
     if (depth == 0 && queryState != null && (!queryState.isAsynchronous() || throwable != null)) {
       queryState.end(throwable);
+    }
+  }
+
+  private static final class QueryDelegation {
+    @Nullable private final Query query;
+    private final Retrofit retrofit;
+    private final InfluxDbQueryState queryState;
+    private boolean consumed;
+
+    private QueryDelegation(
+        @Nullable Query query, Retrofit retrofit, InfluxDbQueryState queryState) {
+      this.query = query;
+      this.retrofit = retrofit;
+      this.queryState = queryState;
+    }
+
+    private boolean matches(
+        @Nullable Query query, Retrofit retrofit, @Nullable InfluxDbQueryState queryState) {
+      return this.query == query && this.retrofit == retrofit && this.queryState == queryState;
     }
   }
 }

@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import retrofit2.Call;
-import retrofit2.Retrofit;
 
 public final class InfluxDbQueryState {
   public static final ContextKey<InfluxDbQueryState> KEY =
@@ -21,23 +20,16 @@ public final class InfluxDbQueryState {
 
   private final InfluxDbQuery request;
   private final Context context;
-  private final Retrofit retrofit;
   private final boolean asynchronous;
   private final AtomicBoolean callbackAssociated = new AtomicBoolean();
   private final AtomicBoolean ended = new AtomicBoolean();
   @Nullable private Call<?> call;
   @Nullable private Throwable callbackError;
 
-  public InfluxDbQueryState(
-      Context parentContext, InfluxDbQuery request, Retrofit retrofit, boolean asynchronous) {
+  public InfluxDbQueryState(Context parentContext, InfluxDbQuery request, boolean asynchronous) {
     this.request = request;
-    this.retrofit = retrofit;
     this.asynchronous = asynchronous;
     context = queryInstrumenter().start(parentContext, request).with(KEY, this);
-  }
-
-  boolean belongsToAsyncQuery(Retrofit retrofit) {
-    return asynchronous && this.retrofit == retrofit && !callbackAssociated.get();
   }
 
   boolean isAsynchronous() {
