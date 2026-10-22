@@ -100,7 +100,10 @@ class GrpcTest extends AbstractGrpcTest {
               ServerCall<REQUEST, RESPONSE> call,
               Metadata headers,
               ServerCallHandler<REQUEST, RESPONSE> next) {
-            call.close(Status.UNIMPLEMENTED, new Metadata());
+            call.close(
+                Status.UNIMPLEMENTED.withDescription(
+                    "Method not found: " + call.getMethodDescriptor().getFullMethodName()),
+                new Metadata());
             return new ServerCall.Listener<REQUEST>() {};
           }
         });
