@@ -10,7 +10,7 @@ import zio.http._
 
 import java.util.concurrent.CountDownLatch
 
-class ZioHttpTestApplication(port: Int) extends ZIOAppDefault {
+class ZioHttpTestApplication(port: Int) {
   private val routes =
     Routes(
       Method.GET / "greet" / string("name") -> handler {
@@ -25,7 +25,7 @@ class ZioHttpTestApplication(port: Int) extends ZIOAppDefault {
 
   val started = new CountDownLatch(1)
 
-  override def run = Server
+  def run = Server
     .install(routes)
     .flatMap { _ =>
       started.countDown()

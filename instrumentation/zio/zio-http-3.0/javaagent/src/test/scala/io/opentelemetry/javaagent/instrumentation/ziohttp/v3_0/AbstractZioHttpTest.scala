@@ -34,7 +34,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.{AbstractLongAssert, AbstractStringAssert}
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.{AfterAll, BeforeAll, TestInstance}
-import zio.ExitCode
+import zio.{Fiber, Runtime, Unsafe}
 
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -45,23 +45,26 @@ abstract class AbstractZioHttpTest {
 
   private var port = 0
   private var client: WebClient = null
-  private var application: ZioHttpTestApplication = null
+  private var server: Fiber.Runtime[Throwable, Nothing] = null
 
   @BeforeAll
   def setup(): Unit = {
     port = PortUtils.findOpenPort
-    application = new ZioHttpTestApplication(port)
-    val t = new Thread(() => {
-      application.main(Array())
-    })
-    t.start()
+    val application = new ZioHttpTestApplication(port)
+    server = Unsafe.unsafe { implicit unsafe =>
+      Runtime.default.unsafe.fork(application.run)
+    }
     assertThat(application.started.await(10, TimeUnit.SECONDS)).isTrue()
     client = WebClient.of("h1c://localhost:" + port)
   }
 
   @AfterAll
   def cleanup(): Unit = {
-    application.exit(ExitCode.success)
+    if (server != null) {
+      Unsafe.unsafe { implicit unsafe =>
+        Runtime.default.unsafe.run(server.interrupt).getOrThrowFiberFailure()
+      }
+    }
   }
 
   protected def assertRoute(
