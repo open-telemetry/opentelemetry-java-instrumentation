@@ -11,8 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -61,7 +61,7 @@ class DefaultExecStarterInstrumentation implements TypeInstrumentation {
       Action<?> wrappedAction = ActionWrapper.wrapIfNeeded(action);
 
       // root context scope must be made current after wrapping
-      Scope scope = Java8BytecodeBridge.rootContext().makeCurrent();
+      Scope scope = Context.root().makeCurrent();
       return new Object[] {scope, wrappedAction};
     }
 
