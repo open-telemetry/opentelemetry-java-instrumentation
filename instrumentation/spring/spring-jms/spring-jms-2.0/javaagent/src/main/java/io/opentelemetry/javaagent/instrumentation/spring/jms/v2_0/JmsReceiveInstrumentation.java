@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJ
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJmsSingletons.receiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -21,16 +22,23 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
+class JmsReceiveInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.springframework.jms.support.destination.JmsDestinationAccessor");
+    return named("org.springframework.jms.support.destination.JmsDestinationAccessor")
+        .or(named("org.springframework.jms.listener.AbstractPollingMessageListenerContainer"))
+        .or(named("org.springframework.jms.listener.DefaultMessageListenerContainer"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("receiveFromConsumer").and(returns(named("javax.jms.Message"))),
+        named("receiveFromConsumer")
+            .and(returns(named("javax.jms.Message")))
+            .or(
+                named("receiveMessage")
+                    .and(takesArgument(0, named("javax.jms.MessageConsumer")))
+                    .and(returns(named("javax.jms.Message")))),
         getClass().getName() + "$ReceiveAdvice");
   }
 

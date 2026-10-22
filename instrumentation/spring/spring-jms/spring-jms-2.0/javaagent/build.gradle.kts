@@ -56,12 +56,34 @@ testing {
       }
     }
 
+    register<JvmTestSuite>("version20Test") {
+      dependencies {
+        implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
+        implementation("org.springframework:spring-jms:2.0")
+        implementation("javax.jms:jms-api:1.1-rev-1")
+        implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
+        implementation("org.hornetq:hornetq-jms-server:2.4.7.Final") {
+          // this doesn't exist in maven central, and doesn't seem to be needed anyways
+          exclude("org.jboss.naming", "jnpserver")
+        }
+      }
+    }
+
     register<JvmTestSuite>("testReceiveSpansDisabled") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
         // this is just to avoid a bit more copy-pasting
         implementation(sourceSets["test"].output)
       }
+    }
+  }
+}
+
+configurations.matching { it.name.startsWith("version20Test") }.configureEach {
+  exclude(group = "org.springframework.boot")
+  resolutionStrategy.eachDependency {
+    if (requested.group == "org.springframework") {
+      useVersion("2.0")
     }
   }
 }
@@ -103,10 +125,19 @@ tasks {
     )
   }
 
+  val version20Test = testing.suites.named<JvmTestSuite>("version20Test")
+  val version20TestReceiveTelemetryEnabled =
+    register<Test>("version20TestReceiveTelemetryEnabled") {
+      testClassesDirs = version20Test.get().sources.output.classesDirs
+      classpath = version20Test.get().sources.runtimeClasspath
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    }
+
   check {
     dependsOn(
       testing.suites,
       testJmsDisabled,
+      version20TestReceiveTelemetryEnabled,
     )
   }
 }
