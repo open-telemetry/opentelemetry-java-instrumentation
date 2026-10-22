@@ -15,7 +15,7 @@ dependencies {
   implementation(project(":instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent"))
   compileOnly("com.clickhouse:clickhouse-client:0.5.0")
 
-  testImplementation("com.google.guava:guava")
+  testImplementation("com.google.guava:guava:33.7.2-jre")
   testLibrary("com.clickhouse:clickhouse-client:0.5.0")
   testLibrary("com.clickhouse:clickhouse-http-client:0.5.0")
   testLibrary("org.apache.httpcomponents.client5:httpclient5:5.2.3")

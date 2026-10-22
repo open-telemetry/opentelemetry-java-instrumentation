@@ -64,7 +64,7 @@ dependencies {
   testCompileOnly("com.google.code.findbugs:annotations")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-  testImplementation("com.google.guava:guava")
+  testImplementation("com.google.guava:guava:33.7.2-jre")
 }
 
 testing {
@@ -85,7 +85,7 @@ testing {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
         implementation("net.bytebuddy:byte-buddy-dep")
-        compileOnly("com.google.guava:guava")
+        compileOnly("com.google.guava:guava:33.7.2-jre")
 
         // Used by byte-buddy but not brought in as a transitive dependency.
         compileOnly("com.google.code.findbugs:annotations")

@@ -12,7 +12,7 @@ dependencies {
   // Bring in various archives to test introspection logic
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("org.springframework:spring-webmvc:3.1.0.RELEASE")
-  testImplementation("com.google.guava:guava")
+  testImplementation("com.google.guava:guava:33.7.2-jre")
 }
 
 tasks.war {

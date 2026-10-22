@@ -8,7 +8,7 @@ dependencies {
   api("com.alipay.sofa:sofa-rpc-all:5.4.0")
 
   implementation("javax.annotation:javax.annotation-api:1.3.2")
-  implementation("com.google.guava:guava")
+  implementation("com.google.guava:guava:33.7.2-jre")
 
   implementation("io.opentelemetry:opentelemetry-api")
 }

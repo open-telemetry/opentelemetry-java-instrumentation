@@ -16,7 +16,7 @@ dependencies {
 
   implementation(project(":instrumentation:lettuce:lettuce-common:library"))
 
-  testImplementation("com.google.guava:guava")
+  testImplementation("com.google.guava:guava:33.7.2-jre")
   testImplementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
@@ -66,7 +66,7 @@ testing {
 
       dependencies {
         val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
-        implementation("com.google.guava:guava")
+        implementation("com.google.guava:guava:33.7.2-jre")
         implementation("io.lettuce:lettuce-core:$lettuceVersion")
         implementation("org.testcontainers:testcontainers")
       }
@@ -81,7 +81,7 @@ testing {
 
       dependencies {
         val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
-        implementation("com.google.guava:guava")
+        implementation("com.google.guava:guava:33.7.2-jre")
         implementation("io.lettuce:lettuce-core:$lettuceVersion")
         implementation("org.testcontainers:testcontainers")
       }
@@ -96,7 +96,7 @@ testing {
 
       dependencies {
         val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
-        implementation("com.google.guava:guava")
+        implementation("com.google.guava:guava:33.7.2-jre")
         implementation("io.lettuce:lettuce-core:$lettuceVersion")
         implementation("org.testcontainers:testcontainers")
       }
