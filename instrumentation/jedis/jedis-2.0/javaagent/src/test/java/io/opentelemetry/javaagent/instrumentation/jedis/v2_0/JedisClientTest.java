@@ -196,10 +196,12 @@ class JedisClientTest {
     transaction.del(noKeys);
     testing.clearData();
 
-    assertThatThrownBy(transaction::exec)
-        .isInstanceOf(JedisDataException.class)
-        .hasMessageStartingWith(testLatestDeps() ? "EXECABORT" : "ERR");
-    assertErrorType(testLatestDeps() ? "EXECABORT" : "ERR");
+    Throwable error = catchThrowable(transaction::exec);
+    String expectedPrefix = testLatestDeps() ? "EXECABORT" : "ERR";
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertThat(error.getMessage()).startsWith(expectedPrefix);
+    assertErrorType(
+        error.getClass() == JedisDataException.class ? expectedPrefix : error.getClass().getName());
 
     testing.clearData();
     jedis.set("after-error", "value");

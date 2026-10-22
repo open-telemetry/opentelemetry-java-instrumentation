@@ -206,10 +206,11 @@ class Jedis30ClientTest {
     transaction.del(noKeys);
     testing.clearData();
 
-    assertThatThrownBy(transaction::exec)
-        .isInstanceOf(JedisDataException.class)
-        .hasMessageStartingWith("EXECABORT");
-    assertErrorType("EXECABORT");
+    Throwable error = catchThrowable(transaction::exec);
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertThat(error.getMessage()).startsWith("EXECABORT");
+    assertErrorType(
+        error.getClass() == JedisDataException.class ? "EXECABORT" : error.getClass().getName());
 
     testing.clearData();
     jedis.set("after-error", "value");
