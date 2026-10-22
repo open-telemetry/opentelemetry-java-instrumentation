@@ -97,6 +97,13 @@ abstract class AbstractZioHttpTest {
     assertFailedRoute()
   }
 
+  @Test
+  def reusedRequestRoute(): Unit = {
+    assertReusedRequestRoute("/reuse/failure", "parent-failure", 500)
+    testing.clearData()
+    assertReusedRequestRoute("/reuse/success", "parent-success", 200)
+  }
+
   protected def assertRoute(route: String): Unit = {
     assertRoute(
       s"/$route/test",
@@ -172,6 +179,55 @@ abstract class AbstractZioHttpTest {
                 .hasKind(SpanKind.SERVER)
                 .hasParent(trace.getSpan(0))
                 .hasAttribute(HTTP_ROUTE, "/failure/{name}")
+          }
+        )
+    })
+  }
+
+  private def assertReusedRequestRoute(
+      path: String,
+      parentName: String,
+      statusCode: Int
+  ): Unit = {
+    val parent = testing.getOpenTelemetry
+      .getTracer("test")
+      .spanBuilder(parentName)
+      .startSpan()
+    try {
+      val context = parent.getSpanContext
+      val response = client
+        .prepare()
+        .get(path)
+        .header(
+          "traceparent",
+          s"00-${context.getTraceId}-${context.getSpanId}-01"
+        )
+        .execute
+        .aggregate
+        .join
+      assertThat(response.status.code).isEqualTo(statusCode)
+      if (statusCode == 200) {
+        assertThat(response.contentUtf8).isEqualTo("Reused inner test")
+      }
+    } finally {
+      parent.end()
+    }
+
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit =
+              span.hasName(parentName).hasNoParent
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit =
+              span
+                .hasName("GET /reused/test")
+                .hasKind(SpanKind.SERVER)
+                .hasParent(trace.getSpan(0))
+                .hasAttribute(HTTP_ROUTE, "/reused/test")
+                .hasAttribute(HTTP_RESPONSE_STATUS_CODE, statusCode)
           }
         )
     })

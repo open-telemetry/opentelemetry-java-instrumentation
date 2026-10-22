@@ -9,8 +9,21 @@ import zio._
 import zio.http._
 
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
 
 class ZioHttpTestApplication(port: Int) {
+  private val failReusedRequest = new AtomicBoolean()
+  private val reusedRequest = Request.get("/reused/test")
+
+  private val reusedRoutes =
+    Routes(
+      Method.GET / "reused" / "test" -> handler { (_: Request) =>
+        if (failReusedRequest.compareAndSet(true, false))
+          ZIO.yieldNow *> ZIO.fail(Response.internalServerError)
+        else ZIO.succeed(Response.text("Reused inner test"))
+      }
+    )
+
   private val delegatedRoutes =
     Routes(
       Method.GET / "delegate" / "test" -> handler { (_: Request) =>
@@ -35,6 +48,11 @@ class ZioHttpTestApplication(port: Int) {
       Method.GET / "greet-async" / string("name") -> handler {
         (name: String, _: Request) =>
           ZIO.yieldNow *> ZIO.succeed(Response.text(s"Hello $name"))
+      },
+      Method.GET / "reuse" / string("mode") -> handler {
+        (mode: String, _: Request) =>
+          failReusedRequest.set(mode == "failure")
+          reusedRoutes.runZIO(reusedRequest)
       },
       Method.GET / "delegate" / string("name") -> handler {
         (_: String, request: Request) =>
