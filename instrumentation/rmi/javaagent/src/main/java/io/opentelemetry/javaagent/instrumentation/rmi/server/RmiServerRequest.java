@@ -17,13 +17,11 @@ import javax.annotation.Nullable;
 
 final class RmiServerRequest {
 
-  private static final ClassValue<Map<Method, Method>> remoteMethods =
-      new ClassValue<Map<Method, Method>>() {
+  private static final ClassValue<Map<Method, String>> rpcMethodNames =
+      new ClassValue<Map<Method, String>>() {
         @Override
-        protected Map<Method, Method> computeValue(Class<?> type) {
+        protected Map<Method, String> computeValue(Class<?> type) {
           Set<Method> declarations = new HashSet<>();
-          // Match UnicastServerRef's export traversal, including interfaces inherited by a class
-          // and declarations inherited by a remote interface.
           for (Class<?> current = type; current != null; current = current.getSuperclass()) {
             for (Class<?> iface : current.getInterfaces()) {
               if (Remote.class.isAssignableFrom(iface)) {
@@ -35,23 +33,22 @@ final class RmiServerRequest {
               }
             }
           }
-          Map<Method, Method> result = new HashMap<>();
+          Map<Method, String> result = new HashMap<>();
           for (Method implementation : type.getMethods()) {
-            Method match = null;
+            String match = null;
             for (Method declaration : declarations) {
               if (declaration.getName().equals(implementation.getName())
                   && Arrays.equals(
                       declaration.getParameterTypes(), implementation.getParameterTypes())
                   && declaration.getReturnType().isAssignableFrom(implementation.getReturnType())) {
-                if (match != null) {
-                  // RMI hashes the name and full descriptor, not the declaring interface. Export
-                  // accepts duplicate declarations and overwrites its hash entry. The invoked
-                  // implementation cannot identify the caller's interface in this case. Do not
-                  // guess an identity. Covariant bridge calls can also reach the same advised body.
+                String candidate =
+                    declaration.getDeclaringClass().getName() + "/" + declaration.getName();
+                if (match != null && !match.equals(candidate)) {
+                  // Multiple declarations agree only when they emit the same logical RPC name.
                   match = null;
                   break;
                 }
-                match = declaration;
+                match = candidate;
               }
             }
             if (match != null) {
@@ -75,7 +72,7 @@ final class RmiServerRequest {
   }
 
   @Nullable
-  Method remoteMethod() {
-    return remoteMethods.get(serverClass).get(method);
+  String rpcMethodName() {
+    return rpcMethodNames.get(serverClass).get(method);
   }
 }

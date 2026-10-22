@@ -30,6 +30,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import rmi.app.ChildValue;
 import rmi.app.Greeter;
 import rmi.app.NumericGreeter;
 import rmi.app.ParentGreeter;
@@ -216,7 +218,9 @@ class RmiTest {
             "parent",
             () -> {
               Remote client = clientRegistry.lookup(Server.RMI_ID);
-              return method.invoke(client, argument);
+              return method.getParameterCount() == 0
+                  ? method.invoke(client)
+                  : method.invoke(client, argument);
             });
     assertThat(response).isEqualTo(expectedResponse);
 
@@ -255,24 +259,30 @@ class RmiTest {
   }
 
   private static Stream<Arguments> remoteMethods() throws NoSuchMethodException {
-    return Stream.of(
-        Arguments.of(
-            Greeter.class.getMethod("inherited", String.class),
-            "you",
-            "Hello you",
-            ParentGreeter.class.getName()),
-        Arguments.of(
-            NumericGreeter.class.getMethod("hello", int.class),
-            42,
-            "Hello 42",
-            NumericGreeter.class.getName()),
-        Arguments.of(
-            ParentGreeter.class.getMethod("covariant", String.class),
-            "you",
-            "Hello you",
-            ParentGreeter.class.getName()),
-        Arguments.of(ParentGreeter.class.getMethod("number", int.class), 42, 42, null),
-        Arguments.of(NumericGreeter.class.getMethod("number", int.class), 42, 42, null),
-        Arguments.of(Greeter.class.getMethod("shared", String.class), "you", "Hello you", null));
+    Stream<Arguments> childValueMethods =
+        Arrays.stream(ChildValue.class.getDeclaredMethods())
+            .map(method -> Arguments.of(method, null, "value", ChildValue.class.getName()));
+    return Stream.concat(
+        childValueMethods,
+        Stream.of(
+            Arguments.of(
+                Greeter.class.getMethod("inherited", String.class),
+                "you",
+                "Hello you",
+                ParentGreeter.class.getName()),
+            Arguments.of(
+                NumericGreeter.class.getMethod("hello", int.class),
+                42,
+                "Hello 42",
+                NumericGreeter.class.getName()),
+            Arguments.of(
+                ParentGreeter.class.getMethod("covariant", String.class),
+                "you",
+                "Hello you",
+                ParentGreeter.class.getName()),
+            Arguments.of(ParentGreeter.class.getMethod("number", int.class), 42, 42, null),
+            Arguments.of(NumericGreeter.class.getMethod("number", int.class), 42, 42, null),
+            Arguments.of(
+                Greeter.class.getMethod("shared", String.class), "you", "Hello you", null)));
   }
 }

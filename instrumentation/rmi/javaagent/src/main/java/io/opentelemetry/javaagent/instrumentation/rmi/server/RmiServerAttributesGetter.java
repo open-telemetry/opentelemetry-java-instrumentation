@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
-import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
 final class RmiServerAttributesGetter implements RpcAttributesGetter<RmiServerRequest, Void> {
@@ -30,9 +29,6 @@ final class RmiServerAttributesGetter implements RpcAttributesGetter<RmiServerRe
   @Override
   @Nullable
   public String getRpcMethod(RmiServerRequest request) {
-    Method remoteMethod = request.remoteMethod();
-    return remoteMethod == null
-        ? null
-        : remoteMethod.getDeclaringClass().getName() + "/" + remoteMethod.getName();
+    return request.rpcMethodName();
   }
 }
