@@ -320,8 +320,7 @@ final class OpenTelemetryTracing implements Tracing {
       } else {
         if (output instanceof MultiOutput && output.getError() == null) {
           TransactionResult result = ((MultiOutput<?, ?>) output).get();
-          for (int i = 0; i < result.size(); i++) {
-            Object value = result.get(i);
+          for (Object value : result) {
             if (value instanceof Throwable) {
               Throwable failure = (Throwable) value;
               end(null, failure);
