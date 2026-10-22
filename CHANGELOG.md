@@ -295,6 +295,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
+  `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
 - Remove deprecated `DeclarativeConfigPropertiesBridge` and
   `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
   `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.
@@ -394,12 +397,6 @@
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
-
-### 🚫 Deprecations
-
-- Deprecate `GrpcRequest.getLogicalHost()` and `getLogicalPort()` in favor of
-  `getServerAddress()` and `getServerPort()`.
-  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
 
 ## Version 2.32.0 (2026-10-03)
 

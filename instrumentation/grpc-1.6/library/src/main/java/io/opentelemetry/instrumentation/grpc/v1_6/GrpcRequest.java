@@ -117,24 +117,6 @@ public final class GrpcRequest {
     return serverPort;
   }
 
-  /**
-   * @deprecated Use {@link #getServerAddress()} instead. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @Nullable
-  public String getLogicalHost() {
-    return getServerAddress();
-  }
-
-  /**
-   * @deprecated Use {@link #getServerPort()} instead. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  public int getLogicalPort() {
-    Integer port = getServerPort();
-    return port != null ? port : -1;
-  }
-
   @Nullable
   public SocketAddress getPeerSocketAddress() {
     return peerSocketAddress;
