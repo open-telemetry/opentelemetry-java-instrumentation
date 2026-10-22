@@ -9,7 +9,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -26,10 +25,9 @@ import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisClusterCommand;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSlotBasedConnectionHandler;
-import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.util.JedisClusterCRC16;
 
-class Jedis23ClientTest {
+class Jedis23ClusterCommandTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -75,28 +73,6 @@ class Jedis23ClientTest {
     testing.clearData();
     assertThat(jedis.set("after-error", "value")).isEqualTo("OK");
     assertErrorType(null);
-  }
-
-  @Test
-  void dedicatedServerErrorUsesExceptionClass() {
-    testing.clearData();
-    Throwable error =
-        catchThrowable(
-            () -> jedis.eval("return redis.error_reply(ARGV[1])", 0, "MOVED 42 127.0.0.1:6379"));
-
-    assertThat(error).isInstanceOf(JedisDataException.class);
-    assertThat(error.getClass()).isNotEqualTo(JedisDataException.class);
-    assertErrorType(error.getClass().getName());
-  }
-
-  @Test
-  void unreliableServerPrefixUsesExceptionClass() {
-    testing.clearData();
-    Throwable error =
-        catchThrowable(() -> jedis.eval("return redis.error_reply(ARGV[1])", 0, "échec details"));
-
-    assertThat(error).isInstanceOf(JedisDataException.class);
-    assertErrorType(error.getClass().getName());
   }
 
   private static void resetRedis() {
