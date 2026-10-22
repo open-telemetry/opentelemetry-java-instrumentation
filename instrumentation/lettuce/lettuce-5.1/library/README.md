@@ -56,8 +56,8 @@ their exceptions. These failures use `error.type="_OTHER"` on spans and duration
 the callback cannot distinguish their origin. When Lettuce supplies an exception, its class is
 used for `error.type`.
 
-Errors returned only as `EXEC` result elements are unavailable to the Lettuce 5.x tracing SPI
-and are not classified.
+Errors available only as `EXEC` result elements are not classified on the aggregate `EXEC` span
+because Lettuce does not expose per-result failure provenance to its tracing callback.
 
 With Lettuce 6.0 and higher, command-aware callbacks distinguish server replies from client
 failures. A dependable server reply uses its first nonempty ASCII-space-delimited token; failures
