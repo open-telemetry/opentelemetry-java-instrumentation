@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -23,8 +24,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
@@ -35,7 +39,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 final class ApiGatewayProxyAttributesExtractor
-    implements AttributesExtractor<AwsLambdaRequest, Object> {
+    implements AttributesExtractor<AwsLambdaRequest, Object>,
+        SpanStatusExtractor<AwsLambdaRequest, Object> {
 
   // copied from FaasIncubatingAttributes
   private static final AttributeKey<String> FAAS_TRIGGER = AttributeKey.stringKey("faas.trigger");
@@ -138,11 +143,42 @@ final class ApiGatewayProxyAttributesExtractor
       AwsLambdaRequest request,
       @Nullable Object response,
       @Nullable Throwable error) {
+    if (!(request.getInput() instanceof APIGatewayProxyRequestEvent)) {
+      return;
+    }
     if (response instanceof APIGatewayProxyResponseEvent) {
       Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
       if (statusCode != null) {
         attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
+        if (isErrorStatusCode(statusCode)) {
+          attributes.put(ERROR_TYPE, statusCode.toString());
+          return;
+        }
       }
     }
+    if (error != null) {
+      attributes.put(ERROR_TYPE, error.getClass().getName());
+    }
+  }
+
+  @Override
+  public void extract(
+      SpanStatusBuilder spanStatusBuilder,
+      AwsLambdaRequest request,
+      @Nullable Object response,
+      @Nullable Throwable error) {
+    if (request.getInput() instanceof APIGatewayProxyRequestEvent
+        && response instanceof APIGatewayProxyResponseEvent) {
+      Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
+      if (statusCode != null && isErrorStatusCode(statusCode)) {
+        spanStatusBuilder.setStatus(StatusCode.ERROR);
+        return;
+      }
+    }
+    SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
+  }
+
+  private static boolean isErrorStatusCode(int statusCode) {
+    return statusCode >= 500 || statusCode < 100;
   }
 }
