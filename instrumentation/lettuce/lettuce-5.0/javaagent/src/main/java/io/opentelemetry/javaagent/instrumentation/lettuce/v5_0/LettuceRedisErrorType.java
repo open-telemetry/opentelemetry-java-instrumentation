@@ -17,18 +17,9 @@ public final class LettuceRedisErrorType {
       return null;
     }
 
-    String errorType = RedisErrorPrefix.extract(error.getMessage());
-    if (errorType == null) {
-      return null;
-    }
     // Lettuce versions before 6.5.4 decode server errors byte-by-byte instead of as UTF-8.
     // See https://github.com/redis/lettuce/pull/3188.
-    for (int i = 0; i < errorType.length(); i++) {
-      if (errorType.charAt(i) > 0x7f) {
-        return null;
-      }
-    }
-    return errorType;
+    return RedisErrorPrefix.extractAscii(error.getMessage());
   }
 
   private LettuceRedisErrorType() {}

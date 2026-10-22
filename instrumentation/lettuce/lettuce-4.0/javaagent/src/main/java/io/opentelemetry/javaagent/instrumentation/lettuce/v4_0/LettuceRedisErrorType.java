@@ -17,16 +17,7 @@ public final class LettuceRedisErrorType {
       return null;
     }
 
-    String errorType = RedisErrorPrefix.extract(error.getMessage());
-    if (errorType == null) {
-      return null;
-    }
-    for (int i = 0; i < errorType.length(); i++) {
-      if (errorType.charAt(i) > 0x7f) {
-        return null;
-      }
-    }
-    return errorType;
+    return RedisErrorPrefix.extractAscii(error.getMessage());
   }
 
   private LettuceRedisErrorType() {}
