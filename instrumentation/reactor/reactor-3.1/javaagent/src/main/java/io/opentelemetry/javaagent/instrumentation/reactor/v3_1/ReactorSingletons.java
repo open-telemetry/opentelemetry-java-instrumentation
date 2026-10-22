@@ -13,7 +13,7 @@ final class ReactorSingletons {
 
   // A single operator, so that registering again after a reset reuses the same async operation end
   // strategy instead of adding a new one to the strategy registry each time.
-  private static final ContextPropagationOperator OPERATOR =
+  private static final ContextPropagationOperator operator =
       ContextPropagationOperator.builder()
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "reactor")
@@ -21,14 +21,14 @@ final class ReactorSingletons {
           .build();
 
   static void registerOnEachOperator() {
-    OPERATOR.registerOnEachOperator();
+    operator.registerOnEachOperator();
   }
 
   // Hooks.resetOnEachOperator() removes the hook without going through the operator, which still
   // considers it registered and would ignore a plain registration.
   static void reregisterOnEachOperator() {
-    OPERATOR.resetOnEachOperator();
-    OPERATOR.registerOnEachOperator();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
   }
 
   private ReactorSingletons() {}
