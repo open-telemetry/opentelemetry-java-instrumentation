@@ -71,13 +71,18 @@ class InfluxDbCallbackInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Callback<?> callback, @Advice.Enter @Nullable Scope scope) {
+        @Advice.This Callback<?> callback,
+        @Advice.Enter @Nullable Scope scope,
+        @Advice.Thrown @Nullable Throwable error) {
       if (scope != null) {
         scope.close();
       }
       InfluxDbQueryState state = CALLBACK_QUERY_STATE.get(callback);
       if (state != null) {
         CALLBACK_QUERY_STATE.set(callback, null);
+        if (error != null) {
+          state.onFailure(error);
+        }
         state.end(null);
       }
     }
