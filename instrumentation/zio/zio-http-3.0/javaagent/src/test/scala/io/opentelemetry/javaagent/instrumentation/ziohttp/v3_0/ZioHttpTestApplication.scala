@@ -9,11 +9,15 @@ import zio._
 import zio.http._
 
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ZioHttpTestApplication(port: Int) {
   private val failReusedRequest = new AtomicBoolean()
   private val reusedRequest = Request.get("/reused/test")
+  private val firstOverlapEntered = new CountDownLatch(1)
+  private val secondOverlapEntered = new CountDownLatch(1)
+  private val releaseFirstOverlap = new CountDownLatch(1)
 
   private val reusedRoutes =
     Routes(
@@ -21,6 +25,30 @@ class ZioHttpTestApplication(port: Int) {
         if (failReusedRequest.compareAndSet(true, false))
           ZIO.yieldNow *> ZIO.fail(Response.internalServerError)
         else ZIO.succeed(Response.text("Reused inner test"))
+      }
+    )
+
+  private val firstOverlapRoutes =
+    Routes(
+      Method.GET / "reused" / string("name") -> handler {
+        (_: String, _: Request) =>
+          ZIO.succeed(firstOverlapEntered.countDown()) *>
+            ZIO.attemptBlocking {
+              if (!releaseFirstOverlap.await(10, TimeUnit.SECONDS))
+                throw new IllegalStateException(
+                  "Timed out waiting to release first request"
+                )
+              Response.text("First inner test")
+            }.orDie
+      }
+    )
+
+  private val secondOverlapRoutes =
+    Routes(
+      Method.GET / string("name") / "test" -> handler {
+        (_: String, _: Request) =>
+          ZIO.succeed(secondOverlapEntered.countDown()) *>
+            ZIO.succeed(Response.text("Second inner test"))
       }
     )
 
@@ -51,8 +79,15 @@ class ZioHttpTestApplication(port: Int) {
       },
       Method.GET / "reuse" / string("mode") -> handler {
         (mode: String, _: Request) =>
-          failReusedRequest.set(mode == "failure")
-          reusedRoutes.runZIO(reusedRequest)
+          mode match {
+            case "overlap-first" =>
+              firstOverlapRoutes.runZIO(reusedRequest)
+            case "overlap-second" =>
+              secondOverlapRoutes.runZIO(reusedRequest)
+            case _ =>
+              failReusedRequest.set(mode == "failure")
+              reusedRoutes.runZIO(reusedRequest)
+          }
       },
       Method.GET / "delegate" / string("name") -> handler {
         (_: String, request: Request) =>
@@ -76,7 +111,15 @@ class ZioHttpTestApplication(port: Int) {
 
   val started = new CountDownLatch(1)
 
-  def run = Server
+  def awaitFirstOverlap(): Boolean =
+    firstOverlapEntered.await(10, TimeUnit.SECONDS)
+
+  def awaitSecondOverlap(): Boolean =
+    secondOverlapEntered.await(10, TimeUnit.SECONDS)
+
+  def releaseOverlap(): Unit = releaseFirstOverlap.countDown()
+
+  def run: ZIO[Any, Throwable, Nothing] = Server
     .install(routes)
     .flatMap { _ =>
       started.countDown()

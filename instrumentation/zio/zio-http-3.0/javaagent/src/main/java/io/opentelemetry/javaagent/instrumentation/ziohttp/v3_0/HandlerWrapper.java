@@ -8,24 +8,43 @@ package io.opentelemetry.javaagent.instrumentation.ziohttp.v3_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import javax.annotation.Nullable;
-import scala.Product;
+import java.util.Optional;
+import scala.Option;
 import scala.runtime.AbstractFunction0;
 import scala.runtime.AbstractFunction1;
+import scala.runtime.AbstractFunction2;
 import scala.runtime.BoxedUnit;
 import scala.runtime.Nothing$;
+import zio.Cause;
+import zio.Exit;
+import zio.FiberRef;
+import zio.FiberRef.unsafe$;
 import zio.Trace$;
+import zio.Unsafe$;
 import zio.ZIO;
 import zio.ZIO$;
 import zio.http.Handler;
-import zio.http.Request;
 import zio.http.RoutePattern;
 
 public class HandlerWrapper {
 
-  private static final VirtualField<Request, RouteContext> REQUEST_CONTEXT =
-      VirtualField.find(Request.class, RouteContext.class);
+  private static final FiberRef<Optional<Context>> ROUTE_CONTEXT =
+      unsafe$.MODULE$.make(
+          Optional.empty(),
+          new AbstractFunction1<Optional<Context>, Optional<Context>>() {
+            @Override
+            public Optional<Context> apply(Optional<Context> context) {
+              return context;
+            }
+          },
+          new AbstractFunction2<Optional<Context>, Optional<Context>, Optional<Context>>() {
+            @Override
+            public Optional<Context> apply(
+                Optional<Context> parentContext, Optional<Context> childContext) {
+              return childContext;
+            }
+          },
+          Unsafe$.MODULE$.unsafe());
 
   public static <R, IN, OUT, ERR> Handler<R, ERR, IN, OUT> wrap(
       Handler<R, ERR, IN, OUT> handler, RoutePattern<?> routePattern) {
@@ -38,143 +57,57 @@ public class HandlerWrapper {
 
               @Override
               public ZIO<R, ERR, OUT> apply(IN input) {
-                RouteInvocation invocation = contextFor(input);
-                RouteContext routeContext = invocation.routeContext;
-                Handler<R, ERR, IN, OUT> result =
-                    handler
-                        .map(
-                            new AbstractFunction1<OUT, OUT>() {
-
-                              @Override
-                              public OUT apply(OUT output) {
-                                updateRoute(routeContext.context, route);
-                                return output;
-                              }
-                            },
-                            Trace$.MODULE$.empty())
-                        .mapError(
-                            new AbstractFunction1<ERR, ERR>() {
-
-                              @Override
-                              public ERR apply(ERR error) {
-                                updateRoute(routeContext.context, route);
-                                return error;
-                              }
-                            },
-                            Trace$.MODULE$.empty());
-                Request request = invocation.request;
-                ZIO<R, ERR, OUT> effect;
-                try {
-                  effect = result.apply(input);
-                } catch (Throwable t) {
-                  if (request != null) {
-                    release(request, routeContext);
-                  }
-                  throw sneakyThrow(t);
-                }
-                if (request == null) {
-                  return effect;
-                }
-                return effect.ensuring(
-                    new AbstractFunction0<ZIO<R, Nothing$, Object>>() {
-                      @Override
-                      public ZIO<R, Nothing$, Object> apply() {
-                        return releaseEffect(request, routeContext);
-                      }
-                    },
-                    Trace$.MODULE$.empty());
+                Context context = Context.current();
+                ZIO<R, ERR, OUT> effect = handler.apply(input);
+                return withRouteContext(context, effect, route);
               }
             });
   }
 
-  private static RouteInvocation contextFor(Object input) {
-    Request request = findRequest(input);
-    if (request == null) {
-      return new RouteInvocation(null, new RouteContext(Context.current()));
-    }
-
-    Context context = Context.current();
-    synchronized (request) {
-      RouteContext routeContext = REQUEST_CONTEXT.get(request);
-      if (routeContext == null) {
-        routeContext = new RouteContext(context);
-        REQUEST_CONTEXT.set(request, routeContext);
-      } else {
-        routeContext.activeHandlers++;
-      }
-      return new RouteInvocation(request, routeContext);
-    }
+  private static <R, ERR, OUT> ZIO<R, ERR, OUT> withRouteContext(
+      Context context, ZIO<R, ERR, OUT> effect, String route) {
+    return ROUTE_CONTEXT
+        .get(Trace$.MODULE$.empty())
+        .flatMap(
+            new AbstractFunction1<Optional<Context>, ZIO<R, ERR, OUT>>() {
+              @Override
+              public ZIO<R, ERR, OUT> apply(Optional<Context> currentContext) {
+                Context routeContext = currentContext.orElse(context);
+                ZIO<R, ERR, OUT> result =
+                    effect.onExit(
+                        new AbstractFunction1<Exit<ERR, OUT>, ZIO<R, Nothing$, Object>>() {
+                          @Override
+                          public ZIO<R, Nothing$, Object> apply(Exit<ERR, OUT> exit) {
+                            return updateRouteEffect(routeContext, route, exit);
+                          }
+                        },
+                        Trace$.MODULE$.empty());
+                return ROUTE_CONTEXT.locally(
+                    Optional.of(routeContext), result, Trace$.MODULE$.empty());
+              }
+            },
+            Trace$.MODULE$.empty());
   }
 
-  private static void release(Request request, RouteContext routeContext) {
-    synchronized (request) {
-      if (--routeContext.activeHandlers == 0 && REQUEST_CONTEXT.get(request) == routeContext) {
-        REQUEST_CONTEXT.set(request, null);
-      }
-    }
-  }
-
-  // Preserve Scala's unchecked exception behavior while releasing the request state.
+  // This no-environment effect is safe for any R.
   @SuppressWarnings("unchecked")
-  private static <T extends Throwable> RuntimeException sneakyThrow(Throwable t) throws T {
-    throw (T) t;
-  }
-
-  // ZIO is contravariant in its environment, so this no-environment effect is safe for any R.
-  @SuppressWarnings("unchecked")
-  private static <R> ZIO<R, Nothing$, Object> releaseEffect(
-      Request request, RouteContext routeContext) {
+  private static <R> ZIO<R, Nothing$, Object> updateRouteEffect(
+      Context context, String route, Exit<?, ?> exit) {
     return (ZIO<R, Nothing$, Object>)
         (ZIO<?, ?, ?>)
             ZIO$.MODULE$.succeed(
                 new AbstractFunction0<Object>() {
                   @Override
                   public Object apply() {
-                    release(request, routeContext);
+                    Option<?> cause = exit.causeOption();
+                    if (exit.isSuccess()
+                        || (cause.isDefined() && ((Cause<?>) cause.get()).isFailure())) {
+                      HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
+                    }
                     return BoxedUnit.UNIT;
                   }
                 },
                 Trace$.MODULE$.empty());
-  }
-
-  @Nullable
-  private static Request findRequest(Object input) {
-    if (input instanceof Request) {
-      return (Request) input;
-    }
-    if (input instanceof Product) {
-      Product product = (Product) input;
-      for (int i = 0; i < product.productArity(); i++) {
-        Request request = findRequest(product.productElement(i));
-        if (request != null) {
-          return request;
-        }
-      }
-    }
-    return null;
-  }
-
-  private static void updateRoute(Context context, String route) {
-    HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
-  }
-
-  private static class RouteContext {
-    private final Context context;
-    private int activeHandlers = 1;
-
-    private RouteContext(Context context) {
-      this.context = context;
-    }
-  }
-
-  private static class RouteInvocation {
-    @Nullable private final Request request;
-    private final RouteContext routeContext;
-
-    private RouteInvocation(@Nullable Request request, RouteContext routeContext) {
-      this.request = request;
-      this.routeContext = routeContext;
-    }
   }
 
   private HandlerWrapper() {}

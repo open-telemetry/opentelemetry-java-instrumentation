@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.ziohttp.v3_0
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
   LongAssertConsumer,
   StringAssertConsumer,
@@ -46,11 +47,12 @@ abstract class AbstractZioHttpTest {
   private var port = 0
   private var client: WebClient = null
   private var server: Fiber.Runtime[Throwable, Nothing] = null
+  private var application: ZioHttpTestApplication = null
 
   @BeforeAll
   def setup(): Unit = {
     port = PortUtils.findOpenPort
-    val application = new ZioHttpTestApplication(port)
+    application = new ZioHttpTestApplication(port)
     server = Unsafe.unsafe { implicit unsafe =>
       Runtime.default.unsafe.fork(application.run)
     }
@@ -102,6 +104,82 @@ abstract class AbstractZioHttpTest {
     assertReusedRequestRoute("/reuse/failure", "parent-failure", 500)
     testing.clearData()
     assertReusedRequestRoute("/reuse/success", "parent-success", 200)
+  }
+
+  @Test
+  def overlappingReusedRequestRoutes(): Unit = {
+    val firstParent = testing.getOpenTelemetry
+      .getTracer("test")
+      .spanBuilder("parent-overlap-first")
+      .startSpan()
+    val secondParent = testing.getOpenTelemetry
+      .getTracer("test")
+      .spanBuilder("parent-overlap-second")
+      .startSpan()
+    try {
+      val firstContext = firstParent.getSpanContext
+      val firstResponse = client
+        .prepare()
+        .get("/reuse/overlap-first")
+        .header(
+          "traceparent",
+          s"00-${firstContext.getTraceId}-${firstContext.getSpanId}-01"
+        )
+        .execute()
+        .aggregate
+      assertThat(application.awaitFirstOverlap()).isTrue()
+
+      val secondContext = secondParent.getSpanContext
+      val secondResponse = client
+        .prepare()
+        .get("/reuse/overlap-second")
+        .header(
+          "traceparent",
+          s"00-${secondContext.getTraceId}-${secondContext.getSpanId}-01"
+        )
+        .execute()
+        .aggregate
+      assertThat(application.awaitSecondOverlap()).isTrue()
+
+      val second = secondResponse.join()
+      assertThat(second.status.code).isEqualTo(200)
+      assertThat(second.contentUtf8).isEqualTo("Second inner test")
+
+      application.releaseOverlap()
+      val first = firstResponse.join()
+      assertThat(first.status.code).isEqualTo(200)
+      assertThat(first.contentUtf8).isEqualTo("First inner test")
+    } finally {
+      application.releaseOverlap()
+      firstParent.end()
+      secondParent.end()
+    }
+
+    testing.waitAndAssertSortedTraces(
+      orderByRootSpanName("parent-overlap-first", "parent-overlap-second"),
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("parent-overlap-first").hasNoParent),
+          assertSpan(
+            _.hasName("GET /reused/{name}")
+              .hasKind(SpanKind.SERVER)
+              .hasParent(trace.getSpan(0))
+              .hasAttribute(HTTP_ROUTE, "/reused/{name}")
+          )
+        )
+      },
+      assertTrace { trace =>
+        trace.hasSpansSatisfyingExactly(
+          assertSpan(_.hasName("parent-overlap-second").hasNoParent),
+          assertSpan(
+            _.hasName("GET /{name}/test")
+              .hasKind(SpanKind.SERVER)
+              .hasParent(trace.getSpan(0))
+              .hasAttribute(HTTP_ROUTE, "/{name}/test")
+          )
+        )
+      }
+    )
   }
 
   protected def assertRoute(route: String): Unit = {
@@ -311,4 +389,10 @@ abstract class AbstractZioHttpTest {
         )
     })
   }
+
+  private def assertTrace(f: TraceAssert => Any): Consumer[TraceAssert] =
+    (trace: TraceAssert) => f(trace)
+
+  private def assertSpan(f: SpanDataAssert => Any): Consumer[SpanDataAssert] =
+    (span: SpanDataAssert) => f(span)
 }
