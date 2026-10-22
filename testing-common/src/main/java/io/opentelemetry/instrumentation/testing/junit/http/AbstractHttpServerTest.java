@@ -48,6 +48,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -992,6 +993,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       String method,
       ServerEndpoint endpoint,
       Consumer<SpanDataAssert> serverSpanAssertion) {
+    AtomicReference<SpanData> exceptionLogSpan = new AtomicReference<>();
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       assertions.add(
@@ -1060,6 +1062,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
             trace.hasSpansSatisfyingExactly(spanAssertions);
 
+            if (endpoint == EXCEPTION
+                && emitExceptionAsLogs()
+                && options.hasExceptionLog.test(endpoint)) {
+              int exceptionLogSpanIndex = 0;
+              if (options.exceptionLogOnHandlerSpan) {
+                assertThat(options.hasHandlerSpan.test(endpoint)).isTrue();
+                exceptionLogSpanIndex = 1;
+              }
+              exceptionLogSpan.set(trace.getSpan(exceptionLogSpanIndex));
+            }
+
             if (options.verifyServerSpanEndTime) {
               List<SpanData> spanData = trace.actual();
               if (spanData.size() > 1) {
@@ -1076,7 +1089,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     testing.waitAndAssertTraces(assertions);
 
     if (endpoint == EXCEPTION && emitExceptionAsLogs() && options.hasExceptionLog.test(endpoint)) {
-      assertExceptionLogs(options.expectedException, "http.server.request.exception");
+      assertExceptionLogs(
+          options.expectedException,
+          "http.server.request.exception",
+          requireNonNull(exceptionLogSpan.get()));
     }
   }
 
@@ -1091,7 +1107,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
-  protected final void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+  protected final void assertExceptionLogs(
+      Throwable expectedException, String expectedEventName, SpanData expectedSpan) {
     Awaitility.await()
         .untilAsserted(
             () -> {
@@ -1101,12 +1118,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                       .collect(toList());
 
               assertThat(logs).hasSize(1);
-              assertThat(testing.getExportedSpans())
-                  .filteredOn(
-                      span ->
-                          options.exceptionLogSpan.test(span)
-                              && span.getSpanContext().equals(logs.get(0).getSpanContext()))
-                  .hasSize(1);
+              assertThat(logs.get(0).getSpanContext()).isEqualTo(expectedSpan.getSpanContext());
               if (options.exceptionLogInstrumentationName != null) {
                 assertThat(logs.get(0).getInstrumentationScopeInfo().getName())
                     .isEqualTo(options.exceptionLogInstrumentationName);

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0.AbstractVertxWebServer.RECOVERED_EXCEPTION;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.vertx.core.AbstractVerticle;
@@ -33,6 +35,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -50,7 +53,7 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setExceptionLogInstrumentationName("io.opentelemetry.vertx-web-3.0");
-    options.setExceptionLogSpan(span -> span.getKind() == SpanKind.SERVER);
+    options.setExceptionLogOnHandlerSpan(false);
     options.setTestPathParam(true);
     options.setTestHttpBodyPipelining(true);
     // server spans are ended inside of the controller spans
@@ -78,17 +81,20 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
 
     assertThat(response.status().code()).isEqualTo(200);
     IllegalStateException error = new IllegalStateException(RECOVERED_EXCEPTION.getBody());
+    AtomicReference<SpanData> serverSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + getContextPath() + RECOVERED_EXCEPTION.getPath())
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .hasException(emitExceptionAsSpanEvents() ? error : null)));
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("GET " + getContextPath() + RECOVERED_EXCEPTION.getPath())
+                      .hasKind(SpanKind.SERVER)
+                      .hasNoParent()
+                      .hasStatus(StatusData.unset())
+                      .hasException(emitExceptionAsSpanEvents() ? error : null));
+          serverSpan.set(trace.getSpan(0));
+        });
     if (emitExceptionAsLogs()) {
-      assertExceptionLogs(error, "http.server.request.exception");
+      assertExceptionLogs(error, "http.server.request.exception", requireNonNull(serverSpan.get()));
     }
   }
 

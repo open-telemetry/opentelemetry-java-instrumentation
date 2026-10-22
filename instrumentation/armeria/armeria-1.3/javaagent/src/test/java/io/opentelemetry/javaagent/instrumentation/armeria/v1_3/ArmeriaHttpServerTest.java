@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.linecorp.armeria.common.HttpResponse;
@@ -20,10 +21,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -94,21 +97,25 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
         client.execute(request(RESPONSE_EXCEPTION_WITH_CAUSE, "GET")).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
+    AtomicReference<SpanData> serverSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(causeIsDropped ? StatusData.unset() : StatusData.error())
-                        .hasException(
-                            causeIsDropped || !emitExceptionAsSpanEvents()
-                                ? null
-                                : new IllegalStateException("response processing failure"))));
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasKind(SpanKind.SERVER)
+                      .hasNoParent()
+                      .hasStatus(causeIsDropped ? StatusData.unset() : StatusData.error())
+                      .hasException(
+                          causeIsDropped || !emitExceptionAsSpanEvents()
+                              ? null
+                              : new IllegalStateException("response processing failure")));
+          serverSpan.set(trace.getSpan(0));
+        });
     if (emitExceptionAsLogs() && !causeIsDropped) {
       assertExceptionLogs(
           new IllegalStateException("response processing failure"),
-          "http.server.request.exception");
+          "http.server.request.exception",
+          requireNonNull(serverSpan.get()));
     }
   }
 
@@ -118,17 +125,22 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
         client.execute(request(WRAPPED_RESPONSE_EXCEPTION, "GET")).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(500);
+    AtomicReference<SpanData> serverSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(
-                            emitExceptionAsSpanEvents() ? wrappedResponseException : null)));
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasKind(SpanKind.SERVER)
+                      .hasNoParent()
+                      .hasStatus(StatusData.error())
+                      .hasException(emitExceptionAsSpanEvents() ? wrappedResponseException : null));
+          serverSpan.set(trace.getSpan(0));
+        });
     if (emitExceptionAsLogs()) {
-      assertExceptionLogs(wrappedResponseException, "http.server.request.exception");
+      assertExceptionLogs(
+          wrappedResponseException,
+          "http.server.request.exception",
+          requireNonNull(serverSpan.get()));
     }
   }
 

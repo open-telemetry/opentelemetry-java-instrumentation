@@ -14,7 +14,6 @@ import static java.util.Collections.singleton;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,7 +54,7 @@ public class HttpServerTestOptions {
   Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
   Predicate<ServerEndpoint> hasExceptionLog = endpoint -> hasExceptionOnServerSpan.test(endpoint);
   @Nullable String exceptionLogInstrumentationName;
-  Predicate<SpanData> exceptionLogSpan = span -> true;
+  boolean exceptionLogOnHandlerSpan;
 
   boolean testRedirect = true;
   boolean testError = true;
@@ -127,8 +126,8 @@ public class HttpServerTestOptions {
   }
 
   @CanIgnoreReturnValue
-  public HttpServerTestOptions setExceptionLogSpan(Predicate<SpanData> exceptionLogSpan) {
-    this.exceptionLogSpan = exceptionLogSpan;
+  public HttpServerTestOptions setExceptionLogOnHandlerSpan(boolean exceptionLogOnHandlerSpan) {
+    this.exceptionLogOnHandlerSpan = exceptionLogOnHandlerSpan;
     return this;
   }
 

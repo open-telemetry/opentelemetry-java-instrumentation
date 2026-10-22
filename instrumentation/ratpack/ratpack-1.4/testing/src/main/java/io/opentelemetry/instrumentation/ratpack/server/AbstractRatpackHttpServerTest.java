@@ -291,7 +291,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     options.setHasHandlerSpan(endpoint -> true);
     options.setHasExceptionLog(endpoint -> true);
     options.setExceptionLogInstrumentationName("io.opentelemetry.ratpack-1.4");
-    options.setExceptionLogSpan(span -> span.getName().equals(EXCEPTION.getPath()));
+    options.setExceptionLogOnHandlerSpan(true);
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);

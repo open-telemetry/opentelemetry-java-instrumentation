@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.ratpack.v1_7.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.TEST_HEADERS;
 
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackHttpServerTest;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -37,7 +36,7 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
 
     options.setHasHandlerSpan(endpoint -> false);
     options.setExceptionLogInstrumentationName("io.opentelemetry.ratpack-1.7");
-    options.setExceptionLogSpan(span -> span.getKind() == SpanKind.SERVER);
+    options.setExceptionLogOnHandlerSpan(false);
     options.setTestClientAddressFromSocketPeer(false);
   }
 }

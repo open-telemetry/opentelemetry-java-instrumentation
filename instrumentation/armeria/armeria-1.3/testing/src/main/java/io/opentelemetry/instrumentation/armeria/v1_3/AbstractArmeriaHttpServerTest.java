@@ -24,7 +24,6 @@ import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -179,7 +178,7 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setExceptionLogInstrumentationName("io.opentelemetry.armeria-1.3");
-    options.setExceptionLogSpan(span -> span.getKind() == SpanKind.SERVER);
+    options.setExceptionLogOnHandlerSpan(false);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
           if (endpoint == ServerEndpoint.NOT_FOUND) {
