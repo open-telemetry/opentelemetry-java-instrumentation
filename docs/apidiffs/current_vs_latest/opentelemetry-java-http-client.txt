@@ -8,7 +8,7 @@ Comparing source compatibility of opentelemetry-java-http-client-3.0.0-SNAPSHOT.
 +++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 55.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<? super java.net.http.HttpRequest,? super java.net.http.HttpResponse<? super ?>>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<java.net.http.HttpRequest,java.net.http.HttpResponse<?>>)
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry build()
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder setRequestHeaders(io.opentelemetry.instrumentation.api.config.IncludeExclude)
