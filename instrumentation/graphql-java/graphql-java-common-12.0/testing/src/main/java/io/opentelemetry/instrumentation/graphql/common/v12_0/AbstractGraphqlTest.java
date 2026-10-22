@@ -158,7 +158,7 @@ public abstract class AbstractGraphqlTest {
                   if ("book-handled-exception".equals(bookId)) {
                     try {
                       throw new IllegalStateException("fetching book failed");
-                    } catch (IllegalStateException e) {
+                    } catch (IllegalStateException ignored) {
                       return builder.data(books.get(0)).build();
                     }
                   } else if ("book-exception".equals(bookId)) {
