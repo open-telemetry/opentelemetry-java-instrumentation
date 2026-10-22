@@ -31,7 +31,6 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -136,8 +135,8 @@ class NettyServerHeaderSelectorTest {
                       AttributesBuilder attributes,
                       Context context,
                       Object request,
-                      @Nullable Object response,
-                      @Nullable Throwable error) {
+                      Object response,
+                      Throwable error) {
                     assertThat(response).isInstanceOf(HttpResponse.class);
                     attributes.put(stringKey("test.response"), "extracted");
                   }
