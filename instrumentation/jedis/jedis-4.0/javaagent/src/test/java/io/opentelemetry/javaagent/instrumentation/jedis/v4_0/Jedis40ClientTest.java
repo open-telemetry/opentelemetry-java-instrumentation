@@ -161,6 +161,35 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void localCommandBuilderFailureUsesExceptionClass() {
+    JedisDataException localFailure = new JedisDataException("WRONGTYPE local conversion failure");
+    try (UnifiedJedis client = new UnifiedJedis(new HostAndPort(host, port))) {
+      jedis.ping();
+      testing.waitForTraces(1);
+      testing.clearData();
+
+      Throwable error =
+          catchThrowable(
+              () ->
+                  client.executeCommand(
+                      new CommandObject<>(
+                          new CommandArguments(Protocol.Command.PING),
+                          new Builder<String>() {
+                            @Override
+                            public String build(Object response) {
+                              throw localFailure;
+                            }
+                          })));
+
+      assertThat(error).isSameAs(localFailure);
+      assertErrorType(JedisDataException.class.getName());
+    }
+
+    testing.waitForTraces(Boolean.getBoolean("testJedis51OrLater") ? 1 : 2);
+    testing.clearData();
+  }
+
+  @Test
   void unreliableServerPrefixUsesExceptionClass() {
     Throwable error =
         catchThrowable(

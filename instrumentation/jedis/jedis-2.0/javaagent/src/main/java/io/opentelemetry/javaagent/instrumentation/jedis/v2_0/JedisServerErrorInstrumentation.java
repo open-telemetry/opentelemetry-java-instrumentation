@@ -32,6 +32,9 @@ class JedisServerErrorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {
       JedisRequestContext.captureServerError(throwable);
+      if (throwable != null) {
+        JedisClusterCommandContext.captureCurrentServerError(throwable);
+      }
     }
   }
 }

@@ -104,6 +104,25 @@ class Jedis23ClusterCommandTest {
     assertErrorType(null);
   }
 
+  @Test
+  void clientFailureAfterSuccessfulClusterCommandUsesExceptionClass() {
+    resetRedis();
+    JedisSlotBasedConnectionHandler handler = new JedisSlotBasedConnectionHandler(emptySet());
+    seedNode(handler.getNodes());
+    JedisDataException localFailure = new JedisDataException("WRONGTYPE local conversion failure");
+    JedisClusterCommand<Object> command =
+        new JedisClusterCommand<Object>(handler, 2000, 3) {
+          @Override
+          public Object execute() {
+            handler.getConnection().ping();
+            throw localFailure;
+          }
+        };
+
+    assertThatThrownBy(() -> command.run("client-failure")).isSameAs(localFailure);
+    assertErrorType(JedisDataException.class.getName());
+  }
+
   private static void resetRedis() {
     jedis.flushAll();
     testing.clearData();

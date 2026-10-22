@@ -42,6 +42,21 @@ class JedisRequestContextTest {
   }
 
   @Test
+  void serverErrorConfirmationUsesThrowableIdentity() {
+    JedisRequestContext<Object> context = JedisRequestContext.attachForBatch();
+    Throwable firstServerFailure = new IllegalStateException("WRONGTYPE failure");
+    Throwable terminalServerFailure = new IllegalStateException("WRONGTYPE failure");
+    JedisRequestContext.captureServerError(firstServerFailure);
+    JedisRequestContext.captureServerError(terminalServerFailure);
+
+    assertThat(context.isServerError(firstServerFailure)).isTrue();
+    assertThat(context.isServerError(terminalServerFailure)).isTrue();
+    assertThat(context.isServerError(new IllegalStateException("WRONGTYPE failure"))).isFalse();
+    assertThat(context.detachAndEnd(terminalServerFailure)).isSameAs(terminalServerFailure);
+    assertDetached();
+  }
+
+  @Test
   void nestedBatchCaptureRestoresEnclosingContext() {
     JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
     assertThat(JedisRequestContext.attach()).isNull();

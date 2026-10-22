@@ -8,15 +8,18 @@ package io.opentelemetry.javaagent.instrumentation.jedis.common;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 
-public class JedisRequestContext<T> {
+public class JedisRequestContext<T> implements JedisServerErrorContext {
   private static final ThreadLocal<JedisRequestContext<?>> contextThreadLocal = new ThreadLocal<>();
 
   @Nullable private Instrumenter<T, Void> instrumenter;
   @Nullable private T request;
   @Nullable private Context context;
   @Nullable private Scope scope;
+  @Nullable private List<Throwable> serverErrors;
   @Nullable private Throwable firstServerErrorThrowable;
   @Nullable private JedisRequestContext<?> previousContext;
   private boolean captureServerErrors;
@@ -54,6 +57,7 @@ public class JedisRequestContext<T> {
 
     JedisRequestContext<T> requestContext = attachForBatch();
     requestContext.request = request;
+    requestContext.associateServerErrorContext(request);
     requestContext.scope = scope;
     if (context != null) {
       requestContext.instrumenter = instrumenter;
@@ -97,11 +101,25 @@ public class JedisRequestContext<T> {
       return;
     }
     JedisRequestContext<?> requestContext = contextThreadLocal.get();
-    if (requestContext != null
-        && requestContext.captureServerErrors
-        && requestContext.firstServerErrorThrowable == null) {
-      requestContext.firstServerErrorThrowable = throwable;
+    if (requestContext != null) {
+      requestContext.addServerError(throwable);
+      if (requestContext.captureServerErrors && requestContext.firstServerErrorThrowable == null) {
+        requestContext.firstServerErrorThrowable = throwable;
+      }
     }
+  }
+
+  @Override
+  public boolean isServerError(Throwable throwable) {
+    List<Throwable> serverErrors = this.serverErrors;
+    if (serverErrors != null) {
+      for (Throwable serverError : serverErrors) {
+        if (serverError == throwable) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -113,6 +131,9 @@ public class JedisRequestContext<T> {
       T request,
       @Nullable Throwable throwable) {
     JedisRequestContext<T> requestContext = current();
+    if (requestContext != null) {
+      requestContext.associateServerErrorContext(request);
+    }
     if (requestContext == null || requestContext.request != null) {
       // End immediately when there is no enclosing operation or a batch is tracking the request.
       endSpan(instrumenter, context, request, throwable);
@@ -120,6 +141,21 @@ public class JedisRequestContext<T> {
       requestContext.instrumenter = instrumenter;
       requestContext.context = context;
       requestContext.request = request;
+    }
+  }
+
+  private void addServerError(Throwable throwable) {
+    List<Throwable> serverErrors = this.serverErrors;
+    if (serverErrors == null) {
+      serverErrors = new ArrayList<>();
+      this.serverErrors = serverErrors;
+    }
+    serverErrors.add(throwable);
+  }
+
+  private void associateServerErrorContext(Object request) {
+    if (request instanceof JedisServerErrorRequest) {
+      ((JedisServerErrorRequest) request).setServerErrorContext(this);
     }
   }
 
