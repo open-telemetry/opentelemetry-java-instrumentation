@@ -85,8 +85,15 @@ class AwsLambdaSqsEventWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CLOUD_RESOURCE_ID, AwsLambdaTestUtils.expectedCloudResourceId()),
-                            equalTo(CLOUD_ACCOUNT_ID, AwsLambdaTestUtils.expectedCloudAccountId()),
+                                CLOUD_RESOURCE_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                    : null),
+                            equalTo(
+                                CLOUD_ACCOUNT_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "123456789"
+                                    : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("process otel")

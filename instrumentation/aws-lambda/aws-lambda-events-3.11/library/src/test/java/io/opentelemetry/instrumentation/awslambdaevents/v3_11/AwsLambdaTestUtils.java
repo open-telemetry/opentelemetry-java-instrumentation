@@ -20,21 +20,13 @@ final class AwsLambdaTestUtils {
       Method method = Context.class.getMethod("getInvokedFunctionArn");
       when((String) method.invoke(context)).thenReturn(INVOKED_FUNCTION_ARN);
     } catch (NoSuchMethodException ignored) {
-      // getInvokedFunctionArn was added in aws-lambda-java-core 1.2.1.
+      // aws-lambda-java-core 1.0.0 does not expose this accessor.
     } catch (ReflectiveOperationException e) {
       throw new LinkageError(e.getMessage(), e);
     }
   }
 
-  static String expectedCloudResourceId() {
-    return supportsInvokedFunctionArn() ? INVOKED_FUNCTION_ARN : null;
-  }
-
-  static String expectedCloudAccountId() {
-    return supportsInvokedFunctionArn() ? "123456789" : null;
-  }
-
-  private static boolean supportsInvokedFunctionArn() {
+  static boolean supportsInvokedFunctionArn() {
     try {
       Context.class.getMethod("getInvokedFunctionArn");
       return true;
