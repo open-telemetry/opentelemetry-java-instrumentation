@@ -77,8 +77,7 @@ example `Context.current()` instead of `Java8BytecodeBridge.currentContext()` an
 `Span.fromContext(context)` instead of `Java8BytecodeBridge.spanFromContext(context)`.
 
 Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
-method, even when the helper is nested in an advice class. Source-level `inline = false` does not
-create an exception; the transformer controls inlining.
+method, even when the helper is nested in an advice class.
 
 ## Use `suppress = Throwable.class` by Default
 

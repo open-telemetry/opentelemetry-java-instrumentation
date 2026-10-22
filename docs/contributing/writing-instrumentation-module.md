@@ -257,6 +257,10 @@ Using indy instrumentation has these advantages:
 - advice classes have access to agent code so communicating between advice and agent does not need an api in boot loader
 - advice classes code does not require to be compatible with instrumented class, for example we can call a static interface method in advice when instrumented class is compiled for Java 7 or older.
 
+Advice classes and their static entry points must remain public for indy method-handle dispatch.
+Ordinary helper methods may be private when their callers and classloader boundaries permit it;
+non-inlined advice may also use lambdas.
+
 ### Shared classes and common classloader
 
 For each application classloader, all the advices are loaded into a shared classloader per application classloader.
