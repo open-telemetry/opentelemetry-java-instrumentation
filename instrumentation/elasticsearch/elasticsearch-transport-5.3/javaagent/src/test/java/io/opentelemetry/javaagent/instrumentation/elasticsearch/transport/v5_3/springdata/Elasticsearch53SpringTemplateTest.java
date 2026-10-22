@@ -21,10 +21,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 import static org.awaitility.Awaitility.await;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -409,9 +409,9 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
 
     assertThat(hits.get()).isEqualTo(2);
     assertThat(results)
-        .containsExactly(
-            ImmutableMap.of("id", "2", "data", "doc b"),
-            ImmutableMap.of("id", "1", "data", "doc a"));
+        .satisfiesExactly(
+            result -> assertThat(result).containsOnly(entry("id", "2"), entry("data", "doc b")),
+            result -> assertThat(result).containsOnly(entry("id", "1"), entry("data", "doc a")));
     assertThat(bucketTags).isEmpty();
 
     testing.waitAndAssertTraces(
