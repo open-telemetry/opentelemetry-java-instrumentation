@@ -46,6 +46,9 @@ testing.suites {
     }
     val baseline = name == "test"
     executions {
+      configureEach {
+        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      }
       register("Experimental") {
         telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
       }
@@ -61,8 +64,6 @@ testing.suites {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
