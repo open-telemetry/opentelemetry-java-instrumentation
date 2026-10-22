@@ -34,6 +34,7 @@ import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -45,6 +46,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
+import redis.clients.jedis.Builder;
+import redis.clients.jedis.CommandArguments;
+import redis.clients.jedis.CommandObject;
 import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.DefaultJedisSocketFactory;
 import redis.clients.jedis.HostAndPort;
@@ -53,6 +57,7 @@ import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Protocol;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
@@ -206,6 +211,34 @@ class Jedis40ClientTest {
         .hasSize(2)
         .allSatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
     assertErrorType("WRONGTYPE");
+  }
+
+  @Test
+  void nestedPipelineServerErrorDoesNotFailSuccessfulOuterPipeline() {
+    jedis.lpush("nested-wrong-type", "value");
+    testing.clearData();
+
+    List<Object> nestedResults = new ArrayList<>();
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                Pipeline nested = jedis.pipelined();
+                nested.get("nested-wrong-type");
+                nestedResults.addAll(nested.syncAndReturnAll());
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertThat(nestedResults).hasSize(1);
+    assertThat(nestedResults.get(0)).isInstanceOf(JedisDataException.class);
+    assertThat((Throwable) nestedResults.get(0)).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType(null);
   }
 
   @Test

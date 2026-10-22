@@ -63,14 +63,14 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   public static class SyncAdvice {
 
     public static class AdviceScope {
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
       private final JedisRequest request;
       @Nullable private final JedisRequestContext<JedisRequest> requestContext;
 
       private AdviceScope(
-          Context context,
-          Scope scope,
+          @Nullable Context context,
+          @Nullable Scope scope,
           JedisRequest request,
           @Nullable JedisRequestContext<JedisRequest> requestContext) {
         this.context = context;
@@ -90,7 +90,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
         JedisRequest request = JedisRequest.createPipeline(requests);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
-          return null;
+          return new AdviceScope(null, null, request, JedisRequestContext.attachForBatch(request));
         }
         Context context = instrumenter().start(parentContext, request);
         return new AdviceScope(
@@ -98,10 +98,14 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
       }
 
       public void end(@Nullable Throwable throwable) {
-        scope.close();
+        if (scope != null) {
+          scope.close();
+        }
         Throwable completionThrowable =
             requestContext != null ? requestContext.detachAndEnd(throwable) : throwable;
-        instrumenter().end(context, request, null, completionThrowable);
+        if (context != null) {
+          instrumenter().end(context, request, null, completionThrowable);
+        }
       }
     }
 
