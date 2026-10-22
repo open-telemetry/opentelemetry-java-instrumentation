@@ -8,20 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
-import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
-import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
@@ -137,23 +126,6 @@ class ArmeriaGrpcTest {
                                         equalTo(MESSAGE_TYPE, "RECEIVED"),
                                         equalTo(MESSAGE_ID, 1L))),
                 span ->
-                    span.hasName("POST /example.Greeter/SayHello")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(HTTP_ROUTE, "/example.Greeter/SayHello"),
-                            equalTo(URL_PATH, "/example.Greeter/SayHello"),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, server.httpPort()),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "2"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.startsWith("armeria/"))),
-                span ->
                     span.hasName("example.Greeter/SayHello")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
@@ -193,14 +165,12 @@ class ArmeriaGrpcTest {
             .build(GreeterGrpc.GreeterBlockingStub.class);
 
     Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
-    assertThatThrownBy(() -> client.sayHello(request)).isInstanceOf(StatusRuntimeException.class);
+    assertThatThrownBy(() -> client.sayHello(request))
+        .isInstanceOfSatisfying(
+            StatusRuntimeException.class,
+            e -> assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.UNIMPLEMENTED));
 
-    // Armeria uses exact-route binding for gRPC services, so calling an unregistered service
-    // results in an HTTP 404 rather than the gRPC service layer producing an UNIMPLEMENTED
-    // response. The gRPC client maps the HTTP 404 to Status.UNIMPLEMENTED (asserted on the
-    // client span below), and the armeria HTTP instrumentation captures the request as an
-    // HTTP server span -- there is no gRPC server span because the gRPC service layer is
-    // never invoked.
+    // Armeria rejects unknown service paths before invoking the gRPC interceptors.
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -234,23 +204,6 @@ class ArmeriaGrpcTest {
                                 event
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L))),
-                span ->
-                    span.hasName("POST /*")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 404),
-                            equalTo(HTTP_ROUTE, "/*"),
-                            equalTo(URL_PATH, "/example.Greeter/SayHello"),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "2"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.startsWith("armeria/")))));
+                                        equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)))));
   }
 }

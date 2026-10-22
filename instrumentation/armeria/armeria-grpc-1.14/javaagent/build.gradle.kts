@@ -19,7 +19,6 @@ dependencies {
   library("com.linecorp.armeria:armeria-grpc:1.14.0")
   implementation(project(":instrumentation:grpc-1.6:library"))
 
-  testInstrumentation(project(":instrumentation:armeria:armeria-1.3:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:grpc-1.6:javaagent"))
 
@@ -61,13 +60,6 @@ afterEvaluate {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    // The armeria HTTP instrumentation creates an HTTP server span, and then the gRPC
-    // interceptor creates a second server span from the same incoming context, which triggers the
-    // context leak debugger.
-    jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
-  }
-
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
