@@ -43,13 +43,6 @@ testing {
           jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
         }
       }
-
-      configurations.configureEach {
-        when (name) {
-          "version310TestImplementation" -> extendsFrom(configurations.testImplementation.get())
-          "version310TestRuntimeOnly" -> extendsFrom(configurations.testRuntimeOnly.get())
-        }
-      }
     }
 
     register<JvmTestSuite>("version310Test") {
@@ -58,6 +51,7 @@ testing {
           setSrcDirs(listOf("src/version310Test/java"))
         }
       }
+
       dependencies {
         implementation(project())
         implementation(
@@ -73,5 +67,14 @@ testing {
         }
       }
     }
+  }
+}
+
+configurations {
+  named("version310TestImplementation") {
+    extendsFrom(configurations["testImplementation"])
+  }
+  named("version310TestRuntimeOnly") {
+    extendsFrom(configurations["testRuntimeOnly"])
   }
 }

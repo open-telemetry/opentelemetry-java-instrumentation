@@ -32,13 +32,6 @@ testing {
           jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
         }
       }
-
-      configurations.configureEach {
-        when (name) {
-          "core12TestImplementation" -> extendsFrom(configurations.testImplementation.get())
-          "core12TestRuntimeOnly" -> extendsFrom(configurations.testRuntimeOnly.get())
-        }
-      }
     }
 
     register<JvmTestSuite>("core12Test") {
@@ -47,6 +40,7 @@ testing {
           setSrcDirs(listOf("src/test/java"))
         }
       }
+
       dependencies {
         implementation(project())
         implementation(
@@ -62,5 +56,14 @@ testing {
         }
       }
     }
+  }
+}
+
+configurations {
+  named("core12TestImplementation") {
+    extendsFrom(configurations["testImplementation"])
+  }
+  named("core12TestRuntimeOnly") {
+    extendsFrom(configurations["testRuntimeOnly"])
   }
 }

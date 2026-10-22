@@ -41,13 +41,6 @@ testing {
           jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
         }
       }
-
-      configurations.configureEach {
-        when (name) {
-          "version12TestImplementation" -> extendsFrom(configurations.testImplementation.get())
-          "version12TestRuntimeOnly" -> extendsFrom(configurations.testRuntimeOnly.get())
-        }
-      }
     }
 
     register<JvmTestSuite>("version12Test") {
@@ -56,6 +49,7 @@ testing {
           setSrcDirs(listOf("src/test/java"))
         }
       }
+
       dependencies {
         implementation(project())
         implementation(
@@ -74,5 +68,14 @@ testing {
         }
       }
     }
+  }
+}
+
+configurations {
+  named("version12TestImplementation") {
+    extendsFrom(configurations["testImplementation"])
+  }
+  named("version12TestRuntimeOnly") {
+    extendsFrom(configurations["testRuntimeOnly"])
   }
 }
