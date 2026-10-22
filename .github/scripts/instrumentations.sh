@@ -41,7 +41,7 @@ readonly INSTRUMENTATIONS=(
   "aws-lambda:aws-lambda-core-1.0:javaagent:test"
   "aws-lambda:aws-lambda-core-1.0:javaagent:testExceptionSignalLogs"
   "aws-lambda:aws-lambda-events-2.2:javaagent:test"
-  "aws-lambda:aws-lambda-events-3.11:library:test"
+  "aws-lambda:aws-lambda-events-3.11:library:version12Test"
   "aws-sdk:aws-sdk-1.11:javaagent:test"
   "aws-sdk:aws-sdk-1.11:javaagent:testExperimentalAttributes"
   "aws-sdk:aws-sdk-1.11:javaagent:testSqs"
