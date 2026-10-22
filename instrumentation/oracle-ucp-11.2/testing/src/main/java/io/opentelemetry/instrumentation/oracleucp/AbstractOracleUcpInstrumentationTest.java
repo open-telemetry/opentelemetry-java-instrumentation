@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.oracleucp;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -17,6 +18,7 @@ import java.util.Locale;
 import oracle.ucp.admin.UniversalConnectionPoolManagerImpl;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
+import oracle.ucp.jdbc.PoolDataSourceImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,6 +49,16 @@ public abstract class AbstractOracleUcpInstrumentationTest {
 
   @BeforeAll
   static void setUp() {
+    if (!testLatestDeps()) {
+      // The 11.2.0.4 artifact's Implementation-Version is incorrectly set to 11.2.0.3.0.
+      assertThat(
+              PoolDataSourceImpl.class
+                  .getProtectionDomain()
+                  .getCodeSource()
+                  .getLocation()
+                  .getPath())
+          .endsWith("/ucp-11.2.0.4.jar");
+    }
     oracle.start();
   }
 

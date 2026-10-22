@@ -5,7 +5,9 @@ plugins {
 
 dependencies {
   library("com.oracle.database.jdbc:ucp:11.2.0.4")
-  library("com.oracle.database.jdbc:ojdbc8:12.2.0.1")
+  library("com.oracle.database.jdbc:ojdbc8:12.2.0.1") {
+    exclude(group = "com.oracle.database.jdbc", module = "ucp")
+  }
 
   testImplementation(project(":instrumentation:oracle-ucp-11.2:testing"))
 }
@@ -13,5 +15,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }
