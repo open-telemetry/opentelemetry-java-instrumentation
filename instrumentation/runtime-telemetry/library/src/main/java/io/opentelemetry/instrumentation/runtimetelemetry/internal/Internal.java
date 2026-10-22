@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
 import java.util.List;
@@ -46,9 +46,7 @@ public final class Internal {
   @Nullable
   public static RuntimeTelemetry configure(OpenTelemetry openTelemetry, boolean defaultEnabled) {
     DeclarativeConfigProperties config =
-        openTelemetry instanceof ExtendedOpenTelemetry
-            ? ((ExtendedOpenTelemetry) openTelemetry).getInstrumentationConfig("runtime_telemetry")
-            : DeclarativeConfigProperties.empty();
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry");
     if (!config.getBoolean("enabled", defaultEnabled)) {
       return null;
     }
