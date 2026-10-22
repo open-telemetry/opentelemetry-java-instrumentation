@@ -127,5 +127,4 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   public boolean isServletException(Throwable throwable) {
     return throwable instanceof ServletException;
   }
-
 }
