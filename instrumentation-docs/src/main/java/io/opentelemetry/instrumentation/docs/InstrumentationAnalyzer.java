@@ -68,6 +68,9 @@ class InstrumentationAnalyzer {
     InstrumentationMetadata metaData = getMetadata(module);
     if (metaData != null) {
       module.setMetadata(metaData);
+      if (metaData.getScopeName() != null) {
+        module.setScopeInfo(InstrumentationScopeInfo.create(metaData.getScopeName()));
+      }
     }
 
     module.setAgentTargetVersions(getVersionInformation(module));
