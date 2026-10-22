@@ -71,9 +71,7 @@ class InfluxDbEscapingResponseExceptionTest {
             new Retrofit.Builder().callbackExecutor(callbackExecutor),
             InfluxDB.ResponseFormat.JSON)) {
       client.query(
-          new Query("SELECT * FROM cpu", "mydb"),
-          result -> resultCallbackInvoked.set(true),
-          error -> {});
+          new Query("SELECT * FROM cpu", "mydb"), 1, result -> resultCallbackInvoked.set(true));
       assertThat(callbackDispatchComplete.await(10, SECONDS)).isTrue();
       assertThat(resultCallbackInvoked.get()).isFalse();
     }
