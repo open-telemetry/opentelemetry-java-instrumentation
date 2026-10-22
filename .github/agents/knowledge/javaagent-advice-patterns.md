@@ -16,7 +16,7 @@ class MyInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class MethodAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(/* ... */) { /* ... */ }
   }
 }
@@ -26,7 +26,7 @@ class MyInstrumentation implements TypeInstrumentation {
 // ❌ Wrong: separate top-level file
 // File: MyAdvice.java
 public class MyAdvice {
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static void onEnter(/* ... */) { /* ... */ }
 }
 ```
@@ -55,7 +55,7 @@ every module except `instrumentation/internal/internal-class-loader` and
 public static void onEnter(/* ... */) { /* ... */ }
 
 // ❌ Wrong — instance method
-@Advice.OnMethodEnter(suppress = Throwable.class)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 public void onEnter(/* ... */) { /* ... */ }
 ```
 
@@ -101,10 +101,10 @@ Both `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` should include
 `suppress = Throwable.class`:
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 public static void onEnter(/* ... */) { /* ... */ }
 
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
 public static void onExit(/* ... */) { /* ... */ }
 ```
 
@@ -133,7 +133,7 @@ Rule of thumb:
 
 ```java
 // ✅ Cleanup advice — needs onThrowable so Scope is always closed
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
 public static void onExit(@Advice.Enter @Nullable Scope scope) {
   if (scope != null) {
     scope.close();
@@ -141,7 +141,7 @@ public static void onExit(@Advice.Enter @Nullable Scope scope) {
 }
 
 // ✅ Return-only advice — omit onThrowable; nothing to clean up on exception
-@Advice.OnMethodExit(suppress = Throwable.class)
+@Advice.OnMethodExit(suppress = Throwable.class, inline = false)
 public static CompletableFuture<?> onExit(@Advice.Return CompletableFuture<?> result) {
   return CompletableFutureWrapper.wrap(result, currentContext());
 }
@@ -169,14 +169,14 @@ adds no value and should be omitted rather than added:
 ```java
 // ✅ Omit suppress — return literal, cannot throw
 @AssignReturned.ToReturned
-@Advice.OnMethodExit
+@Advice.OnMethodExit(inline = false)
 public static boolean methodExit() {
   return true;
 }
 
 // ✅ Keep suppress — calls into library code that may throw
 @AssignReturned.ToReturned
-@Advice.OnMethodExit(suppress = Throwable.class)
+@Advice.OnMethodExit(suppress = Throwable.class, inline = false)
 public static OpenTelemetry methodExit() {
   return application.io.opentelemetry.api.GlobalOpenTelemetry.get();
 }
@@ -199,7 +199,7 @@ public void transform(TypeTransformer transformer) {
 
 @SuppressWarnings({"ReturnValueIgnored", "unused"})
 public static class InitAdvice {
-  @Advice.OnMethodEnter   // no suppress needed — this code is never invoked
+  @Advice.OnMethodEnter(inline = false)   // no suppress needed — this code is never invoked
   public static void init() {
     // ensures helper class is recognized and injected into classloader
     SomeHelperClass.class.getName();
@@ -229,7 +229,7 @@ When method advice passes a raw `Scope` through `@Advice.Enter`, call `makeCurre
 `@Advice.OnMethodExit`:
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 public static @Nullable Scope onEnter(Request request) {
   Context context = startContext(request);
   if (context == null) {
@@ -238,7 +238,7 @@ public static @Nullable Scope onEnter(Request request) {
   return context.makeCurrent();
 }
 
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
 public static void onExit(@Advice.Enter @Nullable Scope scope) {
   if (scope != null) {
     scope.close();
@@ -324,7 +324,7 @@ public static class AdviceScope {
   }
 }
 
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
 public static void onExit(
     @Advice.Thrown @Nullable Throwable throwable,
     @Advice.Enter @Nullable AdviceScope adviceScope) {
