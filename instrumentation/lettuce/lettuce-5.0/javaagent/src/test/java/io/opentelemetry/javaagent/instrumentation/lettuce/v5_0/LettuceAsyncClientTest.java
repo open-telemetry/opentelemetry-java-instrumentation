@@ -36,8 +36,10 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -249,6 +251,113 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
                             equalTo(DB_OPERATION_NAME, "SET"))));
+  }
+
+  @Test
+  void testCommandServerErrorUsesRedisErrorType() throws Exception {
+    connection.sync().hmset("TESTHM", testHashMap);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Throwable thrown = catchThrowable(() -> asyncCommands.get("TESTHM").get(10, SECONDS));
+
+    assertThat(thrown)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET TESTHM"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(ERROR_TYPE, "WRONGTYPE"))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", "WRONGTYPE", 1);
+  }
+
+  @Test
+  void testTransactionServerErrorUsesRedisErrorType() throws Exception {
+    asyncCommands.multi().get(10, SECONDS);
+    RedisFuture<Object> failedCommand =
+        asyncCommands.eval(
+            "return redis.error_reply('ERR transaction failure')", ScriptOutputType.VALUE);
+    assertThat(asyncCommands.exec().get(10, SECONDS)).isNotNull();
+
+    Throwable error = catchThrowable(() -> failedCommand.get(10, SECONDS));
+    assertThat(error)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+    assertThat(error.getCause()).hasMessage("ERR transaction failure");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("MULTI " + host + ":" + port).hasStatus(StatusData.unset())),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, "ERR"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("EXEC " + host + ":" + port).hasStatus(StatusData.unset())));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.lettuce-5.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.satisfies(
+                            data ->
+                                assertThat(data.getPoints())
+                                    .filteredOn(
+                                        point -> point.getAttributes().get(ERROR_TYPE) != null)
+                                    .singleElement()
+                                    .satisfies(
+                                        point -> {
+                                          assertThat(point.getCount()).isEqualTo(1);
+                                          assertThat(point.getAttributes().get(ERROR_TYPE))
+                                              .isEqualTo("ERR");
+                                        }))));
+  }
+
+  @Test
+  void testNonAsciiServerErrorUsesExceptionTypeFallback() throws Exception {
+    Throwable error =
+        catchThrowable(
+            () ->
+                asyncCommands
+                    .eval(
+                        "return redis.error_reply('\\195\\169chec\\228\\184\\173 details')",
+                        ScriptOutputType.VALUE)
+                    .get(10, SECONDS));
+    assertThat(error)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+
+    String exceptionType = RedisCommandExecutionException.class.getName();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, exceptionType))));
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", exceptionType, 1);
   }
 
   @Test
@@ -551,6 +660,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_QUERY_TEXT, "DEL key1 key2"),
                             equalTo(DB_OPERATION_NAME, "DEL"),
                             equalTo(ERROR_TYPE, "java.lang.IllegalStateException"))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", "java.lang.IllegalStateException", 1);
   }
 
   @Test
@@ -615,7 +726,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     for (RedisFuture<?> future : futures) {
       Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
       if (thrown != null) {
-        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.errorType);
+        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.exceptionType);
       }
     }
 
@@ -642,6 +753,27 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_OPERATION_NAME, scenario.operationName),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                             equalTo(ERROR_TYPE, scenario.errorType))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", scenario.errorType, 1);
+  }
+
+  private static void assertErrorTypeMetric(
+      String instrumentationName, String errorType, long count) {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(count)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertThat(attributes.get(ERROR_TYPE))
+                                                .isEqualTo(errorType)))));
   }
 
   @Test
@@ -779,7 +911,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .operationName("PIPELINE")
                 .queryText("CONFIG SET not-a-real-config ?; SET batch-after-error ?")
                 .batchSize(2)
-                .errorType("io.lettuce.core.RedisCommandExecutionException")
+                .exceptionType("io.lettuce.core.RedisCommandExecutionException")
+                .errorType("ERR")
                 .build()));
   }
 
@@ -788,6 +921,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     private final String operationName;
     private final String queryText;
     private final Long batchSize;
+    private final String exceptionType;
     private final String errorType;
 
     private BatchScenario(Builder builder) {
@@ -795,6 +929,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
       this.operationName = builder.operationName;
       this.queryText = builder.queryText;
       this.batchSize = builder.batchSize;
+      this.exceptionType = builder.exceptionType;
       this.errorType = builder.errorType;
     }
 
@@ -811,6 +946,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
       private String operationName;
       private String queryText;
       private Long batchSize;
+      private String exceptionType;
       private String errorType;
 
       private Builder addCommand(BatchCommand command) {
@@ -835,6 +971,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
       private Builder errorType(String errorType) {
         this.errorType = errorType;
+        return this;
+      }
+
+      private Builder exceptionType(String exceptionType) {
+        this.exceptionType = exceptionType;
         return this;
       }
 
