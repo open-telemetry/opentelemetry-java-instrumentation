@@ -20,6 +20,11 @@ public class ZioInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ZioRuntimeInstrumentation());
   }

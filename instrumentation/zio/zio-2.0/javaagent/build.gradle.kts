@@ -33,7 +33,34 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.zio.enabled=true")
+    }
+    if (name != "testScopeLifecycle") {
+      exclude("**/ZioScopeLifecycleTest*")
+    }
+  }
+
   test {
     jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
+  }
+
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*DefaultEnablementTest") }
+  }
+
+  val testScopeLifecycle = register<Test>("testScopeLifecycle") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*ZioScopeLifecycleTest") }
+    jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
+    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=true")
+  }
+
+  check {
+    dependsOn(testDisabled, testScopeLifecycle)
   }
 }

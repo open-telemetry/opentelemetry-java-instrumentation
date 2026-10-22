@@ -16,7 +16,7 @@ import java.util.List;
 public class ZioHttpInstrumentationModule extends InstrumentationModule {
 
   public ZioHttpInstrumentationModule() {
-    super("zio-http-3.0", "zio-http", "zio");
+    super("zio-http-3.0", "zio-http");
   }
 
   @Override

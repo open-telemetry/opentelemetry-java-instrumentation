@@ -16,6 +16,10 @@ object ZioHttpTestApplication extends ZIOAppDefault {
       Method.GET / "greet" / string("name") -> handler {
         (name: String, _: Request) =>
           Response.text(s"Hello $name")
+      },
+      Method.GET / "greet-async" / string("name") -> handler {
+        (name: String, _: Request) =>
+          ZIO.yieldNow *> ZIO.succeed(Response.text(s"Hello $name"))
       }
     )
 

@@ -43,4 +43,23 @@ dependencies {
   testCompileOnly("org.scala-lang:scala-library:2.12.20")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:zio:zio-2.0:javaagent"))
+}
+
+tasks {
+  val testRuntimeDisabled = register<Test>("testRuntimeDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.zio.enabled=false")
+  }
+
+  val testRuntimeEnabled = register<Test>("testRuntimeEnabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.zio.enabled=true")
+  }
+
+  check {
+    dependsOn(testRuntimeDisabled, testRuntimeEnabled)
+  }
 }

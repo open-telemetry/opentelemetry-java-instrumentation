@@ -6,12 +6,22 @@
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.api.trace.{Span, SpanContext, Tracer}
 import zio._
 
 import java.util.concurrent.Executors
 
 object ZioTestFixtures {
+
+  def currentSpanAfterSuspension(): SpanContext =
+    run {
+      for {
+        child <- (ZIO.yieldNow *> ZIO.succeed(
+          Span.current().getSpanContext
+        )).fork
+        context <- child.join
+      } yield context
+    }
 
   def runYieldingFiberAfterParentScopeCloses(): Unit =
     run {
@@ -152,7 +162,7 @@ object ZioTestFixtures {
       } yield result
     }
 
-  private def run[A](zio: ZIO[Any, Nothing, A]): Unit = {
+  private def run[A](zio: ZIO[Any, Nothing, A]): A = {
     val executor = Executors.newSingleThreadExecutor()
     val zioExecutor = Executor.fromJavaExecutor(executor)
     val layer =

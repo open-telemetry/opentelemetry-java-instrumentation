@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- ZIO runtime context propagation is disabled by default due to unresolved scope-lifecycle
+  issues. Opt in with `otel.instrumentation.zio.enabled=true` (or `zio-2.0`).
+  The `zio` selector no longer controls ZIO HTTP route enrichment; use `zio-http` or
+  `zio-http-3.0`, which remain enabled by default.
 - `InstrumenterBuilder` no longer infers a schema URL from attribute extractors. Call
   `setSchemaUrl()` with the schema for the conventions defining the instrumenter's signals;
   otherwise its telemetry has no schema URL.

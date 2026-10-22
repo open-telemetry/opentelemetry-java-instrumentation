@@ -33,7 +33,9 @@ import io.opentelemetry.testing.internal.armeria.client.WebClient
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.{AbstractLongAssert, AbstractStringAssert}
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
+import org.junit.jupiter.api.{AfterAll, BeforeAll, TestInstance}
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import zio.ExitCode
 
 import java.util.concurrent.TimeUnit
@@ -63,9 +65,10 @@ class ZioHttpTest {
     ZioHttpTestApplication.exit(ExitCode.success)
   }
 
-  @Test
-  def spanName(): Unit = {
-    val response = client.get("/greet/test").aggregate.join
+  @ParameterizedTest
+  @ValueSource(strings = Array("greet", "greet-async"))
+  def spanName(route: String): Unit = {
+    val response = client.get(s"/$route/test").aggregate.join
     val content = response.contentUtf8
     assertThat(port).isNotEqualTo(0)
     assertThat(content).isEqualTo("Hello test")
@@ -75,12 +78,12 @@ class ZioHttpTest {
         trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
           override def accept(span: SpanDataAssert): Unit = {
             span
-              .hasName("GET /greet/{name}")
+              .hasName(s"GET /$route/{name}")
               .hasKind(SpanKind.SERVER)
               .hasNoParent
               .hasAttributesSatisfyingExactly(
                 equalTo(URL_SCHEME, "http"),
-                equalTo(URL_PATH, "/greet/test"),
+                equalTo(URL_PATH, s"/$route/test"),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                 satisfies(
@@ -90,7 +93,7 @@ class ZioHttpTest {
                       value.isInstanceOf(classOf[String])
                   }
                 ),
-                equalTo(HTTP_ROUTE, "/greet/{name}"),
+                equalTo(HTTP_ROUTE, s"/$route/{name}"),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, port),
