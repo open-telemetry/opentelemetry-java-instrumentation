@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.VirtualF
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.core.ClusterFacade;
@@ -41,57 +40,12 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(returns(named("rx.Observable"))).and(not(named("query"))),
+        isPublic().and(returns(named("rx.Observable"))),
         getClass().getName() + "$CouchbaseClientAdvice");
-    transformer.applyAdviceToMethod(
-        isPublic().and(returns(named("rx.Observable"))).and(named("query")),
-        getClass().getName() + "$CouchbaseClientQueryAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CouchbaseClientAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope trackCallDepth(
-        @Advice.Origin("#t") Class<?> declaringClass,
-        @Advice.Origin("#m") String methodName,
-        @Advice.FieldValue("bucket") String bucket,
-        @Advice.FieldValue("core") ClusterFacade core) {
-      CallDepth callDepth = CallDepth.forClass(CouchbaseCluster.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return null;
-      }
-      CouchbaseRequestInfo request =
-          CouchbaseRequestInfo.create(
-              bucket, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName);
-      return CouchbaseRequestInfo.init(Java8BytecodeBridge.currentContext(), request).makeCurrent();
-    }
-
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    @SuppressWarnings("deprecation") // Observable.create is required for RxJava 1.0 compatibility
-    public static Observable<?> subscribeResult(
-        @Advice.Return Observable<?> result, @Advice.Enter Scope scope) {
-      CouchbaseRequestInfo request;
-      try {
-        request = CouchbaseRequestInfo.get(Java8BytecodeBridge.currentContext());
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
-      }
-      if (CallDepth.forClass(CouchbaseCluster.class).decrementAndGet() > 0
-          || request == null
-          || result == null) {
-        return result;
-      }
-      return Observable.create(
-          TracedOnSubscribe.perSubscription(result, instrumenter(), request.copySupplier()));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CouchbaseClientQueryAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope trackCallDepth(
@@ -105,10 +59,10 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         return null;
       }
       CouchbaseRequestInfo request =
-          query == null
-              ? CouchbaseRequestInfo.create(
-                  bucket, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName)
-              : CouchbaseRequestInfo.create(bucket, COUCHBASE_SERVER_TARGET.get(core), query);
+          methodName.equals("query") && query != null
+              ? CouchbaseRequestInfo.create(bucket, COUCHBASE_SERVER_TARGET.get(core), query)
+              : CouchbaseRequestInfo.create(
+                  bucket, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName);
       return CouchbaseRequestInfo.init(Java8BytecodeBridge.currentContext(), request).makeCurrent();
     }
 

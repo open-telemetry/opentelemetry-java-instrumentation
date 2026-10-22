@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.Bucket;
-import com.couchbase.client.java.CouchbaseAsyncCluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
@@ -86,13 +85,8 @@ class CouchbaseBaselineTest {
     CouchbaseCluster cluster = CouchbaseCluster.create(environment, "127.0.0.1");
     cleanup.deferAfterAll(cluster::disconnect);
     bucket = cluster.openBucket(BUCKET_NAME, PASSWORD);
-
-    CouchbaseAsyncCluster asyncCluster = CouchbaseAsyncCluster.create(environment, "127.0.0.1");
-    cleanup.deferAfterAll(
-        () -> asyncCluster.disconnect().timeout(20, SECONDS).toBlocking().single());
-    asyncBucket =
-        asyncCluster.openBucket(BUCKET_NAME, PASSWORD).timeout(20, SECONDS).toBlocking().single();
-    testing.waitForTraces(2);
+    asyncBucket = bucket.async();
+    testing.waitForTraces(1);
   }
 
   private static void shutdownEnvironment(CouchbaseEnvironment environment) {
