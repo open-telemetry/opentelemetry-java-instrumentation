@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -29,13 +31,48 @@ dependencies {
   implementation("com.fasterxml.jackson.core:jackson-databind")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
-  // allows to get the default events
-  testLibrary("com.amazonaws:aws-lambda-java-events:3.10.0")
 }
 
-tasks.test {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+        }
+      }
+
+      configurations.configureEach {
+        when (name) {
+          "version310TestImplementation" -> extendsFrom(configurations.testImplementation.get())
+          "version310TestRuntimeOnly" -> extendsFrom(configurations.testRuntimeOnly.get())
+        }
+      }
+    }
+
+    register<JvmTestSuite>("version310Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/version310Test/java"))
+        }
+      }
+      dependencies {
+        implementation(project())
+        implementation(
+          "com.amazonaws:aws-lambda-java-events:${baseVersion("3.10.0").orLatest()}"
+        )
+      }
+      executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+        }
+      }
+    }
+  }
 }

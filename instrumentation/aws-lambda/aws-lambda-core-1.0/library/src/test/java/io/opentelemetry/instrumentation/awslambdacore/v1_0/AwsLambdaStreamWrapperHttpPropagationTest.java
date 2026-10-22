@@ -59,8 +59,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
   void setUp() {
     when(context.getFunctionName()).thenReturn("my_function");
     when(context.getAwsRequestId()).thenReturn("1-22-333");
-    when(context.getInvokedFunctionArn())
-        .thenReturn("arn:aws:lambda:us-east-1:123456789:function:test");
+    AwsLambdaTestUtils.stubInvokedFunctionArn(context);
   }
 
   @AfterEach
@@ -96,8 +95,8 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                                AwsLambdaTestUtils.expectedCloudResourceId()),
+                            equalTo(CLOUD_ACCOUNT_ID, AwsLambdaTestUtils.expectedCloudAccountId()),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
@@ -133,8 +132,8 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                                AwsLambdaTestUtils.expectedCloudResourceId()),
+                            equalTo(CLOUD_ACCOUNT_ID, AwsLambdaTestUtils.expectedCloudAccountId()),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
