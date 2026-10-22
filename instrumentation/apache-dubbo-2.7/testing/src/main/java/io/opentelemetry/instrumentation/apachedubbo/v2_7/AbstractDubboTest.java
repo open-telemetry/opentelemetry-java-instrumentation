@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -40,6 +41,9 @@ import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.config.ApplicationConfig;
@@ -501,6 +505,99 @@ public abstract class AbstractDubboTest {
         new IllegalStateException("expected failure"),
         false,
         IllegalStateException.class.getName());
+  }
+
+  @Test
+  void testAsyncClientTransportTimeout()
+      throws ReflectiveOperationException,
+          InterruptedException,
+          ExecutionException,
+          TimeoutException {
+    int port = PortUtils.findOpenPort();
+    protocolConfig.setPort(port);
+
+    CountDownLatch serverCallStarted = new CountDownLatch(1);
+    CountDownLatch continueServerCall = new CountDownLatch(1);
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-timeout-provider"))
+        .service(
+            configureServer(
+                new HelloServiceImpl() {
+                  @Override
+                  public String hello(String hello) {
+                    serverCallStarted.countDown();
+                    try {
+                      continueServerCall.await();
+                    } catch (InterruptedException e) {
+                      Thread.currentThread().interrupt();
+                      throw new IllegalStateException(e);
+                    }
+                    return hello;
+                  }
+                }))
+        .protocol(protocolConfig)
+        .start();
+
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+    ReferenceConfig<HelloService> referenceConfig = configureClient(port);
+    referenceConfig.setTimeout(500);
+    referenceConfig.setRetries(0);
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-test-timeout-consumer"))
+        .reference(referenceConfig)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    GenericService genericService = convertReference(referenceConfig).get();
+    CompletableFuture<Object> response =
+        genericService.$invokeAsync(
+            "hello", new String[] {String.class.getName()}, new Object[] {"hello"});
+
+    String clientErrorType;
+    try {
+      assertThat(serverCallStarted.await(10, SECONDS)).isTrue();
+      Throwable clientError = response.handle((value, error) -> error).get(10, SECONDS);
+      assertThat(clientError).isNotNull();
+      while (clientError instanceof CompletionException && clientError.getCause() != null) {
+        clientError = clientError.getCause();
+      }
+      clientErrorType = clientError.getClass().getName();
+    } finally {
+      continueServerCall.countDown();
+    }
+
+    String clientMethod = "org.apache.dubbo.rpc.service.GenericService/$invokeAsync";
+    String serverMethod =
+        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello";
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(clientMethod)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(
+                                    ERROR_TYPE, emitPreviewRpcSemconv() ? clientErrorType : null),
+                                equalTo(stringKey("rpc.response.status_code"), null)),
+                    span ->
+                        span.hasName(serverMethod)
+                            .hasKind(SpanKind.SERVER)
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfying(
+                                equalTo(ERROR_TYPE, null),
+                                equalTo(stringKey("rpc.response.status_code"), null))));
+
+    if (emitPreviewRpcSemconv()) {
+      assertPreviewErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType);
+      assertPreviewErrorMetric("rpc.server.call.duration", serverMethod, null);
+    }
   }
 
   private void assertFailure(RuntimeException failure, boolean asynchronous, String serverErrorType)

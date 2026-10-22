@@ -23,7 +23,7 @@ final class DubboRpcStatus {
   @Nullable
   static String getStatusCode(@Nullable Result response, @Nullable Throwable error) {
     String statusCode = getStatusCodeFromException(unwrap(error));
-    if (statusCode == null && response != null) {
+    if (statusCode == null && error == null && response != null) {
       statusCode = getStatusCodeFromException(unwrap(response.getException()));
     }
     return statusCode;
