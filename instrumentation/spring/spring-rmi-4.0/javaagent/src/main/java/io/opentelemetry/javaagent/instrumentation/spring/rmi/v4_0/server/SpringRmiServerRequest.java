@@ -8,17 +8,36 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 public final class SpringRmiServerRequest {
 
-  private static final ClassValue<ConcurrentMap<MethodSignature, MethodLookup>> remoteMethods =
-      new ClassValue<ConcurrentMap<MethodSignature, MethodLookup>>() {
+  private static final ClassValue<Map<MethodSignature, String>> rpcMethods =
+      new ClassValue<Map<MethodSignature, String>>() {
         @Override
-        protected ConcurrentMap<MethodSignature, MethodLookup> computeValue(Class<?> type) {
-          return new ConcurrentHashMap<>();
+        protected Map<MethodSignature, String> computeValue(Class<?> serviceInterface) {
+          Map<MethodSignature, String> methods = new HashMap<>();
+          for (Method method : serviceInterface.getMethods()) {
+            MethodSignature signature =
+                new MethodSignature(method.getName(), method.getParameterTypes());
+            if (methods.containsKey(signature)) {
+              continue;
+            }
+            String rpcMethod = null;
+            try {
+              Method resolvedMethod =
+                  serviceInterface.getMethod(signature.name, signature.parameterTypes);
+              rpcMethod =
+                  resolvedMethod.getDeclaringClass().getName() + "/" + resolvedMethod.getName();
+            } catch (NoSuchMethodException e) {
+              // A method returned by getMethods() should always be resolvable by its signature.
+            }
+            methods.put(signature, rpcMethod);
+          }
+          return Collections.unmodifiableMap(methods);
         }
       };
 
@@ -45,28 +64,7 @@ public final class SpringRmiServerRequest {
     if (serviceInterface == null) {
       return null;
     }
-    MethodLookup lookup =
-        remoteMethods
-            .get(serviceInterface)
-            .computeIfAbsent(methodSignature, signature -> findMethod(serviceInterface, signature));
-    Method method = lookup.method;
-    return method == null ? null : method.getDeclaringClass().getName() + "/" + method.getName();
-  }
-
-  private static MethodLookup findMethod(Class<?> serviceInterface, MethodSignature signature) {
-    try {
-      return new MethodLookup(serviceInterface.getMethod(signature.name, signature.parameterTypes));
-    } catch (NoSuchMethodException e) {
-      return new MethodLookup(null);
-    }
-  }
-
-  private static final class MethodLookup {
-    @Nullable private final Method method;
-
-    private MethodLookup(@Nullable Method method) {
-      this.method = method;
-    }
+    return rpcMethods.get(serviceInterface).get(methodSignature);
   }
 
   private static final class MethodSignature {
