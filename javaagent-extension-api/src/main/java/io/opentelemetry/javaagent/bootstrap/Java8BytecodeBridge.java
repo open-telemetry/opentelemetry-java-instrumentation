@@ -20,7 +20,7 @@ import io.opentelemetry.context.Context;
  *     Span#fromContext(Context)}, and {@link Baggage#fromContext(Context)} directly in non-inlined
  *     advice and helpers. Static interface calls must not be copied into pre-Java-8 class files:
  *     extension authors with inlined advice must use non-inlined advice or their own
- *     Java-8-compiled helper instead. This class may be removed in a subsequent minor release.
+ *     Java-8-compiled helper instead.
  */
 @Deprecated
 public final class Java8BytecodeBridge {
