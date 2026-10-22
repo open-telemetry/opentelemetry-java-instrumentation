@@ -401,9 +401,8 @@
 ### 🚫 Deprecations
 
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
-  in favor of direct `Context`, `Span`, and `Baggage` APIs. They may be removed in a subsequent
-  minor release. Inlined advice targeting pre-Java-8 classes must use non-inlined advice or a
-  Java-8-compiled helper for static interface calls.
+  in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
+  is the default.
 
 ## Version 2.32.0 (2026-10-03)
 
