@@ -4,6 +4,13 @@
 
 ### ⚠️ Breaking changes
 
+- Spring Boot Java agent resource providers move from
+  `io.opentelemetry.instrumentation.spring.resources` to
+  `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
+  `otel.java.enabled.resource.providers` and `otel.java.disabled.resource.providers`.
+- `InstrumenterBuilder` no longer infers a schema URL from attribute extractors. Call
+  `setSchemaUrl()` with the schema for the conventions defining the instrumenter's signals;
+  otherwise its telemetry has no schema URL.
 - Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
   Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
 - `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
@@ -295,6 +302,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `otel.instrumentation.experimental.span-suppression-strategy` and
+  `java.common.span_suppression_strategy/development` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` and
+  `java.common.span_suppression_strategy`.
 - Remove deprecated `DeclarativeConfigPropertiesBridge` and
   `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
   `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.

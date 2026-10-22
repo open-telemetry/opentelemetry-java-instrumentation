@@ -89,14 +89,6 @@ definitions:
         attributes are not captured by default.
       type: boolean
       default: false
-    common.v3-preview:
-      name: otel.instrumentation.common.v3-preview
-      declarative_name: java.common.v3_preview
-      description: Enables a preview of the behavior planned for version 3.0 of the
-        agent, such as ignoring deprecated settings. The set of changes it enables
-        can grow in any release.
-      type: boolean
-      default: false
     http.client.capture-request-headers:
       name: otel.instrumentation.http.client.capture-request-headers
       declarative_name: general.http.client.request_captured_headers
@@ -2220,13 +2212,15 @@ definitions:
         type: STRING
       - name: url.scheme
         type: STRING
-    http.server.request.duration-2311bdb1:
+    http.server.request.duration-4e1d0d72:
       name: http.server.request.duration
       description: Duration of HTTP server requests.
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: error.type
+        type: STRING
       - name: http.request.method
         type: STRING
       - name: http.response.status_code
@@ -5274,21 +5268,6 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-c22f308d:
-      name: rpc.client.call.duration
-      description: Measures the duration of outbound remote procedure calls (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     rpc.client.duration-29bce004:
       name: rpc.client.duration
       description: The duration of an outbound RPC invocation.
@@ -5412,17 +5391,6 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.call.duration-b95d8012:
-      name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
     rpc.server.call.duration-f7f75ef6:
       name: rpc.server.call.duration
       description: Measures the duration of inbound remote procedure calls (RPC).
@@ -5735,7 +5703,6 @@ definitions:
       - name: exception.type
         type: STRING
 global_configuration_refs:
-- common.v3-preview
 - semconv-stability.opt-in
 - semconv-stability.preview
 - semconv-exception.signal.preview
@@ -6074,8 +6041,8 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
-    - rpc.client.call.duration-c22f308d
-    - rpc.server.call.duration-b95d8012
+    - rpc.client.call.duration-620a9e42
+    - rpc.server.call.duration-a87cce7a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -6109,9 +6076,9 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup,service.peer
     metric_refs:
-    - rpc.client.call.duration-c22f308d
+    - rpc.client.call.duration-620a9e42
     - rpc.client.duration-8ed5ac0d
-    - rpc.server.call.duration-b95d8012
+    - rpc.server.call.duration-a87cce7a
     - rpc.server.duration-3caa4b9d
     spans:
     - span_kind: CLIENT
@@ -7901,6 +7868,46 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.preview=rpc
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.s3.bucket
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc/dup
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.s3.bucket
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
 - name: aws-sdk-2.2
   display_name: AWS SDK
   description: |
@@ -8908,6 +8915,46 @@ libraries:
     - gen_ai.choice-c87a79de
     - gen_ai.tool.message-ebf6809d
     - gen_ai.user.message-443462e0
+  - when: otel.semconv-stability.preview=rpc
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.s3.bucket
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc/dup
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.s3.bucket
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
 - name: azure-core-1.14
   display_name: Azure Core
   description: This instrumentation enables context propagation for the Azure Core
@@ -10022,8 +10069,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -10074,6 +10119,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -10111,8 +10158,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -16181,6 +16226,7 @@ libraries:
   source_path: instrumentation/openai/openai-java-1.1
   scope:
     name: io.opentelemetry.openai-java-1.1
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -18913,6 +18959,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.spring-ai-1.0
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework.ai:spring-ai-model:[1.0.0,)
@@ -19723,7 +19770,7 @@ libraries:
   - when: default
     metric_refs:
     - http.client.request.duration-98bb5f3b
-    - http.server.request.duration-2311bdb1
+    - http.server.request.duration-4e1d0d72
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19770,7 +19817,7 @@ libraries:
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
-    - http.server.request.duration-2311bdb1
+    - http.server.request.duration-4e1d0d72
     spans:
     - span_kind: CLIENT
       attributes:
