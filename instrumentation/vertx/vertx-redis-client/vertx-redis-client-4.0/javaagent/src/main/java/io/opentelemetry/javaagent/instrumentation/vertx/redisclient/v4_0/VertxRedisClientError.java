@@ -43,12 +43,15 @@ public final class VertxRedisClientError {
     return error instanceof ErrorType ? SERVER_ERROR.get((ErrorType) error) : null;
   }
 
+  // Vert.x can complete successfully with errors inside a collection reply, such as EXEC results.
+  // Find the first error to classify the telemetry.
   @Nullable
   static Throwable findResponseError(@Nullable Object response) {
     if (response == null) {
       return null;
     }
     try {
+      // Redis replies can be deeply nested. Use an explicit stack to avoid stack overflow.
       Deque<Iterator<?>> pending = new ArrayDeque<>();
       pending.push(singletonList(response).iterator());
       while (!pending.isEmpty()) {
@@ -83,11 +86,15 @@ public final class VertxRedisClientError {
     }
     Response multi = (Response) value;
     if (IS_MAP != null && Boolean.TRUE.equals(IS_MAP.invoke(multi))) {
-      // Native map iterators yield single-entry maps; avoid building a string-keyed view of the
-      // whole map, where distinct binary keys can collide after decoding.
-      return multi.stream().map(entry -> entry.get(entry.getKeys().iterator().next())).iterator();
+      return mapValuesIterator(multi);
     }
     return multi.iterator();
+  }
+
+  private static Iterator<?> mapValuesIterator(Response map) {
+    // Native map iterators yield single-entry maps; avoid building a string-keyed view of the
+    // whole map, where distinct binary keys can collide after decoding.
+    return map.stream().map(entry -> entry.get(entry.getKeys().iterator().next())).iterator();
   }
 
   @Nullable
