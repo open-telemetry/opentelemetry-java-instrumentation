@@ -368,9 +368,7 @@ class HttpServerAttributesExtractorTest {
         new TestHttpServerAttributesGetter() {
           @Override
           public String getErrorType(
-              Map<String, String> request,
-              @Nullable Map<String, String> response,
-              @Nullable Throwable error) {
+              Map<String, String> request, Map<String, String> response, Throwable error) {
             return "custom error type";
           }
         };
@@ -393,12 +391,9 @@ class HttpServerAttributesExtractorTest {
 
     HttpServerAttributesGetter<Map<String, String>, Map<String, String>> getter =
         new TestHttpServerAttributesGetter() {
-          @Nullable
           @Override
           public String getErrorType(
-              Map<String, String> request,
-              @Nullable Map<String, String> response,
-              @Nullable Throwable error) {
+              Map<String, String> request, Map<String, String> response, Throwable error) {
             return null;
           }
         };
