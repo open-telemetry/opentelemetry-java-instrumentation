@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- RPC attribute getters now return the final `error.type` value. Returning `null` omits the
+  attribute even when an error was thrown; return the exception class name directly to retain the
+  default fallback.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to

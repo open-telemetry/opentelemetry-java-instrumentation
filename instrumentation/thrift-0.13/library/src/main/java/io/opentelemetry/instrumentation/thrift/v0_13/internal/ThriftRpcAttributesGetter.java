@@ -68,6 +68,6 @@ final class ThriftRpcAttributesGetter
     if (error == null && response != null && response.isFailed()) {
       return "_OTHER";
     }
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 }
