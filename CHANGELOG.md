@@ -308,6 +308,9 @@
 - Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
 - Java HTTP Client's `addAttributesExtractor` now requires
   `AttributesExtractor<HttpRequest, HttpResponse<?>>`.
+- Remove `setBaseTimeUnit(TimeUnit)` and `setPrometheusMode(boolean)` from the Micrometer registry
+  builder. Use `Experimental.setBaseTimeUnit(builder, timeUnit)` and
+  `Experimental.setPrometheusMode(builder, enabled)`.
 - Remove `otel.instrumentation.experimental.span-suppression-strategy` and
   `java.common.span_suppression_strategy/development` in favor of
   `otel.instrumentation.common.span-suppression-strategy` and

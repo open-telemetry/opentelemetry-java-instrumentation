@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5.internal;
 
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistryBuilder;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -17,8 +18,46 @@ import javax.annotation.Nullable;
 public final class Experimental {
 
   @Nullable
+  private static volatile BiConsumer<OpenTelemetryMeterRegistryBuilder, TimeUnit> setBaseTimeUnit;
+
+  @Nullable
+  private static volatile BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean> setPrometheusMode;
+
+  @Nullable
   private static volatile BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean>
       setMicrometerHistogramGaugesEnabled;
+
+  /** Sets the base time unit. */
+  public static void setBaseTimeUnit(
+      OpenTelemetryMeterRegistryBuilder builder, TimeUnit baseTimeUnit) {
+    if (setBaseTimeUnit != null) {
+      setBaseTimeUnit.accept(builder, baseTimeUnit);
+    }
+  }
+
+  public static void internalSetBaseTimeUnit(
+      BiConsumer<OpenTelemetryMeterRegistryBuilder, TimeUnit> setBaseTimeUnit) {
+    Experimental.setBaseTimeUnit = setBaseTimeUnit;
+  }
+
+  /**
+   * Enables the "Prometheus mode" - this will simulate the behavior of Micrometer's {@code
+   * PrometheusMeterRegistry}. The instruments will be renamed to match Micrometer instrument
+   * naming, and the base time unit will be set to seconds.
+   *
+   * <p>Set this to {@code true} if you are using the Prometheus metrics exporter.
+   */
+  public static void setPrometheusMode(
+      OpenTelemetryMeterRegistryBuilder builder, boolean prometheusMode) {
+    if (setPrometheusMode != null) {
+      setPrometheusMode.accept(builder, prometheusMode);
+    }
+  }
+
+  public static void internalSetPrometheusMode(
+      BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean> setPrometheusMode) {
+    Experimental.setPrometheusMode = setPrometheusMode;
+  }
 
   /**
    * Enables the generation of gauge-based Micrometer histograms. While the Micrometer bridge is
