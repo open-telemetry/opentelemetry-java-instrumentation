@@ -41,6 +41,26 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-api")
+        implementation(project(":opentelemetry-api-shaded-for-instrumenting")) {
+          targetConfiguration = "shadow"
+        }
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+
 configurations.configureEach {
   if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
     resolutionStrategy {
