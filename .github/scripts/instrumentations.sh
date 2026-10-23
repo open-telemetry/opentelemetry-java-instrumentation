@@ -422,4 +422,5 @@ readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "redisson:redisson-metrics-2.3:javaagent:test"
   "redisson:redisson-metrics-3.18:javaagent:test"
   "redisson:redisson-metrics-3.26:javaagent:test"
+  "spring:spring-webflux:spring-webflux-5.0:javaagent:testExperimental"
 )
