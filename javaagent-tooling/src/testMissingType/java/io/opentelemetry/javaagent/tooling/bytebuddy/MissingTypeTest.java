@@ -19,6 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.utility.JavaModule;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -73,11 +74,11 @@ class MissingTypeTest {
   }
 
   @Test
-  void fixtureNotAvailable() {
-    // these tests expect MissingType to be missing from runtime class path
+  void stringUtilsNotAvailable() {
+    // these tests expect StringUtils to be missing from runtime class path
     try {
-      Class.forName("io.opentelemetry.javaagent.tooling.bytebuddy.MissingType");
-      fail("MissingType should not be available during runtime");
+      Class.forName("org.apache.commons.lang3.StringUtils");
+      fail("StringUtils should not be available during runtime");
     } catch (ClassNotFoundException ignored) {
       // ignore
     }
@@ -93,23 +94,23 @@ class MissingTypeTest {
     assertThat(hasErrors.get()).isFalse();
   }
 
-  // MissingType is missing from runtime class path
+  // StringUtils is missing from runtime class path
   static class SomeClass {
-    public MissingType missingType;
+    public StringUtils stringUtils;
 
     public static boolean isInstrumented() {
       return false;
     }
 
-    public void methodWithMissingParameterType(MissingType missingType) {}
+    public void methodWithMissingParameterType(StringUtils stringUtils) {}
 
-    public MissingType methodWithMissingReturnType() {
+    public StringUtils methodWithMissingReturnType() {
       return null;
     }
 
-    public static void staticMethodWithMissingParameterType(MissingType missingType) {}
+    public static void staticMethodWithMissingParameterType(StringUtils stringUtils) {}
 
-    public static MissingType staticMethodWithMissingReturnType() {
+    public static StringUtils staticMethodWithMissingReturnType() {
       return null;
     }
   }
