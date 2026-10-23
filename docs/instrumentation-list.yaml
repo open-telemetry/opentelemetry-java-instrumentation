@@ -17096,7 +17096,7 @@ libraries:
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
-  - io.r2dbc:r2dbc-spi:[1.0.0.RELEASE,)
+  - io.r2dbc:r2dbc-spi:[0.9.0.RELEASE,)
   configuration_refs:
   - common.db.query-sanitization.enabled
   - common.db.sqlcommenter.enabled
