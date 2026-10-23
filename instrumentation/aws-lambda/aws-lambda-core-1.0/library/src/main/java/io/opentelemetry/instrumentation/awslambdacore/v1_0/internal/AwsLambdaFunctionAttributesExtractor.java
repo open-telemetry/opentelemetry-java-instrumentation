@@ -24,7 +24,7 @@ public final class AwsLambdaFunctionAttributesExtractor
 
   // copied from FaasIncubatingAttributes
   private static final AttributeKey<String> FAAS_INVOCATION_ID =
-      AttributeKey.stringKey("faas.invocation_id");
+      AttributeKey.stringKey("faas.invocation.id");
   // copied from CloudIncubatingAttributes
   private static final AttributeKey<String> CLOUD_ACCOUNT_ID =
       AttributeKey.stringKey("cloud.account.id");

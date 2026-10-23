@@ -11,7 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -93,7 +93,7 @@ class AwsLambdaStreamWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -127,7 +127,7 @@ class AwsLambdaStreamWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
       testing.waitAndAssertLogRecords(
