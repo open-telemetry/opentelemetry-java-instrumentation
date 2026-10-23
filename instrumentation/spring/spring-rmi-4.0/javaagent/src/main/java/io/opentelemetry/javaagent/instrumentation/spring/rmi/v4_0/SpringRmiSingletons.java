@@ -13,19 +13,19 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.client.ClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server.ServerAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server.SpringRmiServerRequest;
 import java.lang.reflect.Method;
 
 public class SpringRmiSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-rmi-4.0";
 
   private static final Instrumenter<Method, Void> clientInstrumenter = buildClientInstrumenter();
-  private static final Instrumenter<ClassAndMethod, Void> serverInstrumenter =
+  private static final Instrumenter<SpringRmiServerRequest, Void> serverInstrumenter =
       buildServerInstrumenter();
 
   private static Instrumenter<Method, Void> buildClientInstrumenter() {
@@ -44,11 +44,11 @@ public class SpringRmiSingletons {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  private static Instrumenter<ClassAndMethod, Void> buildServerInstrumenter() {
+  private static Instrumenter<SpringRmiServerRequest, Void> buildServerInstrumenter() {
     ServerAttributesGetter rpcAttributesGetter = new ServerAttributesGetter();
 
-    InstrumenterBuilder<ClassAndMethod, Void> builder =
-        Instrumenter.<ClassAndMethod, Void>builder(
+    InstrumenterBuilder<SpringRmiServerRequest, Void> builder =
+        Instrumenter.<SpringRmiServerRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
@@ -64,7 +64,7 @@ public class SpringRmiSingletons {
     return clientInstrumenter;
   }
 
-  public static Instrumenter<ClassAndMethod, Void> serverInstrumenter() {
+  public static Instrumenter<SpringRmiServerRequest, Void> serverInstrumenter() {
     return serverInstrumenter;
   }
 
