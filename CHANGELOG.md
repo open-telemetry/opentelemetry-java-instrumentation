@@ -5,7 +5,7 @@
 ### ⚠️ Breaking changes
 
 - GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
-  that want the exception-class fallback should delegate to `GenAiAttributesGetter.super.getErrorType(...)`.
+  should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in

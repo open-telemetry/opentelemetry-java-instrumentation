@@ -35,9 +35,7 @@ final class ChatAttributesGetter
   public String getErrorType(
       ChatCompletionRequest request, @Nullable ChatCompletion response, @Nullable Throwable error) {
     String errorType = OpenAiErrorType.getErrorType(error);
-    return errorType != null
-        ? errorType
-        : GenAiAttributesGetter.super.getErrorType(request, response, error);
+    return errorType != null ? errorType : error == null ? null : error.getClass().getName();
   }
 
   @Override

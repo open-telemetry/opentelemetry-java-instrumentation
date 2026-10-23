@@ -76,9 +76,8 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>The default implementation returns the exception class name when an exception is present,
    * and {@code null} otherwise. Returning {@code null} from an override omits the {@code
-   * error.type} attribute. To use the default exception-class fallback when no more specific
-   * classification is available, an override can delegate to {@code
-   * GenAiAttributesGetter.super.getErrorType(request, response, error)}.
+   * error.type} attribute. An override that returns a more specific classification can use {@code
+   * error == null ? null : error.getClass().getName()} when no classification is available.
    *
    * <p>The cardinality of the error type should be low. Implementations are recommended to document
    * the custom values they support.
