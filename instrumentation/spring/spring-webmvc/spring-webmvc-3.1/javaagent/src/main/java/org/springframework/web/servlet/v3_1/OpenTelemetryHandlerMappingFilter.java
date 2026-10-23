@@ -199,6 +199,9 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
               MethodType.methodType(requestPathClass, HttpServletRequest.class));
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
       return null;
+    } catch (LinkageError e) {
+      logger.log(FINE, "Failed looking up parseAndCache", e);
+      return null;
     }
   }
 
