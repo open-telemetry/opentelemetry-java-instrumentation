@@ -78,7 +78,7 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
         return details.errorCode();
       }
     }
-    return DbClientAttributesGetter.super.getErrorType(executionAttributes, response, error);
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override

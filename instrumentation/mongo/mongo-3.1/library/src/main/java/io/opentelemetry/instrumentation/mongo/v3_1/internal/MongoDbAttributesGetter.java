@@ -192,7 +192,7 @@ class MongoDbAttributesGetter
         return Integer.toString(code);
       }
     }
-    return DbClientAttributesGetter.super.getErrorType(request, response, error);
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable

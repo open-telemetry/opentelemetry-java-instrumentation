@@ -48,7 +48,7 @@ final class OpenSearchRestAttributesGetter
         return Integer.toString(statusCode);
       }
     }
-    return DbClientAttributesGetter.super.getErrorType(request, response, error);
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override

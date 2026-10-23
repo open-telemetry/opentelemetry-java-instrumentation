@@ -63,7 +63,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
         return sqlState;
       }
     }
-    return SqlClientAttributesGetter.super.getErrorType(request, null, error);
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override

@@ -5,8 +5,8 @@
 ### ⚠️ Breaking changes
 
 - `DbClientAttributesGetter.getErrorType()` now returns the final `error.type`; returning `null`
-  omits it even with an exception. Overrides needing exception-class fallback must delegate to
-  their inherited default.
+  omits it even with an exception. Overrides wanting exception-class fallback can return
+  `error == null ? null : error.getClass().getName()`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
