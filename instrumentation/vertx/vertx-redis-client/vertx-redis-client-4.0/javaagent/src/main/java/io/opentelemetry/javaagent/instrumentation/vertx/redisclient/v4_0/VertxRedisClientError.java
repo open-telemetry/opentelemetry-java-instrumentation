@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
-import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -45,12 +45,12 @@ public final class VertxRedisClientError {
 
   @Nullable
   static Throwable findResponseError(@Nullable Object response) {
-    if (response == null) {
-      return null;
-    }
-    Deque<Iterator<?>> stack = new ArrayDeque<>();
-    stack.push(singletonList(response).iterator());
     try {
+      if (response == null) {
+        return null;
+      }
+      Deque<Iterator<?>> stack = new ArrayDeque<>();
+      stack.push(singletonList(response).iterator());
       while (!stack.isEmpty()) {
         Iterator<?> iterator = stack.peek();
         if (!iterator.hasNext()) {
@@ -67,8 +67,8 @@ public final class VertxRedisClientError {
           stack.push(children((Response) item));
         }
       }
-    } catch (ReflectiveOperationException e) {
-      logger.log(FINE, "Failed to inspect the Vert.x Redis response collection", e);
+    } catch (Throwable t) {
+      logger.log(WARNING, "Failed to inspect the Vert.x Redis response collection", t);
     }
     return null;
   }
@@ -77,19 +77,7 @@ public final class VertxRedisClientError {
     if (IS_MAP != null && Boolean.TRUE.equals(IS_MAP.invoke(multi))) {
       // Native map iterators yield single-entry maps; avoid building a string-keyed view of the
       // whole map, where distinct binary keys can collide after decoding.
-      Iterator<Response> entries = multi.iterator();
-      return new Iterator<Response>() {
-        @Override
-        public boolean hasNext() {
-          return entries.hasNext();
-        }
-
-        @Override
-        public Response next() {
-          Response entry = entries.next();
-          return entry.get(entry.getKeys().iterator().next());
-        }
-      };
+      return multi.stream().map(entry -> entry.get(entry.getKeys().iterator().next())).iterator();
     }
     return multi.iterator();
   }
