@@ -1,0 +1,281 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.jedis.common;
+
+import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
+
+class JedisRequestContextTest {
+  @Test
+  void returnedBatchFailuresUseFirstServerError() {
+    Throwable firstServerFailure = new IllegalStateException("first server failure");
+    Throwable laterServerFailure = new IllegalStateException("later server failure");
+    assertBatchCompletion(firstServerFailure, laterServerFailure, null, firstServerFailure);
+  }
+
+  @Test
+  void terminalFirstServerFailureWins() {
+    Throwable firstServerFailure = new IllegalStateException("first server failure");
+    Throwable laterServerFailure = new IllegalStateException("later server failure");
+    assertBatchCompletion(
+        firstServerFailure, laterServerFailure, firstServerFailure, firstServerFailure);
+  }
+
+  @Test
+  void terminalLaterServerFailureWins() {
+    Throwable firstServerFailure = new IllegalStateException("first server failure");
+    Throwable laterServerFailure = new IllegalStateException("later server failure");
+    assertBatchCompletion(
+        firstServerFailure, laterServerFailure, laterServerFailure, laterServerFailure);
+  }
+
+  @Test
+  void terminalClientFailureWins() {
+    Throwable firstServerFailure = new IllegalStateException("first server failure");
+    Throwable laterServerFailure = new IllegalStateException("later server failure");
+    Throwable clientFailure = new IllegalStateException("WRONGTYPE client failure");
+    assertBatchCompletion(firstServerFailure, laterServerFailure, clientFailure, clientFailure);
+  }
+
+  @Test
+  void serverErrorConfirmationUsesThrowableIdentity() {
+    JedisRequestContext<Object> context = JedisRequestContext.attachForBatch();
+    Throwable firstServerFailure = new IllegalStateException("WRONGTYPE failure");
+    Throwable terminalServerFailure = new IllegalStateException("WRONGTYPE failure");
+    JedisRequestContext.captureServerError(firstServerFailure);
+    JedisRequestContext.captureServerError(terminalServerFailure);
+
+    assertThat(context.isServerError(firstServerFailure)).isTrue();
+    assertThat(context.isServerError(terminalServerFailure)).isTrue();
+    assertThat(context.isServerError(new IllegalStateException("WRONGTYPE failure"))).isFalse();
+    assertThat(context.detachAndEnd(terminalServerFailure)).isSameAs(terminalServerFailure);
+    assertDetached();
+  }
+
+  @Test
+  void nestedBatchCaptureRestoresEnclosingContext() {
+    JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
+    assertThat(JedisRequestContext.attach()).isNull();
+    Throwable firstServerFailure = new IllegalStateException("first server failure");
+    Throwable laterServerFailure = new IllegalStateException("later server failure");
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+
+    JedisRequestContext.captureServerError(firstServerFailure);
+    JedisRequestContext.captureServerError(laterServerFailure);
+    assertThat(batchContext.detachAndEnd(null)).isSameAs(firstServerFailure);
+    assertThat(JedisRequestContext.attach()).isNull();
+
+    Throwable nextServerFailure = new IllegalStateException("next server failure");
+    batchContext = JedisRequestContext.attachForBatch();
+    JedisRequestContext.captureServerError(nextServerFailure);
+    Throwable terminalClientFailure = new IllegalStateException("terminal client failure");
+    assertThat(batchContext.detachAndEnd(terminalClientFailure)).isSameAs(terminalClientFailure);
+    assertThat(JedisRequestContext.attach()).isNull();
+
+    assertThat(outerContext.detachAndEnd(null)).isNull();
+    assertDetached();
+  }
+
+  @Test
+  void nestedCommandCaptureDoesNotFailEnclosingBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    JedisRequestContext<Object> nestedContext = JedisRequestContext.attach();
+    Throwable nestedServerFailure = new IllegalStateException("nested server failure");
+
+    JedisRequestContext.captureServerError(nestedServerFailure);
+    assertThat(nestedContext.detachAndEnd(null)).isNull();
+    assertThat(batchContext.isServerError(nestedServerFailure)).isTrue();
+    assertThat(batchContext.detachAndEnd(null)).isNull();
+    assertDetached();
+  }
+
+  @Test
+  void deferredNestedBatchServerErrorReturnedByEnclosingBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext<Object> nestedContext = JedisRequestContext.attachForBatch();
+      Throwable firstFailure = new IllegalStateException("WRONGTYPE first nested failure");
+      Throwable deferredFailure = new IllegalStateException("ERR deferred nested failure");
+      JedisRequestContext.captureServerError(firstFailure);
+      JedisRequestContext.captureServerError(deferredFailure);
+
+      assertThat(nestedContext.detachAndEnd(null)).isSameAs(firstFailure);
+      assertThat(batchContext.isServerError(firstFailure)).isTrue();
+      assertThat(batchContext.isServerError(deferredFailure)).isTrue();
+      assertThat(batchContext.detachAndEnd(null, asList(deferredFailure, "OK")))
+          .isSameAs(deferredFailure);
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void handledNestedBatchServerErrorDoesNotFailEnclosingBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext<Object> nestedContext = JedisRequestContext.attachForBatch();
+      Throwable failure = new IllegalStateException("WRONGTYPE handled nested failure");
+      JedisRequestContext.captureServerError(failure);
+
+      assertThat(nestedContext.detachAndEnd(null)).isSameAs(failure);
+      assertThat(batchContext.isServerError(failure)).isTrue();
+      assertThat(batchContext.detachAndEnd(null, asList("PONG", "OK"))).isNull();
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void escapingNestedCommandServerErrorReturnedByBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext<Object> nestedContext = requireNonNull(JedisRequestContext.attach());
+      Throwable failure = new IllegalStateException("WRONGTYPE nested server failure");
+      JedisRequestContext.captureServerError(failure);
+
+      assertThat(nestedContext.detachAndEnd(failure)).isSameAs(failure);
+      assertThat(batchContext.isServerError(failure)).isTrue();
+      assertThat(batchContext.detachAndEnd(null, asList(failure, "OK"))).isSameAs(failure);
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void caughtNestedCommandServerErrorDoesNotFailBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext<Object> nestedContext = requireNonNull(JedisRequestContext.attach());
+      Throwable failure = new IllegalStateException("WRONGTYPE handled server failure");
+      JedisRequestContext.captureServerError(failure);
+
+      assertThat(nestedContext.detachAndEnd(failure)).isSameAs(failure);
+      assertThat(batchContext.detachAndEnd(null, asList("PONG", "OK"))).isNull();
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void escapingNestedCommandServerErrorThrownByBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext<Object> nestedContext = requireNonNull(JedisRequestContext.attach());
+      Throwable failure = new IllegalStateException("WRONGTYPE nested server failure");
+      JedisRequestContext.captureServerError(failure);
+
+      assertThat(nestedContext.detachAndEnd(failure)).isSameAs(failure);
+      assertThat(batchContext.isServerError(failure)).isTrue();
+      assertThat(batchContext.detachAndEnd(failure)).isSameAs(failure);
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void returnedBatchClientFailureIsNotConfirmedAsServerError() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    Throwable failure = new IllegalStateException("WRONGTYPE local conversion failure");
+    try {
+      assertThat(batchContext.detachAndEnd(null, asList("PONG", failure))).isSameAs(failure);
+      assertThat(batchContext.isServerError(failure)).isFalse();
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void terminalFailureWinsOverReturnedBatchFailure() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    Throwable returnedFailure = new IllegalStateException("returned server failure");
+    Throwable terminalFailure = new IllegalStateException("terminal client failure");
+    try {
+      JedisRequestContext.captureServerError(returnedFailure);
+      assertThat(batchContext.detachAndEnd(terminalFailure, asList(returnedFailure)))
+          .isSameAs(terminalFailure);
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void nestedTransactionCaptureUsesIdentityAndRestoresEnclosingOwner() {
+    Object outerTransaction = new String("transaction");
+    JedisRequestContext<Object> outerContext = JedisRequestContext.attachForBatch(outerTransaction);
+    try {
+      assertThat(JedisRequestContext.attachForTransaction(outerTransaction)).isNull();
+
+      Throwable outerFailure = new IllegalStateException("outer transaction failure");
+      JedisRequestContext.captureServerError(outerFailure);
+      Object nestedTransaction = new String("transaction");
+      JedisRequestContext<Object> nestedContext =
+          requireNonNull(JedisRequestContext.attachForTransaction(nestedTransaction));
+      try {
+        Throwable nestedFailure = new IllegalStateException("nested transaction failure");
+        JedisRequestContext.captureServerError(nestedFailure);
+        assertThat(nestedContext.detachAndEnd(null)).isSameAs(nestedFailure);
+      } finally {
+        nestedContext.detachAndEnd(null);
+      }
+
+      assertThat(JedisRequestContext.attachForTransaction(outerTransaction)).isNull();
+      assertThat(outerContext.detachAndEnd(null)).isSameAs(outerFailure);
+    } finally {
+      outerContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void propagatesCommandFailure() {
+    JedisRequestContext<Object> context = JedisRequestContext.attach();
+    Throwable clientFailure = new IllegalStateException("WRONGTYPE client failure");
+    try {
+      assertThat(context.detachAndEnd(clientFailure)).isSameAs(clientFailure);
+    } finally {
+      context.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  private static void assertBatchCompletion(
+      Throwable firstServerFailure,
+      Throwable laterServerFailure,
+      Throwable terminalFailure,
+      Throwable expectedFailure) {
+    JedisRequestContext<Object> context = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext.captureServerError(firstServerFailure);
+      JedisRequestContext.captureServerError(laterServerFailure);
+      assertThat(context.detachAndEnd(terminalFailure)).isSameAs(expectedFailure);
+    } finally {
+      context.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  private static void assertDetached() {
+    JedisRequestContext<Object> next = JedisRequestContext.attach();
+    try {
+      assertThat(next).isNotNull();
+      assertThat(next.detachAndEnd(null)).isNull();
+    } finally {
+      if (next != null) {
+        next.detachAndEnd(null);
+      }
+    }
+  }
+}

@@ -14,12 +14,16 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -39,11 +43,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
+import redis.clients.jedis.Builder;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Protocol;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
+import redis.clients.jedis.exceptions.JedisConnectionException;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis30ClientTest {
@@ -113,6 +122,191 @@ class Jedis30ClientTest {
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
+  }
+
+  @Test
+  void wrongTypeErrorType() {
+    jedis.lpush("wrong-type", "value");
+    testing.clearData();
+
+    assertThatThrownBy(() -> jedis.get("wrong-type")).hasMessageStartingWith("WRONGTYPE");
+
+    assertErrorType("WRONGTYPE");
+  }
+
+  @Test
+  void dedicatedServerErrorUsesExceptionClass() {
+    Throwable error =
+        catchThrowable(
+            () -> jedis.eval("return redis.error_reply(ARGV[1])", 0, "MOVED 42 127.0.0.1:6379"));
+
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertThat(error.getClass()).isNotEqualTo(JedisDataException.class);
+    assertErrorType(error.getClass().getName());
+  }
+
+  @Test
+  void unreliableServerPrefixUsesExceptionClass() {
+    Throwable error =
+        catchThrowable(() -> jedis.eval("return redis.error_reply(ARGV[1])", 0, "échec details"));
+
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertErrorType(error.getClass().getName());
+  }
+
+  @Test
+  void clientFailureUsesExceptionClassAndDoesNotLeak() {
+    Jedis broken = new Jedis("127.0.0.1", 0);
+    cleanup.deferCleanup(broken::disconnect);
+
+    Throwable error = catchThrowable(() -> broken.get("key"));
+
+    assertThat(error).isInstanceOf(JedisConnectionException.class);
+    assertErrorType(error.getClass().getName());
+
+    testing.clearData();
+    jedis.set("after-error", "value");
+    assertErrorType(null);
+  }
+
+  @Test
+  void pipelineAndTransactionErrorsCompleteBatchSpans() {
+    jedis.lpush("wrong-type", "value");
+    jedis.set("not-number", "value");
+    testing.clearData();
+
+    Pipeline pipeline = jedis.pipelined();
+    pipeline.get("wrong-type");
+    pipeline.incr("not-number");
+    assertThat(pipeline.syncAndReturnAll())
+        .hasSize(2)
+        .allSatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
+    assertErrorType("WRONGTYPE");
+
+    testing.clearData();
+    Transaction transaction = jedis.multi();
+    transaction.get("wrong-type");
+    transaction.incr("not-number");
+    assertThat(transaction.exec())
+        .hasSize(2)
+        .allSatisfy(result -> assertThat(result).isInstanceOf(JedisDataException.class));
+    assertErrorType("WRONGTYPE");
+  }
+
+  @Test
+  void terminalTransactionServerFailureWinsOverQueuedError() {
+    Jedis client = new Jedis(host, port);
+    cleanup.deferCleanup(client::disconnect);
+    Transaction transaction = client.multi();
+    String[] noKeys = {};
+    transaction.del(noKeys);
+    testing.clearData();
+
+    Throwable error = catchThrowable(transaction::exec);
+    assertThat(error).isInstanceOf(JedisDataException.class);
+    assertThat(error.getMessage()).startsWith("EXECABORT");
+    assertErrorType(
+        error.getClass() == JedisDataException.class ? "EXECABORT" : error.getClass().getName());
+
+    testing.clearData();
+    jedis.set("after-error", "value");
+    assertErrorType(null);
+  }
+
+  @Test
+  void terminalPipelineConnectionFailureWinsOverServerReply() {
+    Jedis client = new Jedis(host, port);
+    cleanup.deferCleanup(client::disconnect);
+    client.lpush("wrong-type", "value");
+
+    Pipeline pipeline = client.pipelined();
+    pipeline.get("wrong-type");
+    client.getClient().quit();
+    pipeline.get("after-quit");
+    pipeline.get("after-quit-again");
+    testing.clearData();
+
+    Throwable error = catchThrowable(pipeline::syncAndReturnAll);
+    assertThat(error).isInstanceOf(JedisConnectionException.class);
+    assertErrorType(error.getClass().getName());
+
+    testing.clearData();
+    jedis.set("after-error", "value");
+    assertErrorType(null);
+  }
+
+  @Test
+  void nestedMultiServerErrorDoesNotFailSuccessfulOuterPipeline() {
+    String username = "otel-no-multi";
+    jedis
+        .getClient()
+        .sendCommand(
+            () -> "ACL".getBytes(UTF_8),
+            "SETUSER",
+            username,
+            "on",
+            "nopass",
+            "~*",
+            "+@all",
+            "-multi");
+    assertThat(jedis.getClient().getStatusCodeReply()).isEqualTo("OK");
+
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.getClient().sendCommand(Protocol.Command.AUTH, username, "unused-password");
+    assertThat(nestedClient.getClient().getStatusCodeReply()).isEqualTo("OK");
+    testing.clearData();
+
+    NestedMultiPipeline outer = new NestedMultiPipeline(nestedClient);
+    outer.setClient(jedis.getClient());
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("OK");
+    assertThat(outer.nestedMultiError).hasMessageStartingWith("NOPERM");
+    assertErrorType(null);
+  }
+
+  private static class NestedMultiPipeline extends Pipeline {
+    private final Jedis nestedClient;
+    private JedisDataException nestedMultiError;
+
+    private NestedMultiPipeline(Jedis nestedClient) {
+      this.nestedClient = nestedClient;
+    }
+
+    @Override
+    protected <T> Response<T> getResponse(Builder<T> builder) {
+      return super.getResponse(
+          new Builder<T>() {
+            @Override
+            public T build(Object response) {
+              try {
+                nestedClient.multi();
+              } catch (JedisDataException e) {
+                nestedMultiError = e;
+              }
+              return builder.build(response);
+            }
+          });
+    }
+  }
+
+  private static void assertErrorType(String errorType) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-3.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .anySatisfy(
+                            point ->
+                                assertThat(point.getAttributes().get(ERROR_TYPE))
+                                    .isEqualTo(errorType))));
   }
 
   @Test

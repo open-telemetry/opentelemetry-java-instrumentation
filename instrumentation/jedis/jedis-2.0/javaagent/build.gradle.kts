@@ -43,6 +43,7 @@ testing {
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())
+        implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
         implementation(project(":javaagent-extension-api"))
         implementation(project(":instrumentation-api-incubator"))
         implementation("redis.clients:jedis:2.0.0")
@@ -60,6 +61,7 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
