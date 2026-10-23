@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -365,23 +366,26 @@ public abstract class AbstractRedissonClientTest {
 
             AtomicBoolean failureCallbackCalled = new AtomicBoolean();
             AtomicReference<RFuture<?>> clientError = new AtomicReference<>();
-            serverError.whenComplete(
-                (result, error) -> {
-                  failureCallbackCalled.set(true);
-                  failureCallbackActive.set(true);
-                  try {
-                    clientError.set(callbackClient.getBucket("callback-client-error").getAsync());
-                  } finally {
-                    failureCallbackActive.set(false);
-                  }
-                });
+            CompletionStage<?> failureCallback =
+                serverError.whenComplete(
+                    (result, error) -> {
+                      failureCallbackCalled.set(true);
+                      failureCallbackActive.set(true);
+                      try {
+                        clientError.set(
+                            callbackClient.getBucket("callback-client-error").getAsync());
+                      } finally {
+                        failureCallbackActive.set(false);
+                      }
+                    });
             allowEvalMapping.countDown();
 
-            assertThatThrownBy(serverError::join).hasRootCauseInstanceOf(RedisException.class);
+            assertThatThrownBy(() -> failureCallback.toCompletableFuture().join())
+                .hasRootCauseInstanceOf(RedisException.class);
             assertThat(failureCallbackCalled).isTrue();
             assertThat(getMappedInFailureCallback).isTrue();
             assertThat((Object) clientError.get()).isNotNull();
-            assertThatThrownBy(() -> clientError.get().join())
+            assertThatThrownBy(() -> clientError.get().toCompletableFuture().join())
                 .hasRootCauseInstanceOf(RedisException.class);
             callbackClient.getBucket("callback-success").set("success");
           });
@@ -502,7 +506,7 @@ public abstract class AbstractRedissonClientTest {
               + redirectServer.getMappedPort(6379)
               + "'); end; return count";
       RBatch batch = createBatch(redisson);
-      batch.getScript().evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.INTEGER);
+      batch.getScript().evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE);
 
       assertThat(batchResponses(invokeExecute(batch))).isEqualTo(asList(2L));
       assertRedirectErrorTypeOnAttempts();
