@@ -28,6 +28,17 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
+testing {
+  suites {
+    // Older AsyncEventBus tasks are excluded by the agent's library ignore rules.
+    register<JvmTestSuite>("testEventBus") {
+      dependencies {
+        implementation("com.google.guava:guava:33.7.2-jre")
+      }
+    }
+  }
+}
+
 tasks {
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -38,5 +49,6 @@ tasks {
 
   check {
     dependsOn(testExperimental)
+    dependsOn(testing.suites.named("testEventBus"))
   }
 }
