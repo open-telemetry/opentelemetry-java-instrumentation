@@ -39,18 +39,6 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+") // see spring-webmvc-6.0 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation("org.springframework:spring-webmvc:5.3.39")
-        implementation("javax.servlet:javax.servlet-api:3.1.0")
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -81,7 +69,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testExperimental)
   }
 }
 
