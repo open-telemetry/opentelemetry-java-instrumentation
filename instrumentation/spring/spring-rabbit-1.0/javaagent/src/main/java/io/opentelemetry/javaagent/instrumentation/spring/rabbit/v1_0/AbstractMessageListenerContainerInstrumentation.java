@@ -60,8 +60,8 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     public static class AdviceScope {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
-      @Nullable private final SpringRabbitRequest request;
-      @Nullable private SpringRabbitRequest previousRequest;
+      @Nullable final SpringRabbitRequest request;
+      @Nullable SpringRabbitRequest previousRequest;
 
       public static AdviceScope start(
           AbstractMessageListenerContainer container, Channel channel, Object data) {
