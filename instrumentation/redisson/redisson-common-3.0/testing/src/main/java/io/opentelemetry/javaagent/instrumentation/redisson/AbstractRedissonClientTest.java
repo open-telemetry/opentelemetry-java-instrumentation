@@ -309,16 +309,12 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void reentrantFailureCallbackKeepsClientErrorFallback() throws InterruptedException {
+  void reentrantFailureCallbackKeepsClientErrorFallback()
+      throws InterruptedException, ReflectiveOperationException {
     Assumptions.assumeTrue(isClassAvailable("org.redisson.config.CommandMapper"));
 
     Class<?> commandMapperType = loadCommandMapperType();
-    Config config;
-    try {
-      config = createConfig(0, null);
-    } catch (ReflectiveOperationException e) {
-      throw new LinkageError(e.getMessage(), e);
-    }
+    Config config = createConfig(0, null);
     config.useSingleServer().setConnectionPoolSize(1).setConnectionMinimumIdleSize(1);
 
     CountDownLatch evalMappingStarted = new CountDownLatch(1);
@@ -456,27 +452,20 @@ public abstract class AbstractRedissonClientTest {
                                                     .doesNotContainKey(ERROR_TYPE)))));
   }
 
-  private static Class<?> loadCommandMapperType() {
-    try {
-      return Class.forName(
-          "org.redisson.config.CommandMapper",
-          false,
-          AbstractRedissonClientTest.class.getClassLoader());
-    } catch (ClassNotFoundException e) {
-      throw new AssertionError(e);
-    }
+  private static Class<?> loadCommandMapperType() throws ClassNotFoundException {
+    return Class.forName(
+        "org.redisson.config.CommandMapper",
+        false,
+        AbstractRedissonClientTest.class.getClassLoader());
   }
 
   private static void setCommandMapper(
-      Config config, Class<?> commandMapperType, Object commandMapper) {
-    try {
-      config
-          .getClass()
-          .getMethod("setCommandMapper", commandMapperType)
-          .invoke(config, commandMapper);
-    } catch (ReflectiveOperationException e) {
-      throw new LinkageError(e.getMessage(), e);
-    }
+      Config config, Class<?> commandMapperType, Object commandMapper)
+      throws ReflectiveOperationException {
+    config
+        .getClass()
+        .getMethod("setCommandMapper", commandMapperType)
+        .invoke(config, commandMapper);
   }
 
   @Test
