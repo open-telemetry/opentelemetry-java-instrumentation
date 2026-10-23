@@ -43,7 +43,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
-  private boolean downstreamOfContextBoundary;
   @Nullable private Consumer<Runnable> applicationContextScope;
   private final boolean hasExplicitContext;
   private final boolean hasContextToPropagate;
@@ -54,7 +53,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
    * leaves the context active during signals unchanged.
    */
   public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
-    this(subscriber, ctx, io.opentelemetry.context.Context.current(), false, false);
+    this(subscriber, ctx, io.opentelemetry.context.Context.current(), false);
   }
 
   /**
@@ -66,18 +65,16 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
       Subscriber<? super T> subscriber,
       Context ctx,
       io.opentelemetry.context.Context contextToPropagate) {
-    this(subscriber, ctx, contextToPropagate, true, false);
+    this(subscriber, ctx, contextToPropagate, true);
   }
 
   private TracingSubscriber(
       Subscriber<? super T> subscriber,
       Context ctx,
       io.opentelemetry.context.Context contextToPropagate,
-      boolean explicitFallback,
-      boolean downstreamOfContextBoundary) {
+      boolean explicitFallback) {
     this.subscriber = subscriber;
     this.context = ctx;
-    this.downstreamOfContextBoundary = downstreamOfContextBoundary;
     io.opentelemetry.context.Context storedContext =
         ContextPropagationOperator.getOpenTelemetryContext(ctx, null);
     this.traceContext = storedContext != null ? storedContext : contextToPropagate;
@@ -154,23 +151,13 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
     return attr == Scannable.Attr.ACTUAL ? subscriber : null;
   }
 
-  void markDownstreamOfContextBoundary() {
-    downstreamOfContextBoundary = true;
-  }
-
   void markDownstreamOfContextBoundary(Consumer<Runnable> applicationContextScope) {
-    downstreamOfContextBoundary = true;
     this.applicationContextScope = applicationContextScope;
   }
 
   @Nullable
-  private Scope openScope(@Nullable io.opentelemetry.context.Context context) {
-    return context != null
-            && (!downstreamOfContextBoundary
-                || !ContextPropagationOperator.isApplicationContextBoundaryActive()
-                || hasExplicitContext)
-        ? context.makeCurrent()
-        : null;
+  private static Scope openScope(@Nullable io.opentelemetry.context.Context context) {
+    return context == null ? null : context.makeCurrent();
   }
 
   @Nullable
@@ -188,13 +175,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
       return Class.forName("reactor.core.publisher.FluxRetryWhen$RetryWhenMainSubscriber");
     } catch (ClassNotFoundException ignored) {
       return null;
-    }
-  }
-
-  static final class ScannableTracingSubscriber<T> extends TracingSubscriber<T> {
-
-    ScannableTracingSubscriber(Subscriber<? super T> subscriber, Context context) {
-      super(subscriber, context);
     }
   }
 }

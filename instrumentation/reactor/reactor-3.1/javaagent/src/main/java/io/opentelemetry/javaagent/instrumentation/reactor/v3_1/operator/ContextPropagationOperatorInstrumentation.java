@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
-import io.opentelemetry.instrumentation.reactor.v3_1.internal.ContextBoundaryState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
@@ -58,12 +57,6 @@ class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("reactor.util.context.Context"))),
         getClass().getName() + "$WithoutSubscriptionContextCaptureAdvice");
     transformer.applyAdviceToMethod(
-        isStatic()
-            .and(named("isApplicationContextBoundaryActive"))
-            .and(takesArguments(0))
-            .and(returns(boolean.class)),
-        getClass().getName() + "$ApplicationContextBoundaryAdvice");
-    transformer.applyAdviceToMethod(
         isPublic()
             .and(isStatic())
             .and(named("runWithContext"))
@@ -101,15 +94,6 @@ class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
     public static reactor.util.context.Context methodExit(
         @Advice.Return reactor.util.context.Context reactorContext) {
       return ContextPropagationOperator.withoutSubscriptionContextCapture(reactorContext);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class ApplicationContextBoundaryAdvice {
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static boolean methodExit(@Advice.Return boolean applicationContextBoundaryActive) {
-      return applicationContextBoundaryActive || ContextBoundaryState.isActive();
     }
   }
 

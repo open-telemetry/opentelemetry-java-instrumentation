@@ -28,7 +28,6 @@ import static java.util.logging.Level.WARNING;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
-import io.opentelemetry.instrumentation.reactor.v3_1.internal.ContextBoundaryState;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -92,13 +91,7 @@ public final class ContextPropagationOperator {
               method.setAccessible(true);
               return method;
             } catch (NoSuchMethodException ignored) {
-              try {
-                Method method = current.getDeclaredMethod("markDownstreamOfContextBoundary");
-                method.setAccessible(true);
-                return method;
-              } catch (NoSuchMethodException ignore) {
-                current = current.getSuperclass();
-              }
+              current = current.getSuperclass();
             }
           }
           throw new IllegalStateException(type.getName());
@@ -186,14 +179,6 @@ public final class ContextPropagationOperator {
 
   static boolean isSubscriptionContextCaptureDisabled(reactor.util.context.Context context) {
     return context.hasKey(NO_SUBSCRIPTION_CONTEXT_CAPTURE_KEY);
-  }
-
-  static Scope enterApplicationContextBoundary(Context context, Object boundary) {
-    return ContextBoundaryState.enter(context, boundary);
-  }
-
-  static boolean isApplicationContextBoundaryActive() {
-    return ContextBoundaryState.isActive();
   }
 
   /**
@@ -402,12 +387,9 @@ public final class ContextPropagationOperator {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-      Object boundary = ContextBoundaryState.newBoundary();
-      markDownstreamOfContextBoundary(actual, applicationContext, boundary);
+      markDownstreamOfContextBoundary(actual, applicationContext);
       try (Scope ignored = operationContext.makeCurrent()) {
-        source.subscribe(
-            new ContextBoundarySubscriber<>(
-                actual, operationContext, applicationContext, boundary));
+        source.subscribe(new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
       }
     }
 
@@ -433,12 +415,9 @@ public final class ContextPropagationOperator {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-      Object boundary = ContextBoundaryState.newBoundary();
-      markDownstreamOfContextBoundary(actual, applicationContext, boundary);
+      markDownstreamOfContextBoundary(actual, applicationContext);
       try (Scope ignored = operationContext.makeCurrent()) {
-        source.subscribe(
-            new ContextBoundarySubscriber<>(
-                actual, operationContext, applicationContext, boundary));
+        source.subscribe(new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
       }
     }
 
@@ -455,18 +434,13 @@ public final class ContextPropagationOperator {
     private final CoreSubscriber<? super T> actual;
     private final Context operationContext;
     private final Context applicationContext;
-    private final Object boundary;
     private Subscription subscription;
 
     private ContextBoundarySubscriber(
-        CoreSubscriber<? super T> actual,
-        Context operationContext,
-        Context applicationContext,
-        Object boundary) {
+        CoreSubscriber<? super T> actual, Context operationContext, Context applicationContext) {
       this.actual = actual;
       this.operationContext = operationContext;
       this.applicationContext = applicationContext;
-      this.boundary = boundary;
     }
 
     @Override
@@ -479,36 +453,28 @@ public final class ContextPropagationOperator {
     @Override
     public void onSubscribe(Subscription subscription) {
       this.subscription = subscription;
-      try (Scope ignored =
-          ContextPropagationOperator.enterApplicationContextBoundary(
-              applicationContext, boundary)) {
+      try (Scope ignored = applicationContext.makeCurrent()) {
         actual.onSubscribe(this);
       }
     }
 
     @Override
     public void onNext(T value) {
-      try (Scope ignored =
-          ContextPropagationOperator.enterApplicationContextBoundary(
-              applicationContext, boundary)) {
+      try (Scope ignored = applicationContext.makeCurrent()) {
         actual.onNext(value);
       }
     }
 
     @Override
     public void onError(Throwable error) {
-      try (Scope ignored =
-          ContextPropagationOperator.enterApplicationContextBoundary(
-              applicationContext, boundary)) {
+      try (Scope ignored = applicationContext.makeCurrent()) {
         actual.onError(error);
       }
     }
 
     @Override
     public void onComplete() {
-      try (Scope ignored =
-          ContextPropagationOperator.enterApplicationContextBoundary(
-              applicationContext, boundary)) {
+      try (Scope ignored = applicationContext.makeCurrent()) {
         actual.onComplete();
       }
     }
@@ -541,21 +507,17 @@ public final class ContextPropagationOperator {
 
     @Override
     public CoreSubscriber<? super T> apply(Scannable publisher, CoreSubscriber<? super T> sub) {
-      return new TracingSubscriber.ScannableTracingSubscriber<>(sub, sub.currentContext());
+      return new TracingSubscriber<>(sub, sub.currentContext());
     }
   }
 
   private static void markDownstreamOfContextBoundary(
-      CoreSubscriber<?> actual, Context applicationContext, Object boundary) {
+      CoreSubscriber<?> actual, Context applicationContext) {
     Scannable scannable = Scannable.from(actual);
     Consumer<Runnable> applicationContextScope =
         callback -> {
-          if (ContextBoundaryState.isActive(boundary) && Context.current() == applicationContext) {
+          try (Scope ignored = applicationContext.makeCurrent()) {
             callback.run();
-          } else {
-            try (Scope ignored = enterApplicationContextBoundary(applicationContext, boundary)) {
-              callback.run();
-            }
           }
         };
     markDownstreamOfContextBoundary(scannable, applicationContextScope);
@@ -573,11 +535,7 @@ public final class ContextPropagationOperator {
       // The javaagent can have a second, shaded copy in the same subscriber chain.
       try {
         Method method = TRACING_SUBSCRIBER_MARK_METHOD.get(scannable.getClass());
-        if (method.getParameterTypes().length == 0) {
-          method.invoke(scannable);
-        } else {
-          method.invoke(scannable, applicationContextScope);
-        }
+        method.invoke(scannable, applicationContextScope);
       } catch (IllegalAccessException | InvocationTargetException e) {
         throw new IllegalStateException(e);
       }
@@ -668,24 +626,16 @@ public final class ContextPropagationOperator {
   static class RunnableWrapper implements Runnable {
     private final Runnable delegate;
     private final Context context;
-    @Nullable private final Object applicationContextBoundary;
 
     RunnableWrapper(Runnable delegate) {
       this.delegate = delegate;
       context = Context.current();
-      applicationContextBoundary = ContextBoundaryState.currentBoundary();
     }
 
     @Override
     public void run() {
-      if (applicationContextBoundary != null) {
-        try (Scope ignore = ContextBoundaryState.enter(context, applicationContextBoundary)) {
-          delegate.run();
-        }
-      } else {
-        try (Scope ignore = context.makeCurrent()) {
-          delegate.run();
-        }
+      try (Scope ignore = context.makeCurrent()) {
+        delegate.run();
       }
     }
   }
