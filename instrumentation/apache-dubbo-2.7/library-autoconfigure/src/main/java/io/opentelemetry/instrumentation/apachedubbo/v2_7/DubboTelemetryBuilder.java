@@ -86,6 +86,10 @@ public final class DubboTelemetryBuilder {
   @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   public DubboTelemetry build() {
     DubboRpcAttributesGetter rpcAttributesGetter = new DubboRpcAttributesGetter();
+    DubboRpcResponseStatusExtractor clientStatusExtractor =
+        new DubboRpcResponseStatusExtractor(true);
+    DubboRpcResponseStatusExtractor serverStatusExtractor =
+        new DubboRpcResponseStatusExtractor(false);
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
     // Initialize before customization: a user-provided wrapper may hide the RPC extractor
@@ -105,8 +109,10 @@ public final class DubboTelemetryBuilder {
                 openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
             .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(serverStatusExtractor)
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(attributesExtractors)
+            .setSpanStatusExtractor(serverStatusExtractor)
             .addOperationMetrics(RpcServerMetrics.get())
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
@@ -117,9 +123,11 @@ public final class DubboTelemetryBuilder {
                 openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor)
             .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(clientStatusExtractor)
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractors(attributesExtractors)
+            .setSpanStatusExtractor(clientStatusExtractor)
             .addOperationMetrics(RpcClientMetrics.get())
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
