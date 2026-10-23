@@ -123,6 +123,8 @@ class RpcServerMetricsTest {
                   assertThat(metric)
                       .hasName("rpc.server.duration")
                       .hasUnit("ms")
+                      .hasDescription(
+                          "Deprecated, use `rpc.server.call.duration` instead. Note: the unit also changed from `ms` to `s`.")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
@@ -204,6 +206,8 @@ class RpcServerMetricsTest {
                   assertThat(metric)
                       .hasName("rpc.server.call.duration")
                       .hasUnit("s")
+                      .hasDescription(
+                          "Measures the duration of an incoming Remote Procedure Call (RPC).")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
@@ -237,6 +241,8 @@ class RpcServerMetricsTest {
                   assertThat(metric)
                       .hasName("rpc.server.duration")
                       .hasUnit("ms")
+                      .hasDescription(
+                          "Deprecated, use `rpc.server.call.duration` instead. Note: the unit also changed from `ms` to `s`.")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
@@ -258,6 +264,8 @@ class RpcServerMetricsTest {
                   assertThat(metric)
                       .hasName("rpc.server.call.duration")
                       .hasUnit("s")
+                      .hasDescription(
+                          "Measures the duration of an incoming Remote Procedure Call (RPC).")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
