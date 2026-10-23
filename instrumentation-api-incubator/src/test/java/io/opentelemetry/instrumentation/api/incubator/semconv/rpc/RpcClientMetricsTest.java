@@ -43,7 +43,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class RpcClientMetricsTest {
 
   private static final double[] DURATION_BUCKETS = {
-    0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10
+    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100
   };
   private static final double[] LEGACY_BUCKETS = {
     0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000

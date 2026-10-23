@@ -26,6 +26,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -50,7 +53,11 @@ public final class RpcServerMetrics implements OperationListener {
   @Nullable private final LongHistogram oldServerResponseSize;
   private final boolean dualEmit;
 
-  private RpcServerMetrics(Meter meter, boolean emitOldRpcSemconv, boolean emitPreviewRpcSemconv) {
+  private RpcServerMetrics(
+      Meter meter,
+      boolean emitOldRpcSemconv,
+      boolean emitPreviewRpcSemconv,
+      List<Double> durationSecondsBucketBoundaries) {
     dualEmit = emitOldRpcSemconv && emitPreviewRpcSemconv;
     // Old metric (milliseconds)
     if (emitOldRpcSemconv) {
@@ -72,7 +79,7 @@ public final class RpcServerMetrics implements OperationListener {
               .histogramBuilder("rpc.server.call.duration")
               .setDescription("Measures the duration of inbound remote procedure calls (RPC).")
               .setUnit("s")
-              .setExplicitBucketBoundariesAdvice(RpcMetricsAdvice.DURATION_SECONDS_BUCKETS);
+              .setExplicitBucketBoundariesAdvice(durationSecondsBucketBoundaries);
       RpcMetricsAdvice.applyServerDurationAdvice(stableDurationBuilder, true);
       stableServerDurationHistogram = stableDurationBuilder.build();
     } else {
@@ -109,7 +116,17 @@ public final class RpcServerMetrics implements OperationListener {
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
   public static OperationMetrics get() {
-    return new Factory();
+    return get(RpcMetricsAdvice.DURATION_SECONDS_BUCKETS);
+  }
+
+  /**
+   * Returns a {@link OperationMetrics} which uses the given bucket boundaries for the duration
+   * metric.
+   *
+   * @param durationSecondsBucketBoundaries the duration histogram bucket boundaries in seconds
+   */
+  public static OperationMetrics get(List<Double> durationSecondsBucketBoundaries) {
+    return new Factory(durationSecondsBucketBoundaries);
   }
 
   @Override
@@ -178,6 +195,12 @@ public final class RpcServerMetrics implements OperationListener {
 
   private static final class Factory implements OperationMetrics, OpenTelemetryConfigurable {
     private final RpcSemconvSelection selection = new RpcSemconvSelection();
+    private final List<Double> durationSecondsBucketBoundaries;
+
+    private Factory(List<Double> durationSecondsBucketBoundaries) {
+      this.durationSecondsBucketBoundaries =
+          Collections.unmodifiableList(new ArrayList<>(durationSecondsBucketBoundaries));
+    }
 
     @Override
     public void internalInitialize(OpenTelemetry openTelemetry) {
@@ -189,7 +212,12 @@ public final class RpcServerMetrics implements OperationListener {
       RpcSemconvSelection.Selection current = selection.get();
       return OperationMetricsUtil.create(
               "rpc server",
-              ignored -> new RpcServerMetrics(meter, current.emitOld(), current.emitPreview()))
+              ignored ->
+                  new RpcServerMetrics(
+                      meter,
+                      current.emitOld(),
+                      current.emitPreview(),
+                      durationSecondsBucketBoundaries))
           .create(meter);
     }
   }
