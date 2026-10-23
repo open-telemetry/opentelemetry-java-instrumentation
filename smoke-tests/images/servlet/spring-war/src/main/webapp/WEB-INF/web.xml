@@ -5,9 +5,6 @@
     <param-value>/WEB-INF/root.xml</param-value>
   </context-param>
   <listener>
-    <listener-class>io.opentelemetry.examples.springwar.LoaderListener</listener-class>
-  </listener>
-  <listener>
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
   </listener>
   <servlet>

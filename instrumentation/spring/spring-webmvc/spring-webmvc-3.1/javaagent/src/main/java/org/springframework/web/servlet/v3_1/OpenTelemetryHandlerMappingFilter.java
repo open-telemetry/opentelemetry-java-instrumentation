@@ -191,12 +191,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     try {
       Class<?> pathUtilsClass =
           Class.forName("org.springframework.web.util.ServletRequestPathUtils");
-      Class<?> requestPathClass = Class.forName("org.springframework.http.server.RequestPath");
       return MethodHandles.lookup()
-          .findStatic(
-              pathUtilsClass,
-              "parseAndCache",
-              MethodType.methodType(requestPathClass, HttpServletRequest.class));
+          .unreflect(pathUtilsClass.getMethod("parseAndCache", HttpServletRequest.class));
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
