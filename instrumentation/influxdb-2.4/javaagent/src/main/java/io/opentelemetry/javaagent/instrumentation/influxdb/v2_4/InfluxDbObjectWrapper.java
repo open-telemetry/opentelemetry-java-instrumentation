@@ -9,35 +9,46 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 public class InfluxDbObjectWrapper {
 
-  @SuppressWarnings("unchecked") // we check types before casting
-  public static Object wrap(Object object, Context parentContext) {
-    if (object instanceof Consumer) {
-      return (Consumer<Object>)
-          o -> {
-            try (Scope ignore = parentContext.makeCurrent()) {
-              ((Consumer<Object>) object).accept(o);
-            }
-          };
-    } else if (object instanceof BiConsumer) {
-      return (BiConsumer<Object, Object>)
-          (o1, o2) -> {
-            try (Scope ignore = parentContext.makeCurrent()) {
-              ((BiConsumer<Object, Object>) object).accept(o1, o2);
-            }
-          };
-    } else if (object instanceof Runnable) {
-      return (Runnable)
-          () -> {
-            try (Scope ignore = parentContext.makeCurrent()) {
-              ((Runnable) object).run();
-            }
-          };
+  @Nullable
+  public static <T> Consumer<T> wrapConsumer(
+      @Nullable Consumer<T> callback, Context parentContext) {
+    if (callback == null) {
+      return null;
     }
+    return value -> {
+      try (Scope ignore = parentContext.makeCurrent()) {
+        callback.accept(value);
+      }
+    };
+  }
 
-    return object;
+  @Nullable
+  public static <T, U> BiConsumer<T, U> wrapBiConsumer(
+      @Nullable BiConsumer<T, U> callback, Context parentContext) {
+    if (callback == null) {
+      return null;
+    }
+    return (value1, value2) -> {
+      try (Scope ignore = parentContext.makeCurrent()) {
+        callback.accept(value1, value2);
+      }
+    };
+  }
+
+  @Nullable
+  public static Runnable wrapRunnable(@Nullable Runnable callback, Context parentContext) {
+    if (callback == null) {
+      return null;
+    }
+    return () -> {
+      try (Scope ignore = parentContext.makeCurrent()) {
+        callback.run();
+      }
+    };
   }
 
   private InfluxDbObjectWrapper() {}

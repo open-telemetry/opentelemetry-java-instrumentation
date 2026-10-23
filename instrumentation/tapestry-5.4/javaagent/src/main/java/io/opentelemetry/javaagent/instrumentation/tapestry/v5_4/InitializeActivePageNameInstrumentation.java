@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.tapestry.v5_4;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.tapestry.v5_4.TapestryServerSpanNaming.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -52,7 +52,7 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ComponentEventRequestParameters parameters) {
       HttpServerRoute.update(
-          currentContext(), CONTROLLER, serverSpanName(), parameters.getActivePageName());
+          Context.current(), CONTROLLER, serverSpanName(), parameters.getActivePageName());
     }
   }
 
@@ -62,7 +62,7 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) PageRenderRequestParameters parameters) {
       HttpServerRoute.update(
-          currentContext(), CONTROLLER, serverSpanName(), parameters.getLogicalPageName());
+          Context.current(), CONTROLLER, serverSpanName(), parameters.getLogicalPageName());
     }
   }
 }

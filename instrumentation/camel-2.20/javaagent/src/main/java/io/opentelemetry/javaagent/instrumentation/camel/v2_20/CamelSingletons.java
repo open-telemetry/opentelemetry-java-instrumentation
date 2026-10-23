@@ -33,7 +33,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.HttpSpanDecorator;
@@ -188,7 +187,7 @@ class CamelSingletons {
   }
 
   private static class KeylessAttributesExtractor
-      implements AttributesExtractor<CamelRequest, Void>, SchemaUrlProvider {
+      implements AttributesExtractor<CamelRequest, Void> {
 
     private final AttributesExtractor<CamelRequest, Void> delegate;
 
@@ -209,14 +208,6 @@ class CamelSingletons {
         @Nullable Void unused,
         @Nullable Throwable error) {
       delegate.onEnd(attributes, context, request, null, error);
-    }
-
-    @Nullable
-    @Override
-    public String internalGetSchemaUrl() {
-      return delegate instanceof SchemaUrlProvider
-          ? ((SchemaUrlProvider) delegate).internalGetSchemaUrl()
-          : null;
     }
   }
 

@@ -4,6 +4,16 @@
 
 ### ⚠️ Breaking changes
 
+- Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
+- Spring Boot Java agent resource providers move from
+  `io.opentelemetry.instrumentation.spring.resources` to
+  `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
+  `otel.java.enabled.resource.providers` and `otel.java.disabled.resource.providers`.
+- Spring Rabbit 1.0 is no longer supported. Use the `spring-rabbit-1.1` selector; telemetry scope
+  changes from `io.opentelemetry.spring-rabbit-1.0` to `io.opentelemetry.spring-rabbit-1.1`.
+- `InstrumenterBuilder` no longer infers a schema URL from attribute extractors. Call
+  `setSchemaUrl()` with the schema for the conventions defining the instrumenter's signals;
+  otherwise its telemetry has no schema URL.
 - Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
   Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
 - `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
@@ -319,6 +329,16 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
+- Java HTTP Client's `addAttributesExtractor` now requires
+  `AttributesExtractor<HttpRequest, HttpResponse<?>>`.
+- Remove `setBaseTimeUnit(TimeUnit)` and `setPrometheusMode(boolean)` from the Micrometer registry
+  builder. Use `Experimental.setBaseTimeUnit(builder, timeUnit)` and
+  `Experimental.setPrometheusMode(builder, enabled)`.
+- Remove `otel.instrumentation.experimental.span-suppression-strategy` and
+  `java.common.span_suppression_strategy/development` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` and
+  `java.common.span_suppression_strategy`.
 - Remove deprecated `DeclarativeConfigPropertiesBridge` and
   `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
   `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.
@@ -418,6 +438,12 @@
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
+
+### 🚫 Deprecations
+
+- Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
+  in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
+  is the default.
 
 ## Version 2.32.0 (2026-10-03)
 
