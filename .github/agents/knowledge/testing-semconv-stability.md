@@ -139,7 +139,7 @@ equalTo(
     RPC_GRPC_STATUS_CODE,
     emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null)
 equalTo(
-    RPC_RESPONSE_STATUS_CODE,
+    AttributeKey.stringKey("rpc.status_code"),
     emitPreviewRpcSemconv() ? Status.Code.OK.name() : null)
 ```
 

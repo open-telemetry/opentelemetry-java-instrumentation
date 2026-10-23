@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.ME
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
@@ -28,6 +27,7 @@ import example.GreeterGrpc;
 import example.Helloworld;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import org.junit.jupiter.api.Test;
@@ -92,7 +92,7 @@ class ArmeriaGrpcTest {
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
-                                RPC_RESPONSE_STATUS_CODE,
+                                AttributeKey.stringKey("rpc.status_code"),
                                 emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
@@ -123,7 +123,7 @@ class ArmeriaGrpcTest {
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
-                                RPC_RESPONSE_STATUS_CODE,
+                                AttributeKey.stringKey("rpc.status_code"),
                                 emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))

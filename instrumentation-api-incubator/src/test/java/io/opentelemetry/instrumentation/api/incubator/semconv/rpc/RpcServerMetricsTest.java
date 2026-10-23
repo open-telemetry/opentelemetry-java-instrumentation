@@ -23,6 +23,7 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
@@ -88,6 +89,9 @@ class RpcServerMetricsTest {
             .put(SERVER_ADDRESS, "example.com")
             .put(SERVER_PORT, 8080)
             .put(ERROR_TYPE, "INTERNAL")
+            .put(
+                AttributeKey.stringKey("rpc.status_code"),
+                emitPreviewRpcSemconv() ? "INTERNAL" : null)
             .put(NETWORK_LOCAL_ADDRESS, "127.0.0.1")
             .put(NETWORK_TRANSPORT, "tcp")
             .put(NETWORK_TYPE, "ipv4")
@@ -233,6 +237,9 @@ class RpcServerMetricsTest {
                                                   "myservice.EchoService/exampleMethod"),
                                               equalTo(RPC_SYSTEM_NAME, "grpc"),
                                               equalTo(ERROR_TYPE, "INTERNAL"),
+                                              equalTo(
+                                                  AttributeKey.stringKey("rpc.status_code"),
+                                                  "INTERNAL"),
                                               equalTo(SERVER_ADDRESS, "example.com"),
                                               equalTo(SERVER_PORT, 8080))
                                           .hasExemplarsSatisfying(

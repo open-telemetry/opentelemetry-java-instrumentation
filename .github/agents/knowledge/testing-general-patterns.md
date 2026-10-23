@@ -426,7 +426,7 @@ absent":
 
 ```java
 equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null)
-equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null)
+equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null)
 equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
@@ -456,7 +456,7 @@ private static List<AttributeAssertion> rpcAttributes() {
     attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
   }
   if (emitPreviewRpcSemconv()) {
-    attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
+    attributes.add(equalTo(AttributeKey.stringKey("rpc.status_code"), "OK"));
   }
   return attributes;
 }
@@ -465,5 +465,5 @@ span.hasAttributesSatisfyingExactly(rpcAttributes());
 // Good: pass each assertion directly and keep its mode check visible.
 span.hasAttributesSatisfyingExactly(
     equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
-    equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
+    equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null));
 ```
