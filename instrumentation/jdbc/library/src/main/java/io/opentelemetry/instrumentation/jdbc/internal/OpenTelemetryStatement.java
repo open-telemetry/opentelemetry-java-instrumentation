@@ -257,6 +257,10 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   @Override
   public void clearBatch() throws SQLException {
     delegate.clearBatch();
+    clearBatchState();
+  }
+
+  protected final void clearBatchState() {
     batchCommands.clear();
     batchSize = 0;
   }
@@ -411,6 +415,10 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
     DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize, emptyMap(), false);
-    return wrapCall(request, callable);
+    try {
+      return wrapCall(request, callable);
+    } finally {
+      clearBatchState();
+    }
   }
 }

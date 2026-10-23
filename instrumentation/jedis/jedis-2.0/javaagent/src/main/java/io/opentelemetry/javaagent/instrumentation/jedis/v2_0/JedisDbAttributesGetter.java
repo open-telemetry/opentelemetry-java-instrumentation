@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
@@ -19,7 +21,8 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   @Nullable
   public String getDbNamespace(JedisRequest request) {
-    return null;
+    Long databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
   @Override
@@ -39,12 +42,23 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
+  @Nullable
   public String getServerAddress(JedisRequest request) {
-    return request.getConnection().getHost();
+    RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
+    return target != null ? target.getAddress() : null;
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(JedisRequest request) {
-    return request.getConnection().getPort();
+    RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
+    return target != null ? target.getPort() : null;
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      JedisRequest request, @Nullable Void unused) {
+    return request.getPeerAddress();
   }
 }

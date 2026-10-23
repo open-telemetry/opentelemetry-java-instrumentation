@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +29,8 @@ import javax.annotation.Nullable;
 final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
+  private static final String JAVA_DECLARATIVE_PREFIX = "java.";
+  private static final String INSTRUMENTATION_PROPERTY_PREFIX = "otel.instrumentation.";
   private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
@@ -48,12 +51,16 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "general.http.server.response_captured_headers",
         "otel.instrumentation.http.server.capture-response-headers");
     SPECIAL_MAPPINGS.put(
-        "general.sanitization.url.sensitive_query_parameters/development",
+        "general.sanitization.url.sensitive_query_parameters",
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
+    // general.stability_opt_in_list is the name in the declarative configuration schema; the
+    // general.semconv_stability.opt_in spelling is only reachable through this bridge and is kept
+    // for backwards compatibility (see SemconvSelectionResolver, which reads both)
+    SPECIAL_MAPPINGS.put("general.stability_opt_in_list", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put(
         "general.semconv_exception.signal.preview", "otel.semconv.exception.signal.preview");
-    // moving common http, database, messaging, and gen_ai configs under common
+    // moving common http, database, and gen_ai configs under common
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
     SPECIAL_MAPPINGS.put(
@@ -63,18 +70,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "java.common.http.server.emit_experimental_telemetry/development",
         "otel.instrumentation.http.server.emit-experimental-telemetry");
     SPECIAL_MAPPINGS.put(
-        "java.common.messaging.receive_telemetry/development.enabled",
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
-    SPECIAL_MAPPINGS.put(
-        "java.common.messaging.capture_headers/development",
-        "otel.instrumentation.messaging.experimental.capture-headers");
-    SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
-    // top-level common configs
-    SPECIAL_MAPPINGS.put(
-        "java.common.span_suppression_strategy/development",
-        "otel.instrumentation.experimental.span-suppression-strategy");
     // renaming to match instrumentation module name
     SPECIAL_MAPPINGS.put(
         "java.opentelemetry_extension_annotations.exclude_methods",
@@ -83,27 +80,50 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.servlet.javascript_snippet/development", "otel.experimental.javascript-snippet");
     // jmx properties don't have an "instrumentation" segment
-    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
     // otel.jmx.discovery.delay also has a dedicated branch in getLong() that reads it as a
     // Duration and falls back to otel.metric.export.interval; this mapping is here only to keep
     // it consistent with the rest of the jmx.* properties.
     SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
-    SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
+    SPECIAL_MAPPINGS.put(
+        "java.jmx.metrics.experimental.included", "otel.jmx.metrics.experimental.included");
+    SPECIAL_MAPPINGS.put("java.jmx.metrics.included", "otel.jmx.metrics.included");
+    SPECIAL_MAPPINGS.put("java.jmx.metrics.excluded", "otel.jmx.metrics.excluded");
   }
 
   private final ConfigProperties configProperties;
   private final List<String> path;
+  private final String declarativePrefix;
+  private final String configPropertyPrefix;
+  private final boolean instrumentationConfig;
 
   static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, emptyList());
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties,
+        emptyList(),
+        JAVA_DECLARATIVE_PREFIX,
+        INSTRUMENTATION_PROPERTY_PREFIX,
+        true);
+  }
+
+  static DeclarativeConfigProperties createComponentProperties(
+      ConfigProperties configProperties, String configPropertyPrefix) {
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties, emptyList(), "", configPropertyPrefix, false);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
-      ConfigProperties configProperties, List<String> path) {
+      ConfigProperties configProperties,
+      List<String> path,
+      String declarativePrefix,
+      String configPropertyPrefix,
+      boolean instrumentationConfig) {
     this.configProperties = configProperties;
     this.path = path;
+    this.declarativePrefix = declarativePrefix;
+    this.configPropertyPrefix = configPropertyPrefix;
+    this.instrumentationConfig = instrumentationConfig;
   }
 
   @Nullable
@@ -129,7 +149,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   public Long getLong(String name) {
     String fullPath = pathWithName(name);
 
-    if (fullPath.equals("java.jmx.discovery.delay")) {
+    if (instrumentationConfig && fullPath.equals("java.jmx.discovery.delay")) {
       Duration duration = configProperties.getDuration("otel.jmx.discovery.delay");
       if (duration != null) {
         return duration.toMillis();
@@ -147,9 +167,53 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   }
 
   @Nullable
+  Duration getDuration(String name) {
+    return configProperties.getDuration(resolvePropertyKey(name));
+  }
+
+  @Nullable
   @Override
   public Double getDouble(String name) {
     return configProperties.getDouble(resolvePropertyKey(name));
+  }
+
+  @Override
+  public boolean isString(String name) {
+    // Flat configuration stores strings, so no parsing can fail.
+    return getString(name) != null;
+  }
+
+  @Override
+  public boolean isBoolean(String name) {
+    // Boolean.parseBoolean() returns false for unrecognized values instead of throwing.
+    return getBoolean(name) != null;
+  }
+
+  @Override
+  public boolean isInt(String name) {
+    try {
+      return getInt(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean isLong(String name) {
+    try {
+      return getLong(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean isDouble(String name) {
+    try {
+      return getDouble(name) != null;
+    } catch (ConfigurationException e) {
+      return false;
+    }
   }
 
   /**
@@ -162,7 +226,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   public DeclarativeConfigProperties getStructured(String name) {
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, newPath);
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties, newPath, declarativePrefix, configPropertyPrefix, instrumentationConfig);
   }
 
   @Nullable
@@ -187,7 +252,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
-    if (JAVA_COMMON_SERVICE_PEER_MAPPING.equals(fullPath)) {
+    if (instrumentationConfig && fullPath.equals(JAVA_COMMON_SERVICE_PEER_MAPPING)) {
       return ServicePeerMapping.getList(configProperties);
     }
     return null;
@@ -207,18 +272,19 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   private String resolvePropertyKey(String name) {
     String fullPath = pathWithName(name);
 
-    // Check explicit property mappings first
-    String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
-    if (mappedKey != null) {
-      return mappedKey;
+    if (instrumentationConfig) {
+      // Check explicit property mappings first
+      String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
+      if (mappedKey != null) {
+        return mappedKey;
+      }
     }
 
-    if (!fullPath.startsWith("java.")) {
+    if (!declarativePrefix.isEmpty() && !fullPath.startsWith(declarativePrefix)) {
       return "";
     }
 
-    // Remove "java." prefix and translate the remaining path
-    String[] segments = fullPath.substring(5).split("\\.");
+    String[] segments = fullPath.substring(declarativePrefix.length()).split("\\.");
     StringBuilder translatedPath = new StringBuilder();
 
     for (int i = 0; i < segments.length; i++) {
@@ -228,7 +294,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
       translatedPath.append(translateName(segments[i]));
     }
 
-    return "otel.instrumentation." + translatedPath;
+    return configPropertyPrefix + translatedPath;
   }
 
   private String pathWithName(String name) {

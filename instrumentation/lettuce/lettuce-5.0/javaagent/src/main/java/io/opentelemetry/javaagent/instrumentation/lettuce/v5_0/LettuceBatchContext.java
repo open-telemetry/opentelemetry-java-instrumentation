@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
-import io.lettuce.core.RedisURI;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
@@ -18,6 +16,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +65,30 @@ public final class LettuceBatchContext {
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(endpoint, new BatchState());
     return BatchScope.start(
-        state.commands, state.asyncCommands, state.parentContext, ENDPOINT_URI.get(endpoint));
+        state.commands,
+        state.asyncCommands,
+        state.parentContext,
+        state.resolveConnectionState(endpoint));
+  }
+
+  // visible for testing
+  @Nullable
+  static Throwable getError(@Nullable Throwable terminalError, Throwable[] commandErrors) {
+    if (terminalError != null) {
+      return terminalError;
+    }
+    Throwable firstServerError = null;
+    for (Throwable error : commandErrors) {
+      if (error != null) {
+        if (!(error instanceof RedisCommandExecutionException)) {
+          return error;
+        }
+        if (firstServerError == null) {
+          firstServerError = error;
+        }
+      }
+    }
+    return firstServerError;
   }
 
   private LettuceBatchContext() {}
@@ -75,12 +97,14 @@ public final class LettuceBatchContext {
     private final Context context;
     private final LettuceBatchRequest request;
     private final AtomicInteger remaining;
-    private final AtomicReference<Throwable> error = new AtomicReference<>();
+    private final Throwable[] commandErrors;
+    private final AtomicReference<Throwable> terminalError = new AtomicReference<>();
 
-    private BatchScope(Context context, LettuceBatchRequest request, int remaining) {
+    private BatchScope(Context context, LettuceBatchRequest request, int commandCount) {
       this.context = context;
       this.request = request;
-      this.remaining = new AtomicInteger(remaining);
+      this.remaining = new AtomicInteger(commandCount);
+      this.commandErrors = new Throwable[commandCount];
     }
 
     @Nullable
@@ -88,10 +112,10 @@ public final class LettuceBatchContext {
         List<RedisCommand<?, ?, ?>> commands,
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
-        @Nullable RedisURI redisUri) {
-      LettuceBatchRequest request = LettuceBatchRequest.create(commands, redisUri);
+        @Nullable LettuceConnectionState connectionState) {
+      LettuceBatchRequest request = LettuceBatchRequest.create(commands, connectionState);
       Context parentContext =
-          capturedParentContext == null ? currentContext() : capturedParentContext;
+          capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -104,10 +128,12 @@ public final class LettuceBatchContext {
       // Redis executes batch commands in order, but the individual async command futures can
       // complete in a different order. Observe every future so an earlier failure or cancellation
       // is captured; the remaining counter decides when all responses have completed.
-      for (AsyncCommand<?, ?, ?> asyncCommand : asyncCommands) {
+      for (int i = 0; i < asyncCommands.size(); i++) {
+        int index = i;
+        AsyncCommand<?, ?, ?> asyncCommand = asyncCommands.get(i);
         asyncCommand.handleAsync(
             (value, throwable) -> {
-              scope.endOne(throwable);
+              scope.endOne(index, throwable);
               return null;
             });
       }
@@ -115,6 +141,10 @@ public final class LettuceBatchContext {
     }
 
     public void endOne(@Nullable Throwable throwable) {
+      endOne(-1, throwable);
+    }
+
+    private void endOne(int index, @Nullable Throwable throwable) {
       if (throwable instanceof CancellationException) {
         if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
           // On a batch span this means at least one command was cancelled
@@ -122,11 +152,15 @@ public final class LettuceBatchContext {
         }
         throwable = null;
       }
-      if (throwable != null) {
-        error.compareAndSet(null, throwable);
+      if (index >= 0) {
+        // Each callback owns one slot; the remaining counter publishes every slot to the last one.
+        commandErrors[index] = throwable;
+      } else if (throwable != null) {
+        terminalError.compareAndSet(null, throwable);
       }
       if (remaining.getAndDecrement() == 1) {
-        batchInstrumenter().end(context, request, null, error.get());
+        Throwable error = getError(terminalError.get(), commandErrors);
+        batchInstrumenter().end(context, request, null, error);
       }
     }
   }
@@ -135,9 +169,20 @@ public final class LettuceBatchContext {
     private final List<RedisCommand<?, ?, ?>> commands = new ArrayList<>();
     private final List<AsyncCommand<?, ?, ?>> asyncCommands = new ArrayList<>();
     @Nullable private Context parentContext;
+    @Nullable private RedisServerTarget serverTarget;
+    private boolean serverTargetVaries;
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
+      RedisServerTarget commandTarget = LettuceConnectionState.serverTarget(command);
+      if (commandTarget != null && !serverTargetVaries) {
+        if (serverTarget == null) {
+          serverTarget = commandTarget;
+        } else if (!LettuceConnectionState.sameServerTarget(serverTarget, commandTarget)) {
+          serverTarget = null;
+          serverTargetVaries = true;
+        }
+      }
       if (parentContext == null && asyncCommand != null) {
         parentContext = CONTEXT.get(asyncCommand);
       }
@@ -148,6 +193,17 @@ public final class LettuceBatchContext {
 
     private boolean isEmpty() {
       return commands.isEmpty();
+    }
+
+    @Nullable
+    private LettuceConnectionState resolveConnectionState(DefaultEndpoint endpoint) {
+      LettuceConnectionState endpointState = LettuceConnectionState.get(endpoint);
+      if (serverTargetVaries) {
+        return LettuceConnectionState.withServerTarget(endpointState, null);
+      }
+      return serverTarget == null
+          ? endpointState
+          : LettuceConnectionState.withServerTarget(endpointState, serverTarget);
     }
   }
 }

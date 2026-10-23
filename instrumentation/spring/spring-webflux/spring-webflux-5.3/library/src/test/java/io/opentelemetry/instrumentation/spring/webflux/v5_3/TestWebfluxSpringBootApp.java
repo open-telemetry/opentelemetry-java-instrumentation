@@ -14,11 +14,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Properties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -54,8 +54,8 @@ class TestWebfluxSpringBootApp {
   @Bean
   WebFilter telemetryFilter() {
     return SpringWebfluxServerTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+        .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+        .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
         .build()
         .createWebFilterAndRegisterReactorHook();
   }
@@ -140,6 +140,12 @@ class TestWebfluxSpringBootApp {
     @GetMapping("/cancel")
     Mono<String> cancel() {
       return controller(SUCCESS, () -> Mono.never());
+    }
+
+    @GetMapping("/cancel-after-commit")
+    @ResponseBody
+    Flux<String> cancelAfterCommit() {
+      return Flux.just("committed").delayElements(Duration.ofMillis(100)).concatWith(Flux.never());
     }
   }
 }

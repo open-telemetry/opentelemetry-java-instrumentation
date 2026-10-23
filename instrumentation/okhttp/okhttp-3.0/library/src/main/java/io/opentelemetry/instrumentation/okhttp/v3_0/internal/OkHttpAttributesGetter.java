@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import okhttp3.Connection;
@@ -18,7 +19,7 @@ import okhttp3.Response;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@SuppressWarnings("OtelDeprecatedApiUsage") // SPDY_3 is deprecated but still used in okhttp 3.x
+@SuppressWarnings("deprecation") // SPDY_3 is deprecated but still used in okhttp 3.x
 public final class OkHttpAttributesGetter
     implements HttpClientAttributesGetter<Interceptor.Chain, Response> {
 
@@ -38,6 +39,11 @@ public final class OkHttpAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(Interceptor.Chain chain) {
+    return chain.request().headers().names();
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       Interceptor.Chain chain, Response response, @Nullable Throwable error) {
     return response.code();
@@ -47,6 +53,11 @@ public final class OkHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       Interceptor.Chain chain, Response response, String name) {
     return response.headers(name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(Interceptor.Chain chain, Response response) {
+    return response.headers().names();
   }
 
   @Nullable

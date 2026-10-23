@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.sysmsg.SystemMessage;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -36,9 +35,7 @@ class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrumentatio
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("systemEnqueue")
-            .and(takesArgument(0, named("akka.actor.ActorRef")))
-            .and(takesArgument(1, named("akka.dispatch.sysmsg.SystemMessage"))),
+        named("systemEnqueue").and(takesArgument(1, named("akka.dispatch.sysmsg.SystemMessage"))),
         getClass().getName() + "$DispatchSystemAdvice");
   }
 
@@ -48,7 +45,7 @@ class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrumentatio
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
         return ExecutorAdviceHelper.attachContextToTask(
             context, VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);

@@ -24,15 +24,32 @@ final class ConnectionPoolMetrics {
       new ConcurrentHashMap<>();
 
   static void registerMetrics(OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool) {
+    registerMetrics(openTelemetry, connectionPool, connectionPool.getName());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool, String poolName) {
+    registerMetrics(openTelemetry, connectionPool, poolName, Attributes.empty());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry,
+      UniversalConnectionPool connectionPool,
+      String poolName,
+      Attributes databaseAttributes) {
     connectionPoolMetrics.computeIfAbsent(
-        connectionPool, pool -> createMeters(openTelemetry, pool));
+        connectionPool,
+        unused -> createMeters(openTelemetry, connectionPool, poolName, databaseAttributes));
   }
 
   private static BatchCallback createMeters(
-      OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool) {
+      OpenTelemetry openTelemetry,
+      UniversalConnectionPool connectionPool,
+      String poolName,
+      Attributes databaseAttributes) {
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
-            openTelemetry, INSTRUMENTATION_NAME, connectionPool.getName());
+            openTelemetry, INSTRUMENTATION_NAME, poolName, databaseAttributes);
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement maxConnections = metrics.maxConnections();

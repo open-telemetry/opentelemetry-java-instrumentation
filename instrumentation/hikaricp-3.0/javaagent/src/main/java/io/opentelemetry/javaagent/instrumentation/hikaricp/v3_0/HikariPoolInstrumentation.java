@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -44,7 +45,8 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static MetricsTrackerFactory onEnter(
         @Advice.Argument(0) @Nullable MetricsTrackerFactory userMetricsTracker,
-        @Advice.FieldValue("metricsTracker") @Nullable AutoCloseable existingMetricsTracker)
+        @Advice.FieldValue("metricsTracker") @Nullable AutoCloseable existingMetricsTracker,
+        @Advice.FieldValue("config") HikariConfig config)
         throws Exception {
 
       if (existingMetricsTracker != null) {
@@ -53,7 +55,7 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
         // about duplicate metrics
         existingMetricsTracker.close();
       }
-      return HikariSingletons.createMetricsTrackerFactory(userMetricsTracker);
+      return HikariSingletons.createMetricsTrackerFactory(userMetricsTracker, config);
     }
   }
 }

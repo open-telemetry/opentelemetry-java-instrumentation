@@ -62,21 +62,6 @@ public abstract class AbstractTimerTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value"))
                                         .hasBucketBoundaries(NO_BUCKETS))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testTimer.max")
-                    .hasDescription("This is a test timer")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(42)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
 
     // micrometer gauge histogram is not emitted
     testing()
@@ -117,17 +102,6 @@ public abstract class AbstractTimerTest {
                                         .hasSum(0.001234)
                                         .hasCount(1)
                                         .hasAttributes(Attributes.empty()))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testNanoTimer.max")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point.hasValue(0.001234).hasAttributes(Attributes.empty()))));
   }
 
   @Test

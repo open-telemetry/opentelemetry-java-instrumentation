@@ -19,14 +19,14 @@ import org.jboss.netty.handler.codec.http.HttpRequest;
 
 public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandler {
 
-  private static final VirtualField<Channel, NettyServerRequestAndContext> requestAndContextField =
+  private static final VirtualField<Channel, NettyServerRequestAndContext> REQUEST_AND_CONTEXT =
       VirtualField.find(Channel.class, NettyServerRequestAndContext.class);
 
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent event) throws Exception {
     Object message = event.getMessage();
     if (!(message instanceof HttpRequest)) {
-      NettyServerRequestAndContext requestAndContext = requestAndContextField.get(ctx.getChannel());
+      NettyServerRequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(ctx.getChannel());
       if (requestAndContext == null) {
         super.messageReceived(ctx, event);
       } else {
@@ -45,7 +45,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
     }
 
     Context context = instrumenter().start(parentContext, request);
-    requestAndContextField.set(
+    REQUEST_AND_CONTEXT.set(
         ctx.getChannel(), NettyServerRequestAndContext.create(request, context));
 
     try (Scope ignored = context.makeCurrent()) {

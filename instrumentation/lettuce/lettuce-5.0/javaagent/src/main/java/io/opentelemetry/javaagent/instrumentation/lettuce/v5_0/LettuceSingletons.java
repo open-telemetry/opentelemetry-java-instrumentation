@@ -7,11 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
-import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
-import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.AsyncCommand;
-import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -19,7 +16,8 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -40,12 +38,6 @@ public class LettuceSingletons {
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
 
-  public static final VirtualField<DefaultEndpoint, RedisURI> ENDPOINT_URI =
-      VirtualField.find(DefaultEndpoint.class, RedisURI.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
-      VirtualField.find(RedisCommand.class, RedisURI.class);
-
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
 
@@ -53,8 +45,9 @@ public class LettuceSingletons {
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 
@@ -65,8 +58,9 @@ public class LettuceSingletons {
         Instrumenter.<LettuceBatchRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(batchAttributesGetter))
+                RedisSpanNameExtractor.create(batchAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(batchBuilder);
     batchInstrumenter = batchBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -83,6 +77,7 @@ public class LettuceSingletons {
                 ServicePeerAttributesExtractor.create(
                     connectNetworkAttributesGetter, GlobalOpenTelemetry.get()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .setEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
                     .get("connection_telemetry")
@@ -100,16 +95,6 @@ public class LettuceSingletons {
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
     return connectInstrumenter;
-  }
-
-  public static void attachAddress(
-      RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
-    if (connection instanceof RedisChannelHandler) {
-      Object channelWriter = ((RedisChannelHandler<?, ?>) connection).getChannelWriter();
-      if (channelWriter instanceof DefaultEndpoint) {
-        COMMAND_URI.set(command, ENDPOINT_URI.get((DefaultEndpoint) channelWriter));
-      }
-    }
   }
 
   private LettuceSingletons() {}

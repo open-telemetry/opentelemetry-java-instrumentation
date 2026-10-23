@@ -36,6 +36,14 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("testAsyncAcks") {
+      dependencies {
+        // async acks were added in 2.8
+        val springKafkaVersion = baseVersion("2.8.0").orLatest()
+        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+      }
+    }
+
     register<JvmTestSuite>("testNoReceiveTelemetry") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
@@ -56,7 +64,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
           }
         }
       }
@@ -68,31 +76,42 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
     )
   }
 
+  val testSpringDisabled = register<Test>("testSpringDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("SpringKafkaMockConsumerTest")
+    }
+    jvmArgs("-Dotel.instrumentation.spring-kafka.enabled=false")
+
+    systemProperty("springDisabled", true)
+    systemProperty("metadataConfig", "otel.instrumentation.spring-kafka.enabled=false")
+  }
+
   test {
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testSpringDisabled)
   }
 }
 
@@ -109,6 +128,7 @@ if (!otelProps.testLatestDeps) {
     listOf(
       testRuntimeClasspath,
       named("testNoReceiveTelemetryRuntimeClasspath"),
+      named("testAsyncAcksRuntimeClasspath"),
     )
       .forEach {
         it.configure {

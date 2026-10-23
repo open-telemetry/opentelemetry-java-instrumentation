@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.stream.Collectors.toSet;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A class providing a complete definition on how to create an OpenTelemetry metric out of the JMX
@@ -108,5 +112,27 @@ public class MetricDef {
 
   List<MetricHandlerHolder> getHandlers() {
     return handlers;
+  }
+
+  /**
+   * Get metric names included in this MetricDef, does not include metrics from handlers.
+   *
+   * @return metric names.
+   */
+  public Set<String> getMetricNames() {
+    Set<String> metricNames = new HashSet<>();
+    for (MetricExtractor extractor : metricExtractors) {
+      metricNames.add(extractor.getInfo().getMetricName());
+    }
+    return metricNames;
+  }
+
+  /**
+   * Get handler names included in this MetricDef.
+   *
+   * @return handler names.
+   */
+  public Set<String> getHandlerNames() {
+    return handlers.stream().map(MetricHandlerHolder::getHandlerName).collect(toSet());
   }
 }

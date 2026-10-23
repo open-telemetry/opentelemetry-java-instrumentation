@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.instrumentation.resources.HostIdResource.HOST_ID;
-
+import com.google.auto.service.AutoService;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
@@ -17,7 +17,11 @@ import io.opentelemetry.sdk.resources.Resource;
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/resource/host.md#non-privileged-machine-id-lookup">the
  * semantic conventions</a>
  */
+@AutoService(ResourceProvider.class)
 public final class HostIdResourceProvider implements ConditionalResourceProvider {
+
+  // copied from HostIncubatingAttributes
+  private static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
 
   @Override
   public Resource createResource(ConfigProperties config) {

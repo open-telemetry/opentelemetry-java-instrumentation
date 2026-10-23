@@ -3,8 +3,9 @@ plugins {
 }
 
 otelJava {
-  // HBase 2.0.x test stack is not reliable on JDK 25+.
-  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
+  // HBase 2.0.x test stack uses Subject.getSubject(), which is unsupported on JDK 23+.
+  // Cap tests at latest LTS release before JDK 23
+  maxJavaVersionForTests.set(JavaVersion.VERSION_21)
 }
 
 muzzle {
@@ -19,12 +20,13 @@ muzzle {
 dependencies {
   library("org.apache.hbase:hbase-client:2.0.0")
 
-  implementation(project(":instrumentation:hbase:hbase-client-common-1.4:javaagent"))
+  implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testImplementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
+  testImplementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:hbase:hbase-client-1.4:javaagent"))
 
   latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
@@ -35,7 +37,7 @@ testing {
     register<JvmTestSuite>("shadedClientTest") {
       dependencies {
         implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
-        implementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
+        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
       }
     }
   }
@@ -52,22 +54,22 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
+    filter {
+      includeTestsMatching("*HbaseClient20Test.testGetTimeout")
     }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites, testExceptionSignalLogs)
   }
 
   if (otelProps.denyUnsafe) {

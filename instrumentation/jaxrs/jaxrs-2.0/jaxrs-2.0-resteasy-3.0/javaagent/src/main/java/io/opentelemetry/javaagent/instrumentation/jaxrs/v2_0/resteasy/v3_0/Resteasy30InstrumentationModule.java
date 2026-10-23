@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Resteasy30InstrumentationModule extends InstrumentationModule {
   public Resteasy30InstrumentationModule() {
-    super("jaxrs", "jaxrs-2.0", "resteasy", "resteasy-3.0");
+    super("jaxrs-2.0-resteasy-3.0", "jaxrs-resteasy", "jaxrs");
   }
 
   @Override

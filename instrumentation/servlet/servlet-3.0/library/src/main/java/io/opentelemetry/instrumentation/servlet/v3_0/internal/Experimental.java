@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0.internal;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder;
-import java.util.Collection;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -24,12 +24,10 @@ public final class Experimental {
   private static volatile BiConsumer<ServletTelemetryBuilder, Boolean>
       setAddTraceIdRequestAttribute;
 
-  @Nullable
-  private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId;
+  @Nullable private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureUserName;
 
   @Nullable
-  private static volatile BiConsumer<ServletTelemetryBuilder, Collection<String>>
-      setCapturedRequestParameters;
+  private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
 
   /**
    * Sets whether experimental HTTP telemetry should be emitted.
@@ -60,32 +58,38 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to capture the {@code enduser.id} span attribute.
+   * Sets whether to capture the {@code user.name} span attribute.
    *
    * @param builder the telemetry builder
-   * @param captureEnduserId {@code true} to capture {@code enduser.id}
+   * @param captureUserName {@code true} to capture {@code user.name}
    */
-  public static void setCaptureEnduserId(
-      ServletTelemetryBuilder builder, boolean captureEnduserId) {
-    if (setCaptureEnduserId != null) {
-      setCaptureEnduserId.accept(builder, captureEnduserId);
+  public static void setCaptureUserName(ServletTelemetryBuilder builder, boolean captureUserName) {
+    if (setCaptureUserName != null) {
+      setCaptureUserName.accept(builder, captureUserName);
     }
   }
 
   /**
-   * Sets the request parameters to be captured as span attributes.
+   * Sets which request parameters should be captured as span attributes.
    *
    * <p>Request parameters will be captured as attributes with the format {@code
    * servlet.request.parameter.<name>}.
    *
+   * <p>Parameter names and selector patterns are matched case-sensitively. {@code ?} matches any
+   * single character and {@code *} matches any number of characters, including none. Excluded
+   * patterns take precedence over included patterns. An absent or empty selector captures no
+   * parameters; a selector with only excluded patterns captures every parameter that it does not
+   * exclude.
+   *
    * @param builder the telemetry builder
-   * @param captureRequestParameters request parameter names to capture
+   * @param requestParameters request parameter selector
+   * @see javax.servlet.ServletRequest#getParameterNames()
    * @see javax.servlet.ServletRequest#getParameterValues(String)
    */
-  public static void setCaptureRequestParameters(
-      ServletTelemetryBuilder builder, Collection<String> captureRequestParameters) {
-    if (setCapturedRequestParameters != null) {
-      setCapturedRequestParameters.accept(builder, captureRequestParameters);
+  public static void setRequestParameters(
+      ServletTelemetryBuilder builder, IncludeExclude requestParameters) {
+    if (setRequestParameters != null) {
+      setRequestParameters.accept(builder, requestParameters);
     }
   }
 
@@ -99,14 +103,14 @@ public final class Experimental {
     Experimental.setAddTraceIdRequestAttribute = setAddTraceIdRequestAttribute;
   }
 
-  public static void internalSetCaptureEnduserId(
-      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId) {
-    Experimental.setCaptureEnduserId = setCaptureEnduserId;
+  public static void internalSetCaptureUserName(
+      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureUserName) {
+    Experimental.setCaptureUserName = setCaptureUserName;
   }
 
-  public static void internalSetCapturedRequestParameters(
-      BiConsumer<ServletTelemetryBuilder, Collection<String>> setCapturedRequestParameters) {
-    Experimental.setCapturedRequestParameters = setCapturedRequestParameters;
+  public static void internalSetRequestParameters(
+      BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters) {
+    Experimental.setRequestParameters = setRequestParameters;
   }
 
   private Experimental() {}

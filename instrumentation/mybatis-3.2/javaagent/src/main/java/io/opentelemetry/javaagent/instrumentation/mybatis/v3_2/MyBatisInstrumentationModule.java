@@ -16,7 +16,7 @@ import java.util.List;
 public class MyBatisInstrumentationModule extends InstrumentationModule {
 
   public MyBatisInstrumentationModule() {
-    super("mybatis", "mybatis-3.2");
+    super("mybatis-3.2", "mybatis");
   }
 
   @Override

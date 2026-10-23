@@ -5,10 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
@@ -19,6 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class RpcMetricsAdvice {
+
+  static final List<Double> DURATION_SECONDS_BUCKETS =
+      unmodifiableList(
+          asList(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0));
 
   // Stable semconv key
   private static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE =
@@ -52,6 +59,7 @@ final class RpcMetricsAdvice {
 
     if (stable) {
       keys.add(RPC_RESPONSE_STATUS_CODE);
+      keys.add(ERROR_TYPE);
     } else {
       keys.add(RPC_GRPC_STATUS_CODE);
     }
@@ -66,7 +74,7 @@ final class RpcMetricsAdvice {
     keys.add(SERVER_ADDRESS);
     keys.add(SERVER_PORT);
 
-    return keys;
+    return unmodifiableList(keys);
   }
 
   private static List<AttributeKey<?>> getAttributeKeys(boolean stable) {

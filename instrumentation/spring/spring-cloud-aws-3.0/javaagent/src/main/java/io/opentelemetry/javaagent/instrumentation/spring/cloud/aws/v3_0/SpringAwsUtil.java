@@ -5,48 +5,61 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.SpringAwsSqsSingletons.batchProcessInstrumenter;
-
+import io.awspring.cloud.sqs.listener.ContainerOptions;
+import io.awspring.cloud.sqs.listener.ListenerMode;
+import io.awspring.cloud.sqs.listener.source.AbstractMessageConvertingMessageSource;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.Response;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
-import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessageImpl;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsParentContext;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 public class SpringAwsUtil {
-  private static final ThreadLocal<TracingList> context = new ThreadLocal<>();
-  private static final VirtualField<Message<?>, TracingContext> tracingContextField =
+  private static final ScopedThreadValue<TracingList> currentTracingList =
+      new ScopedThreadValue<>();
+  private static final VirtualField<AbstractMessageConvertingMessageSource<?, ?>, ListenerMode>
+      LISTENER_MODE =
+          VirtualField.find(AbstractMessageConvertingMessageSource.class, ListenerMode.class);
+  private static final VirtualField<Message<?>, TracingContext> TRACING_CONTEXT =
       VirtualField.find(Message.class, TracingContext.class);
 
-  // put the TracingList into thread local, so we can use it in attachTracingState method
-  public static void initialize(Collection<?> messages) {
-    if (messages instanceof TracingList tracingList) {
-      // disable tracing in the iterator of TracingList, we'll do the tracing when message handler
-      // is called
-      tracingList.disableTracing();
-      context.set(tracingList);
-    }
+  public static void setListenerMode(
+      AbstractMessageConvertingMessageSource<?, ?> messageSource,
+      ContainerOptions<?, ?> containerOptions) {
+    LISTENER_MODE.set(messageSource, containerOptions.getListenerMode());
   }
 
-  public static void clear() {
-    context.remove();
+  @Nullable
+  public static TracingList initialize(
+      AbstractMessageConvertingMessageSource<?, ?> messageSource, Collection<?> messages) {
+    TracingList tracingList =
+        messages instanceof TracingList currentTracingList ? currentTracingList : null;
+    if (tracingList != null && LISTENER_MODE.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
+      tracingList.markProcessingOwnedOutsideSqsSdk();
+    }
+    return currentTracingList.set(tracingList);
+  }
+
+  public static void restore(@Nullable TracingList previous) {
+    currentTracingList.restore(previous);
   }
 
   // copy tracing state from the sqs message to spring message, we'll use that state when the
   // message handler is called
   public static void attachTracingState(Object originalMessage, Message<?> convertedMessage) {
-    TracingList tracingList = context.get();
+    TracingList tracingList = currentTracingList.get();
     if (tracingList == null) {
       return;
     }
@@ -54,7 +67,10 @@ public class SpringAwsUtil {
       return;
     }
 
-    tracingContextField.set(convertedMessage, new TracingContext(tracingList, message));
+    SqsMessage tracingMessage = tracingList.getTracingMessage(message);
+    if (tracingMessage != null) {
+      TRACING_CONTEXT.set(convertedMessage, new TracingContext(tracingList, tracingMessage));
+    }
   }
 
   public static void copyTracingState(Message<?> original, Message<?> transformed) {
@@ -62,12 +78,12 @@ public class SpringAwsUtil {
       return;
     }
 
-    tracingContextField.set(transformed, tracingContextField.get(original));
+    TRACING_CONTEXT.set(transformed, TRACING_CONTEXT.get(original));
   }
 
   @Nullable
-  public static MessageScope handleMessage(Message<?> message) {
-    TracingContext tracingContext = tracingContextField.get(message);
+  public static ProcessingInvocation handleMessage(Message<?> message) {
+    TracingContext tracingContext = TRACING_CONTEXT.get(message);
     if (tracingContext == null) {
       return null;
     }
@@ -75,84 +91,36 @@ public class SpringAwsUtil {
     return tracingContext.trace();
   }
 
+  // restore context from the first message of the batch
   @Nullable
-  public static BatchMessageScope handleBatch(Collection<Message<?>> messages) {
-    if (messages.isEmpty()) {
-      return null;
-    }
-
-    // Check if the batch has any tracing context before starting
-    Message<?> firstMessage = messages.iterator().next();
-    TracingContext tracingContext = tracingContextField.get(firstMessage);
-    if (tracingContext == null) {
-      return null;
-    }
-
-    Context parentContext = Context.current();
-    if (!emitStableMessagingSemconv()) {
-      Context receiveContext = tracingContext.getReceiveContext();
-      if (receiveContext != null) {
-        parentContext = receiveContext;
-      }
-    }
-    if (!batchProcessInstrumenter().shouldStart(parentContext, messages)) {
-      return null;
-    }
-    Context batchContext = batchProcessInstrumenter().start(parentContext, messages);
-
-    for (Message<?> msg : messages) {
-      TracingContext tc = tracingContextField.get(msg);
-      if (tc != null) {
-        tc.batchProcessContext = batchContext;
-      }
-    }
-
-    return new BatchMessageScope(batchProcessInstrumenter(), batchContext, messages);
-  }
-
-  @Nullable
-  public static Scope restoreBatchContext(Collection<Message<?>> messages) {
+  public static Scope handleBatch(Collection<Message<?>> messages) {
     if (messages.isEmpty()) {
       return null;
     }
     Message<?> message = messages.iterator().next();
-    TracingContext tracingContext = tracingContextField.get(message);
-    if (tracingContext == null || tracingContext.batchProcessContext == null) {
+    TracingContext tracingContext = TRACING_CONTEXT.get(message);
+    if (tracingContext == null) {
       return null;
     }
-    return tracingContext.batchProcessContext.makeCurrent();
+    SqsMessage wrappedMessage = tracingContext.sqsMessage;
+    Context parentContext = tracingContext.processParentContext;
+    if (parentContext == null) {
+      parentContext = wrappedMessage.getCreationContext();
+    } else if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+      parentContext =
+          SqsParentContext.ofMessage(parentContext, wrappedMessage, tracingContext.config);
+    }
+    return parentContext.makeCurrent();
   }
 
-  public static class BatchMessageScope {
-    private final Instrumenter<Collection<Message<?>>, Void> instrumenter;
-    private final Context context;
-    private final Collection<Message<?>> request;
-    private final Scope scope;
-
-    private BatchMessageScope(
-        Instrumenter<Collection<Message<?>>, Void> instrumenter,
-        Context context,
-        Collection<Message<?>> request) {
-      this.instrumenter = instrumenter;
-      this.context = context;
-      this.request = request;
-      this.scope = context.makeCurrent();
-    }
-
-    public void close(@Nullable Throwable throwable) {
-      scope.close();
-      instrumenter.end(context, request, null, throwable);
-    }
-  }
-
-  public static class MessageScope {
+  public static class ProcessingInvocation {
     private final Instrumenter<SqsProcessRequest, Response> instrumenter;
     private final Context context;
     private final SqsProcessRequest request;
     private final Response response;
     private final Scope scope;
 
-    private MessageScope(
+    private ProcessingInvocation(
         Instrumenter<SqsProcessRequest, Response> instrumenter,
         Context context,
         SqsProcessRequest request,
@@ -164,64 +132,54 @@ public class SpringAwsUtil {
       this.scope = context.makeCurrent();
     }
 
-    public void close(@Nullable Throwable throwable) {
+    public void end(@Nullable Throwable throwable) {
       scope.close();
       instrumenter.end(context, request, response, throwable);
     }
+
+    public void endWhenComplete(
+        @Nullable CompletableFuture<?> future, @Nullable Throwable throwable) {
+      scope.close();
+      if (future == null || throwable != null) {
+        instrumenter.end(context, request, response, throwable);
+        return;
+      }
+      future.whenComplete(
+          (unused, completionError) ->
+              instrumenter.end(context, request, response, completionError));
+    }
   }
 
-  // package-private so that SpringAwsSqsBatchProcessAttributesGetter and
-  // SpringAwsSqsSingletons can access tracing state
-  static class TracingContext {
+  private static class TracingContext {
     private final ExecutionAttributes request;
     private final Response response;
     private final Instrumenter<SqsProcessRequest, Response> instrumenter;
     private final TracingExecutionInterceptor config;
-    @Nullable private final Context receiveContext;
-    private final software.amazon.awssdk.services.sqs.model.Message sqsMessage;
-    @Nullable Context batchProcessContext;
+    @Nullable private final Context processParentContext;
+    private final SqsMessage sqsMessage;
 
-    TracingContext(
-        TracingList tracingList, software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
+    private TracingContext(TracingList tracingList, SqsMessage sqsMessage) {
       this.request = tracingList.getRequest();
       this.response = tracingList.getResponse();
       this.instrumenter = tracingList.getInstrumenter();
       this.config = tracingList.getConfig();
-      this.receiveContext = tracingList.getReceiveContext();
+      this.processParentContext = tracingList.getProcessParentContext();
       this.sqsMessage = sqsMessage;
     }
 
-    ExecutionAttributes getRequest() {
-      return request;
-    }
-
-    TracingExecutionInterceptor getConfig() {
-      return config;
-    }
-
     @Nullable
-    Context getReceiveContext() {
-      return receiveContext;
-    }
-
-    software.amazon.awssdk.services.sqs.model.Message getSqsMessage() {
-      return sqsMessage;
-    }
-
-    @Nullable
-    MessageScope trace() {
-      SqsMessage wrappedMessage = SqsMessageImpl.wrap(sqsMessage);
-      Context parentContext = receiveContext;
+    ProcessingInvocation trace() {
+      SqsMessage wrappedMessage = sqsMessage;
+      Context parentContext = processParentContext;
       if (parentContext == null) {
-        parentContext = SqsParentContext.ofMessage(wrappedMessage, config);
+        parentContext = wrappedMessage.getCreationContext();
       }
       SqsProcessRequest processRequest = SqsProcessRequest.create(request, wrappedMessage);
       if (!instrumenter.shouldStart(parentContext, processRequest)) {
         return null;
       }
       Context context = instrumenter.start(parentContext, processRequest);
-      this.batchProcessContext = context;
-      return new MessageScope(instrumenter, context, processRequest, response);
+      return new ProcessingInvocation(instrumenter, context, processRequest, response);
     }
   }
 

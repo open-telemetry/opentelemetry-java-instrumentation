@@ -1,5 +1,3 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
-
 groups:
   - id: attributes.tomcat
     type: attribute_group
@@ -78,7 +76,7 @@ groups:
     metric_name: tomcat.request.duration.sum
     stability: development
     type: metric
-    brief: The total duration of requests processed.
+    brief: Total time of processing all requests.
     unit: "s"
     instrument: counter
     attributes:
@@ -88,7 +86,7 @@ groups:
     metric_name: tomcat.thread.count
     stability: development
     type: metric
-    brief: Tomcat thread count.
+    brief: Total thread count of the thread pool.
     unit: "{thread}"
     instrument: updowncounter
     attributes:
@@ -109,7 +107,7 @@ groups:
     metric_name: tomcat.thread.limit
     stability: development
     type: metric
-    brief: Tomcat thread limit.
+    brief: Maximum possible number of threads in the thread pool.
     unit: "{thread}"
     instrument: updowncounter
     attributes:
@@ -119,7 +117,7 @@ groups:
     metric_name: tomcat.thread.busy.count
     stability: development
     type: metric
-    brief: Tomcat busy thread count.
+    brief: Number of busy threads in the thread pool.
     unit: "{thread}"
     instrument: updowncounter
     attributes:

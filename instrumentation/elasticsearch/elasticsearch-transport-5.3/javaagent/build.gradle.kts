@@ -46,7 +46,6 @@ dependencies {
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
-  testImplementation("com.google.guava:guava")
 
   // Unfortunately spring-data-elasticsearch requires 5.5.0
   testLibrary("org.elasticsearch.client:transport:5.5.0")
@@ -65,16 +64,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -86,7 +75,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

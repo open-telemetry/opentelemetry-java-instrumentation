@@ -33,6 +33,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelDirection;
 import java.net.MalformedURLException;
@@ -42,12 +43,14 @@ import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
-class HttpSpanDecorator extends BaseSpanDecorator {
+public class HttpSpanDecorator extends BaseSpanDecorator {
 
   private static final String POST_METHOD = "POST";
   private static final String GET_METHOD = "GET";
   private static final Set<String> knownMethods =
       AgentCommonConfig.get().getKnownHttpRequestMethods();
+  private static final Set<String> sensitiveQueryParameters =
+      AgentCommonConfig.get().getSensitiveQueryParameters();
 
   protected String getProtocol() {
     return "http";
@@ -98,7 +101,9 @@ class HttpSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    attributes.put(URL_FULL, getHttpUrl(exchange, endpoint));
+    attributes.put(
+        URL_FULL,
+        UrlSanitizer.sanitizeUrl(getHttpUrl(exchange, endpoint), sensitiveQueryParameters));
 
     String method = getHttpMethod(exchange, endpoint);
     if (method == null || knownMethods.contains(method)) {

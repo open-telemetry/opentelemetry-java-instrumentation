@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,7 +37,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand"))),
         getClass().getName() + "$DispatchAdvice");
     transformer.applyAdviceToMethod(
-        named("setAutoFlushCommands").and(takesArguments(1)),
+        named("setAutoFlushCommands").and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetAutoFlushAdvice");
     transformer.applyAdviceToMethod(
         named("flushCommands").and(takesArguments(0)), getClass().getName() + "$FlushAdvice");
@@ -62,7 +61,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
       }
 
       public static AdviceScope captureForBatching(AbstractRedisAsyncCommands<?, ?> commands) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         // batch spans start on flush, but AsyncCommand construction still needs the dispatch
         // caller context so callbacks run under it
         Context context = parentContext.with(COMMAND_CONTEXT_KEY, parentContext);
@@ -94,11 +93,14 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       LettuceSingletons.attachAddress(command, commands.getConnection());
+      // Every buffered command needs its own peer state so a later netty write can record the
+      // address it observed, whether or not this command starts its own span.
+      LettuceSingletons.initializeCommandPeer(command);
       if (LettuceBatchContext.isBatching(commands)) {
         return AdviceScope.captureForBatching(commands);
       }
 
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, command)) {
         return null;
       }

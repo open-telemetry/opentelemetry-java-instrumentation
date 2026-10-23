@@ -13,10 +13,7 @@ Runs three steps in order, aborting on the first failure:
        bumps) followed by per-PR LLM classification for everything else
      - requires `copilot` on PATH; model overridable via $CLASSIFY_MODEL
   3. merge.py --splice --report
-     - rewrites ## Unreleased in CHANGELOG.md
-
-After it finishes, edit CHANGELOG.md directly to adjust wording, grouping,
-or section. Classification rules live in rules.md alongside this script.
+     - rebuilds ## Unreleased from the classified PRs
 """
 
 from __future__ import annotations
@@ -76,11 +73,14 @@ def main() -> int:
 
     # fetch.py: incremental by default; --refetch re-downloads all.
     # classify.py: deterministic preclassify + per-PR LLM in one pass.
-    # merge.py --splice: rewrite ## Unreleased in CHANGELOG.md.
+    # merge.py --splice: rebuild Unreleased from classified PRs.
     steps = [
         ("fetch.py", fetch_cmd),
         ("classify.py", classify_cmd),
-        ("merge.py", [python, str(MERGE), "--splice", "--report"]),
+        (
+            "merge.py",
+            [python, str(MERGE), "--splice", "--report"],
+        ),
     ]
     for name, cmd in steps:
         rc = run(cmd, dry_run=args.dry_run)
@@ -89,13 +89,7 @@ def main() -> int:
             return rc
 
     if not args.dry_run:
-        print(
-            "\nDone. Review:"
-            "\n  git diff CHANGELOG.md"
-            "\n"
-            "\nEdit CHANGELOG.md directly to adjust wording, grouping, or section.",
-            file=sys.stderr,
-        )
+        print("\nDone. Review:\n  git diff CHANGELOG.md", file=sys.stderr)
     return 0
 
 

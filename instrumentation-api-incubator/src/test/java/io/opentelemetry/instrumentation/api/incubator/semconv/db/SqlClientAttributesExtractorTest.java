@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -16,15 +14,9 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -41,9 +33,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class SqlClientAttributesExtractorTest {
+
+  @Test
+  void shouldRetainNetworkPeerWithoutProtocolAttributes() {
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getNetworkPeerAddress(Map<String, Object> request, Void response) {
+                return "192.0.2.1";
+              }
+
+              @Override
+              public Integer getNetworkPeerPort(Map<String, Object> request, Void response) {
+                return 5432;
+              }
+
+              @Override
+              public String getNetworkTransport(Map<String, Object> request, Void response) {
+                return "tcp";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(NETWORK_PEER_ADDRESS, "192.0.2.1"), entry(NETWORK_PEER_PORT, 5432L));
+  }
 
   static class TestAttributesGetter
       implements SqlClientAttributesGetter<Map<String, Object>, Void> {
@@ -61,24 +82,12 @@ class SqlClientAttributesExtractorTest {
 
     @Override
     public String getDbSystemName(Map<String, Object> map) {
-      return read(map, "db.system");
-    }
-
-    @Deprecated
-    @Override
-    public String getUser(Map<String, Object> map) {
-      return read(map, "db.user");
+      return read(map, "db.system.name");
     }
 
     @Override
     public String getDbNamespace(Map<String, Object> map) {
       return read(map, "db.namespace");
-    }
-
-    @Deprecated
-    @Override
-    public String getConnectionString(Map<String, Object> map) {
-      return read(map, "db.connection_string");
     }
 
     @Override
@@ -123,15 +132,22 @@ class SqlClientAttributesExtractorTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
-  @Test
-  void shouldExtractAllAttributes() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "h2database",
+        "oracle.db",
+        "ibm.db2",
+        "ibm.informix",
+        "microsoft.sql_server",
+        "sap.hana",
+        "myDb"
+      })
+  void shouldExtractAllAttributes(String dbSystemName) {
     // given
     Map<String, Object> request = new HashMap<>();
-    request.put("db.system", "myDb");
-    request.put("db.user", "username");
+    request.put("db.system.name", dbSystemName);
     request.put("db.namespace", "potatoes");
-    request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.query.text", "SELECT * FROM potato WHERE id=12345");
 
     Context context = Context.root();
@@ -147,39 +163,12 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM, "myDb"),
-              entry(DB_SYSTEM_NAME, "myDb"),
-              entry(DB_USER, "username"),
-              entry(DB_NAME, "potatoes"),
-              entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
-              entry(DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
-              entry(DB_OPERATION, "SELECT"),
-              entry(DB_SQL_TABLE, "potato"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
-              entry(DB_QUERY_SUMMARY, "SELECT potato"));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM, "myDb"),
-              entry(DB_USER, "username"),
-              entry(DB_NAME, "potatoes"),
-              entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
-              entry(DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
-              entry(DB_OPERATION, "SELECT"),
-              entry(DB_SQL_TABLE, "potato"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM_NAME, "myDb"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
-              entry(DB_QUERY_SUMMARY, "SELECT potato"));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_SYSTEM_NAME, dbSystemName),
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
+            entry(DB_QUERY_SUMMARY, "SELECT potato"));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
@@ -199,60 +188,8 @@ class SqlClientAttributesExtractorTest {
     underTest.onStart(attributes, context, request);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(
-              entry(DB_STATEMENT, "SELECT *"),
-              entry(DB_OPERATION, "SELECT"),
-              entry(DB_QUERY_TEXT, "SELECT *"),
-              entry(DB_QUERY_SUMMARY, "SELECT"));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(entry(DB_STATEMENT, "SELECT *"), entry(DB_OPERATION, "SELECT"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(entry(DB_QUERY_TEXT, "SELECT *"), entry(DB_QUERY_SUMMARY, "SELECT"));
-    }
-  }
-
-  @Test
-  @SuppressWarnings("deprecation") // to support old database semantic conventions
-  void shouldExtractTableToSpecifiedKey() {
-    // given
-    Map<String, Object> request = new HashMap<>();
-    request.put("db.query.text", "SELECT * FROM table");
-
-    Context context = Context.root();
-
-    AttributesExtractor<Map<String, Object>, Void> underTest =
-        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
-            .setTableAttribute(DB_CASSANDRA_TABLE)
-            .build();
-
-    // when
-    AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, context, request);
-
-    // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(
-              entry(DB_STATEMENT, "SELECT * FROM table"),
-              entry(DB_OPERATION, "SELECT"),
-              entry(DB_CASSANDRA_TABLE, "table"),
-              entry(DB_QUERY_TEXT, "SELECT * FROM table"),
-              entry(DB_QUERY_SUMMARY, "SELECT table"));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(
-              entry(DB_STATEMENT, "SELECT * FROM table"),
-              entry(DB_OPERATION, "SELECT"),
-              entry(DB_CASSANDRA_TABLE, "table"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(
-              entry(DB_QUERY_TEXT, "SELECT * FROM table"), entry(DB_QUERY_SUMMARY, "SELECT table"));
-    }
+    assertThat(attributes.build())
+        .containsOnly(entry(DB_QUERY_TEXT, "SELECT *"), entry(DB_QUERY_SUMMARY, "SELECT"));
   }
 
   @Test
@@ -290,33 +227,12 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_OPERATION, "INSERT"),
-              entry(DB_SQL_TABLE, "potato"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
-              entry(DB_OPERATION_BATCH_SIZE, 2L));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_OPERATION, "INSERT"),
-              entry(DB_SQL_TABLE, "potato"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
-              entry(DB_OPERATION_BATCH_SIZE, 2L));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+            entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+            entry(DB_OPERATION_BATCH_SIZE, 2L));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
@@ -341,33 +257,12 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_OPERATION, "INSERT"),
-              entry(DB_SQL_TABLE, "potato"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
-              entry(DB_OPERATION_BATCH_SIZE, 0L));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_OPERATION, "INSERT"),
-              entry(DB_SQL_TABLE, "potato"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
-              entry(DB_OPERATION_BATCH_SIZE, 0L));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+            entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+            entry(DB_OPERATION_BATCH_SIZE, 0L));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
@@ -393,23 +288,11 @@ class SqlClientAttributesExtractorTest {
 
     // then
     // an explicit empty batch has no query texts, so db.query.summary falls back to "BATCH"
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_SUMMARY, "BATCH"),
-              entry(DB_OPERATION_BATCH_SIZE, 0L));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build()).containsOnly(entry(DB_NAME, "potatoes"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_SUMMARY, "BATCH"),
-              entry(DB_OPERATION_BATCH_SIZE, 0L));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_QUERY_SUMMARY, "BATCH"),
+            entry(DB_OPERATION_BATCH_SIZE, 0L));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
@@ -435,25 +318,12 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
-              entry(DB_OPERATION_BATCH_SIZE, 2L));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build()).containsOnly(entry(DB_NAME, "potatoes"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
-              entry(DB_OPERATION_BATCH_SIZE, 2L));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+            entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+            entry(DB_OPERATION_BATCH_SIZE, 2L));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
@@ -481,30 +351,38 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(
-                  DB_QUERY_TEXT,
-                  "INSERT INTO potato VALUES('alice', ?); UPDATE potato SET name=? WHERE id=?"),
-              entry(DB_QUERY_SUMMARY, "BATCH"),
-              entry(DB_OPERATION_BATCH_SIZE, 2L));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build()).containsOnly(entry(DB_NAME, "potatoes"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(
-                  DB_QUERY_TEXT,
-                  "INSERT INTO potato VALUES('alice', ?); UPDATE potato SET name=? WHERE id=?"),
-              entry(DB_QUERY_SUMMARY, "BATCH"),
-              entry(DB_OPERATION_BATCH_SIZE, 2L));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(
+                DB_QUERY_TEXT,
+                "INSERT INTO potato VALUES('alice', ?); UPDATE potato SET name=? WHERE id=?"),
+            entry(DB_QUERY_SUMMARY, "BATCH"),
+            entry(DB_OPERATION_BATCH_SIZE, 2L));
     assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void shouldExtractSingleOperationAndCollection(boolean sanitizationEnabled) {
+    String queryText = "SELECT * FROM potato WHERE id=12345";
+    Map<String, Object> request = singletonMap("db.query.text", queryText);
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
+            .setQuerySanitizationEnabled(sanitizationEnabled)
+            .setSingleOperationAndCollection(true)
+            .build();
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(
+                DB_QUERY_TEXT, sanitizationEnabled ? "SELECT * FROM potato WHERE id=?" : queryText),
+            entry(DB_QUERY_SUMMARY, "SELECT potato"),
+            entry(DB_OPERATION_NAME, "SELECT"),
+            entry(DB_COLLECTION_NAME, "potato"));
   }
 
   @Test
@@ -547,24 +425,18 @@ class SqlClientAttributesExtractorTest {
     underTest.onStart(mixedCollectionsAttributes, context, mixedCollections);
 
     // then
-    if (emitStableDatabaseSemconv()) {
-      assertThat(sameOperationAttributes.build())
-          .containsEntry(DB_OPERATION_NAME, "BATCH INSERT")
-          .containsEntry(DB_COLLECTION_NAME, "potato")
-          .containsEntry(DB_QUERY_SUMMARY, "BATCH INSERT potato");
-      assertThat(mixedOperationsAttributes.build())
-          .containsEntry(DB_OPERATION_NAME, "BATCH")
-          .containsEntry(DB_COLLECTION_NAME, "potato")
-          .containsEntry(DB_QUERY_SUMMARY, "BATCH");
-      // different collections -> db.collection.name is omitted, db.operation.name is BATCH INSERT
-      assertThat(mixedCollectionsAttributes.build())
-          .containsEntry(DB_OPERATION_NAME, "BATCH INSERT")
-          .doesNotContainKey(DB_COLLECTION_NAME);
-    } else {
-      assertThat(sameOperationAttributes.build().get(DB_OPERATION_NAME)).isNull();
-      assertThat(mixedOperationsAttributes.build().get(DB_OPERATION_NAME)).isNull();
-      assertThat(mixedCollectionsAttributes.build().get(DB_OPERATION_NAME)).isNull();
-    }
+    assertThat(sameOperationAttributes.build())
+        .containsEntry(DB_OPERATION_NAME, "BATCH INSERT")
+        .containsEntry(DB_COLLECTION_NAME, "potato")
+        .containsEntry(DB_QUERY_SUMMARY, "BATCH INSERT potato");
+    assertThat(mixedOperationsAttributes.build())
+        .containsEntry(DB_OPERATION_NAME, "BATCH")
+        .containsEntry(DB_COLLECTION_NAME, "potato")
+        .containsEntry(DB_QUERY_SUMMARY, "BATCH");
+    // different collections -> db.collection.name is omitted, db.operation.name is BATCH INSERT
+    assertThat(mixedCollectionsAttributes.build())
+        .containsEntry(DB_OPERATION_NAME, "BATCH INSERT")
+        .doesNotContainKey(DB_COLLECTION_NAME);
   }
 
   @Test
@@ -588,31 +460,11 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_OPERATION, "INSERT"),
-              entry(DB_SQL_TABLE, "potato"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_QUERY_SUMMARY, "INSERT potato"));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAME, "potatoes"),
-              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_OPERATION, "INSERT"),
-              entry(DB_SQL_TABLE, "potato"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DB_QUERY_SUMMARY, "INSERT potato"));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+            entry(DB_QUERY_SUMMARY, "INSERT potato"));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 

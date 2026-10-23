@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.ConnectException;
@@ -199,8 +200,14 @@ class HttpServerAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
-            .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
-            .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
+            .setRequestHeaders(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList("Custom-Request-Header"))
+                    .build())
+            .setResponseHeaders(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList("Custom-Response-Header"))
+                    .build())
             .setHttpRouteGetter(routeFromContext)
             .build();
 
@@ -501,6 +508,21 @@ class HttpServerAttributesExtractorTest {
   }
 
   @Test
+  void shouldExtractIpv6ServerAddressAndPortFromHostHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "[2001:db8::1]:8080");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(entry(SERVER_ADDRESS, "2001:db8::1"), entry(SERVER_PORT, 8080L));
+  }
+
+  @Test
   void shouldExtractPeerAddressEvenIfItDuplicatesClientAddress() {
     Map<String, String> request = new HashMap<>();
     request.put("networkPeerAddress", "1.2.3.4");
@@ -554,8 +576,13 @@ class HttpServerAttributesExtractorTest {
   @ParameterizedTest
   @CsvSource({
     "paramA=valA&paramB=valB, paramA=valA&paramB=valB",
+    // Default sensitive query parameters from semantic conventions:
+    // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-query
     "AWSAccessKeyId=AKIAIOSFODNN7, AWSAccessKeyId=REDACTED",
     "Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, Signature=REDACTED",
+    "X-Amz-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, X-Amz-Signature=REDACTED",
+    "X-Amz-Credential=AKIAIOSFODNN7%2F20260101%2Fus-east-1%2Fs3%2Faws4_request, X-Amz-Credential=REDACTED",
+    "X-Amz-Security-Token=FwoGZXIvYXdzEBYaDG, X-Amz-Security-Token=REDACTED",
     "sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, sig=REDACTED",
     "X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, X-Goog-Signature=REDACTED",
     "paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB, paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB",

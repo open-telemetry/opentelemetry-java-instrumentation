@@ -25,11 +25,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public List<String> injectedClassNames() {
-    return getAdditionalHelperClassNames();
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new BootDelegationInstrumentation(),

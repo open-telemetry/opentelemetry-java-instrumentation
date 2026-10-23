@@ -14,6 +14,7 @@ import io.ktor.util.pipeline.*
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.opentelemetry.instrumentation.api.config.IncludeExclude
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
@@ -37,7 +38,7 @@ class KtorServerTelemetry private constructor(
     internal var spanKindExtractor:
       (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
-    fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
+    fun openTelemetry(openTelemetry: OpenTelemetry) {
       this.builder =
         DefaultHttpServerInstrumenterBuilder.create(
           INSTRUMENTATION_NAME,
@@ -46,7 +47,7 @@ class KtorServerTelemetry private constructor(
         )
     }
 
-    fun setStatusExtractor(
+    fun spanStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<ApplicationRequest, ApplicationResponse>
     ) {
       builder.setSpanStatusExtractorCustomizer { prevExtractor ->
@@ -61,27 +62,51 @@ class KtorServerTelemetry private constructor(
       }
     }
 
-    fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
+    fun spanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
       this.spanKindExtractor = extractor
     }
 
-    fun setSpanNameExtractorCustomizer(extractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
+    fun spanNameExtractor(extractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
       builder.setSpanNameExtractorCustomizer(extractor)
     }
 
-    fun addAttributesExtractor(extractor: AttributesExtractor<ApplicationRequest, ApplicationResponse>) {
+    fun attributesExtractor(extractor: AttributesExtractor<ApplicationRequest, ApplicationResponse>) {
       builder.addAttributesExtractor(extractor)
     }
 
-    fun setCapturedRequestHeaders(requestHeaders: List<String>) {
-      builder.setCapturedRequestHeaders(requestHeaders)
+    /**
+     * Configures which HTTP request headers are captured as span attributes.
+     *
+     * Header values are captured under the `http.request.header.<key>` attribute key. The `<key>`
+     * part in the attribute key is the lowercase header name.
+     *
+     * Selector patterns are matched case-insensitively, since HTTP header names are case-
+     * insensitive. `?` matches one character and `*` matches any number of characters, including
+     * none. Excluded patterns take precedence over included patterns. A selector with no included
+     * patterns captures every header that is not excluded, and an [empty][IncludeExclude.isEmpty]
+     * selector captures no headers.
+     */
+    fun requestHeaders(requestHeaders: IncludeExclude) {
+      builder.setRequestHeaders(requestHeaders)
     }
 
-    fun setCapturedResponseHeaders(responseHeaders: List<String>) {
-      builder.setCapturedResponseHeaders(responseHeaders)
+    /**
+     * Configures which HTTP response headers are captured as span attributes.
+     *
+     * Header values are captured under the `http.response.header.<key>` attribute key. The `<key>`
+     * part in the attribute key is the lowercase header name.
+     *
+     * Selector patterns are matched case-insensitively, since HTTP header names are case-
+     * insensitive. `?` matches one character and `*` matches any number of characters, including
+     * none. Excluded patterns take precedence over included patterns. A selector with no included
+     * patterns captures every header that is not excluded, and an [empty][IncludeExclude.isEmpty]
+     * selector captures no headers.
+     */
+    fun responseHeaders(responseHeaders: IncludeExclude) {
+      builder.setResponseHeaders(responseHeaders)
     }
 
-    fun setKnownMethods(knownMethods: Collection<String>) {
+    fun knownMethods(knownMethods: Collection<String>) {
       builder.setKnownMethods(knownMethods)
     }
 

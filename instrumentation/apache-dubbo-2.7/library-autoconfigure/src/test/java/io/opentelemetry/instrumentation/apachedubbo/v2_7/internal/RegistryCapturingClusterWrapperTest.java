@@ -8,10 +8,12 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.Proxy;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
+import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.directory.StaticDirectory;
@@ -21,6 +23,20 @@ class RegistryCapturingClusterWrapperTest {
 
   private static final URL DUMMY_URL =
       URL.valueOf("dubbo://192.168.1.100:20880/com.example.Service");
+  private static final String REGISTRY_ADDRESS = "zookeeper://localhost:2181";
+
+  @Test
+  void wrapsRegularInvokerWithJdkProxy() {
+    NoopInvoker delegate = new NoopInvoker(DUMMY_URL);
+
+    Invoker<Object> wrapped = RegistryCapturingInvoker.wrap(delegate, REGISTRY_ADDRESS);
+
+    assertThat(Proxy.isProxyClass(wrapped.getClass())).isTrue();
+    assertThat(wrapped.getUrl()).isSameAs(DUMMY_URL);
+    assertThat(wrapped.invoke(new RpcInvocation())).isNull();
+    assertThat(delegate.capturedRegistryAddress).isEqualTo(REGISTRY_ADDRESS);
+    assertThat(DubboRegistryUtil.extractRegistryAddress(new RpcInvocation())).isNull();
+  }
 
   @Test
   void joinDoesNotWrapStaticDirectory() {
@@ -64,6 +80,7 @@ class RegistryCapturingClusterWrapperTest {
 
   private static class NoopInvoker implements Invoker<Object> {
     private final URL url;
+    private String capturedRegistryAddress;
 
     NoopInvoker(URL url) {
       this.url = url;
@@ -76,6 +93,8 @@ class RegistryCapturingClusterWrapperTest {
 
     @Override
     public Result invoke(Invocation invocation) {
+      capturedRegistryAddress =
+          DubboRegistryUtil.extractRegistryAddress((RpcInvocation) invocation);
       return null;
     }
 

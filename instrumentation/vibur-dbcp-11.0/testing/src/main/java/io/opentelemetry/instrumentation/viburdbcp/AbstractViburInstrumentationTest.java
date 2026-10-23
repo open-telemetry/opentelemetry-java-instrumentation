@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.viburdbcp;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -24,8 +23,8 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 public abstract class AbstractViburInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
 
-  @Mock private DataSource dataSourceMock;
-  @Mock private Connection connectionMock;
+  @Mock protected DataSource dataSourceMock;
+  @Mock protected Connection connectionMock;
 
   protected abstract InstrumentationExtension testing();
 
@@ -48,15 +47,7 @@ public abstract class AbstractViburInstrumentationTest {
     Connection viburConnection = viburDataSource.getConnection();
 
     // then
-    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "testPool")
-        .disableMinIdleConnections()
-        .disableMaxIdleConnections()
-        .disablePendingRequests()
-        .disableConnectionTimeouts()
-        .disableCreateTime()
-        .disableWaitTime()
-        .disableUseTime()
-        .assertConnectionPoolEmitsMetrics();
+    assertConnectionPoolEmitsMetrics("testPool");
 
     // when
     viburConnection.close();
@@ -69,15 +60,24 @@ public abstract class AbstractViburInstrumentationTest {
     testing().clearData();
 
     // then
-    String countMetricName =
-        emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage";
+    String countMetricName = "db.client.connection.count";
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME, countMetricName, AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
-            AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "db.client.connection.limit", AbstractIterableAssert::isEmpty);
+  }
+
+  protected void assertConnectionPoolEmitsMetrics(String poolName) {
+    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, poolName)
+        .disableMinIdleConnections()
+        .disableMaxIdleConnections()
+        .disablePendingRequests()
+        .disableConnectionTimeouts()
+        .disableCreateTime()
+        .disableWaitTime()
+        .disableUseTime()
+        .assertConnectionPoolEmitsMetrics();
   }
 }

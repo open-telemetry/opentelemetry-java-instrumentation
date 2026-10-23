@@ -5,7 +5,6 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation:internal:internal-class-loader:compile-stub"))
 
   testImplementation(project(":javaagent-bootstrap"))
@@ -31,7 +30,7 @@ val shadedJar = tasks.register<ShadowJar>("shadedJar") {
 
 tasks {
   withType(ShadowJar::class) {
-    relocate("io.opentelemetry.javaagent.instrumentation.internal.classloader.stub", "java.lang")
+    relocate("io.opentelemetry.javaagent.bootstrap.internal.classloader.stub", "java.lang")
   }
 
   assemble {

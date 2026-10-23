@@ -15,13 +15,15 @@ final class KafkaReceiveAttributesExtractor
     implements AttributesExtractor<KafkaReceiveRequest, Void> {
 
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
-      AttributeKey.stringKey("messaging.kafka.consumer.group");
+  private static final AttributeKey<String> MESSAGING_CONSUMER_GROUP_NAME =
+      AttributeKey.stringKey("messaging.consumer.group.name");
 
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaReceiveRequest request) {
-    attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, request.getConsumerGroup());
+    attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
+    request.getBatchRecordAttributes().putCommonAttributes(attributes);
+    attributes.put(KafkaClusterId.ATTRIBUTE_KEY, request.getClusterId());
   }
 
   @Override

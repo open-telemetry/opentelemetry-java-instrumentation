@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertSendMetrics;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -38,16 +41,31 @@ abstract class AbstractSpringCloudStreamProducerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("testProducer.output publish")
+                    span.hasName("send testProducer.output")
                         .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0)),
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("send", "testProducer.output")),
                 span ->
-                    span.hasName("testConsumer.input process")
+                    span.hasName("process testConsumer.input")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1)),
+                        .hasParent(trace.getSpan(1))
+                        .hasLinksSatisfying(
+                            links -> {
+                              assertThat(links)
+                                  .singleElement()
+                                  .satisfies(
+                                      link ->
+                                          assertThat(link.getSpanContext().getSpanId())
+                                              .isEqualTo(trace.getSpan(1).getSpanId()));
+                            })
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "testConsumer.input")),
                 span ->
                     span.hasName("consumer")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(2))));
+
+    assertSendMetrics(testing, "testProducer.output");
   }
 }

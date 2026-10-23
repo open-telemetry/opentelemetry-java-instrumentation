@@ -77,17 +77,16 @@ class SpanParserTest {
 
     try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
-          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml")))
           .thenReturn(file1Content);
       fileManagerMock
-          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-2.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-2.yaml")))
           .thenReturn(file2Content);
       fileManagerMock
-          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-3.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-3.yaml")))
           .thenReturn(file2Content);
 
-      Map<String, EmittedSpans> result =
-          EmittedSpanParser.getSpansByScopeFromFiles(tempDir.toString(), "");
+      Map<String, EmittedSpans> result = EmittedSpanParser.getSpansByScopeFromFiles(tempDir, "");
 
       EmittedSpans spans = result.get("default");
       assertThat(spans.getSpansByScope()).hasSize(2);
@@ -126,8 +125,9 @@ class SpanParserTest {
   }
 
   @Test
-  void testSpanAggregatorFiltersAndAggregatesCorrectly() {
+  void testSpanAggregatorFiltersSyntheticHeadersAndAggregatesCorrectly() {
     String targetScopeName = "my-instrumentation-scope";
+    String metadataConfig = "otel.semconv.exception.signal.preview=logs";
 
     EmittedSpans.Span span1 =
         new EmittedSpans.Span(
@@ -135,7 +135,8 @@ class SpanParserTest {
             List.of(
                 new TelemetryAttribute("my.operation", "STRING"),
                 new TelemetryAttribute("http.request.header.x-test-request", "STRING_ARRAY"),
-                new TelemetryAttribute("http.response.header.x-test-response", "STRING_ARRAY")));
+                new TelemetryAttribute("http.response.header.x-test-response", "STRING_ARRAY"),
+                new TelemetryAttribute("messaging.header.Test-Message-Header", "STRING_ARRAY")));
     EmittedSpans.Span span2 =
         new EmittedSpans.Span(
             "SERVER",
@@ -155,27 +156,26 @@ class SpanParserTest {
         new EmittedSpans.SpansByScope("other-scope", List.of(testSpan));
 
     EmittedSpans emittedSpans =
-        new EmittedSpans("default", List.of(targetSpansByScope, otherSpansByScope));
+        new EmittedSpans(metadataConfig, List.of(targetSpansByScope, otherSpansByScope));
 
     // Aggregate spans - only target scope should be included
     Map<String, Map<String, Set<TelemetryAttribute>>> spans =
-        SpanParser.SpanAggregator.aggregateSpans("default", emittedSpans, targetScopeName);
+        SpanParser.SpanAggregator.aggregateSpans(metadataConfig, emittedSpans, targetScopeName);
 
     Map<String, List<EmittedSpans.Span>> result =
         SpanParser.SpanAggregator.buildFilteredSpans(spans);
 
-    assertThat(result.size()).isEqualTo(1);
-    assertThat(result.get("default")).isNotNull();
-    assertThat(result.get("default").size()).isEqualTo(2); // CLIENT and SERVER spans
+    assertThat(result).containsOnlyKeys(metadataConfig);
+    assertThat(result.get(metadataConfig)).hasSize(2); // CLIENT and SERVER spans
 
     // Verify span kinds are preserved
     List<String> spanKinds =
-        result.get("default").stream().map(EmittedSpans.Span::getSpanKind).toList();
+        result.get(metadataConfig).stream().map(EmittedSpans.Span::getSpanKind).toList();
     assertThat(spanKinds).containsExactlyInAnyOrder("CLIENT", "SERVER");
 
     // Verify test attributes are filtered out
     List<TelemetryAttribute> clientAttributes =
-        result.get("default").stream()
+        result.get(metadataConfig).stream()
             .filter(span -> span.getSpanKind().equals("CLIENT"))
             .flatMap(span -> span.getAttributes().stream())
             .toList();
@@ -185,7 +185,7 @@ class SpanParserTest {
         .containsExactly("my.operation");
 
     List<TelemetryAttribute> serverAttributes =
-        result.get("default").stream()
+        result.get(metadataConfig).stream()
             .filter(span -> span.getSpanKind().equals("SERVER"))
             .flatMap(span -> span.getAttributes().stream())
             .toList();
@@ -240,11 +240,11 @@ class SpanParserTest {
 
     try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
-          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml")))
           .thenReturn(file1Content);
 
       Map<String, EmittedSpans> fileContents =
-          EmittedSpanParser.getSpansByScopeFromFiles(tempDir.toString(), "");
+          EmittedSpanParser.getSpansByScopeFromFiles(tempDir, "");
 
       EmittedSpans emittedSpans = fileContents.get("default");
 

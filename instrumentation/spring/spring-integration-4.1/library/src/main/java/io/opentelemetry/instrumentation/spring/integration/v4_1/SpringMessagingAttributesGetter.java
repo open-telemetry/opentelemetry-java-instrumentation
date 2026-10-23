@@ -9,23 +9,23 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
-// this class is needed mostly for correct CONSUMER span suppression
 final class SpringMessagingAttributesGetter
     implements MessagingAttributesGetter<MessageWithChannel, Void> {
 
-  @Override
   @Nullable
+  @Override
   public String getSystem(MessageWithChannel messageWithChannel) {
-    return null;
+    return "spring_integration";
   }
 
-  @Override
   @Nullable
+  @Override
   public String getDestination(MessageWithChannel messageWithChannel) {
-    return null;
+    return messageWithChannel.getChannelName();
   }
 
   @Nullable
@@ -47,18 +47,6 @@ final class SpringMessagingAttributesGetter
   @Override
   @Nullable
   public String getConversationId(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageBodySize(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(MessageWithChannel messageWithChannel) {
     return null;
   }
 
@@ -87,5 +75,11 @@ final class SpringMessagingAttributesGetter
       return singletonList(value.toString());
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(MessageWithChannel request) {
+    // MessageHeaders is immutable
+    return request.getMessage().getHeaders().keySet();
   }
 }

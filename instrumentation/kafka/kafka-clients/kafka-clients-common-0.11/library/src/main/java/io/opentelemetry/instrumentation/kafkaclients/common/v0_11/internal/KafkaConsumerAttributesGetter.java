@@ -9,9 +9,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
+import org.apache.kafka.common.header.Header;
 
 final class KafkaConsumerAttributesGetter
     implements MessagingAttributesGetter<KafkaProcessRequest, Void> {
@@ -48,19 +50,6 @@ final class KafkaConsumerAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(KafkaProcessRequest request) {
-    long size = request.getRecord().serializedValueSize();
-    return size >= 0 ? size : null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(KafkaProcessRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(KafkaProcessRequest request, @Nullable Void unused) {
@@ -84,6 +73,13 @@ final class KafkaConsumerAttributesGetter
     return StreamSupport.stream(request.getRecord().headers().headers(name).spliterator(), false)
         .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), UTF_8))
+        .collect(toList());
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(KafkaProcessRequest request) {
+    return StreamSupport.stream(request.getRecord().headers().spliterator(), false)
+        .map(Header::key)
         .collect(toList());
   }
 }

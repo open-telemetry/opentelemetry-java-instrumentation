@@ -5,27 +5,31 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 final class KafkaConnectBatchProcessSpanLinksExtractor
     implements SpanLinksExtractor<KafkaConnectTask> {
 
-  private final SpanLinksExtractor<SinkRecord> singleRecordLinkExtractor;
+  private final TextMapPropagator propagator;
+  private final SinkRecordHeadersGetter recordGetter;
 
   KafkaConnectBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
-    this.singleRecordLinkExtractor =
-        new PropagatorBasedSpanLinksExtractor<>(propagator, new SinkRecordHeadersGetter());
+    this.propagator = propagator;
+    this.recordGetter = new SinkRecordHeadersGetter();
   }
 
   @Override
   public void extract(SpanLinksBuilder spanLinks, Context parentContext, KafkaConnectTask request) {
+    KafkaConnectBatchRecordAttributes attributes = request.getBatchRecordAttributes();
     for (SinkRecord record : request.getRecords()) {
-      singleRecordLinkExtractor.extract(spanLinks, parentContext, record);
+      Context extracted = propagator.extract(Context.root(), record, recordGetter);
+      spanLinks.addLink(
+          Span.fromContext(extracted).getSpanContext(), attributes.getLinkAttributes(record));
     }
   }
 }

@@ -6,19 +6,21 @@
 package io.opentelemetry.instrumentation.spring.pulsar.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -46,7 +48,6 @@ import org.springframework.pulsar.core.PulsarTemplate;
 import org.testcontainers.pulsar.PulsarContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringPulsarTest {
 
   @RegisterExtension
@@ -60,6 +61,7 @@ public abstract class AbstractSpringPulsarTest {
       DockerImageName.parse("apachepulsar/pulsar:4.0.2");
   private static final String OTEL_SUBSCRIPTION = "otel-subscription";
   protected static final String OTEL_TOPIC = "persistent://public/default/otel-topic";
+
   private static PulsarContainer pulsarContainer;
   private static ConfigurableApplicationContext applicationContext;
   private static PulsarTemplate<String> pulsarTemplate;
@@ -108,12 +110,80 @@ public abstract class AbstractSpringPulsarTest {
 
   protected abstract void assertSpringPulsar();
 
+  protected void assertProcessMetrics() {
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-pulsar-1.0",
+        "messaging.process.duration",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription("Duration of processing operation.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-2.8",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("{message}")
+                        .hasDescription(
+                            "Number of messages that were delivered to the application.")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                    OTEL_SUBSCRIPTION),
+                                                equalTo(SERVER_ADDRESS, brokerHost),
+                                                equalTo(SERVER_PORT, brokerPort))))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-pulsar-1.0",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
+  }
+
   protected List<AttributeAssertion> publishAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, "publish"),
+        equalTo(MESSAGING_OPERATION_NAME, "send"),
+        equalTo(MESSAGING_OPERATION_TYPE, "send"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-        satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
@@ -127,8 +197,9 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> processAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, "process"),
-        satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+        equalTo(MESSAGING_OPERATION_NAME, "process"),
+        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+        equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC));
   }
@@ -136,12 +207,14 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> receiveAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, "receive"),
+        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-        satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
         satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
         equalTo(SERVER_ADDRESS, brokerHost),
-        equalTo(SERVER_PORT, brokerPort));
+        equalTo(SERVER_PORT, brokerPort),
+        equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, OTEL_SUBSCRIPTION),
+        equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
   }
 
   @SpringBootConfiguration

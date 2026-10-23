@@ -76,9 +76,11 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       boolean setServiceName,
+      boolean logOutput,
       List<ResourceMapping> extraResources,
       List<Integer> extraPorts,
       TargetWaitStrategy waitStrategy,
+      String[] entrypoint,
       String[] command) {
 
     Consumer<OutputFrame> output = new ToStringConsumer();
@@ -93,11 +95,13 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
             .withExposedPorts(ports.toArray(new Integer[0]))
             .withNetwork(network)
             .withLogConsumer(output)
-            .withLogConsumer(new Slf4jLogConsumer(appLogger))
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/" + TARGET_AGENT_FILENAME)
             .withEnv(getAgentEnvironment(jvmArgsEnvVarName, setServiceName))
             .withEnv(extraEnv);
+    if (logOutput) {
+      target.withLogConsumer(new Slf4jLogConsumer(appLogger));
+    }
 
     for (ResourceMapping resource : extraResources) {
       target.withCopyFileToContainer(
@@ -115,6 +119,11 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
 
     if (command != null) {
       target = target.withCommand(command);
+    }
+    if (entrypoint != null) {
+      target =
+          target.withCreateContainerCmdModifier(
+              createContainerCmd -> createContainerCmd.withEntrypoint(entrypoint));
     }
 
     try {

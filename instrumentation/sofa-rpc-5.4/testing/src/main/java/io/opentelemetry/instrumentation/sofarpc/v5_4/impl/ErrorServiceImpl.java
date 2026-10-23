@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4.impl;
 
-import com.alipay.sofa.rpc.core.exception.SofaRpcRuntimeException;
+import com.alipay.sofa.rpc.core.exception.RpcErrorType;
+import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService;
 
 public class ErrorServiceImpl implements ErrorService {
   @Override
   public String throwException() {
-    throw new SofaRpcRuntimeException("RPC error");
+    throw new SofaRpcException(RpcErrorType.SERVER_BIZ, "RPC error");
   }
 
   @Override

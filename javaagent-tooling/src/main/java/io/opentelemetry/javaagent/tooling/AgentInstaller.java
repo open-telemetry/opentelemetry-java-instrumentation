@@ -83,7 +83,7 @@ public class AgentInstaller {
   private static final String STRICT_CONTEXT_STRESSOR_MILLIS =
       "otel.javaagent.testing.strict-context-stressor-millis";
 
-  private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
+  private static final Map<String, List<Runnable>> classLoadCallbacks = new HashMap<>();
 
   private static volatile boolean instrumentationInstalled;
 
@@ -114,11 +114,7 @@ public class AgentInstaller {
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
     setDefineClassHandler();
     FieldBackedImplementationConfiguration.configure();
-    // preload ThreadLocalRandom to avoid occasional
-    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
-    // see https://github.com/raphw/byte-buddy/issues/1666 and
-    // https://bugs.openjdk.org/browse/JDK-8164165
-    ThreadLocalRandom.current();
+    preloadClasses();
 
     AgentBuilder agentBuilder =
         newAgentBuilder(
@@ -191,6 +187,14 @@ public class AgentInstaller {
     }
     logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
+    // eagerly initialize context storage before any instrumentation is active, so that its lazy
+    // initialization cannot happen while an instrumented method holds a class loader lock that
+    // the initializing thread needs, see
+    // https://github.com/open-telemetry/opentelemetry-java/issues/8434
+    // note that this also finalizes the storage - ContextStorage.addWrapper() calls made after
+    // this point are ignored
+    ContextStorage.get();
+
     agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ClassFileTransformer transformer = agentBuilder.installOn(inst);
     LambdaTransformer lambdaTransformer;
@@ -214,6 +218,25 @@ public class AgentInstaller {
   private static ConfigProperties getConfig(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     return config == null ? EmptyConfigProperties.INSTANCE : config;
+  }
+
+  private static void preloadClasses() {
+    // preload ThreadLocalRandom to avoid occasional
+    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
+    // see https://github.com/raphw/byte-buddy/issues/1666 and
+    // https://bugs.openjdk.org/browse/JDK-8164165
+    ThreadLocalRandom.current();
+
+    // preload the anonymous class used by MethodHandle.customize() to avoid
+    // java.lang.ClassCircularityError: java/lang/invoke/MethodHandle$1
+    // on jdk 17, which breaks all further invokedynamic call site linking in the jvm.
+    // MethodHandle.customize() only runs after a number of call sites have been linked, so linking
+    // a single call site here would not reliably trigger the load.
+    try {
+      Class.forName("java.lang.invoke.MethodHandle$1", false, null);
+    } catch (ClassNotFoundException ignored) {
+      // this class does not exist on all jdk versions
+    }
   }
 
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {
@@ -484,9 +507,9 @@ public class AgentInstaller {
    * @param callback runnable to invoke when class name matches
    */
   public static void registerClassLoadCallback(String className, Runnable callback) {
-    synchronized (CLASS_LOAD_CALLBACKS) {
+    synchronized (classLoadCallbacks) {
       List<Runnable> callbacks =
-          CLASS_LOAD_CALLBACKS.computeIfAbsent(className, k -> new ArrayList<>());
+          classLoadCallbacks.computeIfAbsent(className, k -> new ArrayList<>());
       callbacks.add(callback);
     }
   }
@@ -531,18 +554,22 @@ public class AgentInstaller {
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {
-      synchronized (CLASS_LOAD_CALLBACKS) {
-        List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(typeName);
-        if (callbacks != null) {
-          for (Runnable callback : callbacks) {
-            callback.run();
-          }
+      List<Runnable> callbacks;
+      synchronized (classLoadCallbacks) {
+        List<Runnable> registeredCallbacks = classLoadCallbacks.get(typeName);
+        if (registeredCallbacks == null) {
+          return;
         }
+        callbacks = new ArrayList<>(registeredCallbacks);
+      }
+      for (Runnable callback : callbacks) {
+        callback.run();
       }
     }
   }
 
-  private static class RedefinitionDiscoveryStrategy
+  // visible for testing
+  static class RedefinitionDiscoveryStrategy
       implements AgentBuilder.RedefinitionStrategy.DiscoveryStrategy {
     private static final AgentBuilder.RedefinitionStrategy.DiscoveryStrategy delegate =
         AgentBuilder.RedefinitionStrategy.DiscoveryStrategy.Reiterating.INSTANCE;
@@ -552,12 +579,26 @@ public class AgentInstaller {
       // filter out our agent classes and injected helper classes
       return () ->
           streamOf(delegate.resolve(instrumentation))
-              .map(RedefinitionDiscoveryStrategy::filterClasses)
+              .flatMap(RedefinitionDiscoveryStrategy::filterClasses)
               .iterator();
     }
 
-    private static Iterable<Class<?>> filterClasses(Iterable<Class<?>> classes) {
-      return () -> streamOf(classes).filter(c -> !isIgnored(c)).iterator();
+    private static Stream<Iterable<Class<?>>> filterClasses(Iterable<Class<?>> classes) {
+      List<Class<?>> classLoaders = new ArrayList<>();
+      List<Class<?>> otherClasses = new ArrayList<>();
+      for (Class<?> c : classes) {
+        if (isIgnored(c)) {
+          continue;
+        }
+        if (ClassLoader.class.isAssignableFrom(c)) {
+          classLoaders.add(c);
+        } else {
+          otherClasses.add(c);
+        }
+      }
+      // Initializing non-inline advice may load injected helpers during retransformation.
+      // Instrument class loaders in an earlier batch so those helpers can be defined.
+      return Stream.of(classLoaders, otherClasses);
     }
 
     private static <T> Stream<T> streamOf(Iterable<T> iterable) {

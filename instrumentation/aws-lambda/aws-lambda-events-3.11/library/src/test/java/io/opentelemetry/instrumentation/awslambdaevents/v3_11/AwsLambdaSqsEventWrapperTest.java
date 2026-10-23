@@ -5,12 +5,16 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static java.util.Collections.emptyMap;
@@ -51,8 +55,7 @@ class AwsLambdaSqsEventWrapperTest {
   void setUp() {
     when(context.getFunctionName()).thenReturn("my_function");
     when(context.getAwsRequestId()).thenReturn("1-22-333");
-    when(context.getInvokedFunctionArn())
-        .thenReturn("arn:aws:lambda:us-east-1:123456789:function:test");
+    AwsLambdaTestUtils.stubInvokedFunctionArn(context);
   }
 
   @AfterEach
@@ -60,12 +63,12 @@ class AwsLambdaSqsEventWrapperTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void eventTraced() {
     SQSEvent event = new SQSEvent();
     SQSEvent.SQSMessage record = newMessage();
-    record.setEventSource("otel");
+    record.setEventSource("aws:sqs");
+    record.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:otel");
     record.setAttributes(emptyMap());
     event.setRecords(singletonList(record));
 
@@ -83,15 +86,25 @@ class AwsLambdaSqsEventWrapperTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                    : null),
+                            equalTo(
+                                CLOUD_ACCOUNT_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "123456789"
+                                    : null),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
-                    span.hasName("otel process")
+                    span.hasName("process otel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_OPERATION, "process"))));
+                            equalTo(MESSAGING_DESTINATION_NAME, "otel"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)))));
+    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "otel", 1, 1, null);
   }
 
   public static class TestRequestHandler implements RequestHandler<SQSEvent, SQSBatchResponse> {

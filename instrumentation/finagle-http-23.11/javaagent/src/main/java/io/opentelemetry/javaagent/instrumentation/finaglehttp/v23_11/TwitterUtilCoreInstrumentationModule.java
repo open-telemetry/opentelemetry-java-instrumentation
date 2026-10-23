@@ -16,7 +16,7 @@ import java.util.List;
 public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule {
 
   public TwitterUtilCoreInstrumentationModule() {
-    super("finagle-http", "finagle-http-23.11", "twitter-util-core");
+    super("finagle-http-23.11", "finagle-http");
   }
 
   @Override

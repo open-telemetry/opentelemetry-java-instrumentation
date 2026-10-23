@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -20,7 +21,8 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Nullable
   @Override
   public String getDbNamespace(RedissonRequest request) {
-    return null;
+    Long databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
   @Override
@@ -44,15 +46,15 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Nullable
   @Override
   public String getServerAddress(RedissonRequest request) {
-    InetSocketAddress address = request.getAddress();
-    return address != null ? address.getHostString() : null;
+    RedisServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RedissonRequest request) {
-    InetSocketAddress address = request.getAddress();
-    return address != null ? address.getPort() : null;
+    RedisServerTarget target = request.getServerTarget();
+    return target != null ? target.getPort() : null;
   }
 
   @Override

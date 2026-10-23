@@ -4,4 +4,5 @@ semantic_conventions:
   - MESSAGING_SPANS
 library_link: https://nats.io/
 configurations:
-  - ref: messaging.capture-headers
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded

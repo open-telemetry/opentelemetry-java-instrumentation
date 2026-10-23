@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp.v6_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.activejhttp.v6_0.ActivejHttpServerSingletons.instrumenter;
@@ -13,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
@@ -43,8 +41,7 @@ class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("serve")
-            .and(takesArguments(1).and(takesArgument(0, named("io.activej.http.HttpRequest")))),
+        named("serve").and(takesArgument(0, named("io.activej.http.HttpRequest"))),
         getClass().getName() + "$ServeAdvice");
   }
 
@@ -64,7 +61,7 @@ class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(HttpRequest request) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }

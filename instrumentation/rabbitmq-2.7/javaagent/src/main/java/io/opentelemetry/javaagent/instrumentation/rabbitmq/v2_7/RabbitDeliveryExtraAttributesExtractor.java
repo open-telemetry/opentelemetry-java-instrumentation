@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 
 import com.rabbitmq.client.Envelope;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -23,6 +24,7 @@ class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<Deli
     if (routingKey != null && !routingKey.isEmpty()) {
       attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }
+    attributes.put(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, envelope.getDeliveryTag());
   }
 
   @Override

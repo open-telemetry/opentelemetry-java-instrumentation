@@ -6,11 +6,16 @@
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
+import io.opentelemetry.instrumentation.testing.internal.CollectedMetric;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -35,17 +40,17 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 class JfrExtension implements BeforeEachCallback, AfterEachCallback {
 
-  private final Consumer<JfrConfig> jfrConfigConsumer;
+  private final IncludeExclude jfrMetrics;
 
   private SdkMeterProvider meterProvider;
   private InMemoryMetricReader metricReader;
   private RuntimeTelemetry runtimeMetrics;
-  private final Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope =
+  private final Map<InstrumentationScopeInfo, Map<String, CollectedMetric>> metricsByScope =
       new HashMap<>();
   private final Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
-  JfrExtension(Consumer<JfrConfig> jfrConfigConsumer) {
-    this.jfrConfigConsumer = jfrConfigConsumer;
+  JfrExtension(String... jfrMetricPatterns) {
+    this.jfrMetrics = IncludeExclude.builder().setIncluded(asList(jfrMetricPatterns)).build();
   }
 
   @Override
@@ -61,7 +66,8 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
     meterProvider = SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     OpenTelemetrySdk sdk = OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build();
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
-    jfrConfigConsumer.accept(builder.getJfrConfig());
+    Internal.setDisableJmx(builder, true);
+    Experimental.setJfrMetrics(builder, jfrMetrics);
     runtimeMetrics = builder.build();
     JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
         (JfrConfig.JfrRuntimeMetrics) runtimeMetrics.getJfrTelemetry();
@@ -85,7 +91,7 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
       String path = new File("").getAbsolutePath();
 
       MetaDataCollector.writeTelemetryToFiles(
-          path, metricsByScope, emptyMap(), instrumentationScopes);
+          path, metricsByScope, emptyMap(), emptyMap(), instrumentationScopes);
     }
   }
 
@@ -109,13 +115,13 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
 
   private void collectEmittedMetrics(List<MetricData> metrics) {
     for (MetricData metric : metrics) {
-      Map<String, MetricData> scopeMap =
+      Map<String, CollectedMetric> scopeMap =
           this.metricsByScope.computeIfAbsent(
               metric.getInstrumentationScopeInfo(), m -> new HashMap<>());
 
-      if (!scopeMap.containsKey(metric.getName())) {
-        scopeMap.put(metric.getName(), metric);
-      }
+      scopeMap
+          .computeIfAbsent(metric.getName(), name -> new CollectedMetric(metric))
+          .collect(metric);
 
       InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
       if (!scopeInfo.getName().equals("test")) {

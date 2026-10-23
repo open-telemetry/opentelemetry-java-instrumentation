@@ -37,25 +37,17 @@ public final class ProcessResource {
       Pattern.compile("^\\S+\\.(jar|war)", Pattern.CASE_INSENSITIVE);
   // scrub values for system properties containing "secret" or "password" in the name
   private static final Pattern SCRUB_PATTERN =
-      Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
-
-  @Deprecated // to be removed in 3.0
-  private static final Resource INSTANCE = create(true);
+      Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  // same as above, except that the property name cannot span "=", since argument boundaries have
+  // been lost in the flattened command line
+  private static final Pattern SCRUB_COMMAND_LINE_PATTERN =
+      Pattern.compile(
+          "(-D[^=]*(password|secret)[^=]*=).*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
   /**
-   * Returns a factory for a {@link Resource} which provides information about the current running
-   * process, including the command-line attributes.
-   *
-   * @deprecated Use {@link #create(boolean) create(true)} to retain the current behavior, or {@link
-   *     #create()} to omit the potentially sensitive {@code process.command_args} and {@code
-   *     process.command_line} attributes. Will be removed in 3.0.
+   * Returns a {@link Resource} which provides information about the current running process,
+   * without the potentially sensitive command-line attributes.
    */
-  @Deprecated // to be removed in 3.0
-  public static Resource get() {
-    return INSTANCE;
-  }
-
-  /** Returns a {@link Resource} which provides information about the current running process. */
   public static Resource create() {
     return create(false);
   }
@@ -64,7 +56,10 @@ public final class ProcessResource {
    * Returns a {@link Resource} which provides information about the current running process.
    *
    * <p>Warning: command-line resource attributes may contain sensitive information. Only set {@code
-   * emitCommandAttributes} to {@code true} when this risk is acceptable.
+   * emitCommandAttributes} to {@code true} when this risk is acceptable. When false, the {@code
+   * process.command_args} and {@code process.command_line} attributes are omitted.
+   *
+   * @param emitCommandAttributes whether to include potentially sensitive command-line attributes
    */
   public static Resource create(boolean emitCommandAttributes) {
     try {
@@ -143,10 +138,15 @@ public final class ProcessResource {
         if (JAR_FILE_PATTERN.matcher(javaCommand).matches()) {
           commandLine.append(" -jar");
         }
-        commandLine.append(' ').append(javaCommand);
+        commandLine.append(' ').append(scrubCommandLine(javaCommand));
       }
       attributes.put(PROCESS_COMMAND_LINE, commandLine.toString());
     }
+  }
+
+  private static String scrubCommandLine(String commandLine) {
+    // Argument boundaries have been lost, so redact the remainder to avoid exposing continuations.
+    return SCRUB_COMMAND_LINE_PATTERN.matcher(commandLine).replaceFirst("$1***");
   }
 
   private static String scrub(String argument) {

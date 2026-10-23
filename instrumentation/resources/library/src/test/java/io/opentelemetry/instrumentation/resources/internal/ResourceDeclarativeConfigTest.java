@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.ResourceSchemaAssertions.assertResourceEntitySchemasMatchSdk;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.as;
@@ -17,6 +18,8 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.resources.internal.Entity;
+import io.opentelemetry.sdk.resources.internal.EntityUtil;
 import java.io.ByteArrayInputStream;
 import java.util.Set;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -51,7 +54,7 @@ class ResourceDeclarativeConfigTest {
         .satisfies(
             resource -> {
               // From .resource.attributes
-              assertThat(resource.getAttribute(stringKey("service.name"))).isEqualTo("my-service");
+              assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo("my-service");
 
               // From ComponentProvider SPI
               Set<String> attributeKeys =
@@ -71,6 +74,10 @@ class ResourceDeclarativeConfigTest {
               // ProcessRuntimeResourceComponentProvider
               assertThat(attributeKeys).contains("process.runtime.description");
               assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");
+              assertThat(EntityUtil.getEntities(resource))
+                  .extracting(Entity::getType)
+                  .contains("process.runtime");
+              assertResourceEntitySchemasMatchSdk(resource);
             });
   }
 }

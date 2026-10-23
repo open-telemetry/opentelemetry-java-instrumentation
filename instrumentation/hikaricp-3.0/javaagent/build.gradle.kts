@@ -15,24 +15,10 @@ dependencies {
   library("com.zaxxer:HikariCP:3.0.0")
 
   implementation(project(":instrumentation:hikaricp-3.0:library"))
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
+
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
 
   testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
+  testImplementation("org.postgresql:postgresql:42.7.2")
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -35,6 +36,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Parses JDBC connection URLs to extract database connection information.
@@ -114,7 +116,7 @@ public final class JdbcConnectionUrlParser {
    * @return the parsed DbInfo, or DbInfo.DEFAULT for null/invalid non-JDBC inputs; parser failures
    *     return the best-effort result accumulated before the failure
    */
-  public static DbInfo parse(String connectionUrl, Properties props) {
+  public static DbInfo parse(@Nullable String connectionUrl, @Nullable Properties props) {
     if (connectionUrl == null) {
       return DEFAULT;
     }
@@ -136,6 +138,9 @@ public final class JdbcConnectionUrlParser {
     String type = jdbcUrl.substring(0, typeLoc);
     JdbcUrlParser parser = typeParsers.get(type);
     ParseContext ctx = ParseContext.of(type, props);
+    if (hasMultipleTargets(jdbcUrl)) {
+      ctx.disableSingleServerFallback();
+    }
 
     try {
       if (parser == null) {

@@ -6,8 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
+import redis.actors.ReplyErrorException;
 
 final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
@@ -19,7 +22,10 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   @Override
   @Nullable
   public String getDbNamespace(RediscalaRequest request) {
-    return null;
+    // Rediscala only selects the database when the connection is established, so a SELECT sent
+    // later by application code is not reflected here.
+    Integer databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
   @Override
@@ -41,13 +47,28 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
 
   @Nullable
   @Override
+  public String getErrorType(
+      RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
+    // error prefix; a missing prefix preserves the shared exception-class fallback.
+    // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
+    if (!(error instanceof ReplyErrorException)) {
+      return null;
+    }
+    return RedisErrorPrefix.extract(error.getMessage());
+  }
+
+  @Nullable
+  @Override
   public String getServerAddress(RediscalaRequest request) {
-    return request.getHost();
+    RedisServerTarget serverTarget = request.getServerTarget();
+    return serverTarget != null ? serverTarget.getAddress() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RediscalaRequest request) {
-    return request.getPort();
+    RedisServerTarget serverTarget = request.getServerTarget();
+    return serverTarget != null ? serverTarget.getPort() : null;
   }
 }

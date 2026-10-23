@@ -15,10 +15,6 @@ class TracedWithSpan {
 
   TracedWithSpan() {}
 
-  // used to verify that constructor with @WithSpan annotation doesn't break instrumentation
-  @WithSpan
-  TracedWithSpan(String unused) {}
-
   @WithSpan
   String otel() {
     return "hello!";
@@ -52,6 +48,12 @@ class TracedWithSpan {
       String notTraced) {
 
     return "hello!";
+  }
+
+  @WithSpan
+  <T> String withGenericSpanAttributes(
+      @SpanAttribute("value") T value, @SpanAttribute("values") T[] values) {
+    return String.valueOf(value);
   }
 
   @WithSpan

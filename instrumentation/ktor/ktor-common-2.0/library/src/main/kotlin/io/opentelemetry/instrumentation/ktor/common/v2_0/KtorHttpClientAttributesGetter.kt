@@ -17,9 +17,13 @@ internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<Http
 
   override fun getHttpRequestHeader(request: HttpRequestData, name: String) = request.headers.getAll(name).orEmpty()
 
+  override fun getHttpRequestHeaderNames(request: HttpRequestData): Collection<String> = request.headers.names()
+
   override fun getHttpResponseStatusCode(request: HttpRequestData, response: HttpResponse, error: Throwable?) = response.status.value
 
   override fun getHttpResponseHeader(request: HttpRequestData, response: HttpResponse, name: String) = response.headers.getAll(name).orEmpty()
+
+  override fun getHttpResponseHeaderNames(request: HttpRequestData, response: HttpResponse): Collection<String> = response.headers.names()
 
   override fun getNetworkProtocolName(request: HttpRequestData, response: HttpResponse?): String? = response?.version?.name
 

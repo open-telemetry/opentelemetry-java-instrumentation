@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf.myfaces.v3_0;
 
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta.JsfErrorCauseExtractor;
 import jakarta.el.ELException;
 
@@ -12,10 +13,7 @@ class MyFacesErrorCauseExtractor extends JsfErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {
-    error = super.extract(error);
-    while (error.getCause() != null && error instanceof ELException) {
-      error = error.getCause();
-    }
-    return error;
+    Throwable unwrapped = super.extract(error);
+    return CauseUnwrapper.unwrap(unwrapped, e -> e instanceof ELException);
   }
 }

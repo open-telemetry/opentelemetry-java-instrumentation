@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
@@ -31,9 +33,11 @@ abstract class AbstractSpringCloudStreamRabbitTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("testConsumer.input process")
+                    span.hasName("process testConsumer.input")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0)),
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "testConsumer.input")),
                 span ->
                     span.hasName("consumer")
                         .hasKind(SpanKind.INTERNAL)

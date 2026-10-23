@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static java.util.Collections.emptyList;
 
-import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.List;
@@ -33,7 +33,10 @@ final class LettuceDbAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(RedisCommand<?, ?, ?> request) {
-    return null;
+    // Lettuce does not expose database changes made through SELECT, so report the index established
+    // when the connection was created.
+    Integer databaseIndex = LettuceConnectionState.databaseIndex(request);
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
   @Override
@@ -55,15 +58,34 @@ final class LettuceDbAttributesGetter
 
   @Nullable
   @Override
+  public String getErrorType(
+      RedisCommand<?, ?, ?> request, @Nullable Void response, @Nullable Throwable error) {
+    return LettuceRedisErrorType.getErrorType(error);
+  }
+
+  @Nullable
+  @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
-    RedisURI redisUri = LettuceSingletons.COMMAND_URI.get(request);
-    return redisUri != null ? redisUri.getHost() : null;
+    RedisServerTarget target = LettuceConnectionState.serverTarget(request);
+    return target != null ? target.getAddress() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RedisCommand<?, ?, ?> request) {
-    RedisURI redisUri = LettuceSingletons.COMMAND_URI.get(request);
-    return redisUri != null ? redisUri.getPort() : null;
+    RedisServerTarget target = LettuceConnectionState.serverTarget(request);
+    return target != null ? target.getPort() : null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
+    return LettuceCommandPeer.getNetworkPeerAddress(LettuceCommandPeer.address(request));
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
+    return LettuceCommandPeer.getNetworkPeerPort(LettuceCommandPeer.address(request));
   }
 }

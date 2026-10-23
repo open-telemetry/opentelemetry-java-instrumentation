@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -26,32 +29,105 @@ class MessagingSpanNameExtractorTest {
   @MethodSource("spanNameParams")
   void shouldExtractSpanName(
       boolean isTemporaryQueue,
+      boolean isAnonymousQueue,
       String destinationName,
-      MessageOperation operation,
-      String expectedSpanName) {
+      String destinationTemplate,
+      MessagingOperationType operationType,
+      String operationName,
+      String spanName) {
     // given
     Message message = new Message();
 
-    if (isTemporaryQueue) {
-      when(getter.isTemporaryDestination(message)).thenReturn(true);
-    } else {
-      when(getter.getDestination(message)).thenReturn(destinationName);
+    when(getter.getDestinationTemplate(message)).thenReturn(destinationTemplate);
+    if (destinationTemplate == null) {
+      when(getter.isTemporaryDestination(message)).thenReturn(isTemporaryQueue);
+      if (!isTemporaryQueue) {
+        when(getter.isAnonymousDestination(message)).thenReturn(isAnonymousQueue);
+        if (!isAnonymousQueue) {
+          when(getter.getDestination(message)).thenReturn(destinationName);
+        }
+      }
     }
 
-    SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(getter, operation);
+    SpanNameExtractor<Message> underTest =
+        MessagingSpanNameExtractor.create(getter, operationType, operationName);
 
     // when
-    String spanName = underTest.extract(message);
+    String actualSpanName = underTest.extract(message);
 
     // then
-    assertThat(spanName).isEqualTo(expectedSpanName);
+    assertThat(actualSpanName).isEqualTo(spanName);
+    if (destinationTemplate != null) {
+      verify(getter, never()).isTemporaryDestination(message);
+      verify(getter, never()).isAnonymousDestination(message);
+    }
   }
 
   static Stream<Arguments> spanNameParams() {
     return Stream.of(
-        Arguments.of(false, "destination", MessageOperation.PUBLISH, "destination publish"),
-        Arguments.of(true, null, MessageOperation.PROCESS, "(temporary) process"),
-        Arguments.of(false, null, MessageOperation.RECEIVE, "unknown receive"));
+        argumentSet(
+            "send operation",
+            false,
+            false,
+            "destination",
+            null,
+            MessagingOperationType.SEND,
+            "send",
+            "send destination"),
+        argumentSet(
+            "temporary destination",
+            true,
+            false,
+            "generated",
+            "generated-{id}",
+            MessagingOperationType.PROCESS,
+            "process",
+            "process generated-{id}"),
+        argumentSet(
+            "temporary destination without template",
+            true,
+            false,
+            "generated",
+            null,
+            MessagingOperationType.PROCESS,
+            "process",
+            "process"),
+        argumentSet(
+            "anonymous destination without template",
+            false,
+            true,
+            "generated",
+            null,
+            MessagingOperationType.PROCESS,
+            "process",
+            "process"),
+        argumentSet(
+            "missing destination",
+            false,
+            false,
+            null,
+            null,
+            MessagingOperationType.RECEIVE,
+            "receive",
+            "receive"),
+        argumentSet(
+            "destination template",
+            false,
+            false,
+            "customer-42",
+            "customer-{id}",
+            MessagingOperationType.SEND,
+            "send",
+            "send customer-{id}"),
+        argumentSet(
+            "anonymous destination",
+            false,
+            true,
+            "generated",
+            "generated-{id}",
+            MessagingOperationType.PROCESS,
+            "process",
+            "process generated-{id}"));
   }
 
   static class Message {}

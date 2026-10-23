@@ -10,6 +10,11 @@ dependencies {
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   compileOnly("io.ktor:ktor-client-core:2.0.0")
   compileOnly("io.ktor:ktor-server-core:2.0.0")
+
+  testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+  testImplementation("io.ktor:ktor-client-core:2.0.0")
+  testImplementation("io.ktor:ktor-client-mock:2.0.0")
+  testImplementation("io.ktor:ktor-server-core:2.0.0")
 }
 
 kotlin {

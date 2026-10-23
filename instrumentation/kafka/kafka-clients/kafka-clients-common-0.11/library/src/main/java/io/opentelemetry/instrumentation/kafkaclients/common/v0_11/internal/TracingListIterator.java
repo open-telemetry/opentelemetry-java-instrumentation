@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**
@@ -59,7 +60,15 @@ public class TracingListIterator<K, V> implements ListIterator<ConsumerRecord<K,
 
   @Override
   public ConsumerRecord<K, V> previous() {
+    if (tracingIterator instanceof TracingIterator) {
+      ((TracingIterator<K, V>) tracingIterator).closeScopeAndEndSpan();
+    }
     return delegateListIterator.previous();
+  }
+
+  @Override
+  public void forEachRemaining(Consumer<? super ConsumerRecord<K, V>> action) {
+    tracingIterator.forEachRemaining(action);
   }
 
   @Override

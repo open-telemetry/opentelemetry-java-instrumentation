@@ -14,6 +14,9 @@ dependencies {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled=true")
+    jvmArgs(
+      "-Dotel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled=true",
+      "-Dotel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second=100",
+    )
   }
 }

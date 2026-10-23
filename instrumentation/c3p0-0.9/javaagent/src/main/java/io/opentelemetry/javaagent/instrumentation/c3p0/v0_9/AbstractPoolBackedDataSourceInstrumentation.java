@@ -34,7 +34,7 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This AbstractPoolBackedDataSource dataSource) {
-      telemetry().registerMetrics(dataSource);
+      C3p0Singletons.registerMetrics(dataSource);
     }
   }
 

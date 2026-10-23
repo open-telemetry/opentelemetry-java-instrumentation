@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,12 +15,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
+import io.vertx.core.Promise;
 import io.vertx.core.impl.future.PromiseInternal;
-import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.PreparedStatement;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import java.util.Collection;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -48,8 +47,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
-      // copy connection options from ThreadLocal to VirtualField
-      QueryExecutorUtil.setConnectOptions(queryExecutor, getSqlConnectOptions());
+      VertxSqlClientSingletons.setQueryExecutorInfoReference(
+          queryExecutor, VertxSqlClientSingletons.getClientInfoReference());
     }
   }
 
@@ -58,19 +57,16 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      @Nullable private final VertxSqlClientRequest otelRequest;
-      @Nullable private final Context context;
+      @Nullable private final Promise<?> promise;
       @Nullable private final Scope scope;
 
       private AdviceScope(CallDepth callDepth) {
-        this(callDepth, null, null, null);
+        this(callDepth, null, null);
       }
 
-      private AdviceScope(
-          CallDepth callDepth, VertxSqlClientRequest otelRequest, Context context, Scope scope) {
+      private AdviceScope(CallDepth callDepth, Promise<?> promise, Scope scope) {
         this.callDepth = callDepth;
-        this.otelRequest = otelRequest;
-        this.context = context;
+        this.promise = promise;
         this.scope = scope;
       }
 
@@ -85,7 +81,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         // PreparedStatement, use the first argument that is either of these. PromiseInternal is
         // always at the end of the argument list.
         String sql = null;
-        boolean preparedStatement = false;
+        boolean parameterizedQuery = !methodName.equals("executeSimpleQuery");
         PromiseInternal<?> promiseInternal = null;
         Long batchSize = null;
         for (Object argument : arguments) {
@@ -94,7 +90,6 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
               sql = (String) argument;
             } else if (argument instanceof PreparedStatement) {
               sql = ((PreparedStatement) argument).sql();
-              preparedStatement = true;
             }
           } else if (argument instanceof PromiseInternal) {
             promiseInternal = (PromiseInternal<?>) argument;
@@ -108,21 +103,12 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
-        SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
-        // connectOptions is null when the pool was created via JDBCPool which bypasses the
-        // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
-        // instrumentation handle it
-        if (connectOptions == null) {
+        VertxSqlClientInfo info = VertxSqlClientSingletons.getQueryExecutorInfo(queryExecutor);
+        if (info == null) {
           return new AdviceScope(callDepth);
         }
-        // Try db system stored from pool class first (handles generic SqlConnectOptions),
-        // fall back to class name detection on the connect options itself
-        String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
-        if (dbSystem == null) {
-          dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
-        }
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem, batchSize);
+            new VertxSqlClientRequest(sql, info, parameterizedQuery, batchSize);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth);
@@ -130,20 +116,20 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
         Context context = instrumenter().start(parentContext, otelRequest);
         VertxSqlClientUtil.attachRequest(promiseInternal, otelRequest, context, parentContext);
-        return new AdviceScope(callDepth, otelRequest, context, context.makeCurrent());
+        return new AdviceScope(callDepth, promiseInternal, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
-        if (scope == null || context == null || otelRequest == null) {
+        if (scope == null || promise == null) {
           return;
         }
 
         scope.close();
         if (throwable != null) {
-          instrumenter().end(context, otelRequest, null, throwable);
+          VertxSqlClientUtil.endQuerySpanAndGetParentContext(instrumenter(), promise, throwable);
         }
         // span will be ended in QueryResultBuilderInstrumentation
       }

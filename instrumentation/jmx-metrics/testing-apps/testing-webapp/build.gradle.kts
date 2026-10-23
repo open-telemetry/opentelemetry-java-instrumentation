@@ -11,3 +11,12 @@ dependencies {
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
   compileOnly("javax.servlet:javax.servlet-api:4.0.1")
 }
+
+configurations.create("testWebApp") {
+  isCanBeConsumed = true
+  isCanBeResolved = false
+}
+
+artifacts {
+  add("testWebApp", tasks.named("war"))
+}

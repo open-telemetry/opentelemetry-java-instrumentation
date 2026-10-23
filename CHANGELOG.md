@@ -2,26 +2,1218 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes
+
+- Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
+- Spring Boot Java agent resource providers move from
+  `io.opentelemetry.instrumentation.spring.resources` to
+  `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
+  `otel.java.enabled.resource.providers` and `otel.java.disabled.resource.providers`.
+- Spring Rabbit 1.0 is no longer supported. Use the `spring-rabbit-1.1` selector; telemetry scope
+  changes from `io.opentelemetry.spring-rabbit-1.0` to `io.opentelemetry.spring-rabbit-1.1`.
+- `InstrumenterBuilder` no longer infers a schema URL from attribute extractors. Call
+  `setSchemaUrl()` with the schema for the conventions defining the instrumenter's signals;
+  otherwise its telemetry has no schema URL.
+- Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
+  Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
+- `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
+  (which didn't work properly anyways).
+- Kotlin suspend function `@WithSpan` instrumentation now uses only the
+  `kotlinx-coroutines-annotations` selector and is disabled by default. Use
+  `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true` instead of the
+  `kotlinx-coroutines`, `kotlinx-coroutines-1.0`,
+  `kotlinx-coroutines-opentelemetry-instrumentation-annotations`, or
+  `opentelemetry-instrumentation-annotations` selectors to control suspend function annotations.
+- The Java agent no longer captures thread details by default. Set
+  `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
+- GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
+  remain, instead of emitting an empty object.
+- Process command resource attributes are now disabled by default. Set
+  `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
+  `process.command_args` and `process.command_line`.
+- Declarative Java agent instrumentation selectors no longer accept dotted-version compatibility
+  spellings. In `distribution.javaagent.instrumentation.enabled` and `.disabled`, replace
+  selectors such as `reactor_3.1` with `reactor_3_1`.
+- Java agent telemetry now uses the following instrumentation scopes. Update views, dashboards
+  and filters matching the previous names:
+
+  | Previous scope | Current scope |
+  | --- | --- |
+  | `io.opentelemetry.jaxrs-1.0` | `io.opentelemetry.jaxrs-1.0-annotations` |
+  | `io.opentelemetry.jaxws-cxf-3.0` | `io.opentelemetry.jaxws-2.0-cxf-3.0` |
+  | `io.opentelemetry.jaxws-metro-2.2` | `io.opentelemetry.jaxws-2.0-metro-2.2` |
+  | `io.opentelemetry.mongo-3.7` | `io.opentelemetry.mongo-3.1` |
+  | `io.opentelemetry.ratpack-1.7` | `io.opentelemetry.ratpack-1.4` |
+  | `io.opentelemetry.tomcat-jdbc` | `io.opentelemetry.tomcat-jdbc-8.5` |
+
+- Couchbase Java SDK 3.1 and 3.2+ spans now use the agent-owned scope names instead of
+  `com.couchbase.client.jvm`. SDK 3.1 uses `io.opentelemetry.couchbase-3.1`; SDK 3.2+ uses
+  `io.opentelemetry.couchbase-3.2`.
+- Java agent instrumentation selectors now always use the versioned component name first,
+  followed by supported role, versionless and umbrella selectors. When several selectors are
+  configured, the first matching selector determines enablement. For example,
+  `otel.instrumentation.lettuce-5.0.enabled` takes precedence over
+  `otel.instrumentation.lettuce.enabled`.
+- Remove legacy Java agent selectors and implementation-only aliases from
+  `otel.instrumentation.<name>.enabled`. Use the component selectors below. Where several
+  implementations now share a component selector, there is no implementation-only replacement;
+  the replacement controls the component as a whole.
+
+  | Removed selectors | Replacement selectors |
+  | --- | --- |
+  | `akka-actor-2.3-core`, `akka-actor-fork-join`, `akka-actor-fork-join-2.5`, `akka-actor-forkjoin`, `akka-actor-forkjoin-2.5` | `akka-actor-2.3` |
+  | `akka-http-server-route` | `akka-http-10.0` |
+  | `annotations` | `opentelemetry-instrumentation-annotations` |
+  | `armeria-1.14` | `armeria-grpc-1.14` for gRPC; `armeria` for the component |
+  | `aws-lambda-core`, `aws-lambda-events` | `aws-lambda-core-1.0`, `aws-lambda-events-2.2`, respectively |
+  | `aws-sdk-1.11-core` | `aws-sdk-1.11` |
+  | `aws-sdk-1.11-sqs` | `aws-sdk-sqs` |
+  | `aws-sdk-2.2-core` | `aws-sdk-2.2` |
+  | `aws-sdk-2.2-bedrock-runtime` | `aws-sdk-bedrock-runtime` |
+  | `aws-sdk-2.2-lambda` | `aws-sdk-lambda` |
+  | `aws-sdk-2.2-sns` | `aws-sdk-sns` |
+  | `aws-sdk-2.2-sqs` | `aws-sdk-sqs` |
+  | `axis2`, `axis2-1.6` | `jaxws-2.0-axis2-1.6` |
+  | `camel-sjms` | `camel-jms` |
+  | `clickhouse` | `clickhouse-client` |
+  | `couchbase-2.0-core`, `couchbase-2.0-network`, `couchbase-network-2.0`, `couchbase-2.6` | `couchbase-2.0` |
+  | `couchbase-3.1.6` | `couchbase-3.1` |
+  | `couchbase-3.2-core`, `couchbase-3.4`, `couchbase-3.4.3-protostellar` | `couchbase-3.2` |
+  | `cxf` | `jaxrs-cxf` and/or `jaxws-cxf` |
+  | `cxf-3.2` | `jaxrs-2.0-cxf-3.2` |
+  | `hibernate-procedure-call` | `hibernate-procedure-call-4.3` |
+  | `hibernate-reactive-mutiny`, `hibernate-reactive-stage` | `hibernate-reactive-1.0` |
+  | `jaxrs-1.0` | `jaxrs-1.0-annotations` |
+  | `jaxrs-2.0` | `jaxrs-2.0-annotations`, `jaxrs-2.0-cxf-3.2`, `jaxrs-2.0-jersey-2.0`, `jaxrs-2.0-resteasy-3.0`, `jaxrs-2.0-resteasy-3.1`, as needed |
+  | `jaxrs-3.0` | `jaxrs-3.0-annotations`, `jaxrs-3.0-jersey-3.0`, `jaxrs-3.0-resteasy-6.0`, as needed |
+  | `jaxws-cxf-3.0`, `jaxws-metro-2.2` | `jaxws-2.0-cxf-3.0`, `jaxws-2.0-metro-2.2`, respectively |
+  | `jedis-2.0-core`, `jedis-2.3-cluster` | `jedis-2.0` |
+  | `jersey`, `jersey-2.0`, `jersey-3.0` | `jaxrs-jersey`, `jaxrs-2.0-jersey-2.0`, `jaxrs-3.0-jersey-3.0`, respectively |
+  | `kotlinx-coroutines-1.0-core`, `kotlinx-coroutines-flow`, `kotlinx-coroutines-flow-1.3` | `kotlinx-coroutines-1.0` |
+  | `ktor-client-2.0`, `ktor-server-2.0` | `ktor-2.0` |
+  | `ktor-client-3.0`, `ktor-server-3.0` | `ktor-3.0` |
+  | `metro` | `jaxws-metro` |
+  | `mongo-3.1-client-options`, `mongo-3.7` | `mongo-3.1` |
+  | `mongo-async` | `mongo-async-3.3` or `mongo` |
+  | `openai` | `openai-java` |
+  | `opentelemetry-api-incubator-<version>` | `opentelemetry-api-<version>` or `opentelemetry-api-incubator` |
+  | `pekko-http-server-route`, `tapir-pekko-http-server`, `tapir-pekko-http-server-route` | `pekko-http-1.0` |
+  | `quarkus`, `quarkus-resteasy-reactive-3.0` | `quarkus-resteasy-reactive-1.11` |
+  | `ratpack-1.4-core`, `ratpack-1.7` | `ratpack-1.4` |
+  | `reactor-3.1-core`, `reactor-3.4`, `reactor-context-propagation-operator` | `reactor-3.1` |
+  | `resteasy`, `resteasy-3.0`, `resteasy-3.1`, `resteasy-6.0` | `jaxrs-resteasy`, `jaxrs-2.0-resteasy-3.0`, `jaxrs-2.0-resteasy-3.1`, `jaxrs-3.0-resteasy-6.0`, respectively |
+  | `spring-integration-core-4.1`, `spring-integration-amqp-4.1` | `spring-integration-4.1` |
+  | `spring-security-config-servlet`, `spring-security-config-servlet-6.0`, `spring-security-config-webflux`, `spring-security-config-webflux-6.0` | `spring-security-config-6.0` |
+  | `twitter-util-core` | `finagle-http-23.11` |
+  | `vertx-redis-client-4.0-core`, `vertx-redis-client-4.4.5` | `vertx-redis-client-4.0` |
+
+  The `jaxrs` umbrella no longer enables JAX-RS annotation instrumentation; use
+  `jaxrs-annotations` for that default-off feature. The `jaxws` umbrella no longer enables the
+  JWS annotation module; use `jaxws-jws-api`. The `reactor-netty` selector no longer controls
+  the server integration in Spring WebFlux; use `reactor-netty-server` or `spring-webflux-server`.
+- Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
+  `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
+  Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
+  query-derived span names are still produced, matching other SQL instrumentations. This applies
+  to `otel.instrumentation.couchbase.query-sanitization.enabled=false`, including when inherited
+  from the common database setting.
+- Remove bundled support for the contrib `otel.traces.sampler=linksbased_parentbased_always_on` and
+  declarative `rule_based_routing` samplers. The links-based sampler has no replacement. For
+  compatible rule-based policies, consider the SDK incubator declarative `composite/development`
+  `rule_based` sampler; its rules use case-sensitive exact/wildcard matching and per-rule samplers,
+  and unmatched spans are dropped. This differs from the contrib sampler's regex, action, and
+  fallback behavior.
+- The Java agent now instruments Lettuce 5.1 and later with the Lettuce 5.0 integration, changing
+  the instrumentation scope from `io.opentelemetry.lettuce-5.1` to
+  `io.opentelemetry.lettuce-5.0`. The Java agent no longer emits command-encoding events, and
+  `otel.instrumentation.lettuce.experimental.command-encoding-events.enabled` is no longer
+  supported. Replace the removed `otel.instrumentation.lettuce-5.1.enabled` selector with
+  `otel.instrumentation.lettuce.enabled` to enable or disable Lettuce instrumentation.
+- OpenTelemetry API bridges remain enabled when
+  `otel.instrumentation.common.default-enabled=false`. Disable them explicitly with
+  `otel.instrumentation.opentelemetry-api.enabled=false`.
+- The Java agent no longer instruments Jedis 1.x.
+- Remove deprecated Java agent enablement aliases. In `otel.instrumentation.<name>.enabled`,
+  replace `liberty-dispatcher` with `liberty-dispatcher-20.0`, `scala-fork-join` with
+  `scala-forkjoin`, and `scala-fork-join-2.8` with `scala-forkjoin-2.8`.
+  The removed `azure-core-1.36-context` and `azure-core-1.53-context` aliases have no context-only
+  replacement; `azure-core-1.36` and `azure-core-1.53` each control both SDK and context instrumentation.
+- Removed `otel.instrumentation.couchbase.experimental-span-attributes`. Use `otel.instrumentation.couchbase.emit-experimental-telemetry=true` to enable experimental span attributes for Couchbase 2.x and 3.x. For Couchbase 3.x, this also enables the Couchbase Java SDK's internal `request_encoding` and `dispatch_to_server` spans.
+- Couchbase 3.x operation spans now use the `CLIENT` span kind. Couchbase 3.0 and legacy-bridge 3.1 spans now use the `io.opentelemetry.couchbase-3.0` and `io.opentelemetry.couchbase-3.1` instrumentation scopes, respectively.
+- The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
+  starter has been removed.
+- Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
+  `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
+  `otel.instrumentation.twilio.enabled=true`, respectively.
+- JMX metric collection now always uses instrumentation selectors, including
+  `otel.instrumentation.jmx.enabled` and `otel.instrumentation.common.default-enabled`.
+  The deprecated `otel.jmx.enabled` and `otel.jmx.target.system` settings are removed.
+  For declarative configuration, use `distribution.javaagent.instrumentation.enabled` /
+  `distribution.javaagent.instrumentation.disabled` selectors instead of `java.jmx.enabled`.
+  Stable bundled metrics are collected automatically except JVM rules, which overlap with runtime
+  telemetry. Use `otel.jmx.metrics.experimental.included` to opt in to unstable metrics by name.
+- Runtime telemetry metrics and package-emitter events now always use the
+  `io.opentelemetry.runtime-telemetry` instrumentation scope. Update views, dashboards, and filters
+  that match `io.opentelemetry.runtime-telemetry-java8` or
+  `io.opentelemetry.runtime-telemetry-java17`.
+- JMX `jvm.gc.duration` metrics always include `jvm.gc.cause`. Remove
+  `otel.instrumentation.runtime-telemetry.capture-gc-cause`; GC cause is no longer configurable.
+- Remove the deprecated runtime telemetry configuration properties and their declarative forms:
+  - Replace `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry` with
+    `otel.instrumentation.runtime-telemetry.emit-experimental-metrics`.
+  - Replace `otel.instrumentation.runtime-telemetry.package-emitter.*` with
+    `otel.instrumentation.runtime-telemetry.experimental.package-emitter.*`.
+  - Replace `otel.instrumentation.runtime-telemetry-java17.enabled` with
+    `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics`.
+  - Replace `otel.instrumentation.runtime-telemetry-java17.enable-all` with
+    `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*`.
+  - Replace `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` with explicit metric
+    selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`.
+- Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
+- Remove the retired flat settings `otel.instrumentation.common.db-statement-sanitizer.enabled`
+  and `otel.instrumentation.<module>.statement-sanitizer.enabled`; use
+  `otel.instrumentation.common.db.query-sanitization.enabled` and
+  `otel.instrumentation.<module>.query-sanitization.enabled` instead.
+  Replace `java.common.database.sqlcommenter/development.enabled` with
+  `java.common.db.sqlcommenter/development.enabled`; the flat setting
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` remains supported.
+- Apache Wicket resource requests now always use the resource reference class name for `http.route`
+  and the HTTP server span name, instead of the servlet wildcard route.
+- The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
+  `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
+  arguments by default. Replace the former flat settings for Log4j MapMessage
+  (`otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes`), Logback
+  key/value pairs (`otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes`),
+  Logstash markers (`otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes`),
+  and structured arguments
+  (`otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments`) with
+  the common `otel.instrumentation.common.logging.structured-attributes.included` and
+  `otel.instrumentation.common.logging.structured-attributes.excluded` selectors. Exclusions take
+  precedence, and `*` excludes all structured attributes. The source-specific
+  `.included` and `.excluded` selectors
+  (`otel.instrumentation.log4j-appender.experimental.map-message-attributes.*`,
+  `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.*`,
+  `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.*`, and
+  `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.*`)
+  were removed and are now ignored, so migrate them to the common selectors to keep filtering.
+  The common properties apply to the Java agent and Spring Boot's Logback integration.
+  Standalone appenders, including Log4j under Spring Boot, use
+  `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
+  `setStructuredAttributes(IncludeExclude)` programmatically.
+  Log4j `MapMessage` keys are emitted as their original log attribute names.
+- RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
+  and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
+  `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
+  values in `otel.semconv-stability.opt-in` no longer select them.
+  For declarative configuration, move these values from `general.stability_opt_in_list` to
+  `java.common.semconv_stability.preview`. Default telemetry and explicit `general.rpc.semconv`
+  configuration are unchanged.
+- Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
+  maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
+  name passes through the naming convention (for example, Prometheus mode changes
+  `my.meter.count.bytes` to `my.meter.bytes.count`). Remove the deprecated
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` setting and use
+  `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`.
+- Servlet principal and Spring Security identity capture now emit `user.name` and string-array
+  `user.roles` instead of `enduser.id` and comma-separated `enduser.role`. Replace
+  `otel.instrumentation.common.enduser.id.enabled` and
+  `otel.instrumentation.common.enduser.role.enabled` with
+  `otel.instrumentation.common.user.name.enabled` and
+  `otel.instrumentation.common.user.roles.enabled`. Replace
+  `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix` with
+  `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`.
+  The `otel.instrumentation.common.enduser.scope.enabled` setting and `enduser.scope` capture are
+  removed. Identity capture remains disabled by default.
+- Remove Log4j appender correlation reconstructed from trace-ID, span-ID, and
+  trace-flags strings.
+  For standalone asynchronous logging, configure
+  `log4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector`
+  to carry the full OpenTelemetry context; Java agent correlation remains supported.
+  The appender no longer brings in
+  `io.opentelemetry.instrumentation:opentelemetry-log4j-context-data-2.17-autoconfigure`
+  transitively; add it separately if Log4j layouts need trace or span IDs.
+  Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
+  `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
+  respectively.
+- Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
+  `otel.instrumentation.grpc.capture-metadata.server.request`.
+  Use `otel.instrumentation.grpc.client.request-metadata.included` and
+  `otel.instrumentation.grpc.server.request-metadata.included`.
+- Captured messaging header attribute keys now preserve dashes unconditionally; for example,
+  `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
+  `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
+  `otel.instrumentation.common.messaging.headers.included=Test-Message-*`.
+  The deprecated `otel.instrumentation.messaging.experimental.headers.included`,
+  `otel.instrumentation.messaging.experimental.headers.excluded`, and
+  `otel.instrumentation.messaging.experimental.capture-headers` settings are no longer supported;
+  use `otel.instrumentation.common.messaging.headers.included` / `.excluded` instead.
+  `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is also no longer
+  supported; use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
+- Disable native Kafka client metrics by default. Enable them with
+  `otel.instrumentation.kafka-clients-metrics.enabled=true`. Kafka tracing and messaging operation
+  metrics retain their existing defaults.
+  The `kafka`, `kafka-clients`, `kafka-clients-0.11`, and `kafka-clients-metrics-0.11`
+  selectors no longer enable native metrics.
+- OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
+  Update `system.network.packets` to `system.network.packet.count`, plural count units to
+  `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
+  for network I/O and errors, replace `device` and `direction` with `network.interface.name`
+  and `network.io.direction`. Packet counts use `system.device` and `network.io.direction`;
+  disk metrics use `system.device` and `disk.io.direction`.
+  Remove `otel.instrumentation.oshi.experimental-metrics.enabled`; OSHI no longer emits `runtime.java.memory`
+  or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
+  memory, and `jvm.cpu.time` does not split user/system CPU time.
+- Remove the deprecated GraphQL configuration properties
+  `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
+  `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
+  `otel.instrumentation.graphql.operation-name-in-span-name.enabled` and
+  `otel.instrumentation.graphql.query-sanitization.enabled`, respectively.
+- The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
+- Remove support for the deprecated controller and view telemetry aliases. Replace
+  `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` with
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`.
+- Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
+  `code.function`, and log records use `code.file.path` and `code.line.number` instead of
+  `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
+  `general.code.semconv` declarative settings no longer select legacy emission.
+- Change the Java agent's `telemetry.distro.name` resource attribute from
+  `opentelemetry-java-instrumentation` to `opentelemetry-javaagent`.
+- Database telemetry now uses schema version 1.44.0.
+  Update telemetry queries and dashboards for `db.system.name`, `db.namespace`, `db.query.text`,
+  `db.operation.name`, and `db.collection.name` instead of their legacy keys, and for stable system
+  values such as `microsoft.sql_server`, `oracle.db`, and `h2database`. Database span names use query
+  summaries or stable operation/target fallbacks rather than legacy database-prefixed names.
+  Instrumentations using the shared database client metrics now emit `db.client.operation.duration`
+  in seconds by default. Pool metrics use `db.client.connection.*` rather than
+  `db.client.connections.*`, including `count` instead of `usage` and `limit` instead of `max`,
+  singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
+  Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
+  pools use stable database-derived names, and DBCP retains the first registered pool name.
+- Servlet request parameter attribute keys now preserve the original parameter-name casing, and
+  trace/span request attributes are disabled by default. Re-enable the latter with
+  `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true`.
+- Elasticsearch and OpenSearch query bodies are now always captured.
+  The `otel.instrumentation.elasticsearch.capture-search-query` and
+  `otel.instrumentation.opensearch.capture-search-query` properties
+  are no longer supported and have no replacement. Query sanitization remains enabled
+  by default and configurable with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
+  `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
+  `otel.instrumentation.common.db.query-sanitization.enabled`.
+
+### ⚠️ Breaking changes to non-stable APIs
+
+- Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
+- Java HTTP Client's `addAttributesExtractor` now requires
+  `AttributesExtractor<HttpRequest, HttpResponse<?>>`.
+- Remove `setBaseTimeUnit(TimeUnit)` and `setPrometheusMode(boolean)` from the Micrometer registry
+  builder. Use `Experimental.setBaseTimeUnit(builder, timeUnit)` and
+  `Experimental.setPrometheusMode(builder, enabled)`.
+- Remove `otel.instrumentation.experimental.span-suppression-strategy` and
+  `java.common.span_suppression_strategy/development` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` and
+  `java.common.span_suppression_strategy`.
+- Remove deprecated `DeclarativeConfigPropertiesBridge` and
+  `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
+  `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.
+- In `opentelemetry-instrumentation-api-incubator`, custom
+  `MessagingAttributesGetter` implementations must implement `getMessageHeaderNames`, returning
+  supported header names or an empty iterable for carriers without supported headers.
+- Remove deprecated `ProcessResource.get()`. Replace it with `ProcessResource.create()` to omit
+  command-line attributes, or `ProcessResource.create(true)` to retain them.
+- The `TracingSqsMessageHandler` customization constructor now accepts an
+  `Instrumenter<SQSMessage, Boolean>`.
+- Remove `setSanitizeQuery(boolean)` and `setAddOperationNameToSpanName(boolean)` from the GraphQL
+  Java 12.0 and 20.0 library builders. Use `setQuerySanitizationEnabled(boolean)` and
+  `setOperationNameInSpanNameEnabled(boolean)` instead.
+- In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency
+  helpers are private.
+- Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and
+  `create(Meter, String, Attributes)` overloads. Use the overloads accepting
+  `OpenTelemetry`, the instrumentation name and the pool name instead.
+- Remove `LettuceTelemetryBuilder.setEncodingSpanEventsEnabled` and command-encoding event support
+  from the standalone Lettuce library. There is no replacement API.
+- Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
+  runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
+  specifying the metrics to source from JFR.
+- Remove the deprecated standalone appender boolean setters and XML settings:
+  Log4j `setCaptureMapMessageAttributes` / `captureMapMessageAttributes`, and Logback
+  `setCaptureKeyValuePairAttributes` / `captureKeyValuePairAttributes`,
+  `setCaptureLogstashMarkerAttributes` / `captureLogstashMarkerAttributes`, and
+  `setCaptureLogstashStructuredArguments` / `captureLogstashStructuredArguments`.
+  Replace the source-specific `setMapMessageAttributes`, `setKeyValuePairAttributes`,
+  `setLogstashMarkerAttributes`, and `setLogstashStructuredArgumentAttributes` selectors and their
+  XML included/excluded settings with `setStructuredAttributes(IncludeExclude)` and
+  `structuredAttributesIncluded` / `structuredAttributesExcluded`. One selector filters all
+  supported structured sources. Absent or empty selectors capture all structured attributes;
+  an excluded `*` captures none. MDC and logger context capture remain separate and opt-in.
+- Rename `Experimental.setCaptureEnduserId` to `setCaptureUserName` in the Servlet 3.0 and 5.0
+  libraries. Remove `UserAttributesCapturer.setScopeEnabled(boolean)` and
+  `UserAttributesCapturer.setScopeGrantedAuthorityPrefix(String)`, and remove
+  `UserConfig.isScopeEnabled()` from `opentelemetry-instrumentation-api-incubator`.
+- Remove deprecated `Experimental.setCaptureRequestParameters` from Servlet 3.0 and Servlet 5.0
+  libraries. Use `Experimental.setRequestParameters` with an `IncludeExclude` selector instead.
+- Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
+  `opentelemetry-oshi`. Use `SystemMetrics.registerObservers(OpenTelemetry)` for system metrics
+  and continue closing the returned observers.
+- Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
+  `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
+  `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
+  in `opentelemetry-instrumentation-api`.
+  Rename `CodeAttributesGetter#getMethodName` to `getCodeMethodName`.
+- Remove `otel.javaagent.experimental.indy`.
+  The javaagent now always uses non-inline advice for compatible instrumentation.
+  Instrumentation that intentionally uses inline advice remains supported.
+  ([#20377](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20377))
+- Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
+  HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
+  with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
+  rather than literal header-name characters.
+- Remove the deprecated Elasticsearch REST library instrumentation. Use the Elasticsearch
+  Java API Client's native OpenTelemetry support, or the Java agent for direct RestClient usage.
+  Java agent instrumentation is unaffected.
+- Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
+  Ktor 1.0 configuration, and the `capturedRequestHeaders` and `capturedResponseHeaders`
+  overloads from Ktor 2.0/3.0 builders. Use `requestHeaders` and `responseHeaders` with
+  `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
+  rather than literal header-name characters.
+- Rename Ktor 1.0 configuration methods to match Ktor 2.0/3.0:
+  `setRequestHeaders` to `requestHeaders`, `setResponseHeaders` to `responseHeaders`,
+  `setKnownMethods` to `knownMethods`, `addAttributesExtractor` to `attributesExtractor`,
+  `setSpanNameExtractorCustomizer` to `spanNameExtractor`, `setStatusExtractor` to
+  `spanStatusExtractor`, and `setSpanKindExtractor` to `spanKindExtractor`.
+- Rename `setOpenTelemetry` to `openTelemetry` in Ktor 1.0 configuration and Ktor 2.0/3.0
+  client and server builders.
+- Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
+  Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
+  instead.
+- Remove legacy database APIs from `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator`.
+  Replace `DbClientAttributesGetter.getDbSystem`, `getDbName`, and `getDbOperation` with
+  `getDbSystemName`, `getDbNamespace`, and `getDbOperationName`. Return canonical system names
+  such as `oracle.db` and `h2database` from `getDbSystemName`; extractors no longer translate
+  legacy system names. Remove overrides of `getUser` and `getConnectionString`, which have no
+  stable database attribute replacements. SQL getters use
+  `getRawQueryTexts` instead of `getRawQueryTextsForOldSemconv`; use
+  `DbClientSpanNameExtractor.create` instead of `createWithGenericOldSpanName`.
+  Remove `SqlClientAttributesExtractorBuilder.setTableAttribute`; enable
+  `setSingleOperationAndCollection(true)` to derive `db.collection.name` for systems that support
+  only one collection and operation per non-batch query.
+- Remove `SqlQueryAnalyzer.analyzeWithSummary` from
+  `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator` for 3.0.
+  Use `SqlQueryAnalyzer.analyze`, which now always produces query summaries when sanitization is
+  enabled.
+- Remove `SqlQuery.createWithSummary(queryText, storedProcedureName, querySummary)` from
+  `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator`.
+  Use `SqlQuery.create(queryText, null, null, storedProcedureName, querySummary)` instead.
+  The existing three-argument `SqlQuery.create(queryText, operationName, target)` retains its
+  operation/collection and stored-procedure semantics; it is not a replacement for
+  `createWithSummary`.
+- Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
+  extractors from `opentelemetry-instrumentation-api-incubator`.
+  `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
+  `getMessageEnvelopeSize()`.
+
 ### 🚫 Deprecations
 
-- Deprecate `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative component configuration
-  through `DeclarativeConfigProperties` directly. To expose `ConfigProperties` through the
-  declarative configuration API, use `ConfigPropertiesBackedConfigProvider`.
-- Deprecate the Spring Boot starter `ConfigProperties` bean when experimental Declarative
-  Configuration is enabled. Auto-configurations that support the experimental Declarative
-  Configuration should use the Declarative Config API directly. This compatibility bean will be
-  removed in 3.0. The `ConfigProperties` bean remains supported for non-declarative configuration.
+- Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
+  in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
+  is the default.
+
+## Version 2.32.0 (2026-10-03)
+
+This release targets the OpenTelemetry SDK 1.66.0.
+
+Note that many artifacts have the `-alpha` suffix attached to their version
+number, reflecting that they will continue to have breaking changes. Please see
+[VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning)
+for more details.
+
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove the deprecated `HostIdResource.REGISTRY_QUERY` constant.
+  ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
+- The `ExperimentalJmxMetricHandler` SPI now requires implementations to provide `getMetricNames()`.
+  ([#19781](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19781))
+- Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
+  ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
+- The experimental `java.common.messaging.headers/development` YAML selector no longer configures
+  header capture. Use `java.common.messaging.headers` instead.
+  ([#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
+
+### 🚫 Deprecations
+
+- Add `RocketMqTelemetry.wrap(DefaultMQProducer)` for single-message and batch producer
+  instrumentation, fixing batch context propagation by injecting context before message encoding.
+  Deprecate `RocketMqTelemetry.createSendMessageHook()` in favor of the wrapper.
+  ([#20479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20479))
+- Deprecate `otel.jmx.target.system` in favor of `otel.jmx.metrics.experimental.included`.
+  ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
+- Deprecate `otel.instrumentation.elasticsearch.capture-search-query`. It will be removed in 3.0,
+  when search query bodies are always captured. There is no replacement.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
+- Deprecate `otel.instrumentation.opensearch.capture-search-query`. It will be removed in 3.0,
+  when search query bodies are always captured. There is no replacement. Sanitization remains
+  enabled by default and configurable with `otel.instrumentation.opensearch.query-sanitization.enabled`.
+  ([#19837](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19837))
+- Deprecate `otel.jmx.enabled` in favor of `otel.instrumentation.jmx.enabled` to align with
+  other instrumentation enablement properties.
+  ([#19945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19945))
+- Deprecate automatic rewriting of `VirtualField.find(Class, Class)` calls in inlined javaagent
+  advice. Instead, look up the `VirtualField` once and store it in a helper class's `static final`
+  field. The `find` method itself remains supported.
+  ([#19980](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19980))
+- Deprecate the Elasticsearch REST library instrumentation. Use the Elasticsearch Java API Client's
+  native OpenTelemetry support, or the Java agent for direct `RestClient` usage. Java agent
+  instrumentation is unaffected.
+  ([#19995](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19995))
+- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
+  `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
+  replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` with
+  `otel.instrumentation.common.messaging.headers.included` and `.excluded`. Also deprecate
+  `otel.instrumentation.messaging.experimental.capture-headers` in favor of
+  `otel.instrumentation.common.messaging.headers.included`. Stable selectors take precedence per
+  leaf.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
+  [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
+- Deprecate the `.included` / `.excluded` properties under
+  `otel.instrumentation.log4j-appender.experimental.map-message-attributes`,
+  `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes`,
+  `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes`, and
+  `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes`
+  in favor of the stable and unified
+  `otel.instrumentation.common.logging.structured-attributes.included` / `.excluded`.
+  ([#20066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20066))
+- Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
+  `otel.instrumentation.couchbase.emit-experimental-telemetry`, a broader name for experimental
+  attributes and internal spans from the underlying Couchbase client.
+  ([#20117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20117))
+- Deprecate `otel.traces.sampler=linksbased_parentbased_always_on` with no replacement and
+  declarative `rule_based_routing` in favor of the SDK incubator composite/development `rule_based`
+  sampler, whose configuration and matching behavior differ.
+  ([#20249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20249))
+- Promote controller and view telemetry configuration to the stable properties
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`, deprecating
+  `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled`.
+  ([#20258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20258))
+- Promote Java agent span suppression configuration to the stable property
+  `otel.instrumentation.common.span-suppression-strategy`, deprecating
+  `otel.instrumentation.experimental.span-suppression-strategy`.
+  ([#20259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20259))
+- Deprecate `otel.instrumentation.oshi.experimental-metrics.enabled`,
+  `ProcessMetrics`, and its `registerObservers(...)` methods in favor of `jvm.memory.used` and
+  `jvm.cpu.time`.
+  ([#20323](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20323))
+- Deprecate `SystemMetrics.registerObservers(Meter)` in the OSHI library instrumentation in favor of
+  `SystemMetrics.registerObservers(OpenTelemetry)`.
+  ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
+- In declarative configuration YAML, deprecate dotted selectors in the
+  `distribution.javaagent.instrumentation.enabled` and `.disabled` lists. Use `reactor_3_1`
+  instead of `reactor_3.1`. Flat-property names such as `otel.instrumentation.reactor-3.1.enabled`
+  are unchanged.
+  ([#20326](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20326))
+
+### 🌟 New javaagent instrumentation
+
+- Add Redisson database connection pool metrics for versions 2.3.0 through 3.25.
+  ([#19152](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19152),
+  [#19634](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19634))
+- Add Java agent instrumentation for Pekko remoting so trace context propagates across remote calls.
+  ([#19823](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19823))
 
 ### 📈 Enhancements
 
-- Add Cassandra JMX metrics target system.
+- Expand the upcoming 3.0 database semantic conventions behind `otel.semconv-stability.opt-in=database`,
+  including configured server targets and span names, endpoint validation, network-peer attributes,
+  Redis namespaces, operation names, error types, query text, and connection pool metric names and
+  database identity for Cassandra, ClickHouse, Couchbase, Elasticsearch, Geode, HBase, JDBC, Redis
+  clients, MongoDB, OpenSearch, R2DBC, Spymemcached, and Vert.x.
+  ([#19728](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19728),
+  [#19747](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19747),
+  [#19749](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19749),
+  [#19753](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19753),
+  [#19757](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19757),
+  [#19795](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19795),
+  [#19830](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19830),
+  [#19831](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19831),
+  [#19832](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19832),
+  [#19834](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19834),
+  [#19838](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19838),
+  [#19839](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19839),
+  [#19844](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19844),
+  [#19845](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19845),
+  [#19846](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19846),
+  [#19848](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19848),
+  [#19850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19850),
+  [#19864](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19864),
+  [#19868](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19868),
+  [#19872](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19872),
+  [#19877](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19877),
+  [#19883](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19883),
+  [#19901](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19901),
+  [#19902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19902),
+  [#19903](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19903),
+  [#19904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19904),
+  [#19981](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19981),
+  [#19983](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19983),
+  [#19986](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19986),
+  [#19988](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19988),
+  [#20008](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20008),
+  [#20011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20011),
+  [#20015](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20015),
+  [#20017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20017),
+  [#20041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20041),
+  [#20065](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20065),
+  [#20068](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20068),
+  [#20070](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20070),
+  [#20071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20071),
+  [#20072](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20072),
+  [#20073](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20073),
+  [#20074](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20074),
+  [#20075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20075),
+  [#20076](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20076),
+  [#20077](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20077),
+  [#20078](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20078),
+  [#20080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20080),
+  [#20082](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20082),
+  [#20084](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20084),
+  [#20086](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20086),
+  [#20089](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20089),
+  [#20105](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20105))
+- Expand the upcoming 3.0 messaging semantic conventions behind `otel.semconv-stability.opt-in=messaging`,
+  including operation-based spans, client and process metrics, per-message batch creation and
+  propagation, consistent timestamps, durable subscription names, and duplicate processing
+  suppression for Camel, Kafka Connect, JMS, SQS, and RocketMQ.
+  ([#19483](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19483),
+  [#19485](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19485),
+  [#19503](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19503),
+  [#19517](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19517),
+  [#19915](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19915),
+  [#20045](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20045),
+  [#20067](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20067),
+  [#20144](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20144))
+- Kafka spans and metrics now include `messaging.kafka.cluster.id` once cluster metadata is
+  resolved.
+  ([#18978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18978))
+- Add SQL database attributes to AWS SDK v2 RDS Data API `ExecuteStatement` and
+  `BatchExecuteStatement` spans.
+  ([#19259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19259))
+- Add `WARNING` logs for invalid or empty extension locations and failed extension JAR loads, plus
+  `FINE` logs for successfully loaded extension JARs.
+  ([#19584](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19584))
+- The JMX metrics library now includes the experimental Kafka broker metrics target.
+  ([#19722](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19722))
+- Update the descriptions of `kafka.connect.connector.status` and `kafka.connect.task.status` to
+  omit the listed supported state values.
+  ([#19724](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19724))
+- Geode database client spans now include `server.address` and `server.port` when the region's pool
+  has exactly one configured server.
+  ([#19748](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19748))
+- Add exception-log support for HBase database clients, SofaRPC clients and servers, and GWT RPC
+  with `otel.semconv.exception.signal.preview=logs`.
+  ([#19750](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19750),
+  [#20253](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20253),
+  [#20254](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20254))
+- Add `server.address` and `server.port` attributes to Couchbase database spans.
+  ([#19758](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19758))
+- Add metric-name filtering for JMX metrics with `otel.jmx.metrics.included` and
+  `otel.jmx.metrics.excluded`, or `JmxTelemetryBuilder.setMetrics(IncludeExclude)` in the library.
+  ([#19782](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19782))
+- RabbitMQ spans now include `messaging.rabbitmq.vhost.name` and `messaging.rabbitmq.cluster.name`
+  when `otel.instrumentation.rabbitmq.experimental-span-attributes=true`.
+  ([#19822](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19822))
+- JMX metric creation messages are now logged at `FINE` instead of `INFO`, reducing default log
+  noise.
+  ([#19825](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19825))
+- Akka HTTP server spans now include the remote peer address in network peer address attributes.
+  ([#19840](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19840))
+- Pekko HTTP server spans now include `client.address` from the socket peer for HTTP/1.1 and HTTP/2
+  requests.
+  ([#19841](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19841))
+- Add the `network.protocol.version` attribute to Spring WebFlux 5.0 client request duration
+  metrics.
+  ([#19842](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19842))
+- Ratpack HTTP client spans now include the `network.protocol.version` attribute.
+  ([#19843](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19843))
+- Add `otel.instrumentation.opensearch.query-sanitization.enabled` (default `true`) to control
+  whether captured search query bodies are sanitized; set it to `false` to capture them verbatim.
+  ([#19869](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19869))
+- GenAI spans now include the `gen_ai.request.stream` attribute when the request uses streaming.
+  ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
+- OpenAI Java 1.1 instrumentation now reports cached input token counts as
+  `gen_ai.usage.cache_read.input_tokens` and reasoning output token counts as
+  `gen_ai.usage.reasoning.output_tokens` when usage details are available.
+  ([#19906](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19906))
+- Extend Couchbase Java agent instrumentation to support SDK 3.0.x.
+  ([#19996](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19996))
+- Add the `aws.bedrock.guardrail.id` span attribute to AWS Bedrock Runtime requests when a guardrail
+  identifier is configured.
+  ([#20040](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20040))
+- Make `host.id` resource detection opt-in for the Java agent with
+  `otel.resource.providers.host-id.enabled=true`.
+  ([#20099](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20099))
+- Add mode-aware semantic-conventions schema URLs to database, messaging, and RPC telemetry scopes.
+  ([#20127](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20127))
+- Add the semantic-conventions schema URL to runtime JVM metrics covered by the schema.
+  ([#20255](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20255))
+- GraphQL operation spans now use the OpenTelemetry semantic conventions v1.44.0 schema URL.
+  ([#20262](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20262))
+- Add the semantic-conventions schema URL to OSHI system metrics.
+  ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
+
+### 🛠️ Bug fixes
+
+- Lettuce 5.1 client spans for Redis command failures now have error status.
+  ([#19075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19075))
+- Prevent javaagent startup deadlocks caused by lazy context-storage initialization under
+  class-loader locks.
+  ([#19265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19265))
+- Fix high-cardinality NATS JetStream settlement span names. Use `$JS.ACK publish` under legacy
+  semantic conventions.
+  ([#19396](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19396))
+- Fix context propagation for tail-delegated Kotlin `@WithSpan` methods so their spans retain the
+  correct caller context.
+  ([#19446](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19446))
+- Fix Camel asynchronous sends so context scopes close on the thread that started the send.
+  ([#19503](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19503))
+- Fix Vert.x HTTP client tracing when a request is flushed with `sendHead()` and later completed
+  with `end()`, so the server span is parented to the exported client span.
+  ([#19547](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19547))
+- Handle cyclic exception cause chains without hanging error extraction across instrumentations or
+  JMX rule parsing.
+  ([#19625](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19625))
+- Sanitize captured Elasticsearch REST Java agent search query bodies by default, replacing
+  literal values with `?` while preserving the query structure. Disable sanitization with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
+- Prevent duplicate Pulsar listener instrumentation and suppress duplicate receive spans during
+  nested deliveries, preserving the parent context for processing spans.
+  ([#19699](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19699),
+  [#20137](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20137))
+- Apache HttpAsyncClient pipelined requests now produce client spans.
+  ([#19710](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19710))
+- Async Thrift server requests following a failed request on the same connection are no longer
+  incorrectly reported as errors.
+  ([#19712](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19712))
+- Suppress duplicate Apache Commons Pool metrics for pools backing an Apache DBCP `BasicDataSource`
+  when both instrumentations are enabled.
+  ([#19721](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19721))
+- Fix Spring Boot starter debug logging when `otel.spring-starter.debug=true`.
+  ([#19725](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19725),
+  [#20034](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20034))
+- Fix duplicate processing spans and metrics across Spring Rabbit, RabbitMQ, and Spring
+  Integration, preserving telemetry for separately registered consumers and correctly parented
+  handler spans.
+  ([#19732](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19732),
+  [#20138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20138),
+  [#20200](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20200))
+- Oracle UCP pool metrics now use a JDBC-derived name instead of the generated UCP name,
+  consolidating pools connected to the same database under a consistent `pool.name` value.
+  ([#19745](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19745))
+- Populate Redis command names for client spans when using Lettuce 6.0.0–6.0.2.
+  ([#19763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19763))
+- Fix `@SpanAttribute` handling so generic values and arrays are recorded correctly as span
+  attributes.
+  ([#19785](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19785))
+- Avoid NullPointerExceptions when ending partially initialized Jedis requests or when JSF cannot
+  derive a server span name.
+  ([#19805](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19805))
+- Fix class-loader instrumentation so the javaagent no longer injects its rewritten
+  `java.lang.ClassLoader` stub as a helper.
+  ([#19811](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19811))
+- Pekko HTTP/2 server requests are now traced.
+  ([#19817](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19817))
+- Handle negative choice indices in OpenAI streaming chat completions.
+  ([#19827](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19827))
+- Pekko HTTP requests rejected during parsing now produce server spans with their response status
+  and customized response headers.
+  ([#19829](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19829))
+- OpenAI chat completion spans now use the `CLIENT` span kind.
+  ([#19858](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19858))
+- Fix missing RocketMQ message-consumption spans for an additional `ConsumeService` constructor
+  overload.
+  ([#19860](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19860))
+- Fix context propagation for Pekko batched tasks so spans created inside scheduled futures retain
+  their correct parent.
+  ([#19862](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19862))
+- Limit captured OpenSearch query bodies to 32,768 characters, matching the Elasticsearch query
+  capture limit.
+  ([#19870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19870))
+- OpenSearch query body capture now uses the configured JSON provider, preserving mapper-specific
+  serialization settings.
+  ([#19875](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19875))
+- Thrift server instrumentation skips repeated context-propagation fields after starting the request
+  span.
+  ([#19895](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19895))
+- Fix a race in Ratpack protocol-version capture so spans record the correct protocol version.
+  ([#19911](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19911))
+- AWS Lambda instrumentation now extracts the X-Ray trace header from `Context.getXrayTraceId()` to
+  continue the incoming trace.
+  ([#19920](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19920))
+- Fix a context scope leak in Thrift server request processing.
+  ([#19925](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19925))
+- Allow the Java agent to process H2’s `org.h2.command.dml.Update$$Lambda` class.
+  ([#19993](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19993))
+- The Java agent now starts when its JAR is already on the bootstrap class path without appending
+  the JAR to bootstrap search again.
+  ([#20001](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20001))
+- The JDBC `OpenTelemetryDriver` now honors `otel.instrumentation.jdbc.query-sanitization.enabled`,
+  so JDBC-specific query sanitization can override the common setting.
+  ([#20020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20020))
+- Fix inaccurate durations for Kafka producer and consumer interceptor spans by ending them
+  immediately, since the interceptors cannot measure broker send or poll time.
+  ([#20044](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20044))
+- Vert.x SQL client 5 query spans now report `db.name`, `server.address`, and `server.port` for
+  connections configured with `connectingTo` suppliers.
+  ([#20050](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20050))
+- Keep Java agent and Spring Boot declarative configuration customizers working with OpenTelemetry
+  SDK 1.66.0.
+  ([#20109](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20109))
+- Prevent truncation of sanitized database and search queries from splitting Unicode surrogate
+  pairs.
+  ([#20123](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20123))
+- Prevent duplicate Kafka processing spans across Kafka Connect, Kafka Streams, Reactor Kafka,
+  and Vert.x, including asynchronous handoffs, without suppressing unrelated batches.
+  ([#20139](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20139),
+  [#20142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20142),
+  [#20143](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20143))
+- Avoid duplicate JMS processing spans across JMS, Spring JMS, Camel, and SJMS listener layers.
+  ([#20140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20140))
+- Apache ShenYu server instrumentation no longer throws when route metadata is null, allowing
+  request processing to continue without a route value.
+  ([#20148](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20148))
+- Record exceptions handled by Spring Rabbit error handlers on the message-processing span.
+  ([#20178](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20178))
+- Fix database-system detection for Vert.x SQL client pools wrapped by Vert.x 5.2.
+  ([#20191](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20191))
+- Reactor instrumentation now propagates context values through externally driven publisher
+  callbacks even when the captured context has no valid span.
+  ([#20192](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20192))
+- Spring Cloud AWS SQS processing spans now end when asynchronous listeners complete, recording
+  their eventual failures or cancellation status.
+  ([#20193](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20193))
+- AWS SDK v1 SQS processing spans now end with callback failures and restore the previous context
+  when `forEach` or `forEachRemaining` handlers throw.
+  ([#20194](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20194))
+- Prevent duplicate SQS processing spans when nested AWS Lambda handlers process the same event.
+  ([#20195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20195))
+- Spring MVC server spans for Spring Boot Actuator endpoints now include the `http.route` attribute.
+  ([#20216](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20216))
+- Fix missing reflection hints for Spring Kafka listener interceptor fields and OAuth bearer JWT
+  classes in GraalVM native images.
+  ([#20332](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20332))
+
+## Version 2.31.1 (2026-08-23)
+
+This release targets the OpenTelemetry SDK 1.65.0.
+
+Note that many artifacts have the `-alpha` suffix attached to their version
+number, reflecting that they will continue to have breaking changes. Please see
+[VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning)
+for more details.
+
+### 🛠️ Bug fixes
+
+- Restore stable semantic convention APIs to the compile classpaths of the Spring Boot
+  autoconfigure and starter artifacts.
+  ([#19754](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19754))
+
+## Version 2.31.0 (2026-08-20)
+
+This release targets the OpenTelemetry SDK 1.65.0.
+
+Note that many artifacts have the `-alpha` suffix attached to their version
+number, reflecting that they will continue to have breaking changes. Please see
+[VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning)
+for more details.
+
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove the deprecated `ConfigPropertiesBackedConfigProvider` and its `create(ConfigProperties)`
+  compatibility API from the declarative config bridge.
+  ([#19305](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19305))
+- Stop exposing `opentelemetry-instrumentation-api-incubator` on library instrumentation compile
+  classpaths.
+  ([#19612](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19612))
+
+### 🚫 Deprecations
+
+- Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
+  `Experimental.setSpanSuppressionStrategy(...)`.
+  ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
+- Deprecate `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
+  `HostIdResource`.
+  ([#19293](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19293))
+- Deprecate `MessageOperation` in favor of `MessagingOperationType`, and the `MessageOperation`
+  overloads of `MessagingAttributesExtractor`, `MessagingConsumerMetrics`,
+  `MessagingProducerMetrics`, `MessagingSpanKindExtractor`, and `MessagingSpanNameExtractor` in
+  favor of the corresponding `MessagingOperationType` APIs.
+  ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
+- Deprecate `otel.traces.exporter=zipkin` in favor of `otel.traces.exporter=otlp`, and
+  `otel.exporter.zipkin.endpoint` in favor of `otel.exporter.otlp.traces.endpoint`.
+  ([#19400](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19400))
+- Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in
+  favor of
+  `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
+  ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
+- Deprecate legacy gRPC metadata, messaging header, and servlet request-parameter capture properties
+  and APIs in favor of selector-based `.included` / `.excluded` configuration and `IncludeExclude`
+  APIs.
+  ([#19494](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19494),
+  [#19522](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19522),
+  [#19523](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19523),
+  [#19638](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19638))
+- Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` in favor of
+  `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`, and
+  `setPreferJfrMetrics(...)` in favor of `setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)`.
+  ([#19495](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19495))
+- Deprecate boolean and capture-list configuration for MDC/context data, map messages, key-value
+  pairs, logger context, Logstash markers, and structured arguments in favor of `.included` /
+  `.excluded` selectors and `IncludeExclude` APIs.
+  ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519),
+  [#19520](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19520),
+  [#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521),
+  [#19599](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19599),
+  [#19600](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19600),
+  [#19605](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19605),
+  [#19609](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19609),
+  [#19610](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19610))
+- Deprecate the declarative configuration field `general.semconv_stability.opt_in` in favor of
+  `general.stability_opt_in_list`, and
+  `general.sanitization.url.sensitive_query_parameters/development` in favor of
+  `general.sanitization.url.sensitive_query_parameters`.
+  ([#19561](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19561))
+- Deprecate `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` in favor of
+  `otel.instrumentation.graphql.operation-name-in-span-name.enabled`, and
+  `otel.instrumentation.runtime-telemetry.package-emitter.enabled` / `jars-per-second` in favor of
+  `otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled` / `jars-per-second`.
+  ([#19573](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19573))
+- Deprecate captured request and response header builder methods across HTTP library
+  instrumentations in favor of selector-based `requestHeaders(IncludeExclude)` and
+  `responseHeaders(IncludeExclude)` APIs.
+  ([#19598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19598),
+  [#19601](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19601),
+  [#19602](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19602),
+  [#19603](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19603),
+  [#19604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19604),
+  [#19606](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19606),
+  [#19607](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19607),
+  [#19608](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19608))
+- Deprecate `otel.instrumentation.micrometer.histogram-gauges.enabled` in favor of
+  `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`.
+  ([#19613](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19613))
+
+### 🌟 New javaagent instrumentation
+
+- Add Apache Commons Pool 2 instrumentation for object pool metrics.
+  ([#19091](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19091))
+- Add Apache HBase client 1.0 javaagent instrumentation.
+  ([#19243](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19243))
+- Add Redisson connection pool metrics for 3.26+.
+  ([#19392](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19392))
+- Add support for OpenTelemetry API 1.65 incubator metrics in the Java agent.
+  ([#19456](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19456))
+- Add Tomcat DBCP 8.0 javaagent instrumentation for database pool metrics.
+  ([#19472](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19472))
+
+### 📈 Enhancements
+
+- Add opt-in OSGi bundle metadata for selected instrumentation, API, and SDK extension artifacts so
+  they can be consumed directly in OSGi runtimes.
+  ([#18995](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18995))
+- Add `cassandra.compaction.progress.completed` and `cassandra.compaction.progress.size` gauges for
+  in-flight Cassandra compactions.
+  ([#19290](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19290))
+- Preview the upcoming 3.0 messaging semantic conventions behind
+  `otel.semconv-stability.opt-in=messaging` across AWS SQS and Lambda, JMS, Kafka, NATS, Pulsar,
+  RabbitMQ, RocketMQ, Spring Integration, and Spring messaging instrumentations.
+  ([#19347](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19347),
+  [#19348](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19348),
+  [#19349](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19349),
+  [#19350](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19350),
+  [#19351](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19351),
+  [#19353](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19353),
+  [#19354](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19354),
+  [#19355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19355),
+  [#19356](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19356),
+  [#19476](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19476),
+  [#19477](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19477),
+  [#19478](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19478),
+  [#19479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19479),
+  [#19480](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19480),
+  [#19481](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19481),
+  [#19482](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19482),
+  [#19486](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19486),
+  [#19487](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19487),
+  [#19499](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19499),
+  [#19500](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19500),
+  [#19504](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19504),
+  [#19505](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19505),
+  [#19507](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19507),
+  [#19508](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19508),
+  [#19535](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19535),
+  [#19544](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19544),
+  [#19565](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19565),
+  [#19567](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19567),
+  [#19639](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19639),
+  [#19640](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19640))
+- Under the upcoming 3.0 RPC semantic conventions behind `otel.semconv-stability.opt-in=rpc`,
+  Dubbo requests to unknown services emit server spans even when decoding fails before
+  `DubboProtocol.getInvoker()`, and record the original method in `rpc.method_original`.
+  ([#16668](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16668))
+- Log4j context data now includes `baggage.*` entries even when there is no current span.
+  ([#19378](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19378))
+- When `otel.instrumentation.common.v3-preview=true`, the Micrometer bridge no longer exports `.max`
+  gauges for `Timer` and `DistributionSummary`.
+  ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
+- Add the `IncludeExclude` selector API to `opentelemetry-instrumentation-api` for matching strings
+  against included and excluded glob patterns.
+  ([#19451](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19451))
+- Emit Cassandra driver 3 consistency, coordinator, page size, idempotence, and speculative
+  execution attributes.
+  ([#19629](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19629))
+- Expand the upcoming 3.0 database semantic conventions behind
+  `otel.semconv-stability.opt-in=database`, including operation names, namespaces, collection names,
+  operation parameters, batch telemetry, and error types for Couchbase, Redis clients, Elasticsearch,
+  R2DBC, JDBC, ClickHouse, MongoDB, and HBase.
+  ([#19616](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19616),
+  [#19623](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19623),
+  [#19664](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19664),
+  [#19665](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19665),
+  [#19668](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19668),
+  [#19670](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19670),
+  [#19704](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19704),
+  [#19705](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19705),
+  [#19706](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19706),
+  [#19707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19707),
+  [#19708](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19708))
+- Add `otel.instrumentation.influxdb.query-sanitization.enabled` to control InfluxDB query
+  sanitization, taking precedence over `otel.instrumentation.common.db.query-sanitization.enabled`.
+  ([#19703](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19703))
+
+### 🛠️ Bug fixes
+
+- Use stable database-derived metric names for unnamed Alibaba Druid, c3p0, Tomcat JDBC, HikariCP,
+  and Vibur connection pools.
+  ([#19108](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19108),
+  [#19159](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19159),
+  [#19173](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19173),
+  [#19470](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19470),
+  [#19471](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19471))
+- Apache DBCP 2.0 metrics now register when the pool starts even without JMX registration, and they
+  unregister on `close()`.
+  ([#19160](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19160))
+- Skip instrumenting JDK tools launched from `$JAVA_HOME/bin` unless `otel.javaagent.enabled=true`
+  is set.
+  ([#19203](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19203))
+- Fix Jetty JMX metrics to emit `jetty.select.count` instead of `jetty.io.select.count` for
+  select-call counts.
+  ([#19249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19249))
+- Fix Redisson connection pool permits leaking when a waiting async command is cancelled.
+  ([#19340](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19340))
+- Fix Spring WebFlux route detection so controller spans keep a readable route name on JDK 21+.
+  ([#19365](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19365))
+- Normalize IPv6 JDBC `server.address` values to bare addresses instead of bracketed literals.
+  ([#19366](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19366))
+- Fix Lettuce 5.1 instrumentation with indy by injecting
+  `io.lettuce.core.protocol.OtelCommandArgsUtil` as a helper class.
+  ([#19373](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19373))
+- Add a 2-second timeout to `host.id` resource detection so slow lookup commands no longer block SDK
+  startup.
+  ([#19377](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19377))
+- Fix azure-core instrumentation so applications that do not use the OpenTelemetry API still get
+  Azure SDK tracing.
+  ([#19387](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19387))
+- MySQL JDBC URL parsing now handles hosts, ports, and query parameters in non-standard URL forms
+  more reliably.
+  ([#19394](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19394))
+- Preload `MethodHandle$1` during agent startup to avoid `ClassCircularityError` on JDK 17 that can
+  break invokedynamic call site linking.
+  ([#19398](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19398))
+- Redact sensitive data from AWS SigV4 query parameters, AWS Lambda API Gateway and Elasticsearch REST
+  URLs, embedded URL credentials, and process command lines.
+  ([#19422](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19422),
+  [#19424](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19424),
+  [#19425](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19425),
+  [#19514](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19514))
+- Fix Micrometer custom meter naming and prevent metric descriptions from leaking between related
+  instruments or registries.
+  ([#19463](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19463),
+  [#19466](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19466),
+  [#19467](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19467))
+- Fix `activemq.destination.temp.utilization` to convert `%` values to a unitless fraction.
+  ([#19512](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19512))
+- Fix `jetty.thread.queue.size` to use the `{job}` unit instead of `{thread}`.
+  ([#19513](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19513))
+- Fix Spring Boot Actuator metric endpoints when the OpenTelemetry Micrometer registry is part of a
+  composite registry or cannot return metric values.
+  ([#19515](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19515),
+  [#19541](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19541))
+- IPv6 addresses in `Host` headers are now parsed correctly, including bracketed ports.
+  ([#19540](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19540))
+- Fix Pulsar receive spans under legacy messaging semantic conventions to evaluate suppression against
+  the extracted producer context when receive telemetry is disabled.
+  ([#19592](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19592))
+- Preserve Dubbo's `ClusterInvoker` type when capturing the consumer registry address.
+  ([#19568](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19568))
+- Stop warning about deprecated selector-based capture settings when the corresponding `.included`
+  or `.excluded` replacement is also configured.
+  ([#19571](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19571))
+- Preserve the configured database name's original case in legacy `db.name` and stable
+  `db.namespace` for R2DBC spans.
+  ([#19615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19615))
+- Capture spans for explicit prepared queries in Vert.x SQL client so `PreparedStatement.query()`
+  execution keeps the correct `db.system` and connection options.
+  ([#19619](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19619))
+- Fix Cassandra 3 `SimpleStatement` sanitization so bound values are detected and hidden in
+  `db.statement`.
+  ([#19620](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19620))
+- Emit exception events and logs for failed JDBC `commit` and `rollback` operations.
+  ([#19621](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19621))
+- Clear JDBC batch telemetry state after `executeBatch()` and `executeLargeBatch()` so subsequent
+  batch spans no longer report stale batch contents.
+  ([#19622](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19622))
+- Keep `server.address` and `server.port` for failed Cassandra 3 operations by extracting the
+  coordinator from `CoordinatorException`.
+  ([#19627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19627))
+- SQL query text is now sanitized with `db.system.name`, so double-quoted identifiers stay intact
+  for databases that treat them as identifiers.
+  ([#19632](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19632))
+- Fix AWS Lambda `RequestHandler` instrumentation so `void`-returning `handleRequest` methods are
+  handled correctly.
+  ([#19714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19714))
+
+## Version 2.30.0 (2026-07-22)
+
+This release targets the OpenTelemetry SDK 1.64.0.
+
+Note that many artifacts have the `-alpha` suffix attached to their version
+number, reflecting that they will continue to have breaking changes. Please see
+[VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning)
+for more details.
+
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove `ExperimentalInstrumentationModule#getModuleGroup()`. Built-in invokedynamic modules now
+  share a single `InstrumentationModuleClassLoader`, and each extension is isolated in its own.
+  ([#18859](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18859))
+- Remove the deprecated `InstrumentationModule.isIndyModule()`; whether a module uses invokedynamic
+  is now determined by the agent rather than declared per module.
+  ([#19140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19140))
+- Remove deprecated query-related APIs from `SqlClientAttributesGetter`, `CassandraRequest`, and
+  `Experimental`.
+  ([#19165](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19165))
+- Remove the deprecated `Enduser*` attribute-capturing APIs from the Spring Security 6.0 library;
+  use the `User*` replacements instead.
+  ([#19168](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19168))
+
+### 🚫 Deprecations
+
+- Deprecate only the Spring Boot starter `ConfigProperties` compatibility bean used with
+  experimental declarative configuration, in favor of the new `ConfigProvider` bean; it will be
+  removed in 3.0. The `ConfigProperties` bean remains supported for non-declarative configuration.
+  ([#19175](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19175))
+- Deprecate `DeclarativeConfigPropertiesBridge` and `DeclarativeConfigPropertiesBridgeBuilder`.
+  Use `DeclarativeConfigProperties` directly or `DeclarativeConfigBridge` instead. Will be removed
+  in 3.0.
+  ([#19202](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19202))
+- Deprecate `ConfigPropertiesBackedConfigProvider` in favor of `DeclarativeConfigBridge`. It will be
+  removed in 2.31.0.
+  ([#19220](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19220))
+
+### 🌟 New javaagent instrumentation
+
+- Add Javaagent instrumentation for HBase client 1.4.
+  ([#19087](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19087))
+
+### 🌟 New library instrumentation
+
+- Add library instrumentation (`ThriftTelemetry`) for the Apache Thrift 0.13 async server.
+  ([#19062](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19062))
+
+### 📈 Enhancements
+
+- Add async server tracing to the Apache Thrift 0.13 javaagent instrumentation; async server
+  handlers were previously uninstrumented.
+  ([#18994](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18994))
+- Support `database=` as an alias for `databaseName` when extracting `db.name` from MSSQL JDBC
+  URLs.
+  ([#19029](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19029))
+- Add batch-operation support to the experimental stable database semantic-convention opt-in
+  (`otel.semconv-stability.opt-in=database`) across database instrumentations, including batch
+  span names, `db.operation.batch.size` (including empty batches), and `db.query.summary`.
+  ([#19034](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19034),
+  [#19037](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19037),
+  [#19054](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19054),
+  [#19055](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19055),
+  [#19056](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19056),
+  [#19057](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19057),
+  [#19143](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19143),
+  [#19147](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19147),
+  [#19161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19161),
+  [#19162](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19162),
+  [#19164](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19164),
+  [#19172](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19172),
+  [#19189](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19189),
+  [#19199](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19199))
+- Add tracing for Lettuce 4.0 reactive commands, including exceptional completion and cancellation.
+  ([#19071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19071))
+- Add the experimental Cassandra JMX metrics target system.
   ([#19080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19080))
+- Add experimental JFR-based `jvm.thread.virtual.pinned` and `jvm.thread.virtual.submit_failed`
+  metrics for Java 19+ virtual threads; enable with
+  `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true`.
+  ([#19092](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19092))
+- Capture custom object values passed to `PreparedStatement.setObject()` in query parameter
+  attributes.
+  ([#19093](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19093))
+- `InstrumentationModule` now exposes `injectedClassNames()` and `exposedClassNames()` for indy
+  instrumentations, so module authors no longer need `ExperimentalInstrumentationModule` for those
+  helper-class declarations.
+  ([#19142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19142))
 - Add `captureTemplate` and `captureArguments` options to the log4j, java-util-logging, and
   jboss-logmanager logging instrumentations, capturing the log message template and arguments as
-  separate `log.body.template` / `log.body.parameters` attributes. This extends the same option
-  that was previously added for logback in
-  [#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423).
+  separate `log.body.template` / `log.body.parameters` attributes; logback already supported these
+  options ([#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423)).
   ([#19154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19154))
+- Add `server.address` and `server.port` attributes to Redisson client spans.
+  ([#19191](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19191))
+- Add `server.address` and `server.port` attributes to Lettuce Redis client spans.
+  ([#19192](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19192))
+- Add `server.address` and `server.port` attributes to Rediscala client spans.
+  ([#19193](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19193))
+- Set `server.address` on registry-backed Dubbo client spans to the registry address plus the
+  service target (`registry://host:port/interface:version:group`) and leave `server.port` unset,
+  gated behind the stable rpc semconv opt-in (`otel.semconv-stability.opt-in=rpc`); the resolved
+  provider host and port are kept under the default semconv.
+  ([#17244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17244),
+  [#19285](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19285))
+
+### 🛠️ Bug fixes
+
+- Fix a spurious duplicate warning when the application logger bridge is installed multiple times
+  during startup.
+  ([#19088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19088))
+- Fix MySQL and MariaDB `db.connection_string` values so IPv6 hosts stay bracketed instead of
+  becoming ambiguous.
+  ([#19078](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19078))
+- Fix multi-topic Pulsar consumers so the internal background receive no longer creates a spurious
+  extra receive span.
+  ([#19095](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19095))
+- `SpringConfigProperties.getMap()` no longer evaluates map property values as SpEL expressions;
+  non-special-cased map properties now parse as comma-delimited `key=value` pairs via the SDK's
+  `DefaultConfigProperties`, so settings like `otel.instrumentation.common.peer-service-mapping`
+  work without SpEL syntax.
+  ([#19113](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19113))
+- Fix JMS destination extraction so an unreadable destination now leaves
+  `messaging.destination.name` unset instead of reporting it as `unknown`.
+  ([#19115](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19115))
+- Fix the JMX Metric Insight `jvm.class.loaded` and `jvm.class.unloaded` metrics to use counter
+  instruments.
+  ([#19141](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19141))
 
 ## Version 2.29.0 (2026-06-19)
 
@@ -1532,7 +2724,7 @@ for more details.
 ### 🌟 New javaagent instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
@@ -1545,7 +2737,7 @@ for more details.
 ### 🌟 New library instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
@@ -3388,7 +4580,7 @@ too disruptive to adopt right away.
   ([#7904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7904))
 - Upgrade to gradle 8.0.2
   ([#7910](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7910),
-  [ 7978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7978))
+  [7978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7978))
 - Replace the test-sets plugin with Gradle test suites
   ([#7930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7930),
   [#7933](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7933),

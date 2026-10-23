@@ -129,7 +129,7 @@ class Netty41ConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -141,7 +141,7 @@ class Netty41ConnectionSpanTest {
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server")
@@ -172,7 +172,7 @@ class Netty41ConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -187,6 +187,6 @@ class Netty41ConnectionSpanTest {
                             satisfies(
                                 NETWORK_PEER_PORT, val -> val.isIn((long) uri.getPort(), null)),
                             satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn("127.0.0.1", null)),
-                            equalTo(maybeStablePeerService(), "test-peer-service"))));
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 }

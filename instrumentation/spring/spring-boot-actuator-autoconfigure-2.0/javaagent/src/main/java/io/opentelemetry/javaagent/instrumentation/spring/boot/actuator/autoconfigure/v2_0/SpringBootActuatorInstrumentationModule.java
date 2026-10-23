@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -20,10 +21,9 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
 
   public SpringBootActuatorInstrumentationModule() {
     super(
-        "spring-boot-actuator-autoconfigure",
         "spring-boot-actuator-autoconfigure-2.0",
-        // share the instrumentation name with MicrometerInstrumentationModule to lessen the users'
-        // confusion
+        "spring-boot-actuator-autoconfigure",
+        // Share the micrometer selector so both registry integration paths use one setting.
         "micrometer");
   }
 
@@ -51,7 +51,9 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AutoConfigurationImportSelectorInstrumentation());
+    return asList(
+        new AutoConfigurationImportSelectorInstrumentation(),
+        new CompositeMeterRegistryInstrumentation());
   }
 
   @Override

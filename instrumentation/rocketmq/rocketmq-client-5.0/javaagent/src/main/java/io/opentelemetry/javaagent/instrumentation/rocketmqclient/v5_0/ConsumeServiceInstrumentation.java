@@ -34,14 +34,33 @@ final class ConsumeServiceInstrumentation implements TypeInstrumentation {
                     .and(
                         takesArgument(
                             1, named("org.apache.rocketmq.client.apis.consumer.MessageListener")))),
-        getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$Constructor1Advice");
+
+    transformer.applyAdviceToMethod(
+        isConstructor()
+            .and(
+                isPublic()
+                    .and(
+                        takesArgument(
+                            2, named("org.apache.rocketmq.client.apis.consumer.MessageListener")))),
+        getClass().getName() + "$Constructor2Advice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
+  public static class Constructor1Advice {
     @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static MessageListener onEnter(@Advice.Argument(1) MessageListener messageListener) {
+      // Replace messageListener by wrapper.
+      return MessageListenerWrapper.wrapIfNeeded(messageListener);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class Constructor2Advice {
+    @AssignReturned.ToArguments(@ToArgument(2))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static MessageListener onEnter(@Advice.Argument(2) MessageListener messageListener) {
       // Replace messageListener by wrapper.
       return MessageListenerWrapper.wrapIfNeeded(messageListener);
     }

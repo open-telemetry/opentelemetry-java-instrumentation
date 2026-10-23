@@ -24,9 +24,19 @@ public final class HttpConstants {
               asList(
                   "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE")));
 
+  // Default sensitive query parameters from semantic conventions:
+  // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full
   public static final Set<String> SENSITIVE_QUERY_PARAMETERS =
       unmodifiableSet(
-          new HashSet<>(asList("AWSAccessKeyId", "Signature", "sig", "X-Goog-Signature")));
+          new HashSet<>(
+              asList(
+                  "AWSAccessKeyId",
+                  "Signature",
+                  "X-Amz-Signature",
+                  "X-Amz-Credential",
+                  "X-Amz-Security-Token",
+                  "sig",
+                  "X-Goog-Signature")));
 
   public static final String _OTHER = "_OTHER";
 

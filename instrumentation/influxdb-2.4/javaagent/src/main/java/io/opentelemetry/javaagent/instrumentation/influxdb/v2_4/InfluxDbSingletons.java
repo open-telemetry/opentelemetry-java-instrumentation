@@ -8,15 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-@SuppressWarnings("deprecation") // to support old semconv
 public class InfluxDbSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.influxdb-2.4";
@@ -31,11 +32,13 @@ public class InfluxDbSingletons {
         Instrumenter.<InfluxDbQuery, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.createWithGenericOldSpanName(queryAttributesGetter))
+                DbClientSpanNameExtractor.create(queryAttributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(queryAttributesGetter)
-                    .setTableAttribute(null)
+                    .setQuerySanitizationEnabled(
+                        DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "influxdb"))
                     .build())
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(queryBuilder);
 
@@ -49,6 +52,7 @@ public class InfluxDbSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(modifyBuilder);
 

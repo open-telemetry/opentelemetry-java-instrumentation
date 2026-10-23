@@ -3,8 +3,9 @@ plugins {
 }
 
 otelJava {
-  // HBase 1.4.x test stack is not reliable on JDK 25+.
-  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
+  // HBase 2.0.x test stack uses Subject.getSubject(), which is unsupported on JDK 23+.
+  // Cap tests at latest LTS release before JDK 23
+  maxJavaVersionForTests.set(JavaVersion.VERSION_21)
 }
 
 muzzle {
@@ -17,16 +18,14 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:hbase:hbase-client-common-1.4:javaagent"))
-
   library("org.apache.hbase:hbase-client:1.4.0")
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
+  implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))
 
   compileOnly("org.apache.hbase:hbase-shaded-client:1.4.0")
 
-  testImplementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
+  testImplementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:hbase:hbase-client-2.0:javaagent"))
 
   latestDepTestLibrary("org.apache.hbase:hbase-client:1.+") // see hbase-client-2.0 module
@@ -43,7 +42,7 @@ testing {
     register<JvmTestSuite>("shadedClientTest") {
       dependencies {
         implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.4.0").orLatest("1.+")}")
-        implementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
+        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
       }
     }
   }
@@ -60,22 +59,10 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val stableSemconvSuites =
-    testing.suites.withType(JvmTestSuite::class).map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
-    }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

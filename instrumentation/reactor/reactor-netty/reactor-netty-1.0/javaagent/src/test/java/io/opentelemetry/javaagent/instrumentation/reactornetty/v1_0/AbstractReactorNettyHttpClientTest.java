@@ -13,7 +13,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -45,6 +44,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import reactor.netty.http.client.HttpClient;
 
 abstract class AbstractReactorNettyHttpClientTest
@@ -135,14 +136,7 @@ abstract class AbstractReactorNettyHttpClientTest
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
-    // unopened port or non routable address
-    if ("http://localhost:61/".equals(uri.toString())
-        || "https://192.0.2.1/".equals(uri.toString())) {
-      attributes.remove(NETWORK_PROTOCOL_VERSION);
-    }
-
     if (uri.getPath().endsWith("/read-timeout")) {
-      attributes.remove(NETWORK_PROTOCOL_VERSION);
       attributes.remove(SERVER_ADDRESS);
       attributes.remove(SERVER_PORT);
     }
@@ -201,12 +195,17 @@ abstract class AbstractReactorNettyHttpClientTest
         });
   }
 
-  @Test
-  void shouldExposeContextToHttpRequestErrorCallback() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void shouldExposeContextToHttpRequestErrorCallback(boolean combinedCallbacks) {
     AtomicReference<Span> onRequestErrorSpan = new AtomicReference<>();
 
     HttpClient httpClient =
-        createHttpClient().doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
+        combinedCallbacks
+            ? createHttpClient()
+                .doOnError((rq, err) -> onRequestErrorSpan.set(Span.current()), (rs, err) -> {})
+            : createHttpClient()
+                .doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
 
     Throwable thrown =
         catchThrowable(
@@ -318,7 +317,7 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(ERROR_TYPE, "cancelled"),
-                            equalTo(maybeStablePeerService(), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

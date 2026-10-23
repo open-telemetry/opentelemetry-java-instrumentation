@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -17,15 +16,10 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -33,14 +27,19 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -62,8 +61,9 @@ class JdbcTelemetryTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
-                        .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))));
+                    span.hasName("SELECT")
+                        .hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))));
 
     assertDurationMetric(
         testing,
@@ -71,13 +71,74 @@ class JdbcTelemetryTest {
         DB_NAMESPACE,
         DB_QUERY_SUMMARY,
         DB_SYSTEM_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jdbc",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("groupTargets")
+  void groupTargetUsesNormalizedPorts(String url, String expectedAddress) throws SQLException {
+    JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
+    DataSource dataSource = telemetry.wrap(new TestDataSource(url));
+
+    testing.runWithSpan(
+        "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, "dbname"),
+                        equalTo(DB_QUERY_TEXT, "SELECT ?;"),
+                        equalTo(DB_QUERY_SUMMARY, "SELECT"),
+                        equalTo(SERVER_ADDRESS, expectedAddress))));
+  }
+
+  private static Stream<Arguments> groupTargets() {
+    return Stream.of(
+        argumentSet(
+            "default ports",
+            "jdbc:postgresql://pg.host1,pg.host2:5432/dbname",
+            "pg.host1,pg.host2"),
+        argumentSet(
+            "shared non-default port",
+            "jdbc:postgresql://pg.host1:15432,pg.host2:15432/dbname",
+            "pg.host1:15432,pg.host2:15432"),
+        argumentSet(
+            "mixed ports",
+            "jdbc:postgresql://pg.host1:5432,pg.host2:15432/dbname",
+            "pg.host1:5432,pg.host2:15432"));
   }
 
   @Test
-  void error() throws SQLException {
-    assumeTrue(emitStableDatabaseSemconv());
+  void spanNameFallsBackToGroupTarget() throws SQLException {
+    JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
+    DataSource dataSource =
+        telemetry.wrap(new TestDataSource("jdbc:postgresql://pg.host1:15432,pg.host2:15432"));
+
+    testing.runWithSpan(
+        "parent", () -> dataSource.getConnection().createStatement().execute("invalid"));
+
+    // span naming is unchanged: a query that has no summary and no namespace falls back to
+    // server.address, which now holds the whole configured target
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span -> span.hasName("pg.host1:15432,pg.host2:15432")));
+  }
+
+  @ParameterizedTest
+  @MethodSource("errorCodes")
+  void error(int errorCode, String sqlState, String expectedErrorType) throws SQLException {
 
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
     DataSource source = spy(new TestDataSource());
@@ -85,7 +146,9 @@ class JdbcTelemetryTest {
     Statement statement = spy(connection.createStatement());
     when(source.getConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
-    doThrow(new SQLException("BOOM", "state", 42)).when(statement).execute(Mockito.anyString());
+    doThrow(new SQLException("BOOM", sqlState, errorCode))
+        .when(statement)
+        .execute(Mockito.anyString());
     DataSource dataSource = telemetry.wrap(source);
 
     assertThatCode(
@@ -100,16 +163,14 @@ class JdbcTelemetryTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
+                    span.hasName("SELECT")
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, POSTGRESQL),
                             equalTo(DB_NAMESPACE, "dbname"),
                             equalTo(DB_QUERY_TEXT, "SELECT ?;"),
-                            equalTo(
-                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT"),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, 5432),
-                            equalTo(ERROR_TYPE, "42"))));
+                            equalTo(ERROR_TYPE, expectedErrorType))));
 
     assertDurationMetric(
         testing,
@@ -118,8 +179,32 @@ class JdbcTelemetryTest {
         DB_QUERY_SUMMARY,
         DB_SYSTEM_NAME,
         ERROR_TYPE,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jdbc",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> point.hasAttribute(ERROR_TYPE, expectedErrorType))));
+  }
+
+  private static Stream<Arguments> errorCodes() {
+    return Stream.of(
+        argumentSet("positive vendor code takes precedence", 42, "42601", "42"),
+        argumentSet("negative vendor code", -42, null, "-42"),
+        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601"),
+        argumentSet(
+            "null SQLSTATE falls back to exception class", 0, null, SQLException.class.getName()),
+        argumentSet(
+            "empty SQLSTATE falls back to exception class", 0, "", SQLException.class.getName()),
+        argumentSet(
+            "successful completion SQLSTATE falls back to exception class",
+            0,
+            "00000",
+            SQLException.class.getName()));
   }
 
   @Test
@@ -155,8 +240,7 @@ class JdbcTelemetryTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")));
+                span -> span.hasName("parent"), span -> span.hasName("SELECT")));
   }
 
   @Test
@@ -218,7 +302,8 @@ class JdbcTelemetryTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"), span -> span.hasName("COMMIT")));
+                span -> span.hasName("parent"),
+                span -> span.hasName("COMMIT").satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))));
 
     assertDurationMetric(
         testing,
@@ -226,8 +311,13 @@ class JdbcTelemetryTest {
         DB_NAMESPACE,
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        SERVER_ADDRESS);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jdbc",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)));
   }
 
   @Test
@@ -246,9 +336,7 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
-                        .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT 1;"))));
+                span -> span.hasName("SELECT").hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT 1;"))));
   }
 
   @Test
@@ -285,22 +373,13 @@ class JdbcTelemetryTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "BATCH INSERT test" : "dbname")
+                    span.hasName("BATCH INSERT test")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
-                            equalTo(maybeStable(DB_NAME), "dbname"),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : "postgresql://127.0.0.1:5432"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv() ? "INSERT INTO test VALUES(?)" : null),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "BATCH INSERT test" : null),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, 5432))));
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, "dbname"),
+                            equalTo(DB_QUERY_TEXT, "INSERT INTO test VALUES(?)"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                            equalTo(DB_QUERY_SUMMARY, "BATCH INSERT test"),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"))));
   }
 }

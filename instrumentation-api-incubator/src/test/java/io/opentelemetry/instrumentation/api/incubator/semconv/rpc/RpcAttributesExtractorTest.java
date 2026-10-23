@@ -5,13 +5,15 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -63,6 +65,11 @@ class RpcAttributesExtractorTest {
       return service + "/" + method;
     }
 
+    @Override
+    public String getRpcMethodOriginal(Map<String, String> request) {
+      return request.get("originalMethod");
+    }
+
     @Nullable
     @Override
     public String getErrorType(
@@ -81,14 +88,11 @@ class RpcAttributesExtractorTest {
     testExtractor(RpcClientAttributesExtractor.create(new TestGetter()));
   }
 
-  // Stable semconv keys
-  private static final AttributeKey<String> RPC_SYSTEM_NAME =
-      AttributeKey.stringKey("rpc.system.name");
-
   private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
     Map<String, String> request = new HashMap<>();
     request.put("service", "my.Service");
     request.put("method", "Method");
+    request.put("originalMethod", "my.Service/OriginalMethod");
 
     Context context = Context.root();
 
@@ -98,15 +102,16 @@ class RpcAttributesExtractorTest {
     // Build expected entries list based on semconv mode
     List<Map.Entry<? extends AttributeKey<?>, ?>> expectedEntries = new ArrayList<>();
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM_NAME, "test"));
       expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
+      expectedEntries.add(entry(RPC_METHOD_ORIGINAL, "my.Service/OriginalMethod"));
     }
 
     if (emitOldRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM, "test"));
       expectedEntries.add(entry(RPC_SERVICE, "my.Service"));
-      if (!emitStableRpcSemconv()) {
+      if (!emitPreviewRpcSemconv()) {
         expectedEntries.add(entry(RPC_METHOD, "Method"));
       }
     }
@@ -136,7 +141,7 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, null);
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       assertThat(attributes.build()).containsEntry(ERROR_TYPE, "CANCELLED");
     }
   }
@@ -155,7 +160,7 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, new IllegalArgumentException());
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       assertThat(attributes.build())
           .containsEntry(ERROR_TYPE, "java.lang.IllegalArgumentException");
     }
@@ -175,7 +180,7 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, null);
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
     }
   }

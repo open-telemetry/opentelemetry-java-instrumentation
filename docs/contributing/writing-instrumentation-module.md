@@ -233,122 +233,17 @@ the `transform()` method.
 
 ## Use advice classes to write instrumentation code
 
-Two types of instrumentation are currently supported:
-
-- inlined instrumentation, where advice classes method body bytecode is copied into the instrumented class files
-- non-inlined instrumentation, where advice classes are loaded as regular class files.
-
-The choice between the two strategies is made by instrumentation author by using the `inline` property of the `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotations.
-
-- if `inline` property is not set or set to `true` (default), the advice is inlined into the instrumented class files
-- if `inline` property is explicitly set to `false`
-  - before 3.0.0: the advice is inlined
-  - as of 3.0.0 and later: the advice is not inlined
-
-## Inlined instrumentation
-
-With inlined instrumentation, advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
-the instrumented library class files. You should not treat them as ordinary, plain Java classes.
-
-Unfortunately many standard practices do not apply to advice classes:
-
-- If they're inner classes, they MUST be static.
-- They MUST only contain static methods.
-- They MUST NOT contain any state (fields) whatsoever, static constants included. Only the advice
-  methods' content is copied to the instrumented code, constants are not.
-- Inner advice classes defined in an `InstrumentationModule` or a `TypeInstrumentation` MUST NOT use
-  anything from the outer class (loggers, constants, etc).
-- Reusing code by extracting a common method and/or parent class won't work: create additional helper
-  classes to store any reusable code instead.
-- They SHOULD NOT contain any methods other than `@Advice`-annotated method.
-
-Consider the following example:
-
-```java
-@SuppressWarnings("unused")
-public static class MethodAdvice {
-  @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void onEnter(/* ... */) {
-    // ...
-  }
-
-  @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-  public static void onExit(/* ... */) {
-    // ...
-  }
-}
-```
-
-Include the `suppress = Throwable.class` property in `@Advice`-annotated methods. Exceptions
-thrown by the advice methods get caught and handled by a special `ExceptionHandler` that the
-OpenTelemetry javaagent defines. The handler makes sure to properly log all unexpected
-exceptions.
-
-The `OnMethodEnter` and `OnMethodExit` advice methods often need to share several pieces of
-information. We use local variables prefixed with `otel` to pass context, scope, and other
-data between both methods, like in the following example:
-
-```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
-public static void onEnter(@Advice.Argument(1) Object request,
-                           @Advice.Local("otelContext") Context context,
-                           @Advice.Local("otelScope") Scope scope) {
-  // ...
-}
-```
-
-For telemetry-producing instrumentations, both methods follow this pattern:
-
-```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
-public static void onEnter(@Advice.Argument(1) Object request,
-                           @Advice.Local("otelContext") Context context,
-                           @Advice.Local("otelScope") Scope scope) {
-  Context parentContext = Java8BytecodeBridge.currentContext();
-
-  if (!instrumenter().shouldStart(parentContext, request)) {
-    return;
-  }
-
-  context = instrumenter().start(parentContext, request);
-  scope = context.makeCurrent();
-}
-
-@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-public static void onExit(@Advice.Argument(1) Object request,
-                          @Advice.Return Object response,
-                          @Advice.Thrown Throwable exception,
-                          @Advice.Local("otelContext") Context context,
-                          @Advice.Local("otelScope") Scope scope) {
-  if (scope == null) {
-    return;
-  }
-  scope.close();
-  instrumenter().end(context, request, response, exception);
-}
-```
-
-Notice that the example above doesn't use `Context.current()`, but a `Java8BytecodeBridge` method
-instead. This is intentional: if you are instrumenting a pre-Java 8 library, inlining Java 8 default
-method calls (or static methods in an interface) into that library results in a `java.lang.VerifyError`
-at runtime, since Java 8 default method invocations aren't legal in Java 7 (and prior) bytecode.
-
-Since the OpenTelemetry API has many common default/static interface methods, like `Span.current()`,
-the `javaagent-extension-api` artifact has a class `Java8BytecodeBridge` which provides static
-methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
-in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
-
-[suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
-
 ## Non-inlined instrumentation
 
-The most common way to instrument code with ByteBuddy relies on inlining, this strategy will be
-referred as "inlined" strategy as opposed to "non-inlined".
+Non-inlined (indy) advice is the repository default. In production javaagent modules, explicitly set
+`inline = false` on every `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotation. The only
+exceptions are `instrumentation/internal/internal-class-loader` and
+`instrumentation/internal/internal-lambda`.
 
-For inlined advices, the advice code is directly copied into the instrumented method.
-In addition, all helper classes are injected into the classloader of the instrumented classes.
+The `inline` attribute defaults to `true`, which copies advice code into the instrumented method.
+Set `inline = false` to load advice as regular classes and use indy instrumentation.
 
-For indy, advice classes are not inlined. Instead, they are loaded alongside all helper classes
+With indy, advice classes are loaded alongside all helper classes
 into a special `InstrumentationModuleClassloader`, which sees the classes from both the instrumented
 application classloader and the agent classloader.
 The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
@@ -358,9 +253,13 @@ Using indy instrumentation has these advantages:
 
 - allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
-- allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#inlined-instrumentation))
+- allows advice classes to contain static fields and methods which can be accessed from the advice entry points
 - advice classes have access to agent code so communicating between advice and agent does not need an api in boot loader
 - advice classes code does not require to be compatible with instrumented class, for example we can call a static interface method in advice when instrumented class is compiled for Java 7 or older.
+
+Advice classes and their static entry points must remain public for indy method-handle dispatch.
+Ordinary helper methods may be private when their callers and classloader boundaries permit it;
+non-inlined advice may also use lambdas.
 
 ### Shared classes and common classloader
 
@@ -381,14 +280,10 @@ module classloader.
 
 This allows for example to access package-private methods that would not be accessible otherwise.
 
-### Advice local variables
+### Passing state between advice methods
 
-With [inlined advices](#inlined-instrumentation), declaring an advice method argument with `@Advice.Local` allows defining
-a variable that is local to the advice execution for communication between the enter and exit advices.
-
-When advices are not inlined, usage of `@Advice.Local` is not possible. It is however possible to
-return a value from the enter advice and get the value in the exit advice with a parameter annotated
-with `@Advice.Enter`, for example:
+To pass state from enter advice to exit advice, return it from the enter method and receive it with
+`@Advice.Enter`:
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -402,6 +297,9 @@ public static void onExit(@Advice.Argument(1) Object request,
   // do something with enterValue
 }
 ```
+
+Include `suppress = Throwable.class` in advice annotations. Exceptions thrown by advice methods are
+caught and handled by the javaagent's exception handler, which logs unexpected exceptions.
 
 ### Modifying method arguments
 
@@ -460,29 +358,80 @@ public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFiel
 It is possible to modify multiple fields at once by using an array, see usages of
 `@Advice.AssignReturned.ToFields` for detailed examples.
 
+[suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
+
 ## Using virtual fields to associate instrumentation classes to instrumented classes
 
-Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
-the library does not offer a way to do this. The Java javaagent provides `VirtualField`
-for that purpose. Consider the following example:
+Sometimes javaagent instrumentation needs to associate instrumentation-owned state with an instance
+of an instrumented library class, but the library does not provide a field for that state. The
+javaagent provides `VirtualField` for this purpose.
+
+Prefer `VirtualField` over an external weak-key cache, `WeakHashMap`, or identity-keyed side table
+when:
+
+- the key is a third-party object instance such as a request, message, task, callback, or connection;
+- the value is instrumentation state associated with that exact instance; and
+- the state should live no longer than the carrier object.
+
+Weak references and caches still have other uses. For example, a cache of metadata derived from a
+`Class` or `ClassLoader` is memoization rather than state attached to an individual library object,
+and a weak interning pool can canonicalize equal value objects without retaining them.
+
+Outside an advice method, look up the virtual field once and store its handle in a field:
 
 ```java
-VirtualField<Runnable, Context> virtualField =
-    VirtualField.get(Runnable.class, Context.class);
+private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
+    VirtualField.find(Runnable.class, Context.class);
 ```
 
-A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many
-bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` instance is rather
-limited: the `VirtualField#get()` method must receive class references as its parameters; it won't
-work with variables, method params, etc. Both the owner class and the field class must be known at
-compile time for it to work.
+The first argument is the carrier type and the second is the attached value type. In normal
+javaagent instrumentation, both should be class literals so muzzle can discover and register the
+mapping. Bytecode transformation rewrites calls with class-literal arguments in inlined `@Advice`
+methods. Lookups made outside advice execute at runtime and should be cached.
+A rare lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle`
+method. The instrumentation module must implement `ExperimentalInstrumentationModule` and override
+`registerVirtualFields(...)` to register every possible carrier/value pair. The `(carrier class,
+value class)` pair identifies the virtual field across instrumentations, so use a dedicated holder
+class when common value types such as `Object`, `Boolean`, `String`, or `Map` could give unrelated
+state the same pair.
 
-Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
-ClassNotFoundException when trying to access the field.
+When a shared bootstrap or common helper cannot name the library carrier type, keep the
+`VirtualField` lookup with the instrumentation-specific caller. Pass the typed handle, or a small
+typed accessor around it, into the shared logic:
 
-The call to `VirtualField.find()` is expensive, so it is best to call it once and cache the result in a field.
-In addition, when using [non-inlined instrumentation](#non-inlined-instrumentation), the calls to `VirtualField.find()` must be done outside the advice class and methods
-because those calls are re-written for efficiency. The `VirtualFieldChecker` class is used to check this at runtime when the advice class is loaded.
+```java
+public static <T> void attachContext(
+    VirtualField<T, Context> field, T carrier, Context context) {
+  field.set(carrier, context);
+}
+```
+
+Do not generalize this pattern with `VirtualField.find(Object.class, ...)`. The caller should select
+the narrow class or interface that identifies the library objects that can carry the state.
+
+Inside an inlined `@Advice` method, call `VirtualField.find(...)` directly where the virtual field
+is used. The call is rewritten during bytecode transformation and does not need to be cached. A
+non-inlined advice method (`inline = false`) must not call `VirtualField.find(...)` because the call
+is not rewritten. For non-inlined advice, put the handle in a `static final` field on a non-advice
+helper or singleton and reference that handle from the advice method. Use the same caching pattern
+for other lookups outside advice.
+
+The javaagent normally injects field-backed storage into eligible carrier implementations. It falls
+back to a weak-key, strong-value map when field injection is unavailable. Avoid storing a value that
+strongly references its carrier because that object graph can retain the weak key through the
+fallback value. If such a back-reference is required, make that reference weak.
+
+`VirtualField` follows object identity. Clear state with `field.set(carrier, null)` once it has been
+consumed or when an operation fails. Garbage collection is not enough for pooled or reused carriers:
+clear or replace their state at the lifecycle boundary so a later logical operation cannot observe
+stale state.
+
+Individual lookups and updates are safe, but a `get()` followed by `set()` is not an atomic
+read-modify-write operation. Attached state that can be updated concurrently must provide the
+required synchronization or atomic operations.
+
+Use of `VirtualField` requires the `muzzle-generation` Gradle plugin. Without it, the mapping is not
+registered and the javaagent cannot install or rewrite the field implementation.
 
 ## Avoid using @Advice.Origin Method
 

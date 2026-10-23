@@ -41,7 +41,6 @@ tasks {
     // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
     jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   if (!otelProps.testLatestDeps) {
@@ -50,15 +49,24 @@ tasks {
     }
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  test {
+    filter {
+      excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+    }
+  }
+
+  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    filter {
+      includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+    }
+    systemProperty("metadataConfig", "otel.instrumentation.influxdb.query-sanitization.enabled=false")
+    jvmArgs("-Dotel.instrumentation.influxdb.query-sanitization.enabled=false")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testQuerySanitizationDisabled)
   }
 }

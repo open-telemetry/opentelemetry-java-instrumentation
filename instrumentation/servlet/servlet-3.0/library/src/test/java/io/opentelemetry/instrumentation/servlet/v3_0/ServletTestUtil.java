@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet.v3_0;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.servlet.v3_0.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import javax.servlet.Filter;
@@ -20,9 +21,10 @@ public class ServletTestUtil {
   public static Filter newFilter(OpenTelemetry openTelemetry) {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER));
-    Experimental.setCaptureRequestParameters(builder, singletonList("test-parameter"));
+            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS);
+    Experimental.setRequestParameters(
+        builder, IncludeExclude.builder().setIncluded(singletonList("test-parameter")).build());
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);
     return builder.build().createFilter();
   }

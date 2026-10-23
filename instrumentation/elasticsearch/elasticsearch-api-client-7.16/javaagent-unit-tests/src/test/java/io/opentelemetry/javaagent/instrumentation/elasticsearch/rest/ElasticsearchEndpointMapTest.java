@@ -9,8 +9,8 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchEndpointDefinition;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16.ElasticsearchEndpointMap;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0.ElasticsearchEndpointDefinition;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

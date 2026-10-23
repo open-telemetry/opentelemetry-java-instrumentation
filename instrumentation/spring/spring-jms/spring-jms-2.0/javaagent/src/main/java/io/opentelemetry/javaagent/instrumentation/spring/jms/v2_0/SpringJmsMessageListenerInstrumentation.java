@@ -15,11 +15,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import io.opentelemetry.javaagent.instrumentation.jms.v1_1.JavaxMessageAdapter;
+import io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSubscriptionNames;
 import javax.annotation.Nullable;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
@@ -53,44 +55,77 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
   public static class MessageListenerAdvice {
 
     public static class AdviceScope {
+      private final Instrumenter<MessageWithDestination, Void> instrumenter;
       private final MessageWithDestination request;
-      private final Context context;
-      private final Scope scope;
+      private final MessageAdapter messageAdapter;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
-      private AdviceScope(MessageWithDestination request, Context context, Scope scope) {
+      private AdviceScope(
+          Instrumenter<MessageWithDestination, Void> instrumenter,
+          MessageWithDestination request,
+          MessageAdapter messageAdapter,
+          @Nullable Context context,
+          @Nullable Scope scope) {
+        this.instrumenter = instrumenter;
         this.request = request;
+        this.messageAdapter = messageAdapter;
         this.context = context;
         this.scope = scope;
       }
 
       @Nullable
-      public static AdviceScope enter(Message message) {
-        Context parentContext = Context.current();
-        Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
-        if (receiveContext != null) {
-          parentContext = receiveContext;
-        }
-
+      public static AdviceScope start(Message message) {
+        MessageAdapter messageAdapter = JavaxMessageAdapter.create(message);
         MessageWithDestination request =
-            MessageWithDestination.create(JavaxMessageAdapter.create(message), null);
+            MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
+        boolean firstProcessingObserver = messageAdapter.beginProcessing();
 
-        if (!listenerInstrumenter().shouldStart(parentContext, request)) {
-          return null;
+        try {
+          if (!firstProcessingObserver) {
+            return new AdviceScope(
+                listenerInstrumenter(messageAdapter.wereConsumedMessagesRecorded()),
+                request,
+                messageAdapter,
+                null,
+                null);
+          }
+
+          Context parentContext = Context.current();
+
+          Instrumenter<MessageWithDestination, Void> instrumenter =
+              listenerInstrumenter(messageAdapter.wereConsumedMessagesRecorded());
+          if (!instrumenter.shouldStart(parentContext, request)) {
+            return new AdviceScope(instrumenter, request, messageAdapter, null, null);
+          }
+          Context context;
+          try (Scope ignored = Context.root().makeCurrent()) {
+            context = instrumenter.start(parentContext, request);
+          }
+          return new AdviceScope(
+              instrumenter, request, messageAdapter, context, context.makeCurrent());
+        } catch (Throwable t) {
+          messageAdapter.endProcessingAfterStartFailure(t);
+          throw t;
         }
-        Context context = listenerInstrumenter().start(parentContext, request);
-        return new AdviceScope(request, context, context.makeCurrent());
       }
 
-      public void exit(@Nullable Throwable throwable) {
-        scope.close();
-        listenerInstrumenter().end(context, request, null, throwable);
+      public void end(@Nullable Throwable throwable) {
+        try {
+          if (context != null && scope != null) {
+            scope.close();
+            instrumenter.end(context, request, null, throwable);
+          }
+        } finally {
+          messageAdapter.endProcessing();
+        }
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
-      return AdviceScope.enter(message);
+      return AdviceScope.start(message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -98,7 +133,7 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }

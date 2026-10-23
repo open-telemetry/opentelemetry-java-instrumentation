@@ -1,0 +1,464 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
+
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CLIENT_OPERATION_DURATION;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import java.util.Collection;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+class MessagingConsumerMetricsTest {
+
+  private static final double[] DURATION_BUCKETS =
+      MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  @Test
+  void collectsMetricsAndCountsBatchOnce() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
+
+    Attributes requestAttributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "pulsar")
+            .put(MESSAGING_DESTINATION_NAME, "topic")
+            .put(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}")
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .put(MESSAGING_CONSUMER_GROUP_NAME, "group")
+            .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "subscription")
+            .build();
+    Attributes responseAttributes =
+        Attributes.builder()
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
+            .put(ERROR_TYPE, IllegalStateException.class.getName())
+            .build();
+
+    Context context = listener.onStart(enable(Context.root()), requestAttributes, nanos(100));
+    assertThat(contains(context, RECEIVE, CLIENT_OPERATION_DURATION)).isTrue();
+    assertThat(contains(context, RECEIVE, CONSUMED_MESSAGES)).isTrue();
+    listener.onEnd(context, responseAttributes, nanos(300));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics).hasSize(2);
+    assertThat(metrics)
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(0.2)
+                                        .hasBucketBoundaries(DURATION_BUCKETS)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
+                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                            equalTo(
+                                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                "subscription"),
+                                            equalTo(
+                                                ERROR_TYPE, IllegalStateException.class.getName()),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive")))))
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.client.consumed.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application.")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(3)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(
+                                                ERROR_TYPE, IllegalStateException.class.getName()),
+                                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
+                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                            equalTo(
+                                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                "subscription")))));
+  }
+
+  @Test
+  void outerReceivePreventsDuplicateNestedMetrics() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener outer = MessagingConsumerMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingConsumerMetrics.get().create(meterProvider.get("inner"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "kafka")
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
+            .build();
+
+    Context outerContext = outer.onStart(enable(Context.root()), attributes, nanos(100));
+    Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
+    inner.onEnd(innerContext, Attributes.empty(), nanos(200));
+    outer.onEnd(outerContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .allMatch(metric -> metric.getInstrumentationScopeInfo().getName().equals("outer"))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.client.operation.duration", "messaging.client.consumed.messages");
+    assertThat(metrics)
+        .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
+        .singleElement()
+        .satisfies(
+            metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(3))));
+  }
+
+  @Test
+  void nestedReceiveOperationsRecordIndependentlyByDefault() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener outer = MessagingConsumerMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingConsumerMetrics.get().create(meterProvider.get("inner"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .build();
+
+    Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
+    Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
+    inner.onEnd(innerContext, Attributes.empty(), nanos(200));
+    outer.onEnd(outerContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
+        .containsExactlyInAnyOrder("outer", "outer", "inner", "inner");
+  }
+
+  @Test
+  void separateListenersKeepIndependentState() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener durationListener =
+        MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("test"));
+    OperationListener consumedMessagesListener =
+        MessagingConsumerMetrics.getConsumedMessages().create(meterProvider.get("test"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .build();
+
+    Context context = durationListener.onStart(Context.root(), attributes, nanos(100));
+    context = consumedMessagesListener.onStart(context, attributes, nanos(100));
+    consumedMessagesListener.onEnd(context, Attributes.empty(), nanos(200));
+    durationListener.onEnd(context, Attributes.empty(), nanos(200));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.client.operation.duration", "messaging.client.consumed.messages");
+  }
+
+  @Test
+  void distinctClientOperationTypesRecordTheirDurations() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener receive =
+        MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("receive"));
+    OperationListener settle =
+        MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("settle"));
+    Attributes receiveAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .build();
+    Attributes settleAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "settle")
+            .put(MESSAGING_OPERATION_TYPE, "settle")
+            .build();
+
+    Context receiveContext = receive.onStart(Context.root(), receiveAttributes, nanos(100));
+    Context settleContext = settle.onStart(receiveContext, settleAttributes, nanos(150));
+    settle.onEnd(settleContext, Attributes.empty(), nanos(200));
+    receive.onEnd(receiveContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
+        .containsExactlyInAnyOrder("receive", "settle");
+  }
+
+  @Test
+  void failedReceiveWithoutBatchCountCountsNoConsumedMessages() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
+
+    Attributes requestAttributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "pulsar")
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .build();
+    Attributes responseAttributes =
+        Attributes.of(ERROR_TYPE, IllegalStateException.class.getName());
+
+    Context context = listener.onStart(Context.root(), requestAttributes, nanos(100));
+    listener.onEnd(context, responseAttributes, nanos(300));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
+        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"));
+  }
+
+  @Test
+  void consumedMessagesOnlyCountsFailedDelivery() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener listener =
+        MessagingConsumerMetrics.getConsumedMessages().create(meterProvider.get("test"));
+
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "pulsar")
+            .put(MESSAGING_DESTINATION_NAME, "topic")
+            .put(MESSAGING_OPERATION_NAME, "process")
+            .put(MESSAGING_OPERATION_TYPE, "process")
+            .build();
+    Context context = listener.onStart(Context.root(), attributes, nanos(100));
+    listener.onEnd(
+        context, Attributes.of(ERROR_TYPE, IllegalStateException.class.getName()), nanos(300));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .satisfiesExactly(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.client.consumed.messages")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                                            equalTo(
+                                                ERROR_TYPE,
+                                                IllegalStateException.class.getName())))));
+  }
+
+  @Test
+  void clientOperationDurationOnlyDoesNotCountConsumedMessages() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener listener =
+        MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("test"));
+
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "kafka")
+            .put(MESSAGING_OPERATION_NAME, "poll")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
+            .build();
+    Context context = listener.onStart(Context.root(), attributes, nanos(100));
+    listener.onEnd(context, Attributes.empty(), nanos(300));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .satisfiesExactly(
+            metric -> assertThat(metric).hasName("messaging.client.operation.duration"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("nonReceiveOperations")
+  void selectsMetricsByOperationType(String operationType, boolean recordsClientDuration) {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
+
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, operationType)
+            .put(MESSAGING_OPERATION_TYPE, operationType)
+            .build();
+    Context context = listener.onStart(Context.root(), attributes, nanos(100));
+    assertThat(contains(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    listener.onEnd(context, Attributes.empty(), nanos(300));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .extracting(MetricData::getName)
+        .containsExactly(
+            recordsClientDuration
+                ? new String[] {"messaging.client.operation.duration"}
+                : new String[0]);
+  }
+
+  @Test
+  void zeroBatchDoesNotCountConsumedMessages() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
+
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, 0)
+            .build();
+    Context context = listener.onStart(Context.root(), attributes, nanos(100));
+    listener.onEnd(context, Attributes.empty(), nanos(300));
+
+    assertThat(metricReader.collectAllMetrics())
+        .extracting(MetricData::getName)
+        .containsExactly("messaging.client.operation.duration");
+  }
+
+  private static Stream<Arguments> nonReceiveOperations() {
+    return Stream.of(
+        argumentSet("process", "process", false), argumentSet("settle", "settle", true));
+  }
+
+  @Test
+  void endBatchCountWinsOverStartBatchCount() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
+
+    Attributes startAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
+            .build();
+    Attributes endAttributes = Attributes.of(MESSAGING_BATCH_MESSAGE_COUNT, 5L);
+
+    Context context = listener.onStart(Context.root(), startAttributes, nanos(100));
+    listener.onEnd(context, endAttributes, nanos(300));
+
+    // the recorded attributes are start merged with end, so end wins there; the counter increment
+    // has to agree with them
+    assertThat(metricReader.collectAllMetrics())
+        .filteredOn(metric -> metric.getName().endsWith(".messages"))
+        .isNotEmpty()
+        .allSatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(5))));
+  }
+
+  @Test
+  void successfulReceiveWithoutBatchCountCountsOneConsumedMessage() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
+
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "pulsar")
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
+            .build();
+    Context context = listener.onStart(Context.root(), attributes, nanos(100));
+    listener.onEnd(context, Attributes.empty(), nanos(300));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.client.operation.duration", "messaging.client.consumed.messages");
+    assertThat(metrics)
+        .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
+        .singleElement()
+        .satisfies(
+            metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
+  }
+
+  private static long nanos(int millis) {
+    return MILLISECONDS.toNanos(millis);
+  }
+}

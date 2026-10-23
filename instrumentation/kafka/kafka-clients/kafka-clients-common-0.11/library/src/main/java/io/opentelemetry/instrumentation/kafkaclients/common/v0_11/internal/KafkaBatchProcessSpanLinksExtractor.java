@@ -5,31 +5,35 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<KafkaReceiveRequest> {
 
-  private final SpanLinksExtractor<KafkaProcessRequest> singleRecordLinkExtractor;
+  private final TextMapPropagator propagator;
+  private final KafkaConsumerRecordGetter recordGetter;
 
   KafkaBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
-    this.singleRecordLinkExtractor =
-        new PropagatorBasedSpanLinksExtractor<>(propagator, new KafkaConsumerRecordGetter());
+    this.propagator = propagator;
+    this.recordGetter = new KafkaConsumerRecordGetter();
   }
 
   @Override
   public void extract(
       SpanLinksBuilder spanLinks, Context parentContext, KafkaReceiveRequest request) {
 
-    for (ConsumerRecord<?, ?> record : request.getRecords()) {
-      singleRecordLinkExtractor.extract(
-          spanLinks,
-          parentContext,
-          KafkaProcessRequest.create(record, request.getConsumerGroup(), request.getClientId()));
+    KafkaBatchRecordAttributes attributes = request.getBatchRecordAttributes();
+    for (ConsumerRecord<?, ?> record : request.getRecordList()) {
+      KafkaProcessRequest processRequest =
+          KafkaProcessRequest.create(
+              record, request.getConsumerGroup(), request.getClientId(), request.getClusterId());
+      Context extracted = propagator.extract(Context.root(), processRequest, recordGetter);
+      spanLinks.addLink(
+          Span.fromContext(extracted).getSpanContext(), attributes.getLinkAttributes(record));
     }
   }
 }

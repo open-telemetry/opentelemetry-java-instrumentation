@@ -36,6 +36,7 @@ class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("start").and(isPublic()), getClass().getName() + "$StartAdvice");
+    transformer.applyAdviceToMethod(named("setName"), getClass().getName() + "$SetNameAdvice");
     transformer.applyAdviceToMethod(
         named("stop").and(takesArguments(0)), getClass().getName() + "$StopAdvice");
   }
@@ -45,7 +46,16 @@ class UniversalConnectionPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This UniversalConnectionPool connectionPool) {
-      telemetry().registerMetrics(connectionPool);
+      OracleUcpSingletons.registerMetrics(connectionPool);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetNameAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This UniversalConnectionPool connectionPool) {
+      OracleUcpSingletons.updatePoolName(connectionPool);
     }
   }
 

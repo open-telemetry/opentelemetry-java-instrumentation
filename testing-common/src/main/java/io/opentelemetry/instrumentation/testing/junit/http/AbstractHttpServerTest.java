@@ -20,6 +20,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -61,6 +62,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
@@ -129,6 +131,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
   public static final String TEST_REQUEST_HEADER = "X-Test-Request";
   public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
+
+  /**
+   * Header selector that the shared server tests configure. The wildcard pattern makes the tests
+   * exercise capturing headers by name enumeration.
+   */
+  public static final IncludeExclude TEST_HEADERS =
+      IncludeExclude.builder().setIncluded("X-Test-*").build();
 
   private final HttpServerTestOptions options = new HttpServerTestOptions();
 
@@ -219,6 +228,28 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     assertTheTraces(count, null, null, null, method, SUCCESS);
+  }
+
+  @Test
+  void clientAddressFromSocketPeer() {
+    assumeTrue(options.testClientAddressFromSocketPeer);
+
+    String method = "GET";
+    AggregatedHttpRequest request = request(SUCCESS, method);
+    AggregatedHttpResponse response = clientWithoutForwardedFor.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+
+    String spanId = assertResponseHasCustomizedHeaders(response, SUCCESS, null);
+    assertTheTraces(
+        1,
+        null,
+        null,
+        spanId,
+        method,
+        SUCCESS,
+        span -> assertServerSpan(span, method, SUCCESS, SUCCESS.status, "127.0.0.1", "127.0.0.1"));
   }
 
   @Test
@@ -837,7 +868,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return bootstrap;
   }
 
-  protected void assertHighConcurrency(int count) {
+  private void assertHighConcurrency(int count) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
@@ -875,7 +906,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     testing.waitAndAssertTraces(assertions);
   }
 
-  protected void assertHighConcurrencyWithRequestBody(int count) {
+  private void assertHighConcurrencyWithRequestBody(int count) {
     ServerEndpoint endpoint = INDEXED_CHILD_FROM_REQUEST_BODY;
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
@@ -915,7 +946,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     testing.waitAndAssertTraces(assertions);
   }
 
-  protected String assertResponseHasCustomizedHeaders(
+  protected final String assertResponseHasCustomizedHeaders(
       AggregatedHttpResponse response, ServerEndpoint endpoint, String expectedTraceId) {
     if (!options.hasResponseCustomizer.test(endpoint)) {
       return null;
@@ -936,13 +967,31 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   // NOTE: this method does not currently implement asserting all the span types that groovy
   // HttpServerTest does
-  protected void assertTheTraces(
+  protected final void assertTheTraces(
       int size,
       String traceId,
       String parentId,
       String spanId,
       String method,
       ServerEndpoint endpoint) {
+    assertTheTraces(
+        size,
+        traceId,
+        parentId,
+        spanId,
+        method,
+        endpoint,
+        span -> assertServerSpan(span, method, endpoint, endpoint.status));
+  }
+
+  private void assertTheTraces(
+      int size,
+      String traceId,
+      String parentId,
+      String spanId,
+      String method,
+      ServerEndpoint endpoint,
+      Consumer<SpanDataAssert> serverSpanAssertion) {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       assertions.add(
@@ -950,7 +999,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
             spanAssertions.add(
                 span -> {
-                  assertServerSpan(span, method, endpoint, endpoint.status);
+                  serverSpanAssertion.accept(span);
                   if (traceId != null) {
                     span.hasTraceId(traceId);
                   }
@@ -1034,7 +1083,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertControllerSpan(SpanDataAssert span, Throwable expectedException) {
+  protected final SpanDataAssert assertControllerSpan(
+      SpanDataAssert span, Throwable expectedException) {
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (expectedException != null) {
       span.hasStatus(StatusData.error())
@@ -1043,7 +1093,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
-  protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+  protected final void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
     Awaitility.await()
         .untilAsserted(
             () -> {
@@ -1112,19 +1162,25 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertServerSpan(
+  protected final SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint, int statusCode) {
+    return assertServerSpan(
+        span, method, endpoint, statusCode, options.sockPeerAddr.apply(endpoint), TEST_CLIENT_IP);
+  }
 
+  @CanIgnoreReturnValue
+  private SpanDataAssert assertServerSpan(
+      SpanDataAssert span,
+      String method,
+      ServerEndpoint endpoint,
+      int statusCode,
+      String expectedNetworkPeerAddress,
+      String expectedClientAddress) {
     Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
     String expectedRoute = options.expectedHttpRoute.apply(endpoint, method);
     String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
 
-    span.hasName(name)
-        .hasKind(SpanKind.SERVER)
-        .satisfies(
-            spanData ->
-                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_41_0));
+    span.hasName(name).hasKind(SpanKind.SERVER).satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
     if (statusCode >= 500) {
       span.hasStatus(StatusData.error());
     }
@@ -1154,8 +1210,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           }
 
           if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
-            assertThat(attrs)
-                .containsEntry(NETWORK_PEER_ADDRESS, options.sockPeerAddr.apply(endpoint));
+            assertThat(attrs).containsEntry(NETWORK_PEER_ADDRESS, expectedNetworkPeerAddress);
           }
           if (attrs.get(NETWORK_PEER_PORT) != null) {
             assertThat(attrs)
@@ -1167,7 +1222,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             .isNotEqualTo(Long.valueOf(port)));
           }
 
-          assertThat(attrs).containsEntry(CLIENT_ADDRESS, TEST_CLIENT_IP);
+          assertThat(attrs).containsEntry(CLIENT_ADDRESS, expectedClientAddress);
           // client.port is opt-in
           assertThat(attrs).doesNotContainKey(CLIENT_PORT);
 
@@ -1205,10 +1260,15 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     stringArrayKey("http.response.header.x-test-response"), singletonList("test"));
           }
           if (endpoint == CAPTURE_PARAMETERS) {
-            assertThat(attrs)
-                .containsEntry(
-                    stringArrayKey("servlet.request.parameter.test-parameter"),
-                    singletonList("test value õäöü"));
+            if (options.expectCapturedRequestParameters) {
+              assertThat(attrs)
+                  .containsEntry(
+                      stringArrayKey("servlet.request.parameter.test-parameter"),
+                      singletonList("test value õäöü"));
+            } else {
+              assertThat(attrs)
+                  .doesNotContainKey(stringArrayKey("servlet.request.parameter.test-parameter"));
+            }
           }
         });
 
@@ -1216,7 +1276,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
+  private SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     String method = "GET";
     return assertServerSpan(span, method, endpoint, endpoint.status)
@@ -1226,7 +1286,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
+  private static SpanDataAssert assertIndexedControllerSpan(SpanDataAssert span, int requestId) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
@@ -1235,7 +1295,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedBodyServerSpan(SpanDataAssert span) {
+  private SpanDataAssert assertIndexedBodyServerSpan(SpanDataAssert span) {
     ServerEndpoint endpoint = INDEXED_CHILD_FROM_REQUEST_BODY;
     String method = "POST";
     return assertServerSpan(span, method, endpoint, endpoint.status)
@@ -1243,7 +1303,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
+  private static SpanDataAssert assertIndexedBodyControllerSpan(SpanDataAssert span) {
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         // The request id belongs on the nested body-consumer span only, not on the controller.
@@ -1255,7 +1315,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  protected SpanDataAssert assertIndexedBodyConsumerSpan(SpanDataAssert span, int requestId) {
+  private static SpanDataAssert assertIndexedBodyConsumerSpan(SpanDataAssert span, int requestId) {
     span.hasName("body-consumer")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(

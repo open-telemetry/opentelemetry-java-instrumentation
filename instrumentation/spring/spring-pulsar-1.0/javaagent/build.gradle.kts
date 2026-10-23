@@ -50,7 +50,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
             systemProperty(
               "metadataConfig",
               "otel.instrumentation.pulsar.experimental-span-attributes=true",
@@ -65,20 +65,21 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   test {
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(
+      testing.suites,
+    )
   }
 
   if (otelProps.denyUnsafe) {

@@ -20,6 +20,8 @@ public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
   private static final Pattern SPACES_REGEX = Pattern.compile("[ \\t]+");
   private static final Pattern METHOD_REGEX =
       Pattern.compile("^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) ");
+  // router function string is "<predicate> -> <handler function>"
+  private static final Pattern HANDLER_FUNCTION_REGEX = Pattern.compile("\\s*->.*");
 
   @Nullable private final String route;
 
@@ -34,15 +36,16 @@ public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
 
   @Nullable
   private static String parsePredicateString(RouterFunction<?> routerFunction) {
-    String routerFunctionString = routerFunction.toString();
+    // the handler function is frequently a lambda, so it has to be stripped before looking for a
+    // lambda predicate
+    String predicate = HANDLER_FUNCTION_REGEX.matcher(routerFunction.toString()).replaceFirst("");
     // Router functions containing lambda predicates should not end up in span tags since they are
-    // confusing
-    if (routerFunctionString.startsWith(
-        "org.springframework.web.reactive.function.server.RequestPredicates$$Lambda$")) {
+    // confusing. Lambda class names look like "Foo$$Lambda$14/0x..." before jdk 21 and
+    // "Foo$$Lambda/0x..." starting from jdk 21.
+    if (predicate.contains("$$Lambda")) {
       return null;
-    } else {
-      return routerFunctionString.replaceFirst("\\s*->.*$", "");
     }
+    return predicate;
   }
 
   @Nullable

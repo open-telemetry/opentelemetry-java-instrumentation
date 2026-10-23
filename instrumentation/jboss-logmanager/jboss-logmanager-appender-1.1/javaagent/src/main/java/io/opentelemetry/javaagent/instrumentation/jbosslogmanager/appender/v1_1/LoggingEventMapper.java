@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
-import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
@@ -19,19 +18,19 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.Level;
 import org.jboss.logmanager.Logger;
 import org.jboss.logmanager.MDC;
 
 public class LoggingEventMapper {
-
-  public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
@@ -40,11 +39,14 @@ public class LoggingEventMapper {
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
 
-  private static final boolean captureExperimentalAttributes;
-  private static final boolean captureTemplate;
-  private static final boolean captureArguments;
+  public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
-  static {
+  private final boolean captureExperimentalAttributes;
+  private final boolean captureTemplate;
+  private final boolean captureArguments;
+  @Nullable private final Predicate<String> mdcAttributes;
+
+  private LoggingEventMapper() {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(
             GlobalOpenTelemetry.get(), "jboss_logmanager");
@@ -52,31 +54,8 @@ public class LoggingEventMapper {
         config.getBoolean("experimental_log_attributes/development", false);
     captureTemplate = config.getBoolean("capture_template/development", false);
     captureArguments = config.getBoolean("capture_arguments/development", false);
-  }
-
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
-
-  // cached as an optimization
-  private final boolean captureAllMdcAttributes;
-
-  private LoggingEventMapper() {
-    List<String> captureMdcAttributes =
-        DeclarativeConfigUtil.getInstrumentationConfig(
-                GlobalOpenTelemetry.get(), "jboss_logmanager")
-            .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    this.captureAllMdcAttributes =
-        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
-    if (captureAllMdcAttributes) {
-      this.captureMdcAttributeKeys = emptyList();
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
-      for (String key : captureMdcAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getMdcAttributeKey(key));
-        }
-      }
-      this.captureMdcAttributeKeys = keys;
-    }
+    mdcAttributes =
+        SelectorConfig.resolveLegacyLiteral(config, "jboss-logmanager", "mdc-attributes");
   }
 
   public void capture(Logger logger, ExtLogRecord record) {
@@ -144,19 +123,15 @@ public class LoggingEventMapper {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllMdcAttributes) {
-      for (Map.Entry<String, String> entry : context.entrySet()) {
-        String key = entry.getKey();
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
-        }
-      }
+    if (mdcAttributes == null) {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
-      String value = context.get(attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
+    for (Map.Entry<String, String> entry : context.entrySet()) {
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.test(key)) {
+        builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
+      }
     }
   }
 

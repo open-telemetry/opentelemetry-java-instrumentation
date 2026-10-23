@@ -9,6 +9,8 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -35,8 +37,12 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // sendComplete declares Exception in Pulsar 2.8 and Throwable in Pulsar 4.0;
+    // advice accepts both as Throwable.
     transformer.applyAdviceToMethod(
-        named("sendComplete"), getClass().getName() + "$SendCallbackSendCompleteAdvice");
+        named("sendComplete")
+            .and(takesArgument(0, namedOneOf("java.lang.Exception", "java.lang.Throwable"))),
+        getClass().getName() + "$SendCallbackSendCompleteAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -44,31 +50,30 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final PulsarRequest request;
-      private final Context context;
-      private final Scope scope;
+      private final Context currentContext;
+      private final Scope currentScope;
 
-      private AdviceScope(PulsarRequest request, Context context, Scope scope) {
+      private AdviceScope(PulsarRequest request, Context currentContext, Scope currentScope) {
         this.request = request;
-        this.context = context;
-        this.scope = scope;
+        this.currentContext = currentContext;
+        this.currentScope = currentScope;
       }
 
       @Nullable
       public static AdviceScope start(SendCallback callback) {
         // Extract the Context and PulsarRequest from the SendCallback instance.
-        SendCallbackData callBackData = VirtualFieldStore.extract(callback);
-        if (callBackData == null) {
+        SendCallbackData callbackData = VirtualFieldStore.takeSendCallbackData(callback);
+        if (callbackData == null) {
           return null;
         }
 
-        Context context = callBackData.context;
-        return new AdviceScope(callBackData.request, context, context.makeCurrent());
+        Context currentContext = callbackData.context;
+        return new AdviceScope(callbackData.request, currentContext, currentContext.makeCurrent());
       }
 
       public void end(@Nullable Throwable t) {
-        // Close the Scope and end the span.
-        scope.close();
-        producerInstrumenter().end(context, request, null, t);
+        currentScope.close();
+        producerInstrumenter().end(currentContext, request, null, t);
       }
     }
 

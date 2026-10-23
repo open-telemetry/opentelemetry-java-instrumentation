@@ -9,19 +9,22 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public class KafkaConnectSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-connect-2.6";
+  private static final String PROCESS_OPERATION_NAME = "process";
   private static final TextMapPropagator propagator =
       GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator();
-
   private static final Instrumenter<KafkaConnectTask, Void> instrumenter;
 
   static {
@@ -33,15 +36,24 @@ public class KafkaConnectSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    new KafkaConnectAttributesGetter(), MessageOperation.PROCESS))
+                    new KafkaConnectAttributesGetter(),
+                    MessagingOperationType.PROCESS,
+                    PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(
-                        new KafkaConnectAttributesGetter(), MessageOperation.PROCESS)
-                    .build())
-            .addSpanLinksExtractor(spanLinksExtractor);
+                MessagingAttributesExtractor.create(
+                    new KafkaConnectAttributesGetter(),
+                    MessagingOperationType.PROCESS,
+                    PROCESS_OPERATION_NAME))
+            .addAttributesExtractor(new KafkaConnectBatchAttributesExtractor())
+            .addSpanLinksExtractor(spanLinksExtractor)
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
 
-    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    instrumenter =
+        builder.buildInstrumenter(
+            MessagingSpanKindExtractor.create(MessagingOperationType.PROCESS));
   }
 
   public static Instrumenter<KafkaConnectTask, Void> instrumenter() {

@@ -50,7 +50,10 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
         openTelemetrySdk,
         WrapperConfiguration.flushTimeout(),
         AwsLambdaEventsInstrumenterFactory.createInstrumenter(
-            openTelemetrySdk, INSTRUMENTATION_NAME, HttpConstants.KNOWN_METHODS));
+            openTelemetrySdk,
+            INSTRUMENTATION_NAME,
+            HttpConstants.KNOWN_METHODS,
+            HttpConstants.SENSITIVE_QUERY_PARAMETERS));
     this.wrappedLambda = wrappedLambda;
     this.targetMethod = wrappedLambda.getRequestTargetMethod();
     this.parameterMapper = parameterMapper;

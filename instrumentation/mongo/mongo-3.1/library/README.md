@@ -28,16 +28,20 @@ implementation("io.opentelemetry.instrumentation:instrumentation:opentelemetry-m
 
 ## Usage
 
-The instrumentation is initialized by passing a `MongoTelemetry::createCommandListener()` to the `MongoClientSettings` builder. You must set the `OpenTelemetry` to use with the feature.
+Add a command listener from `MongoTelemetry` to the `MongoClientSettings` builder.
+Pass the client's complete seed list to `createCommandListener(seeds)` to derive
+`server.address` and `server.port` from the client configuration.
 
 ```java
 OpenTelemetry openTelemetry = ...;
 
 MongoTelemetry mongoTelemetry = MongoTelemetry.builder(openTelemetry).build();
 
+List<ServerAddress> seeds = Collections.singletonList(
+    new ServerAddress("localhost", 27017));
 MongoClientSettings settings = MongoClientSettings.builder()
-    .applyConnectionString(ConnectionString("mongodb://localhost:27017"))
-    .addCommandListener(mongoTelemetry.createCommandListener())
+    .applyToClusterSettings(cluster -> cluster.hosts(seeds))
+    .addCommandListener(mongoTelemetry.createCommandListener(seeds))
     .build();
 
 // With Reactive Streams

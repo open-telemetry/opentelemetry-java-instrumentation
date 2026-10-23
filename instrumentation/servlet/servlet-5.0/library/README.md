@@ -48,3 +48,33 @@ ServletTelemetry telemetry = ServletTelemetry.create(openTelemetry);
 // Create telemetry producing servlet filter
 Filter filter = telemetry.createFilter();
 ```
+
+### Capture the authenticated user name
+
+Capture the name returned by `HttpServletRequest.getUserPrincipal()` as `user.name` by enabling it
+on the builder. Capture is disabled by default.
+
+```java
+ServletTelemetryBuilder builder = ServletTelemetry.builder(openTelemetry);
+Experimental.setCaptureUserName(builder, true);
+Filter filter = builder.build().createFilter();
+```
+
+### Capture selected request parameters
+
+```java
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
+import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
+
+ServletTelemetryBuilder builder = ServletTelemetry.builder(openTelemetry);
+Experimental.setRequestParameters(
+    builder,
+    IncludeExclude.builder()
+        .setIncluded("user-*", "search-?")
+        .setExcluded("password", "*-token")
+        .build());
+Filter filter = builder.build().createFilter();
+```
+
+Matching is case-sensitive, and excluded patterns take precedence over included patterns. An absent or empty selector captures nothing; an exclude-only selector captures all available parameters except those excluded.

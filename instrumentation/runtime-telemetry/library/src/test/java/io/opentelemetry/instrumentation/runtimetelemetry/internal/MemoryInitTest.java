@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.when;
 
@@ -69,13 +70,12 @@ class MemoryInitTest {
                             point ->
                                 point
                                     .hasValue(11)
-                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
                             point ->
                                 point
                                     .hasValue(15)
-                                    .hasAttribute(
-                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
   }
 }

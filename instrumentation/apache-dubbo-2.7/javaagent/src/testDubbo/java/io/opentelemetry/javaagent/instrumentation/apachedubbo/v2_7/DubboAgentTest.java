@@ -21,7 +21,7 @@ class DubboAgentTest extends AbstractDubboTest {
   }
 
   @Override
-  protected boolean hasServicePeerName() {
+  protected boolean canCaptureUnknownServiceSpans() {
     return true;
   }
 }

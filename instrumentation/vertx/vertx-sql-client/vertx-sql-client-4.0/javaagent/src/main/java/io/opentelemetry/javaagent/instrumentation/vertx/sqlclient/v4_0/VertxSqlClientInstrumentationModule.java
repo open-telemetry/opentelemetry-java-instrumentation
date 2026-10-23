@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
 
   public VertxSqlClientInstrumentationModule() {
-    super("vertx-sql-client", "vertx-sql-client-4.0", "vertx");
+    super("vertx-sql-client-4.0", "vertx-sql-client", "vertx");
   }
 
   @Override
@@ -43,6 +43,9 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
     return asList(
         new PoolInstrumentation(),
         new SqlClientBaseInstrumentation(),
+        new SqlConnectionBaseInstrumentation(),
+        new PreparedStatementInstrumentation(),
+        new QueryBaseInstrumentation(),
         new QueryExecutorInstrumentation(),
         new QueryResultBuilderInstrumentation(),
         new TransactionImplInstrumentation());

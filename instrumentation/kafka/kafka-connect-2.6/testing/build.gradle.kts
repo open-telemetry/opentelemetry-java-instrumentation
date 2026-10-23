@@ -32,18 +32,28 @@ tasks.withType<Test>().configureEach {
   dependsOn(agentShadowJar)
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
-  systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
 tasks {
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
+
+  val testReceiveTelemetry =
+    register<Test>("testReceiveTelemetry") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")
+      }
+
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true"
+      )
+    }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(
+      testReceiveTelemetry
+    )
   }
 }

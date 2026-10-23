@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.statementInstrumenter;
 import static java.util.Collections.emptyList;
 
@@ -65,7 +64,7 @@ public class JdbcAdviceScope {
       return new JdbcAdviceScope(callDepth, null, null, null);
     }
 
-    Context parentContext = currentContext();
+    Context parentContext = Context.current();
     DbRequest request = requestSupplier.get();
     if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
       return new JdbcAdviceScope(callDepth, null, null, null);

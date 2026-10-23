@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.sun.net.httpserver.HttpServer;
@@ -347,6 +348,7 @@ class ElasticJobTest {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> elasticJobAttributes(
       String jobName,
       long item,
@@ -357,8 +359,7 @@ class ElasticJobTest {
       String jobType) {
     List<AttributeAssertion> assertions = new ArrayList<>();
 
-    assertions.add(equalTo(stringKey("code.function"), codeFunction));
-    assertions.add(equalTo(stringKey("code.namespace"), codeNamespace));
+    assertions.add(equalTo(CODE_FUNCTION_NAME, codeNamespace + "." + codeFunction));
 
     assertions.add(equalTo(stringKey("job.system"), experimental("elasticjob")));
     assertions.add(

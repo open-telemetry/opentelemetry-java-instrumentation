@@ -23,52 +23,70 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Instrumenter<SqsProcessRequest, Response<?>> instrumenter;
   private final transient Request<?> request;
   private final transient Response<?> response;
-  @Nullable private final transient Context receiveContext;
+  @Nullable private final transient Context processParentContext;
   private boolean firstIterator = true;
 
-  private TracingList(
-      List<Message> list,
+  static SdkInternalList<Message> wrap(
+      List<Message> messages,
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
       Response<?> response,
-      @Nullable Context receiveContext) {
-    super(list);
+      @Nullable Context processParentContext) {
+    return new TracingList(messages, instrumenter, request, response, processParentContext);
+  }
+
+  private TracingList(
+      List<Message> messages,
+      Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
+      Request<?> request,
+      Response<?> response,
+      @Nullable Context processParentContext) {
+    super(messages);
     this.instrumenter = instrumenter;
     this.request = request;
     this.response = response;
-    this.receiveContext = receiveContext;
-  }
-
-  static SdkInternalList<Message> wrap(
-      List<Message> list,
-      Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
-      Request<?> request,
-      Response<?> response,
-      @Nullable Context receiveContext) {
-    return new TracingList(list, instrumenter, request, response, receiveContext);
+    this.processParentContext = processParentContext;
   }
 
   @Override
   public Iterator<Message> iterator() {
-    Iterator<Message> it;
-    // We should only return one iterator with tracing.
-    // However, this is not thread-safe, but usually the first (hopefully only) traversal of
-    // List is performed in the same thread that called receiveMessage()
+    Iterator<Message> iterator = super.iterator();
     if (firstIterator && !inAwsClient()) {
-      it = TracingIterator.wrap(super.iterator(), instrumenter, request, response, receiveContext);
       firstIterator = false;
-    } else {
-      it = super.iterator();
+      return TracingIterator.wrap(iterator, this);
     }
+    return iterator;
+  }
 
-    return it;
+  Instrumenter<SqsProcessRequest, Response<?>> getInstrumenter() {
+    return instrumenter;
+  }
+
+  Request<?> getRequest() {
+    return request;
+  }
+
+  Response<?> getResponse() {
+    return response;
+  }
+
+  @Nullable
+  Context getProcessParentContext() {
+    return processParentContext;
+  }
+
+  boolean isProcessingOwnedOutsideSqsSdk() {
+    return SqsProcessTracing.isProcessingOwnedOutsideSqsSdk(this);
+  }
+
+  @Nullable
+  static SdkInternalList<?> processingOwner(List<?> messages) {
+    return messages instanceof TracingList ? (TracingList) messages : null;
   }
 
   @Override
   public void forEach(Consumer<? super Message> action) {
-    for (Message message : this) {
-      action.accept(message);
-    }
+    iterator().forEachRemaining(action);
   }
 
   private static boolean inAwsClient() {

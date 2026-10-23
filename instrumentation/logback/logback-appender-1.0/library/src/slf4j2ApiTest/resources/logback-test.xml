@@ -13,12 +13,9 @@
     <captureExperimentalAttributes>false</captureExperimentalAttributes>
     <captureCodeAttributes>true</captureCodeAttributes>
     <captureMarkerAttribute>true</captureMarkerAttribute>
-    <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
     <captureTemplate>true</captureTemplate>
     <captureArguments>true</captureArguments>
-    <captureLogstashMarkerAttributes>true</captureLogstashMarkerAttributes>
-    <captureLogstashStructuredArguments>true</captureLogstashStructuredArguments>
-    <captureMdcAttributes>*</captureMdcAttributes>
+    <mdcAttributesIncluded>key?</mdcAttributesIncluded>
   </appender>
 
   <root level="INFO">

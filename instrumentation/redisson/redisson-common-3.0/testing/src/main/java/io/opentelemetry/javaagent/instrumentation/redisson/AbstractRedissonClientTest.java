@@ -7,32 +7,28 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -113,11 +109,15 @@ public abstract class AbstractRedissonClientTest {
 
   @BeforeEach
   void setup(TestInfo testInfo) throws InvocationTargetException, IllegalAccessException {
-    String newAddress = address;
-    if (useRedisProtocol()) {
-      // Newer versions of redisson require scheme, older versions forbid it
-      newAddress = "redis://" + address;
-    }
+    // the stringCommandLazyConnection test case simulates reconnection during Redis command
+    // execution, which needs an empty idle connection pool
+    Integer connectionMinimumIdleSize = testInfo.getTags().contains(TEST_RECONNECT) ? 0 : null;
+    redisson = Redisson.create(createConfig(0, connectionMinimumIdleSize));
+    testing.clearData();
+  }
+
+  private Config createConfig(int database, Integer connectionMinimumIdleSize)
+      throws InvocationTargetException, IllegalAccessException {
     Config config = new Config();
     try {
       // script cache is enabled by default in 3.46.0 and that causes hashCommand and lockCommand
@@ -127,13 +127,11 @@ public abstract class AbstractRedissonClientTest {
       // ignored
     }
     SingleServerConfig singleServerConfig = config.useSingleServer();
-    singleServerConfig.setAddress(newAddress);
+    singleServerConfig.setAddress(redisAddressForHost(host));
     singleServerConfig.setTimeout(30_000);
-    if (testInfo.getTags().contains(TEST_RECONNECT)) {
-      // When verifying the stringCommandLazyConnection test case, simulate reconnection during
-      // Redis
-      // command execution.
-      singleServerConfig.setConnectionMinimumIdleSize(0);
+    singleServerConfig.setDatabase(database);
+    if (connectionMinimumIdleSize != null) {
+      singleServerConfig.setConnectionMinimumIdleSize(connectionMinimumIdleSize);
     }
     try {
       // disable connection ping if it exists
@@ -144,8 +142,12 @@ public abstract class AbstractRedissonClientTest {
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
-    redisson = Redisson.create(config);
-    testing.clearData();
+    return config;
+  }
+
+  private String redisAddressForHost(String serverHost) {
+    // Newer versions of redisson require scheme, older versions forbid it.
+    return (useRedisProtocol() ? "redis://" : "") + serverHost + ":" + port;
   }
 
   @AfterEach
@@ -170,31 +172,31 @@ public abstract class AbstractRedissonClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                    span.hasName("SET " + address)
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET")),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + address : "GET")
+                    span.hasName("GET " + address)
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "GET foo"),
+                            equalTo(DB_OPERATION_NAME, "GET"))));
   }
 
   @Test
@@ -207,28 +209,125 @@ public abstract class AbstractRedissonClientTest {
           instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
           trace.hasSpansSatisfyingExactly(
               span ->
-                  span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                  span.hasName("SET " + address)
                       .hasKind(CLIENT)
                       .hasAttributesSatisfyingExactly(
-                          equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                           equalTo(NETWORK_PEER_ADDRESS, ip),
                           equalTo(NETWORK_PEER_PORT, port),
                           equalTo(SERVER_ADDRESS, host),
                           equalTo(SERVER_PORT, port),
-                          equalTo(maybeStable(DB_SYSTEM), REDIS),
-                          equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                          equalTo(maybeStable(DB_OPERATION), "SET")));
+                          equalTo(DB_SYSTEM_NAME, REDIS),
+                          equalTo(DB_NAMESPACE, dbNamespace("0")),
+                          equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                          equalTo(DB_OPERATION_NAME, "SET")));
         });
 
+    List<AttributeKey<?>> expectedKeys =
+        new ArrayList<>(
+            asList(
+                DB_SYSTEM_NAME,
+                DB_OPERATION_NAME,
+                NETWORK_PEER_PORT,
+                NETWORK_PEER_ADDRESS,
+                SERVER_PORT,
+                SERVER_ADDRESS));
+    if (hasDatabaseIndex()) {
+      expectedKeys.add(DB_NAMESPACE);
+    }
     assertDurationMetric(
-        testing,
-        instrumentationName.get(),
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        NETWORK_PEER_PORT,
-        NETWORK_PEER_ADDRESS,
-        SERVER_PORT,
-        SERVER_ADDRESS);
+        testing, instrumentationName.get(), expectedKeys.toArray(new AttributeKey<?>[0]));
+  }
+
+  @Test
+  void configuredDatabaseIndex() throws InvocationTargetException, IllegalAccessException {
+    RedissonClient databaseOne = Redisson.create(createConfig(1, null));
+    try {
+      testing.clearData();
+      RBucket<String> keyObject = databaseOne.getBucket("foo");
+      keyObject.set("bar");
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("SET " + address)
+                          .hasKind(CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NETWORK_PEER_ADDRESS, ip),
+                              equalTo(NETWORK_PEER_PORT, port),
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_NAMESPACE, dbNamespace("1")),
+                              equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                              equalTo(DB_OPERATION_NAME, "SET"))));
+    } finally {
+      databaseOne.shutdown();
+    }
+  }
+
+  @Test
+  void configuredMasterSlaveServerTarget() {
+    String aliasHost = host.equals(ip) ? "localhost" : ip;
+    String configuredServerAddress = host + ":" + port + "," + aliasHost + ":" + port;
+
+    Config config = new Config();
+    config
+        .useMasterSlaveServers()
+        .setMasterAddress(redisAddressForHost(host))
+        .addSlaveAddress(redisAddressForHost(aliasHost));
+    RedissonClient configuredClient = Redisson.create(config);
+    try {
+      if (hasDatabaseIndex()) {
+        testing.waitForTraces(2);
+      }
+      assertConfiguredTarget(
+          configuredClient, "SET " + configuredServerAddress, configuredServerAddress, null);
+    } finally {
+      configuredClient.shutdown();
+    }
+  }
+
+  @Test
+  void configuredSingleServerTarget() {
+    String configuredHost = host.equals(ip) ? "localhost" : ip;
+    Config config = new Config();
+    config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
+    RedissonClient configuredClient = Redisson.create(config);
+    try {
+      if (hasDatabaseIndex()) {
+        testing.waitForTraces(1);
+      }
+      assertConfiguredTarget(
+          configuredClient, "SET " + configuredHost + ":" + port, configuredHost, port);
+    } finally {
+      configuredClient.shutdown();
+    }
+  }
+
+  private void assertConfiguredTarget(
+      RedissonClient client,
+      String expectedSpanName,
+      String expectedServerAddress,
+      Long expectedServerPort) {
+    testing.clearData();
+    client.getBucket("configured-target").set("value");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(expectedSpanName)
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, expectedServerAddress),
+                            equalTo(SERVER_PORT, expectedServerPort),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "SET configured-target ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))));
   }
 
   @Test
@@ -237,37 +336,35 @@ public abstract class AbstractRedissonClientTest {
     keyObject.set("bar");
     keyObject.get();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName(
-            emitStableDatabaseSemconv() ? "SET " + address : "SET",
-            emitStableDatabaseSemconv() ? "GET " + address : "GET"),
+        orderByRootSpanName("SET " + address, "GET " + address),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                    span.hasName("SET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + address : "GET")
+                    span.hasName("GET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "GET foo"),
+                            equalTo(DB_OPERATION_NAME, "GET"))));
   }
 
   @ParameterizedTest
@@ -291,27 +388,18 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? scenario.operationName + " " + address
-                                : scenario.oldSpanName)
+                    span.hasName(scenario.operationName + " " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv()
-                                    ? scenario.operationName
-                                    : scenario.oldOperation),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
-                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_OPERATION_NAME, scenario.operationName),
+                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(DB_QUERY_TEXT, scenario.queryText))));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -323,8 +411,6 @@ public abstract class AbstractRedissonClientTest {
             BatchScenario.builder()
                 .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))
                 .operationName("SET")
-                .oldSpanName("SET")
-                .oldOperation("SET")
                 .queryText("SET batch1 ?")
                 .build()),
         argumentSet(
@@ -333,12 +419,8 @@ public abstract class AbstractRedissonClientTest {
                 .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))
                 .addCommand(batch -> batch.getBucket("batch2").setAsync("v2"))
                 .operationName("PIPELINE SET")
-                .oldSpanName("DB Query")
                 .batchSize(2)
-                .queryText(
-                    emitStableDatabaseSemconv()
-                        ? "SET batch1 ?; SET batch2 ?"
-                        : "SET batch1 ?;SET batch2 ?")
+                .queryText("SET batch1 ?; SET batch2 ?")
                 .build()),
         argumentSet(
             "twoDifferentOperations",
@@ -346,12 +428,8 @@ public abstract class AbstractRedissonClientTest {
                 .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))
                 .addCommand(batch -> batch.getBucket("batch1").getAsync())
                 .operationName("PIPELINE")
-                .oldSpanName("DB Query")
                 .batchSize(2)
-                .queryText(
-                    emitStableDatabaseSemconv()
-                        ? "SET batch1 ?; GET batch1"
-                        : "SET batch1 ?;GET batch1")
+                .queryText("SET batch1 ?; GET batch1")
                 .build()));
   }
 
@@ -380,26 +458,21 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "PIPELINE SET " + address : "DB Query")
+                    span.hasName("PIPELINE SET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, (long) batchSize),
                             equalTo(
-                                DB_OPERATION_NAME,
-                                emitStableDatabaseSemconv() ? "PIPELINE SET" : null),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? (long) batchSize : null),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
+                                DB_QUERY_TEXT,
                                 String.join(
-                                    emitStableDatabaseSemconv() ? "; " : ";",
+                                    "; ",
                                     nCopies(
                                         truncatedQueryTextCommandCount,
                                         "SET " + bucketName + " ?"))))));
@@ -429,52 +502,46 @@ public abstract class AbstractRedissonClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "MULTI SET " + address : "DB Query")
+                    span.hasName("MULTI SET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                DB_OPERATION_NAME,
-                                emitStableDatabaseSemconv() ? "MULTI SET" : null),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_OPERATION_NAME, "MULTI SET"),
                             // db.operation.batch.size is not emitted because MULTI transaction
                             // telemetry is split across wrapper and command spans, so this span
                             // does not represent the full logical batch.
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "MULTI; SET batch1 ?"
-                                    : "MULTI;SET batch1 ?"))
+                            equalTo(DB_QUERY_TEXT, "MULTI; SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                    span.hasName("SET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "SET batch2 ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC")
+                    span.hasName("EXEC " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
-                            equalTo(maybeStable(DB_OPERATION), "EXEC"))
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "EXEC"),
+                            equalTo(DB_OPERATION_NAME, "EXEC"))
                         .hasParent(trace.getSpan(0))));
   }
 
@@ -488,17 +555,17 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "RPUSH " + address : "RPUSH")
+                    span.hasName("RPUSH " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "RPUSH list1 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "RPUSH"))
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "RPUSH list1 ?"),
+                            equalTo(DB_OPERATION_NAME, "RPUSH"))
                         .hasNoParent()));
   }
 
@@ -515,33 +582,31 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "EVAL " + address : "EVAL")
+                    span.hasName("EVAL " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                String.format("EVAL %s 1 map1 ? ?", script)),
-                            equalTo(maybeStable(DB_OPERATION), "EVAL"))),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, String.format("EVAL %s 1 map1 ? ?", script)),
+                            equalTo(DB_OPERATION_NAME, "EVAL"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "HGET " + address : "HGET")
+                    span.hasName("HGET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "HGET map1 key1"),
-                            equalTo(maybeStable(DB_OPERATION), "HGET"))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "HGET map1 key1"),
+                            equalTo(DB_OPERATION_NAME, "HGET"))));
   }
 
   @Test
@@ -554,17 +619,17 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SADD " + address : "SADD")
+                    span.hasName("SADD " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SADD"))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
+                            equalTo(DB_OPERATION_NAME, "SADD"))));
   }
 
   @Test
@@ -579,21 +644,21 @@ public abstract class AbstractRedissonClientTest {
     invokeAddAll(sortSet, scores);
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName(emitStableDatabaseSemconv() ? "ZADD " + address : "ZADD"),
+        orderByRootSpanName("ZADD " + address),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "ZADD " + address : "ZADD")
+                    span.hasName("ZADD " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "ZADD sort_set1 ? ? ? ? ? ?"),
-                            equalTo(maybeStable(DB_OPERATION), "ZADD"))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "ZADD sort_set1 ? ? ? ? ? ?"),
+                            equalTo(DB_OPERATION_NAME, "ZADD"))));
   }
 
   private static void invokeAddAll(RScoredSortedSet<String> object, Map<String, Double> arg)
@@ -611,17 +676,17 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "INCR " + address : "INCR")
+                    span.hasName("INCR " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "INCR AtomicLong"),
-                            equalTo(maybeStable(DB_OPERATION), "INCR"))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "INCR AtomicLong"),
+                            equalTo(DB_OPERATION_NAME, "INCR"))));
   }
 
   @Test
@@ -639,48 +704,48 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "EVAL " + address : "EVAL")
+                    span.hasName("EVAL " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_OPERATION), "EVAL"),
-                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("EVAL")))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_OPERATION_NAME, "EVAL"),
+                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("EVAL")))));
     traceAsserts.add(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "EVAL " + address : "EVAL")
+                    span.hasName("EVAL " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_OPERATION), "EVAL"),
-                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("EVAL")))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_OPERATION_NAME, "EVAL"),
+                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("EVAL")))));
     if (lockHas3Traces()) {
       traceAsserts.add(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(emitStableDatabaseSemconv() ? "DEL " + address : "DEL")
+                      span.hasName("DEL " + address)
                           .hasKind(CLIENT)
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                               equalTo(NETWORK_PEER_ADDRESS, ip),
                               equalTo(NETWORK_PEER_PORT, port),
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, port),
-                              equalTo(maybeStable(DB_SYSTEM), REDIS),
-                              equalTo(maybeStable(DB_OPERATION), "DEL"),
-                              satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("DEL")))));
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_NAMESPACE, dbNamespace("0")),
+                              equalTo(DB_OPERATION_NAME, "DEL"),
+                              satisfies(DB_QUERY_TEXT, val -> val.startsWith("DEL")))));
     }
 
     testing.waitAndAssertSortedTraces(orderByRootSpanKind(SpanKind.CLIENT), traceAsserts);
@@ -694,6 +759,15 @@ public abstract class AbstractRedissonClientTest {
     return false;
   }
 
+  /** Whether the instrumented redisson version can report the Redis database index. */
+  protected boolean hasDatabaseIndex() {
+    return false;
+  }
+
+  private String dbNamespace(String databaseIndex) {
+    return hasDatabaseIndex() ? databaseIndex : null;
+  }
+
   protected RBatch createBatch(RedissonClient redisson) {
     return redisson.createBatch(BatchOptions.defaults());
   }
@@ -701,18 +775,14 @@ public abstract class AbstractRedissonClientTest {
   private static final class BatchScenario {
     final List<Consumer<RBatch>> commands;
     final String operationName;
-    final String oldSpanName;
     final Long batchSize;
-    final String oldOperation;
     final String queryText;
     final boolean empty;
 
     BatchScenario(Builder builder) {
       this.commands = builder.commands;
       this.operationName = builder.operationName;
-      this.oldSpanName = builder.oldSpanName;
       this.batchSize = builder.batchSize;
-      this.oldOperation = builder.oldOperation;
       this.queryText = builder.queryText;
       this.empty = builder.empty;
     }
@@ -724,9 +794,7 @@ public abstract class AbstractRedissonClientTest {
     static final class Builder {
       private final List<Consumer<RBatch>> commands = new ArrayList<>();
       private String operationName;
-      private String oldSpanName;
       private Long batchSize;
-      private String oldOperation;
       private String queryText;
       private boolean empty;
 
@@ -740,18 +808,8 @@ public abstract class AbstractRedissonClientTest {
         return this;
       }
 
-      Builder oldSpanName(String oldSpanName) {
-        this.oldSpanName = oldSpanName;
-        return this;
-      }
-
       Builder batchSize(long batchSize) {
         this.batchSize = batchSize;
-        return this;
-      }
-
-      Builder oldOperation(String oldOperation) {
-        this.oldOperation = oldOperation;
         return this;
       }
 

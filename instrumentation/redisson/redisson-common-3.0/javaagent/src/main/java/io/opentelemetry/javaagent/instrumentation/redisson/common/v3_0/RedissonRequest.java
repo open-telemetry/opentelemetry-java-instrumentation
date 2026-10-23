@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
@@ -15,6 +14,7 @@ import io.netty.buffer.ByteBuf;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -74,14 +74,28 @@ public abstract class RedissonRequest {
     }
   }
 
-  public static RedissonRequest create(@Nullable InetSocketAddress address, Object command) {
-    return new AutoValue_RedissonRequest(address, command);
+  /**
+   * Creates a request with values supplied by version-specific instrumentation when they are not
+   * uniformly exposed across supported Redisson versions.
+   */
+  public static RedissonRequest create(
+      @Nullable InetSocketAddress address,
+      Object command,
+      @Nullable Long databaseIndex,
+      @Nullable RedisServerTarget serverTarget) {
+    return new AutoValue_RedissonRequest(address, command, databaseIndex, serverTarget);
   }
 
   @Nullable
   public abstract InetSocketAddress getAddress();
 
   public abstract Object getCommand();
+
+  @Nullable
+  public abstract Long getDatabaseIndex();
+
+  @Nullable
+  public abstract RedisServerTarget getServerTarget();
 
   @Nullable
   public String getOperationName() {
@@ -94,7 +108,7 @@ public abstract class RedissonRequest {
       if (commands.size() == 1) {
         return commands.get(0).getCommand().getName();
       }
-      return emitStableDatabaseSemconv() ? getBatchOperationName(commands) : null;
+      return getBatchOperationName(commands);
     }
     return null;
   }
@@ -142,12 +156,8 @@ public abstract class RedissonRequest {
       case 1:
         return sanitizedQueries.get(0);
       default:
-        return String.join(batchQuerySeparator(), sanitizedQueries);
+        return String.join("; ", sanitizedQueries);
     }
-  }
-
-  private static String batchQuerySeparator() {
-    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 
   private List<String> sanitizeQuery() {

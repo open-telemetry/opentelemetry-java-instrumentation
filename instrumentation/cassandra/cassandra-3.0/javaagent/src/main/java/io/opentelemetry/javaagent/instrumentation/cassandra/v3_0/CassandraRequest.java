@@ -9,10 +9,12 @@ import static java.util.Collections.singleton;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -21,23 +23,37 @@ import javax.annotation.Nullable;
 @AutoValue
 abstract class CassandraRequest {
 
-  static CassandraRequest create(Session session, String queryText, boolean parameterizedQuery) {
-    return create(session, singleton(queryText), parameterizedQuery, null, null);
+  static CassandraRequest create(
+      Session session,
+      String queryText,
+      boolean parameterizedQuery,
+      @Nullable DbServerTarget serverTarget) {
+    return create(
+        session, singleton(queryText), parameterizedQuery, null, null, null, serverTarget);
   }
 
-  static CassandraRequest create(Session session, String queryText) {
-    return create(session, singleton(queryText), false, null, null);
+  static CassandraRequest create(
+      Session session, String queryText, @Nullable DbServerTarget serverTarget) {
+    return create(session, singleton(queryText), false, null, null, null, serverTarget);
   }
 
-  static CassandraRequest create(Session session, Statement statement) {
+  static CassandraRequest create(
+      Session session, Statement statement, @Nullable DbServerTarget serverTarget) {
     if (statement instanceof BatchStatement) {
-      return create(session, (BatchStatement) statement);
+      return create(session, (BatchStatement) statement, serverTarget);
     }
     return create(
-        session, singleton(getQuery(statement)), statement instanceof BoundStatement, null, null);
+        session,
+        singleton(getQuery(statement)),
+        hasQueryValues(statement),
+        null,
+        null,
+        statement,
+        serverTarget);
   }
 
-  private static CassandraRequest create(Session session, BatchStatement batchStatement) {
+  private static CassandraRequest create(
+      Session session, BatchStatement batchStatement, @Nullable DbServerTarget serverTarget) {
     List<String> queryTexts = new ArrayList<>();
     List<Boolean> mixedParameterizedQueries = null;
     boolean allQueriesParameterized = true;
@@ -45,7 +61,7 @@ abstract class CassandraRequest {
     int queryIndex = 0;
     for (Statement batchEntry : batchStatement.getStatements()) {
       queryTexts.add(getQuery(batchEntry));
-      boolean parameterizedQuery = batchEntry instanceof BoundStatement;
+      boolean parameterizedQuery = hasQueryValues(batchEntry);
       if (!parameterizedQuery) {
         allQueriesParameterized = false;
       }
@@ -72,7 +88,9 @@ abstract class CassandraRequest {
         queryTexts,
         allQueriesParameterizedResult,
         mixedParameterizedQueries,
-        Long.valueOf(batchStatement.size()));
+        Long.valueOf(batchStatement.size()),
+        batchStatement,
+        serverTarget);
   }
 
   private static CassandraRequest create(
@@ -80,9 +98,35 @@ abstract class CassandraRequest {
       Collection<String> queryTexts,
       boolean allQueriesParameterized,
       @Nullable List<Boolean> mixedParameterizedQueries,
-      @Nullable Long batchSize) {
+      @Nullable Long batchSize,
+      @Nullable Statement statement,
+      @Nullable DbServerTarget serverTarget) {
+    QueryOptions queryOptions = session.getCluster().getConfiguration().getQueryOptions();
+    String consistencyLevel =
+        (statement == null || statement.getConsistencyLevel() == null)
+            ? queryOptions.getConsistencyLevel().name()
+            : statement.getConsistencyLevel().name();
+    int fetchSize =
+        (statement == null || statement.getFetchSize() <= 0)
+            ? queryOptions.getFetchSize()
+            : statement.getFetchSize();
+    // the driver treats Integer.MAX_VALUE as a request to disable paging and never sends a page
+    // size, so there is no page size to report
+    Long pageSize =
+        (fetchSize <= 0 || fetchSize == Integer.MAX_VALUE) ? null : Long.valueOf(fetchSize);
+    Boolean idempotent = statement == null ? null : statement.isIdempotent();
+    boolean queryIdempotent =
+        idempotent == null ? queryOptions.getDefaultIdempotence() : idempotent;
     return new AutoValue_CassandraRequest(
-        session, queryTexts, allQueriesParameterized, mixedParameterizedQueries, batchSize);
+        session,
+        queryTexts,
+        allQueriesParameterized,
+        mixedParameterizedQueries,
+        batchSize,
+        consistencyLevel,
+        pageSize,
+        queryIdempotent,
+        serverTarget);
   }
 
   private static String getQuery(Statement statement) {
@@ -94,6 +138,16 @@ abstract class CassandraRequest {
     }
 
     return query == null ? "" : query;
+  }
+
+  private static boolean hasQueryValues(Statement statement) {
+    if (statement instanceof BoundStatement) {
+      return true;
+    }
+    if (statement instanceof RegularStatement) {
+      return ((RegularStatement) statement).hasValues();
+    }
+    return false;
   }
 
   abstract Session getSession();
@@ -114,4 +168,14 @@ abstract class CassandraRequest {
 
   @Nullable
   abstract Long getBatchSize();
+
+  abstract String getConsistencyLevel();
+
+  @Nullable
+  abstract Long getPageSize();
+
+  abstract boolean isIdempotent();
+
+  @Nullable
+  abstract DbServerTarget getServerTarget();
 }

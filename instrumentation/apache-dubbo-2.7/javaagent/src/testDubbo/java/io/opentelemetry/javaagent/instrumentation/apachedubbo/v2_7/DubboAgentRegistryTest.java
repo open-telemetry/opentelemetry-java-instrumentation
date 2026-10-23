@@ -19,9 +19,4 @@ class DubboAgentRegistryTest extends AbstractDubboRegistryTest {
   protected InstrumentationExtension testing() {
     return testing;
   }
-
-  @Override
-  protected boolean hasServicePeerName() {
-    return true;
-  }
 }

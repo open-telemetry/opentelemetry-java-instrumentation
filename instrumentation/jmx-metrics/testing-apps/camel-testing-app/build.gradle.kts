@@ -35,3 +35,12 @@ tasks {
     exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
   }
 }
+
+configurations.create("camelTestApp") {
+  isCanBeConsumed = true
+  isCanBeResolved = false
+}
+
+artifacts {
+  add("camelTestApp", tasks.named("camelTestAppJar"))
+}

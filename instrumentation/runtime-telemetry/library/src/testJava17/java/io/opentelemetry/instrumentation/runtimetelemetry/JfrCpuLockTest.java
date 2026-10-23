@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.runtimetelemetry;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
@@ -16,13 +15,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JfrCpuLockTest {
 
-  @RegisterExtension
-  JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.LOCK_METRICS);
-          });
+  @RegisterExtension JfrExtension jfrExtension = new JfrExtension("jvm.cpu.longlock");
 
   @Test
   void shouldHaveLockEvents() throws InterruptedException {

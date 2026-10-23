@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v1_8;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.data.v1_8.SpringDataSingletons.instrumenter;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -36,7 +35,7 @@ import org.springframework.data.repository.core.support.RepositoryProxyPostProce
 public class SpringDataInstrumentationModule extends InstrumentationModule {
 
   public SpringDataInstrumentationModule() {
-    super("spring-data", "spring-data-1.8");
+    super("spring-data-1.8", "spring-data");
   }
 
   @Override
@@ -75,13 +74,6 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
     public static final RepositoryProxyPostProcessor INSTANCE =
         new InterceptingRepositoryProxyPostProcessor();
 
-    // DQH - TODO: Support older versions?
-    // The signature of postProcess changed to add RepositoryInformation in
-    // spring-data-commons 1.9.0
-    // public void postProcess(final ProxyFactory factory) {
-    //   factory.addAdvice(0, RepositoryInterceptor.INSTANCE);
-    // }
-
     @Override
     public void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
       factory.addAdvice(
@@ -109,7 +101,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
     @Override
     @Nullable
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       Method method = methodInvocation.getMethod();
       // Since this interceptor is the outermost interceptor, non-Repository methods
       // including Object methods will also flow through here. Don't create spans for those.

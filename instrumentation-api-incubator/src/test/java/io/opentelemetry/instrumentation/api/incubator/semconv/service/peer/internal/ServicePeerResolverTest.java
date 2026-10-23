@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitPreviewServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAMESPACE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,12 +26,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ServicePeerResolverTest {
-
-  private static final AttributeKey<String> SERVICE_PEER_NAMESPACE =
-      AttributeKey.stringKey("service.peer.namespace");
-
   // resolver with a rich set of mappings exercising name, namespace, and specificity
   private static final ServicePeerResolver resolver =
       createResolver(
@@ -40,6 +38,7 @@ class ServicePeerResolverTest {
           mapping("1.2.3.4", "ipSvc", "ipNs"),
           mapping("1.2.3.4/api", "ipApiSvc", null),
           mapping("1.2.3.4:8080/api", "ipPortApi", "ipPortApiNs"),
+          mapping("[::1]:8080", "ipv6PortSvc", null),
           mapping("nsonly.com", null, "nsOnly"));
 
   @ParameterizedTest
@@ -82,7 +81,10 @@ class ServicePeerResolverTest {
         // mismatch, falls back to host-only
         Arguments.of("1.2.3.4", 8080, null, "ipSvc", "ipNs"),
         // path-only matcher rejects when query port differs from matcher port
-        Arguments.of("1.2.3.4", 9000, "/api", "ipSvc", "ipNs"));
+        Arguments.of("1.2.3.4", 9000, "/api", "ipSvc", "ipNs"),
+        // bracketed IPv6 mapping matches the IPv6 address and port
+        Arguments.of("::1", 8080, null, "ipv6PortSvc", null),
+        Arguments.of("::1", 9090, null, null, null));
   }
 
   @Test
@@ -94,6 +96,49 @@ class ServicePeerResolverTest {
   @Test
   void nonEmptyWithValidMapping() {
     assertThat(resolver.isEmpty()).isFalse();
+  }
+
+  @Test
+  void configuredTargetDoesNotAlsoMatchItsFirstHost() {
+    String target = "node1:6379,node2:6380";
+    ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
+    assertThat(r.isEmpty()).isFalse();
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve(target, null, () -> null, attrs::put);
+    assertName("cluster", attrs.build());
+
+    attrs = Attributes.builder();
+    r.resolve("node1", 6379, () -> null, attrs::put);
+    assertThat(attrs.build().isEmpty()).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "oracle:thin:@(description=(address=(host=h1))(address=(host=h2)))",
+        "oracle:thin:@(DESCRIPTION=(ADDRESS = (HOST=h1))(ADDRESS = (HOST=h2)))"
+      })
+  void oracleDescriptorDoesNotAlsoMatchParsedHost(String target) {
+    ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve(target, null, () -> null, attrs::put);
+    assertName("cluster", attrs.build());
+
+    attrs = Attributes.builder();
+    r.resolve("oracle", null, () -> null, attrs::put);
+    assertThat(attrs.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void commaInPathStillUsesHostAndPathMatching() {
+    ServicePeerResolver r = createResolver(mapping("example.com/api,v2", "versionedApi", null));
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve("example.com", null, () -> "/api,v2", attrs::put);
+
+    assertName("versionedApi", attrs.build());
   }
 
   @Test
@@ -136,7 +181,7 @@ class ServicePeerResolverTest {
   }
 
   private static void assertNamespace(@Nullable String expected, Attributes attrs) {
-    if (emitStableServicePeerSemconv()) {
+    if (emitPreviewServicePeerSemconv()) {
       if (expected != null) {
         assertThat(attrs.get(SERVICE_PEER_NAMESPACE)).isEqualTo(expected);
       } else {
@@ -151,7 +196,9 @@ class ServicePeerResolverTest {
   private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(otel.getGeneralInstrumentationConfig()).thenReturn(DeclarativeConfigProperties.empty());
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
 
     List<DeclarativeConfigProperties> entryList = asList(entries);
     when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);

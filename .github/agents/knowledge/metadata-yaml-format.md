@@ -1,9 +1,14 @@
 # [Config] metadata.yaml Format and Declarative Name Conversion
 
-## Quick Reference
+Consult this article when editing instrumentation `metadata.yaml` or
+investigating a non-obvious flat-property to declarative-key mapping. It
+documents the schema, conversion examples, and validation for metadata edits.
 
-- Use when: reviewing or creating `metadata.yaml` files, converting config names
-- Review focus: declarative_name format, examples guidelines, special mappings, config validation
+## General
+
+- General enabled/disabled configs for an instrumentation module (example: `otel.instrumentation.apache-commons-pool.enabled`)
+  should not be defined within the configuration block. It will be assumed that modules are enabled
+  unless they contain `disabled_by_default: true`
 
 ## Entry Structure
 
@@ -15,12 +20,39 @@ Each configuration entry includes:
 - `declarative_name`: YAML key path (e.g., `java.grpc.emit_message_events`)
 - `type`: `boolean`, `string`, `list`, `int`, `map`. Describes the **flat** form.
 - `description`: Human-readable explanation
-- `default`: Default value
+- `default`: The value used when the setting is unset. **Omit it** when leaving the setting unset
+  means falling back to another setting (for example a per-module override of a common setting),
+  and say what applies instead in the description ("… when unset, that setting applies.").
+  `docs/declarative-configuration-example.yaml` leaves such entries out, because setting any value
+  there would override the fallback.
+- `deprecated` (optional): `true` for a deprecated setting. Required exactly when the description
+  starts with "Deprecated". Deprecated entries are left out of the generated example.
+- `replaced_by` (optional, deprecated entries only): the flat name of the replacing setting, or its
+  declarative name if it has no flat property. It must name a documented setting.
 - `examples` (optional): Only for module-specific configs with non-obvious format
 - `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
-  `type`. Currently only `structured_list` (see Structured Lists).
+  `type`. Either `structured_list` (see Structured Lists) or a scalar type — `string`, `boolean`,
+  `int` (see Scalar Overrides).
 - `declarative_schema` (optional): Per-item object schema, required when
   `declarative_type: structured_list` (see Structured Lists).
+
+When a module-specific configuration overrides a referenced common configuration, list the
+module-specific entry immediately before the common `ref`. This keeps the override and fallback
+together and makes their precedence clear. The override has no `default`, and the module must `ref`
+the common setting it falls back to (`DeclarativeConfigValidationTest` checks this).
+
+## Shared and Global Configurations
+
+`instrumentation-docs/src/main/resources/shared-config-definitions.yaml` has two sections:
+
+- `configurations`: settings that several modules expose identically. Each module that reads one,
+  including through a shared helper such as `DbConfig` or `CommonConfig`, declares `- ref: <id>`.
+- `global_configurations`: settings read on behalf of every instrumentation rather than any
+  particular one (semantic convention selection, span suppression). No module declares
+  or references them; the generator always includes them.
+
+If a setting is read on behalf of specific modules, it belongs in `configurations`, even when the
+reading code lives in the instrumentation API.
 
 ## Structured Lists
 
@@ -28,8 +60,13 @@ Some declarative configs are **lists of objects** even though their flat form is
 flat `type` describes the flat system property; `declarative_type: structured_list` plus a
 `declarative_schema` describe the per-item object shape for the declarative builder. The schema
 mirrors the JSON-schema style used by opentelemetry-configuration: `type: object`, a `required`
-list, and named `properties` (each with `type`, optional `description`, optional `default`). The
-`required` keys must be a subset of `properties`.
+list, and named `properties` (each with `type`, optional `description`, optional `default`, and
+optional `example`). The `required` keys must be a subset of `properties`.
+
+`example` is the sample value used for that property in the generated
+`docs/declarative-configuration-example.yaml` entry; without it the generator falls back to the
+property's `default`, then to a `<property-name>` placeholder. Set it on every property whose
+placeholder would not be self-explanatory.
 
 `service_peer_mapping` — flat form is a `host=service` map, declarative form is a list of
 `{peer, service_name}`:
@@ -43,10 +80,16 @@ list, and named `properties` (each with `type`, optional `description`, optional
   declarative_type: structured_list
   declarative_schema:
     type: object
-    required: [peer, service_name]
+    required: [ peer, service_name ]
     properties:
-      peer: { type: string, description: Host name or IP address to match against. }
-      service_name: { type: string, description: Peer service name to record for matching peers. }
+      peer:
+        type: string
+        description: Host name or IP address to match against.
+        example: host
+      service_name:
+        type: string
+        description: Peer service name to record for matching peers.
+        example: serviceName
 ```
 
 `url_template_rules` is **declarative-only** (no flat property) — it omits `name`:
@@ -59,12 +102,51 @@ list, and named `properties` (each with `type`, optional `description`, optional
   declarative_type: structured_list
   declarative_schema:
     type: object
-    required: [pattern, template]
+    required: [ pattern, template ]
     properties:
-      pattern: { type: string }
-      template: { type: string }
-      override: { type: boolean, default: false }
+      pattern:
+        type: string
+        description: Regular expression matched against the request URL.
+        example: '/users/\d+'
+      template:
+        type: string
+        description: Template used to derive the low-cardinality route.
+        example: '/users/{id}'
+      override:
+        type: boolean
+        default: false
+        description: Whether this rule overrides an already-applied template.
 ```
+
+## Scalar Overrides
+
+A flat property that parses as a `list` or `map` is sometimes a plain scalar in the declarative
+configuration schema. Set `declarative_type` to the scalar type so the declarative form is described
+correctly; `type` keeps describing the flat system property. No `declarative_schema` is involved.
+
+`otel.semconv-stability.opt-in` is the current case: the flat property is a comma-separated list,
+but `general.stability_opt_in_list` is a single string that the agent splits itself (see
+`SemconvSelectionResolver`), so it is `type: list` + `declarative_type: string`:
+
+```yaml
+- name: otel.semconv-stability.opt-in
+  declarative_name: general.stability_opt_in_list
+  description: Opt-in to emit stable semantic conventions instead of the old experimental ones.
+  type: list
+  declarative_type: string
+  default: ""
+```
+
+## Deprecated Declarative Names
+
+Some declarative names were published under an earlier spelling. The bridge keeps the old spelling
+in `SPECIAL_MAPPINGS` so existing configuration files keep working. A current setting MUST use the
+current name; the old spelling may only be documented by an entry marked `deprecated: true`
+(`DeclarativeConfigValidationTest` fails otherwise).
+
+| Deprecated                         | Use instead                     |
+| ---------------------------------- | ------------------------------- |
+| `general.semconv_stability.opt_in` | `general.stability_opt_in_list` |
 
 ## Special Mappings
 
@@ -76,20 +158,15 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.http.client.capture-response-headers`                     | `general.http.client.response_captured_headers`                   |
 | `otel.instrumentation.http.server.capture-request-headers`                      | `general.http.server.request_captured_headers`                    |
 | `otel.instrumentation.http.server.capture-response-headers`                     | `general.http.server.response_captured_headers`                   |
-| `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters/development` |
-| `otel.semconv-stability.opt-in`                                                 | `general.semconv_stability.opt_in`                                |
+| `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters`             |
+| `otel.semconv-stability.opt-in`                                                 | `general.stability_opt_in_list`                                   |
 | `otel.instrumentation.http.known-methods`                                       | `java.common.http.known_methods`                                  |
 | `otel.instrumentation.http.client.emit-experimental-telemetry`                  | `java.common.http.client.emit_experimental_telemetry/development` |
 | `otel.instrumentation.http.server.emit-experimental-telemetry`                  | `java.common.http.server.emit_experimental_telemetry/development` |
-| `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`         | `java.common.messaging.receive_telemetry/development.enabled`     |
-| `otel.instrumentation.messaging.experimental.capture-headers`                   | `java.common.messaging.capture_headers/development`               |
 | `otel.instrumentation.genai.capture-message-content`                            | `java.common.gen_ai.capture_message_content`                      |
-| `otel.instrumentation.experimental.span-suppression-strategy`                   | `java.common.span_suppression_strategy/development`               |
 | `otel.instrumentation.opentelemetry-annotations.exclude-methods`                | `java.opentelemetry_extension_annotations.exclude_methods`        |
 | `otel.experimental.javascript-snippet`                                          | `java.servlet.javascript_snippet/development`                     |
-| `otel.jmx.enabled`                                                              | `java.jmx.enabled`                                                |
 | `otel.jmx.config`                                                               | `java.jmx.config`                                                 |
-| `otel.jmx.target.system`                                                        | `java.jmx.target.system`                                          |
 
 ## Standard Conversion
 
@@ -110,7 +187,7 @@ Examples:
 | `otel.instrumentation.grpc.experimental-span-attributes`                     | `java.grpc.experimental_span_attributes/development`        |
 | `otel.instrumentation.aws-sdk.experimental-span-attributes`                  | `java.aws_sdk.experimental_span_attributes/development`     |
 | `otel.instrumentation.logback-appender.experimental.capture-code-attributes` | `java.logback_appender.capture_code_attributes/development` |
-| `otel.instrumentation.common.experimental.controller-telemetry.enabled`      | `java.common.controller_telemetry/development.enabled`      |
+| `otel.instrumentation.common.controller-telemetry.enabled`                   | `java.common.controller_telemetry.enabled`                  |
 
 **Key distinction**:
 
@@ -124,15 +201,20 @@ Add `examples` only for module-specific configs with non-obvious format (lists, 
 **Never add for**: `general.*`, `java.common.*`, or boolean configs.
 
 ```yaml
-- name: otel.instrumentation.grpc.capture-metadata.client.request
-  declarative_name: java.grpc.capture_metadata.client.request
+- name: otel.instrumentation.grpc.client.request-metadata.included
+  declarative_name: java.grpc.client.request_metadata.included
   type: list
   examples:
     - "custom-request-header"
-    - "header1,header2,header3"
+    - "my-*-key,another-metadata-key"
+- name: otel.instrumentation.grpc.client.request-metadata.excluded
+  declarative_name: java.grpc.client.request_metadata.excluded
+  type: list
+  examples:
+    - "authorization,*-token"
 ```
 
-## Validation Procedure
+## Checking an Edited Metadata File
 
 ### 1. Validate experimental markers match
 
@@ -154,11 +236,14 @@ If a module has a dependency on other modules (for example, a "-common" module, 
 
 ### 3. Verify type and default
 
-Match type and default value with actual code usage.
+Match type and default value with actual code usage. Check whether the reader distinguishes an
+absent value from a default one (`getBoolean(key)` returning `null`, `getPropertyKeys().contains`,
+a warning logged whenever the value is non-null): if it falls back to another setting when absent,
+the entry has no `default`.
 
-## Automated Test (MANDATORY)
+## Automated Validation After Editing Metadata
 
-**Run after any metadata.yaml changes:**
+Run after changing `metadata.yaml`:
 
 ```bash
 ./gradlew :instrumentation-docs:test --tests DeclarativeConfigValidationTest
@@ -172,7 +257,7 @@ This validates round-trip conversion (flat property → bridge → declarative p
 
 Example failure when flat name is wrong:
 
-```
+```text
 FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
   flat property: otel.instrumentation.servlet.capture-request-parameters
   expected: [item1, item2, item3]
@@ -183,12 +268,12 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 
 ## Validation Outcomes
 
-| Issue                        | Action                                  |
-| ---------------------------- | --------------------------------------- |
-| Config not used              | Flag for removal                        |
-| Default/type mismatch        | Update metadata.yaml to match code      |
-| Missing config (in code)     | Add to metadata.yaml                    |
-| Experimental marker mismatch | Fix flat and declarative names to agree |
+| Issue                        | Action                                    |
+| ---------------------------- | ----------------------------------------- |
+| Config not used              | Remove after confirming it has no readers |
+| Default/type mismatch        | Update metadata.yaml to match code        |
+| Missing config (in code)     | Add to metadata.yaml                      |
+| Experimental marker mismatch | Fix flat and declarative names to agree   |
 
 ## Output Format
 

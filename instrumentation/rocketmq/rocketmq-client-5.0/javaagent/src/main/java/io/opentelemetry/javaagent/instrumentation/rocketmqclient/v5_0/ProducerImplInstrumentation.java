@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.Roc
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -25,6 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
+import org.apache.rocketmq.client.java.route.MessageQueueImpl;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.Futures;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.MoreExecutors;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture;
@@ -42,24 +42,16 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("send0")
             .and(isPrivate())
-            .and(takesArguments(6))
             .and(
                 takesArgument(
                     0,
                     named(
                         "org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture")))
-            .and(takesArgument(1, String.class))
-            .and(takesArgument(2, named("org.apache.rocketmq.client.java.message.MessageType")))
             .and(takesArgument(3, List.class))
-            .and(takesArgument(4, List.class))
-            .and(takesArgument(5, int.class)),
+            .and(takesArgument(4, List.class)),
         getClass().getName() + "$SendAdvice");
 
-    transformer.applyAdviceToMethod(
-        named("sendAsync")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.apache.rocketmq.client.apis.message.Message"))),
-        getClass().getName() + "$SendAsyncAdvice");
+    transformer.applyAdviceToMethod(named("sendAsync"), getClass().getName() + "$SendAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -67,12 +59,16 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) SettableFuture<List<SendReceiptImpl>> future0,
+        @Advice.Argument(3) List<MessageQueueImpl> messageQueues,
         @Advice.Argument(4) List<PublishingMessageImpl> messages) {
       Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter = producerInstrumenter();
       int count = messages.size();
       List<SettableFuture<SendReceiptImpl>> futures = FutureConverter.convert(future0, count);
+      String namespace =
+          messageQueues.isEmpty() ? "" : messageQueues.get(0).getTopicResource().getNamespace();
       for (int i = 0; i < count; i++) {
         PublishingMessageImpl message = messages.get(i);
+        VirtualFieldStore.setNamespaceByMessage(message, namespace);
 
         // Try to extract parent context.
         Context parentContext = VirtualFieldStore.getContextByMessage(message);

@@ -12,13 +12,17 @@ import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -50,28 +54,75 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
             .and(returns(named("jakarta.jms.Message")))
             .and(isPublic()),
         getClass().getName() + "$ConsumerAdvice");
+    transformer.applyAdviceToMethod(
+        named("setMessageListener")
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("jakarta.jms.MessageListener")))
+            .and(isPublic()),
+        getClass().getName() + "$SetMessageListenerAdvice");
+  }
+
+  public static class AdviceScope {
+    private final CallDepth callDepth;
+    @Nullable private final Timer timer;
+
+    private AdviceScope(CallDepth callDepth, @Nullable Timer timer) {
+      this.callDepth = callDepth;
+      this.timer = timer;
+    }
+
+    public static AdviceScope enter() {
+      CallDepth callDepth = CallDepth.forClass(MessageConsumer.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return new AdviceScope(callDepth, null);
+      }
+      return new AdviceScope(callDepth, Timer.start());
+    }
+
+    public void exit(MessageConsumer consumer, @Nullable Message message) {
+      if (callDepth.decrementAndGet() > 0 || timer == null) {
+        return;
+      }
+      if (message == null) {
+        // Do not create span when no message is received
+        return;
+      }
+
+      String subscriptionName = JmsSubscriptionNames.get(consumer);
+      JmsSubscriptionNames.set(message, subscriptionName);
+      MessageWithDestination request =
+          MessageWithDestination.create(
+              JakartaMessageAdapter.create(message), null, subscriptionName);
+
+      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
+    }
   }
 
   @SuppressWarnings("unused")
   public static class ConsumerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Timer onEnter() {
-      return Timer.start();
+    public static AdviceScope onEnter() {
+      return AdviceScope.enter();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Enter Timer timer, @Advice.Return @Nullable Message message) {
-      if (message == null) {
-        // Do not create span when no message is received
-        return;
-      }
+        @Advice.This MessageConsumer consumer,
+        @Advice.Enter AdviceScope adviceScope,
+        @Advice.Return @Nullable Message message) {
+      adviceScope.exit(consumer, message);
+    }
+  }
 
-      MessageWithDestination request =
-          MessageWithDestination.create(JakartaMessageAdapter.create(message), null);
+  @SuppressWarnings("unused")
+  public static class SetMessageListenerAdvice {
 
-      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.This MessageConsumer consumer,
+        @Advice.Argument(0) @Nullable MessageListener messageListener) {
+      JmsSubscriptionNames.copyToListener(consumer, messageListener);
     }
   }
 }

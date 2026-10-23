@@ -19,13 +19,10 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class Db2UrlParser implements JdbcUrlParser {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String IBM_DB2 = "ibm.db2";
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String DB2 = "db2";
 
   private static final int DEFAULT_PORT = 50000;
 
@@ -36,8 +33,7 @@ public final class Db2UrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(IBM_DB2);
-    ctx.oldSemconvSystem(DB2);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyDataSourceProperties();
 

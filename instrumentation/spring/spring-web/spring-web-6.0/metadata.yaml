@@ -29,9 +29,11 @@ configurations:
         pattern:
           type: string
           description: Regular expression matched against the request URL.
+          example: '/users/\d+'
         template:
           type: string
           description: Template used to derive the low-cardinality route.
+          example: '/users/{id}'
         override:
           type: boolean
           default: false

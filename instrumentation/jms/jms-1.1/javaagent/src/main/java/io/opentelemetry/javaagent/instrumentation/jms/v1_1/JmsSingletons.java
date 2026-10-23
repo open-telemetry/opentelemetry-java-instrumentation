@@ -17,17 +17,19 @@ public class JmsSingletons {
   private static final Instrumenter<MessageWithDestination, Void> producerInstrumenter;
   private static final Instrumenter<MessageWithDestination, Void> consumerReceiveInstrumenter;
   private static final Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter;
+  private static final Instrumenter<MessageWithDestination, Void>
+      consumerProcessInstrumenterWithConsumedMessages;
 
   static {
     JmsInstrumenterFactory factory =
         new JmsInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
-            .setMessagingReceiveTelemetryEnabled(
-                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+            .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
 
     producerInstrumenter = factory.createProducerInstrumenter();
     consumerReceiveInstrumenter = factory.createConsumerReceiveInstrumenter();
     consumerProcessInstrumenter = factory.createConsumerProcessInstrumenter(false);
+    consumerProcessInstrumenterWithConsumedMessages =
+        factory.createConsumerProcessInstrumenter(true);
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {
@@ -38,8 +40,11 @@ public class JmsSingletons {
     return consumerReceiveInstrumenter;
   }
 
-  public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter() {
-    return consumerProcessInstrumenter;
+  public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter(
+      boolean consumedMessagesRecorded) {
+    return consumedMessagesRecorded
+        ? consumerProcessInstrumenter
+        : consumerProcessInstrumenterWithConsumedMessages;
   }
 
   private JmsSingletons() {}

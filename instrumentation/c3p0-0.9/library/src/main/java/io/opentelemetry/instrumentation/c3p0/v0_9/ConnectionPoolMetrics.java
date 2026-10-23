@@ -32,15 +32,30 @@ final class ConnectionPoolMetrics {
       new ConcurrentHashMap<>();
 
   static void registerMetrics(OpenTelemetry openTelemetry, PooledDataSource dataSource) {
+    registerMetrics(openTelemetry, dataSource, dataSource.getDataSourceName());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry, PooledDataSource dataSource, String dataSourceName) {
+    registerMetrics(openTelemetry, dataSource, dataSourceName, Attributes.empty());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry,
+      PooledDataSource dataSource,
+      String dataSourceName,
+      Attributes databaseAttributes) {
     dataSourceMetrics.compute(
         new IdentityDataSourceKey(dataSource),
         (key, existingCallback) ->
-            ConnectionPoolMetrics.createMeters(openTelemetry, key, existingCallback));
+            createMeters(openTelemetry, key, dataSourceName, databaseAttributes, existingCallback));
   }
 
   private static BatchCallback createMeters(
       OpenTelemetry openTelemetry,
       IdentityDataSourceKey key,
+      String dataSourceName,
+      Attributes databaseAttributes,
       @Nullable BatchCallback existingCallback) {
     // remove old counters from the registry in case they were already there
     removeMetersFromRegistry(existingCallback);
@@ -49,7 +64,7 @@ final class ConnectionPoolMetrics {
 
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(
-            openTelemetry, INSTRUMENTATION_NAME, dataSource.getDataSourceName());
+            openTelemetry, INSTRUMENTATION_NAME, dataSourceName, databaseAttributes);
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement pendingRequestsForConnection = metrics.pendingRequestsForConnection();

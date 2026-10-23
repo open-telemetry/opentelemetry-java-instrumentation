@@ -16,7 +16,7 @@ import java.util.List;
 public class JoddHttpInstrumentationModule extends InstrumentationModule {
 
   public JoddHttpInstrumentationModule() {
-    super("jodd-http", "jodd-http-4.2");
+    super("jodd-http-4.2", "jodd-http");
   }
 
   @Override

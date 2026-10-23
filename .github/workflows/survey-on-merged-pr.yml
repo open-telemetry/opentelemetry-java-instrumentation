@@ -1,7 +1,9 @@
 name: Survey on Merged PR by Non-Member
 
 on:
-  pull_request_target: # zizmor: ignore[dangerous-triggers] — this workflow only calls the reusable shared workflow; no PR code is checked out or executed.
+  pull_request_target:
+    # zizmor: ignore[dangerous-triggers] This only calls the trusted reusable
+    # workflow; no PR code is checked out or executed.
     types: [closed]
     branches: [main]
 
@@ -9,7 +11,7 @@ permissions: {}
 
 jobs:
   survey:
-    uses: open-telemetry/shared-workflows/.github/workflows/survey-on-merged-pr.yml@62d5939b47144252763c5ff9fffe8c20d76cd806 # v0.4.0
+    uses: open-telemetry/shared-workflows/.github/workflows/survey-on-merged-pr.yml@f09a36e1fa2576787fe05cbc1313ef6066918c78 # v0.23.0
     with:
       client_id: ${{ vars.OTELBOT_CLIENT_ID }}
     secrets:

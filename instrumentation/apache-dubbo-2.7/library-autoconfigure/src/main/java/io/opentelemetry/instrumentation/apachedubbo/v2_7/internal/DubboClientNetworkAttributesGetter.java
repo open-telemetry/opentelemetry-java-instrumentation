@@ -6,12 +6,15 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboRegistryUtil.buildServiceTarget;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.Result;
 
 /**
@@ -21,23 +24,38 @@ import org.apache.dubbo.rpc.Result;
 public final class DubboClientNetworkAttributesGetter
     implements ServerAttributesGetter<DubboRequest>, NetworkAttributesGetter<DubboRequest, Result> {
 
+  private final boolean emitPreviewRpcSemconv;
+
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  public DubboClientNetworkAttributesGetter(OpenTelemetry openTelemetry) {
+    emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
+  }
+
   @Nullable
   @Override
   public String getServerAddress(DubboRequest request) {
+    // the registry address is the logical target only under the preview rpc semconv; keep the
+    // resolved provider host under the old semconv to avoid changing already-emitted attributes
     String registryAddress = request.registryAddress();
-    if (registryAddress != null) {
+    if (registryAddress != null && emitPreviewRpcSemconv) {
       return registryAddress + "/" + buildServiceTarget(request.url());
     }
-    return request.url().getHost();
+    URL url = request.url();
+    return url != null ? url.getHost() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DubboRequest request) {
-    if (request.registryAddress() != null) {
+    if (request.registryAddress() != null && emitPreviewRpcSemconv) {
       return null;
     }
-    int port = request.url().getPort();
+    URL url = request.url();
+    if (url == null) {
+      return null;
+    }
+    int port = url.getPort();
     return port > 0 ? port : null;
   }
 

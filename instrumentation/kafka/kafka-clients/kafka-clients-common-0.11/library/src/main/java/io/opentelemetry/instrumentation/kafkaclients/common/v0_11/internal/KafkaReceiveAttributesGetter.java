@@ -10,11 +10,13 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Header;
 
 final class KafkaReceiveAttributesGetter
     implements MessagingAttributesGetter<KafkaReceiveRequest, Void> {
@@ -55,18 +57,6 @@ final class KafkaReceiveAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(KafkaReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(KafkaReceiveRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(KafkaReceiveRequest request, @Nullable Void unused) {
@@ -86,12 +76,21 @@ final class KafkaReceiveAttributesGetter
 
   @Override
   public List<String> getMessageHeader(KafkaReceiveRequest request, String name) {
-    return StreamSupport.stream(request.getRecords().spliterator(), false)
+    return request.getRecordList().stream()
         .flatMap(
             consumerRecord ->
                 StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))
         .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), UTF_8))
         .collect(toList());
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(KafkaReceiveRequest request) {
+    return request.getRecordList().stream()
+        .flatMap(
+            consumerRecord -> StreamSupport.stream(consumerRecord.headers().spliterator(), false))
+        .map(Header::key)
+        .collect(toSet());
   }
 }

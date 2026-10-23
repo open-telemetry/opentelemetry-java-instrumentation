@@ -47,7 +47,7 @@ tasks {
       includeTestsMatching("*HistogramGaugesTest")
     }
     include("**/*HistogramGaugesTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true")
+    jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
   }
 
   test {
@@ -59,7 +59,11 @@ tasks {
   }
 
   check {
-    dependsOn(testBaseTimeUnit, testPrometheusMode, testHistogramGauges)
+    dependsOn(
+      testBaseTimeUnit,
+      testPrometheusMode,
+      testHistogramGauges,
+    )
   }
 
   withType<Test>().configureEach {

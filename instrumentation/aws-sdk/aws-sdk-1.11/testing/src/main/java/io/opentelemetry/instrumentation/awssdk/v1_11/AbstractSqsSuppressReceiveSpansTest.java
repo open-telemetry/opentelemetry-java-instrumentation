@@ -18,12 +18,14 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -32,26 +34,35 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractSqsSuppressReceiveSpansTest {
+public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdkTest {
 
   private static int sqsPort;
   private static SQSRestServer sqsRestServer;
   private static AmazonSQSAsync sqsClient;
-
-  protected abstract InstrumentationExtension testing();
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
@@ -96,82 +107,160 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
     testing()
         .waitAndAssertTraces(
+            trace -> trace.hasSpansSatisfyingExactly(this::createQueueSpan),
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("SQS.CreateQueue")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "CreateQueue"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("testSdkSqs publish")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(
-                                    AWS_SQS_QUEUE_URL,
-                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "SendMessage"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION, "publish"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1")),
-                    span ->
-                        span.hasName("testSdkSqs process")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(
-                                    AWS_SQS_QUEUE_URL,
-                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "ReceiveMessage"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION, "process"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1")),
+                    this::publishSpan,
+                    span -> processSpan(span, trace.getSpan(0), trace.getSpan(0)),
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
                             .hasTotalAttributeCount(0)));
+  }
+
+  @Test
+  void testAbandonedIteratorDoesNotParentNextProcessSpan() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "first"));
+    ReceiveMessageResult firstResponse = sqsClient.receiveMessage(queueUrl);
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "second"));
+    ReceiveMessageResult secondResponse = sqsClient.receiveMessage(queueUrl);
+
+    Iterator<Message> firstIterator = firstResponse.getMessages().iterator();
+    Iterator<Message> secondIterator = secondResponse.getMessages().iterator();
+    assertThat(firstIterator.hasNext()).isTrue();
+    firstIterator.next();
+    assertThat(secondIterator.hasNext()).isTrue();
+    secondIterator.next();
+    assertThat(secondIterator.hasNext()).isFalse();
+    assertThat(firstIterator.hasNext()).isFalse();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("SQS.CreateQueue").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("send testSdkSqs").hasNoParent(),
+                    span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("send testSdkSqs").hasNoParent(),
+                    span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
+
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"iterator", "forEach", "spliterator"})
+  void testOnlyFirstIteratorTraversalProducesProcessSpan(String traversal) {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
+    Context previous = Context.current();
+    boolean iteratorTraversal = !traversal.equals("spliterator");
+    for (int attempt = 0; attempt < 2; attempt++) {
+      boolean traced = iteratorTraversal && attempt == 0;
+      switch (traversal) {
+        case "iterator":
+          for (Message ignored : messages) {
+            assertThat(Span.current().getSpanContext().isValid()).isEqualTo(traced);
+          }
+          break;
+        case "spliterator":
+          messages
+              .spliterator()
+              .forEachRemaining(
+                  message ->
+                      assertThat(Span.current().getSpanContext().isValid()).isEqualTo(traced));
+          break;
+        default:
+          messages.forEach(
+              message -> assertThat(Span.current().getSpanContext().isValid()).isEqualTo(traced));
+      }
+      assertThat(Span.current().getSpanContext())
+          .isEqualTo(Span.fromContext(previous).getSpanContext());
+    }
+    assertThat(testing().spans())
+        .filteredOn(span -> span.getName().equals("process testSdkSqs"))
+        .hasSize(iteratorTraversal ? 1 : 0);
+    if (iteratorTraversal) {
+      SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
+    }
+  }
+
+  @Test
+  void testUnusedFirstIteratorDisablesLaterSdkProcessing() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
+    Iterator<Message> unused = messages.iterator();
+    assertThat(unused).isNotNull();
+    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(testing().spans())
+        .filteredOn(span -> span.getName().equals("process testSdkSqs"))
+        .isEmpty();
+  }
+
+  @Test
+  void testSublistTraversalDoesNotTraceOrDisableResponse() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
+    messages
+        .subList(0, 1)
+        .forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    messages
+        .subList(0, 1)
+        .spliterator()
+        .forEachRemaining(
+            message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
+  }
+
+  @Test
+  void testNestedTraversalRestoresOuterProcessScope() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "outer"));
+    ReceiveMessageResult outer = sqsClient.receiveMessage(queueUrl);
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "inner"));
+    ReceiveMessageResult inner = sqsClient.receiveMessage(queueUrl);
+    testing().waitForTraces(3);
+    testing().clearData();
+
+    outer
+        .getMessages()
+        .forEach(
+            message -> {
+              Context outerContext = Context.current();
+              inner
+                  .getMessages()
+                  .forEach(
+                      nested ->
+                          assertThat(Span.current().getSpanContext())
+                              .isNotEqualTo(Span.fromContext(outerContext).getSpanContext()));
+              assertThat(Span.current().getSpanContext())
+                  .isEqualTo(Span.fromContext(outerContext).getSpanContext());
+            });
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
   }
 
   @Test
@@ -194,111 +283,140 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                   .forEach(message -> testing().runWithSpan("process child", () -> {}));
             });
 
+    // with an ambient span the process span is parented to it rather than to the message creation
+    // context, which puts it in the same trace as the ambient span
+
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+
     testing()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("SQS.CreateQueue")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "CreateQueue"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("testSdkSqs publish")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(
-                                    AWS_SQS_QUEUE_URL,
-                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "SendMessage"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION, "publish"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1")),
-                    span ->
-                        span.hasName("testSdkSqs process")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(
-                                    AWS_SQS_QUEUE_URL,
-                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "ReceiveMessage"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION, "process"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1")),
-                    span ->
-                        span.hasName("process child")
-                            .hasParent(trace.getSpan(1))
-                            .hasTotalAttributeCount(0)),
-            /*
-             * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-             * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-             */
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span ->
-                        span.hasName("SQS.ReceiveMessage")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(
-                                    AWS_SQS_QUEUE_URL,
-                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "ReceiveMessage"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))));
+            trace -> trace.hasSpansSatisfyingExactly(this::createQueueSpan),
+            trace -> {
+              List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
+              spanAsserts.add(
+                  span -> {
+                    publishSpan.set(trace.getSpan(0));
+                    publishSpan(span);
+                  });
+
+              trace.hasSpansSatisfyingExactly(spanAsserts);
+            },
+            trace -> {
+              List<Consumer<SpanDataAssert>> spanAsserts =
+                  new ArrayList<>(
+                      asList(
+                          span -> span.hasName("parent").hasNoParent(),
+                          /*
+                           * This span represents HTTP "sending of receive message" operation. It's always single,
+                           * while there can be multiple CONSUMER spans (one per consumed message).
+                           * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then
+                           * HTTP instrumentation span would appear)
+                           */
+                          span -> receiveMessageSdkSpan(span, trace.getSpan(0))));
+              spanAsserts.add(span -> processSpan(span, trace.getSpan(0), publishSpan.get()));
+              spanAsserts.add(
+                  span ->
+                      span.hasName("process child")
+                          .hasParent(trace.getSpan(2))
+                          .hasTotalAttributeCount(0));
+              trace.hasSpansSatisfyingExactly(spanAsserts);
+            });
+  }
+
+  private void createQueueSpan(SpanDataAssert span) {
+    span.hasName("SQS.CreateQueue")
+        .hasKind(SpanKind.CLIENT)
+        .hasNoParent()
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+            equalTo(stringKey("aws.queue.name"), experimental("testSdkSqs")),
+            satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+            equalTo(RPC_SYSTEM, "aws-api"),
+            equalTo(RPC_SERVICE, "AmazonSQS"),
+            equalTo(RPC_METHOD, "CreateQueue"),
+            equalTo(HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(URL_FULL, "http://localhost:" + sqsPort),
+            equalTo(SERVER_ADDRESS, "localhost"),
+            equalTo(SERVER_PORT, sqsPort),
+            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
+  }
+
+  private void publishSpan(SpanDataAssert span) {
+    span.hasName("send testSdkSqs")
+        .hasKind(SpanKind.PRODUCER)
+        .hasNoParent()
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+            equalTo(AWS_SQS_QUEUE_URL, "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+            satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+            equalTo(RPC_SYSTEM, "aws-api"),
+            equalTo(RPC_SERVICE, "AmazonSQS"),
+            equalTo(RPC_METHOD, "SendMessage"),
+            equalTo(HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(URL_FULL, "http://localhost:" + sqsPort),
+            equalTo(SERVER_ADDRESS, "localhost"),
+            equalTo(SERVER_PORT, sqsPort),
+            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+            equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+            equalTo(MESSAGING_OPERATION_NAME, "send"),
+            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
+  }
+
+  private void processSpan(SpanDataAssert span, SpanData parent, SpanData creationContext) {
+    span.hasName("process testSdkSqs")
+        .hasKind(SpanKind.CONSUMER)
+        .hasParent(parent)
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+            equalTo(AWS_SQS_QUEUE_URL, "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+            satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+            equalTo(RPC_SYSTEM, "aws-api"),
+            equalTo(RPC_SERVICE, "AmazonSQS"),
+            equalTo(RPC_METHOD, "ReceiveMessage"),
+            equalTo(HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(URL_FULL, "http://localhost:" + sqsPort),
+            equalTo(SERVER_ADDRESS, "localhost"),
+            equalTo(SERVER_PORT, sqsPort),
+            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+            equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
+
+    // the creation context is linked even when it is also this span's parent
+    span.hasLinksSatisfying(
+        links ->
+            assertThat(links)
+                .singleElement()
+                .satisfies(
+                    link ->
+                        assertThat(link.getSpanContext().getSpanId())
+                            .isEqualTo(creationContext.getSpanId())));
+  }
+
+  private void receiveMessageSdkSpan(SpanDataAssert span, SpanData parent) {
+    span.hasName("SQS.ReceiveMessage")
+        .hasKind(SpanKind.CLIENT)
+        .hasParent(parent)
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+            equalTo(AWS_SQS_QUEUE_URL, "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+            satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+            equalTo(RPC_SYSTEM, "aws-api"),
+            equalTo(RPC_SERVICE, "AmazonSQS"),
+            equalTo(RPC_METHOD, "ReceiveMessage"),
+            equalTo(HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(URL_FULL, "http://localhost:" + sqsPort),
+            equalTo(SERVER_ADDRESS, "localhost"),
+            equalTo(SERVER_PORT, sqsPort),
+            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
   }
 
   @Test

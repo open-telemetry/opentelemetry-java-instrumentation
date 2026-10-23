@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -57,18 +58,6 @@ class SqsProcessRequestAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(SqsProcessRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SqsProcessRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(SqsProcessRequest request, @Nullable Response<?> response) {
@@ -91,5 +80,10 @@ class SqsProcessRequestAttributesGetter
   public List<String> getMessageHeader(SqsProcessRequest request, String name) {
     String value = request.getMessage().getMessageAttribute(name);
     return value != null ? singletonList(value) : emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(SqsProcessRequest request) {
+    return request.getMessage().getMessageAttributeNames();
   }
 }

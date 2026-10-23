@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.time.Duration;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -31,13 +32,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
     producer.send(new ProducerRecord<>(SHARED_TOPIC, message));
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SHARED_TOPIC + " publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(sendAttributes(null, message, false))));
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertSendSpan(span, message)));
 
     awaitUntilConsumerIsReady();
 
@@ -50,21 +45,25 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
     }
 
     testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertSendSpan(span, message)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(sendAttributes(null, message, false))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
                         .hasLinks(emptyList())
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, message, false, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(0))));
+  }
+
+  // when propagation is disabled the span context is not sent as the message creation context,
+  // so the send span is CLIENT
+  private static void assertSendSpan(SpanDataAssert span, String message) {
+    span.hasName("send " + SHARED_TOPIC)
+        .hasKind(SpanKind.CLIENT)
+        .hasNoParent()
+        .hasAttributesSatisfyingExactly(sendAttributes(null, message, false));
   }
 }

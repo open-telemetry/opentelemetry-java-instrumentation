@@ -22,12 +22,12 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHandler {
 
-  private static final VirtualField<Channel, NettyServerRequestAndContext> requestAndContextField =
+  private static final VirtualField<Channel, NettyServerRequestAndContext> REQUEST_AND_CONTEXT =
       VirtualField.find(Channel.class, NettyServerRequestAndContext.class);
 
   @Override
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) throws Exception {
-    NettyServerRequestAndContext requestAndContext = requestAndContextField.get(ctx.getChannel());
+    NettyServerRequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get(ctx.getChannel());
 
     if (requestAndContext == null || !(msg.getMessage() instanceof HttpResponse)) {
       super.writeRequested(ctx, msg);
@@ -39,7 +39,7 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     HttpResponse response = (HttpResponse) msg.getMessage();
     customizeResponse(context, response);
 
-    requestAndContextField.set(ctx.getChannel(), null);
+    REQUEST_AND_CONTEXT.set(ctx.getChannel(), null);
     try (Scope ignored = context.makeCurrent()) {
       super.writeRequested(ctx, msg);
     } catch (Throwable t) {

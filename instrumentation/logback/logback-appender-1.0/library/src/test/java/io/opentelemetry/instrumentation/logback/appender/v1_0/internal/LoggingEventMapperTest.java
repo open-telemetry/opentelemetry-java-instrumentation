@@ -10,6 +10,8 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
@@ -18,8 +20,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 
@@ -46,7 +50,7 @@ class LoggingEventMapperTest {
   void testSome() {
     // given
     LoggingEventMapper mapper =
-        LoggingEventMapper.builder().setCaptureMdcAttributes(singletonList("key2")).build();
+        LoggingEventMapper.builder().setMdcAttributes(include("key2")).build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -63,8 +67,7 @@ class LoggingEventMapperTest {
   @Test
   void testAll() {
     // given
-    LoggingEventMapper mapper =
-        LoggingEventMapper.builder().setCaptureMdcAttributes(singletonList("*")).build();
+    LoggingEventMapper mapper = LoggingEventMapper.builder().setMdcAttributes(include("*")).build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -80,10 +83,83 @@ class LoggingEventMapperTest {
   }
 
   @Test
+  void testWildcardPatterns() {
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder().setMdcAttributes(include("request-?d", "user.*")).build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("request-id", "123");
+    contextData.put("request-name", "ignored");
+    contextData.put("user.name", "alice");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    mapper.captureMdcAttributes(builder, contextData);
+
+    verify(builder).setAttribute(stringKey("request-id"), "123");
+    verify(builder).setAttribute(USER_NAME, "alice");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testExcludeOnly() {
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder()
+            .setMdcAttributes(
+                AttributeSelectors.create(
+                    IncludeExclude.builder().setExcluded(singletonList("*secret*")).build()))
+            .build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("request-id", "123");
+    contextData.put("client-secret", "ignored");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    mapper.captureMdcAttributes(builder, contextData);
+
+    verify(builder).setAttribute(stringKey("request-id"), "123");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testExclusionsTakePrecedence() {
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder()
+            .setMdcAttributes(
+                AttributeSelectors.create(
+                    IncludeExclude.builder()
+                        .setIncluded(singletonList("request-*"))
+                        .setExcluded(singletonList("*-secret"))
+                        .build()))
+            .build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("request-id", "123");
+    contextData.put("request-secret", "ignored");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    mapper.captureMdcAttributes(builder, contextData);
+
+    verify(builder).setAttribute(stringKey("request-id"), "123");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testEmptySelectorCapturesNothing() {
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder()
+            .setMdcAttributes(AttributeSelectors.create(IncludeExclude.builder().build()))
+            .build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    mapper.captureMdcAttributes(builder, contextData);
+
+    verifyNoInteractions(builder);
+  }
+
+  @Test
   void testEventNameMdc() {
     // given
     LoggingEventMapper mapper =
-        LoggingEventMapper.builder().setCaptureMdcAttributes(singletonList("key1")).build();
+        LoggingEventMapper.builder().setMdcAttributes(include("key1")).build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("otel.event.name", "MyEventName");
@@ -101,8 +177,7 @@ class LoggingEventMapperTest {
   @Test
   void testEventNameMdcWithCaptureAll() {
     // given
-    LoggingEventMapper mapper =
-        LoggingEventMapper.builder().setCaptureMdcAttributes(singletonList("*")).build();
+    LoggingEventMapper mapper = LoggingEventMapper.builder().setMdcAttributes(include("*")).build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("otel.event.name", "MyEventName");
@@ -180,5 +255,10 @@ class LoggingEventMapperTest {
     verify(builder).setAttribute(stringArrayKey("List"), singletonList("test"));
     verify(builder).setAttribute(stringArrayKey("Set"), singletonList("test"));
     verifyNoMoreInteractions(builder);
+  }
+
+  private static Predicate<String> include(String... patterns) {
+    return AttributeSelectors.create(
+        IncludeExclude.builder().setIncluded(asList(patterns)).build());
   }
 }

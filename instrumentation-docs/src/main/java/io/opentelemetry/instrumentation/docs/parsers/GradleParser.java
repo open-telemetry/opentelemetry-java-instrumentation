@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +33,14 @@ public class GradleParser {
       Pattern.compile("pass\\s*\\{(.*?)}", Pattern.DOTALL);
 
   private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\.set\\(true\\)");
+
+  /**
+   * Marker comment that excludes a muzzle directive from the generated documentation. Some pass
+   * blocks only exist to verify a sub-range or an alternate dependency set, and publishing their
+   * version range alongside the module's real range is misleading.
+   */
+  private static final Pattern docsIgnorePattern =
+      Pattern.compile("//\\s*instrumentation-docs:ignore");
 
   private static final Pattern ifBlockPattern =
       Pattern.compile("if\\s*\\([^)]*\\)\\s*\\{.*?}", Pattern.DOTALL);
@@ -75,6 +84,9 @@ public class GradleParser {
 
     while (passBlockMatcher.find()) {
       String passBlock = passBlockMatcher.group(1);
+      if (docsIgnorePattern.matcher(passBlock).find()) {
+        continue;
+      }
 
       if (coreJdkPattern.matcher(passBlock).find()) {
         if (minJavaVersion != null) {
@@ -182,20 +194,20 @@ public class GradleParser {
   }
 
   public static Set<String> extractVersions(
-      List<String> gradleFiles, InstrumentationModule module) {
+      Path moduleRoot, List<Path> gradleFiles, InstrumentationModule module) {
     Set<String> allVersions = new HashSet<>();
-    gradleFiles.forEach(file -> processGradleFile(file, allVersions, module));
+    gradleFiles.forEach(file -> processGradleFile(moduleRoot, file, allVersions, module));
     return allVersions;
   }
 
   private static void processGradleFile(
-      String filePath, Set<String> versions, InstrumentationModule module) {
+      Path moduleRoot, Path filePath, Set<String> versions, InstrumentationModule module) {
     String fileContents = FileManager.readFileToString(filePath);
     if (fileContents == null) {
       return;
     }
 
-    Optional<InstrumentationType> type = determineInstrumentationType(filePath);
+    Optional<InstrumentationType> type = determineInstrumentationType(moduleRoot, filePath);
     if (type.isEmpty()) {
       return;
     }
@@ -216,10 +228,23 @@ public class GradleParser {
     }
   }
 
-  private static Optional<InstrumentationType> determineInstrumentationType(String filePath) {
-    if (filePath.contains("/javaagent/")) {
+  /**
+   * Determines the instrumentation type from the first segment of the build file's path relative to
+   * the module root. Resolving against the module root rather than scanning the absolute path keeps
+   * an ancestor checkout directory named {@code javaagent} or {@code library} from being mistaken
+   * for the module's own type.
+   */
+  private static Optional<InstrumentationType> determineInstrumentationType(
+      Path moduleRoot, Path filePath) {
+    Path relativePath = moduleRoot.relativize(filePath);
+    if (relativePath.getNameCount() < 2) {
+      return Optional.empty();
+    }
+
+    String type = relativePath.getName(0).toString();
+    if (type.equals("javaagent")) {
       return Optional.of(InstrumentationType.JAVAAGENT);
-    } else if (filePath.contains("/library/")) {
+    } else if (type.equals("library")) {
       return Optional.of(InstrumentationType.LIBRARY);
     }
     return Optional.empty();

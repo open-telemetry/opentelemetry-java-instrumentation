@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.Collections.singleton;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
@@ -27,28 +25,9 @@ public final class R2dbcSqlAttributesGetter
     return request.getSystemName();
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  public String getDbSystem(DbExecution request) {
-    return request.getSystem();
-  }
-
   @Override
   public SqlDialect getSqlDialect(DbExecution request) {
-    // the underlying database is unknown, use the safer default that sanitizes double-quoted
-    // fragments as string literals (note that this can lead to incorrect summarization
-    // for databases that do use double quotes as identifiers)
-    //
-    // TODO do better in
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16251
-    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getUser(DbExecution request) {
-    return request.getUser();
+    return fromDbSystemName(request.getSystemName());
   }
 
   @Override
@@ -57,41 +36,15 @@ public final class R2dbcSqlAttributesGetter
     return request.getNamespace();
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  public String getConnectionString(DbExecution request) {
-    return request.getConnectionString();
-  }
-
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
-    Collection<String> rawQueryTexts = request.getRawQueryTexts();
-    // In old-only mode, join multi-query batches into a single query to preserve the legacy
-    // db.statement and db.operation extraction behavior. In database/dup mode, favor stable
-    // multi-query batch attributes because the shared SQL extractor can only use one raw query
-    // collection.
-    return emitStableDatabaseSemconv() || rawQueryTexts.size() == 1
-        ? rawQueryTexts
-        : singleton(join(";\n", rawQueryTexts));
-  }
-
-  private static String join(String delimiter, Collection<String> collection) {
-    StringBuilder builder = new StringBuilder();
-    for (String string : collection) {
-      if (builder.length() != 0) {
-        builder.append(delimiter);
-      }
-      builder.append(string);
-    }
-    return builder.toString();
+    return request.getRawQueryTexts();
   }
 
   @Override
   @Nullable
   public Long getDbOperationBatchSize(DbExecution request) {
-    // Batch size is a stable database semconv signal. Keep it hidden from old-only mode so legacy
-    // extraction does not start treating existing requests as batches.
-    return emitStableDatabaseSemconv() ? request.getBatchSize() : null;
+    return request.getBatchSize();
   }
 
   @Nullable
@@ -107,13 +60,13 @@ public final class R2dbcSqlAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DbExecution request) {
-    return request.getServerAddress();
+    return request.getConfiguredServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbExecution request) {
-    return request.getServerPort();
+    return request.getConfiguredServerPort();
   }
 
   @Override

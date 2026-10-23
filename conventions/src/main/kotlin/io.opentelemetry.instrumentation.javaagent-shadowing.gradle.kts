@@ -19,6 +19,10 @@ tasks.withType<ShadowJar>().configureEach {
   filesMatching("software/amazon/awssdk/global/handlers/**") {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
   }
+  // avoid warning about duplicate kotlin module files being silently dropped
+  filesMatching("META-INF/*.kotlin_module") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
 
   exclude("**/module-info.class")
 
@@ -30,7 +34,6 @@ tasks.withType<ShadowJar>().configureEach {
     relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
       // Exclude resource providers since they live in the agent class loader
       exclude("io.opentelemetry.instrumentation.resources.*")
-      exclude("io.opentelemetry.instrumentation.spring.resources.*")
     }
 
     // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader

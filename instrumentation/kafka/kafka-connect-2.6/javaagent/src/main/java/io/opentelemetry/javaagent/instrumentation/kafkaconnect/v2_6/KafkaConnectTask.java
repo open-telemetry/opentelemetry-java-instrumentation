@@ -16,6 +16,7 @@ import org.apache.kafka.connect.sink.SinkRecord;
 public class KafkaConnectTask {
 
   private final Collection<SinkRecord> records;
+  @Nullable private KafkaConnectBatchRecordAttributes batchRecordAttributes;
 
   public KafkaConnectTask(Collection<SinkRecord> records) {
     this.records = records;
@@ -23,6 +24,15 @@ public class KafkaConnectTask {
 
   public Collection<SinkRecord> getRecords() {
     return records;
+  }
+
+  // both the attributes extractor and the span links extractor need this, and they are always
+  // called on the same thread while the span is being started
+  KafkaConnectBatchRecordAttributes getBatchRecordAttributes() {
+    if (batchRecordAttributes == null) {
+      batchRecordAttributes = KafkaConnectBatchRecordAttributes.create(records);
+    }
+    return batchRecordAttributes;
   }
 
   private Set<String> getTopics() {

@@ -8,28 +8,46 @@ muzzle {
     module.set("kafka-streams")
     versions.set("[0.11.0.0,)")
     assertInverse.set(true)
+    excludeInstrumentationName("kafka-clients")
+    excludeInstrumentationName("kafka-clients-metrics")
   }
 }
 
 dependencies {
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
   library("org.apache.kafka:kafka-streams:0.11.0.0")
 
   // Include kafka-clients instrumentation for tests.
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
-  testImplementation("com.google.guava:guava")
   testImplementation("org.testcontainers:testcontainers-kafka")
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("org.apache.kafka:kafka-streams:0.11.0.0")
+      }
+    }
+  }
 }
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    if (name != "unitTests") {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
@@ -41,6 +59,20 @@ tasks {
     include("**/KafkaStreamsSuppressReceiveSpansTest.*")
   }
 
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -48,21 +80,26 @@ tasks {
     filter {
       excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
 
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
+        "otel.instrumentation.kafka.experimental-span-attributes=true",
+    )
   }
 
   test {
     filter {
       excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   check {
+    dependsOn(testing.suites)
     dependsOn(testReceiveSpansDisabled)
+    dependsOn(testReceiveTelemetry)
     dependsOn(testExperimental)
   }
 }

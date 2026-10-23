@@ -8,10 +8,15 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -21,6 +26,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -37,9 +44,12 @@ final class ApiGatewayProxyAttributesExtractor
   private static final String HTTP = "http";
 
   private final Set<String> knownMethods;
+  private final Set<String> sensitiveQueryParameters;
 
-  ApiGatewayProxyAttributesExtractor(Set<String> knownMethods) {
+  ApiGatewayProxyAttributesExtractor(
+      Set<String> knownMethods, Set<String> sensitiveQueryParameters) {
     this.knownMethods = knownMethods;
+    this.sensitiveQueryParameters = sensitiveQueryParameters;
   }
 
   @Override
@@ -64,12 +74,20 @@ final class ApiGatewayProxyAttributesExtractor
     String userAgent = headers.get("user-agent");
     attributes.put(USER_AGENT_ORIGINAL, userAgent);
 
-    attributes.put(URL_FULL, getHttpUrl(request, headers));
+    attributes.put(URL_PATH, request.getPath());
+    attributes.put(URL_SCHEME, headers.get("x-forwarded-proto"));
+    attributes.put(HTTP_ROUTE, request.getResource());
+    String query = getQueryString(request);
+    attributes.put(URL_QUERY, UrlQuerySanitizer.redactQueryString(query, sensitiveQueryParameters));
+    attributes.put(URL_FULL, getHttpUrl(request, headers, query, sensitiveQueryParameters));
   }
 
   @Nullable
   private static String getHttpUrl(
-      APIGatewayProxyRequestEvent request, Map<String, String> headers) {
+      APIGatewayProxyRequestEvent request,
+      Map<String, String> headers,
+      @Nullable String query,
+      Set<String> sensitiveQueryParameters) {
     StringBuilder str = new StringBuilder();
 
     String scheme = headers.get("x-forwarded-proto");
@@ -85,17 +103,31 @@ final class ApiGatewayProxyAttributesExtractor
       str.append(path);
     }
 
+    if (query != null) {
+      str.append('?').append(query);
+    }
+    return str.length() == 0
+        ? null
+        : UrlSanitizer.sanitizeUrl(str.toString(), sensitiveQueryParameters);
+  }
+
+  @Nullable
+  private static String getQueryString(APIGatewayProxyRequestEvent request) {
+    StringBuilder str = new StringBuilder();
     try {
       boolean first = true;
       for (Map.Entry<String, String> entry :
           emptyIfNull(request.getQueryStringParameters()).entrySet()) {
         String key = URLEncoder.encode(entry.getKey(), UTF_8.name());
         String value = URLEncoder.encode(entry.getValue(), UTF_8.name());
-        str.append(first ? '?' : '&').append(key).append('=').append(value);
+        if (!first) {
+          str.append('&');
+        }
+        str.append(key).append('=').append(value);
         first = false;
       }
-    } catch (UnsupportedEncodingException ignored) {
-      // Ignore
+    } catch (UnsupportedEncodingException e) {
+      throw new IllegalStateException(e);
     }
     return str.length() == 0 ? null : str.toString();
   }
@@ -107,11 +139,21 @@ final class ApiGatewayProxyAttributesExtractor
       AwsLambdaRequest request,
       @Nullable Object response,
       @Nullable Throwable error) {
+    if (!(request.getInput() instanceof APIGatewayProxyRequestEvent)) {
+      return;
+    }
     if (response instanceof APIGatewayProxyResponseEvent) {
       Integer statusCode = ((APIGatewayProxyResponseEvent) response).getStatusCode();
       if (statusCode != null) {
         attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
+        if (statusCode >= 500 || statusCode < 100) {
+          attributes.put(ERROR_TYPE, statusCode.toString());
+          return;
+        }
       }
+    }
+    if (error != null) {
+      attributes.put(ERROR_TYPE, error.getClass().getName());
     }
   }
 }

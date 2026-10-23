@@ -27,7 +27,7 @@ gradle.sharedServices.registerIfAbsent("dockerBuildService", DockerBuildService:
 val extraTag = findProperty("extraTag")
   ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
 
-val latestJava = "25" // renovate(java-version)
+val latestJava = "27" // renovate(java-version)
 
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
@@ -36,26 +36,26 @@ val targets = mapOf(
     ImageTarget(
       listOf("9.4.58"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", latestJava),
+      listOf("8", "11", "17", "21", "25", latestJava),
       mapOf("sourceVersion" to "9.4.58.v20250814")
     ),
     ImageTarget(
       listOf("10.0.26"),
       listOf("hotspot", "openj9"),
-      listOf("11", "17", "21", latestJava),
+      listOf("11", "17", "21", "25", latestJava),
       mapOf("sourceVersion" to "10.0.26")
     ),
     ImageTarget(
       listOf("11.0.26"),
       listOf("hotspot", "openj9"),
-      listOf("11", "17", "21", latestJava),
+      listOf("11", "17", "21", "25", latestJava),
       mapOf("sourceVersion" to "11.0.26"),
       "servlet-5.0"
     ),
     ImageTarget(
       listOf("12.0.28"),
       listOf("hotspot", "openj9"),
-      listOf("17", "21", latestJava),
+      listOf("17", "21", "25", latestJava),
       mapOf("sourceVersion" to "12.0.28"),
       "servlet-5.0"
     ),
@@ -109,7 +109,13 @@ val targets = mapOf(
       listOf("openj9"),
       listOf("11", "17", "21"),
       war = "servlet-5.0"
-    )
+    ),
+    ImageTarget(
+      listOf("payara/server-full:7.2026.9@sha256:0fc31d7985e4bc6951581df2014a0c609ee93fa09cd03e51dd27a3f2d6f62c9d"),
+      listOf("hotspot", "openj9"),
+      listOf("25"),
+      war = "servlet-5.0"
+    ),
   ),
   "tomcat" to listOf(
     ImageTarget(
@@ -121,19 +127,19 @@ val targets = mapOf(
     ImageTarget(
       listOf("8.5.98"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", latestJava),
+      listOf("8", "11", "17", "21", "25", latestJava),
       mapOf("majorVersion" to "8")
     ),
     ImageTarget(
       listOf("9.0.111"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", latestJava),
+      listOf("8", "11", "17", "21", "25", latestJava),
       mapOf("majorVersion" to "9")
     ),
     ImageTarget(
       listOf("10.1.48"),
       listOf("hotspot", "openj9"),
-      listOf("11", "17", "21", latestJava),
+      listOf("11", "17", "21", "25", latestJava),
       mapOf("majorVersion" to "10"),
       "servlet-5.0"
     ),
@@ -147,12 +153,12 @@ val targets = mapOf(
     ImageTarget(
       listOf("8.0.16"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", latestJava)
+      listOf("8", "11", "17", "21", "25", latestJava)
     ),
     ImageTarget(
       listOf("9.1.3"),
       listOf("hotspot", "openj9"),
-      listOf("11", "17", "21", latestJava),
+      listOf("11", "17", "21", "25", latestJava),
       war = "servlet-5.0"
     ),
   ),
@@ -182,6 +188,12 @@ val targets = mapOf(
       listOf("28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
       listOf("hotspot", "openj9"),
       listOf("11", "17", "21"),
+      war = "servlet-5.0"
+    ),
+    ImageTarget(
+      listOf("41.0.1.Final"),
+      listOf("hotspot", "openj9"),
+      listOf("25"),
       war = "servlet-5.0"
     ),
   ),
@@ -301,19 +313,21 @@ fun configureImage(
     } else if (isWindows) {
       when (jdk) {
         "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:2f2dc58147a9877ecde8644961b1e3c0f26f838af038ec8b8fc04dfbea61a4d0"
-        "11" -> "eclipse-temurin:11.0.31_11-jdk-windowsservercore-ltsc2022@sha256:e17748c6e41dd3545eb4c8337e03baf71b70c6369b11a709d596f1e50451906e"
-        "17" -> "eclipse-temurin:17.0.19_10-jdk-windowsservercore-ltsc2022@sha256:2e3bf0b5145354247e7ab8ab71d3de824984bb71f723bde8db17686237469573"
-        "21" -> "eclipse-temurin:21.0.11_10-jdk-windowsservercore-ltsc2022@sha256:7302d592e1aaa383bd83dd430643a64a1a16bf68a817dc7eb795e6cf28f73834"
-        "25" -> "eclipse-temurin:25.0.3_9-jdk-windowsservercore-ltsc2022@sha256:5dc0f37d57a3d066eedff87929853353261032ea6a873315484b91d3c96e19ba"
+        "11" -> "eclipse-temurin:11.0.32_9-jdk-windowsservercore-ltsc2022@sha256:2700e4d42757b6afaf5716fcfd342453c67b862541f8eb510be636404742227a"
+        "17" -> "eclipse-temurin:17.0.20_8-jdk-windowsservercore-ltsc2022@sha256:8633576ebfaa3bacb67d69680476760ed53757eb0bd0f1e9a53f7eee88935785"
+        "21" -> "eclipse-temurin:21.0.12_8-jdk-windowsservercore-ltsc2022@sha256:87883996bf34a15b691000be1f87650e523d995e8be6871c0bf98c601950f65a"
+        "25" -> "eclipse-temurin:25.0.4_7-jdk-windowsservercore-ltsc2022@sha256:cde5960f305a580de558cda3102c9edb06bbfd06d50004db2aa291d2d3cf58ef"
+        "27" -> "eclipse-temurin:27_35-jdk-windowsservercore-ltsc2022@sha256:8f0d4387ea3c275a44bcbc4200e7ac3214a1b456430ad997ce683ad2883d1367"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
       when (jdk) {
         "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:0b793df1b9217f3d25c5f820d47e85a20b0a78b0ccd0ab6deb9051502493c855"
-        "11" -> "eclipse-temurin:11.0.31_11-jdk@sha256:29d6dba5f13264bbab01afd7fb241f08efafb8fe975d0bc9337b25ee39fd9758"
-        "17" -> "eclipse-temurin:17.0.19_10-jdk@sha256:89dc1a6e09920ea26b2ede6fddfcac1a7508b50159a6d04c918a46132953aab6"
-        "21" -> "eclipse-temurin:21.0.11_10-jdk@sha256:1eeacc8c295ed4805f6ffead2417b1936aad296b02ea9e56b457230befc9e98d"
-        "25" -> "eclipse-temurin:25.0.3_9-jdk@sha256:68868d04fa9cfd5f5c6abec0b5cef86d8de2bf9c62c37c7d3e4f0f80f5cfd7ff"
+        "11" -> "eclipse-temurin:11.0.32_9-jdk@sha256:51985b993d8f2461c357cd10dbac1760f228b3b80028861a18cccde764fb507a"
+        "17" -> "eclipse-temurin:17.0.20_8-jdk@sha256:bc033b57e11b773c3043babfd664e7a5ef110805548b921cbfc3e8c67a0725d6"
+        "21" -> "eclipse-temurin:21.0.12_8-jdk@sha256:92a2a4d7a928d057e7bd999c418d66c26a34eb9a0442f3ab67721c3f88110b2d"
+        "25" -> "eclipse-temurin:25.0.4_7-jdk@sha256:97014c4b396021f9ddb7d592a7dbedb0c4e4215c29e03dc01c393558aefb71c2"
+        "27" -> "eclipse-temurin:27_35-jdk@sha256:4a02e0ee713d13bb7974f4e19b7bea1746668603c3557fe09c4681784a86bb52"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
@@ -325,9 +339,10 @@ fun configureImage(
       when (jdk) {
         "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:779c0c1133ebac0d599012c5a908e67adaa993352072eac21d7ced8d6a47f14d"
         "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:00bbefbb2cf3690546338c0e4ba4cf85ec658f40de5b292e77774b55e8267d66"
-        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:82de886dad5f1546dbe4589335dcdddd8d8a3a2eef0e504d99bb4a917504abf8"
+        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:430484daf5993fabe8ce4d47fa3645e0f2cd82223e1210e1b3fb3b74f059e9cd"
         "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:2edabc89c49cfa2b9f0c051aced57ca6dee81c2e6b8820a1257182e779b58a48"
-        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:9ecdbb9e06828e391ed1dde149e6a834f4c1bdadcb5d95dcd3006045db72d760"
+        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:865dae69f86969ab690c73c62204a1f5a258c58b2e8797581874ce9029edc1e6"
+        "27" -> "ibm-semeru-runtimes:open-27.0.0.0-jdk@sha256:3f684925311686c36d77e264496625c1b8fe51ab79aa2385410c93123eaface7"
         else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
       }
     }

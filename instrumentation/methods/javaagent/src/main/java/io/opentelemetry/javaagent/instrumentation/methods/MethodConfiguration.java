@@ -15,7 +15,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
+import io.opentelemetry.javaagent.tooling.config.internal.MethodsConfigurationParser;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
