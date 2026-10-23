@@ -43,27 +43,32 @@ public final class RedissonErrorCapture {
   @Nullable
   public static String parseServerErrorType(ByteBuf input) {
     try {
-      int readerIndex = input.readerIndex();
-      if (input.getByte(readerIndex) != '-') {
+      int replyStart = input.readerIndex();
+      if (input.getByte(replyStart) != '-') {
         return null;
       }
 
-      int start = readerIndex + 1;
-      int writerIndex = input.writerIndex();
-      int replyEnd = start;
-      while (replyEnd + 1 < writerIndex
-          && (input.getByte(replyEnd) != '\r' || input.getByte(replyEnd + 1) != '\n')) {
-        replyEnd++;
-      }
-      if (replyEnd + 1 >= writerIndex) {
+      int lineStart = replyStart + 1;
+      int lineEnd = findCrlf(input, lineStart);
+      if (lineEnd == -1) {
         return null;
       }
 
-      return RedisErrorPrefix.extract(input.toString(start, replyEnd - start, UTF_8));
+      return RedisErrorPrefix.extract(input.toString(lineStart, lineEnd - lineStart, UTF_8));
     } catch (Throwable ignored) {
       // ReplayingDecoder retries incomplete replies; leave buffer handling to Redisson.
       return null;
     }
+  }
+
+  private static int findCrlf(ByteBuf input, int start) {
+    int end = input.writerIndex();
+    for (int i = start; i + 1 < end; i++) {
+      if (input.getByte(i) == '\r' && input.getByte(i + 1) == '\n') {
+        return i;
+      }
+    }
+    return -1;
   }
 
   public static void captureServerError(@Nullable Throwable error) {
