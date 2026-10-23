@@ -107,6 +107,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)

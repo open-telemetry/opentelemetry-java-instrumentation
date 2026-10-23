@@ -37,6 +37,7 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new RedisStandaloneConnectionInstrumentation(),
+        new RespParserInstrumentation(),
         new RedisConnectionManagerInstrumentation(),
         new RedisConnectionProviderInstrumentation(),
         new CommandImplInstrumentation());
