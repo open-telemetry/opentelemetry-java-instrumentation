@@ -112,6 +112,7 @@ dependencies {
 
   testCompileOnly(project(":javaagent-bootstrap"))
   testCompileOnly(project(":javaagent-extension-api"))
+  testCompileOnly(project(":instrumentation:internal:internal-application-logger:bootstrap"))
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
