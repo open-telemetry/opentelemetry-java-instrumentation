@@ -27,7 +27,7 @@ import org.slf4j.event.Level;
 class ResourceProviderRegistrationTest {
 
   @RegisterExtension
-  LogCapturer logs = LogCapturer.create().captureForType(Resource.class, Level.TRACE);
+  LogCapturer logs = LogCapturer.create().captureForType(Resource.class, Level.INFO);
 
   @ParameterizedTest
   @CsvSource({
@@ -62,8 +62,7 @@ class ResourceProviderRegistrationTest {
           .containsAllEntriesOf(ProcessRuntimeResource.get().getAttributes().asMap());
     }
 
-    logs.assertDoesNotContain(
-        event -> event.getLevel().toInt() >= Level.INFO.toInt(), "INFO-or-higher JUL log record");
+    assertThat(logs.getEvents()).isEmpty();
   }
 
   @Test
