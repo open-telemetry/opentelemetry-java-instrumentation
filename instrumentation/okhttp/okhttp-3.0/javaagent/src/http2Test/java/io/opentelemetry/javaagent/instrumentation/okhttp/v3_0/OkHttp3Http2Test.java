@@ -9,7 +9,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.okhttp.v3_0.AbstractOkHttp3Test;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class OkHttp3Http2Test extends AbstractOkHttp3Test {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @Override
   protected Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {

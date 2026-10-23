@@ -27,7 +27,7 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.HashSet;
@@ -51,7 +51,7 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
       Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @BeforeAll
   void setUp() {

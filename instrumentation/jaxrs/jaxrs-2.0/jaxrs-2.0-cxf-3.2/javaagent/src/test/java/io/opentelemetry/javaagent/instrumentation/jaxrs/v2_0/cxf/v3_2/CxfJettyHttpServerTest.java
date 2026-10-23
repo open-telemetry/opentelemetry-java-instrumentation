@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 
 import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsJettyHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -19,7 +19,7 @@ class CxfJettyHttpServerTest extends JaxRsJettyHttpServerTest {
       Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected void configure(HttpServerTestOptions options) {

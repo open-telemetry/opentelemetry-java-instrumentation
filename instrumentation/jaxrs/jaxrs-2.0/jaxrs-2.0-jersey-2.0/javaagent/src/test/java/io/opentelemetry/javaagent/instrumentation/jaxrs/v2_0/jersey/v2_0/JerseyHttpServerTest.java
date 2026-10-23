@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsHttpServerTest;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsTestApplication;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import javax.servlet.Servlet;
 import org.eclipse.jetty.server.Server;
@@ -24,7 +24,7 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
       Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected Server setupServer() throws Exception {

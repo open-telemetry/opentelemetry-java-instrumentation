@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -54,7 +54,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   @RegisterExtension
   private static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+      AgentHttpServerInstrumentationExtension.create();
 
   protected abstract String getJsfVersion();
 

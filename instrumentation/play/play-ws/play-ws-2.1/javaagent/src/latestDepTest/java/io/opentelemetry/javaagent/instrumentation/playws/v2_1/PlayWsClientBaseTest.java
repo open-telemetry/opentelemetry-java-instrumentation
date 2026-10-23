@@ -15,7 +15,7 @@ import akka.stream.Materializer;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -39,7 +39,7 @@ import play.shaded.ahc.org.asynchttpclient.RequestBuilderBase;
 abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQUEST> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   private static ActorSystem system;
   protected static AsyncHttpClient asyncHttpClient;

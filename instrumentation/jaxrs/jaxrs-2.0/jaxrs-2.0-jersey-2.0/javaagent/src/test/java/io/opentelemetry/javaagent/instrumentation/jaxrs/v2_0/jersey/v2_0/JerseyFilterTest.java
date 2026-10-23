@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.jersey.v2_0;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsFilterTest;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.test.Resource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JerseyFilterTest extends JaxRsFilterTest<Server> {
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @BeforeAll
   void setUp() {

@@ -15,7 +15,7 @@ import com.linecorp.armeria.server.ServerBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.armeria.v1_3.AbstractArmeriaHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -40,7 +40,7 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
       findResponseExceptionWithCauseFactory();
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   private final HttpResponseException wrappedResponseException =
       HttpResponseException.of(HttpResponse.of(HttpStatus.OK));

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class HttpUrlConnectionResponseCodeOnlyTest extends AbstractHttpClientTest<HttpURLConnection> {
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @Override
   public HttpURLConnection buildRequest(String method, URI uri, Map<String, String> headers)

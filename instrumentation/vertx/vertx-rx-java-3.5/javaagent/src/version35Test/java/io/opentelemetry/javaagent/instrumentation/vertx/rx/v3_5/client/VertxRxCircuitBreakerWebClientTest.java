@@ -12,7 +12,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
@@ -38,7 +38,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class VertxRxCircuitBreakerWebClientTest extends AbstractHttpClientTest<HttpRequest<?>> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   private final Vertx vertx = Vertx.vertx(new VertxOptions());
   private final WebClient httpClient = buildClient(vertx);

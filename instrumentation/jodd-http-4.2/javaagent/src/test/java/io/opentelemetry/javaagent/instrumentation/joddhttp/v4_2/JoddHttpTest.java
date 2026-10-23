@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {

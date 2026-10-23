@@ -18,7 +18,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.AbstractNetty41ClientTest;
 import io.opentelemetry.instrumentation.netty.v4_1.Netty41ClientExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class Netty41NativeClientTest extends AbstractNetty41ClientTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @RegisterExtension
   static final Netty41ClientExtension clientExtension =

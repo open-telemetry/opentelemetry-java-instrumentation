@@ -7,14 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.clien
 
 import io.opentelemetry.instrumentation.ratpack.client.AbstractRatpackPooledHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RatpackPooledHttpClientTest extends AbstractRatpackPooledHttpClientTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @Override
   protected boolean useNettyClientAttributes() {

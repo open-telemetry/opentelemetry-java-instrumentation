@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpSe
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest.TEST_USER_AGENT;
 
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.AgentTestRunner;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -28,11 +27,15 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public class HttpServerInstrumentationExtension extends InstrumentationExtension {
 
   /**
-   * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
-   * javaagent instrumentation.
+   * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpServerUsingTest}
+   * for javaagent instrumentation.
+   *
+   * @deprecated Use {@link AgentHttpServerInstrumentationExtension#create()}. This method will be
+   *     removed in a future minor release.
    */
+  @Deprecated
   public static InstrumentationExtension forAgent() {
-    return new HttpServerInstrumentationExtension(AgentTestRunner.instance());
+    return AgentHttpServerInstrumentationExtension.create();
   }
 
   /**
@@ -48,7 +51,7 @@ public class HttpServerInstrumentationExtension extends InstrumentationExtension
   private final WebClient client;
   private final WebClient clientWithoutForwardedFor;
 
-  private HttpServerInstrumentationExtension(InstrumentationTestRunner runner) {
+  protected HttpServerInstrumentationExtension(InstrumentationTestRunner runner) {
     super(runner);
 
     port = PortUtils.findOpenPort();

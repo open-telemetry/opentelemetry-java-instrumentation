@@ -9,7 +9,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.InputStream;
@@ -27,7 +27,7 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
 
   @RegisterExtension
   private static final InstrumentationExtension testing =
-      HttpClientInstrumentationExtension.forAgent();
+      AgentHttpClientInstrumentationExtension.create();
 
   private static final RestTemplate restTemplate = buildClient(false);
   private static final RestTemplate restTemplateWithReadTimeout = buildClient(true);

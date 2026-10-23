@@ -10,7 +10,7 @@ import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 abstract class AbstractJaxRsClientTest extends AbstractHttpClientTest<Invocation.Builder> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   protected static final List<String> BODY_METHODS = unmodifiableList(asList("POST", "PUT"));
 

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
-  HttpServerInstrumentationExtension,
+  AgentHttpServerInstrumentationExtension,
   HttpServerTestOptions,
   ServerEndpoint
 }
@@ -19,7 +19,7 @@ class PekkoHttpServerSourceInstrumentationTest
     extends AbstractHttpServerInstrumentationTest {
 
   @RegisterExtension val extension: InstrumentationExtension =
-    HttpServerInstrumentationExtension.forAgent()
+    AgentHttpServerInstrumentationExtension.create()
 
   override protected def setupServer(): AnyRef = {
     PekkoHttpTestServerSourceWebServer.start(port)

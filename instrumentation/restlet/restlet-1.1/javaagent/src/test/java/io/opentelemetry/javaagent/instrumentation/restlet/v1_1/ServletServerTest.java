@@ -7,14 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.restlet.v1_1;
 
 import io.opentelemetry.instrumentation.restlet.v1_1.AbstractServletServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ServletServerTest extends AbstractServletServerTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected void configure(HttpServerTestOptions options) {

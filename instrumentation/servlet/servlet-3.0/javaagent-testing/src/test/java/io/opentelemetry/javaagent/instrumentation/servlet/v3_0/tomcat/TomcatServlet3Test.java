@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat;
 
 import io.opentelemetry.instrumentation.servlet.v3_0.tomcat.BaseTomcatServlet3Test;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatServlet3Test extends BaseTomcatServlet3Test {
   @RegisterExtension
   private static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+      AgentHttpServerInstrumentationExtension.create();
 }

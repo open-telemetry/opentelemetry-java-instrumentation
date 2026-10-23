@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.client;
 
 import io.opentelemetry.instrumentation.ratpack.client.AbstractRatpackHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 }

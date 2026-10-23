@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.serve
 
 import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackAsyncHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.server.RatpackServerSpec;
@@ -15,7 +15,7 @@ import ratpack.server.RatpackServerSpec;
 class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected void configure(RatpackServerSpec serverSpec) {}

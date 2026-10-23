@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.jetty;
 
 import io.opentelemetry.instrumentation.servlet.v3_0.jetty.BaseJettyDispatchTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JettyDispatchTest extends BaseJettyDispatchTest {
   @RegisterExtension
   private static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+      AgentHttpServerInstrumentationExtension.create();
 }

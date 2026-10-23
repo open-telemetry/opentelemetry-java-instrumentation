@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.AbstractJettyClient12Test;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class JettyHttpClient12AgentTest extends AbstractJettyClient12Test {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @Override
   protected HttpClient createStandardClient() {

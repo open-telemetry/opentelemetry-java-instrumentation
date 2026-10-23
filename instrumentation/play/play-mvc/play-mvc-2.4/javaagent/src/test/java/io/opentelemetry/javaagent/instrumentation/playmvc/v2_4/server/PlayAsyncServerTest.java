@@ -14,7 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import play.libs.concurrent.HttpExecution;
@@ -26,7 +26,7 @@ import play.server.Server;
 class PlayAsyncServerTest extends PlayServerTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected Server setupServer() {

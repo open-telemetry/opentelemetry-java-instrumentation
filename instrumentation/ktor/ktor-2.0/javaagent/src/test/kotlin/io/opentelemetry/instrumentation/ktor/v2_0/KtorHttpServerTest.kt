@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.ktor.v2_0
 
 import io.ktor.server.application.Application
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -16,7 +16,7 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    private val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forAgent()
+    private val testing: InstrumentationExtension = AgentHttpServerInstrumentationExtension.create()
   }
 
   override fun getTesting(): InstrumentationExtension = testing
