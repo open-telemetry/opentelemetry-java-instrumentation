@@ -247,12 +247,18 @@ class VertxRedisClientTest {
         2L);
   }
 
-  @Test
-  void serverErrorReplyPrefixes() throws Exception {
-    assertServerErrorReply("Custom.Code! detail", "Custom.Code!");
-    assertServerErrorReply("lowercase detail", "lowercase");
-    assertServerErrorReply("PrefixOnly", "PrefixOnly");
-    assertServerErrorReply(" ", ErrorType.class.getName());
+  @ParameterizedTest
+  @MethodSource("serverErrorReplyPrefixCases")
+  void serverErrorReplyPrefixes(String reply, String expectedErrorType) throws Exception {
+    assertServerErrorReply(reply, expectedErrorType);
+  }
+
+  private static Stream<Arguments> serverErrorReplyPrefixCases() {
+    return Stream.of(
+        argumentSet("customPrefix", "Custom.Code! detail", "Custom.Code!"),
+        argumentSet("lowercasePrefix", "lowercase detail", "lowercase"),
+        argumentSet("prefixOnly", "PrefixOnly", "PrefixOnly"),
+        argumentSet("blankPrefix", " ", ErrorType.class.getName()));
   }
 
   private static void assertServerErrorReply(String reply, String expectedErrorType)
@@ -299,7 +305,6 @@ class VertxRedisClientTest {
                         histogram.hasPointsSatisfying(
                             point ->
                                 point.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
-    testing.clearData();
   }
 
   @Test
