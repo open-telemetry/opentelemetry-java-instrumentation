@@ -76,7 +76,7 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
         && (isClient ? !response.isOk() : GrpcSpanStatusExtractor.isServerError(response))) {
       return response.getCode().name();
     }
-    return null;
+    return RpcAttributesGetter.super.getErrorType(request, response, error);
   }
 
   List<String> metadataValue(GrpcRequest request, String key) {

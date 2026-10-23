@@ -52,7 +52,7 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
   public String getErrorType(
       SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
     if (!(error instanceof SofaRpcException)) {
-      return null;
+      return RpcAttributesGetter.super.getErrorType(request, response, error);
     }
 
     int errorType = ((SofaRpcException) error).getErrorType();
@@ -62,6 +62,6 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
     if (errorType >= 100 && errorType <= 299) {
       return Integer.toString(errorType);
     }
-    return null;
+    return RpcAttributesGetter.super.getErrorType(request, response, error);
   }
 }

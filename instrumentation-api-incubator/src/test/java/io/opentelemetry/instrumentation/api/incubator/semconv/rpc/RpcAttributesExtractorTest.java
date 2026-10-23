@@ -69,12 +69,23 @@ class RpcAttributesExtractorTest {
     public String getRpcMethodOriginal(Map<String, String> request) {
       return request.get("originalMethod");
     }
+  }
 
+  private static final class CustomErrorTypeGetter extends TestGetter {
     @Nullable
     @Override
     public String getErrorType(
         Map<String, String> request, @Nullable Void response, @Nullable Throwable error) {
       return request.get("errorType");
+    }
+  }
+
+  private static final class NullErrorTypeGetter extends TestGetter {
+    @Nullable
+    @Override
+    public String getErrorType(
+        Map<String, String> request, @Nullable Void response, @Nullable Throwable error) {
+      return null;
     }
   }
 
@@ -134,7 +145,7 @@ class RpcAttributesExtractorTest {
     request.put("errorType", "CANCELLED");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter());
+        RpcServerAttributesExtractor.create(new CustomErrorTypeGetter());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();
@@ -179,6 +190,26 @@ class RpcAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, null);
+
+    if (emitPreviewRpcSemconv()) {
+      assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
+    }
+  }
+
+  @Test
+  void shouldNotExtractErrorType_whenGetterReturnsNullForError() {
+    Map<String, String> request = new HashMap<>();
+    request.put("service", "my.Service");
+    request.put("method", "Method");
+    request.put("errorType", "CANCELLED");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        RpcServerAttributesExtractor.create(new NullErrorTypeGetter());
+
+    Context context = Context.root();
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, context, request);
+    extractor.onEnd(attributes, context, request, null, new IllegalArgumentException());
 
     if (emitPreviewRpcSemconv()) {
       assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
