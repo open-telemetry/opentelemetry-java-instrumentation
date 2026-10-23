@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import java.util.Optional;
 import scala.Option;
-import scala.runtime.AbstractFunction0;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.AbstractFunction2;
 import scala.runtime.BoxedUnit;
@@ -20,6 +19,7 @@ import zio.Exit;
 import zio.FiberRef;
 import zio.FiberRef.unsafe$;
 import zio.Trace$;
+import zio.Unsafe;
 import zio.Unsafe$;
 import zio.ZIO;
 import zio.ZIO$;
@@ -95,10 +95,10 @@ public class HandlerWrapper {
       Context context, String route, Exit<?, ?> exit) {
     return (ZIO<R, Nothing$, Object>)
         (ZIO<?, ?, ?>)
-            ZIO$.MODULE$.succeed(
-                new AbstractFunction0<Object>() {
+            ZIO$.MODULE$.succeedUnsafe(
+                new AbstractFunction1<Unsafe, Object>() {
                   @Override
-                  public Object apply() {
+                  public Object apply(Unsafe unsafe) {
                     Option<?> cause = exit.causeOption();
                     if (exit.isSuccess()
                         || (cause.isDefined() && ((Cause<?>) cause.get()).isFailure())) {
