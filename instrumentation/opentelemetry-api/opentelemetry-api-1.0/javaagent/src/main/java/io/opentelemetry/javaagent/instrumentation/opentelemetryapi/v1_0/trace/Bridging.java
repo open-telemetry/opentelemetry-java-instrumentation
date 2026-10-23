@@ -75,11 +75,12 @@ public class Bridging {
 
   @Nullable
   public static Span toAgentOrNull(application.io.opentelemetry.api.trace.Span applicationSpan) {
-    if (!applicationSpan.getSpanContext().isValid()) {
+    if (applicationSpan instanceof ApplicationSpan) {
+      Span agentSpan = ((ApplicationSpan) applicationSpan).getAgentSpan();
+      return agentSpan.getSpanContext().isValid() ? agentSpan : Span.getInvalid();
+    } else if (!applicationSpan.getSpanContext().isValid()) {
       // no need to wrap
       return Span.getInvalid();
-    } else if (applicationSpan instanceof ApplicationSpan) {
-      return ((ApplicationSpan) applicationSpan).getAgentSpan();
     } else {
       return null;
     }

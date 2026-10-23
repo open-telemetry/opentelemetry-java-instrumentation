@@ -300,7 +300,7 @@ targets:
       target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
     - type: gradle
       path: ./
-      target: ':instrumentation:spark-2.3:javaagent'
+      target: ':instrumentation:spark-2.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-boot-autoconfigure'
@@ -1026,7 +1026,7 @@ targets:
       target: ':instrumentation:spring:spring-pulsar-1.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-rabbit-1.0:javaagent'
+      target: ':instrumentation:spring:spring-rabbit-1.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-rmi-4.0:javaagent'
