@@ -30,6 +30,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -163,7 +164,9 @@ class Jedis40ClientTest {
   @Test
   void localCommandBuilderFailureUsesExceptionClass() {
     JedisDataException localFailure = new JedisDataException("WRONGTYPE local conversion failure");
-    try (UnifiedJedis client = new UnifiedJedis(new HostAndPort(host, port))) {
+    try (UnifiedJedis client =
+        new UnifiedJedis(
+            new HostAndPort(host, port), DefaultJedisClientConfig.builder().build())) {
       jedis.ping();
       testing.waitForTraces(1);
       testing.clearData();
@@ -298,6 +301,56 @@ class Jedis40ClientTest {
     assertThat(nestedResults.get(0)).isInstanceOf(JedisDataException.class);
     assertThat((Throwable) nestedResults.get(0)).hasMessageStartingWith("WRONGTYPE");
     assertErrorType(null);
+  }
+
+  @Test
+  void nestedPipelineServerErrorDoesNotFailSuccessfulOuterTransaction()
+      throws ReflectiveOperationException {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    testing.clearData();
+
+    List<Object> nestedResults = new ArrayList<>();
+    Transaction outer = jedis.multi();
+    appendCommand(
+        outer,
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                Pipeline nested = nestedClient.pipelined();
+                nested.get("nested-wrong-type");
+                nestedResults.addAll(nested.syncAndReturnAll());
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    outer.set("outer-transaction", "value");
+
+    assertThat(outer.exec()).containsExactly("PONG", "OK");
+    assertThat(nestedResults).hasSize(1);
+    assertThat(nestedResults.get(0)).isInstanceOf(JedisDataException.class);
+    assertThat((Throwable) nestedResults.get(0)).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType(null);
+  }
+
+  private static <T> void appendCommand(Transaction transaction, CommandObject<T> command)
+      throws ReflectiveOperationException {
+    Method appendCommand = null;
+    for (Class<?> type = transaction.getClass(); type != null; type = type.getSuperclass()) {
+      try {
+        appendCommand = type.getDeclaredMethod("appendCommand", CommandObject.class);
+        break;
+      } catch (NoSuchMethodException ignored) {
+        // The method is declared on different transaction base classes across Jedis versions.
+      }
+    }
+    if (appendCommand == null) {
+      throw new NoSuchMethodException("appendCommand");
+    }
+    appendCommand.setAccessible(true);
+    appendCommand.invoke(transaction, command);
   }
 
   @Test

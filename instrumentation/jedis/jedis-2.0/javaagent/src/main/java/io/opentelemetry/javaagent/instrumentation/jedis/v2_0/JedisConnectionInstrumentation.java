@@ -95,6 +95,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(JedisRequest request) {
+      if (JedisPipelineContext.capture(request)) {
+        // Keep the request until method exit so its post-send peer snapshot is available to the
+        // batch span created at sync()/exec().
+        return new AdviceScope(null, null, request, null);
+      }
       if (JedisPipelineContext.inTransactionFraming()) {
         // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
         // span rather than getting their own spans. Keep the request until method exit so a
@@ -102,11 +107,6 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         return new AdviceScope(null, null, request, null);
       }
       Context parentContext = Context.current();
-      if (JedisPipelineContext.capture(request)) {
-        // Keep the request until method exit so its post-send peer snapshot is available to the
-        // batch span created at sync()/exec().
-        return new AdviceScope(null, null, request, null);
-      }
       JedisClusterCommandContext clusterCommandContext = currentCommandContext().get();
       if (clusterCommandContext != null) {
         if (clusterCommandContext.isAcquiringConnection()) {
