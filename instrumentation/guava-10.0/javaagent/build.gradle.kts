@@ -30,10 +30,9 @@ dependencies {
 
 testing {
   suites {
-    // Older AsyncEventBus tasks are excluded by the agent's library ignore rules.
-    register<JvmTestSuite>("testEventBus") {
+    register<JvmTestSuite>("version19Test") {
       dependencies {
-        implementation("com.google.guava:guava:33.7.2-jre")
+        implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")
       }
     }
   }
@@ -49,6 +48,6 @@ tasks {
 
   check {
     dependsOn(testExperimental)
-    dependsOn(testing.suites.named("testEventBus"))
+    dependsOn(testing.suites.named("version19Test"))
   }
 }
