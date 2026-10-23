@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
@@ -16,7 +17,6 @@ import io.vertx.redis.client.ResponseType;
 import io.vertx.redis.client.impl.types.ErrorType;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
@@ -49,7 +49,7 @@ public final class VertxRedisClientError {
       return null;
     }
     Deque<Iterator<?>> stack = new ArrayDeque<>();
-    stack.push(Collections.singletonList(response).iterator());
+    stack.push(singletonList(response).iterator());
     try {
       while (!stack.isEmpty()) {
         Iterator<?> iterator = stack.peek();

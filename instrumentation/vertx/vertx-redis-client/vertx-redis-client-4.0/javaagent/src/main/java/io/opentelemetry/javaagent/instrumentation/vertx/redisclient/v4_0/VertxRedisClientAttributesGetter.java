@@ -78,12 +78,6 @@ final class VertxRedisClientAttributesGetter
   @Nullable
   public String getErrorType(
       VertxRedisClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return getRedisErrorType(error);
-  }
-
-  // visible for testing
-  @Nullable
-  static String getRedisErrorType(@Nullable Throwable error) {
     return VertxRedisClientError.getErrorType(error);
   }
 }
