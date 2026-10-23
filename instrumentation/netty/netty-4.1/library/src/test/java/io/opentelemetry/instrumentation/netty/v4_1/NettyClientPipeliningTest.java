@@ -1,0 +1,662 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.netty.v4_1;
+
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
+import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultHttpContent;
+import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.DefaultLastHttpContent;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.util.AttributeKey;
+import io.netty.util.ReferenceCountUtil;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+class NettyClientPipeliningTest {
+  @RegisterExtension
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @Test
+  void unrelatedExceptionDoesNotAllocateClientState() {
+    EmbeddedChannel channel = new EmbeddedChannel();
+    try {
+      AttributeKey<ClientContexts> key =
+          AttributeKey.valueOf(ClientContexts.class, "client-contexts");
+      ClientContexts.end(
+          channel,
+          Instrumenter.<NettyCommonRequest, HttpResponse>builder(
+                  testing.getOpenTelemetry(), "test", request -> "GET")
+              .buildInstrumenter(),
+          new IOException("unrelated exception"),
+          false);
+      assertThat(channel.hasAttr(key)).isFalse();
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  private static EmbeddedChannel channel(ChannelOutboundHandlerAdapter outbound) {
+    return channel(outbound, false);
+  }
+
+  private static EmbeddedChannel channel(ChannelOutboundHandlerAdapter outbound, boolean events) {
+    NettyClientTelemetryBuilder builder = NettyClientTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setEmitExperimentalTelemetry(builder, events);
+    return new EmbeddedChannel(outbound, builder.build().createCombinedHandler());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void untracedRequestsKeepTheirResponsePosition(boolean aws) {
+    List<Context> contexts = new ArrayList<>();
+    EmbeddedChannel channel =
+        channel(
+            new ChannelOutboundHandlerAdapter() {
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                contexts.add(Context.current());
+                super.write(ctx, msg, promise);
+              }
+            });
+    try {
+      channel.writeOutbound(request("/first"));
+      DefaultFullHttpRequest untraced = request("/untraced");
+      if (aws) {
+        untraced.headers().set("amz-sdk-invocation-id", "signed");
+        channel.writeOutbound(untraced);
+      } else {
+        try (Scope ignored = contexts.get(0).makeCurrent()) {
+          channel.writeOutbound(untraced);
+        }
+      }
+      channel.writeOutbound(request("/third"));
+      assertThat(untraced.headers().contains("traceparent")).isFalse();
+      response(channel, 201);
+      response(channel, 202);
+      response(channel, 203);
+      assertThat(testing.spans()).hasSize(2);
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(201);
+      assertThat(testing.spans().get(1).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(203);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void untracedFirstRequestKeepsItsResponsePosition(boolean aws) {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    try {
+      DefaultFullHttpRequest untraced = request("/untraced");
+      if (aws) {
+        untraced.headers().set("amz-sdk-invocation-id", "signed");
+        channel.writeOutbound(untraced);
+      } else {
+        Context suppressed = SpanKey.HTTP_CLIENT.storeInContext(Context.root(), Span.getInvalid());
+        try (Scope ignored = suppressed.makeCurrent()) {
+          channel.writeOutbound(untraced);
+        }
+      }
+      channel.writeOutbound(request("/traced"));
+      assertThat(untraced.headers().contains("traceparent")).isFalse();
+      response(channel, 201);
+      assertThat(testing.spans()).isEmpty();
+      response(channel, 202);
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(202);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void streamingResponsesUseTheirOwnParentThroughout() {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    List<SpanContext> callbacks = new ArrayList<>();
+    List<SpanContext> parents = new ArrayList<>();
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                callbacks.add(Span.current().getSpanContext());
+                ReferenceCountUtil.release(msg);
+              }
+            });
+    try {
+      for (int i = 0; i < 2; i++) {
+        Span parent =
+            testing.getOpenTelemetry().getTracer("test").spanBuilder("parent-" + i).startSpan();
+        parents.add(parent.getSpanContext());
+        NettyClientTelemetry.setParentContext(channel, Context.root().with(parent));
+        channel.writeOutbound(request("/request-" + i));
+        parent.end();
+      }
+      for (int i = 0; i < 2; i++) {
+        channel.writeInbound(
+            new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(201 + i)));
+        channel.writeInbound(new DefaultHttpContent(Unpooled.copiedBuffer("body", UTF_8)));
+        channel.writeInbound(LastHttpContent.EMPTY_LAST_CONTENT);
+      }
+      assertThat(callbacks)
+          .containsExactly(
+              parents.get(0),
+              parents.get(0),
+              parents.get(0),
+              parents.get(1),
+              parents.get(1),
+              parents.get(1));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent-0"),
+                  span -> span.hasName("GET").hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent-1"),
+                  span -> span.hasName("GET").hasParent(trace.getSpan(0))));
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void asynchronousWriteFailureDisablesCorrelation(boolean voidPromise, boolean delivered) {
+    List<ChannelPromise> promises = new ArrayList<>();
+    EmbeddedChannel channel =
+        channel(
+            new ChannelOutboundHandlerAdapter() {
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                if (promises.isEmpty()) {
+                  promises.add(promise);
+                  if (delivered) {
+                    super.write(ctx, msg, ctx.newPromise());
+                  } else {
+                    ReferenceCountUtil.release(msg);
+                  }
+                } else {
+                  super.write(ctx, msg, promise);
+                }
+              }
+            });
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {}
+            });
+    try {
+      channel.write(request("/failed"), voidPromise ? channel.voidPromise() : channel.newPromise());
+      channel.writeOutbound(request("/success"));
+      IOException failure = new IOException("failed write");
+      promises.get(0).setFailure(failure);
+      channel.runPendingTasks();
+      if (delivered) {
+        response(channel, 201);
+      }
+      response(channel, 202);
+      DefaultFullHttpRequest subsequent = request("/subsequent");
+      channel.writeOutbound(subsequent);
+      assertThat(subsequent.headers().contains("traceparent")).isFalse();
+      response(channel, 203);
+      DefaultFullHttpRequest signed = request("/signed");
+      signed.headers().set("amz-sdk-invocation-id", "signed");
+      signed.headers().set("traceparent", "signed-trace-header");
+      channel.writeOutbound(signed);
+      assertThat(signed.headers().get("traceparent")).isEqualTo("signed-trace-header");
+      response(channel, 204);
+      assertThat(channel.isActive()).isTrue();
+      channel.close();
+      assertThat(testing.spans()).hasSize(2);
+      assertThat(testing.spans())
+          .allSatisfy(
+              span -> {
+                assertThat(span.getEvents()).hasSize(1);
+                assertThat(span.getAttributes().get(HTTP_RESPONSE_STATUS_CODE)).isNull();
+              });
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void informationalResponsesDoNotConsumeRequests() {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    try {
+      channel.writeOutbound(request("/first"), request("/second"));
+      response(channel, 100);
+      channel.writeInbound(new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(103)));
+      channel.writeInbound(LastHttpContent.EMPTY_LAST_CONTENT);
+      assertThat(testing.spans()).isEmpty();
+      response(channel, 201);
+      response(channel, 202);
+      assertThat(testing.spans()).hasSize(2);
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(201);
+      assertThat(testing.spans().get(1).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(202);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void switchingProtocolsRetainsRequest(boolean fullResponse, boolean events) {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter(), events);
+    try {
+      channel.writeOutbound(request("/upgrade"));
+      if (fullResponse) {
+        response(channel, 101);
+      } else {
+        channel.writeInbound(
+            new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS));
+        channel.writeInbound(LastHttpContent.EMPTY_LAST_CONTENT);
+      }
+      assertThat(testing.spans()).isEmpty();
+      assertThat(channel.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNotNull();
+      response(channel, 200);
+      channel.close();
+      assertThat(testing.spans()).hasSize(1);
+      if (events) {
+        assertThat(testing.spans().get(0).getEvents())
+            .extracting(event -> event.getName())
+            .containsExactly("http.response.status_code.101.upgrade");
+      } else {
+        assertThat(testing.spans().get(0).getEvents()).isEmpty();
+      }
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(200);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void websocketUpgradeEndsOnClose(boolean fullResponse) {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter(), true);
+    try {
+      channel.writeOutbound(request("/websocket"));
+      if (fullResponse) {
+        response(channel, 101);
+      } else {
+        channel.writeInbound(
+            new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS));
+        channel.writeInbound(LastHttpContent.EMPTY_LAST_CONTENT);
+      }
+      assertThat(testing.spans()).isEmpty();
+      channel.close();
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getEvents())
+          .extracting(event -> event.getName())
+          .containsExactly("http.response.status_code.101.upgrade");
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(fullResponse ? null : 101L);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        "HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\nbody",
+        "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nbody\r\n"
+      })
+  void remoteInactiveEndsIncompleteResponsesWithError(String response) {
+    EmbeddedChannel channel =
+        new EmbeddedChannel(
+            new HttpClientCodec(),
+            NettyClientTelemetry.builder(testing.getOpenTelemetry())
+                .build()
+                .createCombinedHandler());
+    try {
+      channel.writeOutbound(request("/first"), request("/second"));
+      if (!response.isEmpty()) {
+        channel.writeInbound(Unpooled.copiedBuffer(response, UTF_8));
+      }
+      assertThat(testing.spans()).isEmpty();
+      channel.pipeline().fireChannelInactive();
+      assertThat(testing.spans()).hasSize(2);
+      assertThat(testing.spans())
+          .allSatisfy(
+              span -> {
+                assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+                assertThat(span.getEvents()).hasSize(1);
+                assertThat(span.getEvents().get(0).getAttributes().get(EXCEPTION_TYPE))
+                    .isEqualTo(ClosedChannelException.class.getName());
+              });
+      channel.pipeline().fireChannelInactive();
+      assertThat(testing.spans()).hasSize(2);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void remoteWebsocketCloseRemainsNormal() {
+    EmbeddedChannel channel =
+        new EmbeddedChannel(
+            new HttpClientCodec(),
+            NettyClientTelemetry.builder(testing.getOpenTelemetry())
+                .build()
+                .createCombinedHandler());
+    try {
+      channel.writeOutbound(request("/websocket"));
+      channel.writeInbound(
+          Unpooled.copiedBuffer(
+              "HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\n"
+                  + "Upgrade: websocket\r\nSec-WebSocket-Accept: accepted\r\n\r\n",
+              UTF_8));
+      assertThat(testing.spans()).isEmpty();
+      channel.pipeline().fireChannelInactive();
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET);
+      assertThat(testing.spans().get(0).getEvents()).isEmpty();
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"exception", "inactive", "close"})
+  void pendingRequestsEndOnceOnExceptionOrInactive(String event) {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {}
+            });
+    try {
+      channel.writeOutbound(request("/first"), request("/second"));
+      if (event.equals("exception")) {
+        channel.pipeline().fireExceptionCaught(new IOException("channel failed"));
+        DefaultFullHttpRequest subsequent = request("/subsequent");
+        channel.writeOutbound(subsequent);
+        assertThat(subsequent.headers().contains("traceparent")).isFalse();
+        // Forward responses without assigning them after an exception can lose framing.
+        response(channel, 201);
+        response(channel, 202);
+        assertThat(channel.isActive()).isTrue();
+      } else if (event.equals("inactive")) {
+        channel.pipeline().fireChannelInactive();
+      } else {
+        channel.close();
+      }
+      channel.close();
+      assertThat(testing.spans()).hasSize(2);
+      if (event.equals("close")) {
+        assertThat(testing.spans())
+            .allSatisfy(
+                span -> assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET));
+      } else {
+        assertThat(testing.spans())
+            .allSatisfy(
+                span -> assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR));
+      }
+      assertThat(channel.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
+      assertThat(channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get()).isNull();
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void exceptionParentIsNotReusedAfterCorrelationIsDisabled() {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    List<SpanContext> callbacks = new ArrayList<>();
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                callbacks.add(Span.current().getSpanContext());
+              }
+            });
+    Span parent = testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+    Span subsequentParent =
+        testing.getOpenTelemetry().getTracer("test").spanBuilder("subsequent-parent").startSpan();
+    try {
+      NettyClientTelemetry.setParentContext(channel, Context.root().with(parent));
+      channel.writeOutbound(request("/first"));
+      IOException failure = new IOException("decoder failed");
+      channel.pipeline().fireExceptionCaught(failure);
+      channel.pipeline().fireExceptionCaught(new IOException("another handler failed"));
+      DefaultFullHttpRequest subsequent = request("/subsequent");
+      try (Scope ignored = Context.root().with(subsequentParent).makeCurrent()) {
+        channel.writeOutbound(subsequent);
+        channel.pipeline().fireExceptionCaught(failure);
+      }
+      assertThat(subsequent.headers().contains("traceparent")).isFalse();
+      assertThat(callbacks)
+          .containsExactly(
+              parent.getSpanContext(),
+              Span.getInvalid().getSpanContext(),
+              subsequentParent.getSpanContext());
+      assertThat(channel.isActive()).isTrue();
+    } finally {
+      parent.end();
+      subsequentParent.end();
+      channel.finishAndReleaseAll();
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span -> span.hasName("GET").hasParent(trace.getSpan(0))),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("subsequent-parent")));
+  }
+
+  @Test
+  void synchronousWriteFailureDisablesCorrelation() {
+    EmbeddedChannel channel =
+        channel(
+            new ChannelOutboundHandlerAdapter() {
+              private boolean first = true;
+
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                if (first) {
+                  first = false;
+                  ReferenceCountUtil.release(msg);
+                  throw new IOException("failed write");
+                }
+                super.write(ctx, msg, promise);
+              }
+            });
+    try {
+      assertThat(channel.writeAndFlush(request("/failed")).isSuccess()).isFalse();
+      DefaultFullHttpRequest subsequent = request("/success");
+      channel.writeOutbound(subsequent);
+      assertThat(subsequent.headers().contains("traceparent")).isFalse();
+      response(channel, 202);
+      assertThat(channel.isActive()).isTrue();
+      channel.close();
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getEvents()).hasSize(1);
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE)).isNull();
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void failedRequestContentDisablesCorrelation() {
+    EmbeddedChannel channel =
+        channel(
+            new ChannelOutboundHandlerAdapter() {
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                if (msg instanceof HttpContent) {
+                  ReferenceCountUtil.release(msg);
+                  promise.setFailure(new IOException("content failed"));
+                } else {
+                  super.write(ctx, msg, promise);
+                }
+              }
+            });
+    try {
+      HttpRequest request = new DefaultHttpRequest(HTTP_1_1, HttpMethod.POST, "/first");
+      request.headers().set("host", "localhost");
+      channel.writeOutbound(request);
+      assertThat(channel.writeAndFlush(new DefaultLastHttpContent()).isSuccess()).isFalse();
+      response(channel, 201);
+      assertThat(channel.isActive()).isTrue();
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getEvents()).hasSize(1);
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE)).isNull();
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void unrelatedWriteFailureDoesNotDisableCorrelation() {
+    Object unrelated = new Object();
+    EmbeddedChannel channel =
+        channel(
+            new ChannelOutboundHandlerAdapter() {
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                if (msg == unrelated) {
+                  promise.setFailure(new IOException("unrelated write failed"));
+                } else {
+                  super.write(ctx, msg, promise);
+                }
+              }
+            });
+    try {
+      assertThat(channel.writeAndFlush(unrelated).isSuccess()).isFalse();
+      DefaultFullHttpRequest request = request("/success");
+      channel.writeOutbound(request);
+      assertThat(request.headers().contains("traceparent")).isTrue();
+      response(channel, 200);
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getEvents()).isEmpty();
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(200);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void upgradedRequestTransfersToHttp2Stream(boolean parentClosedBeforeRead) {
+    EmbeddedChannel parent = channel(new ChannelOutboundHandlerAdapter());
+    EmbeddedChannel stream =
+        new EmbeddedChannel(
+            NettyClientTelemetry.builder(testing.getOpenTelemetry())
+                .build()
+                .createCombinedHandler()) {
+          @Override
+          public Channel parent() {
+            return parent;
+          }
+        };
+    try {
+      parent.writeOutbound(request("/upgrade"));
+      response(parent, 101);
+      // Finagle's HTTP/2 bridge copies these attributes when it initializes the stream channel.
+      stream
+          .attr(AttributeKeys.CLIENT_CONTEXT)
+          .set(parent.attr(AttributeKeys.CLIENT_CONTEXT).get());
+      stream
+          .attr(AttributeKeys.CLIENT_PARENT_CONTEXT)
+          .set(parent.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get());
+      stream
+          .attr(HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST)
+          .set(parent.attr(HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST).get());
+      if (parentClosedBeforeRead) {
+        parent.close();
+      }
+      response(stream, 103);
+      parent.close();
+      if (parentClosedBeforeRead) {
+        assertThat(testing.spans()).hasSize(1);
+        assertThat(stream.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
+      } else {
+        assertThat(testing.spans()).isEmpty();
+      }
+      response(stream, 200);
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(parentClosedBeforeRead ? null : 200L);
+    } finally {
+      stream.finishAndReleaseAll();
+      parent.finishAndReleaseAll();
+    }
+  }
+
+  private static DefaultFullHttpRequest request(String uri) {
+    DefaultFullHttpRequest request = new DefaultFullHttpRequest(HTTP_1_1, HttpMethod.GET, uri);
+    request.headers().set("host", "localhost");
+    return request;
+  }
+
+  private static void response(EmbeddedChannel channel, int status) {
+    channel.writeInbound(new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(status)));
+  }
+}

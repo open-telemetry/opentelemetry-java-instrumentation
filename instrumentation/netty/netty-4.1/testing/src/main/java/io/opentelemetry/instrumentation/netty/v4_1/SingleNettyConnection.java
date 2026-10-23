@@ -23,13 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-/*
-Netty does not actually support proper http pipelining and has no way to correlate incoming response
-message with some sent request. This means that without some support from the higher level protocol
-we cannot concurrently send several requests across the same channel. Thus doRequest method of this
-class is synchronised. Yes, it seems kinda pointless, but at least we test that our instrumentation
-does not wreak havoc on Netty channel.
- */
+// This synchronous adapter serializes requests because each ClientHandler consumes one response.
 class SingleNettyConnection implements SingleConnection {
   private final String host;
   private final int port;
