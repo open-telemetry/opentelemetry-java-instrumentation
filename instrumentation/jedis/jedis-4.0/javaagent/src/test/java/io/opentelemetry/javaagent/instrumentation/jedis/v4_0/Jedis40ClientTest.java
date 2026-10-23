@@ -35,6 +35,7 @@ import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -63,6 +64,7 @@ import redis.clients.jedis.Transaction;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.jedis.providers.PooledConnectionProvider;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis40ClientTest {
@@ -166,7 +168,7 @@ class Jedis40ClientTest {
     JedisDataException localFailure = new JedisDataException("WRONGTYPE local conversion failure");
     try (UnifiedJedis client =
         new UnifiedJedis(
-            new HostAndPort(host, port), DefaultJedisClientConfig.builder().build())) {
+            new PooledConnectionProvider(new HostAndPort(host, port)), 1, Duration.ZERO)) {
       jedis.ping();
       testing.waitForTraces(1);
       testing.clearData();
