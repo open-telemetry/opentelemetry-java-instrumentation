@@ -22,12 +22,17 @@ sourceSets {
       "builtBy" to ":instrumentation:r2dbc-1.0:library-instrumentation-shaded:extractShadowJar",
     )
   }
+  test {
+    java.srcDir("src/testSpiCompatibility/java")
+    java.srcDir(project(":instrumentation:r2dbc-1.0:testing").file("src/testSpiCompatibility/java"))
+  }
 }
 
 dependencies {
   library("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
   compileOnly(project(path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded", configuration = "shadow"))
 
+  testImplementation("io.projectreactor:reactor-core:3.4.12")
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
@@ -40,7 +45,8 @@ testing {
           setSrcDirs(
             listOf(
               "src/testSpi09/java",
-              project(":instrumentation:r2dbc-1.0:testing").file("src/testSpi09/java"),
+              "src/testSpiCompatibility/java",
+              project(":instrumentation:r2dbc-1.0:testing").file("src/testSpiCompatibility/java"),
             )
           )
         }

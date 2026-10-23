@@ -13,6 +13,13 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers")
 }
 
+sourceSets {
+  test {
+    java.srcDir("src/testSpiCompatibility/java")
+    java.srcDir(project(":instrumentation:r2dbc-1.0:testing").file("src/testSpiCompatibility/java"))
+  }
+}
+
 testing {
   suites {
     register<JvmTestSuite>("testSpi09") {
@@ -21,7 +28,8 @@ testing {
           setSrcDirs(
             listOf(
               "src/testSpi09/java",
-              project(":instrumentation:r2dbc-1.0:testing").file("src/testSpi09/java"),
+              "src/testSpiCompatibility/java",
+              project(":instrumentation:r2dbc-1.0:testing").file("src/testSpiCompatibility/java"),
             )
           )
         }

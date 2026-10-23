@@ -5,25 +5,17 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.r2dbc.spi.ConnectionFactories;
-import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.ConnectionFactoryOptions;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.AbstractR2dbcAgentResultConsumptionTest;
 
-class R2dbcSpi09Test extends AbstractR2dbcSpi09Test {
-
-  @RegisterExtension
-  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+class R2dbcSpi09Test extends AbstractR2dbcAgentResultConsumptionTest {
 
   @Override
-  protected InstrumentationExtension getTesting() {
-    return testing;
+  protected Class<?> expectedUpdateCountType() {
+    return Integer.class;
   }
 
   @Override
-  protected ConnectionFactory createProxyConnectionFactory(ConnectionFactoryOptions options) {
-    return ConnectionFactories.find(options);
+  protected Number expectedUpdateCount() {
+    return 1;
   }
 }
