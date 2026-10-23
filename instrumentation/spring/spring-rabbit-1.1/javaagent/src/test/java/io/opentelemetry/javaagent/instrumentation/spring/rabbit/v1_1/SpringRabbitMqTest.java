@@ -478,7 +478,7 @@ class SpringRabbitMqTest {
                     .hasParent(producerSpan)
                     .hasSpanId(listenerContext.get().getSpanId())
                     .hasStatus(fail ? StatusData.error() : StatusData.unset())
-                    .satisfies(hasScopeName("io.opentelemetry.spring-rabbit-1.0"))
+                    .satisfies(hasScopeName("io.opentelemetry.spring-rabbit-1.1"))
                     .hasAttributesSatisfyingExactly(processAssertions);
                 verifyLink(span, producerSpan);
               });
