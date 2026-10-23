@@ -409,8 +409,8 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                           // subscribers that know that their subscription can happen
                           // ahead of time and in the 'wrong' context, has to clean up 'wrong'
                           // context
-                          return ContextPropagationOperator.storeOpenTelemetryContext(
-                              context, Context.root());
+                          return ContextPropagationOperator.withoutSubscriptionContextCapture(
+                              context);
                         });
       } catch (Throwable t) {
         throw new AssertionError(t);
