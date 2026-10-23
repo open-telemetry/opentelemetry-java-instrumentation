@@ -41,6 +41,7 @@ testing {
           filter {
             includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
             includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+            includeTestsMatching("*RedissonClientTest.configuredDatabaseIndexOnAtomicBatch")
           }
         }
       }
@@ -54,21 +55,8 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val redisson324ServerTarget = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "redisson324Test" }
-    .map { suite ->
-      register<Test>("${suite.name}ServerTarget") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-        filter {
-          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-        }
-      }
-    }
-
   check {
-    dependsOn(testing.suites, redisson324ServerTarget)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {
