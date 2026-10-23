@@ -49,6 +49,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Builder;
+import redis.clients.jedis.BuilderFactory;
 import redis.clients.jedis.CommandArguments;
 import redis.clients.jedis.CommandObject;
 import redis.clients.jedis.DefaultJedisClientConfig;
@@ -169,8 +170,9 @@ class Jedis40ClientTest {
     try (UnifiedJedis client =
         new UnifiedJedis(
             new PooledConnectionProvider(new HostAndPort(host, port)), 1, Duration.ZERO)) {
-      jedis.ping();
-      testing.waitForTraces(1);
+      client.executeCommand(
+          new CommandObject<>(new CommandArguments(Protocol.Command.PING), BuilderFactory.STRING));
+      testing.waitForTraces(Boolean.getBoolean("testJedis51OrLater") ? 3 : 1);
       testing.clearData();
 
       Throwable error =
