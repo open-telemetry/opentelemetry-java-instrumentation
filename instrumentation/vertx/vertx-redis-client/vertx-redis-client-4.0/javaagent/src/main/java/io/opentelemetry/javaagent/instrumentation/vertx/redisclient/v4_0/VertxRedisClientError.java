@@ -45,26 +45,25 @@ public final class VertxRedisClientError {
 
   @Nullable
   static Throwable findResponseError(@Nullable Object response) {
+    if (response == null) {
+      return null;
+    }
     try {
-      if (response == null) {
-        return null;
-      }
-      Deque<Iterator<?>> stack = new ArrayDeque<>();
-      stack.push(singletonList(response).iterator());
-      while (!stack.isEmpty()) {
-        Iterator<?> iterator = stack.peek();
-        if (!iterator.hasNext()) {
-          stack.pop();
+      Deque<Iterator<?>> pending = new ArrayDeque<>();
+      pending.push(singletonList(response).iterator());
+      while (!pending.isEmpty()) {
+        Iterator<?> current = pending.peek();
+        if (!current.hasNext()) {
+          pending.pop();
           continue;
         }
-        Object item = iterator.next();
-        if (item instanceof ErrorType) {
-          return (ErrorType) item;
+        Object value = current.next();
+        if (value instanceof ErrorType) {
+          return (ErrorType) value;
         }
-        if (item instanceof List<?>) {
-          stack.push(((List<?>) item).iterator());
-        } else if (item instanceof Response && ((Response) item).type() == ResponseType.MULTI) {
-          stack.push(children((Response) item));
+        Iterator<?> children = childIterator(value);
+        if (children != null) {
+          pending.push(children);
         }
       }
     } catch (Throwable t) {
@@ -73,7 +72,16 @@ public final class VertxRedisClientError {
     return null;
   }
 
-  private static Iterator<?> children(Response multi) throws ReflectiveOperationException {
+  @Nullable
+  private static Iterator<?> childIterator(@Nullable Object value)
+      throws ReflectiveOperationException {
+    if (value instanceof List<?>) {
+      return ((List<?>) value).iterator();
+    }
+    if (!(value instanceof Response) || ((Response) value).type() != ResponseType.MULTI) {
+      return null;
+    }
+    Response multi = (Response) value;
     if (IS_MAP != null && Boolean.TRUE.equals(IS_MAP.invoke(multi))) {
       // Native map iterators yield single-entry maps; avoid building a string-keyed view of the
       // whole map, where distinct binary keys can collide after decoding.
