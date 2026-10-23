@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("checkstyle:TypeName") // testing generated class names
 class CodeSpanNameExtractorTest {
   @Mock CodeAttributesGetter<Object> getter;
 
