@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -70,6 +73,19 @@ testing {
         implementation("io.vertx:vertx-circuit-breaker:$version")
       }
     }
+
+    withType<JvmTestSuite>().matching { it.name in listOf("version35Test", "version41Test", "version5Test") }.configureEach {
+      executions {
+        listOf("logs", "logs/dup").forEach { signal ->
+          register(if (signal == "logs") "ExceptionSignalLogs" else "ExceptionSignalLogsDup") {
+            filter {
+              includeTestsMatching("*VertxRxCircuitBreakerHttpServerTest.requestWithException")
+            }
+            telemetryConfig("otel.semconv.exception.signal.preview", signal)
+          }
+        }
+      }
+    }
   }
 }
 
@@ -80,7 +96,7 @@ tasks {
 
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
-    named("version5Test", Test::class).configure {
+    withType<Test>().matching { it.name.startsWith("version5Test") }.configureEach {
       enabled = false
     }
   }

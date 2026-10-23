@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.dropwizard;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -71,6 +72,8 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
     // this override is needed because dropwizard reports peer ip as the client ip
     options.setSockPeerAddr(serverEndpoint -> TEST_CLIENT_IP);
     options.setHasHandlerSpan(endpoint -> endpoint != NOT_FOUND);
+    // Jersey maps resource failures to responses, including failures resumed asynchronously.
+    options.setHasExceptionLog(false);
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND);
     options.setTestPathParam(true);
     options.setResponseCodeOnNonStandardHttpMethod(405);
@@ -107,7 +110,8 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
         .hasKind(INTERNAL);
     if (EXCEPTION.equals(endpoint)) {
       span.hasStatus(StatusData.error())
-          .hasException(new IllegalStateException(EXCEPTION.getBody()));
+          .hasException(
+              emitExceptionAsSpanEvents() ? new IllegalStateException(EXCEPTION.getBody()) : null);
     }
     return span;
   }

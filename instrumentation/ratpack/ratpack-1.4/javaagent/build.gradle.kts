@@ -96,6 +96,15 @@ tasks {
       register("PreviewSemconv") {
         telemetryConfig("otel.semconv-stability.preview", "service.peer")
       }
+      listOf("logs", "logs/dup").forEach { signal ->
+        register(if (signal == "logs") "ExceptionSignalLogs" else "ExceptionSignalLogsDup") {
+          filter {
+            includeTestsMatching("*HttpServerTest.requestWithException")
+          }
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+          telemetryConfig("otel.semconv.exception.signal.preview", signal)
+        }
+      }
       register("ControllerTelemetryDisabled") {
         filter {
           includeTestsMatching(

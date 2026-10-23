@@ -992,6 +992,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       String method,
       ServerEndpoint endpoint,
       Consumer<SpanDataAssert> serverSpanAssertion) {
+    AtomicReference<SpanData> exceptionLogSpan = new AtomicReference<>();
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       assertions.add(
@@ -1060,6 +1061,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
             trace.hasSpansSatisfyingExactly(spanAssertions);
 
+            if (endpoint == EXCEPTION && emitExceptionAsLogs() && options.hasExceptionLog) {
+              exceptionLogSpan.set(getExceptionLogSpan(trace.actual(), options));
+            }
+
             if (options.verifyServerSpanEndTime) {
               List<SpanData> spanData = trace.actual();
               if (spanData.size() > 1) {
@@ -1075,11 +1080,20 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     testing.waitAndAssertTraces(assertions);
 
-    if (endpoint == EXCEPTION
-        && emitExceptionAsLogs()
-        && options.hasExceptionOnServerSpan.test(endpoint)) {
-      assertExceptionLogs(options.expectedException, "http.server.request.exception");
+    if (endpoint == EXCEPTION && emitExceptionAsLogs() && options.hasExceptionLog) {
+      assertThat(exceptionLogSpan.get()).isNotNull();
+      assertExceptionLogs(
+          options.expectedException, "http.server.request.exception", exceptionLogSpan.get());
     }
+  }
+
+  // visible for testing
+  static SpanData getExceptionLogSpan(List<SpanData> spans, HttpServerTestOptions options) {
+    if (options.exceptionLogOnHandlerSpan) {
+      assertThat(options.hasHandlerSpan.test(EXCEPTION)).isTrue();
+      return spans.get(1);
+    }
+    return spans.get(0);
   }
 
   @CanIgnoreReturnValue
@@ -1093,7 +1107,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
-  protected final void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+  protected final void assertExceptionLogs(
+      Throwable expectedException, String expectedEventName, SpanData expectedSpan) {
     Awaitility.await()
         .untilAsserted(
             () -> {
@@ -1104,6 +1119,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
               assertThat(logs).hasSize(1);
               assertThat(logs.get(0))
+                  .hasSpanContext(expectedSpan.getSpanContext())
                   .hasSeverity(Severity.ERROR)
                   .hasEventName(expectedEventName)
                   .hasAttributesSatisfyingExactly(

@@ -52,6 +52,8 @@ public class HttpServerTestOptions {
   Predicate<ServerEndpoint> hasResponseCustomizer = unused -> false;
 
   Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
+  boolean hasExceptionLog = true;
+  boolean exceptionLogOnHandlerSpan = false;
 
   boolean testRedirect = true;
   boolean testError = true;
@@ -145,6 +147,20 @@ public class HttpServerTestOptions {
   public HttpServerTestOptions setHasExceptionOnServerSpan(
       Predicate<ServerEndpoint> hasExceptionOnServerSpan) {
     this.hasExceptionOnServerSpan = hasExceptionOnServerSpan;
+    return this;
+  }
+
+  /** Whether the exception route emits an HTTP exception log when exception-log mode is enabled. */
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasExceptionLog(boolean hasExceptionLog) {
+    this.hasExceptionLog = hasExceptionLog;
+    return this;
+  }
+
+  /** Correlates the HTTP exception log with the framework handler, not the synthetic controller. */
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setExceptionLogOnHandlerSpan(boolean exceptionLogOnHandlerSpan) {
+    this.exceptionLogOnHandlerSpan = exceptionLogOnHandlerSpan;
     return this;
   }
 

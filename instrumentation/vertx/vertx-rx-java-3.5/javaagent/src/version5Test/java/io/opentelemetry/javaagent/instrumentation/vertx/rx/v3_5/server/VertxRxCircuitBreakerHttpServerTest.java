@@ -30,6 +30,8 @@ class VertxRxCircuitBreakerHttpServerTest extends AbstractVertxRxHttpServerTest 
 
     options.setTestHttpPipelining(false);
     options.setHasExceptionOnServerSpan(endpoint -> endpoint != EXCEPTION);
+    // The circuit breaker handles the error response before it reaches the HTTP reporter.
+    options.setHasExceptionLog(false);
   }
 
   @Override

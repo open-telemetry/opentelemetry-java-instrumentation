@@ -47,6 +47,8 @@ class JFinalTest extends AbstractHttpServerTest<Server> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setHasHandlerSpan(endpoint -> endpoint != NOT_FOUND);
+    // JFinal catches action failures and renders a 500 response before returning to Jetty.
+    options.setHasExceptionLog(false);
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {

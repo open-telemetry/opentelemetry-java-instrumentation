@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -17,6 +20,18 @@ dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
   bootstrap(project(":instrumentation:undertow-1.4:bootstrap"))
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("ExceptionSignalLogsDup") {
+      filter {
+        includeTestsMatching("*requestWithException")
+        includeTestsMatching("*testSendResponseWithException")
+      }
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs/dup")
+    }
+  }
 }
 
 tasks {

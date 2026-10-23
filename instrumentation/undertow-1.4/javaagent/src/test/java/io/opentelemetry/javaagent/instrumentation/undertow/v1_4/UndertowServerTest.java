@@ -41,6 +41,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.undertow.Handlers;
@@ -49,6 +50,7 @@ import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import io.undertow.util.StatusCodes;
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -251,11 +253,13 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8().trim()).isEqualTo("sendResponseWithException");
 
+    AtomicReference<SpanData> serverSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasName("GET")
+                      .satisfies(serverSpan::set)
                       .hasNoParent()
                       .hasKind(SpanKind.SERVER)
                       .hasStatus(StatusData.error())
@@ -298,7 +302,9 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
 
     if (emitExceptionAsLogs()) {
       assertExceptionLogs(
-          new Exception("exception after sending response"), "http.server.request.exception");
+          new Exception("exception after sending response"),
+          "http.server.request.exception",
+          serverSpan.get());
     }
   }
 }

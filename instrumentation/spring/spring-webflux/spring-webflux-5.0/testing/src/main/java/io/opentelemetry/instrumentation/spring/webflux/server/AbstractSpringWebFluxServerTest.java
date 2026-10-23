@@ -76,6 +76,8 @@ public abstract class AbstractSpringWebFluxServerTest
   protected void configure(HttpServerTestOptions options) {
     options.setTestPathParam(true);
     options.setHasHandlerSpan(unused -> true);
+    // WebFlux handles the error response; its handler reporter emits "exception" at WARN instead.
+    options.setHasExceptionLog(false);
   }
 
   protected static void assertHandlerExceptionLog(

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -75,6 +76,9 @@ public abstract class AbstractSpringBootBasedTest
     super.configure(options);
     options.setContextPath("/xyz");
     options.setHasHandlerSpan(unused -> true);
+    // TestController's @ExceptionHandler converts the failure to a response before the HTTP
+    // reporter.
+    options.setHasExceptionLog(false);
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == NOT_FOUND);
     options.setTestPathParam(true);
     options.setHasErrorPageSpans(endpoint -> endpoint == NOT_FOUND);
@@ -241,14 +245,18 @@ public abstract class AbstractSpringBootBasedTest
             equalTo(CODE_FUNCTION_NAME, codeNamespace + "." + codeFunction));
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasEventsSatisfyingExactly(
-          event ->
-              event
-                  .hasName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, "java.lang.RuntimeException"),
-                      equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      if (emitExceptionAsSpanEvents()) {
+        span.hasEventsSatisfyingExactly(
+            event ->
+                event
+                    .hasName("exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, "java.lang.RuntimeException"),
+                        equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      } else {
+        span.hasEventsSatisfyingExactly();
+      }
     }
     return span;
   }

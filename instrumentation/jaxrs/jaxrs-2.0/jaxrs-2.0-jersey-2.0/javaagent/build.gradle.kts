@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -55,6 +58,25 @@ if (!otelProps.testLatestDeps) {
     testImplementation {
       exclude("org.ow2.asm", "asm")
       exclude("org.ow2.asm", "asm-commons")
+    }
+  }
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    listOf("logs", "logs/dup").forEach { signal ->
+      listOf(false, true).forEach { controllerTelemetry ->
+        val suffix = if (signal == "logs") "ExceptionSignalLogs" else "ExceptionSignalLogsDup"
+        register(suffix + if (controllerTelemetry) "ControllerTelemetry" else "") {
+          filter {
+            includeTestsMatching("*HttpServerTest.requestWithException")
+          }
+          if (controllerTelemetry) {
+            telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+          }
+          telemetryConfig("otel.semconv.exception.signal.preview", signal)
+        }
+      }
     }
   }
 }

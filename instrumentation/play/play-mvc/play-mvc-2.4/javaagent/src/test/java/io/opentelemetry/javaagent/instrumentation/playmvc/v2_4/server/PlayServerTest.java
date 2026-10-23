@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.playmvc.v2_4.server;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -96,6 +97,8 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setHasHandlerSpan(unused -> true);
+    // Play converts action failures to responses before they reach the HTTP server reporter.
+    options.setHasExceptionLog(false);
     options.setTestHttpPipelining(false);
     options.setResponseCodeOnNonStandardHttpMethod(404);
     options.setVerifyServerSpanEndTime(
@@ -117,7 +120,8 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
     span.hasName("play.request").hasKind(INTERNAL);
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasException(new IllegalArgumentException(EXCEPTION.getBody()));
+      span.hasException(
+          emitExceptionAsSpanEvents() ? new IllegalArgumentException(EXCEPTION.getBody()) : null);
     }
     return span;
   }

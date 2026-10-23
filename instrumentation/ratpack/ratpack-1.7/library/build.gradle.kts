@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -12,6 +15,19 @@ dependencies {
 
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
+  }
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    listOf("logs", "logs/dup").forEach { signal ->
+      register(if (signal == "logs") "ExceptionSignalLogs" else "ExceptionSignalLogsDup") {
+        filter {
+          includeTestsMatching("*HttpServerTest.requestWithException")
+        }
+        telemetryConfig("otel.semconv.exception.signal.preview", signal)
+      }
+    }
   }
 }
 

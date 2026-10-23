@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.finatra.v2_9
 
 import com.twitter.finatra.http.HttpServer
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
@@ -61,6 +62,8 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
         endpoint != ServerEndpoint.NOT_FOUND
     })
     options.setResponseCodeOnNonStandardHttpMethod(400)
+    // ExceptionMappingFilter converts the failed action future into a response before Netty.
+    options.setHasExceptionLog(false)
   }
 
   override protected def assertHandlerSpan(
@@ -91,7 +94,9 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
       span
         .hasStatus(StatusData.error())
         .hasException(
-          new IllegalStateException(ServerEndpoint.EXCEPTION.getBody)
+          if (emitExceptionAsSpanEvents())
+            new IllegalStateException(ServerEndpoint.EXCEPTION.getBody)
+          else null
         )
     }
 

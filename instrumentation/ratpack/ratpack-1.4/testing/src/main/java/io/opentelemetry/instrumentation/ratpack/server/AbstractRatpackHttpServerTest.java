@@ -288,6 +288,8 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> true);
+    // The agent's ServerErrorHandler records span events directly, without an HTTP exception log.
+    options.setHasExceptionLog(false);
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);

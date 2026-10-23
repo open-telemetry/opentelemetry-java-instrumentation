@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -65,6 +68,19 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:3.+") // see testing-webflux7 module
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // see testing-webflux7 module
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("ExceptionSignalLogsDup") {
+      include("**/server/**")
+      filter {
+        includeTestsMatching("*requestWithException")
+      }
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs/dup")
+    }
+  }
 }
 
 tasks {

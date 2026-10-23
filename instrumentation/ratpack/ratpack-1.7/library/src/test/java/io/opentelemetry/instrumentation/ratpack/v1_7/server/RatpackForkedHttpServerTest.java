@@ -35,6 +35,7 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest {
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> false);
+    options.setHasExceptionLog(true);
     options.setTestClientAddressFromSocketPeer(false);
   }
 }

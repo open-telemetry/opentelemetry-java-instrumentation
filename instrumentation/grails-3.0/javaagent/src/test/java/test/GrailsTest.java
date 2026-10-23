@@ -5,6 +5,7 @@
 
 package test;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -62,6 +63,8 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
   protected void configure(HttpServerTestOptions options) {
     options.setContextPath("/xyz");
     options.setHasHandlerSpan(unused -> true);
+    // GrailsExceptionResolver handles controller failures and renders the error response.
+    options.setHasExceptionLog(false);
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
     options.setHasErrorPageSpans(
@@ -168,7 +171,8 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
 
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasException(new IllegalStateException(EXCEPTION.getBody()));
+      span.hasException(
+          emitExceptionAsSpanEvents() ? new IllegalStateException(EXCEPTION.getBody()) : null);
     }
     return span;
   }
