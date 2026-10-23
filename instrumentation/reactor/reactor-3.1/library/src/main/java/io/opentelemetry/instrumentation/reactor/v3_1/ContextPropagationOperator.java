@@ -38,7 +38,6 @@ import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
@@ -252,8 +251,7 @@ public final class ContextPropagationOperator {
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
       ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
-    return Operators.lift(
-        ContextPropagationOperator::shouldInstrument, new Lifter<>(asyncOperationEndStrategy));
+    return Operators.lift(new Lifter<>(asyncOperationEndStrategy));
   }
 
   /** Forces Mono to run in traceContext scope. */
@@ -348,11 +346,6 @@ public final class ContextPropagationOperator {
     public reactor.util.context.Context apply(reactor.util.context.Context context) {
       return storeOpenTelemetryContext(context, tracingContext);
     }
-  }
-
-  private static boolean shouldInstrument(Scannable publisher) {
-    // skip if Flux/Mono #just, #empty, #error
-    return !(publisher instanceof Fuseable.ScalarCallable);
   }
 
   private static final class ContextBoundaryMono<T> extends Mono<T> implements Scannable {
