@@ -43,6 +43,7 @@ dependencies {
 
   testLibrary("io.ktor:ktor-server-netty:$ktorVersion")
   testLibrary("io.ktor:ktor-client-cio:$ktorVersion")
+  testLibrary("io.ktor:ktor-server-cio:$ktorVersion")
 }
 
 kotlin {
@@ -50,6 +51,23 @@ kotlin {
     jvmTarget.set(JvmTarget.JVM_1_8)
     // generate metadata for Java 1.8 reflection on method parameters, used in @WithSpan tests
     javaParameters = true
+  }
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("version343Test") {
+      dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+        implementation("io.ktor:ktor-server-cio:${baseVersion("3.4.3").orLatest("+")}")
+      }
+      sources {
+        kotlin {
+          setSrcDirs(listOf("src/test/kotlin"))
+          include("**/KtorServerExternalJobTest.kt")
+        }
+      }
+    }
   }
 }
 
@@ -68,6 +86,6 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testPreviewSemconv)
+    dependsOn(testing.suites, testExperimental, testPreviewSemconv)
   }
 }
