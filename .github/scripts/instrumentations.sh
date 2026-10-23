@@ -321,6 +321,8 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-pulsar-1.0:javaagent:test"
   "spring:spring-rabbit-1.0:javaagent:test"
   "spring:spring-rmi-4.0:javaagent:test"
+  "spring:spring-rmi-4.0:javaagent:testBothSemconv"
+  "spring:spring-rmi-4.0:javaagent:testPreviewSemconv"
   "spring:spring-scheduling-3.1:javaagent:test"
   "spring:spring-scheduling-3.1:javaagent:testExperimental"
   "spring:spring-web:spring-web-3.1:library:test"

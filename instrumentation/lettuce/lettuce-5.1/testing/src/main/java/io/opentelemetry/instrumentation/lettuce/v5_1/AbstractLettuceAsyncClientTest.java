@@ -20,11 +20,13 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.awaitility.Awaitility.await;
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisCommandTimeoutException;
+import io.lettuce.core.RedisException;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.TimeoutOptions;
@@ -50,6 +52,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -178,7 +181,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
                                     equalTo(DB_OPERATION_NAME, "SET")))));
 
-    assertCommandErrorMetric(null);
+    assertCommandMetric("SET", null);
   }
 
   @Test
@@ -212,14 +215,19 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(DB_OPERATION_NAME, "LPUSH"),
-                                    equalTo(ERROR_TYPE, "WRONGTYPE")))
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        testLatestDeps()
+                                            ? RedisCommandExecutionException.class.getName()
+                                            : "_OTHER")))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
-    assertCommandErrorMetric("WRONGTYPE");
+    assertCommandMetric(
+        "LPUSH", testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
   }
 
   @Test
-  void testCommandTimeoutDoesNotReportRedisErrorType() {
+  void testCommandTimeout() {
     RedisClient timeoutClient = createClient(embeddedDbUri);
     cleanup.deferCleanup(timeoutClient::shutdown);
     timeoutClient.setOptions(
@@ -260,16 +268,72 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "BLPOP TIMEOUT_LIST 1"),
                                     equalTo(DB_OPERATION_NAME, "BLPOP"),
-                                    // Lettuce 5.1 tags the timeout without the throwable.
-                                    // Command-aware tracing exposes the throwable in 6.0+.
                                     equalTo(
                                         ERROR_TYPE,
                                         testLatestDeps()
                                             ? RedisCommandTimeoutException.class.getName()
                                             : "_OTHER")))));
 
-    assertCommandErrorMetric(
-        testLatestDeps() ? RedisCommandTimeoutException.class.getName() : "_OTHER");
+    assertCommandMetric(
+        "BLPOP", testLatestDeps() ? RedisCommandTimeoutException.class.getName() : "_OTHER");
+  }
+
+  @Test
+  void testPendingCommandDisconnect() {
+    StatefulRedisConnection<String, String> pendingConnection = redisClient.connect();
+    cleanup.deferCleanup(pendingConnection);
+    pendingConnection.sync().clientSetname("otel-pending-disconnect");
+    testing().waitForTraces(testLatestDeps() ? 4 : 1);
+    testing().clearData();
+
+    RedisClient observerClient = RedisClient.create(embeddedDbUri);
+    cleanup.deferCleanup(observerClient::shutdown);
+    StatefulRedisConnection<String, String> observer = observerClient.connect();
+    cleanup.deferCleanup(observer);
+
+    RedisFuture<?> pending = pendingConnection.async().blpop(0, "PENDING_DISCONNECT_LIST");
+    await()
+        .atMost(Duration.ofSeconds(5))
+        .until(
+            () ->
+                Stream.of(observer.sync().clientList().split("\n"))
+                    .anyMatch(
+                        line ->
+                            line.contains("name=otel-pending-disconnect")
+                                && line.contains("cmd=blpop")));
+    assertThat(pending.isDone()).isFalse();
+
+    pendingConnection.close();
+    Throwable thrown = catchThrowable(() -> pending.get(3, SECONDS));
+    assertThat(thrown)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisException.class);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("BLPOP"))
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(DB_SYSTEM_NAME, REDIS),
+                                    equalTo(DB_QUERY_TEXT, "BLPOP PENDING_DISCONNECT_LIST 0"),
+                                    equalTo(DB_OPERATION_NAME, "BLPOP"),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        testLatestDeps()
+                                            ? RedisException.class.getName()
+                                            : "_OTHER")))));
+
+    assertCommandMetric("BLPOP", testLatestDeps() ? RedisException.class.getName() : "_OTHER");
   }
 
   @Test
