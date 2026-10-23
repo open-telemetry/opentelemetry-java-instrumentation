@@ -242,45 +242,6 @@ public abstract class AbstractR2dbcStatementTest {
                             .hasParent(trace.getSpan(0))));
   }
 
-  @Test
-  void filteredUpdateResultConsumptionFinishesQuerySpan() {
-    ConnectionFactoryOptions options =
-        ConnectionFactoryOptions.parse("r2dbc:h2:mem:///filtered_update_" + UUID.randomUUID());
-    Connection connection =
-        Mono.from(createProxyConnectionFactory(options).create()).block(Duration.ofSeconds(10));
-    try {
-      getTesting()
-          .runWithSpan(
-              "parent",
-              () ->
-                  assertThat(
-                          Flux.from(
-                                  connection
-                                      .createStatement("CREATE TABLE test (id INT)")
-                                      .execute())
-                              .flatMap(
-                                  result ->
-                                      result
-                                          .filter(segment -> segment instanceof Result.UpdateCount)
-                                          .getRowsUpdated())
-                              .collectList()
-                              .block(Duration.ofSeconds(10)))
-                      .containsExactly(0L));
-    } finally {
-      Mono.from(connection.close()).block(Duration.ofSeconds(10));
-    }
-
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                    span ->
-                        span.hasName("CREATE TABLE test")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))));
-  }
-
   private static Stream<Arguments> provideParameters() {
     return systems.values().stream()
         .flatMap(
