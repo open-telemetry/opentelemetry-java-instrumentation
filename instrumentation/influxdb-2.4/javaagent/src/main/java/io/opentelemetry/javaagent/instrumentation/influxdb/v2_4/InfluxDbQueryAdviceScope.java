@@ -128,6 +128,8 @@ public class InfluxDbQueryAdviceScope {
     if (delegationInstalled) {
       currentQueryDelegation.restore(previousDelegation);
     }
+    // Successful async calls finish in callback advice; synchronous completion or an escaping
+    // exception finishes here.
     if (depth == 0 && queryState != null && (!queryState.isAsynchronous() || throwable != null)) {
       queryState.end(throwable);
     }
@@ -144,6 +146,7 @@ public class InfluxDbQueryAdviceScope {
 
     @Nullable
     private QueryMethod expectedDelegationTarget() {
+      // This is an expected forwarding target; older supported clients may implement it directly.
       switch (this) {
         case CHUNKED_CONSUMER:
           return CHUNKED_CONSUMER_COMPLETION;
