@@ -17,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
+import io.opentelemetry.api.trace.Span;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
@@ -30,8 +31,34 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
 
   abstract void end(HttpServerResponse response);
 
+  void addMultiHandlerRoutes(Router router) {
+    router.route("/precedence/*").handler(RoutingContext::next);
+    for (String path :
+        new String[] {"/standard", "/virtual", "/repeat/repeat", "/precedence/:id"}) {
+      router
+          .get(path)
+          .handler(
+              ctx -> {
+                Span span = Span.current();
+                if (path.equals("/standard") || path.equals("/virtual")) {
+                  span.updateName(ctx.request().path());
+                }
+                span.setAttribute("http.target", ctx.request().path())
+                    .setAttribute("first-handler-span-id", span.getSpanContext().getSpanId());
+                ctx.next();
+              })
+          .handler(
+              ctx -> {
+                Span span = Span.current();
+                span.setAttribute("custom-prop", "from-handler");
+                end(ctx.response(), span.getSpanContext().getSpanId());
+              });
+    }
+  }
+
   Router buildRouter() {
     Router router = Router.router(vertx);
+    addMultiHandlerRoutes(router);
 
     router.route().handler(RoutingContext::next);
     // verify that calling RoutingContext::next doesn't affect http.route

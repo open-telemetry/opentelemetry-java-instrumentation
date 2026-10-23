@@ -5,9 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -26,6 +31,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx> {
 
@@ -70,6 +77,49 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
     assertTheTraces(1, null, null, null, method, SUB_ROUTER_PATH_PARAM);
   }
 
+  @ParameterizedTest
+  @CsvSource({
+    "/standard, /standard, /standard",
+    "/virtual, /virtual, /virtual",
+    "/repeat/repeat, /repeat/repeat, GET /repeat/repeat",
+    "/precedence/123, /precedence/:id, GET /precedence/:id",
+    "/vertx-app/standard, /vertx-app/standard, /vertx-app/standard",
+    "/vertx-app/child/standard, /vertx-app/child/standard, /vertx-app/child/standard",
+    "/vertx-app/child/repeat/repeat, /vertx-app/child/repeat/repeat, GET /vertx-app/child/repeat/repeat"
+  })
+  void multiHandlerRoute(String path, String expectedRoute, String expectedName) {
+    assumeTrue(
+        supportsMultiHandlerRoutes(), "Vert.x 3.0 replaces rather than appends route handlers");
+    AggregatedHttpResponse response =
+        client
+            .get(address.resolve(path).toString().replace("http://", "h1c://"))
+            .aggregate()
+            .join();
+
+    assertThat(response.status().code()).isEqualTo(200);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(expectedName)
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasSpanId(response.contentUtf8())
+                        .hasAttributesSatisfying(
+                            equalTo(HTTP_ROUTE, expectedRoute),
+                            equalTo(stringKey("http.target"), path),
+                            equalTo(stringKey("first-handler-span-id"), response.contentUtf8()),
+                            equalTo(stringKey("custom-prop"), "from-handler"))));
+  }
+
+  protected boolean supportsMultiHandlerRoutes() {
+    return true;
+  }
+
+  protected DeploymentOptions deploymentOptions() {
+    return new DeploymentOptions();
+  }
+
   @Override
   protected Vertx setupServer() throws ExecutionException, InterruptedException, TimeoutException {
     Vertx server =
@@ -82,7 +132,7 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
 
     server.deployVerticle(
         verticle().getName(),
-        new DeploymentOptions()
+        deploymentOptions()
             // casting port to Object because the put override that takes Integer is removed in
             // later versions of vertx-core
             .setConfig(

@@ -5,11 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 
 public class VertxWebServer extends AbstractVertxWebServer {
+
+  @Override
+  void addMultiHandlerRoutes(Router router) {
+    if (testLatestDeps()) {
+      super.addMultiHandlerRoutes(router);
+    }
+  }
 
   @Override
   void end(HttpServerResponse response) {
@@ -28,6 +37,7 @@ public class VertxWebServer extends AbstractVertxWebServer {
     router.mountSubRouter("/child", buildRouter());
 
     Router mainRouter = Router.router(vertx);
+    addMultiHandlerRoutes(mainRouter);
     mainRouter.mountSubRouter("/vertx-app", router);
 
     vertx
