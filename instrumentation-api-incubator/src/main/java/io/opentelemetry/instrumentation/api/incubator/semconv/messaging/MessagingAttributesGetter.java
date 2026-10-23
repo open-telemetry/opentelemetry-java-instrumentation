@@ -59,10 +59,12 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns a description of a class of error the operation ended with.
+   * Returns the final value of {@code error.type} for the operation.
    *
-   * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
-   * type.
+   * <p>Returning {@code null} omits {@code error.type}, even when {@code error} is non-null. The
+   * default implementation returns the exception class name when {@code error} is non-null, and
+   * {@code null} otherwise. An override that wants this fallback can delegate to {@code
+   * MessagingAttributesGetter.super.getErrorType(request, response, error)}.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
@@ -70,7 +72,7 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 
   /**

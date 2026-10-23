@@ -92,7 +92,7 @@ final class CamelMessagingAttributesGetter
   public String getErrorType(
       CamelRequest request, @Nullable Void unused, @Nullable Throwable error) {
     if (error != null) {
-      return error.getClass().getName();
+      return MessagingAttributesGetter.super.getErrorType(request, unused, error);
     }
     return request.getExchange().isFailed() ? "_OTHER" : null;
   }
