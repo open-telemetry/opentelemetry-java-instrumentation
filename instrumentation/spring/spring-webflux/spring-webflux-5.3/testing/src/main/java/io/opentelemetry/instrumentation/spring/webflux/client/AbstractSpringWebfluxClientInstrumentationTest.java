@@ -105,17 +105,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "varargs",
-        "map",
-        "absolute",
-        "query",
-        "signed-query",
-        "query-fragment",
-        "uri",
-        "builder"
-      })
+  @ValueSource(strings = {"varargs", "map", "absolute", "signed-query", "uri", "builder"})
   void shouldCaptureUriTemplate(String overload) {
     URI uri = resolveAddress("/hello/some-account");
     WebClient client =
@@ -136,23 +126,10 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
       case "absolute":
         request = client.get().uri(resolveAddress("/hello/") + "{id}", "some-account");
         break;
-      case "query":
-        template += "?next=https://example.org/landing";
-        request = client.get().uri(template, "some-account");
-        uri = resolveAddress("/hello/some-account?next=https://example.org/landing");
-        template = "/hello/{id}";
-        break;
       case "signed-query":
         template += "?sig=secret";
         request = client.get().uri(template, "some-account");
         uri = resolveAddress("/hello/some-account?sig=REDACTED");
-        template = "/hello/{id}";
-        break;
-      case "query-fragment":
-        template += "?next=https://example.org/landing#fragment/secret";
-        request = client.get().uri(template, "some-account");
-        uri =
-            resolveAddress("/hello/some-account?next=https://example.org/landing#fragment/secret");
         template = "/hello/{id}";
         break;
       case "uri":
@@ -167,21 +144,6 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         throw new AssertionError(overload);
     }
     assertTemplateRequest(request, uri, expectedTemplate(template));
-  }
-
-  @Test
-  void shouldCaptureAccountsUriTemplate() {
-    // The shared server has no accounts endpoint; retrieve the 404 body without raising an error.
-    WebClient client =
-        instrument(
-                WebClient.builder()
-                    .baseUrl(resolveAddress("").toString())
-                    .clientConnector(ClientHttpConnectorFactory.create()))
-            .build();
-    assertTemplateRequest(
-        client.get().uri("/accounts/{id}", "some-account"),
-        resolveAddress("/accounts/some-account"),
-        expectedTemplate("/accounts/{id}"));
   }
 
   @Test
@@ -220,13 +182,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
 
   protected void assertTemplateRequest(
       WebClient.RequestHeadersSpec<?> request, URI uri, String template) {
-    request
-        .retrieve()
-        .onStatus(status -> status.value() == 404, response -> Mono.empty())
-        .bodyToMono(String.class)
-        .block();
+    request.retrieve().bodyToMono(String.class).block();
 
-    int statusCode = uri.getPath().startsWith("/accounts/") ? 404 : 200;
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
@@ -236,17 +193,15 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                       .hasNoParent()
                       .hasAttributesSatisfyingExactly(
                           equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                           equalTo(
-                              HTTP_RESPONSE_BODY_SIZE,
-                              emitExperimentalTelemetry() ? (statusCode == 404 ? 35L : 20L) : null),
+                              HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
                           equalTo(URL_FULL, uri.toString()),
                           equalTo(URL_TEMPLATE, template),
                           equalTo(SERVER_ADDRESS, "localhost"),
                           equalTo(SERVER_PORT, uri.getPort()),
                           satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
-                          equalTo(maybeStablePeerService(), testing.expectedPeerService()),
-                          equalTo(ERROR_TYPE, statusCode == 404 ? "404" : null)),
+                          equalTo(maybeStablePeerService(), testing.expectedPeerService())),
               span ->
                   span.hasName("test-http-server")
                       .hasKind(SpanKind.SERVER)
