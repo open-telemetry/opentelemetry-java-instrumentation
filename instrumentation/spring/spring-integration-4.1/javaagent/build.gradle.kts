@@ -27,6 +27,7 @@ dependencies {
   compileOnly("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-rabbit-1.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
@@ -47,6 +48,12 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("fluxChannelTest") {
+      dependencies {
+        implementation("org.springframework.integration:spring-integration-core:5.5.20")
+        implementation("io.projectreactor:reactor-core:3.4.29")
+      }
+    }
     register<JvmTestSuite>("version41Test") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
@@ -137,7 +144,7 @@ tasks {
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    if (name != "version41Test") {
+    if (name != "version41Test" && name != "fluxChannelTest") {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     }
   }
