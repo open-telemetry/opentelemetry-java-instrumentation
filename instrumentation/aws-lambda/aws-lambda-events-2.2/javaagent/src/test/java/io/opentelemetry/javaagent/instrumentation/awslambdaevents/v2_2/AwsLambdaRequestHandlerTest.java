@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.when;
 
