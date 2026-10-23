@@ -532,7 +532,7 @@ class JedisNetworkAttributesGetterTest {
     try {
       assertThat(JedisPipelineContext.takeBatchState(transaction)).isNull();
     } finally {
-      JedisTransactionInstrumentation.ExecAdvice.stopSpan(null, adviceState);
+      JedisTransactionInstrumentation.ExecAdvice.stopSpan(null, null, adviceState);
     }
 
     assertThat(JedisPipelineContext.inTransactionFraming()).isFalse();
