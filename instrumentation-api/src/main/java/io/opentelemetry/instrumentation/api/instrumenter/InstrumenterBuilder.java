@@ -35,6 +35,7 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -120,7 +121,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * {@link Instrumenter}.
    *
    * <p>The schema URL identifies the semantic conventions followed by the spans, metrics, and logs.
-   * If this method is not called, the telemetry has no schema URL.
+   * If this method is not called, spans and metrics have no schema URL. Default exception logs use
+   * the OpenTelemetry exception schema; logs from custom exception event extractors have no schema
+   * URL.
    */
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> setSchemaUrl(String schemaUrl) {
@@ -338,6 +341,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
     if (schemaUrl != null) {
       loggerBuilder.setSchemaUrl(schemaUrl);
+    } else if (exceptionEventExtractor == null) {
+      loggerBuilder.setSchemaUrl(SchemaUrls.V1_44_0);
     }
     return loggerBuilder.build();
   }

@@ -13,13 +13,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.GraphqlErrorRecorder;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.semconv.SchemaUrls;
 
 final class GraphqlInstrumenterFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.graphql-java-20.0";
 
   static GraphqlErrorRecorder createDataFetcherErrorRecorder(OpenTelemetry openTelemetry) {
-    return new GraphqlErrorRecorder(openTelemetry, INSTRUMENTATION_NAME, null);
+    return new GraphqlErrorRecorder(openTelemetry, INSTRUMENTATION_NAME, SchemaUrls.V1_44_0);
   }
 
   static OpenTelemetryInstrumentationHelper createInstrumentationHelper(

@@ -45,6 +45,7 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -875,6 +876,18 @@ class InstrumenterTest {
   @ValueSource(
       strings = {"https://opentelemetry.io/schemas/1.0.0", "https://example.com/custom-schema"})
   void schemaUrl_allSignals(String schemaUrl) {
+    assertSchemaUrls(schemaUrl, false);
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(
+      strings = {"https://opentelemetry.io/schemas/1.0.0", "https://example.com/custom-schema"})
+  void schemaUrl_customExceptionEventExtractor(String schemaUrl) {
+    assertSchemaUrls(schemaUrl, true);
+  }
+
+  private static void assertSchemaUrls(String schemaUrl, boolean customExceptionEventExtractor) {
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", name -> "span")
@@ -898,6 +911,12 @@ class InstrumenterTest {
     if (schemaUrl != null) {
       builder.setSchemaUrl(schemaUrl);
     }
+    if (customExceptionEventExtractor) {
+      Experimental.setExceptionEventExtractor(
+          builder,
+          (logRecordBuilder, context, request) ->
+              logRecordBuilder.setEventName("custom.exception"));
+    }
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         builder.buildInstrumenter();
 
@@ -909,7 +928,16 @@ class InstrumenterTest {
     if (emitExceptionAsLogs()) {
       assertThat(otelTesting.getLogRecords())
           .singleElement()
-          .satisfies(hasScopeSchemaUrl(schemaUrl));
+          .satisfies(
+              hasScopeSchemaUrl(
+                  schemaUrl == null && !customExceptionEventExtractor
+                      ? SchemaUrls.V1_44_0
+                      : schemaUrl))
+          .satisfies(
+              log ->
+                  assertThat(log)
+                      .hasEventName(
+                          customExceptionEventExtractor ? "custom.exception" : "exception"));
     } else {
       assertThat(otelTesting.getLogRecords()).isEmpty();
     }

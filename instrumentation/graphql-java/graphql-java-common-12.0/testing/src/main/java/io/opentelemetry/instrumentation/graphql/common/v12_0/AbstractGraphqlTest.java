@@ -37,6 +37,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -389,6 +390,7 @@ public abstract class AbstractGraphqlTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                             equalTo(GRAPHQL_OPERATION_TYPE, "query"),
@@ -404,6 +406,7 @@ public abstract class AbstractGraphqlTest {
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasStatus(StatusData.error())
+                          .satisfies(hasScopeSchemaUrl(null))
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("graphql.field.name"), "bookById"),
                               equalTo(stringKey("graphql.field.path"), "/bookById"));
@@ -481,7 +484,12 @@ public abstract class AbstractGraphqlTest {
             .satisfies(
                 logData ->
                     assertThat(logData.getInstrumentationScopeInfo())
-                        .isEqualTo(span.getInstrumentationScopeInfo()))
+                        .isEqualTo(
+                            InstrumentationScopeInfo.builder(
+                                    span.getInstrumentationScopeInfo().getName())
+                                .setVersion(span.getInstrumentationScopeInfo().getVersion())
+                                .setSchemaUrl(SchemaUrls.V1_44_0)
+                                .build()))
             .hasAttributesSatisfyingExactly(
                 equalTo(EXCEPTION_TYPE, type), equalTo(EXCEPTION_MESSAGE, message));
   }
@@ -489,6 +497,7 @@ public abstract class AbstractGraphqlTest {
   private static Consumer<LogRecordDataAssert> throwableLog(SpanData span, Throwable failure) {
     return log ->
         log.hasEventName("exception")
+            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
             .hasSeverity(Severity.WARN)
             .hasSpanContext(span.getSpanContext())
             .hasException(failure)
