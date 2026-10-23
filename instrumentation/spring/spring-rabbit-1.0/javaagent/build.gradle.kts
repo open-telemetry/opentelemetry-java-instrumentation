@@ -38,6 +38,14 @@ testing {
       }
     }
 
+    register<JvmTestSuite>("version10Test") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.testcontainers:testcontainers")
+        implementation("org.springframework.amqp:spring-rabbit:1.0.0.RELEASE")
+      }
+    }
+
     register<JvmTestSuite>("version11Test") {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -69,6 +77,11 @@ tasks {
     configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
       jvmArgs("-javaagent:$absolutePath")
     }
+  }
+
+  named<Test>("version10Test") {
+    // The original RabbitMQ client 2.5.0 is below the client instrumentation's 2.7 minimum.
+    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
   }
 
   val testSpringDisabled = register<Test>("testSpringDisabled") {
