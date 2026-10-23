@@ -76,6 +76,7 @@ testing.suites.named<JvmTestSuite>("test") {
       include("**/server/**")
       filter {
         includeTestsMatching("*requestWithException")
+        includeTestsMatching("*requestForNotFound")
       }
       telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
       telemetryConfig("otel.semconv.exception.signal.preview", "logs/dup")
