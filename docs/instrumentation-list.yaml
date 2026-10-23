@@ -1470,10 +1470,10 @@ definitions:
       attributes:
       - name: apache_commons_pool.pool.name
         type: STRING
-    db.client.connection.count-255e75e8:
+    db.client.connection.count-3cbbc5cf:
       name: db.client.connection.count
       description: The number of connections that are currently in state described
-        by the state attribute.
+        by the `state` attribute.
       instrument: updowncounter
       data_type: LONG_SUM
       unit: '{connection}'
@@ -1490,10 +1490,10 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    db.client.connection.count-f1e2cae3:
+    db.client.connection.count-b5017d66:
       name: db.client.connection.count
       description: The number of connections that are currently in state described
-        by the state attribute.
+        by the `state` attribute.
       instrument: updowncounter
       data_type: LONG_SUM
       unit: '{connection}'
@@ -2136,9 +2136,9 @@ definitions:
         type: STRING
       - name: gen_ai.request.model
         type: STRING
-    gen_ai.client.token.usage-9c41606c:
+    gen_ai.client.token.usage-03c2baed:
       name: gen_ai.client.token.usage
-      description: Measures number of input and output tokens used.
+      description: Number of input and output tokens used.
       instrument: histogram
       data_type: HISTOGRAM
       unit: '{token}'
@@ -2151,9 +2151,9 @@ definitions:
         type: STRING
       - name: gen_ai.token.type
         type: STRING
-    gen_ai.client.token.usage-c5ff244f:
+    gen_ai.client.token.usage-669e5ee6:
       name: gen_ai.client.token.usage
-      description: Measures number of input and output tokens used.
+      description: Number of input and output tokens used.
       instrument: histogram
       data_type: HISTOGRAM
       unit: '{token}'
@@ -2200,12 +2200,12 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    http.server.active_requests-2c1402e2:
+    http.server.active_requests-ac5f9a7f:
       name: http.server.active_requests
       description: Number of active HTTP server requests.
       instrument: updowncounter
       data_type: LONG_SUM
-      unit: '{requests}'
+      unit: '{request}'
       attributes:
       - name: http.request.method
         type: STRING
@@ -5248,9 +5248,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-019ae5d4:
+    rpc.client.call.duration-049a8fa5:
       name: rpc.client.call.duration
-      description: Measures the duration of outbound remote procedure calls (RPC).
+      description: Measures the duration of an outgoing Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5267,9 +5267,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-620a9e42:
+    rpc.client.call.duration-a776e0a5:
       name: rpc.client.call.duration
-      description: Measures the duration of outbound remote procedure calls (RPC).
+      description: Measures the duration of an outgoing Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5284,9 +5284,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.duration-29bce004:
+    rpc.client.duration-69e5f261:
       name: rpc.client.duration
-      description: The duration of an outbound RPC invocation.
+      description: Measures the duration of outbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5303,9 +5303,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.duration-599bf562:
+    rpc.client.duration-bd919f7d:
       name: rpc.client.duration
-      description: The duration of an outbound RPC invocation.
+      description: Measures the duration of outbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5322,9 +5322,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.duration-8ed5ac0d:
+    rpc.client.duration-c6925f70:
       name: rpc.client.duration
-      description: The duration of an outbound RPC invocation.
+      description: Measures the duration of outbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5377,9 +5377,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.call.duration-a87cce7a:
+    rpc.server.call.duration-4a9fd153:
       name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
+      description: Measures the duration of an incoming Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5390,9 +5390,9 @@ definitions:
         type: STRING
       - name: rpc.system.name
         type: STRING
-    rpc.server.call.duration-ae232d87:
+    rpc.server.call.duration-cfaf5409:
       name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
+      description: Measures the duration of an incoming Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5407,9 +5407,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.call.duration-f7f75ef6:
+    rpc.server.call.duration-e8a57252:
       name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
+      description: Measures the duration of an incoming Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5426,9 +5426,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.duration-026d346c:
+    rpc.server.duration-4b5b404d:
       name: rpc.server.duration
-      description: The duration of an inbound RPC invocation.
+      description: Measures the duration of inbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5445,9 +5445,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.duration-3caa4b9d:
+    rpc.server.duration-6ea1f0bd:
       name: rpc.server.duration
-      description: The duration of an inbound RPC invocation.
+      description: Measures the duration of inbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5458,9 +5458,9 @@ definitions:
         type: STRING
       - name: rpc.system
         type: STRING
-    rpc.server.duration-83a39fb3:
+    rpc.server.duration-aa764f4b:
       name: rpc.server.duration
-      description: The duration of an inbound RPC invocation.
+      description: Measures the duration of inbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5953,7 +5953,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.idle.max-50075a96
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -5999,7 +5999,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.idle.max-50075a96
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -6025,8 +6025,8 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.duration-c6925f70
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -6056,8 +6056,8 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.server.call.duration-a87cce7a
+    - rpc.client.call.duration-a776e0a5
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: CLIENT
       attributes:
@@ -6091,10 +6091,10 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup,service.peer
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.call.duration-a87cce7a
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.call.duration-a776e0a5
+    - rpc.client.duration-c6925f70
+    - rpc.server.call.duration-4a9fd153
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8394,7 +8394,7 @@ libraries:
     metric_refs:
     - db.client.operation.duration-c5800c2e
     - gen_ai.client.operation.duration-d420df10
-    - gen_ai.client.token.usage-9c41606c
+    - gen_ai.client.token.usage-03c2baed
     - messaging.client.consumed.messages-471caf5c
     - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
@@ -8879,7 +8879,7 @@ libraries:
   - when: otel.instrumentation.genai.capture-message-content=true
     metric_refs:
     - gen_ai.client.operation.duration-d420df10
-    - gen_ai.client.token.usage-9c41606c
+    - gen_ai.client.token.usage-03c2baed
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9044,7 +9044,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.pending_requests-42efb2dd
 - name: camel-2.20
   display_name: Apache Camel
@@ -10605,10 +10605,10 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-599bf562
+    - rpc.client.duration-bd919f7d
     - rpc.client.request.size-0d8f967b
     - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-83a39fb3
+    - rpc.server.duration-aa764f4b
     - rpc.server.request.size-75ef4f8e
     - rpc.server.response.size-fb45af0b
     spans:
@@ -10648,10 +10648,10 @@ libraries:
         type: LONG
   - when: otel.instrumentation.grpc.experimental-span-attributes=true
     metric_refs:
-    - rpc.client.duration-599bf562
+    - rpc.client.duration-bd919f7d
     - rpc.client.request.size-0d8f967b
     - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-83a39fb3
+    - rpc.server.duration-aa764f4b
     - rpc.server.request.size-75ef4f8e
     - rpc.server.response.size-fb45af0b
     spans:
@@ -10699,8 +10699,8 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-019ae5d4
-    - rpc.server.call.duration-f7f75ef6
+    - rpc.client.call.duration-049a8fa5
+    - rpc.server.call.duration-e8a57252
     spans:
     - span_kind: CLIENT
       attributes:
@@ -10738,10 +10738,10 @@ libraries:
         type: LONG
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
-    - rpc.client.duration-599bf562
+    - rpc.client.duration-bd919f7d
     - rpc.client.request.size-0d8f967b
     - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-83a39fb3
+    - rpc.server.duration-aa764f4b
     - rpc.server.request.size-75ef4f8e
     - rpc.server.response.size-fb45af0b
     spans:
@@ -11189,7 +11189,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.create_time-23c73da1
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -14735,7 +14735,7 @@ libraries:
   - when: otel.instrumentation.http.server.emit-experimental-telemetry=true
     metric_refs:
     - http.client.request.duration-a64b5297
-    - http.server.active_requests-2c1402e2
+    - http.server.active_requests-ac5f9a7f
     - http.server.request.duration-b6723875
     - http.server.response.body.size-9ece7062
     spans:
@@ -16278,7 +16278,7 @@ libraries:
   - when: default
     metric_refs:
     - gen_ai.client.operation.duration-7139fb88
-    - gen_ai.client.token.usage-c5ff244f
+    - gen_ai.client.token.usage-669e5ee6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -16331,7 +16331,7 @@ libraries:
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
     - gen_ai.client.operation.duration-7139fb88
-    - gen_ai.client.token.usage-c5ff244f
+    - gen_ai.client.token.usage-669e5ee6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -16500,7 +16500,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.limit-a51cb0ee
     - db.client.connection.pending_requests-42efb2dd
 - name: oshi-5.0
@@ -17951,7 +17951,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-f1e2cae3
+    - db.client.connection.count-b5017d66
     - db.client.connection.idle.min-fa38020f
     - db.client.connection.limit-12eb182f
     - db.client.connection.pending_requests-68c56df0
@@ -17971,7 +17971,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-f1e2cae3
+    - db.client.connection.count-b5017d66
     - db.client.connection.idle.min-fa38020f
     - db.client.connection.limit-12eb182f
     - db.client.connection.pending_requests-68c56df0
@@ -17991,7 +17991,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-f1e2cae3
+    - db.client.connection.count-b5017d66
     - db.client.connection.idle.min-fa38020f
     - db.client.connection.limit-12eb182f
     - db.client.connection.pending_requests-68c56df0
@@ -18902,8 +18902,8 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.duration-c6925f70
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18929,8 +18929,8 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.server.call.duration-a87cce7a
+    - rpc.client.call.duration-a776e0a5
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18956,10 +18956,10 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup,service.peer
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.call.duration-a87cce7a
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.call.duration-a776e0a5
+    - rpc.client.duration-c6925f70
+    - rpc.server.call.duration-4a9fd153
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18993,8 +18993,8 @@ libraries:
         type: STRING
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.duration-c6925f70
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19056,7 +19056,7 @@ libraries:
   - when: default
     metric_refs:
     - gen_ai.client.operation.duration-32ef946d
-    - gen_ai.client.token.usage-c5ff244f
+    - gen_ai.client.token.usage-669e5ee6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19102,7 +19102,7 @@ libraries:
   - when: otel.instrumentation.genai.capture-message-content=true
     metric_refs:
     - gen_ai.client.operation.duration-32ef946d
-    - gen_ai.client.token.usage-c5ff244f
+    - gen_ai.client.token.usage-669e5ee6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20244,8 +20244,8 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-29bce004
-    - rpc.server.duration-026d346c
+    - rpc.client.duration-69e5f261
+    - rpc.server.duration-4b5b404d
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20289,8 +20289,8 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.server.call.duration-ae232d87
+    - rpc.client.call.duration-a776e0a5
+    - rpc.server.call.duration-cfaf5409
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20334,10 +20334,10 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc/dup
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.client.duration-29bce004
-    - rpc.server.call.duration-ae232d87
-    - rpc.server.duration-026d346c
+    - rpc.client.call.duration-a776e0a5
+    - rpc.client.duration-69e5f261
+    - rpc.server.call.duration-cfaf5409
+    - rpc.server.duration-4b5b404d
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20638,7 +20638,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.idle.max-50075a96
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -20659,7 +20659,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.idle.max-50075a96
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -21360,7 +21360,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.limit-a51cb0ee
 - name: wicket-8.0
   display_name: Apache Wicket
