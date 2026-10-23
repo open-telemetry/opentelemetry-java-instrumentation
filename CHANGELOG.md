@@ -8,6 +8,9 @@
   should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
 - HTTP client and server getters now determine `error.type`; their returned value, including `null`,
   is used as-is.
+- RPC attribute getters now return the final `error.type` value. Returning `null` omits the
+  attribute even when an error was thrown; delegate to `RpcAttributesGetter.super.getErrorType(...)`
+  to retain the default exception-class fallback.
 - Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
   `error.type` value. Return `null` to omit it, or return `error == null ? null :
   error.getClass().getName()` for exception-class fallback.

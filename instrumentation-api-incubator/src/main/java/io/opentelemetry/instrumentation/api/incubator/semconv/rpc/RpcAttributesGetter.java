@@ -91,12 +91,15 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns a description of a class of error the operation ended with.
+   * Returns the final {@code error.type} value for the operation.
    *
-   * <p>This method should return {@code null} if there was no error.
+   * <p>By default, returns the exception class name if an error was thrown, or {@code null} if
+   * there was no error.
    *
-   * <p>If this method returns {@code null}, the exception class name will be used as error type if
-   * one was thrown.
+   * <p>An override can return a protocol-specific, low-cardinality classification. Returning {@code
+   * null} explicitly omits {@code error.type}, even when an error was thrown. To retain the default
+   * exception-class fallback when an error cannot be classified more specifically, an override can
+   * delegate to {@code RpcAttributesGetter.super.getErrorType(request, response, error)}.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
@@ -104,9 +107,8 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code CANCELLED}, {@code UNKNOWN}, {@code -32602}
    */
   @Nullable
-  // TODO remove default implementation
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 }
