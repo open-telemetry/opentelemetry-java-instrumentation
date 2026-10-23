@@ -61,9 +61,7 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   public String getErrorType(
       ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
     String errorType = errorCodeExtractor.apply(error);
-    return errorType != null
-        ? errorType
-        : SqlClientAttributesGetter.super.getErrorType(request, null, error);
+    return errorType != null ? errorType : error == null ? null : error.getClass().getName();
   }
 
   @Nullable

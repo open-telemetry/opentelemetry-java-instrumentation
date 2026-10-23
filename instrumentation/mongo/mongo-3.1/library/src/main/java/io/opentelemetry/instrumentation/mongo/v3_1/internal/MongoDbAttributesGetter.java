@@ -182,7 +182,7 @@ class MongoDbAttributesGetter
     String errorCode = getServerErrorCode(response, error);
     return errorCode != null
         ? errorCode
-        : DbClientAttributesGetter.super.getErrorType(request, response, error);
+        : error == null ? null : error.getClass().getName();
   }
 
   @Nullable

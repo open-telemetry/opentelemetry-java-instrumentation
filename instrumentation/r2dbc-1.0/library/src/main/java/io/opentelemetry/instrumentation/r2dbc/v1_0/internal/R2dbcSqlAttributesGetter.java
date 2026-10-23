@@ -62,7 +62,7 @@ public final class R2dbcSqlAttributesGetter
     String sqlState = getSqlState(error);
     return sqlState != null
         ? sqlState
-        : SqlClientAttributesGetter.super.getErrorType(request, null, error);
+        : error == null ? null : error.getClass().getName();
   }
 
   @Nullable

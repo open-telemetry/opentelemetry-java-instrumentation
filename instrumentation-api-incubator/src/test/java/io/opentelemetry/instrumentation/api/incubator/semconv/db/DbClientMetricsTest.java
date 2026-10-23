@@ -78,7 +78,7 @@ class DbClientMetricsTest {
             if (classification.equals("omit")) {
               return null;
             }
-            return super.getErrorType(request, null, error);
+            return error == null ? null : error.getClass().getName();
           }
         };
     Instrumenter<Map<String, String>, Void> instrumenter =
