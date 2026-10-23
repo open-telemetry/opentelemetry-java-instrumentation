@@ -40,7 +40,7 @@ public final class RpcSpanNameExtractor<REQUEST>
   public String extract(REQUEST request) {
     if (selection.get().emitPreview()) {
       String method = getter.getRpcMethod(request);
-      if (method != null) {
+      if (method != null && !method.equals("_OTHER")) {
         return method;
       }
       // fall back to rpc.system.name
