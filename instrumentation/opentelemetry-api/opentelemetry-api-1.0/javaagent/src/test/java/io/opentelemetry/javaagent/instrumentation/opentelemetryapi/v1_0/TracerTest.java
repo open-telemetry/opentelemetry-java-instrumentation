@@ -44,23 +44,21 @@ class TracerTest {
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void reusesSpanContextAfterSpanEnds() {
+  void reusesSpanContext() {
     Span span = GlobalOpenTelemetry.getTracer("test").spanBuilder("test").startSpan();
-    SpanContext context;
-    try {
-      context = span.getSpanContext();
-      assertThat(span.getSpanContext()).isSameAs(context);
-    } finally {
-      span.end();
-    }
+    SpanContext context = span.getSpanContext();
     assertThat(span.getSpanContext()).isSameAs(context);
+    span.end();
+    assertThat(span.getSpanContext()).isSameAs(context);
+
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(exported -> exported.hasName("test").hasNoParent()));
+            trace.hasSpansSatisfyingExactly(
+                spanDataAssert -> spanDataAssert.hasName("test").hasNoParent()));
   }
 
   @Test
-  void propagatesUnsampledSpanWithTraceState() {
+  void unsampledSpanWithTraceState() {
     SpanContext parent =
         SpanContext.createFromRemoteParent(
             "0123456789abcdef0123456789abcdef",
@@ -72,24 +70,22 @@ class TracerTest {
             .spanBuilder("unsampled")
             .setParent(Context.root().with(Span.wrap(parent)))
             .startSpan();
-    try {
-      SpanContext context = span.getSpanContext();
-      assertThat(context.isValid()).isTrue();
-      assertThat(context.isSampled()).isFalse();
-      assertThat(context.isRemote()).isFalse();
-      assertThat(context.getTraceId()).isEqualTo(parent.getTraceId());
-      assertThat(context.getTraceState()).isEqualTo(parent.getTraceState());
-      assertThat(span.getSpanContext()).isSameAs(context);
+    SpanContext context = span.getSpanContext();
+    assertThat(context.isValid()).isTrue();
+    assertThat(context.isSampled()).isFalse();
+    assertThat(context.isRemote()).isFalse();
+    assertThat(context.getTraceId()).isEqualTo(parent.getTraceId());
+    assertThat(context.getTraceState()).isEqualTo(parent.getTraceState());
+    assertThat(span.getSpanContext()).isSameAs(context);
 
-      try (Scope ignored = Context.root().with(span).makeCurrent()) {
-        assertThat(Span.current().getSpanContext()).isEqualTo(context);
-      }
-      try (Scope ignored = span.makeCurrent()) {
-        assertThat(Span.current().getSpanContext()).isEqualTo(context);
-      }
-    } finally {
-      span.end();
+    try (Scope ignored = Context.root().with(span).makeCurrent()) {
+      assertThat(Span.current().getSpanContext()).isEqualTo(context);
     }
+    try (Scope ignored = span.makeCurrent()) {
+      assertThat(Span.current().getSpanContext()).isEqualTo(context);
+    }
+    span.end();
+
     assertThat(testing.spans()).isEmpty();
   }
 
