@@ -105,7 +105,17 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"varargs", "map", "absolute", "query", "uri", "builder"})
+  @ValueSource(
+      strings = {
+        "varargs",
+        "map",
+        "absolute",
+        "query",
+        "signed-query",
+        "query-fragment",
+        "uri",
+        "builder"
+      })
   void shouldCaptureUriTemplate(String overload) {
     URI uri = resolveAddress("/hello/some-account");
     WebClient client =
@@ -130,9 +140,20 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         template += "?next=https://example.org/landing";
         request = client.get().uri(template, "some-account");
         uri = resolveAddress("/hello/some-account?next=https://example.org/landing");
-        if (springVersionAtLeast(6, 1, 2)) {
-          template = "/hello/{id}";
-        }
+        template = "/hello/{id}";
+        break;
+      case "signed-query":
+        template += "?sig=secret";
+        request = client.get().uri(template, "some-account");
+        uri = resolveAddress("/hello/some-account?sig=REDACTED");
+        template = "/hello/{id}";
+        break;
+      case "query-fragment":
+        template += "?next=https://example.org/landing#fragment/secret";
+        request = client.get().uri(template, "some-account");
+        uri =
+            resolveAddress("/hello/some-account?next=https://example.org/landing#fragment/secret");
+        template = "/hello/{id}";
         break;
       case "uri":
         request = client.get().uri(uri);

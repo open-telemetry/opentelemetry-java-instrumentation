@@ -33,6 +33,19 @@ public class WebClientHttpAttributesGetter
       return null;
     }
     String urlTemplate = (String) template;
+    int queryIndex = urlTemplate.indexOf('?');
+    int fragmentIndex = urlTemplate.indexOf('#');
+    int endIndex = urlTemplate.length();
+    if (queryIndex != -1) {
+      endIndex = queryIndex;
+    }
+    if (fragmentIndex != -1 && fragmentIndex < endIndex) {
+      endIndex = fragmentIndex;
+    }
+    urlTemplate = urlTemplate.substring(0, endIndex);
+    if (urlTemplate.isEmpty()) {
+      return null;
+    }
     if (urlTemplate.regionMatches(true, 0, "http://", 0, 7)
         || urlTemplate.regionMatches(true, 0, "https://", 0, 8)) {
       return UrlParser.getPath(urlTemplate);
