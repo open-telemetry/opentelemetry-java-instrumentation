@@ -9,6 +9,7 @@ import com.openai.client.OpenAIClientAsync;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
+import com.openai.models.responses.Response;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
@@ -17,6 +18,7 @@ final class InstrumentedOpenAiClientAsync extends DelegatingInvocationHandler<Op
 
   private final Instrumenter<ChatCompletionRequest, ChatCompletion> chatInstrumenter;
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter;
+  private final Instrumenter<ResponseCreateRequest, Response> responsesInstrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
@@ -24,11 +26,13 @@ final class InstrumentedOpenAiClientAsync extends DelegatingInvocationHandler<Op
       OpenAIClientAsync delegate,
       Instrumenter<ChatCompletionRequest, ChatCompletion> chatInstrumenter,
       Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter,
+      Instrumenter<ResponseCreateRequest, Response> responsesInstrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
     super(delegate);
     this.chatInstrumenter = chatInstrumenter;
     this.embeddingInstrumenter = embeddingInstrumenter;
+    this.responsesInstrumenter = responsesInstrumenter;
     this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
   }
@@ -36,6 +40,18 @@ final class InstrumentedOpenAiClientAsync extends DelegatingInvocationHandler<Op
   @Override
   protected Class<OpenAIClientAsync> getProxyType() {
     return OpenAIClientAsync.class;
+  }
+
+  @Override
+  protected OpenAIClientAsync wrap(OpenAIClientAsync delegate) {
+    return new InstrumentedOpenAiClientAsync(
+            delegate,
+            chatInstrumenter,
+            embeddingInstrumenter,
+            responsesInstrumenter,
+            eventLogger,
+            captureMessageContent)
+        .createProxy();
   }
 
   @Override
@@ -47,6 +63,10 @@ final class InstrumentedOpenAiClientAsync extends DelegatingInvocationHandler<Op
               delegate.chat(), chatInstrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }
+    if (methodName.equals("responses") && parameterTypes.length == 0) {
+      return new InstrumentedResponseServiceAsync(delegate.responses(), responsesInstrumenter)
+          .createProxy();
+    }
     if (methodName.equals("embeddings") && parameterTypes.length == 0) {
       return new InstrumentedEmbeddingServiceAsync(delegate.embeddings(), embeddingInstrumenter)
           .createProxy();
@@ -56,6 +76,7 @@ final class InstrumentedOpenAiClientAsync extends DelegatingInvocationHandler<Op
               delegate.sync(),
               chatInstrumenter,
               embeddingInstrumenter,
+              responsesInstrumenter,
               eventLogger,
               captureMessageContent)
           .createProxy();

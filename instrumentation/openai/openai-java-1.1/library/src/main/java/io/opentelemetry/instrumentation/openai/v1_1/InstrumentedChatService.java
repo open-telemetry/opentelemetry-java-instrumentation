@@ -34,6 +34,12 @@ final class InstrumentedChatService extends DelegatingInvocationHandler<ChatServ
   }
 
   @Override
+  protected ChatService wrap(ChatService delegate) {
+    return new InstrumentedChatService(delegate, instrumenter, eventLogger, captureMessageContent)
+        .createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();

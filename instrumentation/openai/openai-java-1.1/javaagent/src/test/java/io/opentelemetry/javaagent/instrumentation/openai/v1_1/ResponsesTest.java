@@ -1,0 +1,69 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.openai.v1_1;
+
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableList;
+
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
+import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.instrumentation.openai.v1_1.AbstractResponsesTest;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import java.util.List;
+import java.util.function.Consumer;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class ResponsesTest extends AbstractResponsesTest {
+
+  @RegisterExtension
+  private static final AgentInstrumentationExtension testing =
+      AgentInstrumentationExtension.create();
+
+  @Override
+  protected InstrumentationExtension getTesting() {
+    return testing;
+  }
+
+  @Override
+  protected OpenAIClient wrap(OpenAIClient client) {
+    return client;
+  }
+
+  @Override
+  protected OpenAIClientAsync wrap(OpenAIClientAsync client) {
+    return client;
+  }
+
+  @Override
+  protected List<Consumer<SpanDataAssert>> maybeWithTransportSpan(Consumer<SpanDataAssert> span) {
+    // Do a very simple assertion since the telemetry is not part of this library.
+    return unmodifiableList(asList(span, s -> s.hasName("POST")));
+  }
+
+  @Override
+  protected List<Consumer<LogRecordDataAssert>> transportExceptionLogs() {
+    return singletonList(
+        transportLog ->
+            transportLog
+                .hasSeverity(Severity.WARN)
+                .hasEventName("http.client.request.exception")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(EXCEPTION_TYPE, "java.net.ConnectException"),
+                    satisfies(
+                        EXCEPTION_MESSAGE, val -> val.startsWith("Failed to connect to localhost")),
+                    satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+  }
+}

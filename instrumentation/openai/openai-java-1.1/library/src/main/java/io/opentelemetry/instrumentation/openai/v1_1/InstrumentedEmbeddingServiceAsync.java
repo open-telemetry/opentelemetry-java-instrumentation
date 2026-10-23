@@ -33,6 +33,11 @@ final class InstrumentedEmbeddingServiceAsync
   }
 
   @Override
+  protected EmbeddingServiceAsync wrap(EmbeddingServiceAsync delegate) {
+    return new InstrumentedEmbeddingServiceAsync(delegate, instrumenter).createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();

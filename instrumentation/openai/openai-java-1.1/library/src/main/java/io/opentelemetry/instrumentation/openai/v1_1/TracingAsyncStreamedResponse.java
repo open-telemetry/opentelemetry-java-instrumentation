@@ -6,18 +6,16 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import com.openai.core.http.AsyncStreamResponse;
-import com.openai.models.chat.completions.ChatCompletionChunk;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-final class TracingAsyncStreamedResponse implements AsyncStreamResponse<ChatCompletionChunk> {
+final class TracingAsyncStreamedResponse<T> implements AsyncStreamResponse<T> {
 
-  private final AsyncStreamResponse<ChatCompletionChunk> delegate;
-  private final StreamListener listener;
+  private final AsyncStreamResponse<T> delegate;
+  private final ChunkListener<T> listener;
 
-  TracingAsyncStreamedResponse(
-      AsyncStreamResponse<ChatCompletionChunk> delegate, StreamListener listener) {
+  TracingAsyncStreamedResponse(AsyncStreamResponse<T> delegate, ChunkListener<T> listener) {
     this.delegate = delegate;
     this.listener = listener;
   }
@@ -29,15 +27,13 @@ final class TracingAsyncStreamedResponse implements AsyncStreamResponse<ChatComp
   }
 
   @Override
-  public AsyncStreamResponse<ChatCompletionChunk> subscribe(
-      Handler<? super ChatCompletionChunk> handler) {
+  public AsyncStreamResponse<T> subscribe(Handler<? super T> handler) {
     delegate.subscribe(new TracingHandler(handler));
     return this;
   }
 
   @Override
-  public AsyncStreamResponse<ChatCompletionChunk> subscribe(
-      Handler<? super ChatCompletionChunk> handler, Executor executor) {
+  public AsyncStreamResponse<T> subscribe(Handler<? super T> handler, Executor executor) {
     delegate.subscribe(new TracingHandler(handler), executor);
     return this;
   }
@@ -47,16 +43,16 @@ final class TracingAsyncStreamedResponse implements AsyncStreamResponse<ChatComp
     return delegate.onCompleteFuture();
   }
 
-  private class TracingHandler implements Handler<ChatCompletionChunk> {
+  private class TracingHandler implements Handler<T> {
 
-    private final Handler<? super ChatCompletionChunk> delegate;
+    private final Handler<? super T> delegate;
 
-    private TracingHandler(Handler<? super ChatCompletionChunk> delegate) {
+    private TracingHandler(Handler<? super T> delegate) {
       this.delegate = delegate;
     }
 
     @Override
-    public void onNext(ChatCompletionChunk chunk) {
+    public void onNext(T chunk) {
       listener.onChunk(chunk);
       delegate.onNext(chunk);
     }
