@@ -29,6 +29,9 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
 
+  @Nullable
+  private static volatile BiConsumer<ServletTelemetryBuilder, Integer> setCaptureRequestBodyMaxSize;
+
   /**
    * Sets whether experimental HTTP telemetry should be emitted.
    *
@@ -93,6 +96,18 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether to capture the request body as a span attribute.
+   *
+   * @param builder the telemetry builder
+   * @param maxSize the maximum size of the request body to capture, use {@code <=0} to disable.
+   */
+  public static void setCaptureRequestBodyMaxSize(ServletTelemetryBuilder builder, int maxSize) {
+    if (setCaptureRequestBodyMaxSize != null) {
+      setCaptureRequestBodyMaxSize.accept(builder, maxSize);
+    }
+  }
+
   public static void internalSetEmitExperimentalTelemetry(
       BiConsumer<ServletTelemetryBuilder, Boolean> setEmitExperimentalTelemetry) {
     Experimental.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry;
@@ -111,6 +126,11 @@ public final class Experimental {
   public static void internalSetRequestParameters(
       BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters) {
     Experimental.setRequestParameters = setRequestParameters;
+  }
+
+  public static void internalSetCaptureRequestBodyMaxSize(
+      BiConsumer<ServletTelemetryBuilder, Integer> setCaptureRequestBodyMaxSize) {
+    Experimental.setCaptureRequestBodyMaxSize = setCaptureRequestBodyMaxSize;
   }
 
   private Experimental() {}

@@ -7,8 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
 import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -134,6 +137,18 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     captureRequestParameters(serverSpan, request);
     captureUserName(serverSpan, request);
+    captureRequestBody(serverSpan, request);
+  }
+
+  private void captureRequestBody(Span serverSpan, REQUEST request) {
+    if (!servletConfig.getCaptureRequestBodyEnabled()) {
+      return;
+    }
+
+    Value<?> body = extractRequestBody(accessor, request);
+    if (body != null) {
+      serverSpan.setAttribute(SPAN_BODY_ATTRIBUTE, body);
+    }
   }
 
   /**
@@ -189,5 +204,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {
     return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
+  }
+
+  public int captureRequestBodyMaxSize() {
+    return servletConfig.getCaptureRequestBodyMaxSize();
+  }
+
+  public boolean captureRequestBodyEnabled() {
+    return servletConfig.getCaptureRequestBodyEnabled();
   }
 }
