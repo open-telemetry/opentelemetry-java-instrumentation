@@ -25,12 +25,11 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
         .setRequestHeaders(TEST_HEADERS)
         .setResponseHeaders(TEST_HEADERS)
         .build()
-        .instrument(HttpClient.of(Action.noop()));
+        .wrap(HttpClient.of(Action.noop()));
   }
 
   @Override
   protected HttpClient buildHttpClient(Action<? super HttpClientSpec> action) throws Exception {
-    return RatpackClientTelemetry.create(testing.getOpenTelemetry())
-        .instrument(HttpClient.of(action));
+    return RatpackClientTelemetry.create(testing.getOpenTelemetry()).wrap(HttpClient.of(action));
   }
 }
