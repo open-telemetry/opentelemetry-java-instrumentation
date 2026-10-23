@@ -82,6 +82,9 @@ public class HandlerWrapper {
                           }
                         },
                         Trace$.MODULE$.empty());
+                if (currentContext.isPresent()) {
+                  return result;
+                }
                 return ROUTE_CONTEXT.locally(
                     Optional.of(routeContext), result, Trace$.MODULE$.empty());
               }
