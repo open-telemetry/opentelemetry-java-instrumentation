@@ -43,6 +43,6 @@ class AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttribut
         }
       }
     }
-    return RpcAttributesGetter.super.getErrorType(request, response, error);
+    return error == null ? null : error.getClass().getName();
   }
 }

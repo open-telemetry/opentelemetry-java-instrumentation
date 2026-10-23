@@ -5,8 +5,8 @@
 ### ⚠️ Breaking changes
 
 - RPC attribute getters now return the final `error.type` value. Returning `null` omits the
-  attribute even when an error was thrown; delegate to `RpcAttributesGetter.super.getErrorType(...)`
-  to retain the default exception-class fallback.
+  attribute even when an error was thrown; return the exception class name directly to retain the
+  default fallback.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
