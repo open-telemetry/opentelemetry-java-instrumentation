@@ -187,7 +187,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   ```java
   span.hasName(emitPreviewRpcSemconv() ? "Greeter/SayHello" : "helloworld.Greeter/SayHello");
-  equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null);
+  equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null);
   ```
 
 - Do not extract the ternary into a helper such as `spanName(...)`,
@@ -207,7 +207,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
       attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
     }
     if (emitPreviewRpcSemconv()) {
-      attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
+      attributes.add(equalTo(AttributeKey.stringKey("rpc.status_code"), "OK"));
     }
     return attributes;
   }
@@ -216,7 +216,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
       equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
-      equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
+      equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.

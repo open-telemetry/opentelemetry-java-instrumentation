@@ -28,11 +28,11 @@ final class RpcMetricsAdvice {
           asList(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0));
 
   // Stable semconv key
-  private static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE =
-      AttributeKey.stringKey("rpc.response.status_code");
+  private static final AttributeKey<String> RPC_STATUS_CODE =
+      AttributeKey.stringKey("rpc.status_code");
 
   // copied from RpcIncubatingAttributes
-  // use RPC_RESPONSE_STATUS_CODE for stable semconv
+  // use RPC_STATUS_CODE for stable semconv
   private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
       AttributeKey.longKey("rpc.grpc.status_code");
 
@@ -58,7 +58,7 @@ final class RpcMetricsAdvice {
     keys.add(RpcCommonAttributesExtractor.RPC_METHOD);
 
     if (stable) {
-      keys.add(RPC_RESPONSE_STATUS_CODE);
+      keys.add(RPC_STATUS_CODE);
       keys.add(ERROR_TYPE);
     } else {
       keys.add(RPC_GRPC_STATUS_CODE);
