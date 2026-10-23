@@ -57,7 +57,7 @@ public final class R2dbcSqlAttributesGetter
         return sqlState;
       }
     }
-    return SqlClientAttributesGetter.super.getErrorType(request, response, error);
+    return SqlClientAttributesGetter.super.getErrorType(request, null, error);
   }
 
   @Nullable

@@ -52,7 +52,7 @@ final class OpenSearchAttributesGetter
         return Integer.toString(statusCode);
       }
     }
-    return DbClientAttributesGetter.super.getErrorType(request, response, originalError);
+    return DbClientAttributesGetter.super.getErrorType(request, null, originalError);
   }
 
   @Override
