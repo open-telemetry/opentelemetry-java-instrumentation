@@ -22,10 +22,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.slf4j.event.Level;
 
 class ResourceProviderRegistrationTest {
 
-  @RegisterExtension LogCapturer logs = LogCapturer.create().captureForType(Resource.class);
+  @RegisterExtension
+  LogCapturer logs = LogCapturer.create().captureForType(Resource.class, Level.INFO);
 
   @ParameterizedTest
   @CsvSource({
@@ -60,7 +62,7 @@ class ResourceProviderRegistrationTest {
           .containsAllEntriesOf(ProcessRuntimeResource.get().getAttributes().asMap());
     }
 
-    logs.assertDoesNotContain("Attempting to merge Resources with different schemaUrls");
+    assertThat(logs.getEvents()).isEmpty();
   }
 
   @Test
