@@ -17,7 +17,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.webmvc.v3_1.filter.AbstractServletFilterTest;
 import io.opentelemetry.instrumentation.spring.webmvc.v3_1.filter.FilteredAppConfig;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.boot.SecurityConfig;
@@ -33,7 +33,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+      AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected Class<?> securityConfigClass() {

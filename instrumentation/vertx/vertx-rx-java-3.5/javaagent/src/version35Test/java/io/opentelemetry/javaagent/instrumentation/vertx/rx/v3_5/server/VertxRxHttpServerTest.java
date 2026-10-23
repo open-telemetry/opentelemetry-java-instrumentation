@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.rx.v3_5.server;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.vertx.core.Future;
 import io.vertx.reactivex.core.AbstractVerticle;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class VertxRxHttpServerTest extends AbstractVertxRxHttpServerTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected Class<? extends AbstractVerticle> verticle() {

@@ -47,7 +47,7 @@ import io.netty.util.CharsetUtil;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.URI;
@@ -59,7 +59,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   private static final LoggingHandler loggingHandler =
       new LoggingHandler(Netty40ServerTest.class, LogLevel.DEBUG);

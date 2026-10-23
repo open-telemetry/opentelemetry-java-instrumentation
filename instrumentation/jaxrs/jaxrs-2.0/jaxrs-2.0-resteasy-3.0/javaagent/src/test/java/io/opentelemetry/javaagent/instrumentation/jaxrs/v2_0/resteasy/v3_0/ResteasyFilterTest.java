@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.v3_0;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsFilterTest;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.test.Resource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import javax.ws.rs.core.MediaType;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.mock.MockDispatcherFactory;
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResteasyFilterTest extends JaxRsFilterTest<Void> {
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   private Dispatcher dispatcher;
 

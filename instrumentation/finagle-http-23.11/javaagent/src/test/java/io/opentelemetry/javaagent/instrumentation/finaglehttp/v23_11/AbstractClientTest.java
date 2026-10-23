@@ -25,7 +25,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.ClientType;
@@ -51,7 +51,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 //  otel test framework doesn't support an http/2 server out of the box
 abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   /** Concrete subclasses provide their per-class client extension. */
   protected abstract FinagleClientExtension clientExtension();

@@ -17,7 +17,7 @@ import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpClientTest,
-  HttpClientInstrumentationExtension,
+  AgentHttpClientInstrumentationExtension,
   HttpClientResult,
   HttpClientTestOptions,
   SingleConnection
@@ -41,7 +41,7 @@ class AkkaHttpClientInstrumentationTest
     extends AbstractHttpClientTest[HttpRequest] {
 
   @RegisterExtension val extension: InstrumentationExtension =
-    HttpClientInstrumentationExtension.forAgent()
+    AgentHttpClientInstrumentationExtension.create()
 
   val system: ActorSystem = ActorSystem.create()
   implicit val materializer: ActorMaterializer =

@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -57,7 +57,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriRequest> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   private static final RequestConfig REQUEST_CONFIG =
       RequestConfig.custom().setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis()).build();

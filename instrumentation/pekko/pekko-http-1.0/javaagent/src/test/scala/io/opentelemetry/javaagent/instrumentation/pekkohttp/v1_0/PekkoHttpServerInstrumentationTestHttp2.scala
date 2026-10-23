@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
-  HttpServerInstrumentationExtension,
+  AgentHttpServerInstrumentationExtension,
   HttpServerTestOptions,
   ServerEndpoint
 }
@@ -39,7 +39,7 @@ class PekkoHttpServerInstrumentationTestHttp2
     extends AbstractHttpServerInstrumentationTest {
 
   @RegisterExtension val extension: InstrumentationExtension =
-    HttpServerInstrumentationExtension.forAgent()
+    AgentHttpServerInstrumentationExtension.create()
 
   override protected def setupServer(): AnyRef = {
     PekkoHttpTestHttp2WebServer.start(port)

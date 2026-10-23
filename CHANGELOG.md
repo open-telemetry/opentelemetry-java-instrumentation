@@ -332,6 +332,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `HttpClientInstrumentationExtension.forAgent()` and
+  `HttpServerInstrumentationExtension.forAgent()`; use
+  `AgentHttpClientInstrumentationExtension.create()` and
+  `AgentHttpServerInstrumentationExtension.create()` instead.
 - `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
   `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
 - Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
