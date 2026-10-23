@@ -108,7 +108,10 @@ enum WebfluxServerHttpAttributesGetter
   @Override
   public String getErrorType(
       ServerWebExchange request, @Nullable ServerWebExchange response, @Nullable Throwable error) {
-    return response == null && error == null ? "cancelled" : null;
+    if (response == null && error == null) {
+      return "cancelled";
+    }
+    return HttpServerAttributesGetter.super.getErrorType(request, response, error);
   }
 
   @Override

@@ -81,6 +81,6 @@ public class WebClientHttpAttributesGetter
     if (response == null && error == null) {
       return "cancelled";
     }
-    return null;
+    return HttpClientAttributesGetter.super.getErrorType(request, response, error);
   }
 }

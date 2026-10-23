@@ -133,15 +133,6 @@ class HttpClientAttributesExtractorTest {
       String value = request.get("serverPort");
       return value == null ? null : Integer.parseInt(value);
     }
-
-    @Nullable
-    @Override
-    public String getErrorType(
-        Map<String, String> request,
-        @Nullable Map<String, String> respobse,
-        @Nullable Throwable error) {
-      return request.get("errorType");
-    }
   }
 
   @Test
@@ -356,7 +347,7 @@ class HttpClientAttributesExtractorTest {
   @Test
   void shouldExtractErrorType_httpStatusCode() {
     Map<String, String> response = new HashMap<>();
-    response.put("statusCode", "400");
+    response.put("statusCode", "404");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
@@ -366,36 +357,86 @@ class HttpClientAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
 
     assertThat(attributes.build())
-        .containsEntry(HTTP_RESPONSE_STATUS_CODE, 400)
-        .containsEntry(ERROR_TYPE, "400");
+        .containsEntry(HTTP_RESPONSE_STATUS_CODE, 404)
+        .containsEntry(ERROR_TYPE, "404");
   }
 
   @Test
   void shouldExtractErrorType_getter() {
-    Map<String, String> request = new HashMap<>();
-    request.put("statusCode", "0");
-    request.put("errorType", "custom error type");
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "500");
 
+    HttpClientAttributesGetter<Map<String, String>, Map<String, String>> getter =
+        new TestHttpClientAttributesGetter() {
+          @Override
+          public String getErrorType(
+              Map<String, String> request, Map<String, String> response, Throwable error) {
+            return "custom error type";
+          }
+        };
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+        HttpClientAttributesExtractor.create(getter);
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), emptyMap());
-    extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
+    extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
 
-    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "custom error type");
+    assertThat(attributes.build())
+        .containsEntry(HTTP_RESPONSE_STATUS_CODE, 500)
+        .containsEntry(ERROR_TYPE, "custom error type");
+  }
+
+  @Test
+  void shouldOmitErrorType_whenGetterReturnsNullForErrorStatus() {
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "500");
+
+    HttpClientAttributesGetter<Map<String, String>, Map<String, String>> getter =
+        new TestHttpClientAttributesGetter() {
+          @Override
+          public String getErrorType(
+              Map<String, String> request, Map<String, String> response, Throwable error) {
+            return null;
+          }
+        };
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(getter);
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onEnd(attributes, Context.root(), emptyMap(), response, new ConnectException());
+
+    assertThat(attributes.build())
+        .containsEntry(HTTP_RESPONSE_STATUS_CODE, 500)
+        .doesNotContainKey(ERROR_TYPE);
   }
 
   @Test
   void shouldExtractErrorType_exceptionClassName() {
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), emptyMap());
-    extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), new ConnectException());
+    extractor.onEnd(attributes, Context.root(), emptyMap(), response, new ConnectException());
 
     assertThat(attributes.build()).containsEntry(ERROR_TYPE, "java.net.ConnectException");
+  }
+
+  @Test
+  void shouldPreferErrorStatusOverExceptionClassName() {
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "500");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onEnd(attributes, Context.root(), emptyMap(), response, new ConnectException());
+
+    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "500");
   }
 
   @Test
@@ -408,6 +449,20 @@ class HttpClientAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
 
     assertThat(attributes.build()).containsEntry(ERROR_TYPE, HttpConstants._OTHER);
+  }
+
+  @Test
+  void shouldOmitErrorType_forSuccessfulResponse() {
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "200");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
+
+    assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
   }
 
   @Test
