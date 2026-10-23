@@ -18,6 +18,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContent;
@@ -26,6 +27,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseDecoder;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.ReferenceCountUtil;
 import io.opentelemetry.api.impl.InstrumentationUtil;
@@ -144,6 +146,75 @@ class Netty40PipeliningTest {
       respond(
           channel,
           "HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: test\r\n\r\n");
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("upgrade"),
+                  span ->
+                      span.hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(101L))));
+    } finally {
+      close(channel);
+    }
+  }
+
+  @Test
+  void switchingProtocolsRetainsParentThroughTerminalContent() {
+    List<SpanContext> callbacks = new ArrayList<>();
+    List<SpanContext> parents = new ArrayList<>();
+    EmbeddedChannel channel = channel(callbacks);
+    try {
+      write(channel, "upgrade", parents);
+      testing.runWithSpan(
+          "response callback caller",
+          () -> {
+            channel.writeInbound(
+                new DefaultHttpResponse(
+                    HttpVersion.HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS));
+            channel.writeInbound(new DefaultLastHttpContent());
+          });
+      assertThat(callbacks).containsExactly(parents.get(0), parents.get(0));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("upgrade"),
+                  span ->
+                      span.hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(101L))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(span -> span.hasName("response callback caller")));
+    } finally {
+      close(channel);
+    }
+  }
+
+  @Test
+  void handlerRemovalDuringUpgradeDoesNotRequireTerminalContent() {
+    List<SpanContext> callbacks = new ArrayList<>();
+    List<SpanContext> parents = new ArrayList<>();
+    EmbeddedChannel channel =
+        new EmbeddedChannel(new HttpRequestEncoder(), new HttpResponseDecoder());
+    channel
+        .pipeline()
+        .addAfter(
+            "io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientResponseTracingHandler",
+            "callbacks",
+            callbacks(callbacks));
+    try {
+      write(channel, "upgrade", parents);
+      channel.writeInbound(
+          new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS));
+
+      channel.pipeline().remove(HttpResponseDecoder.class);
+      assertThat(callbacks).containsExactly(parents.get(0));
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
