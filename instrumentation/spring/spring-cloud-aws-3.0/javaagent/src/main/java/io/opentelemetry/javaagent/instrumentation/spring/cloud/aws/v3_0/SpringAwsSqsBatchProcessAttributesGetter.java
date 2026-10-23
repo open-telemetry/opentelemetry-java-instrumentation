@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
 import io.awspring.cloud.sqs.listener.SqsHeaders;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -77,13 +78,15 @@ class SpringAwsSqsBatchProcessAttributesGetter
     return (long) request.getMessages().size();
   }
 
+  // headers are the sqs message attributes, not the spring message headers, which also carry
+  // framework data such as the receipt handle and the original sdk message
   @Override
   public List<String> getMessageHeader(SpringAwsSqsBatchProcessRequest request, String name) {
     List<String> values = new ArrayList<>();
-    for (Message<?> message : request.getMessages()) {
-      Object value = message.getHeaders().get(name);
+    for (SqsMessage message : request.getSqsMessages()) {
+      String value = message.getMessageAttribute(name);
       if (value != null) {
-        values.add(value.toString());
+        values.add(value);
       }
     }
     return values;
@@ -92,8 +95,8 @@ class SpringAwsSqsBatchProcessAttributesGetter
   @Override
   public Iterable<String> getMessageHeaderNames(SpringAwsSqsBatchProcessRequest request) {
     Set<String> names = new LinkedHashSet<>();
-    for (Message<?> message : request.getMessages()) {
-      names.addAll(message.getHeaders().keySet());
+    for (SqsMessage message : request.getSqsMessages()) {
+      names.addAll(message.getMessageAttributeNames());
     }
     return names;
   }

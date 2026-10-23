@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 
@@ -12,13 +13,18 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -30,6 +36,36 @@ final class SpringAwsSqsSingletons {
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       stringKey("messaging.message.id");
+  private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
+      longKey("messaging.batch.message_count");
+  private static final ContextKey<Long> CONSUMED_MESSAGES_COUNT_KEY =
+      ContextKey.named("opentelemetry-spring-cloud-aws-sqs-consumed-messages-count");
+  private static final OperationMetrics consumedMessagesMetrics =
+      meter -> {
+        OperationListener delegate = MessagingConsumerMetrics.getConsumedMessages().create(meter);
+        return new OperationListener() {
+          @Override
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+            Long consumedMessagesCount = context.get(CONSUMED_MESSAGES_COUNT_KEY);
+            return consumedMessagesCount != null && consumedMessagesCount > 0
+                ? delegate.onStart(context, startAttributes, startNanos)
+                : context;
+          }
+
+          @Override
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+            Long consumedMessagesCount = context.get(CONSUMED_MESSAGES_COUNT_KEY);
+            if (consumedMessagesCount != null && consumedMessagesCount > 0) {
+              delegate.onEnd(
+                  context,
+                  endAttributes.toBuilder()
+                      .put(MESSAGING_BATCH_MESSAGE_COUNT, consumedMessagesCount)
+                      .build(),
+                  endNanos);
+            }
+          }
+        };
+      };
 
   private static final Instrumenter<SpringAwsSqsBatchProcessRequest, Void> batchProcessInstrumenter;
 
@@ -59,8 +95,27 @@ final class SpringAwsSqsSingletons {
                   }
                 })
             .addOperationMetrics(MessagingProcessMetrics.get());
+    // without receive telemetry, deliveries are counted by the process operation, like the sdk does
+    // for single messages; a delivery is only counted the first time it is processed
+    if (!ExperimentalConfig.get().messagingReceiveInstrumentationEnabled()) {
+      builder
+          .addContextCustomizer(
+              (context, request, startAttributes) ->
+                  context.with(CONSUMED_MESSAGES_COUNT_KEY, claimDeliveries(request)))
+          .addOperationMetrics(consumedMessagesMetrics);
+    }
     setMessagingProcessExceptionEventExtractor(builder);
     batchProcessInstrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+  }
+
+  private static long claimDeliveries(SpringAwsSqsBatchProcessRequest request) {
+    long claimed = 0;
+    for (SqsMessage message : request.getSqsMessages()) {
+      if (message.claimDelivery()) {
+        claimed++;
+      }
+    }
+    return claimed;
   }
 
   static Instrumenter<SpringAwsSqsBatchProcessRequest, Void> batchProcessInstrumenter() {

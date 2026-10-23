@@ -350,6 +350,7 @@ class AwsSqsTest {
         "io.opentelemetry.spring-cloud-aws-3.0",
         "messaging.process.duration",
         metrics -> metrics.hasSize(1));
+    assertBatchConsumedMessages(2);
 
     AwsSqsTestApplication.batchMessageHandler = null;
     AwsSqsTestApplication.batchInterceptor = null;
@@ -357,6 +358,41 @@ class AwsSqsTest {
     // a listener that is not invoked through the @SqsListener adapter and completes asynchronously
     assertBatchAsyncCompletion(messages, createSpanIds, /* success= */ true);
     assertBatchAsyncCompletion(messages, createSpanIds, /* success= */ false);
+    // processing the same deliveries again does not count them again
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-cloud-aws-3.0",
+        "messaging.process.duration",
+        metrics -> metrics.hasSize(1));
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric
+                        .getInstrumentationScopeInfo()
+                        .getName()
+                        .equals("io.opentelemetry.spring-cloud-aws-3.0")
+                    && metric.getName().equals("messaging.client.consumed.messages"))
+        .isEmpty();
+  }
+
+  private static void assertBatchConsumedMessages(long expected) {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-cloud-aws-3.0",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(expected)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_NAME, "batch-queue"))))));
   }
 
   private static List<SpanData> findSpans(String name) {
