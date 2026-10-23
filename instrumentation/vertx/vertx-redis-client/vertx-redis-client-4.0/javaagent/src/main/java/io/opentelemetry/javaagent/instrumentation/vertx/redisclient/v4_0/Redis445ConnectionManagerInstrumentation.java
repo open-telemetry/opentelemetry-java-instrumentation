@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
+package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
+class Redis445ConnectionManagerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.vertx.redis.client.impl.RedisConnectionManager");
@@ -47,7 +47,7 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object manager, @Advice.Argument(3) RedisConnectOptions options) {
-      RedisConnectionManagerUtil.setServerTarget(manager, VertxRedisServerTargets.of(options));
+      RedisConnectionManagerUtil.setServerTarget(manager, VertxRedis445ServerTargets.of(options));
     }
   }
 
@@ -57,7 +57,7 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Object manager, @Advice.Argument(3) Supplier<?> optionsSupplier) {
       RedisConnectionManagerUtil.setServerTarget(
-          manager, VertxRedisServerTargets.ofConstantSupplier(optionsSupplier));
+          manager, VertxRedis445ServerTargets.ofConstantSupplier(optionsSupplier));
     }
   }
 

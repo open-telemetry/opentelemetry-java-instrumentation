@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
+package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.vertx.redis.client.impl.RedisConnectionManagerUtil.discoveryEndpoints;
 import static java.util.logging.Level.FINE;
@@ -18,9 +18,9 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-public final class VertxRedisServerTargets {
+public final class VertxRedis445ServerTargets {
 
-  private static final Logger logger = Logger.getLogger(VertxRedisServerTargets.class.getName());
+  private static final Logger logger = Logger.getLogger(VertxRedis445ServerTargets.class.getName());
 
   private static final String CONSTANT_SUPPLIER_CLASS_NAME =
       "io.vertx.redis.client.ConstantSupplier";
@@ -67,7 +67,7 @@ public final class VertxRedisServerTargets {
   private static Class<?> findConstantSupplierClass() {
     try {
       return Class.forName(
-          CONSTANT_SUPPLIER_CLASS_NAME, false, VertxRedisServerTargets.class.getClassLoader());
+          CONSTANT_SUPPLIER_CLASS_NAME, false, VertxRedis445ServerTargets.class.getClassLoader());
     } catch (ClassNotFoundException ignored) {
       return null;
     }
@@ -96,12 +96,12 @@ public final class VertxRedisServerTargets {
           Class.forName(
               "io.vertx.redis.client.RedisReplicationConnectOptions",
               false,
-              VertxRedisServerTargets.class.getClassLoader());
+              VertxRedis445ServerTargets.class.getClassLoader());
       return replicationConnectOptions.getMethod("getTopology");
     } catch (ReflectiveOperationException ignored) {
       return null;
     }
   }
 
-  private VertxRedisServerTargets() {}
+  private VertxRedis445ServerTargets() {}
 }
