@@ -276,7 +276,7 @@ public abstract class AbstractR2dbcStatementTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("CREATE TABLE")
+                        span.hasName("CREATE TABLE test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))));
   }
