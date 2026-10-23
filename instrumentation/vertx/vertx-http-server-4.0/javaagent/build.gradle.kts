@@ -28,7 +28,22 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-web:4.+")
 }
 
-tasks.test {
+testing {
+  suites {
+    register<JvmTestSuite>("version45Test") {
+      sources.java.setSrcDirs(listOf("src/test/java"))
+      dependencies {
+        val version = baseVersion("4.5.35").orLatest("4.+")
+        implementation("io.vertx:vertx-core:$version")
+        implementation("io.vertx:vertx-codegen:$version")
+        implementation("io.vertx:vertx-web:$version")
+        implementation("io.netty:netty-codec-haproxy")
+      }
+    }
+  }
+}
+
+tasks.withType<Test>().configureEach {
   systemProperty(
     "test.keystore",
     rootProject.file("testing-common/src/misc/testing-keystore.p12").absolutePath
@@ -38,4 +53,12 @@ tasks.test {
 
 tasks.compileTestJava {
   options.release.set(11)
+}
+
+tasks.named<JavaCompile>("compileVersion45TestJava") {
+  options.release.set(11)
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

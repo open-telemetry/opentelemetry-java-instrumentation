@@ -85,7 +85,7 @@ class VertxHttp2ServerTest {
             new HttpServerOptions()
                 .setSsl(true)
                 .setUseAlpn(true)
-                .setPfxKeyCertOptions(
+                .setKeyCertOptions(
                     new PfxOptions()
                         .setPath(System.getProperty("test.keystore"))
                         .setPassword("testing")));
@@ -241,7 +241,7 @@ class VertxHttp2ServerTest {
                 .setSsl(true)
                 .setUseAlpn(true)
                 .setProtocolVersion(HttpVersion.HTTP_2)
-                .setPfxTrustOptions(
+                .setTrustOptions(
                     new PfxOptions()
                         .setPath(System.getProperty("test.keystore"))
                         .setPassword("testing")));
