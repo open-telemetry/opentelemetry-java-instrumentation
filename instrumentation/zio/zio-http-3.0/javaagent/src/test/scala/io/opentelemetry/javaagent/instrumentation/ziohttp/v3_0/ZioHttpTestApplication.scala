@@ -63,7 +63,7 @@ class ZioHttpTestApplication(port: Int) {
     Routes(
       Method.GET / "delegate" / string("middle") -> handler {
         (_: String, request: Request) =>
-          delegatedRoutes.runZIO(request)
+          ZIO.scoped(delegatedRoutes.runZIO(request))
       }
     )
 
@@ -81,12 +81,12 @@ class ZioHttpTestApplication(port: Int) {
         (mode: String, _: Request) =>
           mode match {
             case "overlap-first" =>
-              firstOverlapRoutes.runZIO(reusedRequest)
+              ZIO.scoped(firstOverlapRoutes.runZIO(reusedRequest))
             case "overlap-second" =>
-              secondOverlapRoutes.runZIO(reusedRequest)
+              ZIO.scoped(secondOverlapRoutes.runZIO(reusedRequest))
             case _ =>
               failReusedRequest.set(mode == "failure")
-              reusedRoutes.runZIO(reusedRequest)
+              ZIO.scoped(reusedRoutes.runZIO(reusedRequest))
           }
       },
       Method.GET / "delegate" / string("name") -> handler {
@@ -96,12 +96,12 @@ class ZioHttpTestApplication(port: Int) {
           )
             ZIO.yieldNow *> ZIO.suspendSucceed {
               if (request.rawHeader("x-test-deep-delegation").contains("true"))
-                middleDelegatedRoutes.runZIO(request)
-              else delegatedRoutes.runZIO(request)
+                ZIO.scoped(middleDelegatedRoutes.runZIO(request))
+              else ZIO.scoped(delegatedRoutes.runZIO(request))
             }
           else if (request.rawHeader("x-test-deep-delegation").contains("true"))
-            middleDelegatedRoutes.runZIO(request)
-          else delegatedRoutes.runZIO(request)
+            ZIO.scoped(middleDelegatedRoutes.runZIO(request))
+          else ZIO.scoped(delegatedRoutes.runZIO(request))
       },
       Method.GET / "failure" / string("name") -> handler {
         (_: String, _: Request) =>
