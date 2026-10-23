@@ -320,6 +320,7 @@ public abstract class AbstractRedissonClientTest {
 
     CountDownLatch evalMappingStarted = new CountDownLatch(1);
     CountDownLatch allowEvalMapping = new CountDownLatch(1);
+    AtomicBoolean interceptCommands = new AtomicBoolean();
     AtomicBoolean failureCallbackActive = new AtomicBoolean();
     AtomicBoolean getMappedInFailureCallback = new AtomicBoolean();
     Object commandMapper =
@@ -329,6 +330,9 @@ public abstract class AbstractRedissonClientTest {
             (proxy, method, args) -> {
               if (method.getName().equals("map")) {
                 String command = (String) args[0];
+                if (!interceptCommands.get()) {
+                  return command;
+                }
                 if (command.equals("EVAL") || command.equals("EVALSHA")) {
                   evalMappingStarted.countDown();
                   try {
@@ -350,6 +354,7 @@ public abstract class AbstractRedissonClientTest {
     setCommandMapper(config, commandMapperType, commandMapper);
 
     RedissonClient callbackClient = Redisson.create(config);
+    interceptCommands.set(true);
     testing.clearData();
     try {
       testing.runWithSpan(
