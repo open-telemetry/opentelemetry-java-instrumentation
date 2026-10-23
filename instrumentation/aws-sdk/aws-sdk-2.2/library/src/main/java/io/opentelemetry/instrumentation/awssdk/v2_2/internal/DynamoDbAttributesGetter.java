@@ -72,14 +72,13 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
       ExecutionAttributes executionAttributes,
       @Nullable Response response,
       @Nullable Throwable error) {
-    if (!(error instanceof AwsServiceException)) {
-      return null;
+    if (error instanceof AwsServiceException) {
+      AwsErrorDetails details = ((AwsServiceException) error).awsErrorDetails();
+      if (details != null && details.errorCode() != null) {
+        return details.errorCode();
+      }
     }
-    AwsErrorDetails details = ((AwsServiceException) error).awsErrorDetails();
-    if (details == null) {
-      return null;
-    }
-    return details.errorCode();
+    return DbClientAttributesGetter.super.getErrorType(executionAttributes, response, error);
   }
 
   @Override

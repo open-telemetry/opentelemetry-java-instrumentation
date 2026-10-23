@@ -86,9 +86,13 @@ class JdbcAttributesGetterTest {
         argumentSet("positive vendor code takes precedence", 42, "42601", "42"),
         argumentSet("negative vendor code", -42, null, "-42"),
         argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601"),
-        argumentSet("null SQLSTATE is unavailable", 0, null, null),
-        argumentSet("empty SQLSTATE is unavailable", 0, "", null),
-        argumentSet("successful completion SQLSTATE is unavailable", 0, "00000", null));
+        argumentSet("null SQLSTATE is unavailable", 0, null, SQLException.class.getName()),
+        argumentSet("empty SQLSTATE is unavailable", 0, "", SQLException.class.getName()),
+        argumentSet(
+            "successful completion SQLSTATE is unavailable",
+            0,
+            "00000",
+            SQLException.class.getName()));
   }
 
   @Test

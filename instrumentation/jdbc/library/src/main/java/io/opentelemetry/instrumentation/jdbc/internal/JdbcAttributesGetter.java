@@ -59,12 +59,11 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
         return Integer.toString(errorCode);
       }
       String sqlState = sqlException.getSQLState();
-      if (sqlState == null || sqlState.isEmpty() || sqlState.equals("00000")) {
-        return null;
+      if (sqlState != null && !sqlState.isEmpty() && !sqlState.equals("00000")) {
+        return sqlState;
       }
-      return sqlState;
     }
-    return null;
+    return SqlClientAttributesGetter.super.getErrorType(request, response, error);
   }
 
   @Override

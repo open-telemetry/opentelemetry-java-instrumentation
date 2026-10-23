@@ -42,6 +42,7 @@ final class OpenSearchAttributesGetter
   @Nullable
   public String getErrorType(
       OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
+    Throwable originalError = error;
     if (error instanceof CompletionException) {
       error = error.getCause();
     }
@@ -51,7 +52,7 @@ final class OpenSearchAttributesGetter
         return Integer.toString(statusCode);
       }
     }
-    return null;
+    return DbClientAttributesGetter.super.getErrorType(request, response, originalError);
   }
 
   @Override

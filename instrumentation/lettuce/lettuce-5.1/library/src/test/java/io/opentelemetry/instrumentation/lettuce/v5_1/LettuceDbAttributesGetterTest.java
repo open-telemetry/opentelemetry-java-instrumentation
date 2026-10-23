@@ -37,7 +37,7 @@ class LettuceDbAttributesGetterTest {
     assertThat(
             getter.getErrorType(
                 null, response, new RedisCommandTimeoutException("Connection closed")))
-        .isNull();
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
   }
 
   @Test

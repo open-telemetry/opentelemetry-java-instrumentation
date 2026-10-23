@@ -186,14 +186,13 @@ class MongoDbAttributesGetter
     if (error instanceof MongoException) {
       // MongoException.getCode() only returns a real server error code (a positive value) when the
       // exception came from a server command error. For client-side exceptions the driver uses
-      // negative sentinels (e.g. -2, -3, -4), which are meaningless as an error.type. Returning
-      // null in that case lets the shared extractor fall back to the exception class name.
+      // negative sentinels (e.g. -2, -3, -4), which are meaningless as an error.type.
       int code = ((MongoException) error).getCode();
       if (code > 0) {
         return Integer.toString(code);
       }
     }
-    return null;
+    return DbClientAttributesGetter.super.getErrorType(request, response, error);
   }
 
   @Nullable

@@ -177,15 +177,61 @@ class DbClientAttributesExtractorTest {
   }
 
   @Test
-  void shouldUseExceptionClassWhenErrorTypeIsUnavailable() {
+  void shouldInheritExceptionClassFallback() {
+    TestAttributesGetter getter = new TestAttributesGetter();
     AttributesExtractor<Map<String, String>, Void> underTest =
-        DbClientAttributesExtractor.create(new TestAttributesGetter());
+        DbClientAttributesExtractor.create(getter);
     IllegalStateException error = new IllegalStateException();
+
+    assertThat(getter.getErrorType(emptyMap(), null, error))
+        .isEqualTo(IllegalStateException.class.getName());
+    assertThat(getter.getErrorType(emptyMap(), null, null)).isNull();
 
     AttributesBuilder attributes = Attributes.builder();
     underTest.onEnd(attributes, Context.root(), emptyMap(), null, error);
 
     assertThat(attributes.build())
         .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
+  }
+
+  @Test
+  void shouldOmitErrorTypeWithoutError() {
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(new TestAttributesGetter())
+        .onEnd(attributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(attributes.build()).isEmpty();
+  }
+
+  @Test
+  void shouldUseCustomFinalClassification() {
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, String> request, Void response, Throwable error) {
+                return "CUSTOM";
+              }
+            })
+        .onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build()).containsOnly(entry(ERROR_TYPE, "CUSTOM"));
+  }
+
+  @Test
+  void shouldRespectExplicitNullDespiteException() {
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, String> request, Void response, Throwable error) {
+                return null;
+              }
+            })
+        .onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build()).isEmpty();
   }
 }
