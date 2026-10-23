@@ -58,10 +58,12 @@ public final class InfluxDbQueryState {
     }
 
     Throwable failure = error;
+    // Older supported clients do not have InfluxDBException.
     if (error.getClass().getName().equals("org.influxdb.InfluxDBException")
         && error.getCause() != null) {
       failure = error.getCause();
     }
+    // Malformed JSON remains a query failure even if the call is canceled.
     if (failure instanceof IOException
         && !failure.getClass().getName().equals("com.squareup.moshi.JsonEncodingException")
         && call != null
