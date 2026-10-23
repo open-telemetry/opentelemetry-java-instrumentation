@@ -97,9 +97,9 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
    * there was no error.
    *
    * <p>An override can return a protocol-specific, low-cardinality classification. Returning {@code
-   * null} explicitly omits {@code error.type}, even when an error was thrown. To retain the default
+   * null} explicitly omits {@code error.type}, even when an error was thrown. To retain the
    * exception-class fallback when an error cannot be classified more specifically, an override can
-   * delegate to {@code RpcAttributesGetter.super.getErrorType(request, response, error)}.
+   * return {@code error == null ? null : error.getClass().getName()}.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.

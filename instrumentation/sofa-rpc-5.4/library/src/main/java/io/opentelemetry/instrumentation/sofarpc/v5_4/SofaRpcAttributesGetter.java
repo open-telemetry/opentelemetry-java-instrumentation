@@ -52,9 +52,7 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
   public String getErrorType(
       SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
     String rpcCode = getSofaRpcCode(error);
-    return rpcCode != null
-        ? rpcCode
-        : RpcAttributesGetter.super.getErrorType(request, response, error);
+    return rpcCode != null ? rpcCode : error == null ? null : error.getClass().getName();
   }
 
   @Override
