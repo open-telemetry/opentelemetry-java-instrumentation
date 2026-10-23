@@ -32,6 +32,8 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new HttpExtServerInstrumentation(),
+        new MessageStartErrorInstrumentation(),
+        new HttpServerControllerInstrumentation(),
         new HttpServerAttributesInstrumentation(),
         new GraphInterpreterInstrumentation(),
         new AkkaHttpServerSourceInstrumentation());
