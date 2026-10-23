@@ -54,13 +54,14 @@ abstract class AbstractRabbitMqTest {
     rabbitMqContainer.execInContainer(
         "rabbitmqctl", "set_permissions", "-p", "otel-test", "guest", ".*", ".*", ".*");
 
+    // Use the same resolved address for the connection and the network attribute assertions.
+    rabbitMqIp = InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
     connectionFactory = new ConnectionFactory();
-    connectionFactory.setHost(rabbitMqContainer.getHost());
+    connectionFactory.setHost(rabbitMqIp);
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
     connectionFactory.setVirtualHost("otel-test");
 
     rabbitMqHost = rabbitMqContainer.getHost();
-    rabbitMqIp = InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
     rabbitMqPort = rabbitMqContainer.getMappedPort(5672);
   }
 
