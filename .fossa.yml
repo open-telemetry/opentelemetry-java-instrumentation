@@ -1071,6 +1071,9 @@ targets:
       target: ':instrumentation:tomcat:tomcat-jdbc-8.5:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:vertx:vertx-http-server-4.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:vertx:vertx-kafka-client-3.6:javaagent'
     - type: gradle
       path: ./

@@ -1,0 +1,8 @@
+display_name: Vert.x HTTP Server
+description: >
+  This instrumentation provides HTTP server spans and metrics for Vert.x 4 HTTP/2 requests.
+  HTTP/1.1 requests are handled by the Netty instrumentation.
+semantic_conventions:
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS
+library_link: https://vertx.io/docs/vertx-core/java/
