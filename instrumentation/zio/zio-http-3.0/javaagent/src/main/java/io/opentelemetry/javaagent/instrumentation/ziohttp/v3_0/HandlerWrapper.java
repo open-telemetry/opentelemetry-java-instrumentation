@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.ziohttp.v3_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import java.util.Optional;
@@ -66,6 +67,13 @@ public class HandlerWrapper {
 
   private static <R, ERR, OUT> ZIO<R, ERR, OUT> withRouteContext(
       Context context, ZIO<R, ERR, OUT> effect, String route) {
+    if (effect instanceof Exit) {
+      HttpRouteState routeState = HttpRouteState.fromContextOrNull(context);
+      if (routeState != null && routeState.getSpan() != null) {
+        updateRoute(context, route, (Exit<?, ?>) effect);
+        return effect;
+      }
+    }
     return ROUTE_CONTEXT
         .get(Trace$.MODULE$.empty())
         .flatMap(
@@ -102,15 +110,18 @@ public class HandlerWrapper {
                 new AbstractFunction1<Unsafe, Object>() {
                   @Override
                   public Object apply(Unsafe unsafe) {
-                    Option<?> cause = exit.causeOption();
-                    if (exit.isSuccess()
-                        || (cause.isDefined() && ((Cause<?>) cause.get()).isFailure())) {
-                      HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
-                    }
+                    updateRoute(context, route, exit);
                     return BoxedUnit.UNIT;
                   }
                 },
                 Trace$.MODULE$.empty());
+  }
+
+  private static void updateRoute(Context context, String route, Exit<?, ?> exit) {
+    Option<?> cause = exit.causeOption();
+    if (exit.isSuccess() || (cause.isDefined() && ((Cause<?>) cause.get()).isFailure())) {
+      HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
+    }
   }
 
   private HandlerWrapper() {}

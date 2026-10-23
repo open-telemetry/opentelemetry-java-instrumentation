@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ZioHttpTestApplication(port: Int) {
+  @volatile var immediateResult: ZIO[Scope, Nothing, Response] = null
+
   private val failReusedRequest = new AtomicBoolean()
   private val reusedRequest = Request.get("/reused/test")
   private val firstOverlapEntered = new CountDownLatch(1)
@@ -76,6 +78,12 @@ class ZioHttpTestApplication(port: Int) {
       Method.GET / "greet-async" / string("name") -> handler {
         (name: String, _: Request) =>
           ZIO.yieldNow *> ZIO.succeed(Response.text(s"Hello $name"))
+      },
+      Method.GET / "immediate" / string("name") -> handler {
+        (_: String, _: Request) =>
+          val result = delegatedRoutes.runZIO(Request.get("/delegate/test"))
+          immediateResult = result
+          ZIO.scoped(result)
       },
       Method.GET / "reuse" / string("mode") -> handler {
         (mode: String, _: Request) =>

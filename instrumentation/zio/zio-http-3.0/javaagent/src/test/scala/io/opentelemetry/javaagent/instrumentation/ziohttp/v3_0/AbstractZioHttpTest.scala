@@ -35,7 +35,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.{AbstractLongAssert, AbstractStringAssert}
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
-import zio.{Fiber, Runtime, Unsafe}
+import zio.{Exit, Fiber, Runtime, Unsafe}
 
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -77,6 +77,17 @@ abstract class AbstractZioHttpTest {
   @Test
   def yieldingRoute(): Unit = {
     assertRoute("greet-async")
+  }
+
+  @Test
+  def immediateRoute(): Unit = {
+    assertRoute(
+      "/immediate/test",
+      "GET /delegate/test",
+      "/delegate/test",
+      "Inner test"
+    )
+    assertThat(application.immediateResult).isInstanceOf(classOf[Exit[_, _]])
   }
 
   @Test
