@@ -105,7 +105,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"varargs", "map", "absolute", "uri", "builder"})
+  @ValueSource(strings = {"varargs", "map", "absolute", "query", "uri", "builder"})
   void shouldCaptureUriTemplate(String overload) {
     URI uri = resolveAddress("/hello/some-account");
     WebClient client =
@@ -125,6 +125,14 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         break;
       case "absolute":
         request = client.get().uri(resolveAddress("/hello/") + "{id}", "some-account");
+        break;
+      case "query":
+        template += "?next=https://example.org/landing";
+        request = client.get().uri(template, "some-account");
+        uri = resolveAddress("/hello/some-account?next=https://example.org/landing");
+        if (springVersionAtLeast(6, 1, 2)) {
+          template = "/hello/{id}";
+        }
         break;
       case "uri":
         request = client.get().uri(uri);

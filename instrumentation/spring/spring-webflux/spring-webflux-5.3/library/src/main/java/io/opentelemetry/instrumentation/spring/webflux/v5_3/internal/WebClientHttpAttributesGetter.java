@@ -32,8 +32,12 @@ public class WebClientHttpAttributesGetter
     if (!(template instanceof String)) {
       return null;
     }
-    String path = UrlParser.getPath((String) template);
-    return path == null ? (String) template : path;
+    String urlTemplate = (String) template;
+    if (urlTemplate.regionMatches(true, 0, "http://", 0, 7)
+        || urlTemplate.regionMatches(true, 0, "https://", 0, 8)) {
+      return UrlParser.getPath(urlTemplate);
+    }
+    return urlTemplate;
   }
 
   @Override
