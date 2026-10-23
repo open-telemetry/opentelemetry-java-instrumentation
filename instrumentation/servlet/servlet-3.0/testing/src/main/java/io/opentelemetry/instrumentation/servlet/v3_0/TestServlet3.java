@@ -20,11 +20,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
 import javax.servlet.AsyncContext;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -79,16 +81,36 @@ public class TestServlet3 {
             } else if (EXCEPTION.equals(endpoint)) {
               throw new IllegalStateException(endpoint.getBody());
             } else if (HTML_PRINT_WRITER.equals(endpoint)) {
-              resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
-              resp.setContentLength(endpoint.getBody().length());
-              resp.getWriter().print(endpoint.getBody());
+              if ("true".equals(req.getParameter("lateContentType"))) {
+                String body = "<head>late content type</head>";
+                PrintWriter writer = resp.getWriter();
+                resp.setContentLength(body.length());
+                resp.setContentType("text/html");
+                writer.write("<he");
+                writer.write("ad>late content type</head>");
+              } else {
+                resp.setContentType("text/html");
+                resp.setContentLength(endpoint.getBody().length());
+                resp.getWriter().print(endpoint.getBody());
+              }
             } else if (HTML_SERVLET_OUTPUT_STREAM.equals(endpoint)) {
-              resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
-              resp.setContentLength(endpoint.getBody().length());
-              byte[] body = endpoint.getBody().getBytes(UTF_8);
-              resp.getOutputStream().write(body, 0, body.length);
+              if ("true".equals(req.getParameter("lateContentType"))) {
+                String body = "<head>late content type</head>";
+                ServletOutputStream output = resp.getOutputStream();
+                BufferedOutputStream bufferedOutput = new BufferedOutputStream(output);
+                resp.setContentLength(body.length());
+                resp.setContentType("text/html");
+                bufferedOutput.write("<he".getBytes(UTF_8));
+                bufferedOutput.write("ad>late content type</head>".getBytes(UTF_8));
+                bufferedOutput.flush();
+              } else {
+                resp.setContentType("text/html");
+                resp.setContentLength(endpoint.getBody().length());
+                byte[] body = endpoint.getBody().getBytes(UTF_8);
+                resp.getOutputStream().write(body, 0, body.length);
+              }
             }
             return null;
           });
