@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-import com.google.common.base.Joiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.ByteBuddyAgent;
@@ -74,11 +73,11 @@ class MissingTypeTest {
   }
 
   @Test
-  void guavaNotAvailable() {
-    // these tests expect com.google.common.base.Joiner to be missing from runtime class path
+  void fixtureNotAvailable() {
+    // these tests expect MissingType to be missing from runtime class path
     try {
-      Class.forName("com.google.common.base.Joiner");
-      fail("guava should not be available during runtime");
+      Class.forName("io.opentelemetry.javaagent.tooling.bytebuddy.MissingType");
+      fail("MissingType should not be available during runtime");
     } catch (ClassNotFoundException ignored) {
       // ignore
     }
@@ -94,23 +93,23 @@ class MissingTypeTest {
     assertThat(hasErrors.get()).isFalse();
   }
 
-  // com.google.common.base.Joiner is missing from runtime class path
+  // MissingType is missing from runtime class path
   static class SomeClass {
-    public Joiner joiner;
+    public MissingType missingType;
 
     public static boolean isInstrumented() {
       return false;
     }
 
-    public void methodWithMissingParameterType(Joiner joiner) {}
+    public void methodWithMissingParameterType(MissingType missingType) {}
 
-    public Joiner methodWithMissingReturnType() {
+    public MissingType methodWithMissingReturnType() {
       return null;
     }
 
-    public static void staticMethodWithMissingParameterType(Joiner joiner) {}
+    public static void staticMethodWithMissingParameterType(MissingType missingType) {}
 
-    public static Joiner staticMethodWithMissingReturnType() {
+    public static MissingType staticMethodWithMissingReturnType() {
       return null;
     }
   }

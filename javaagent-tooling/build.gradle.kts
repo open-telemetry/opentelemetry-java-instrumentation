@@ -9,6 +9,8 @@ plugins {
 
 group = "io.opentelemetry.javaagent"
 
+val testMissingTypeFixtures = sourceSets.create("testMissingTypeFixtures")
+
 dependencies {
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))
@@ -64,7 +66,6 @@ dependencies {
   testCompileOnly("com.google.code.findbugs:annotations")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-  testImplementation("com.google.guava:guava")
 }
 
 testing {
@@ -85,7 +86,7 @@ testing {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
         implementation("net.bytebuddy:byte-buddy-dep")
-        compileOnly("com.google.guava:guava")
+        compileOnly(testMissingTypeFixtures.output)
 
         // Used by byte-buddy but not brought in as a transitive dependency.
         compileOnly("com.google.code.findbugs:annotations")
