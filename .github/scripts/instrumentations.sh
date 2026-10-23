@@ -223,6 +223,7 @@ readonly INSTRUMENTATIONS=(
   "lettuce:lettuce-5.0:javaagent:lettuce51Test"
   "lettuce:lettuce-5.0:javaagent:lettuce60Test"
   "lettuce:lettuce-5.0:javaagent:lettuce65Test"
+  "mcp-java-sdk-0.14:javaagent:test"
   "mongo:mongo-3.1:javaagent:test"
   "mongo:mongo-3.1:javaagent:version37Test"
   "mongo:mongo-4.0:javaagent:test"
