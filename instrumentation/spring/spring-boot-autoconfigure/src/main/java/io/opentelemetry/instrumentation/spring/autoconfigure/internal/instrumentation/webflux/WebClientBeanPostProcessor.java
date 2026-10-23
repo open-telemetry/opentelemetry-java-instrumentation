@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfl
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -58,8 +59,8 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
             .mutate()
             .filters(
                 filters -> {
-                  if (isFilterNotPresent(filters)) {
-                    filters.add(getWebfluxClientTelemetry(openTelemetry).createFilter());
+                  if (addFilterIfNotPresent(
+                      filters, () -> getWebfluxClientTelemetry(openTelemetry).createFilter())) {
                     filterAdded.set(true);
                   }
                 });
@@ -67,7 +68,12 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
     return filterAdded.get() ? builder.build() : webClient;
   }
 
-  private static boolean isFilterNotPresent(List<ExchangeFilterFunction> filters) {
-    return filters.stream().noneMatch(WebClientTracingFilter.class::isInstance);
+  static boolean addFilterIfNotPresent(
+      List<ExchangeFilterFunction> filters, Supplier<ExchangeFilterFunction> filterFactory) {
+    if (filters.stream().anyMatch(WebClientTracingFilter.class::isInstance)) {
+      return false;
+    }
+    filters.add(filterFactory.get());
+    return true;
   }
 }
