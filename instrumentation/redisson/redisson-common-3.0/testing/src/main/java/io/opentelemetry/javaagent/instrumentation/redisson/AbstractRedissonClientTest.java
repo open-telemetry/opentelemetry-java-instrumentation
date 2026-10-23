@@ -305,7 +305,7 @@ public abstract class AbstractRedissonClientTest {
     Object result =
         redisson.getScript().eval(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.VALUE);
     assertThat(result).isEqualTo(1L);
-    assertErrorTypeOnLastOperation(null);
+    assertErrorTypeOnSpanAndMetric(null);
   }
 
   @Test
@@ -480,7 +480,7 @@ public abstract class AbstractRedissonClientTest {
 
     assertThatThrownBy(() -> invokeExecute(batch)).hasRootCauseInstanceOf(RedisException.class);
 
-    assertErrorTypeOnLastOperation("Batch.Code!");
+    assertErrorTypeOnSpanAndMetric("Batch.Code!");
   }
 
   @Test
@@ -547,7 +547,7 @@ public abstract class AbstractRedissonClientTest {
 
     assertThatThrownBy(() -> invokeExecute(batch))
         .satisfies(error -> assertThat(rootCause(error)).isInstanceOf(expectedFailureType));
-    assertErrorTypeOnLastOperation(expectedErrorType);
+    assertErrorTypeOnSpanAndMetric(expectedErrorType);
   }
 
   private RBatch createBatchWithoutRetries() throws ReflectiveOperationException {
@@ -568,7 +568,7 @@ public abstract class AbstractRedissonClientTest {
   private void assertFollowingOperationsHaveNoLeakedServerError()
       throws IOException, InterruptedException {
     redisson.getBucket("after-batch-server-error").set("success");
-    assertErrorTypeOnLastOperation(null);
+    assertErrorTypeOnSpanAndMetric(null);
     assertClientSideDecodeFailure("client-side-after-batch-error");
   }
 
@@ -660,10 +660,10 @@ public abstract class AbstractRedissonClientTest {
                         e -> assertThat(e).hasRootCauseInstanceOf(expectedCause));
               }
             });
-    assertErrorTypeOnLastOperation(expectedErrorType);
+    assertErrorTypeOnSpanAndMetric(expectedErrorType);
   }
 
-  private static void assertErrorTypeOnLastOperation(String expectedErrorType) {
+  private static void assertErrorTypeOnSpanAndMetric(String expectedErrorType) {
     AtomicReference<String> instrumentationName = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace -> {

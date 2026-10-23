@@ -231,7 +231,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     .toCompletableFuture()
                     .join())
         .hasRootCauseInstanceOf(RedisException.class);
-    assertErrorTypeOnLastOperation("WRONGTYPE");
+    assertErrorTypeOnSpanAndMetric("WRONGTYPE");
 
     assertThat(
             redisson
@@ -240,7 +240,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                 .toCompletableFuture()
                 .join())
         .isEqualTo(1L);
-    assertErrorTypeOnLastOperation(null);
+    assertErrorTypeOnSpanAndMetric(null);
   }
 
   @Test
@@ -256,7 +256,7 @@ public abstract class AbstractRedissonAsyncClientTest {
     assertThatThrownBy(() -> batch.executeAsync().toCompletableFuture().join())
         .hasRootCauseInstanceOf(RedisException.class);
 
-    assertErrorTypeOnLastOperation("Batch.Code!");
+    assertErrorTypeOnSpanAndMetric("Batch.Code!");
   }
 
   @Test
@@ -281,7 +281,7 @@ public abstract class AbstractRedissonAsyncClientTest {
     assertThatThrownBy(() -> bucket.getAsync().toCompletableFuture().join())
         .hasRootCauseInstanceOf(RedisException.class);
 
-    assertErrorTypeOnLastOperation(RedisException.class.getName());
+    assertErrorTypeOnSpanAndMetric(RedisException.class.getName());
   }
 
   @Test
@@ -322,7 +322,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
 
-  private static void assertErrorTypeOnLastOperation(String expectedErrorType) {
+  private static void assertErrorTypeOnSpanAndMetric(String expectedErrorType) {
     AtomicReference<String> instrumentationName = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace -> {
