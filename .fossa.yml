@@ -1026,7 +1026,7 @@ targets:
       target: ':instrumentation:spring:spring-pulsar-1.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-rabbit-1.0:javaagent'
+      target: ':instrumentation:spring:spring-rabbit-1.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-rmi-4.0:javaagent'

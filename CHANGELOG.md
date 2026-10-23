@@ -8,6 +8,8 @@
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
   `otel.java.enabled.resource.providers` and `otel.java.disabled.resource.providers`.
+- Spring Rabbit 1.0 is no longer supported. Use the `spring-rabbit-1.1` selector; telemetry scope
+  changes from `io.opentelemetry.spring-rabbit-1.0` to `io.opentelemetry.spring-rabbit-1.1`.
 - `InstrumenterBuilder` no longer infers a schema URL from attribute extractors. Call
   `setSchemaUrl()` with the schema for the conventions defining the instrumenter's signals;
   otherwise its telemetry has no schema URL.

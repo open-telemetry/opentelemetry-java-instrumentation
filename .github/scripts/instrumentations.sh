@@ -319,7 +319,7 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-kafka-2.7:javaagent:test"
   "spring:spring-kafka-2.7:javaagent:testExperimental"
   "spring:spring-pulsar-1.0:javaagent:test"
-  "spring:spring-rabbit-1.0:javaagent:test"
+  "spring:spring-rabbit-1.1:javaagent:test"
   "spring:spring-rmi-4.0:javaagent:test"
   "spring:spring-scheduling-3.1:javaagent:test"
   "spring:spring-scheduling-3.1:javaagent:testExperimental"
