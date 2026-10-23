@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -61,6 +62,18 @@ class WebClientBeanPostProcessorTest {
 
     assertThat(secondProcessed).isSameAs(firstProcessed);
     assertFilterCount(secondProcessed);
+  }
+
+  @Test
+  void doesNotAddDuplicateFilterToManuallyInstrumentedClient() {
+    ExchangeFilterFunction existingFilter =
+        SpringWebfluxClientTelemetry.create(OpenTelemetry.noop()).createFilter();
+    WebClient webClient = WebClient.builder().filter(existingFilter).build();
+
+    Object processed = underTest.postProcessAfterInitialization(webClient, "testWebClient");
+
+    assertThat(processed).isSameAs(webClient);
+    webClient.mutate().filters(filters -> assertThat(filters).containsExactly(existingFilter));
   }
 
   private static void assertFilterCount(WebClient webClient) {

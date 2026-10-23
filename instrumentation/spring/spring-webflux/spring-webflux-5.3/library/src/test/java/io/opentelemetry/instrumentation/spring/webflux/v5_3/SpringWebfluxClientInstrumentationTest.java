@@ -25,6 +25,6 @@ class SpringWebfluxClientInstrumentationTest
             .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .build();
-    return builder.filters(instrumentation::addFilterAndRegisterReactorHook);
+    return builder.filter(instrumentation.createFilterAndRegisterReactorHook());
   }
 }

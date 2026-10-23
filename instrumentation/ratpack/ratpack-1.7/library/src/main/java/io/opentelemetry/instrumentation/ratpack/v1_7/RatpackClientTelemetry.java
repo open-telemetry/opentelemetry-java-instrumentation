@@ -16,13 +16,13 @@ import ratpack.http.client.RequestSpec;
  * Entrypoint for instrumenting Ratpack http client.
  *
  * <p>To apply OpenTelemetry instrumentation to a http client, wrap the {@link HttpClient} using
- * {@link #instrument(HttpClient)}.
+ * {@link #wrap(HttpClient)}.
  *
  * <pre>{@code
  * RatpackClientTelemetry telemetry = RatpackClientTelemetry.create(OpenTelemetrySdk.builder()
  *   ...
  *   .build());
- * HttpClient instrumentedHttpClient = telemetry.instrument(httpClient);
+ * HttpClient instrumentedHttpClient = telemetry.wrap(httpClient);
  * }</pre>
  */
 public final class RatpackClientTelemetry {
@@ -43,7 +43,7 @@ public final class RatpackClientTelemetry {
   }
 
   /** Returns an instrumented wrapper for the given {@link HttpClient}. */
-  public HttpClient instrument(HttpClient httpClient) throws Exception {
+  public HttpClient wrap(HttpClient httpClient) throws Exception {
     return httpClientInstrumenter.instrument(httpClient);
   }
 }

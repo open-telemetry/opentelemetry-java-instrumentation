@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
+  `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
+  `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
+  Rename `RatpackClientTelemetry.instrument(HttpClient)` to `wrap(HttpClient)`.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
