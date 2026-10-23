@@ -67,14 +67,11 @@ class CouchbaseClusterInstrumentation implements TypeInstrumentation {
     @SuppressWarnings("deprecation") // Observable.create is required for RxJava 1.0 compatibility
     public static Observable<?> subscribeResult(
         @Advice.Return Observable<?> result, @Advice.Enter Scope scope) {
-      CouchbaseRequestInfo request;
-      try {
-        request = CouchbaseRequestInfo.get(Context.current());
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
+      Context context = Context.current();
+      if (scope != null) {
+        scope.close();
       }
+      CouchbaseRequestInfo request = CouchbaseRequestInfo.get(context);
       if (CallDepth.forClass(CouchbaseCluster.class).decrementAndGet() > 0
           || request == null
           || result == null) {
