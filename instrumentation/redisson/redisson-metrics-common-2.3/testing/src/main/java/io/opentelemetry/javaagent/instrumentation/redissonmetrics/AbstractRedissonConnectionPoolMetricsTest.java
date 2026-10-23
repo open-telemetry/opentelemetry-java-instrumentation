@@ -176,7 +176,7 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                     assertThat(metric)
                         .hasUnit("{connection}")
                         .hasDescription(
-                            "The number of connections that are currently in state described by the state attribute.")
+                            "The number of connections that are currently in state described by the `state` attribute.")
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.isNotMonotonic()
