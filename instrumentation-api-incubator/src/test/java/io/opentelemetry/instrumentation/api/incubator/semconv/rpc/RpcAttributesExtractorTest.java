@@ -85,10 +85,8 @@ class RpcAttributesExtractorTest {
   }
 
   private static final class NullErrorTypeGetter extends TestGetter {
-    @Nullable
     @Override
-    public String getErrorType(
-        Map<String, String> request, @Nullable Void response, @Nullable Throwable error) {
+    public String getErrorType(Map<String, String> request, Void response, Throwable error) {
       return null;
     }
   }
