@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
+package io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.ENDPOINT_SEPARATOR;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.canonicalEndpoint;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerEndpoint.parsePort;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerEndpoint.ENDPOINT_SEPARATOR;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerEndpoint.canonicalEndpoint;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerEndpoint.parsePort;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;

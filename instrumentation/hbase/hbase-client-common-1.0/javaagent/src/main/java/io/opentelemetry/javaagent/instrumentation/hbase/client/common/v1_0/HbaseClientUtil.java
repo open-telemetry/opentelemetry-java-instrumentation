@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
+package io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.getTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.getTableName;
 
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;

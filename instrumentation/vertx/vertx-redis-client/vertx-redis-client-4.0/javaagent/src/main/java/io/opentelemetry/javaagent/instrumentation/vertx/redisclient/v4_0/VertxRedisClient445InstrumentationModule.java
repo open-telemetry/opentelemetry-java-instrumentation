@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
+package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -15,9 +15,9 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
+public class VertxRedisClient445InstrumentationModule extends InstrumentationModule {
 
-  public VertxRedisClientInstrumentationModule() {
+  public VertxRedisClient445InstrumentationModule() {
     super("vertx-redis-client-4.0", "vertx-redis-client", "vertx");
   }
 
@@ -42,6 +42,7 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new RedisConnectionManagerInstrumentation(), new RedisConnectionProviderInstrumentation());
+        new Redis445ConnectionManagerInstrumentation(),
+        new Redis445ConnectionProviderInstrumentation());
   }
 }

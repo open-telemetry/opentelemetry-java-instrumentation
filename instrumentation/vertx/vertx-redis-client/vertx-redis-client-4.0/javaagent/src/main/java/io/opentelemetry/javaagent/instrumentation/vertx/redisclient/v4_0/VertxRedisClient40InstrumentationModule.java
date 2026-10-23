@@ -13,9 +13,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
+public class VertxRedisClient40InstrumentationModule extends InstrumentationModule {
 
-  public VertxRedisClientInstrumentationModule() {
+  public VertxRedisClient40InstrumentationModule() {
     super("vertx-redis-client-4.0", "vertx-redis-client", "vertx");
   }
 

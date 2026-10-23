@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
+package io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetTableName;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.resetTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.setTableName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
