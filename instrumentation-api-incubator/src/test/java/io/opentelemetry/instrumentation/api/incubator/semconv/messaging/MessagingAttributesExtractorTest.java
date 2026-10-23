@@ -23,7 +23,7 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -208,6 +208,7 @@ class MessagingAttributesExtractorTest {
         MessagingAttributesExtractor.create(
             defaultGetter, MessagingOperationType.PROCESS, "process");
     IllegalStateException error = new IllegalStateException();
+    when(defaultGetter.getBatchMessageCount(emptyMap(), null)).thenReturn(null);
 
     AttributesBuilder errorAttributes = Attributes.builder();
     underTest.onEnd(errorAttributes, Context.root(), emptyMap(), null, error);
@@ -225,7 +226,7 @@ class MessagingAttributesExtractorTest {
         MessagingAttributesExtractor.create(
             defaultGetter, MessagingOperationType.PROCESS, "process");
     IllegalStateException error = new IllegalStateException();
-    doReturn(null).when(defaultGetter).getErrorType(emptyMap(), "failure", error);
+    when(defaultGetter.getErrorType(emptyMap(), "failure", error)).thenReturn(null);
 
     AttributesBuilder attributes = Attributes.builder();
     underTest.onEnd(attributes, Context.root(), emptyMap(), "failure", error);
