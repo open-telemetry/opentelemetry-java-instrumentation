@@ -23,7 +23,7 @@ class ProcessRuntimeResourceTest {
     Attributes attributes = resource.getAttributes();
 
     // then
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(attributes.get(PROCESS_RUNTIME_NAME)).isNotBlank();
     assertThat(attributes.get(PROCESS_RUNTIME_VERSION)).isNotBlank();
     assertThat(attributes.get(PROCESS_RUNTIME_DESCRIPTION)).isNotBlank();
