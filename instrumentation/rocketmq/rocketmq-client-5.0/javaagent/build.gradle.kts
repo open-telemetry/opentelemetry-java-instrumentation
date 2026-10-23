@@ -20,6 +20,19 @@ dependencies {
   testLibrary("org.apache.rocketmq:rocketmq-client-java:5.0.2")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api"))
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("org.apache.rocketmq:rocketmq-client-java:5.0.0")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -61,6 +74,7 @@ tasks {
 
   check {
     dependsOn(
+      testing.suites,
       testReceiveSpanDisabled,
       testSimpleConsumerReceiveTelemetryDisabled,
     )

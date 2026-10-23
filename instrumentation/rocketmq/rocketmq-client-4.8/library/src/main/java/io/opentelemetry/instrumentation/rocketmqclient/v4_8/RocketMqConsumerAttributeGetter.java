@@ -82,7 +82,8 @@ final class RocketMqConsumerAttributeGetter
       RocketMqConsumerRequest request,
       @Nullable ConsumeMessageContext response,
       @Nullable Throwable error) {
-    return getErrorType(response);
+    String errorType = getErrorType(response);
+    return errorType != null ? errorType : error == null ? null : error.getClass().getName();
   }
 
   /** Returns the error type of the consume operation, or {@code null} if it did not fail. */
