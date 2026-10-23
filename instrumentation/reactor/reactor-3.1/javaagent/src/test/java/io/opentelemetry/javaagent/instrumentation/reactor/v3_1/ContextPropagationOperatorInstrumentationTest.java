@@ -536,6 +536,93 @@ class ContextPropagationOperatorInstrumentationTest {
   }
 
   @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void temporaryContextDuringOnSubscribeDoesNotReplaceApplicationContext(
+      boolean rootApplicationContext) throws InterruptedException {
+    assumeTrue(schedulerHooksSupported());
+    Context applicationContext =
+        rootApplicationContext
+            ? Context.root()
+            : Context.root().with(APPLICATION_KEY, "application");
+    Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
+    Context subscriptionContext = Context.root().with(APPLICATION_KEY, "subscription");
+    Context temporaryContext = Context.root().with(APPLICATION_KEY, "temporary");
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
+    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
+    CountDownLatch workerStarted = new CountDownLatch(1);
+    CountDownLatch releaseWorker = new CountDownLatch(1);
+    CountDownLatch callbackFinished = new CountDownLatch(1);
+    AtomicReference<String> requestContext = new AtomicReference<>();
+    AtomicReference<String> contextAfterTemporaryScope = new AtomicReference<>();
+    AtomicReference<String> callbackContext = new AtomicReference<>();
+    AtomicReference<Throwable> callbackError = new AtomicReference<>();
+    try {
+      scheduler.schedule(
+          () -> {
+            workerStarted.countDown();
+            try {
+              releaseWorker.await();
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
+          });
+      assertThat(workerStarted.await(10, SECONDS)).isTrue();
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        ContextPropagationOperator.runWithContext(
+                Flux.just("value"), operationContext, applicationContext)
+            .publishOn(scheduler)
+            .doOnNext(
+                value -> {
+                  callbackContext.set(Context.current().get(APPLICATION_KEY));
+                  callbackFinished.countDown();
+                })
+            .subscribe(
+                new CoreSubscriber<String>() {
+                  @Override
+                  public reactor.util.context.Context currentContext() {
+                    return reactor.util.context.Context.empty();
+                  }
+
+                  @Override
+                  public void onSubscribe(Subscription subscription) {
+                    try (Scope ignored = temporaryContext.makeCurrent()) {
+                      subscription.request(1);
+                      requestContext.set(Context.current().get(APPLICATION_KEY));
+                    }
+                    contextAfterTemporaryScope.set(Context.current().get(APPLICATION_KEY));
+                  }
+
+                  @Override
+                  public void onNext(String value) {}
+
+                  @Override
+                  public void onError(Throwable error) {
+                    callbackError.set(error);
+                    callbackFinished.countDown();
+                  }
+
+                  @Override
+                  public void onComplete() {}
+                });
+        assertThat(Context.current()).isSameAs(subscriptionContext);
+      }
+      releaseWorker.countDown();
+      assertThat(callbackFinished.await(10, SECONDS)).isTrue();
+      String expectedApplication = rootApplicationContext ? null : "application";
+      assertThat(requestContext.get()).isEqualTo("temporary");
+      assertThat(contextAfterTemporaryScope.get()).isEqualTo(expectedApplication);
+      assertThat(callbackError.get()).isNull();
+      assertThat(callbackContext.get()).isEqualTo(expectedApplication);
+    } finally {
+      releaseWorker.countDown();
+      operator.resetOnEachOperator();
+      scheduler.dispose();
+    }
+  }
+
+  @ParameterizedTest
   @CsvSource({
     "false,false,false",
     "false,false,true",

@@ -550,7 +550,7 @@ public final class ContextPropagationOperator {
     Scannable scannable = Scannable.from(actual);
     Consumer<Runnable> applicationContextScope =
         callback -> {
-          if (ContextBoundaryState.isActive(boundary)) {
+          if (ContextBoundaryState.isActive(boundary) && Context.current() == applicationContext) {
             callback.run();
           } else {
             try (Scope ignored = enterApplicationContextBoundary(applicationContext, boundary)) {

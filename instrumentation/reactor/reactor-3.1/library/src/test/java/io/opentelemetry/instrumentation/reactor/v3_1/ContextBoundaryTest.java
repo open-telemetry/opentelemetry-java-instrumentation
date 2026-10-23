@@ -469,6 +469,83 @@ class ContextBoundaryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
+  void restoresApplicationContextWhenDemandIsRequestedUnderTemporaryContext(boolean rootApplication)
+      throws InterruptedException {
+    assumeTrue(schedulerHooksSupported());
+    operator.registerOnEachOperator();
+    Context application = rootApplication ? Context.root() : APPLICATION;
+    Context temporary = Context.root().with(KEY, "temporary");
+    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
+    CountDownLatch workerStarted = new CountDownLatch(1);
+    CountDownLatch releaseWorker = new CountDownLatch(1);
+    CountDownLatch callbackFinished = new CountDownLatch(1);
+    AtomicReference<Context> requestContext = new AtomicReference<>();
+    AtomicReference<Context> contextAfterTemporaryScope = new AtomicReference<>();
+    AtomicReference<Context> callbackContext = new AtomicReference<>();
+    AtomicReference<Throwable> callbackError = new AtomicReference<>();
+    try {
+      scheduler.schedule(
+          () -> {
+            workerStarted.countDown();
+            try {
+              releaseWorker.await();
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
+          });
+      assertThat(workerStarted.await(10, SECONDS)).isTrue();
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, application)
+            .publishOn(scheduler)
+            .doOnNext(
+                value -> {
+                  callbackContext.set(Context.current());
+                  callbackFinished.countDown();
+                })
+            .subscribe(
+                new CoreSubscriber<String>() {
+                  @Override
+                  public reactor.util.context.Context currentContext() {
+                    return reactor.util.context.Context.empty();
+                  }
+
+                  @Override
+                  public void onSubscribe(Subscription subscription) {
+                    try (Scope ignored = temporary.makeCurrent()) {
+                      subscription.request(1);
+                      requestContext.set(Context.current());
+                    }
+                    contextAfterTemporaryScope.set(Context.current());
+                  }
+
+                  @Override
+                  public void onNext(String value) {}
+
+                  @Override
+                  public void onError(Throwable error) {
+                    callbackError.set(error);
+                    callbackFinished.countDown();
+                  }
+
+                  @Override
+                  public void onComplete() {}
+                });
+        assertThat(Context.current()).isSameAs(UNRELATED);
+      }
+      releaseWorker.countDown();
+      assertThat(callbackFinished.await(10, SECONDS)).isTrue();
+      assertThat(requestContext.get()).isSameAs(temporary);
+      assertThat(contextAfterTemporaryScope.get()).isSameAs(application);
+      assertThat(callbackError.get()).isNull();
+      assertThat(callbackContext.get()).isSameAs(application);
+    } finally {
+      releaseWorker.countDown();
+      scheduler.dispose();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
   void keepsMatchingApplicationContextForDelayedDemandFromAnotherBoundary(boolean rootApplication)
       throws InterruptedException {
     operator.registerOnEachOperator();
