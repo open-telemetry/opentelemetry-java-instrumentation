@@ -139,6 +139,20 @@ and `contextDataAttributesExcluded` settings, which in turn take precedence over
 does not disable capture and the next configured source is used instead. No context data attributes
 are captured only when every one of these sources is absent or empty.
 
+Context data values that are not strings, for example values set through Log4j's
+`ObjectThreadContextMap`, are captured as follows:
+
+- `Boolean` becomes a boolean attribute, `Byte`, `Short`, `Integer`, and `Long` become long
+  attributes, and `Float` and `Double` become double attributes.
+- Arrays, collections, and maps are converted element by element with the same rules. A non-empty
+  array or collection whose converted elements are all strings, all booleans, all longs, or all
+  doubles becomes an array attribute of that type, so a `List<UUID>` becomes a string array. Any
+  other array, collection, or map becomes a complex attribute.
+  Map keys are converted with `toString()`, `null` keys are skipped, and colliding keys keep the
+  last value. A reference back to a containing array, collection, or map becomes an empty value.
+- Any other value, including other `Number` types such as `BigDecimal`, is captured as its
+  `toString()`.
+
 Structured attributes from `MapMessage` entries are captured by default. The structured selector
 uses the same pattern syntax, case sensitivity, and exclusion precedence as the context data
 selector. Only a non-empty selector set with `setStructuredAttributes(IncludeExclude)` takes
