@@ -27,18 +27,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public class HttpServerInstrumentationExtension extends InstrumentationExtension {
 
   /**
-   * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpServerUsingTest}
-   * for javaagent instrumentation.
-   *
-   * @deprecated Use {@link AgentHttpServerInstrumentationExtension#create()}. This method will be
-   *     removed in a future minor release.
-   */
-  @Deprecated
-  public static InstrumentationExtension forAgent() {
-    return AgentHttpServerInstrumentationExtension.create();
-  }
-
-  /**
    * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
    * library instrumentation.
    */

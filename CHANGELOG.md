@@ -354,6 +354,10 @@
 - In `opentelemetry-instrumentation-api-incubator`, remove calls to
   `RpcMetricsContextCustomizers.dualEmitContextCustomizer`. RPC metrics no longer require this
   context customizer.
+- Remove `HttpClientInstrumentationExtension.forAgent()` and
+  `HttpServerInstrumentationExtension.forAgent()`; use
+  `AgentHttpClientInstrumentationExtension.create()` and
+  `AgentHttpServerInstrumentationExtension.create()` instead.
 - Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
   `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
   ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
@@ -471,10 +475,6 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `HttpClientInstrumentationExtension.forAgent()` and
-  `HttpServerInstrumentationExtension.forAgent()` in favor of
-  `AgentHttpClientInstrumentationExtension.create()` and
-  `AgentHttpServerInstrumentationExtension.create()`, respectively, for removal in a future minor release.
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.

@@ -18,18 +18,6 @@ public class HttpClientInstrumentationExtension extends InstrumentationExtension
 
   /**
    * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
-   * javaagent instrumentation.
-   *
-   * @deprecated Use {@link AgentHttpClientInstrumentationExtension#create()}. This method will be
-   *     removed in a future minor release.
-   */
-  @Deprecated
-  public static InstrumentationExtension forAgent() {
-    return AgentHttpClientInstrumentationExtension.create();
-  }
-
-  /**
-   * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
    * library instrumentation.
    */
   public static InstrumentationExtension forLibrary() {

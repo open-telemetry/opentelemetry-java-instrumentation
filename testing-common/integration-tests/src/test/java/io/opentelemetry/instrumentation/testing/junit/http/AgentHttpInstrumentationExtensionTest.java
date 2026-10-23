@@ -18,21 +18,15 @@ import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.server.Server;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 class AgentHttpInstrumentationExtensionTest {
 
-  @SuppressWarnings("deprecation")
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void clientFixtureLifecycle(boolean deprecatedFactory) throws Exception {
-    InstrumentationExtension extension =
-        deprecatedFactory
-            ? HttpClientInstrumentationExtension.forAgent()
-            : AgentHttpClientInstrumentationExtension.create();
+  @Test
+  void clientFixtureLifecycle() throws Exception {
+    InstrumentationExtension extension = AgentHttpClientInstrumentationExtension.create();
     assertThat(extension).isInstanceOf(AgentHttpClientInstrumentationExtension.class);
     assertThat(extension.getOpenTelemetry())
         .isSameAs(AgentTestRunner.instance().getOpenTelemetry());
@@ -69,14 +63,9 @@ class AgentHttpInstrumentationExtensionTest {
     await().untilAsserted(() -> assertThat(server.activePorts()).isEmpty());
   }
 
-  @SuppressWarnings("deprecation")
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void serverFixtureLifecycle(boolean deprecatedFactory) throws Exception {
-    InstrumentationExtension extension =
-        deprecatedFactory
-            ? HttpServerInstrumentationExtension.forAgent()
-            : AgentHttpServerInstrumentationExtension.create();
+  @Test
+  void serverFixtureLifecycle() throws Exception {
+    InstrumentationExtension extension = AgentHttpServerInstrumentationExtension.create();
     assertThat(extension).isInstanceOf(AgentHttpServerInstrumentationExtension.class);
     assertThat(extension.getOpenTelemetry())
         .isSameAs(AgentTestRunner.instance().getOpenTelemetry());
