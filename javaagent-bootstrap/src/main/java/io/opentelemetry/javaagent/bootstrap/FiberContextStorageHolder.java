@@ -26,7 +26,9 @@ public final class FiberContextStorageHolder {
 
   public static Activation activate(
       ContextState contextState, @Nullable Activation previousFiberActivation) {
-    enabled = true;
+    if (!enabled) {
+      enabled = true;
+    }
     Activation activation = new Activation(contextState, CURRENT.get(), previousFiberActivation);
     CURRENT.set(activation);
     return activation;
@@ -38,7 +40,7 @@ public final class FiberContextStorageHolder {
       throw new IllegalStateException("Fiber context activations must be closed in reverse order");
     }
     if (activation.previousGlobalActivation == null) {
-      CURRENT.remove();
+      CURRENT.set(null);
     } else {
       CURRENT.set(activation.previousGlobalActivation);
     }

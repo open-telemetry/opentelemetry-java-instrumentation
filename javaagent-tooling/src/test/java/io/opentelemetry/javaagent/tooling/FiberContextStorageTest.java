@@ -211,6 +211,24 @@ class FiberContextStorageTest {
   }
 
   @Test
+  void activationClearsAndCanBeActivatedAgain() {
+    ContextStateImpl state = new ContextStateImpl(Context.root());
+    assertThat(FiberContextStorageHolder.current()).isNull();
+
+    for (int i = 0; i < 2; i++) {
+      Activation activation = FiberContextStorageHolder.activate(state, null);
+      try {
+        assertThat(FiberContextStorageHolder.isEnabled()).isTrue();
+        assertThat(FiberContextStorageHolder.current()).isSameAs(state);
+      } finally {
+        assertThat(FiberContextStorageHolder.deactivate(activation)).isNull();
+      }
+      assertThat(FiberContextStorageHolder.current()).isNull();
+      assertThat(FiberContextStorageHolder.isEnabled()).isTrue();
+    }
+  }
+
+  @Test
   void nestedActivationRestoresOuterFiberAndItsScope() throws Exception {
     Context outerContext = context("outer");
     Context innerContext = context("inner");
@@ -235,8 +253,9 @@ class FiberContextStorageTest {
       assertThat(storage.current()).isSameAs(Context.root());
       storage.close();
     } finally {
-      FiberContextStorageHolder.deactivate(outerActivation);
+      assertThat(FiberContextStorageHolder.deactivate(outerActivation)).isNull();
     }
+    assertThat(FiberContextStorageHolder.current()).isNull();
   }
 
   @Test
