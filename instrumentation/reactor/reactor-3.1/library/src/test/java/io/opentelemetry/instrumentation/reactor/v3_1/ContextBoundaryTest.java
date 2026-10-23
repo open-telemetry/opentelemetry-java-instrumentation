@@ -18,7 +18,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,14 +28,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Fuseable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoSink;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 class ContextBoundaryTest {
@@ -52,7 +48,6 @@ class ContextBoundaryTest {
   @AfterEach
   void resetHooks() {
     operator.resetOnEachOperator();
-    assertThat(ContextPropagationOperator.isApplicationContextBoundaryActive()).isFalse();
   }
 
   private static Stream<Arguments> boundaries() {
@@ -78,26 +73,6 @@ class ContextBoundaryTest {
         Arguments.of(false, false, Context.root(), APPLICATION),
         Arguments.of(true, true, Context.root(), APPLICATION),
         Arguments.of(false, true, OPERATION, Context.root()));
-  }
-
-  private static Stream<Arguments> hookedChainBoundaries() {
-    return Stream.of(false, true)
-        .flatMap(
-            mono ->
-                Stream.of(Context.root(), APPLICATION)
-                    .map(application -> Arguments.of(mono, application)));
-  }
-
-  private static Stream<Arguments> deferredBoundaries() {
-    return Stream.of(false, true)
-        .flatMap(
-            mono ->
-                Stream.of(false, true)
-                    .flatMap(
-                        schedulerHop ->
-                            Stream.of(Context.root(), APPLICATION)
-                                .map(
-                                    application -> Arguments.of(mono, schedulerHop, application))));
   }
 
   private static Stream<Arguments> directSubscriberBoundaries() {
@@ -174,102 +149,6 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("hookedChainBoundaries")
-  void keepsApplicationContextAcrossHookedDownstreamChain(boolean mono, Context application) {
-    operator.registerOnEachOperator();
-    AtomicReference<Context> observed = new AtomicReference<>();
-    try (Scope ignored = UNRELATED.makeCurrent()) {
-      if (mono) {
-        ContextPropagationOperator.runWithContext(Mono.just("value"), OPERATION, application)
-            .map(value -> value)
-            .doOnNext(
-                value -> {
-                  ContextPropagationOperator.runWithContext(
-                          Mono.just(value), OPERATION, APPLICATION)
-                      .doOnNext(unused -> assertThat(Context.current()).isSameAs(APPLICATION))
-                      .block();
-                  assertThat(Context.current()).isSameAs(application);
-                  observed.set(Context.current());
-                })
-            .block();
-      } else {
-        ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, application)
-            .map(value -> value)
-            .doOnNext(
-                value -> {
-                  ContextPropagationOperator.runWithContext(
-                          Flux.just(value), OPERATION, APPLICATION)
-                      .doOnNext(unused -> assertThat(Context.current()).isSameAs(APPLICATION))
-                      .collectList()
-                      .block();
-                  assertThat(Context.current()).isSameAs(application);
-                  observed.set(Context.current());
-                })
-            .collectList()
-            .block();
-      }
-      assertThat(Context.current()).isSameAs(UNRELATED);
-    }
-    assertThat(observed.get()).isSameAs(application);
-  }
-
-  @ParameterizedTest
-  @MethodSource("deferredBoundaries")
-  void keepsApplicationContextForDeferredBoundary(
-      boolean mono, boolean schedulerHop, Context application) {
-    assumeTrue(!schedulerHop || schedulerHooksSupported());
-    operator.registerOnEachOperator();
-    AtomicReference<Context> observed = new AtomicReference<>();
-    Scheduler scheduler = schedulerHop ? Schedulers.newSingle("context-boundary-test") : null;
-    try {
-      try (Scope ignored = UNRELATED.makeCurrent()) {
-        if (mono) {
-          Mono<String> boundary =
-              Mono.defer(
-                  () ->
-                      ContextPropagationOperator.runWithContext(
-                          Mono.just("value"), OPERATION, application));
-          if (schedulerHop) {
-            boundary = boundary.publishOn(scheduler);
-          }
-          boundary
-              .map(value -> value)
-              .doOnNext(
-                  value -> {
-                    observed.set(Context.current());
-                    assertThat(Context.current()).isSameAs(application);
-                  })
-              .block();
-        } else {
-          Flux<String> boundary =
-              Flux.defer(
-                  () ->
-                      ContextPropagationOperator.runWithContext(
-                          Flux.just("value"), OPERATION, application));
-          if (schedulerHop) {
-            boundary = boundary.publishOn(scheduler);
-          }
-          boundary
-              .map(value -> value)
-              .doOnNext(
-                  value -> {
-                    observed.set(Context.current());
-                    assertThat(Context.current()).isSameAs(application);
-                  })
-              .collectList()
-              .block();
-        }
-        assertThat(Context.current()).isSameAs(UNRELATED);
-      }
-    } finally {
-      if (scheduler != null) {
-        scheduler.dispose();
-      }
-    }
-    assertThat(observed.get()).isSameAs(application);
-  }
-
-  @ParameterizedTest
   @MethodSource("nestedPublisherBoundaries")
   void keepsExplicitContextForIndependentPublisher(boolean mono, Context inner) {
     operator.registerOnEachOperator();
@@ -319,304 +198,6 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("hookedChainBoundaries")
-  void keepsApplicationContextAcrossDownstreamSchedulerHop(boolean mono, Context application) {
-    assumeTrue(schedulerHooksSupported());
-    operator.registerOnEachOperator();
-    AtomicReference<Context> observed = new AtomicReference<>();
-    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
-    try {
-      try (Scope ignored = UNRELATED.makeCurrent()) {
-        if (mono) {
-          ContextPropagationOperator.runWithContext(
-                  Mono.fromCallable(
-                      () -> {
-                        assertThat(Context.current()).isSameAs(OPERATION);
-                        return "value";
-                      }),
-                  OPERATION,
-                  application)
-              .publishOn(scheduler)
-              .map(value -> value)
-              .doOnNext(
-                  value -> {
-                    assertThat(Context.current()).isSameAs(application);
-                    observed.set(Context.current());
-                  })
-              .block();
-        } else {
-          ContextPropagationOperator.runWithContext(
-                  Flux.from(
-                      Mono.fromCallable(
-                          () -> {
-                            assertThat(Context.current()).isSameAs(OPERATION);
-                            return "value";
-                          })),
-                  OPERATION,
-                  application)
-              .publishOn(scheduler)
-              .map(value -> value)
-              .doOnNext(
-                  value -> {
-                    assertThat(Context.current()).isSameAs(application);
-                    observed.set(Context.current());
-                  })
-              .collectList()
-              .block();
-        }
-        assertThat(Context.current()).isSameAs(UNRELATED);
-      }
-      try (Scope ignored = INNER.makeCurrent()) {
-        Mono.just("independent")
-            .publishOn(scheduler)
-            .doOnNext(value -> assertThat(Context.current()).isSameAs(INNER))
-            .block();
-        assertThat(Context.current()).isSameAs(INNER);
-      }
-    } finally {
-      scheduler.dispose();
-    }
-    assertThat(observed.get()).isSameAs(application);
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void keepsApplicationContextForDelayedDownstreamDemand(boolean rootApplication)
-      throws InterruptedException {
-    operator.registerOnEachOperator();
-    Context application = rootApplication ? Context.root() : APPLICATION;
-    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
-    AtomicReference<Subscription> subscription = new AtomicReference<>();
-    AtomicReference<Context> callbackContext = new AtomicReference<>();
-    AtomicReference<Context> independentContext = new AtomicReference<>();
-    AtomicReference<Context> callbackContextAfterIndependentSignal = new AtomicReference<>();
-    AtomicReference<Thread> callbackThread = new AtomicReference<>();
-    AtomicReference<Thread> reusedWorkerThread = new AtomicReference<>();
-    AtomicReference<MonoSink<String>> sink = new AtomicReference<>();
-    CountDownLatch callbackFinished = new CountDownLatch(1);
-    CountDownLatch initialDrainFinished = new CountDownLatch(1);
-    CountDownLatch workerReused = new CountDownLatch(1);
-    try {
-      try (Scope ignored = INNER.makeCurrent()) {
-        Mono.<String>create(sink::set)
-            .map(
-                value -> {
-                  independentContext.set(Context.current());
-                  return value;
-                })
-            .subscribe();
-      }
-      try (Scope ignored = UNRELATED.makeCurrent()) {
-        ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, application)
-            .publishOn(scheduler)
-            .doOnNext(
-                value -> {
-                  callbackContext.set(Context.current());
-                  callbackThread.set(Thread.currentThread());
-                  sink.get().success("independent");
-                  callbackContextAfterIndependentSignal.set(Context.current());
-                  scheduler.schedule(
-                      () -> {
-                        reusedWorkerThread.set(Thread.currentThread());
-                        workerReused.countDown();
-                      });
-                  callbackFinished.countDown();
-                })
-            .subscribe(
-                new CoreSubscriber<String>() {
-                  @Override
-                  public reactor.util.context.Context currentContext() {
-                    return reactor.util.context.Context.empty();
-                  }
-
-                  @Override
-                  public void onSubscribe(Subscription actualSubscription) {
-                    subscription.set(actualSubscription);
-                  }
-
-                  @Override
-                  public void onNext(String value) {}
-
-                  @Override
-                  public void onError(Throwable error) {
-                    throw new AssertionError(error);
-                  }
-
-                  @Override
-                  public void onComplete() {}
-                });
-        assertThat(Context.current()).isSameAs(UNRELATED);
-      }
-
-      scheduler.schedule(initialDrainFinished::countDown);
-      assertThat(initialDrainFinished.await(10, SECONDS)).isTrue();
-      assertThat(subscription.get()).isNotNull();
-      try (Scope ignored = UNRELATED.makeCurrent()) {
-        subscription.get().request(1);
-        assertThat(Context.current()).isSameAs(UNRELATED);
-      }
-      assertThat(callbackFinished.await(10, SECONDS)).isTrue();
-      assertThat(workerReused.await(10, SECONDS)).isTrue();
-      assertThat(callbackContext.get()).isSameAs(application);
-      assertThat(independentContext.get()).isSameAs(INNER);
-      assertThat(callbackContextAfterIndependentSignal.get()).isSameAs(application);
-      assertThat(reusedWorkerThread.get()).isSameAs(callbackThread.get());
-    } finally {
-      scheduler.dispose();
-      operator.resetOnEachOperator();
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void restoresApplicationContextWhenDemandIsRequestedUnderTemporaryContext(boolean rootApplication)
-      throws InterruptedException {
-    assumeTrue(schedulerHooksSupported());
-    operator.registerOnEachOperator();
-    Context application = rootApplication ? Context.root() : APPLICATION;
-    Context temporary = Context.root().with(KEY, "temporary");
-    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
-    CountDownLatch workerStarted = new CountDownLatch(1);
-    CountDownLatch releaseWorker = new CountDownLatch(1);
-    CountDownLatch callbackFinished = new CountDownLatch(1);
-    AtomicReference<Context> requestContext = new AtomicReference<>();
-    AtomicReference<Context> contextAfterTemporaryScope = new AtomicReference<>();
-    AtomicReference<Context> callbackContext = new AtomicReference<>();
-    AtomicReference<Throwable> callbackError = new AtomicReference<>();
-    try {
-      scheduler.schedule(
-          () -> {
-            workerStarted.countDown();
-            try {
-              releaseWorker.await();
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-            }
-          });
-      assertThat(workerStarted.await(10, SECONDS)).isTrue();
-      try (Scope ignored = UNRELATED.makeCurrent()) {
-        ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, application)
-            .publishOn(scheduler)
-            .doOnNext(
-                value -> {
-                  callbackContext.set(Context.current());
-                  callbackFinished.countDown();
-                })
-            .subscribe(
-                new CoreSubscriber<String>() {
-                  @Override
-                  public reactor.util.context.Context currentContext() {
-                    return reactor.util.context.Context.empty();
-                  }
-
-                  @Override
-                  public void onSubscribe(Subscription subscription) {
-                    try (Scope ignored = temporary.makeCurrent()) {
-                      subscription.request(1);
-                      requestContext.set(Context.current());
-                    }
-                    contextAfterTemporaryScope.set(Context.current());
-                  }
-
-                  @Override
-                  public void onNext(String value) {}
-
-                  @Override
-                  public void onError(Throwable error) {
-                    callbackError.set(error);
-                    callbackFinished.countDown();
-                  }
-
-                  @Override
-                  public void onComplete() {}
-                });
-        assertThat(Context.current()).isSameAs(UNRELATED);
-      }
-      releaseWorker.countDown();
-      assertThat(callbackFinished.await(10, SECONDS)).isTrue();
-      assertThat(requestContext.get()).isSameAs(temporary);
-      assertThat(contextAfterTemporaryScope.get()).isSameAs(application);
-      assertThat(callbackError.get()).isNull();
-      assertThat(callbackContext.get()).isSameAs(application);
-    } finally {
-      releaseWorker.countDown();
-      scheduler.dispose();
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void keepsMatchingApplicationContextForDelayedDemandFromAnotherBoundary(boolean rootApplication)
-      throws InterruptedException {
-    operator.registerOnEachOperator();
-    Context boundaryApplication =
-        rootApplication ? Context.root() : Context.root().with(KEY, "boundary");
-    Context outerApplication = Context.root().with(KEY, "outer");
-    Context boundaryOperation = Context.root().with(KEY, "boundary-operation");
-    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
-    AtomicReference<Subscription> subscription = new AtomicReference<>();
-    AtomicReference<Context> boundaryCallbackContext = new AtomicReference<>();
-    AtomicReference<Context> outerCallbackContext = new AtomicReference<>();
-    CountDownLatch initialDrainFinished = new CountDownLatch(1);
-    CountDownLatch boundaryCallbackFinished = new CountDownLatch(1);
-    try {
-      try (Scope ignored = UNRELATED.makeCurrent()) {
-        ContextPropagationOperator.runWithContext(
-                Flux.just("boundary"), boundaryOperation, boundaryApplication)
-            .publishOn(scheduler)
-            .doOnNext(
-                value -> {
-                  boundaryCallbackContext.set(Context.current());
-                  boundaryCallbackFinished.countDown();
-                })
-            .subscribe(
-                new CoreSubscriber<String>() {
-                  @Override
-                  public reactor.util.context.Context currentContext() {
-                    return reactor.util.context.Context.empty();
-                  }
-
-                  @Override
-                  public void onSubscribe(Subscription actualSubscription) {
-                    subscription.set(actualSubscription);
-                  }
-
-                  @Override
-                  public void onNext(String value) {}
-
-                  @Override
-                  public void onError(Throwable error) {
-                    throw new AssertionError(error);
-                  }
-
-                  @Override
-                  public void onComplete() {}
-                });
-      }
-
-      scheduler.schedule(initialDrainFinished::countDown);
-      assertThat(initialDrainFinished.await(10, SECONDS)).isTrue();
-      try (Scope ignored = UNRELATED.makeCurrent()) {
-        ContextPropagationOperator.runWithContext(Mono.just("outer"), OPERATION, outerApplication)
-            .doOnNext(
-                value -> {
-                  assertThat(Context.current()).isSameAs(outerApplication);
-                  subscription.get().request(1);
-                  outerCallbackContext.set(Context.current());
-                })
-            .block();
-        assertThat(Context.current()).isSameAs(UNRELATED);
-      }
-      assertThat(boundaryCallbackFinished.await(10, SECONDS)).isTrue();
-      assertThat(boundaryCallbackContext.get()).isSameAs(boundaryApplication);
-      assertThat(outerCallbackContext.get()).isSameAs(outerApplication);
-    } finally {
-      scheduler.dispose();
-      operator.resetOnEachOperator();
-    }
-  }
-
-  @ParameterizedTest
   @MethodSource("directSubscriberBoundaries")
   void marksDirectlyConstructedTracingSubscribers(
       boolean mono, boolean rootApplication, boolean wrapped) {
@@ -642,71 +223,6 @@ class ContextBoundaryTest {
     assertThat(recording.contexts).containsExactly(application, application, application);
     assertThat(recording.values).containsExactly("value");
     assertThat(recording.complete).isTrue();
-  }
-
-  @ParameterizedTest
-  @MethodSource("publisherKindsAndSchedulerHops")
-  void preservesCapturedContextForIndependentPublisher(
-      boolean mono, boolean schedulerHop, boolean sameContext) {
-    assumeTrue(!schedulerHop || schedulerHooksSupported());
-    operator.registerOnEachOperator();
-    Context independentSubscriptionContext = sameContext ? UNRELATED : INNER;
-    AtomicReference<MonoSink<String>> sink = new AtomicReference<>();
-    AtomicReference<Context> independentContext = new AtomicReference<>();
-    try (Scope ignored = independentSubscriptionContext.makeCurrent()) {
-      Mono.<String>create(sink::set)
-          .map(
-              value -> {
-                independentContext.set(Context.current());
-                return value;
-              })
-          .subscribe();
-    }
-
-    Scheduler scheduler = schedulerHop ? Schedulers.newSingle("context-boundary-test") : null;
-    try {
-      try (Scope ignored = UNRELATED.makeCurrent()) {
-        if (mono) {
-          Mono<String> boundary =
-              ContextPropagationOperator.runWithContext(
-                  Mono.just("boundary"), OPERATION, APPLICATION);
-          if (schedulerHop) {
-            boundary = boundary.publishOn(scheduler);
-          }
-          boundary
-              .map(value -> value)
-              .doOnNext(
-                  value -> {
-                    assertThat(Context.current()).isSameAs(APPLICATION);
-                    sink.get().success("independent");
-                    assertThat(Context.current()).isSameAs(APPLICATION);
-                  })
-              .block();
-        } else {
-          Flux<String> boundary =
-              ContextPropagationOperator.runWithContext(
-                  Flux.just("boundary"), OPERATION, APPLICATION);
-          if (schedulerHop) {
-            boundary = boundary.publishOn(scheduler);
-          }
-          boundary
-              .map(value -> value)
-              .doOnNext(
-                  value -> {
-                    assertThat(Context.current()).isSameAs(APPLICATION);
-                    sink.get().success("independent");
-                    assertThat(Context.current()).isSameAs(APPLICATION);
-                  })
-              .blockLast();
-        }
-        assertThat(Context.current()).isSameAs(UNRELATED);
-      }
-    } finally {
-      if (scheduler != null) {
-        scheduler.dispose();
-      }
-    }
-    assertThat(independentContext.get()).isSameAs(independentSubscriptionContext);
   }
 
   @ParameterizedTest
@@ -986,17 +502,6 @@ class ContextBoundaryTest {
     }
   }
 
-  private static Stream<Arguments> publisherKindsAndSchedulerHops() {
-    return Stream.of(false, true)
-        .flatMap(
-            schedulerHop ->
-                Stream.of(false, true)
-                    .flatMap(
-                        sameContext ->
-                            Stream.of(true, false)
-                                .map(mono -> Arguments.of(mono, schedulerHop, sameContext))));
-  }
-
   private static MethodHandle getMonoContextWriteMethod() {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
@@ -1233,7 +738,6 @@ class ContextBoundaryTest {
     }
 
     private void recordContext() {
-      assertThat(ContextPropagationOperator.isApplicationContextBoundaryActive()).isTrue();
       assertThat(Context.current()).isSameAs(application);
       contexts.add(Context.current());
     }

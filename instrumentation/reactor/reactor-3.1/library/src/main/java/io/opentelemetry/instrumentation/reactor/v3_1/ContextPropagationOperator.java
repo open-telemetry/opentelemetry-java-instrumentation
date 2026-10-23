@@ -389,7 +389,8 @@ public final class ContextPropagationOperator {
     public void subscribe(CoreSubscriber<? super T> actual) {
       markDownstreamOfContextBoundary(actual, applicationContext);
       try (Scope ignored = operationContext.makeCurrent()) {
-        source.subscribe(new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
+        source.subscribe(
+            new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
       }
     }
 
@@ -417,7 +418,8 @@ public final class ContextPropagationOperator {
     public void subscribe(CoreSubscriber<? super T> actual) {
       markDownstreamOfContextBoundary(actual, applicationContext);
       try (Scope ignored = operationContext.makeCurrent()) {
-        source.subscribe(new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
+        source.subscribe(
+            new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
       }
     }
 
