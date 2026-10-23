@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.http.StreamResetException;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -48,6 +49,8 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("handleException").and(takesArguments(Throwable.class)),
         getClass().getName() + "$ExceptionAdvice");
+    transformer.applyAdviceToMethod(
+        named("reset").and(takesArguments(long.class)), getClass().getName() + "$ResetAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -57,10 +60,14 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Handler<AsyncResult<Void>> onEnter(
         @Advice.This HttpServerResponse response,
+        @Advice.Argument(0) @Nullable Object data,
         @Advice.Argument(1) boolean end,
+        @Advice.FieldValue("headWritten") boolean headWritten,
+        @Advice.FieldValue("trailers") @Nullable Object trailers,
         @Advice.Argument(2) @Nullable Handler<AsyncResult<Void>> handler) {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
-      return end && state != null
+      // Header-only responses and trailers complete through the terminal HEADERS write instead.
+      return end && state != null && trailers == null && (data != null || headWritten)
           ? new ResponseCompletionHandler(response, state.state, handler)
           : handler;
     }
@@ -103,6 +110,19 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This HttpServerResponse response, @Advice.Argument(0) Throwable error) {
       VertxHttpServerSingletons.endResponse(response, error);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ResetAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This HttpServerResponse response,
+        @Advice.Argument(0) long code,
+        @Advice.Return boolean accepted) {
+      if (accepted) {
+        VertxHttpServerSingletons.endResponse(response, new StreamResetException(code));
+      }
     }
   }
 }

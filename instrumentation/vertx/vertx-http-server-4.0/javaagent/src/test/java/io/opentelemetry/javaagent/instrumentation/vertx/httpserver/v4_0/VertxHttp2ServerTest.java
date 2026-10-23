@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0;
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.api.trace.StatusCode.ERROR;
+import static io.opentelemetry.api.trace.StatusCode.UNSET;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -224,8 +225,9 @@ class VertxHttp2ServerTest {
     assertDuration(SCOPE, 2);
   }
 
-  @Test
-  void headerOnlyResponseEndsBeforeUpload() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void responseEndsBeforeUpload(boolean trailers) throws Exception {
     CompletableFuture<Void> requestEnd = new CompletableFuture<>();
     CompletableFuture<Void> responseEnd = new CompletableFuture<>();
     start(
@@ -233,6 +235,9 @@ class VertxHttp2ServerTest {
         request -> {
           assertThat(request.version()).isEqualTo(HttpVersion.HTTP_2);
           request.endHandler(ignored -> requestEnd.complete(null));
+          if (trailers) {
+            request.response().putTrailer("x-finished", "yes");
+          }
           request.response().endHandler(ignored -> responseEnd.complete(null)).end();
         });
     io.vertx.core.http.HttpClient client =
@@ -265,7 +270,14 @@ class VertxHttp2ServerTest {
                   response -> {
                     assertThat(response.version()).isEqualTo(HttpVersion.HTTP_2);
                     assertThat(response.statusCode()).isEqualTo(200);
-                    return response.body();
+                    return response
+                        .body()
+                        .map(
+                            body -> {
+                              assertThat(response.getTrailer("x-finished"))
+                                  .isEqualTo(trailers ? "yes" : null);
+                              return body;
+                            });
                   })
               .toCompletionStage()
               .toCompletableFuture();
@@ -310,6 +322,36 @@ class VertxHttp2ServerTest {
                         .hasTraceId(TRACE_ID)
                         .hasParentSpanId(PARENT_ID)
                         .hasStatusSatisfying(status -> status.hasCode(ERROR))));
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
+  void resetDuringHeaderPreparation() throws Exception {
+    CompletableFuture<Boolean> resetAccepted = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request ->
+                request
+                    .response()
+                    .headersEndHandler(
+                        ignored -> resetAccepted.complete(request.response().reset(8)))
+                    .end());
+    CompletableFuture<HttpResponse<String>> response = send(client, "/reset", TRACE_ID);
+    boolean accepted = resetAccepted.get(10, SECONDS);
+    if (accepted) {
+      assertThatThrownBy(() -> response.get(10, SECONDS)).isInstanceOf(ExecutionException.class);
+    } else {
+      assertThat(response.get(10, SECONDS).statusCode()).isEqualTo(200);
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SERVER)
+                        .hasTraceId(TRACE_ID)
+                        .hasParentSpanId(PARENT_ID)
+                        .hasStatusSatisfying(status -> status.hasCode(accepted ? ERROR : UNSET))));
     assertDuration(SCOPE, 1);
   }
 

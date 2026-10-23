@@ -30,6 +30,16 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("version43Test") {
+      sources.java.setSrcDirs(listOf("src/test/java"))
+      dependencies {
+        val version = baseVersion("4.3.7").orLatest("4.+")
+        implementation("io.vertx:vertx-core:$version")
+        implementation("io.vertx:vertx-codegen:$version")
+        implementation("io.vertx:vertx-web:$version")
+        implementation("io.netty:netty-codec-haproxy")
+      }
+    }
     register<JvmTestSuite>("version45Test") {
       sources.java.setSrcDirs(listOf("src/test/java"))
       dependencies {
@@ -52,6 +62,10 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks.compileTestJava {
+  options.release.set(11)
+}
+
+tasks.named<JavaCompile>("compileVersion43TestJava") {
   options.release.set(11)
 }
 

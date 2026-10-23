@@ -43,7 +43,7 @@ public class Http2ServerRequestInstrumentation implements TypeInstrumentation {
         named("handleData")
             .and(takesArgument(0, named("io.vertx.core.buffer.Buffer")))
             .or(named("handleEnd").and(takesArgument(0, named("io.vertx.core.MultiMap"))))
-            .or(named("handleClose").and(takesArguments(0))),
+            .or(named("handleClose")),
         getClass().getName() + "$CallbackAdvice");
     transformer.applyAdviceToMethod(
         named("handleException").and(takesArguments(Throwable.class)),
@@ -83,9 +83,8 @@ public class Http2ServerRequestInstrumentation implements TypeInstrumentation {
       }
       if (error != null) {
         VertxHttpServerSingletons.end(request, error);
-      } else if (method.equals("handleClose")) {
-        VertxHttpServerSingletons.end(
-            request, request.response().ended() ? null : new ClosedChannelException());
+      } else if (method.equals("handleClose") && !request.response().ended()) {
+        VertxHttpServerSingletons.end(request, new ClosedChannelException());
       }
     }
   }
