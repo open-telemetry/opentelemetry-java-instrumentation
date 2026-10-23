@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -15,6 +16,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -29,7 +31,6 @@ import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -129,8 +130,9 @@ class SpringSchedulingTest {
   }
 
   @Test
-  @Tag("enhanced")
   void scheduleEnhancedClassTest() throws InterruptedException {
+    assumeTrue(testLatestDeps());
+
     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
     cleanup.deferCleanup(() -> context.close());
     context.register(EnhancedClassTaskConfig.class);

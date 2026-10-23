@@ -23,12 +23,7 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    if (!otelProps.testLatestDeps) {
-      useJUnitPlatform {
-        excludeTags("enhanced")
-      }
-    }
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testExperimental = register<Test>("testExperimental") {
