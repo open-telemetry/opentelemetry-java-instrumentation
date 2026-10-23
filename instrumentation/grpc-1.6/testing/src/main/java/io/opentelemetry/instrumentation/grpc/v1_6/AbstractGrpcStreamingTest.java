@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExtraClientAttributes;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
@@ -40,7 +41,6 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
@@ -247,7 +247,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         RPC_GRPC_STATUS_CODE,
                                         emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                                     equalTo(
-                                        AttributeKey.stringKey("rpc.status_code"),
+                                        stringKey("rpc.status_code"),
                                         emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -278,7 +278,7 @@ public abstract class AbstractGrpcStreamingTest {
                                     RPC_GRPC_STATUS_CODE,
                                     emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                                 equalTo(
-                                    AttributeKey.stringKey("rpc.status_code"),
+                                    stringKey("rpc.status_code"),
                                     emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -334,7 +334,8 @@ public abstract class AbstractGrpcStreamingTest {
                                           equalTo(SERVER_PORT, server.getPort()),
                                           equalTo(RPC_METHOD, "example.Greeter/Conversation"),
                                           equalTo(
-                                              AttributeKey.stringKey("rpc.status_code"), Status.Code.OK.name())))));
+                                              stringKey("rpc.status_code"),
+                                              Status.Code.OK.name())))));
     }
     if (emitOldRpcSemconv()) {
       testing()
@@ -377,7 +378,8 @@ public abstract class AbstractGrpcStreamingTest {
                                           equalTo(SERVER_PORT, server.getPort()),
                                           equalTo(RPC_METHOD, "example.Greeter/Conversation"),
                                           equalTo(
-                                              AttributeKey.stringKey("rpc.status_code"), Status.Code.OK.name())))));
+                                              stringKey("rpc.status_code"),
+                                              Status.Code.OK.name())))));
     }
   }
 
@@ -471,7 +473,7 @@ public abstract class AbstractGrpcStreamingTest {
                                             ? (long) Status.Code.INTERNAL.value()
                                             : null),
                                     equalTo(
-                                        AttributeKey.stringKey("rpc.status_code"),
+                                        stringKey("rpc.status_code"),
                                         emitPreviewRpcSemconv()
                                             ? Status.Code.INTERNAL.name()
                                             : null),
@@ -503,7 +505,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         ? (long) Status.Code.INTERNAL.value()
                                         : null),
                                 equalTo(
-                                    AttributeKey.stringKey("rpc.status_code"),
+                                    stringKey("rpc.status_code"),
                                     emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),

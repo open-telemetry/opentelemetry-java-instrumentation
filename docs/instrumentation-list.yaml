@@ -5248,7 +5248,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-019ae5d4:
+    rpc.client.call.duration-3bb27bbc:
       name: rpc.client.call.duration
       description: Measures the duration of outbound remote procedure calls (RPC).
       instrument: histogram
@@ -5259,7 +5259,7 @@ definitions:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -5407,7 +5407,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.call.duration-f7f75ef6:
+    rpc.server.call.duration-80918298:
       name: rpc.server.call.duration
       description: Measures the duration of inbound remote procedure calls (RPC).
       instrument: histogram
@@ -5418,7 +5418,7 @@ definitions:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6743,7 +6743,7 @@ libraries:
       attributes:
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6755,7 +6755,7 @@ libraries:
       attributes:
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6771,9 +6771,9 @@ libraries:
         type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
-        type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING
@@ -6789,9 +6789,9 @@ libraries:
         type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
-        type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING
@@ -10699,8 +10699,8 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-019ae5d4
-    - rpc.server.call.duration-f7f75ef6
+    - rpc.client.call.duration-3bb27bbc
+    - rpc.server.call.duration-80918298
     spans:
     - span_kind: CLIENT
       attributes:
@@ -10708,7 +10708,7 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -10728,7 +10728,7 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING

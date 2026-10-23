@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -27,7 +28,6 @@ import example.GreeterGrpc;
 import example.Helloworld;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import org.junit.jupiter.api.Test;
@@ -92,7 +92,7 @@ class ArmeriaGrpcTest {
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
-                                AttributeKey.stringKey("rpc.status_code"),
+                                stringKey("rpc.status_code"),
                                 emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
@@ -123,7 +123,7 @@ class ArmeriaGrpcTest {
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
-                                AttributeKey.stringKey("rpc.status_code"),
+                                stringKey("rpc.status_code"),
                                 emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
