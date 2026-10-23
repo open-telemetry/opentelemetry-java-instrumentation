@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -662,11 +661,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   }
 
   private Consumer<TraceAssert> transactionSpan(
-      String operation,
-      String query,
-      StatusData status,
-      @Nullable String errorType,
-      @Nullable String lettuceVersion) {
+      String operation, String query, StatusData status, String errorType, String lettuceVersion) {
     boolean missingEndpoint = "6.0.0.RELEASE".equals(lettuceVersion);
     return trace ->
         trace.hasSpansSatisfyingExactly(
