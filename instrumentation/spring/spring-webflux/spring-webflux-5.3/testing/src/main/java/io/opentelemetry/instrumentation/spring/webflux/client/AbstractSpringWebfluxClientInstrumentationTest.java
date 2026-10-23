@@ -9,13 +9,18 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -34,6 +39,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.core.SpringVersion;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -91,6 +99,131 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   protected abstract WebClient.Builder instrument(WebClient.Builder builder);
+
+  protected static boolean emitExperimentalTelemetry() {
+    return Boolean.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"varargs", "map", "absolute", "uri", "builder"})
+  void shouldCaptureUriTemplate(String overload) {
+    URI uri = resolveAddress("/hello/some-account");
+    WebClient client =
+        instrument(
+                WebClient.builder()
+                    .baseUrl(resolveAddress("").toString())
+                    .clientConnector(ClientHttpConnectorFactory.create()))
+            .build();
+    WebClient.RequestHeadersSpec<?> request;
+    String template = "/hello/{id}";
+    switch (overload) {
+      case "varargs":
+        request = client.get().uri(template, "some-account");
+        break;
+      case "map":
+        request = client.get().uri(template, singletonMap("id", "some-account"));
+        break;
+      case "absolute":
+        request = client.get().uri(resolveAddress("/hello/") + "{id}", "some-account");
+        break;
+      case "uri":
+        request = client.get().uri(uri);
+        template = null;
+        break;
+      case "builder":
+        request = client.get().uri(builder -> builder.path("/hello/{id}").build("some-account"));
+        template = null;
+        break;
+      default:
+        throw new AssertionError(overload);
+    }
+    assertTemplateRequest(request, uri, expectedTemplate(template));
+  }
+
+  @Test
+  void shouldCaptureAccountsUriTemplate() {
+    // The shared server has no accounts endpoint; retrieve the 404 body without raising an error.
+    WebClient client =
+        instrument(
+                WebClient.builder()
+                    .baseUrl(resolveAddress("").toString())
+                    .clientConnector(ClientHttpConnectorFactory.create()))
+            .build();
+    assertTemplateRequest(
+        client.get().uri("/accounts/{id}", "some-account"),
+        resolveAddress("/accounts/some-account"),
+        expectedTemplate("/accounts/{id}"));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateWithBasePath() {
+    String baseUrl = resolveAddress("/hello").toString();
+    WebClient client =
+        instrument(
+                WebClient.builder()
+                    .baseUrl(baseUrl)
+                    .clientConnector(ClientHttpConnectorFactory.create()))
+            .build();
+    assertTemplateRequest(
+        client.get().uri("/{id}", "some-account"),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate(springVersionAtLeast(6, 1, 2) ? "/hello/{id}" : "/{id}"));
+  }
+
+  protected static String expectedTemplate(String template) {
+    if (template == null || !emitExperimentalTelemetry() || !springVersionAtLeast(5, 0, 5)) {
+      return null;
+    }
+    return template;
+  }
+
+  private static boolean springVersionAtLeast(int major, int minor, int patch) {
+    String[] version = requireNonNull(SpringVersion.getVersion()).split("[.-]");
+    int[] minimum = {major, minor, patch};
+    for (int i = 0; i < minimum.length; i++) {
+      int part = Integer.parseInt(version[i]);
+      if (part != minimum[i]) {
+        return part > minimum[i];
+      }
+    }
+    return true;
+  }
+
+  protected void assertTemplateRequest(
+      WebClient.RequestHeadersSpec<?> request, URI uri, String template) {
+    request
+        .retrieve()
+        .onStatus(status -> status.value() == 404, response -> Mono.empty())
+        .bodyToMono(String.class)
+        .block();
+
+    int statusCode = uri.getPath().startsWith("/accounts/") ? 404 : 200;
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName(template == null ? "GET" : "GET " + template)
+                      .hasKind(CLIENT)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "GET"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
+                          equalTo(
+                              HTTP_RESPONSE_BODY_SIZE,
+                              emitExperimentalTelemetry() ? (statusCode == 404 ? 35L : 20L) : null),
+                          equalTo(URL_FULL, uri.toString()),
+                          equalTo(URL_TEMPLATE, template),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, uri.getPort()),
+                          satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
+                          equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                          equalTo(ERROR_TYPE, statusCode == 404 ? "404" : null)),
+              span ->
+                  span.hasName("test-http-server")
+                      .hasKind(SpanKind.SERVER)
+                      .hasParent(trace.getSpan(0)));
+        });
+  }
 
   @Override
   public int sendRequest(

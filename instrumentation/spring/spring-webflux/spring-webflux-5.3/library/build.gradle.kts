@@ -34,6 +34,14 @@ if (!otelProps.testLatestDeps) {
 }
 
 tasks {
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    include("**/SpringWebfluxClientInstrumentationTest*")
+    systemProperty("otel.instrumentation.http.client.emit-experimental-telemetry", true)
+    systemProperty("metadataConfig", "Experimental.setEmitExperimentalTelemetry")
+  }
+
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -42,6 +50,6 @@ tasks {
   }
 
   check {
-    dependsOn(testPreviewSemconv)
+    dependsOn(testPreviewSemconv, testExperimental)
   }
 }
