@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -18,12 +19,14 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -40,7 +43,9 @@ import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.RedisOptions;
 import io.vertx.redis.client.Request;
 import io.vertx.redis.client.Response;
+import io.vertx.redis.client.ResponseType;
 import io.vertx.redis.client.impl.types.ErrorType;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,6 +53,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
@@ -226,6 +232,30 @@ class VertxRedisClientErrorTest {
     assertTelemetry("Collection", 2);
   }
 
+  @Test
+  void collidingBinaryMapKeysDoNotHideNestedServerError()
+      throws ExecutionException, IOException, InterruptedException, TimeoutException {
+    assumeTrue(testLatestDeps());
+    RedisConnection connection = connectRaw(resp3MapWithCollidingBinaryKeys());
+
+    Response response =
+        connection
+            .send(Request.cmd(Command.GET).arg("key0"))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(30, SECONDS);
+
+    assertThat(response.type()).isEqualTo(ResponseType.MULTI);
+    Iterator<Response> entries = response.iterator();
+    Response first = entries.next();
+    Response firstValue = first.get(first.getKeys().iterator().next());
+    Response second = entries.next();
+    Response secondValue = second.get(second.getKeys().iterator().next());
+    assertThat(firstValue.get(0)).isInstanceOf(ErrorType.class);
+    assertThat(secondValue.toString()).isEqualTo("OK");
+    assertTelemetry("WRONGTYPE", 1);
+  }
+
   private static Stream<Arguments> responseCollections() {
     return Stream.of(
         argumentSet("array", "*3\r\n+OK\r\n*1\r\n-Collection detail\r\n-Second detail\r\n", false),
@@ -313,7 +343,21 @@ class VertxRedisClientErrorTest {
 
   private RedisConnection connect(RedisOptions options, String... replies)
       throws ExecutionException, IOException, InterruptedException, TimeoutException {
-    server = new ReplyServer(asList(replies));
+    return connectWithReplies(
+        options,
+        Stream.of(replies)
+            .map(reply -> reply == null ? null : reply.getBytes(UTF_8))
+            .collect(toList()));
+  }
+
+  private RedisConnection connectRaw(byte[]... replies)
+      throws ExecutionException, IOException, InterruptedException, TimeoutException {
+    return connectWithReplies(new RedisOptions(), asList(replies));
+  }
+
+  private RedisConnection connectWithReplies(RedisOptions options, List<byte[]> replies)
+      throws ExecutionException, IOException, InterruptedException, TimeoutException {
+    server = new ReplyServer(replies);
     cleanup.deferCleanup(server);
     Redis client =
         Redis.createClient(
@@ -324,6 +368,16 @@ class VertxRedisClientErrorTest {
     testing.waitForTraces(server.handshakeCommands.get());
     testing.clearData();
     return connection;
+  }
+
+  private static byte[] resp3MapWithCollidingBinaryKeys() throws IOException {
+    ByteArrayOutputStream reply = new ByteArrayOutputStream();
+    reply.write("%2\r\n$1\r\n".getBytes(US_ASCII));
+    reply.write(0xff);
+    reply.write("\r\n*1\r\n-WRONGTYPE detail\r\n$1\r\n".getBytes(US_ASCII));
+    reply.write(0xfe);
+    reply.write("\r\n+OK\r\n".getBytes(US_ASCII));
+    return reply.toByteArray();
   }
 
   private static List<Request> requests() {
@@ -402,14 +456,14 @@ class VertxRedisClientErrorTest {
     private final ServerSocket listener;
     private final int port;
     private final Thread thread;
-    private final List<String> replies;
+    private final List<byte[]> replies;
     private final AtomicReference<Throwable> failure = new AtomicReference<>();
     private final AtomicInteger handshakeCommands = new AtomicInteger();
     private final AtomicInteger requestCommands = new AtomicInteger();
     private volatile Socket socket;
     private volatile boolean closed;
 
-    private ReplyServer(List<String> replies) throws IOException {
+    private ReplyServer(List<byte[]> replies) throws IOException {
       this.replies = replies;
       port = PortUtils.findOpenPort();
       listener = new ServerSocket(port, 1, InetAddress.getAllByName(HOST)[0]);
@@ -444,14 +498,15 @@ class VertxRedisClientErrorTest {
               break;
             case "GET":
               int index = requestCommands.getAndIncrement();
-              String reply = replies.get(index);
+              byte[] reply = replies.get(index);
               if (reply == null) {
                 // Closing with unread pipelined requests can turn EOF into a TCP reset.
                 if (index + 1 == replies.size()) {
                   return;
                 }
               } else {
-                TestRedisCluster.write(output, reply);
+                output.write(reply);
+                output.flush();
               }
               break;
             default:

@@ -75,17 +75,19 @@ public final class VertxRedisClientError {
 
   private static Iterator<?> children(Response multi) throws ReflectiveOperationException {
     if (IS_MAP != null && Boolean.TRUE.equals(IS_MAP.invoke(multi))) {
-      // Native map iterators yield single-entry maps, so enumerate the values through the keys.
-      Iterator<String> keys = multi.getKeys().iterator();
+      // Native map iterators yield single-entry maps; avoid building a string-keyed view of the
+      // whole map, where distinct binary keys can collide after decoding.
+      Iterator<Response> entries = multi.iterator();
       return new Iterator<Response>() {
         @Override
         public boolean hasNext() {
-          return keys.hasNext();
+          return entries.hasNext();
         }
 
         @Override
         public Response next() {
-          return multi.get(keys.next());
+          Response entry = entries.next();
+          return entry.get(entry.getKeys().iterator().next());
         }
       };
     }
