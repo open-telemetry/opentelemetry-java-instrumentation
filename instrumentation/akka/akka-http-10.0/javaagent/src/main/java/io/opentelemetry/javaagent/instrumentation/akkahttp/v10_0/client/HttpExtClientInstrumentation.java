@@ -25,6 +25,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 
 class HttpExtClientInstrumentation implements TypeInstrumentation {
@@ -81,9 +82,10 @@ class HttpExtClientInstrumentation implements TypeInstrumentation {
         scope.close();
         if (actorSystem != null) {
           if (throwable == null) {
-            responseFuture.onComplete(
-                new OnCompleteHandler(context, request), actorSystem.dispatcher());
-            return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), Context.current());
+            ExecutionContext executionContext =
+                new CallbackExecutionContext(actorSystem.dispatcher());
+            responseFuture.onComplete(new OnCompleteHandler(context, request), executionContext);
+            return FutureWrapper.wrap(responseFuture, executionContext, Context.current());
           } else {
             instrumenter().end(context, request, null, throwable);
           }
