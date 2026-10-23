@@ -15,7 +15,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation-api-incubator"))
-        implementation("org.redisson:redisson:${baseVersion("3.0.0").orLatest("3.16.+")}")
+        implementation("org.redisson:redisson:3.0.0")
       }
     }
   }
