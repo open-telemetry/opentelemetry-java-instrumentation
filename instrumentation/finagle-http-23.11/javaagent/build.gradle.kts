@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -48,23 +49,13 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-common-4.0:library"))
 }
 
-tasks {
-  test {
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true"
-    )
-  }
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
         configureEach {
-          jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
-          jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+          telemetryConfig("otel.instrumentation.http.client.emit-experimental-telemetry", "true")
+          telemetryConfig("otel.instrumentation.http.server.emit-experimental-telemetry", "true")
           jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
 
           // force the netty event loop into constrained territory
@@ -78,15 +69,12 @@ testing {
             enabled = false
           }
         }
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-              "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-              "otel.semconv-stability.preview=service.peer"
-          )
+        register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
         }
       }
     }

@@ -75,8 +75,7 @@ testing.suites.register<JvmTestSuite>("version17Test") {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("otel.instrumentation.common.controller-telemetry.enabled", true)
-    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+    telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
   }
 
   if (otelProps.denyUnsafe) {
@@ -86,15 +85,21 @@ tasks {
   }
 
   testing.suites.withType<JvmTestSuite>().configureEach {
-    val ratpack14Test = name == "test"
+    val suiteName = name
     executions {
       configureEach {
-        if (ratpack14Test) {
+        if (suiteName == "test") {
           systemProperty("ratpack14Test", true)
         }
       }
-      register("PreviewSemconv") {
-        telemetryConfig("otel.semconv-stability.preview", "service.peer")
+      if (suiteName == "version17Test") {
+        register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
       }
       register("ControllerTelemetryDisabled") {
         filter {

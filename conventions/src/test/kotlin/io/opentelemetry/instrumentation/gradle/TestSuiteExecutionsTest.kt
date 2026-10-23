@@ -135,6 +135,51 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
+  fun `mapped executions keep default profiles separate and retain source suite settings`() {
+    val source = suites().register("clientTest", JvmTestSuite::class.java).get()
+    val mappingKey = "otel.instrumentation.common.peer-service-mapping"
+    val mapping = "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service"
+    source.executions {
+      configureEach {
+        systemProperty("testLatestDeps", true)
+        jvmArgs("-Djava.net.preferIPv4Stack=true")
+        filter.includeTestsMatching("*ClientTest")
+        exclude("**/server/**")
+      }
+      register("WithPeerServiceMapping") {
+        telemetryConfig(mappingKey, mapping)
+      }
+      register("PreviewSemconvWithPeerServiceMapping") {
+        telemetryConfig("otel.semconv-stability.preview", "service.peer")
+        telemetryConfig(mappingKey, mapping)
+      }
+    }
+
+    assertThat(test(source.name).systemProperties)
+      .doesNotContainKeys(mappingKey, "otel.semconv-stability.preview", "metadataConfig")
+    assertThat(test(source.name + "WithPeerServiceMapping").systemProperties)
+      .containsEntry(mappingKey, mapping)
+      .containsEntry("metadataConfig", "$mappingKey=$mapping")
+      .doesNotContainKey("otel.semconv-stability.preview")
+    val preview = test(source.name + "PreviewSemconvWithPeerServiceMapping")
+    assertThat(preview.systemProperties)
+      .containsEntry(mappingKey, mapping)
+      .containsEntry("otel.semconv-stability.preview", "service.peer")
+      .containsEntry("metadataConfig", "otel.semconv-stability.preview=service.peer,$mappingKey=$mapping")
+    for (name in listOf(source.name, source.name + "WithPeerServiceMapping", preview.name)) {
+      val execution = test(name)
+      assertBinding(execution, source)
+      assertThat(execution.systemProperties).containsEntry("testLatestDeps", true)
+      assertThat(execution.allJvmArgs).containsOnlyOnce("-Djava.net.preferIPv4Stack=true")
+      assertThat(execution.filter.includePatterns).containsExactly("*ClientTest")
+      assertThat(execution.excludes).containsExactly("**/server/**")
+    }
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains(source.name, source.name + "WithPeerServiceMapping", preview.name)
+    assertThat(project.tasks.names).doesNotContain("testWithPeerServiceMapping")
+  }
+
+  @JunitTest
   fun `variants stay lazy and receive shared providers independently without flattening`() {
     var configuredTasks = 0
     var providerReads = 0
@@ -197,6 +242,164 @@ class TestSuiteExecutionsTest {
         register("Variant") {}
       }
     }.isInstanceOf(IllegalArgumentException::class.java)
+  }
+
+  @JunitTest
+  fun `group configuration is isolated and follows suite configuration before execution configuration`() {
+    suite("test").executions {
+      group {
+        register("Connection") {
+          systemProperty("order", "${systemProperties["order"]},execution")
+          systemProperty("setting", "execution")
+        }
+        register("OtherConnection") {}
+        configureEach {
+          systemProperty("order", "${systemProperties["order"]},group")
+          systemProperty("setting", "group")
+          filter.includeTestsMatching("*ConnectionTest")
+        }
+      }
+      register("Sibling") {}
+      group {
+        configureEach {
+          systemProperty("order", "${systemProperties["order"]},other-group")
+          filter.includeTestsMatching("*OtherTest")
+        }
+        register("OtherGroup") {}
+      }
+      configureEach {
+        systemProperty("order", "suite")
+        systemProperty("setting", "suite")
+      }
+    }
+
+    for (name in listOf("test", "testSibling")) {
+      assertThat(test(name).systemProperties)
+        .containsEntry("order", "suite")
+        .containsEntry("setting", "suite")
+      assertThat(test(name).filter.includePatterns).isEmpty()
+    }
+    assertThat(test("testConnection").systemProperties)
+      .containsEntry("order", "suite,group,execution")
+      .containsEntry("setting", "execution")
+    assertThat(test("testOtherConnection").systemProperties)
+      .containsEntry("order", "suite,group")
+      .containsEntry("setting", "group")
+    for (name in listOf("testConnection", "testOtherConnection")) {
+      assertThat(test(name).filter.includePatterns).containsExactly("*ConnectionTest")
+    }
+    assertThat(test("testOtherGroup").systemProperties)
+      .containsEntry("order", "suite,other-group")
+      .containsEntry("setting", "suite")
+    assertThat(test("testOtherGroup").filter.includePatterns).containsExactly("*OtherTest")
+  }
+
+  @JunitTest
+  fun `group registrations stay lazy and bind to their source suite and check without extra tasks`() {
+    var configuredTasks = 0
+    project.tasks.withType(Test::class.java).configureEach {
+      configuredTasks++
+    }
+    val source = suites().register("clientTest", JvmTestSuite::class.java).get()
+    val sources = project.extensions.getByType(SourceSetContainer::class.java).names.toSet()
+    source.executions {
+      group {}
+      group {
+        register("Connection") {}
+        configureEach {
+          systemProperty("group", true)
+        }
+      }
+    }
+
+    assertThat(configuredTasks).isZero()
+    assertThat(project.tasks.withType(Test::class.java).names)
+      .containsExactlyInAnyOrder("test", "clientTest", "clientTestConnection")
+    val variant = test("clientTestConnection")
+    assertThat(configuredTasks).isEqualTo(1)
+    assertBinding(variant, source)
+    assertThat(variant.systemProperties).containsEntry("group", true)
+    assertThat(test("clientTest").systemProperties).doesNotContainKey("group")
+    assertThat(project.extensions.getByType(SourceSetContainer::class.java).names).isEqualTo(sources)
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains("clientTest", "clientTestConnection")
+  }
+
+  @JunitTest
+  fun `groups reject duplicate suffixes within and across scopes`() {
+    for (scope in listOf("root-first", "root-last", "groups", "same-group")) {
+      assertThatThrownBy {
+        suites().register(scope, JvmTestSuite::class.java).get().executions {
+          when (scope) {
+            "root-first" -> {
+              register("Variant") {}
+              group { register("Variant") {} }
+            }
+            "root-last" -> {
+              group { register("Variant") {} }
+              register("Variant") {}
+            }
+            "groups" -> {
+              group { register("Variant") {} }
+              group { register("Variant") {} }
+            }
+            else -> group {
+              register("Variant") {}
+              register("Variant") {}
+            }
+          }
+        }
+      }.isInstanceOf(IllegalArgumentException::class.java)
+        .hasMessage("Execution variant 'Variant' is already registered")
+    }
+    assertThatThrownBy {
+      suite("test").executions {
+        group { register("") {} }
+      }
+    }.isInstanceOf(IllegalArgumentException::class.java)
+      .hasMessage("An execution variant needs a non-empty suffix")
+  }
+
+  @JunitTest
+  fun `group telemetry composes independently with suite and execution settings`() {
+    suite("test").executions {
+      group {
+        register("Legacy") {}
+        register("Preview") {
+          telemetryConfig("otel.shared", "execution")
+          telemetryConfig("otel.preview", "true")
+        }
+        configureEach {
+          telemetryConfig("otel.shared", "group")
+          telemetryConfig("otel.connection", "true")
+        }
+      }
+      group {
+        configureEach { telemetryConfig("otel.other", "true") }
+        register("Other") {}
+      }
+      register("Sibling") {}
+      configureEach { telemetryConfig("otel.shared", "suite") }
+    }
+
+    assertThat(test("testPreview").systemProperties)
+      .containsEntry("otel.shared", "execution")
+      .containsEntry("otel.connection", "true")
+      .containsEntry("otel.preview", "true")
+      .containsEntry("metadataConfig", "otel.shared=execution,otel.connection=true,otel.preview=true")
+      .doesNotContainKey("otel.other")
+    assertThat(test("testLegacy").systemProperties)
+      .containsEntry("otel.shared", "group")
+      .containsEntry("metadataConfig", "otel.shared=group,otel.connection=true")
+      .doesNotContainKeys("otel.preview", "otel.other")
+    assertThat(test("testOther").systemProperties)
+      .containsEntry("metadataConfig", "otel.shared=suite,otel.other=true")
+      .doesNotContainKeys("otel.connection", "otel.preview")
+    for (name in listOf("test", "testSibling")) {
+      assertThat(test(name).systemProperties)
+        .containsEntry("metadataConfig", "otel.shared=suite")
+        .doesNotContainKeys("otel.connection", "otel.preview", "otel.other")
+    }
   }
 
   private fun suites() = project.extensions.getByType(TestingExtension::class.java).suites

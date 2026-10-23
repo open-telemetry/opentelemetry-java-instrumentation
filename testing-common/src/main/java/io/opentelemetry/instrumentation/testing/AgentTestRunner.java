@@ -39,9 +39,7 @@ public class AgentTestRunner extends InstrumentationTestRunner {
 
   private static final AgentTestRunner INSTANCE = new AgentTestRunner();
 
-  // the javaagent testing convention configures otel.instrumentation.common.peer-service-mapping to
-  // map every local test host to this name, see
-  // conventions/src/main/kotlin/io.opentelemetry.instrumentation.javaagent-testing.gradle.kts
+  // Explicit mapped test executions map local test hosts to this name.
   private static final String PEER_SERVICE_NAME = "test-peer-service";
   private static final String PEER_SERVICE_MAPPING_PROPERTY =
       "otel.instrumentation.common.peer-service-mapping";

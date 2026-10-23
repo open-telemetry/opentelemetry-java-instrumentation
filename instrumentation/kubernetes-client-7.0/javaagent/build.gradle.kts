@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -23,6 +26,17 @@ val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+      }
+    }
     // version22Test reuses the same test source against `latest.release` in latest-deps mode
     // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
     // builder API line.
@@ -35,14 +49,19 @@ testing {
       dependencies {
         implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
       }
-      targets {
-        all {
-          testTask.configure {
-            // client-java-api 22.0.0+ requires Java 11+
-            if (testJavaVersion.isJava8) {
-              enabled = false
-            }
+      executions {
+        configureEach {
+          // client-java-api 22.0.0+ requires Java 11+
+          if (testJavaVersion.isJava8) {
+            enabled = false
           }
+        }
+        register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
         }
       }
     }
@@ -76,19 +95,7 @@ tasks {
       }
     }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-        isEnabled = project.tasks.named(suite.name).get().enabled
-      }
-    }
-
   check {
-    dependsOn(experimentalSuites, previewSemconvSuites)
+    dependsOn(experimentalSuites)
   }
 }

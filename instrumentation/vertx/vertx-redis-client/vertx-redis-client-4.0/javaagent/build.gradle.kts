@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -35,6 +38,18 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("WithPeerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+        register("PreviewSemconvWithPeerServiceMapping") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+        }
+      }
+    }
+
     withType<JvmTestSuite>().configureEach {
       if (!name.endsWith("unitTests", true)) {
         sources {
@@ -110,24 +125,12 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .filter { !it.name.endsWith("unitTests", true) }
-    .associate { suite ->
-      suite.name to register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-      }
-    }
-
   check {
     dependsOn(testing.suites.named("unitTests"), testing.suites.named("previewSemconvUnitTests"))
     if (otelProps.testLatestDeps) {
-      dependsOn(previewSemconvSuites.getValue("test"))
+      dependsOn(testing.suites.named("test"))
     } else {
-      dependsOn(testing.suites, previewSemconvSuites.values)
+      dependsOn(testing.suites)
     }
   }
 }

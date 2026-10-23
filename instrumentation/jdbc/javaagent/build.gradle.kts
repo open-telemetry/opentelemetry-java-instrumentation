@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -42,6 +45,32 @@ dependencies {
   testImplementation("com.typesafe.slick:slick_2.11:3.2.0")
 }
 
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        group {
+          configureEach {
+            filter {
+              includeTestsMatching("*JdbcInstrumentationTest.testGetClientInfoException")
+              includeTestsMatching("*JdbcInstrumentationTest.testProduceProperSpanName")
+              includeTestsMatching("*JdbcInstrumentationTest.testHandleRecursiveStatements")
+            }
+            jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+          }
+          register("WithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("PreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   val testSlick = register<Test>("testSlick") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -65,23 +94,6 @@ tasks {
     // otel.instrumentation.jdbc.experimental.sqlcommenter.enabled to test that the
     // SqlCommenterCustomizer is run.
     jvmArgs("-Dotel.testing.sqlcommenter.enabled=true")
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("SlickTest")
-      excludeTestsMatching("SqlCommenterTest")
-      excludeTestsMatching("PreparedStatementParametersTest")
-      excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
-      excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
-      excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
-    }
-    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
   val testCaptureParameters = register<Test>("testCaptureParameters") {
@@ -146,7 +158,6 @@ tasks {
   check {
     dependsOn(testSlick)
     dependsOn(testSqlCommenter)
-    dependsOn(testPreviewSemconv)
     dependsOn(testCaptureParameters)
     dependsOn(testExceptionSignalLogs)
     dependsOn(testTransactions)

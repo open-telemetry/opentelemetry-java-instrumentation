@@ -10,15 +10,3 @@ dependencies {
 
   latestDepTestLibrary("org.springframework:spring-web:5.+") // see spring-web-6.0 module
 }
-
-tasks {
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
-  }
-}

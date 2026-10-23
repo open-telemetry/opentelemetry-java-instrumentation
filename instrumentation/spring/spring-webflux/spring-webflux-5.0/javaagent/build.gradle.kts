@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -67,6 +70,21 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      exclude("**/server/**")
+    }
+    register("WithPeerServiceMapping") {
+      telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+    }
+    register("PreviewSemconvWithPeerServiceMapping") {
+      telemetryConfig("otel.semconv-stability.preview", "service.peer")
+      telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     // required on jdk17
@@ -92,27 +110,6 @@ tasks {
     )
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    exclude("**/server/**")
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  val testControllerTelemetryPreviewSemconv = register<Test>("testControllerTelemetryPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/server/**")
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true," +
-        "otel.semconv-stability.preview=service.peer"
-    )
-  }
-
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -128,8 +125,6 @@ tasks {
   check {
     dependsOn(
       testControllerTelemetry,
-      testPreviewSemconv,
-      testControllerTelemetryPreviewSemconv,
       testExceptionSignalLogs
     )
   }

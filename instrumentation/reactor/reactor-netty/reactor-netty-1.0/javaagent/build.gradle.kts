@@ -45,33 +45,52 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
 }
 
-tasks {
-  test {
-    filter {
-      excludeTestsMatching("ReactorNettyConnectionSpanTest")
-      excludeTestsMatching("ReactorNettyClientSslTest")
-    }
-  }
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
-      executions {
-        register("ConnectionSpan") {
-          filter {
-            includeTestsMatching("ReactorNettyConnectionSpanTest")
-            includeTestsMatching("ReactorNettyClientSslTest")
-          }
-          include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
-          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+      targets.all {
+        testTask.configure {
           filter {
             excludeTestsMatching("ReactorNettyConnectionSpanTest")
             excludeTestsMatching("ReactorNettyClientSslTest")
+          }
+        }
+      }
+      executions {
+        group {
+          configureEach {
+            filter {
+              excludeTestsMatching("ReactorNettyConnectionSpanTest")
+              excludeTestsMatching("ReactorNettyClientSslTest")
+            }
+          }
+          register("WithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("PreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+        }
+        group {
+          configureEach {
+            filter {
+              includeTestsMatching("ReactorNettyConnectionSpanTest")
+              includeTestsMatching("ReactorNettyClientSslTest")
+            }
+            include("**/ReactorNettyConnectionSpanTest.*")
+            include("**/ReactorNettyClientSslTest.*")
+
+            telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+            telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
+          }
+          register("ConnectionSpan") {}
+          register("ConnectionSpanWithPeerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+          }
+          register("ConnectionSpanPreviewSemconvWithPeerServiceMapping") {
+            telemetryConfig("otel.semconv-stability.preview", "service.peer")
+            telemetryConfig("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
           }
         }
       }
