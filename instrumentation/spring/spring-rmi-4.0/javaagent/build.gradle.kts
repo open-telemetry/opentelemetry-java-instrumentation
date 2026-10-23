@@ -27,13 +27,43 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot:2.+") // documented limitation
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
+}
+
 otelJava {
   // due to security manager deprecation this test does not work on jdk 24 with default configuration
   maxJavaVersionForTests.set(JavaVersion.VERSION_23)
 }
 
-tasks.test {
-  jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
+tasks {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
+  }
+
+  withType<Test>().configureEach {
+    jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
+  }
+
+  check {
+    dependsOn(testing.suites, testPreviewSemconv, testBothSemconv)
+  }
 }
 
 configurations.testRuntimeClasspath {
