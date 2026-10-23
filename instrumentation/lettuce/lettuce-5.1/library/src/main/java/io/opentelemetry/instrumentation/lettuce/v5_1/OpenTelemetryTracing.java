@@ -6,8 +6,9 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.output.CommandOutput;
+import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
 import io.lettuce.core.protocol.ProtocolKeyword;
@@ -209,11 +210,19 @@ final class OpenTelemetryTracing implements Tracing {
 
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
+        AsyncCommand<?, ?, ?> asyncCommand = CommandWrapper.unwrap(command, AsyncCommand.class);
         completeableCommand.onComplete(
             (o, throwable) -> {
-              CommandOutput<?, ?, ?> output = command.getOutput();
-              Throwable error = this.error != null ? this.error : throwable;
-              finishFromOutput(output != null ? output.getError() : null, error);
+              Throwable error = throwable != null ? throwable : this.error;
+              // CommandWrapper can report null even when its async delegate failed.
+              if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
+                asyncCommand.whenComplete(
+                    (result, terminalError) ->
+                        finishFromOutput(
+                            command.getOutput(), terminalError != null ? terminalError : error));
+              } else {
+                finishFromOutput(command.getOutput(), error);
+              }
             });
       }
 
@@ -263,11 +272,12 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public Tracer.Span tag(String key, String value) {
-      if (value == null || value.isEmpty()) {
-        return this;
-      }
       if (key.equals("error")) {
         taggedErrorMessage = value;
+        return this;
+      }
+      if (value == null || value.isEmpty()) {
+        return this;
       }
       if (key.equals("redis.args")) {
         request.setArgsString(value);
@@ -293,19 +303,20 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     public void finish() {
-      finishFromOutput(taggedErrorMessage, error);
-    }
-
-    private void finishFromOutput(@Nullable String errorMessage, @Nullable Throwable error) {
-      // Lettuce also copies the message of client-side failures, such as command
-      // timeouts, into the output, so only treat it as a Redis error reply when there is
-      // no client-side failure
-      if (error instanceof RedisCommandExecutionException) {
-        end(LettuceResponse.fromErrorMessage(errorMessage), error);
-      } else if (error != null) {
+      if (error != null) {
         end(null, error);
       } else {
-        end(LettuceResponse.fromErrorMessage(errorMessage), null);
+        // Lettuce 5.x tags both server and client errors here, suppressing their throwable.
+        end(taggedErrorMessage != null ? LettuceResponse.unknownFailure() : null, null);
+      }
+    }
+
+    private void finishFromOutput(
+        @Nullable CommandOutput<?, ?, ?> output, @Nullable Throwable error) {
+      if (error != null) {
+        end(null, error);
+      } else {
+        end(LettuceResponse.fromCommandOutput(output), null);
       }
     }
 

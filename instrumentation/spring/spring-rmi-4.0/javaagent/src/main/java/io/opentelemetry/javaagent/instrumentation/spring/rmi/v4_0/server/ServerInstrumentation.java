@@ -44,13 +44,13 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      @Nullable private final ClassAndMethod request;
+      @Nullable private final SpringRmiServerRequest request;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
 
       private AdviceScope(
           CallDepth callDepth,
-          @Nullable ClassAndMethod request,
+          @Nullable SpringRmiServerRequest request,
           @Nullable Context context,
           @Nullable Scope scope) {
         this.callDepth = callDepth;
@@ -71,8 +71,12 @@ public class ServerInstrumentation implements TypeInstrumentation {
         }
 
         Class<?> serverClass = rmiExporter.getService().getClass();
-        String methodName = remoteInvocation.getMethodName();
-        ClassAndMethod request = ClassAndMethod.create(serverClass, methodName);
+        SpringRmiServerRequest request =
+            new SpringRmiServerRequest(
+                ClassAndMethod.create(serverClass, remoteInvocation.getMethodName()),
+                rmiExporter.getServiceInterface(),
+                remoteInvocation.getMethodName(),
+                remoteInvocation.getParameterTypes());
 
         if (!serverInstrumenter().shouldStart(parentContext, request)) {
           return new AdviceScope(callDepth, request, null, null);
