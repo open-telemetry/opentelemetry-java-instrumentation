@@ -101,13 +101,15 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns a description of a class of error the operation ended with.
+   * Returns the final {@code error.type} value for the operation.
    *
-   * <p>This method is called if no valid response status code was sent or received, or if the
-   * request failed with an exception after a non-error response status code was sent or received.
+   * <p>The default implementation returns the exception class name when {@code error} is non-null,
+   * or {@value HttpConstants#_OTHER} otherwise. The HTTP client and server getter defaults also
+   * classify error response status codes and omit {@code error.type} for successful operations.
    *
-   * <p>If this method is not implemented, or if it returns {@code null}, the exception class name
-   * (if any was caught) or the value {@value HttpConstants#_OTHER} will be used as error type.
+   * <p>A {@code null} result omits {@code error.type}, even when {@code error} is non-null. An
+   * override that wants to retain the inherited fallback behavior must explicitly delegate to the
+   * appropriate HTTP getter interface default.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
@@ -118,6 +120,6 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
+    return HttpStatusCodeConverter.defaultErrorType(error);
   }
 }

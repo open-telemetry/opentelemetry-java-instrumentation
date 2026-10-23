@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- HTTP attribute extractors now use the getter's `getErrorType()` result directly. Overrides
+  returning `null` omit `error.type`, including for error response statuses; delegate to
+  the HTTP getter default to retain status and exception fallback classification.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
