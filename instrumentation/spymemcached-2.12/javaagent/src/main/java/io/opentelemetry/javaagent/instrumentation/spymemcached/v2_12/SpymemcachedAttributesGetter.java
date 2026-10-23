@@ -44,7 +44,7 @@ class SpymemcachedAttributesGetter
   public String getErrorType(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
     if (error != null || !(response instanceof OperationFuture)) {
-      return null;
+      return error == null ? null : error.getClass().getName();
     }
     OperationFuture<?> future = (OperationFuture<?>) response;
     if (future.isCancelled()) {

@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- `DbClientAttributesGetter.getErrorType()` now returns the final `error.type`; returning `null`
+  omits it even with an exception. Overrides wanting exception-class fallback can return
+  `error == null ? null : error.getClass().getName()`.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to

@@ -48,7 +48,7 @@ final class OpenSearchRestAttributesGetter
         return Integer.toString(statusCode);
       }
     }
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override

@@ -25,18 +25,18 @@ class LettuceDbAttributesGetterTest {
   }
 
   @Test
-  void ignoresClientErrorWithoutResponse() {
+  void returnsExceptionClassWithoutResponse() {
     assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
-        .isNull();
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
   }
 
   @Test
-  void delegatesExceptionFallbackWhenReplyHasNoPrefix() {
+  void returnsExceptionClassWhenReplyHasNoPrefix() {
     LettuceResponse response = LettuceResponse.fromErrorMessage("   ");
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
     assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
-        .isNull();
+        .isEqualTo(RedisNoScriptException.class.getName());
   }
 
   @Test
@@ -57,7 +57,7 @@ class LettuceDbAttributesGetterTest {
                 null,
                 LettuceResponse.unknownFailure(),
                 new RedisCommandTimeoutException("Connection closed")))
-        .isNull();
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
   }
 
   @Test

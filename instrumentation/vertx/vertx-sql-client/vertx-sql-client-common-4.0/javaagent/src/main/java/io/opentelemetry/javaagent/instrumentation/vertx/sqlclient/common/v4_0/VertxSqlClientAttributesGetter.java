@@ -65,7 +65,8 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return responseStatusExtractor.apply(error);
+    String errorType = responseStatusExtractor.apply(error);
+    return errorType != null ? errorType : error == null ? null : error.getClass().getName();
   }
 
   @Override

@@ -145,7 +145,7 @@ final class ElasticsearchDbAttributesGetter
         return Integer.toString(statusCode);
       }
     }
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override
