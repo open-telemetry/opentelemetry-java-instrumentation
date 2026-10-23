@@ -25,8 +25,7 @@ import java.util.List;
 public class Couchbase26Util {
 
   private static final boolean EXPERIMENTAL_TELEMETRY =
-      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry")
-          || Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
 
   public static DefaultCouchbaseEnvironment.Builder envBuilder(
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {

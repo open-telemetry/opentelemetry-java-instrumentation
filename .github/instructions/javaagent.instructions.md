@@ -7,10 +7,10 @@ applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/*
 Apply these checks to executable advice and the helpers it calls. Inspect registration and
 library lifecycle before deciding whether an exception applies.
 
-## Enablement names in v3 preview
+## Enablement names
 
-Apply these rules to names registered under `otel.instrumentation.common.v3-preview=true`.
-Public enablement names describe selectable behavior, not Muzzle implementation identities.
+Apply these rules to names registered by an `InstrumentationModule`. Public enablement names
+describe selectable behavior, not Muzzle implementation identities.
 
 - The primary is the full module-directory name, including versions, except where a default-off
   feature needs a separate identity within that module. Example: `spring-webflux-5.0`.
@@ -36,6 +36,10 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
 
 ## Advice and matching
 
+- For production javaagent advice (not test fixtures), explicitly set `inline = false` on both
+  `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` in every module. The only exceptions are
+  `instrumentation/internal/internal-class-loader` and `instrumentation/internal/internal-lambda`;
+  do not add other production exceptions.
 - A new `InstrumentationModule` needs SPI registration and a compatible `TypeInstrumentation`;
   public names distinguish independently selectable behavior, not implementation classes.
   Multiple classes may share all public names; Muzzle supports name-based exclusions and precise
@@ -64,15 +68,39 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
   signature matchers may use accessible `java.base` types available at the minimum
   supported Java version; keep `named(...)` for instrumented-library types.
   With dynamic advice typing, match only signatures that guarantee assignability.
+- Omit explicit `typing = Assigner.Typing.DYNAMIC` on `@Advice.AssignReturned` mappings,
+  including nested argument and field mappings, when using the standard transformation pipeline;
+  its postprocessor supplies dynamic typing. This does not apply to advice parameter bindings.
+  Verify custom pipelines separately.
+- For a fixed signature consisting of primitive types or accessible `java.base` types available
+  at the minimum supported Java version, use `takesArguments(Type...)`, including parameters
+  the advice does not use. Do not expand it into positional matchers to remove unused checks.
+- Use positional `takesArgument` matchers for instrumented-library types or parameter types that
+  vary across supported versions. Retain type checks only for arguments the advice uses or that
+  distinguish supported methods.
+- When advice binds a library argument as `Object` to support different known parameter types
+  across versions, use `takesArgument(index, namedOneOf(...))` with those type names instead of
+  `any()` or a custom argument-count check. The positional matcher already guarantees that the
+  argument exists. `takesArgument(index, Object.class)` matches a parameter declared exactly as
+  `Object`, not any reference type.
+- With positional matchers, use `takesArguments(n)` only when exact arity is needed to distinguish
+  supported overloads, preserve helper-call compatibility, or select the required lifecycle
+  boundary. Do not add an exact count merely to guarantee that an argument exists.
+- Omit return-type predicates unless needed to select supported methods or prevent a concrete
+  incompatibility. A typed `@Advice.Return` alone does not justify a predicate; consider the supported
+  API contract, covariant returns, and the actual transformation pipeline. If advice replaces the
+  return value, ensure the replacement fits the method's declared return type; replacement alone does
+  not require a predicate.
 - Do not require `isDeclaredBy` on a Byte Buddy method matcher by default. Use it only
   when a type matcher covers several types but advice targets a member declared by one
   specific type; a name and signature that already identify the method need no extra
   restriction. `isMethod()` is redundant after a non-empty `named(...)` or
   `namedOneOf(...)` matcher. Keep it when the name can be empty, because `named("")`
   can match constructors and class initializers.
-- Use `Java8BytecodeBridge` only for supported API calls directly in annotated advice;
-  helper methods use the normal API even when nested inside the advice class. Add a
-  `classLoaderMatcher()` only for a real version boundary Muzzle cannot distinguish.
+- Use normal OpenTelemetry APIs in non-inlined advice and ordinary helpers. Inlined advice in
+  the two internal exceptions must use a Java-8-compiled helper for static interface calls
+  targeting pre-Java-8 class files.
+  Add a `classLoaderMatcher()` only for a real version boundary Muzzle cannot distinguish.
   Verify every version-landmark class against the artifact versions and keep its role explicit:
   a positive floor uses `// added in X.Y`, a positive ceiling uses `// removed in X.Y`, and a
   negated exclusion class uses `// added in X.Y`. A positive class that supplies both bounds

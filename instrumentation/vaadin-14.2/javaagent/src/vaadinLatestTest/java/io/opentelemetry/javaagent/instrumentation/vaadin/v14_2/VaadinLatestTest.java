@@ -21,6 +21,13 @@ class VaadinLatestTest extends AbstractVaadinTest {
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = testing.waitForTraces(1);
+              if (!controllerTelemetryEnabled()) {
+                for (List<SpanData> trace : traces) {
+                  assertThat(trace).anySatisfy(span -> assertThat(span).hasKind(SpanKind.SERVER));
+                  assertNoControllerSpans(trace);
+                }
+                return;
+              }
               TracesAssert.assertThat(traces)
                   .satisfies(
                       trace -> {

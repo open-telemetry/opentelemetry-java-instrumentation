@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Arrays.asList;
 
@@ -89,29 +90,17 @@ public abstract class AbstractLettuceClientTest {
     return asList(assertions);
   }
 
-  protected static void assertCommandEncodeEvents(SpanData span) {
-    assertThat(span)
-        .hasEventsSatisfyingExactly(
-            event -> event.hasName("redis.encode.start"),
-            event -> event.hasName("redis.encode.end"));
-  }
-
   protected static void assertCommandErrorEvents(SpanData span) {
     if (testLatestDeps()) {
       assertThat(span)
           .hasException(
               new RedisCommandExecutionException(
                   "WRONGTYPE Operation against a key holding the wrong kind of value"))
-          .hasEventsSatisfyingExactly(
-              event -> event.hasName("redis.encode.start"),
-              event -> event.hasName("redis.encode.end"),
-              event -> event.hasName("exception"));
-    } else {
-      assertCommandEncodeEvents(span);
+          .hasEventsSatisfyingExactly(event -> event.hasName("exception"));
     }
   }
 
-  protected void assertCommandErrorMetric(String errorType) {
+  protected void assertCommandMetric(String operation, String errorType) {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.lettuce-5.1",
@@ -122,10 +111,13 @@ public abstract class AbstractLettuceClientTest {
                         assertThat(metric)
                             .hasHistogramSatisfying(
                                 histogram ->
-                                    histogram.hasPointsSatisfying(
+                                    histogram.containsPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(ERROR_TYPE, errorType))))));
+                                            point
+                                                .hasCount(1)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(DB_OPERATION_NAME, operation),
+                                                    equalTo(ERROR_TYPE, errorType))))));
   }
 
   protected String spanName(String operation) {

@@ -42,17 +42,15 @@ MeterRegistry meterRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).
 `<name>` below is the Micrometer meter name after the registry's
 [naming convention](https://docs.micrometer.io/micrometer/reference/concepts/naming.html) has been
 applied. The default convention passes the name through unchanged; see
-[Prometheus mode](#prometheus-mode) for the exception. For [custom meters](#custom-meters), unless
-`otel.instrumentation.common.v3-preview` is enabled, the naming convention is applied after the
-statistic suffix is appended to the raw meter name. Their emitted names may therefore differ from
-the `<name>.<statistic>` form under a custom convention.
+[Prometheus mode](#prometheus-mode) for the exception. For [custom meters](#custom-meters), the
+naming convention is applied to the base meter name and the statistic suffix is appended afterward.
 
 | Micrometer instrument | OpenTelemetry instrument(s)                                            | Name(s)                            | Unit                           |
 | --------------------- | ---------------------------------------------------------------------- | ---------------------------------- | ------------------------------ |
 | `Counter`             | synchronous double counter                                             | `<name>`                           | base unit                      |
 | `Gauge`               | asynchronous double gauge                                              | `<name>`                           | base unit                      |
-| `Timer`               | synchronous double histogram, plus an asynchronous double gauge        | `<name>`, `<name>.max`             | base time unit                 |
-| `DistributionSummary` | synchronous double histogram, plus an asynchronous double gauge        | `<name>`, `<name>.max`             | base unit                      |
+| `Timer`               | synchronous double histogram                                           | `<name>`                           | base time unit                 |
+| `DistributionSummary` | synchronous double histogram                                           | `<name>`                           | base unit                      |
 | `LongTaskTimer`       | asynchronous long up-down counter, asynchronous double up-down counter | `<name>.active`, `<name>.duration` | `{tasks}`, base time unit      |
 | `FunctionCounter`     | asynchronous double counter                                            | `<name>`                           | base unit                      |
 | `FunctionTimer`       | asynchronous long counter, asynchronous double counter                 | `<name>.count`, `<name>.sum`       | `{invocation}`, base time unit |
@@ -64,14 +62,19 @@ Micrometer tags become OpenTelemetry attributes. Meter names, tag keys, and tag 
 through the registry's naming convention, and metrics are emitted under the instrumentation scope
 `io.opentelemetry.micrometer-1.5`.
 
-The `<name>.max` gauge is deprecated and will be removed in 3.0. It is no longer emitted when
-`otel.instrumentation.common.v3-preview` is enabled.
+Timer and distribution summary maximum values are available from their OpenTelemetry histograms.
 
 ### Units
 
 Base units are used verbatim rather than translated to [UCUM](https://ucum.org/), so a base unit of
 `bytes` stays `bytes` rather than becoming `By`. The base time unit defaults to seconds and can be
-changed with `OpenTelemetryMeterRegistryBuilder.setBaseTimeUnit(TimeUnit)`.
+changed with the experimental `Experimental#setBaseTimeUnit` helper:
+
+```java
+OpenTelemetryMeterRegistryBuilder builder = OpenTelemetryMeterRegistry.builder(openTelemetry);
+Experimental.setBaseTimeUnit(builder, TimeUnit.MILLISECONDS);
+MeterRegistry meterRegistry = builder.build();
+```
 
 ### Descriptions
 
@@ -136,22 +139,20 @@ the OpenTelemetry one.
 
 ### Prometheus mode
 
-Prometheus mode approximates the naming behavior of Micrometer's `PrometheusMeterRegistry`, for
-users exporting with the Prometheus exporter. It forces the base time unit to seconds. For meters
-whose Micrometer `Meter.Type` is `COUNTER` (including `FunctionCounter`), `DISTRIBUTION_SUMMARY`, or
-`GAUGE`, it appends a non-empty base unit to the instrument name. For `TIMER` (including
-`FunctionTimer`) and `LONG_TASK_TIMER`, it appends `seconds`; meters of type `OTHER` do not get a unit
-suffix. For example, a `Timer` named `my.timer` becomes `my.timer.seconds`, and a
-`DistributionSummary` named `my.summary` with the base unit `bytes` becomes `my.summary.bytes`.
-Encoding the unit in the metric name is contrary to the OpenTelemetry naming rules, so this mode is
-disabled by default and should only be enabled for Prometheus compatibility.
+Prometheus mode forces the base time unit to seconds. For counters, distribution summaries, and
+gauges, it appends a non-empty base unit to the instrument name. For timers and long-task timers, it
+appends `seconds`; meters of type `OTHER` do not get a unit suffix. For example, a `Timer` named
+`my.timer` becomes `my.timer.seconds`, and a `DistributionSummary` named `my.summary` with the base
+unit `bytes` becomes `my.summary.bytes`. The mode is typically used with the OpenTelemetry Prometheus
+exporter, which handles Prometheus-specific name translation, such as replacing dots with underscores
+and adding the `_total` suffix to counter names. The mode is optional and disabled by default.
 
 ```java
-MeterRegistry meterRegistry =
-    OpenTelemetryMeterRegistry.builder(openTelemetry).setPrometheusMode(true).build();
+OpenTelemetryMeterRegistryBuilder builder = OpenTelemetryMeterRegistry.builder(openTelemetry);
+Experimental.setPrometheusMode(builder, true);
+MeterRegistry meterRegistry = builder.build();
 ```
 
-For [custom meters](#custom-meters), the naming convention is applied to the combined name and
-suffix instead of to the name alone, unless `otel.instrumentation.common.v3-preview` is enabled. A
-custom `Meter` of type `COUNTER` named `my.meter` with the base unit `bytes` is therefore emitted as
-`my.meter.count.bytes` rather than `my.meter.bytes.count`.
+For [custom meters](#custom-meters), the naming convention is applied to the base name before the
+statistic suffix is appended. A custom `COUNTER` meter named `my.meter` with the base unit `bytes` is
+emitted as `my.meter.bytes.count`.

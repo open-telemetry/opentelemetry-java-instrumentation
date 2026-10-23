@@ -16,16 +16,12 @@ public abstract class SqlQuery {
   private static final String SQL_CALL = "CALL";
   private static final int QUERY_SUMMARY_MAX_LENGTH = 255;
 
-  /** Creates a SQL analysis result with a query summary. */
-  public static SqlQuery createWithSummary(
-      @Nullable String queryText,
-      @Nullable String storedProcedureName,
-      @Nullable String querySummary) {
-    return createWithSummary(queryText, null, null, storedProcedureName, querySummary);
-  }
-
-  /** Creates a SQL analysis result with a query summary. */
-  static SqlQuery createWithSummary(
+  /**
+   * Creates a SQL analysis result with operation, collection, stored procedure, and summary values.
+   *
+   * <p>The query text is used as supplied; the summary is truncated to at most 255 characters.
+   */
+  public static SqlQuery create(
       @Nullable String queryText,
       @Nullable String operationName,
       @Nullable String collectionName,
@@ -42,8 +38,7 @@ public abstract class SqlQuery {
     boolean isStoredProcedure = SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName);
     String collectionName = isStoredProcedure ? null : target;
     String storedProcedureName = isStoredProcedure ? target : null;
-    return new AutoValue_SqlQuery(
-        queryText, operationName, collectionName, storedProcedureName, null);
+    return create(queryText, operationName, collectionName, storedProcedureName, null);
   }
 
   @Nullable
@@ -63,8 +58,8 @@ public abstract class SqlQuery {
   @Nullable
   public abstract String getQueryText();
 
+  /** Returns the parsed operation name, or null when no operation was analyzed. */
   @Nullable
-  @Deprecated // to be changed to package-private in 3.0
   public abstract String getOperationName();
 
   /**
@@ -73,7 +68,6 @@ public abstract class SqlQuery {
    * @see #getStoredProcedureName()
    */
   @Nullable
-  @Deprecated // to be changed to package-private in 3.0
   public abstract String getCollectionName();
 
   /** Returns the stored procedure name for CALL operations, or null for other operations. */

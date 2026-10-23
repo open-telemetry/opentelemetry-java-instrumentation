@@ -1,5 +1,9 @@
 # Instrumentation for Java Servlets
 
+When Servlet instrumentation observes a request principal, javaagent capture of its name as
+`user.name` is disabled by default. Enable it with
+`otel.instrumentation.common.user.name.enabled=true`.
+
 ## Settings
 
 | System property                                                                | Type    | Default | Description                                                                                                                                                                                                                                                                                                             |

@@ -26,10 +26,6 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   val testWithCommonsPoolInstrumentation =
     register<Test>("testWithCommonsPoolInstrumentation") {
       testClassesDirs = sourceSets.test.get().output.classesDirs

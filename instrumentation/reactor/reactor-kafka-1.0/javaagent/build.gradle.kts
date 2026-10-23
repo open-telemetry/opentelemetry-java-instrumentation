@@ -123,7 +123,6 @@ tasks {
   withType<Test>().configureEach {
     if (!name.endsWith("unitTests", ignoreCase = true)) {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-      systemProperty("collectMetadata", otelProps.collectMetadata)
     }
   }
 

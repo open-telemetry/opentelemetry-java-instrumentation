@@ -13,23 +13,5 @@ otelJava {
 tasks {
   test {
     jvmArgs("-Dotel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*")
-    filter {
-      excludeTestsMatching("*JfrRuntimeMetricsBackcompatTest")
-    }
-  }
-
-  val testBackcompat = register<Test>("testBackcompat") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    // Verify backward compatibility of the deprecated runtime-telemetry-java17.enabled flag
-    jvmArgs("-Dotel.instrumentation.runtime-telemetry-java17.enabled=true")
-    filter {
-      includeTestsMatching("*JfrRuntimeMetricsBackcompatTest")
-    }
-  }
-
-  check {
-    dependsOn(testBackcompat)
   }
 }

@@ -63,3 +63,4 @@ configurations:
     default: ""
     examples:
       - "<script type=\"text/javascript\">console.log('test')</script>"
+  - ref: common.user.name.enabled

@@ -16,7 +16,6 @@ public final class LettuceTelemetry {
 
   private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
   private final RedisCommandSanitizer sanitizer;
-  private final boolean encodingEventsEnabled;
 
   /** Returns a new {@link LettuceTelemetry} configured with the given {@link OpenTelemetry}. */
   public static LettuceTelemetry create(OpenTelemetry openTelemetry) {
@@ -32,11 +31,9 @@ public final class LettuceTelemetry {
 
   LettuceTelemetry(
       Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-      boolean querySanitizationEnabled,
-      boolean encodingEventsEnabled) {
+      boolean querySanitizationEnabled) {
     this.instrumenter = instrumenter;
     this.sanitizer = RedisCommandSanitizer.create(querySanitizationEnabled);
-    this.encodingEventsEnabled = encodingEventsEnabled;
   }
 
   /**
@@ -44,6 +41,6 @@ public final class LettuceTelemetry {
    * io.lettuce.core.resource.ClientResources.Builder#tracing(Tracing)}.
    */
   public Tracing createTracing() {
-    return new OpenTelemetryTracing(instrumenter, sanitizer, encodingEventsEnabled);
+    return new OpenTelemetryTracing(instrumenter, sanitizer);
   }
 }

@@ -24,7 +24,7 @@ class Aws2ClientTest extends AbstractAws2ClientTest {
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(
             AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-                .setCaptureExperimentalSpanAttributes(true)
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
                 .setUseConfiguredPropagatorForMessaging(isSqsAttributeInjectionEnabled())
                 .build()
                 .createExecutionInterceptor());

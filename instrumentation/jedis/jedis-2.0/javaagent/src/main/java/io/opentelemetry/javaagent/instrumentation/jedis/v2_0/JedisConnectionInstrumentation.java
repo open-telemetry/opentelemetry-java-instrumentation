@@ -19,7 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -47,6 +47,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0,
+                    // Jedis 2.7.1 and 2.7.2 use ProtocolCommand in sendCommand signatures.
                     namedOneOf(
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand"))),
@@ -57,6 +58,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0,
+                    // Jedis 2.7.1 and 2.7.2 use ProtocolCommand in sendCommand signatures.
                     namedOneOf(
                         "redis.clients.jedis.Protocol$Command",
                         "redis.clients.jedis.ProtocolCommand")))

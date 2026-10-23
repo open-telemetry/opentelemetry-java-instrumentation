@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,16 +55,16 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("producer"),
                     span ->
-                        span.hasName(spanName("testSingleTopic", "send"))
+                        span.hasName("send testSingleTopic")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(sendAttributes(record)),
                     span -> {
-                      span.hasName(spanName("testSingleTopic", "process"))
+                      span.hasName("process testSingleTopic")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
                           .hasAttributesSatisfyingExactly(processAttributes(record));
-                      span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                      span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(
@@ -93,18 +94,18 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("producer"),
                     span ->
-                        span.hasName(spanName("testSingleTopic", "send"))
+                        span.hasName("send testSingleTopic")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(sendAttributes(record)),
                     span -> {
-                      span.hasName(spanName("testSingleTopic", "process"))
+                      span.hasName("process testSingleTopic")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
                           .hasStatus(StatusData.error())
                           .hasException(new IllegalArgumentException("boom"))
                           .hasAttributesSatisfyingExactly(withErrorType(processAttributes(record)));
-                      span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                      span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(

@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMess
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -142,27 +143,27 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName(spanName("testBatchTopic", "send"))
+                      span.hasName("send testBatchTopic")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record1)),
                   span ->
-                      span.hasName(spanName("testBatchTopic", "process"))
+                      span.hasName("process testBatchTopic")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
-                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                           .hasAttributesSatisfyingExactly(processAttributes(record1)),
                   span -> span.hasName("process testSpan1").hasParent(trace.getSpan(2)),
                   span ->
-                      span.hasName(spanName("testBatchTopic", "send"))
+                      span.hasName("send testBatchTopic")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record2)),
                   span ->
-                      span.hasName(spanName("testBatchTopic", "process"))
+                      span.hasName("process testBatchTopic")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(4))
-                          .hasLinks(LinkData.create(trace.getSpan(4).getSpanContext()))
+                          .hasLinks(LinkData.create(asRemote(trace.getSpan(4).getSpanContext())))
                           .hasAttributesSatisfyingExactly(processAttributes(record2)),
                   span -> span.hasName("process testSpan2").hasParent(trace.getSpan(5)));
 
@@ -172,7 +173,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(spanName("testBatchTopic", "process"))
+                        span.hasName("process testBatchTopic")
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(
@@ -183,7 +184,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(spanName("testBatchTopic", "poll"))
+                        span.hasName("poll testBatchTopic")
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasLinks(
@@ -201,15 +202,15 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName(spanName("testBatchTopic", "send"))
+                      span.hasName("send testBatchTopic")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record)),
                   span ->
-                      span.hasName(spanName("testBatchTopic", "process"))
+                      span.hasName("process testBatchTopic")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
-                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                           .hasAttributesSatisfyingExactly(processAttributes(record)),
                   span -> span.hasName("process error").hasParent(trace.getSpan(2)));
 
@@ -218,7 +219,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(spanName("testBatchTopic", "process"))
+                        span.hasName("process testBatchTopic")
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(batchRecordLink(producer.get()))
@@ -230,7 +231,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(spanName("testBatchTopic", "poll"))
+                        span.hasName("poll testBatchTopic")
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasLinks(batchRecordLink(producer.get()))

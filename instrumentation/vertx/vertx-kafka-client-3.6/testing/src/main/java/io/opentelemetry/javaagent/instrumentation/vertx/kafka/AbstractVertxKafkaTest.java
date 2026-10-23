@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -27,7 +28,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -217,9 +217,8 @@ public abstract class AbstractVertxKafkaTest {
   // the offset and the message key stay on the links even when the batch carries a single record,
   // because they are only recommended on spans that describe a single message operation
   protected static LinkData batchRecordLink(SpanData producerSpan) {
-
     return LinkData.create(
-        producerSpan.getSpanContext(),
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
             .put(
@@ -262,14 +261,6 @@ public abstract class AbstractVertxKafkaTest {
 
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     return assertions;
-  }
-
-  protected static String spanName(String topic, String operationName) {
-    return operationName + " " + topic;
-  }
-
-  protected static SpanKind receiveKind() {
-    return SpanKind.CLIENT;
   }
 
   protected static List<AttributeAssertion> withErrorType(List<AttributeAssertion> assertions) {

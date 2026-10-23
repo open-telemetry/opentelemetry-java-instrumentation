@@ -24,7 +24,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
 
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
@@ -68,11 +67,11 @@ tasks {
       )
     }
 
-    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=span-kind")
+    jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=span-kind")
     systemProperty("testBatchSendSuppression", "true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.experimental.span-suppression-strategy=span-kind",
+      "otel.instrumentation.common.span-suppression-strategy=span-kind",
     )
   }
 

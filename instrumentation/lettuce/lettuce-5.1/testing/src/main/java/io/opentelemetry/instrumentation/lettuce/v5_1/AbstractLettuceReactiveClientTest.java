@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
@@ -98,8 +99,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
-                                    equalTo(DB_OPERATION_NAME, "SET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
+                                    equalTo(DB_OPERATION_NAME, "SET"))),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -141,8 +141,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
-                                    equalTo(DB_OPERATION_NAME, "GET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                    equalTo(DB_OPERATION_NAME, "GET")))));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -189,8 +188,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
-                                    equalTo(DB_OPERATION_NAME, "GET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
+                                    equalTo(DB_OPERATION_NAME, "GET"))),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -225,8 +223,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
-                                    equalTo(DB_OPERATION_NAME, "RANDOMKEY")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                    equalTo(DB_OPERATION_NAME, "RANDOMKEY")))));
   }
 
   @Test
@@ -257,10 +254,10 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(DB_OPERATION_NAME, "LPUSH"),
-                                    equalTo(ERROR_TYPE, "WRONGTYPE")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                    equalTo(
+                                        ERROR_TYPE, testLatestDeps() ? "WRONGTYPE" : "_OTHER")))));
 
-    assertCommandErrorMetric("WRONGTYPE");
+    assertCommandMetric("LPUSH", testLatestDeps() ? "WRONGTYPE" : "_OTHER");
   }
 
   @Test
@@ -282,8 +279,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "COMMAND"),
-                                    equalTo(DB_OPERATION_NAME, "COMMAND")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                    equalTo(DB_OPERATION_NAME, "COMMAND")))));
   }
 
   @Test
@@ -326,8 +322,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "SET a ?"),
-                                    equalTo(DB_OPERATION_NAME, "SET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
+                                    equalTo(DB_OPERATION_NAME, "SET"))),
                     span ->
                         span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
@@ -340,8 +335,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "GET a"),
-                                    equalTo(DB_OPERATION_NAME, "GET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                    equalTo(DB_OPERATION_NAME, "GET")))));
   }
 
   @Test
@@ -368,8 +362,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "SET a ?"),
-                                    equalTo(DB_OPERATION_NAME, "SET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
+                                    equalTo(DB_OPERATION_NAME, "SET"))),
                     span ->
                         span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
@@ -382,7 +375,6 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "GET a"),
-                                    equalTo(DB_OPERATION_NAME, "GET")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                                    equalTo(DB_OPERATION_NAME, "GET")))));
   }
 }

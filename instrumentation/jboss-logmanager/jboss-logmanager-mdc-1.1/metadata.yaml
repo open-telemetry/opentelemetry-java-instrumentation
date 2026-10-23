@@ -7,6 +7,3 @@ configurations:
   - ref: common.logging.trace-id-key
   - ref: common.logging.span-id-key
   - ref: common.logging.trace-flags-key
-  - ref: common.logging.trace-id
-  - ref: common.logging.span-id
-  - ref: common.logging.trace-flags

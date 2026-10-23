@@ -70,23 +70,19 @@ public final class LoggingEventMapper {
   @Nullable private final Predicate<String> mdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
-  @Nullable private final Predicate<String> keyValuePairAttributes;
+  @Nullable private final Predicate<String> structuredAttributes;
   @Nullable private final Predicate<String> loggerContextAttributes;
   private final boolean captureTemplate;
   private final boolean captureArguments;
-  @Nullable private final Predicate<String> logstashMarkerAttributes;
-  @Nullable private final Predicate<String> logstashStructuredArgumentAttributes;
 
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
     this.captureCodeAttributes = builder.captureCodeAttributes;
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
-    this.keyValuePairAttributes = builder.keyValuePairAttributes;
+    this.structuredAttributes = builder.structuredAttributes;
     this.loggerContextAttributes = builder.loggerContextAttributes;
     this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
-    this.logstashMarkerAttributes = builder.logstashMarkerAttributes;
-    this.logstashStructuredArgumentAttributes = builder.logstashStructuredArgumentAttributes;
     this.mdcAttributes = builder.mdcAttributes;
   }
 
@@ -166,7 +162,7 @@ public final class LoggingEventMapper {
     }
 
     if (captureMarkerAttribute) {
-      boolean skipLogstashMarkers = supportsLogstashMarkers && logstashMarkerAttributes != null;
+      boolean skipLogstashMarkers = supportsLogstashMarkers && structuredAttributes != null;
       captureMarkerAttribute(builder, loggingEvent, skipLogstashMarkers);
     }
 
@@ -203,8 +199,8 @@ public final class LoggingEventMapper {
 
     captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
 
-    if (supportsKeyValuePairs && keyValuePairAttributes != null) {
-      captureKeyValuePairAttributes(builder, loggingEvent, keyValuePairAttributes);
+    if (supportsKeyValuePairs && structuredAttributes != null) {
+      captureKeyValuePairAttributes(builder, loggingEvent, structuredAttributes);
     }
 
     if (supportsKeyValuePairs) {
@@ -499,7 +495,7 @@ public final class LoggingEventMapper {
   @NoMuzzle
   private void captureLogstashMarkerAndReferences(LogRecordBuilder builder, Marker marker) {
     LogstashMarker logstashMarker = (LogstashMarker) marker;
-    captureLogstashMarker(builder, logstashMarker, logstashMarkerAttributes);
+    captureLogstashMarker(builder, logstashMarker, structuredAttributes);
 
     if (logstashMarker.hasReferences()) {
       for (Iterator<Marker> it = logstashMarker.iterator(); it.hasNext(); ) {
@@ -642,7 +638,7 @@ public final class LoggingEventMapper {
   private void processLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
-        captureLogstashMarker(builder, argument, logstashStructuredArgumentAttributes);
+        captureLogstashMarker(builder, argument, structuredAttributes);
       }
     }
   }
@@ -679,12 +675,10 @@ public final class LoggingEventMapper {
     @Nullable private Predicate<String> mdcAttributes;
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
-    @Nullable private Predicate<String> keyValuePairAttributes;
+    @Nullable private Predicate<String> structuredAttributes;
     @Nullable private Predicate<String> loggerContextAttributes;
     private boolean captureTemplate;
     private boolean captureArguments;
-    @Nullable private Predicate<String> logstashMarkerAttributes;
-    @Nullable private Predicate<String> logstashStructuredArgumentAttributes;
 
     Builder() {}
 
@@ -717,12 +711,15 @@ public final class LoggingEventMapper {
     }
 
     /**
-     * Sets the selector that decides which key value pair keys are captured as log attributes. A
-     * {@code null} selector captures no key value pair attributes.
+     * Sets the selector for SLF4J key value pairs, Logstash markers, and Logstash structured
+     * arguments. A {@code null} selector captures no structured attributes.
      */
     @CanIgnoreReturnValue
-    public Builder setKeyValuePairAttributes(@Nullable Predicate<String> keyValuePairAttributes) {
-      this.keyValuePairAttributes = keyValuePairAttributes;
+    public Builder setStructuredAttributes(@Nullable Predicate<String> structuredAttributes) {
+      this.structuredAttributes =
+          structuredAttributes == null
+              ? null
+              : key -> key != null && !key.isEmpty() && structuredAttributes.test(key);
       return this;
     }
 
@@ -745,20 +742,6 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureArguments(boolean captureArguments) {
       this.captureArguments = captureArguments;
-      return this;
-    }
-
-    @CanIgnoreReturnValue
-    public Builder setLogstashMarkerAttributes(
-        @Nullable Predicate<String> logstashMarkerAttributes) {
-      this.logstashMarkerAttributes = logstashMarkerAttributes;
-      return this;
-    }
-
-    @CanIgnoreReturnValue
-    public Builder setLogstashStructuredArgumentAttributes(
-        @Nullable Predicate<String> logstashStructuredArgumentAttributes) {
-      this.logstashStructuredArgumentAttributes = logstashStructuredArgumentAttributes;
       return this;
     }
 

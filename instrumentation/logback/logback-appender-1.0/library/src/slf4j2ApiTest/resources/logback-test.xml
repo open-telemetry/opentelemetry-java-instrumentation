@@ -13,11 +13,8 @@
     <captureExperimentalAttributes>false</captureExperimentalAttributes>
     <captureCodeAttributes>true</captureCodeAttributes>
     <captureMarkerAttribute>true</captureMarkerAttribute>
-    <keyValuePairAttributesIncluded>*</keyValuePairAttributesIncluded>
     <captureTemplate>true</captureTemplate>
     <captureArguments>true</captureArguments>
-    <logstashMarkerAttributesIncluded>*</logstashMarkerAttributesIncluded>
-    <logstashStructuredArgumentAttributesIncluded>*</logstashStructuredArgumentAttributesIncluded>
     <mdcAttributesIncluded>key?</mdcAttributesIncluded>
   </appender>
 

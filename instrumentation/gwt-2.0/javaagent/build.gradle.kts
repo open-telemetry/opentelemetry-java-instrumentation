@@ -112,7 +112,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
@@ -123,7 +122,21 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
+  }
+
   check {
-    dependsOn(testExceptionSignalLogs)
+    dependsOn(testExceptionSignalLogs, testPreviewSemconv, testBothSemconv)
   }
 }

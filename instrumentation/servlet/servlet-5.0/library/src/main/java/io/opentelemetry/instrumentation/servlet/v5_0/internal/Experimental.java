@@ -24,8 +24,7 @@ public final class Experimental {
   private static volatile BiConsumer<ServletTelemetryBuilder, Boolean>
       setAddTraceIdRequestAttribute;
 
-  @Nullable
-  private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId;
+  @Nullable private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureUserName;
 
   @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
@@ -59,15 +58,14 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to capture the {@code enduser.id} span attribute.
+   * Sets whether to capture the {@code user.name} span attribute.
    *
    * @param builder the telemetry builder
-   * @param captureEnduserId {@code true} to capture {@code enduser.id}
+   * @param captureUserName {@code true} to capture {@code user.name}
    */
-  public static void setCaptureEnduserId(
-      ServletTelemetryBuilder builder, boolean captureEnduserId) {
-    if (setCaptureEnduserId != null) {
-      setCaptureEnduserId.accept(builder, captureEnduserId);
+  public static void setCaptureUserName(ServletTelemetryBuilder builder, boolean captureUserName) {
+    if (setCaptureUserName != null) {
+      setCaptureUserName.accept(builder, captureUserName);
     }
   }
 
@@ -105,9 +103,9 @@ public final class Experimental {
     Experimental.setAddTraceIdRequestAttribute = setAddTraceIdRequestAttribute;
   }
 
-  public static void internalSetCaptureEnduserId(
-      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId) {
-    Experimental.setCaptureEnduserId = setCaptureEnduserId;
+  public static void internalSetCaptureUserName(
+      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureUserName) {
+    Experimental.setCaptureUserName = setCaptureUserName;
   }
 
   public static void internalSetRequestParameters(

@@ -44,6 +44,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import reactor.netty.http.client.HttpClient;
 
 abstract class AbstractReactorNettyHttpClientTest
@@ -193,12 +195,17 @@ abstract class AbstractReactorNettyHttpClientTest
         });
   }
 
-  @Test
-  void shouldExposeContextToHttpRequestErrorCallback() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void shouldExposeContextToHttpRequestErrorCallback(boolean combinedCallbacks) {
     AtomicReference<Span> onRequestErrorSpan = new AtomicReference<>();
 
     HttpClient httpClient =
-        createHttpClient().doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
+        combinedCallbacks
+            ? createHttpClient()
+                .doOnError((rq, err) -> onRequestErrorSpan.set(Span.current()), (rs, err) -> {})
+            : createHttpClient()
+                .doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
 
     Throwable thrown =
         catchThrowable(
@@ -310,7 +317,7 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(ERROR_TYPE, "cancelled"),
-                            equalTo(maybeStablePeerService(), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

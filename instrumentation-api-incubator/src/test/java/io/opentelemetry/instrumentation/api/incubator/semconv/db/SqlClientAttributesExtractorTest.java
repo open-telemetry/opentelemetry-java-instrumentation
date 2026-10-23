@@ -28,8 +28,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -66,15 +64,6 @@ class SqlClientAttributesExtractorTest {
 
     assertThat(attributes.build())
         .containsOnly(entry(NETWORK_PEER_ADDRESS, "192.0.2.1"), entry(NETWORK_PEER_PORT, 5432L));
-  }
-
-  @Test
-  void shouldProvideSchemaUrl() {
-    AttributesExtractor<Map<String, Object>, Void> extractor =
-        SqlClientAttributesExtractor.create(new TestAttributesGetter());
-
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(SchemaUrls.V1_44_0);
   }
 
   static class TestAttributesGetter
@@ -371,6 +360,29 @@ class SqlClientAttributesExtractorTest {
             entry(DB_QUERY_SUMMARY, "BATCH"),
             entry(DB_OPERATION_BATCH_SIZE, 2L));
     assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void shouldExtractSingleOperationAndCollection(boolean sanitizationEnabled) {
+    String queryText = "SELECT * FROM potato WHERE id=12345";
+    Map<String, Object> request = singletonMap("db.query.text", queryText);
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
+            .setQuerySanitizationEnabled(sanitizationEnabled)
+            .setSingleOperationAndCollection(true)
+            .build();
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(
+                DB_QUERY_TEXT, sanitizationEnabled ? "SELECT * FROM potato WHERE id=?" : queryText),
+            entry(DB_QUERY_SUMMARY, "SELECT potato"),
+            entry(DB_OPERATION_NAME, "SELECT"),
+            entry(DB_COLLECTION_NAME, "potato"));
   }
 
   @Test

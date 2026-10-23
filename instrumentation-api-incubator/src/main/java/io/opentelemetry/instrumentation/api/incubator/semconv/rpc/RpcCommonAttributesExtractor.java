@@ -5,20 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.rpcSchemaUrl;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import javax.annotation.Nullable;
 
 abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, OpenTelemetryConfigurable {
 
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
   private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
@@ -34,25 +33,32 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
 
   private final RpcAttributesGetter<REQUEST, RESPONSE> getter;
+  private final RpcSemconvSelection selection = new RpcSemconvSelection();
 
   RpcCommonAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
   }
 
+  @Override
+  public final void internalInitialize(OpenTelemetry openTelemetry) {
+    selection.initialize(openTelemetry);
+  }
+
   @SuppressWarnings("deprecation") // for getSystem(), getMethod()
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    RpcSemconvSelection.Selection current = selection.get();
 
-    if (emitPreviewRpcSemconv()) {
+    if (current.emitPreview()) {
       attributes.put(RPC_SYSTEM_NAME, getter.getRpcSystemName(request));
       attributes.put(RPC_METHOD, getter.getRpcMethod(request));
       attributes.put(RPC_METHOD_ORIGINAL, getter.getRpcMethodOriginal(request));
     }
 
-    if (emitOldRpcSemconv()) {
+    if (current.emitOld()) {
       attributes.put(RPC_SYSTEM, getter.getSystem(request));
       attributes.put(RPC_SERVICE, getter.getService(request));
-      if (!emitPreviewRpcSemconv()) {
+      if (!current.emitPreview()) {
         // only set old rpc.method on spans when there's no clash with stable rpc.method
         attributes.put(RPC_METHOD, getter.getMethod(request));
       }
@@ -66,7 +72,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    if (emitPreviewRpcSemconv()) {
+    if (selection.get().emitPreview()) {
       String errorType = getter.getErrorType(request, response, error);
       // fall back to exception class name
       if (errorType == null && error != null) {
@@ -74,10 +80,5 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       }
       attributes.put(ERROR_TYPE, errorType);
     }
-  }
-
-  @Override
-  public final String internalGetSchemaUrl() {
-    return rpcSchemaUrl();
   }
 }

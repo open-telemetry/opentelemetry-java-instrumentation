@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
+import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -79,6 +80,10 @@ import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
  * any time.
  */
 public final class BedrockRuntimeImpl {
+
+  private static final java.util.logging.Logger logger =
+      java.util.logging.Logger.getLogger(BedrockRuntimeImpl.class.getName());
+
   private BedrockRuntimeImpl() {}
 
   // copied from GenAiIncubatingAttributes
@@ -907,7 +912,11 @@ public final class BedrockRuntimeImpl {
           continue;
       }
       // Requests don't have index or stop reason.
-      event.setBody(convertMessage(message, -1, null, captureMessageContent)).emit();
+      Value<?> body = convertMessage(message, -1, null, captureMessageContent);
+      if (body != null) {
+        event.setBody(body);
+      }
+      event.emit();
     }
   }
 
@@ -926,16 +935,15 @@ public final class BedrockRuntimeImpl {
     }
     if (response instanceof ConverseResponse) {
       ConverseResponse converseResponse = (ConverseResponse) response;
-      newEvent(otelContext, eventLogger)
-          .setAttribute(EVENT_NAME, "gen_ai.choice")
+      emitChoiceEvent(
+          otelContext,
+          eventLogger,
           // Bedrock Runtime does not support multiple choices so index is always 0.
-          .setBody(
-              convertMessage(
-                  converseResponse.output().message(),
-                  0,
-                  converseResponse.stopReasonAsString(),
-                  captureMessageContent))
-          .emit();
+          convertMessage(
+              converseResponse.output().message(),
+              0,
+              converseResponse.stopReasonAsString(),
+              captureMessageContent));
     }
   }
 
@@ -972,15 +980,11 @@ public final class BedrockRuntimeImpl {
         if (outputText != null && outputText.isString()) {
           parsedMessage.content(ContentBlock.fromText(outputText.asString()));
         }
-        newEvent(otelContext, eventLogger)
-            .setAttribute(EVENT_NAME, "gen_ai.choice")
-            .setBody(
-                convertMessage(
-                    parsedMessage.build(),
-                    index,
-                    completionReason.asString(),
-                    captureMessageContent))
-            .emit();
+        emitChoiceEvent(
+            otelContext,
+            eventLogger,
+            convertMessage(
+                parsedMessage.build(), index, completionReason.asString(), captureMessageContent));
         index++;
       }
       return;
@@ -1020,10 +1024,10 @@ public final class BedrockRuntimeImpl {
     }
     Message parsedMessage =
         Message.builder().role(ConversationRole.ASSISTANT).content(parsedContentBlocks).build();
-    newEvent(otelContext, eventLogger)
-        .setAttribute(EVENT_NAME, "gen_ai.choice")
-        .setBody(convertMessage(parsedMessage, 0, stopReasonString, captureMessageContent))
-        .emit();
+    emitChoiceEvent(
+        otelContext,
+        eventLogger,
+        convertMessage(parsedMessage, 0, stopReasonString, captureMessageContent));
   }
 
   @Nullable
@@ -1230,9 +1234,20 @@ public final class BedrockRuntimeImpl {
       delegate.onEventStream(
           sdkPublisher.map(
               event -> {
-                handleEvent(event);
+                handleEventSafely(event);
                 return event;
               }));
+    }
+
+    // Telemetry parsing must never change the behavior of the application's stream.
+    // visible for testing
+    final void handleEventSafely(S event) {
+      try {
+        handleEvent(event);
+      } catch (RuntimeException e) {
+        // Keep the original event flowing to the delegate subscriber.
+        logger.log(FINE, "Failed to handle event", e);
+      }
     }
 
     @Override
@@ -1325,10 +1340,10 @@ public final class BedrockRuntimeImpl {
         }
         String stopReason = ((MessageStopEvent) event).stopReasonAsString();
         stopReasons.add(stopReason);
-        newEvent(otelContext, eventLogger)
-            .setAttribute(EVENT_NAME, "gen_ai.choice")
-            .setBody(convertMessageData(currentText, tools, 0, stopReason, captureMessageContent))
-            .emit();
+        emitChoiceEvent(
+            otelContext,
+            eventLogger,
+            convertMessageData(currentText, tools, 0, stopReason, captureMessageContent));
       }
       if (event instanceof ConverseStreamMetadataEvent) {
         usage = ((ConverseStreamMetadataEvent) event).usage();
@@ -1412,10 +1427,10 @@ public final class BedrockRuntimeImpl {
         stopReasons.add(stopReason);
         // There's no indication of the final event other than completion reason. Emit the event
         // and finish up.
-        newEvent(otelContext, eventLogger)
-            .setAttribute(EVENT_NAME, "gen_ai.choice")
-            .setBody(convertMessageData(currentText, null, 0, stopReason, captureMessageContent))
-            .emit();
+        emitChoiceEvent(
+            otelContext,
+            eventLogger,
+            convertMessageData(currentText, null, 0, stopReason, captureMessageContent));
         this.usage =
             TokenUsage.builder()
                 .inputTokens(this.inputTokens)
@@ -1483,10 +1498,10 @@ public final class BedrockRuntimeImpl {
         }
         String stopReason = stopReasonDoc.asString();
         stopReasons.add(stopReason);
-        newEvent(otelContext, eventLogger)
-            .setAttribute(EVENT_NAME, "gen_ai.choice")
-            .setBody(convertMessageData(currentText, tools, 0, stopReason, captureMessageContent))
-            .emit();
+        emitChoiceEvent(
+            otelContext,
+            eventLogger,
+            convertMessageData(currentText, tools, 0, stopReason, captureMessageContent));
         return;
       }
       Document metadata = result.asMap().get("metadata");
@@ -1620,12 +1635,10 @@ public final class BedrockRuntimeImpl {
                   stopReasons = new ArrayList<>();
                 }
                 stopReasons.add(stopReason);
-                newEvent(otelContext, eventLogger)
-                    .setAttribute(EVENT_NAME, "gen_ai.choice")
-                    .setBody(
-                        convertMessageData(
-                            currentText, tools, 0, stopReason, captureMessageContent))
-                    .emit();
+                emitChoiceEvent(
+                    otelContext,
+                    eventLogger,
+                    convertMessageData(currentText, tools, 0, stopReason, captureMessageContent));
               }
             }
             Document usage = result.asMap().get("usage");
@@ -1646,6 +1659,16 @@ public final class BedrockRuntimeImpl {
           return;
       }
     }
+  }
+
+  private static void emitChoiceEvent(
+      Context otelContext, Logger eventLogger, @Nullable Value<?> body) {
+    LogRecordBuilder event =
+        newEvent(otelContext, eventLogger).setAttribute(EVENT_NAME, "gen_ai.choice");
+    if (body != null) {
+      event.setBody(body);
+    }
+    event.emit();
   }
 
   private static LogRecordBuilder newEvent(Context otelContext, Logger eventLogger) {
@@ -1684,6 +1707,7 @@ public final class BedrockRuntimeImpl {
     }
   }
 
+  @Nullable
   private static Value<?> convertMessage(
       Message message, int index, @Nullable String stopReason, boolean captureMessageContent) {
     StringBuilder text = null;
@@ -1743,6 +1767,7 @@ public final class BedrockRuntimeImpl {
     }
   }
 
+  @Nullable
   private static Value<?> convertMessageData(
       @Nullable StringBuilder text,
       List<ToolUseBlock> toolCalls,
@@ -1766,7 +1791,7 @@ public final class BedrockRuntimeImpl {
     if (index >= 0) {
       body.put("index", Value.of(index));
     }
-    return Value.of(body);
+    return body.isEmpty() ? null : Value.of(body);
   }
 
   private static Value<?> convertToolCall(ToolUseBlock toolCall, boolean captureMessageContent) {

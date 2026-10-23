@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -27,6 +28,7 @@ class RpcSpanNameExtractorTest {
     RpcRequest request = new RpcRequest();
 
     if (emitPreviewRpcSemconv()) {
+      lenient().when(getter.getRpcSystemName(request)).thenReturn("custom_rpc");
       when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
     } else {
       when(getter.getService(request)).thenReturn("my.Service");
@@ -68,10 +70,23 @@ class RpcSpanNameExtractorTest {
 
     RpcRequest request = new RpcRequest();
 
-    when(getter.getRpcSystemName(request)).thenReturn("grpc");
+    when(getter.getRpcSystemName(request)).thenReturn("custom_rpc");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    assertThat(extractor.extract(request)).isEqualTo("grpc");
+    assertThat(extractor.extract(request)).isEqualTo("custom_rpc");
+  }
+
+  @Test
+  void rpcMethodOther_fallsBackToSystemName() {
+    assumeTrue(emitPreviewRpcSemconv());
+
+    RpcRequest request = new RpcRequest();
+
+    when(getter.getRpcMethod(request)).thenReturn("_OTHER");
+    when(getter.getRpcSystemName(request)).thenReturn("custom_rpc");
+
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    assertThat(extractor.extract(request)).isEqualTo("custom_rpc");
   }
 
   @Test
@@ -82,10 +97,10 @@ class RpcSpanNameExtractorTest {
     RpcRequest request = new RpcRequest();
 
     when(getter.getRpcSystemName(request)).thenCallRealMethod();
-    when(getter.getSystem(request)).thenReturn("grpc");
+    when(getter.getSystem(request)).thenReturn("custom_rpc");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    assertThat(extractor.extract(request)).isEqualTo("grpc");
+    assertThat(extractor.extract(request)).isEqualTo("custom_rpc");
   }
 
   static class RpcRequest {}

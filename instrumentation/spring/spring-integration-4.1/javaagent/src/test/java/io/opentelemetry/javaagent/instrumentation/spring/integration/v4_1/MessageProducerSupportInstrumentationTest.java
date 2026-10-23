@@ -59,7 +59,7 @@ import org.springframework.messaging.support.MessageBuilder;
 class MessageProducerSupportInstrumentationTest {
 
   private static final String SPRING_RABBIT_INSTRUMENTATION_NAME =
-      "io.opentelemetry.spring-rabbit-1.0";
+      "io.opentelemetry.spring-rabbit-1.1";
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

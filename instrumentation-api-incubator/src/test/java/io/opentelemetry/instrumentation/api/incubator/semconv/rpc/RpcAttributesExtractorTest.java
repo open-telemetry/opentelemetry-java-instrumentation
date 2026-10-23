@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -21,8 +21,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -91,9 +89,6 @@ class RpcAttributesExtractorTest {
   }
 
   private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0);
-
     Map<String, String> request = new HashMap<>();
     request.put("service", "my.Service");
     request.put("method", "Method");

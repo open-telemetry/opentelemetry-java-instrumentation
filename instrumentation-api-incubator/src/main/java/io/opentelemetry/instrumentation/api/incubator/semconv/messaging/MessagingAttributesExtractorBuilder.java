@@ -32,10 +32,8 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
   /**
    * Configures which message headers are captured as span attributes.
    *
-   * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
-   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
-   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
-   * preserved.
+   * <p>Header values are captured under the {@code messaging.header.<name>} attribute key, where
+   * {@code <name>} is the header name with its original spelling, including dashes.
    *
    * <p>Selector patterns are matched case-sensitively. {@code ?} matches one character and {@code
    * *} matches any number of characters, including none. Excluded patterns take precedence over
@@ -58,9 +56,8 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Configures the messaging headers that will be captured as span attributes.
    *
    * <p>The messaging header values will be captured under the {@code messaging.header.<name>}
-   * attribute key. The {@code <name>} part in the attribute key is the header name with dashes
-   * replaced by underscores unless {@code otel.instrumentation.common.v3-preview} is enabled, in
-   * which case dashes are preserved.
+   * attribute key, where {@code <name>} is the header name with its original spelling, including
+   * dashes.
    *
    * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
    * and logged, since this setting never supported wildcards.

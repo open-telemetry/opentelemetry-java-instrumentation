@@ -35,11 +35,14 @@ public final class SqlQueryAnalyzer {
   /**
    * Returns sanitized query text, a low-cardinality summary, and operation and target names.
    *
+   * <p>When quote or comment boundaries are ambiguous across dialects or connection settings, the
+   * remaining query text is replaced with {@code ?} and summary extraction stops.
+   *
    * <p>When sanitization is disabled, returns the original query text without analysis.
    */
   public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {
     if (!querySanitizationEnabled || query == null) {
-      return SqlQuery.createWithSummary(query, null, null);
+      return SqlQuery.create(query, null, null);
     }
     // sanitization result will not be cached for queries larger than the threshold to avoid
     // cache growing too large
@@ -53,7 +56,7 @@ public final class SqlQueryAnalyzer {
 
   private static SqlQuery analyzeImpl(String query, SqlDialect dialect) {
     supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
-    return AutoSqlSanitizerWithSummary.sanitize(query, dialect);
+    return AutoSqlSanitizer.sanitize(query, dialect);
   }
 
   // visible for tests

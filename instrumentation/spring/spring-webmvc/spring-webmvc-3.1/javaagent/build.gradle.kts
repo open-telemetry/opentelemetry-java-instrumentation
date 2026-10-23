@@ -29,7 +29,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:testing"))
-  testImplementation("com.google.guava:guava")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")
@@ -53,7 +52,6 @@ tasks {
       "otel.instrumentation.common.controller-telemetry.enabled=true," +
         "otel.instrumentation.common.view-telemetry.enabled=true"
     )
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.view-telemetry.enabled=true")
   }

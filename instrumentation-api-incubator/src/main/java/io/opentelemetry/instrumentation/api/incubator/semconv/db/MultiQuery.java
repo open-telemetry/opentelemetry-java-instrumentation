@@ -76,9 +76,6 @@ class MultiQuery {
     private final UniqueValue uniqueOperationName = new UniqueValue();
     private final UniqueValue uniqueCollectionName = new UniqueValue();
 
-    // getOperationName()/getCollectionName() are deprecated because they will become
-    // package-private in 3.0. This helper is in the same package, so it can still use them.
-    @SuppressWarnings("deprecation")
     void add(SqlQuery analyzedQuery, @Nullable String queryText) {
       uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
       uniqueQueryTexts.add(queryText);

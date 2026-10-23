@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -106,7 +107,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                   span.hasName("process testSingleTopic")
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                       .hasAttributesSatisfyingExactly(
                           singleProcessAttributes("testSingleTopic", "testSingleListener", "10")),
               span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
@@ -470,7 +471,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           span.hasName("process testSingleTopic")
               .hasKind(SpanKind.CONSUMER)
               .hasParent(trace.getSpan(1))
-              .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+              .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
               .hasAttributesSatisfyingExactly(withErrorType(processAttributes, failed));
           if (failed) {
             span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));

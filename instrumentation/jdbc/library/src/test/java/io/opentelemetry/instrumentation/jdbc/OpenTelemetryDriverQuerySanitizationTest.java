@@ -36,7 +36,6 @@ import org.junitpioneer.jupiter.ClearSystemProperty;
 
 @ClearSystemProperty(key = "otel.instrumentation.jdbc.query-sanitization.enabled")
 @ClearSystemProperty(key = "otel.instrumentation.common.db.query-sanitization.enabled")
-@ClearSystemProperty(key = "otel.instrumentation.common.db-statement-sanitizer.enabled")
 class OpenTelemetryDriverQuerySanitizationTest {
 
   @RegisterExtension
@@ -68,10 +67,9 @@ class OpenTelemetryDriverQuerySanitizationTest {
   }
 
   @ParameterizedTest
-  @MethodSource("sanitizationSettings")
-  void declarativeConfiguration(Boolean jdbcEnabled, Boolean commonEnabled, boolean expected)
-      throws SQLException {
-    assertQuerySanitization(configuredOpenTelemetry(jdbcEnabled, commonEnabled), expected);
+  @ValueSource(booleans = {true, false})
+  void declarativeConfiguration(boolean enabled) throws SQLException {
+    assertQuerySanitization(configuredOpenTelemetry(enabled, null), enabled);
   }
 
   @ParameterizedTest
@@ -83,32 +81,6 @@ class OpenTelemetryDriverQuerySanitizationTest {
         "otel.instrumentation.common.db.query-sanitization.enabled", Boolean.toString(!enabled));
 
     assertQuerySanitization(configuredOpenTelemetry(null, enabled), enabled);
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void deprecatedJdbcSettingUsesInstanceV3Preview(boolean v3Preview) throws SQLException {
-    ExtendedOpenTelemetry openTelemetry = configuredOpenTelemetry(null, null);
-    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
-        .thenReturn(v3Preview);
-    when(openTelemetry
-            .getInstrumentationConfig("jdbc")
-            .get("statement_sanitizer")
-            .getBoolean("enabled"))
-        .thenReturn(false);
-
-    assertQuerySanitization(openTelemetry, v3Preview);
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void deprecatedSystemFallbackUsesInstanceV3Preview(boolean v3Preview) throws SQLException {
-    ExtendedOpenTelemetry openTelemetry = configuredOpenTelemetry(null, null);
-    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
-        .thenReturn(v3Preview);
-    System.setProperty("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
-
-    assertQuerySanitization(openTelemetry, v3Preview);
   }
 
   private static ExtendedOpenTelemetry configuredOpenTelemetry(
@@ -133,12 +105,8 @@ class OpenTelemetryDriverQuerySanitizationTest {
     when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(jdbcConfig);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(jdbcConfig.get("query_sanitization").getBoolean("enabled")).thenReturn(jdbcEnabled);
-    when(jdbcConfig.get("statement_sanitizer").getBoolean("enabled")).thenReturn(null);
     when(commonConfig.get("db").get("query_sanitization").getBoolean("enabled"))
         .thenReturn(commonEnabled);
-    when(commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled"))
-        .thenReturn(null);
-    when(commonConfig.get("db_statement_sanitizer").getBoolean("enabled")).thenReturn(null);
 
     return openTelemetry;
   }

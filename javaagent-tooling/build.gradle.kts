@@ -40,7 +40,6 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-logging-otlp")
 
   implementation("io.opentelemetry:opentelemetry-exporter-prometheus")
-  implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
 
@@ -51,9 +50,6 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
-  // to be removed in 3.0 (see #18903)
-  implementation("io.opentelemetry.contrib:opentelemetry-samplers")
-
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
   implementation("org.ow2.asm:asm-util")
@@ -68,7 +64,6 @@ dependencies {
   testCompileOnly("com.google.code.findbugs:annotations")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-  testImplementation("com.google.guava:guava")
 }
 
 testing {
@@ -89,7 +84,7 @@ testing {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
         implementation("net.bytebuddy:byte-buddy-dep")
-        compileOnly("com.google.guava:guava")
+        compileOnly("org.apache.commons:commons-lang3:3.21.0")
 
         // Used by byte-buddy but not brought in as a transitive dependency.
         compileOnly("com.google.code.findbugs:annotations")

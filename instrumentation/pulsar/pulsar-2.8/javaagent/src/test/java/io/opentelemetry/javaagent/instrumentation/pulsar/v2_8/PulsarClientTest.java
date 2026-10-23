@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -199,7 +200,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
   }
@@ -245,7 +246,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
   }
@@ -293,7 +294,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                   span.hasName("receive " + topic)
                       .hasKind(SpanKind.CLIENT)
                       .hasNoParent()
-                      .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                      .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                       .hasAttributesSatisfyingExactly(
                           receiveAttributes(topic, msgId.toString(), false)));
 
@@ -360,7 +361,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
   }
@@ -407,7 +408,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
   }
@@ -473,7 +474,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), true))));
   }
@@ -532,7 +533,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(partitionTopic, msgId.toString(), false))));
   }
@@ -592,7 +593,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic1)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic1, msgId1.toString(), false))),
         trace -> {
@@ -618,7 +619,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic2)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan2.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic2, msgId2.toString(), false))));
   }
@@ -672,7 +673,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic1)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic1, msgId1.toString(), false))),
         trace -> {
@@ -693,7 +694,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     span.hasName("receive " + topic2)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan2.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic2, msgId2.toString(), false))));
   }

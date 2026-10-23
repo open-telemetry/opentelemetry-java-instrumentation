@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -52,7 +53,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
                           equalTo(MESSAGING_OPERATION_TYPE, "process"),
                           satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                           equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"));
-                  span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                  span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                 },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
 

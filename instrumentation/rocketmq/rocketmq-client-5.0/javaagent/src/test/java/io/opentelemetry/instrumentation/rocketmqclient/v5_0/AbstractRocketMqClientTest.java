@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -608,7 +609,7 @@ abstract class AbstractRocketMqClientTest {
       // one link per received message, carrying the attributes of that message
       result.hasLinks(
           LinkData.create(
-              linkedSpan.getSpanContext(),
+              asRemote(linkedSpan.getSpanContext()),
               Attributes.of(MESSAGING_MESSAGE_ID, linkedAttributes.get(MESSAGING_MESSAGE_ID))));
     }
     return result;
@@ -685,7 +686,7 @@ abstract class AbstractRocketMqClientTest {
             .hasName("process " + topic)
             .hasStatus(status)
             .hasAttributesSatisfyingExactly(attributeAssertions);
-    return result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+    return result.hasLinks(LinkData.create(asRemote(linkedSpan.getSpanContext())));
   }
 
   private static SpanDataAssert assertProcessSpanWithFifoMessage(
@@ -719,7 +720,7 @@ abstract class AbstractRocketMqClientTest {
             .hasName("process " + topic)
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(attributeAssertions);
-    return result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+    return result.hasLinks(LinkData.create(asRemote(linkedSpan.getSpanContext())));
   }
 
   private static SpanDataAssert assertProcessSpanWithDelayMessage(
@@ -753,7 +754,7 @@ abstract class AbstractRocketMqClientTest {
             .hasName("process " + topic)
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(attributeAssertions);
-    return result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+    return result.hasLinks(LinkData.create(asRemote(linkedSpan.getSpanContext())));
   }
 
   private void assertFailureMetrics() {

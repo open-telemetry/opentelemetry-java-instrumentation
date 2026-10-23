@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -61,9 +62,8 @@ public final class SpringIntegrationTelemetryBuilder {
    * Configures which message headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
-   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
-   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
-   * preserved.
+   * {@code <name>} part in the attribute key is the header name with its original spelling,
+   * including dashes.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
    * of characters, including none. Excluded patterns take precedence over included patterns. A
@@ -118,6 +118,7 @@ public final class SpringIntegrationTelemetryBuilder {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
                     consumerGetter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
@@ -140,6 +141,7 @@ public final class SpringIntegrationTelemetryBuilder {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
                     producerGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(

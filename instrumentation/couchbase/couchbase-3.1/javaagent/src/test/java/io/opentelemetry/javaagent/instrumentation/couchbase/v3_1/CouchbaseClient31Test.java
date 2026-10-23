@@ -9,7 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -57,8 +57,6 @@ import org.testcontainers.couchbase.CouchbaseService;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient31Test {
-  private static final boolean LEGACY_EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
   private static final boolean EXPERIMENTAL_TELEMETRY =
       Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
 
@@ -128,7 +126,7 @@ class CouchbaseClient31Test {
 
     List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
     dispatchAttributes.add(equalTo(DB_SYSTEM_NAME, "couchbase"));
-    if (emitExperimentalAttributes()) {
+    if (EXPERIMENTAL_TELEMETRY) {
       dispatchAttributes.add(
           satisfies(stringKey("db.couchbase.local_id"), val -> val.isNotBlank()));
       dispatchAttributes.add(
@@ -141,7 +139,7 @@ class CouchbaseClient31Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, kvPort));
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   assertGetSpan(span, testLatestDeps() ? 0L : null);
@@ -168,7 +166,7 @@ class CouchbaseClient31Test {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   assertOperationSpan(span, "upsert", testLatestDeps() ? 0L : null);
@@ -198,7 +196,7 @@ class CouchbaseClient31Test {
 
     List<AttributeAssertion> dispatchAttributes = new ArrayList<>();
     dispatchAttributes.add(equalTo(DB_SYSTEM_NAME, "couchbase"));
-    if (emitExperimentalAttributes()) {
+    if (EXPERIMENTAL_TELEMETRY) {
       // The chunked HTTP handler reports a textual operation id, unlike the key-value handler
       dispatchAttributes.add(
           satisfies(stringKey("db.couchbase.operation_id"), val -> val.isNotBlank()));
@@ -208,7 +206,7 @@ class CouchbaseClient31Test {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("query " + serverAddress()).hasNoParent(),
                 span ->
@@ -228,8 +226,9 @@ class CouchbaseClient31Test {
   }
 
   private static void assertOperationSpan(SpanDataAssert span, String operation, Long retries) {
-    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
+    span.hasKind(CLIENT)
         .hasName(operation + " _default")
+        .satisfies(hasScopeName("io.opentelemetry.couchbase-3.1"))
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(DB_SYSTEM_NAME, "couchbase"),
@@ -248,15 +247,7 @@ class CouchbaseClient31Test {
     return String.join(",", endpoints);
   }
 
-  private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
-  }
-
-  private static boolean emitExperimentalAttributes() {
-    return EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
-  }
-
   private static <T> T experimental(T value) {
-    return emitExperimentalAttributes() ? value : null;
+    return EXPERIMENTAL_TELEMETRY ? value : null;
   }
 }

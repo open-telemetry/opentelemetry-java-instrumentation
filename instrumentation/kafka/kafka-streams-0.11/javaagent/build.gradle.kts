@@ -23,7 +23,6 @@ dependencies {
   // Include kafka-clients instrumentation for tests.
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
-  testImplementation("com.google.guava:guava")
   testImplementation("org.testcontainers:testcontainers-kafka")
 }
 
@@ -48,7 +47,6 @@ tasks {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
-      systemProperty("collectMetadata", otelProps.collectMetadata)
     }
   }
 
@@ -61,6 +59,20 @@ tasks {
     include("**/KafkaStreamsSuppressReceiveSpansTest.*")
   }
 
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -71,19 +83,23 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
 
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
+        "otel.instrumentation.kafka.experimental-span-attributes=true",
+    )
   }
 
   test {
     filter {
       excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   check {
     dependsOn(testing.suites)
     dependsOn(testReceiveSpansDisabled)
+    dependsOn(testReceiveTelemetry)
     dependsOn(testExperimental)
   }
 }

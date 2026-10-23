@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.pulsar.PulsarVersion;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -74,8 +76,13 @@ abstract class AbstractPulsarClientTest {
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
+  // Pulsar 2.8 transaction clients lack the coordinator-connect handshake required by newer
+  // brokers. The v5 API requires a 5.x broker.
   private static final DockerImageName DEFAULT_IMAGE_NAME =
-      DockerImageName.parse("apachepulsar/pulsar:2.8.0");
+      DockerImageName.parse(
+          Integer.parseInt(PulsarVersion.getVersion().split("\\.")[0]) >= 5
+              ? "apachepulsar/pulsar:5.0.0"
+              : "apachepulsar/pulsar:2.8.0");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -319,7 +326,7 @@ abstract class AbstractPulsarClientTest {
 
   private static LinkData batchLink(SpanData producerSpan, String messageId) {
     return LinkData.create(
-        producerSpan.getSpanContext(), Attributes.of(MESSAGING_MESSAGE_ID, messageId));
+        asRemote(producerSpan.getSpanContext()), Attributes.of(MESSAGING_MESSAGE_ID, messageId));
   }
 
   static List<AttributeAssertion> receiveAttributes(

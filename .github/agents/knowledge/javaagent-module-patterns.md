@@ -16,11 +16,7 @@ registers the instrumentation with the agent.
 public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 
   public MyLibrary10InstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "my-library-1.0" : "my-library",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"my-library"}
-            : new String[] {"my-library-1.0"});
+    super("my-library-1.0", "my-library");
   }
 
   @Override
@@ -35,7 +31,7 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 - Must have `@AutoService(InstrumentationModule.class)` — this registers it via SPI.
 - Class name follows `{Library}{Version}InstrumentationModule` (e.g.,
   `OkHttp3InstrumentationModule`, `JedisInstrumentationModule`).
-- Constructor `super()` arguments in v3 preview: the **first** (main) name normally equals the full
+- Constructor `super()` arguments: the **first** (main) name normally equals the full
   Gradle module directory name, including versions. Names use **kebab-case**. See
   [module-naming.md](module-naming.md) for the full naming convention.
   The Reactor Netty server registration housed in `spring-webflux-5.0` also includes
@@ -60,7 +56,7 @@ not justify a feature selector. Network enrichment, transport compatibility, and
 span-completion helpers can share their parent's selectors. Modules belonging to one client/server
 role share that role's selectors.
 
-Preview selectors normally start with the full module directory name, then optional versionless
+Selectors normally start with the full module directory name, then optional versionless
 client/server roles and independent features, then the version-stripped component name and
 API/product umbrellas. A default-off feature within a default-on module uses an independent primary
 and shares no selectors with the default-on registrations.
@@ -90,17 +86,15 @@ instrumentation. They use independent feature names, such as `kafka-clients-metr
 `jdbc-datasource`, or `kotlinx-coroutines-annotations`. A group whose
 members are all default-off can share an umbrella: `hibernate` selects default-off telemetry,
 including procedure calls, but not default-on Hibernate Reactive context propagation.
-The deprecated Jedis 1.x and superseded Lettuce 5.1 implementations slated for removal in 3.0
-do not define long-term group membership.
 
 Ordinary defaults assume global enablement on and optional feature settings absent. The native
 Javaagent review instructions contain the naming and default-isolation rules.
 
 Muzzle passes prefer `excludeInstrumentationName(...)` when the public name selects the intended
-classes both outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with the
-fully qualified module class name when shared public names cannot distinguish the required
-implementations. Public enablement names do not need to identify individual classes. Outside v3
-preview, preserve the existing first name and the order of existing names.
+classes. Use `excludeInstrumentationModule(...)` with the fully qualified module class name when
+shared public names cannot distinguish the required implementations. Public enablement names do not
+need to identify individual classes. Preserve the existing first name and the order of existing
+names.
 
 See [Compatibility range ownership](gradle-conventions.md#compatibility-range-ownership) for when
 modules should share a javaagent project and how to separate their Muzzle passes and dependencies.
@@ -538,20 +532,9 @@ sufficient for optimization.
 
 ### Method matchers and advice bindings
 
-The method matcher must prove compatibility for every non-optional, statically typed value that the
-advice reads. For each `@Advice.Argument(n)`, normally include a compatible
-`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature. Apply the
-same rule to a concretely typed `@Advice.Return` with `returns(...)`.
-
-When supported signatures use different concrete subtypes accepted by the advice's common
-supertype, match the hierarchy:
-
-```java
-named("pool")
-    .and(takesArguments(3))
-    .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
-    .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool"))))
-```
+The method matcher must prove compatibility for every non-optional, statically typed argument that
+the advice reads. For each `@Advice.Argument(n)`, normally include a compatible
+`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature.
 
 Match argument positions that the advice does not bind only when they distinguish an intended
 overload or supported-version signature. Do not restate unrelated arguments, and do not bind unused
@@ -566,6 +549,15 @@ instead permits otherwise-incompatible assignment by inserting a runtime cast. U
 explicit type constraint only when every matched signature has a separate runtime contract that
 guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
 prevent `ClassCastException`.
+
+This describes advice parameter bindings, not `@Advice.AssignReturned` mappings. The standard
+transformation pipelines supply dynamic typing for returned-value assignments; see
+[returned-value assignment typing](javaagent-advice-patterns.md#returned-value-assignment-typing).
+
+Argument matchers check declared parameter types, not runtime value types. Match supported
+declarations compatible with the advice binding. These may be subtypes of the advice parameter's type
+or differ across supported library versions. A short matcher comment is useful to explain the
+supported signatures or concrete-type assumption when the choice is not obvious.
 
 ### Rules
 

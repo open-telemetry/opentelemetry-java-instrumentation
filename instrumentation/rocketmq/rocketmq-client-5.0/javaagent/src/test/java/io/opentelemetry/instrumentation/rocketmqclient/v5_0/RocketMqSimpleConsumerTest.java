@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -324,7 +325,7 @@ class RocketMqSimpleConsumerTest {
             equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(KEYS)))
         .hasLinks(
             LinkData.create(
-                sendSpan.getSpanContext(),
+                asRemote(sendSpan.getSpanContext()),
                 Attributes.of(
                     MESSAGING_MESSAGE_ID, sendSpan.getAttributes().get(MESSAGING_MESSAGE_ID))));
   }
