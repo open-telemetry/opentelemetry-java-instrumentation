@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
+  function version when available.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to

@@ -46,7 +46,7 @@ testing {
     register<JvmTestSuite>("version12Test") {
       sources {
         java {
-          setSrcDirs(listOf("src/test/java"))
+          setSrcDirs(listOf("src/test/java", "src/version12Test/java"))
         }
       }
 
