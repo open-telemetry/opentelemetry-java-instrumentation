@@ -40,7 +40,7 @@ public class InfluxDbQueryAdviceScope {
   }
 
   public static InfluxDbQueryAdviceScope start(
-      @Nullable Query query, Retrofit retrofit, boolean asynchronous, boolean overloadDelegation) {
+      @Nullable Query query, Retrofit retrofit, boolean asynchronous, QueryMethod queryMethod) {
     CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
     int depth = callDepth.getAndIncrement();
     if (depth > 0) {
@@ -50,13 +50,13 @@ public class InfluxDbQueryAdviceScope {
       boolean delegated = false;
       if (delegation != null && !delegation.consumed) {
         delegation.consumed = true;
-        delegated = delegation.matches(query, retrofit, currentState);
+        delegated = delegation.matches(query, retrofit, currentState, queryMethod);
       }
       if (delegated) {
         InfluxDbQueryAdviceScope adviceScope =
             new InfluxDbQueryAdviceScope(callDepth, null, null, null);
-        if (overloadDelegation && currentState != null) {
-          adviceScope.installDelegation(query, retrofit, currentState);
+        if (currentState != null) {
+          adviceScope.installDelegation(query, retrofit, currentState, queryMethod);
         }
         return adviceScope;
       }
@@ -87,16 +87,21 @@ public class InfluxDbQueryAdviceScope {
     InfluxDbQueryAdviceScope adviceScope =
         new InfluxDbQueryAdviceScope(
             callDepth, parentContext, queryState, queryState.getContext().makeCurrent());
-    if (overloadDelegation) {
-      adviceScope.installDelegation(query, retrofit, queryState);
-    }
+    adviceScope.installDelegation(query, retrofit, queryState, queryMethod);
     return adviceScope;
   }
 
   private void installDelegation(
-      @Nullable Query query, Retrofit retrofit, InfluxDbQueryState queryState) {
+      @Nullable Query query,
+      Retrofit retrofit,
+      InfluxDbQueryState queryState,
+      QueryMethod queryMethod) {
+    QueryMethod nextMethod = queryMethod.next();
+    if (nextMethod == null) {
+      return;
+    }
     previousDelegation =
-        currentQueryDelegation.set(new QueryDelegation(query, retrofit, queryState));
+        currentQueryDelegation.set(new QueryDelegation(query, retrofit, queryState, nextMethod));
     delegationInstalled = true;
   }
 
@@ -123,22 +128,58 @@ public class InfluxDbQueryAdviceScope {
     }
   }
 
+  public enum QueryMethod {
+    SYNCHRONOUS,
+    ASYNCHRONOUS,
+    CHUNKED_CONSUMER,
+    CHUNKED_BI_CONSUMER,
+    CHUNKED_CONSUMER_COMPLETION,
+    CHUNKED_BI_CONSUMER_COMPLETION,
+    CHUNKED_BI_CONSUMER_COMPLETION_ERROR;
+
+    @Nullable
+    private QueryMethod next() {
+      switch (this) {
+        case CHUNKED_CONSUMER:
+          return CHUNKED_CONSUMER_COMPLETION;
+        case CHUNKED_BI_CONSUMER:
+        case CHUNKED_CONSUMER_COMPLETION:
+          return CHUNKED_BI_CONSUMER_COMPLETION;
+        case CHUNKED_BI_CONSUMER_COMPLETION:
+          return CHUNKED_BI_CONSUMER_COMPLETION_ERROR;
+        default:
+          return null;
+      }
+    }
+  }
+
   private static final class QueryDelegation {
     @Nullable private final Query query;
     private final Retrofit retrofit;
     private final InfluxDbQueryState queryState;
+    private final QueryMethod expectedMethod;
     private boolean consumed;
 
     private QueryDelegation(
-        @Nullable Query query, Retrofit retrofit, InfluxDbQueryState queryState) {
+        @Nullable Query query,
+        Retrofit retrofit,
+        InfluxDbQueryState queryState,
+        QueryMethod expectedMethod) {
       this.query = query;
       this.retrofit = retrofit;
       this.queryState = queryState;
+      this.expectedMethod = expectedMethod;
     }
 
     private boolean matches(
-        @Nullable Query query, Retrofit retrofit, @Nullable InfluxDbQueryState queryState) {
-      return this.query == query && this.retrofit == retrofit && this.queryState == queryState;
+        @Nullable Query query,
+        Retrofit retrofit,
+        @Nullable InfluxDbQueryState queryState,
+        QueryMethod queryMethod) {
+      return this.query == query
+          && this.retrofit == retrofit
+          && this.queryState == queryState
+          && expectedMethod == queryMethod;
     }
   }
 }

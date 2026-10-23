@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbQueryAdviceScope.QueryMethod;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -123,7 +124,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static InfluxDbQueryAdviceScope onEnter(
         @Advice.Argument(0) @Nullable Query query,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      return InfluxDbQueryAdviceScope.start(query, retrofit, false, false);
+      return InfluxDbQueryAdviceScope.start(query, retrofit, false, QueryMethod.SYNCHRONOUS);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -151,7 +152,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) @Nullable Consumer<?> failureCallback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       InfluxDbQueryAdviceScope adviceScope =
-          InfluxDbQueryAdviceScope.start(query, retrofit, true, false);
+          InfluxDbQueryAdviceScope.start(query, retrofit, true, QueryMethod.ASYNCHRONOUS);
       Context parentContext = adviceScope.parentContext();
       InfluxDbQueryState queryState = adviceScope.queryState();
       if (parentContext == null || queryState == null) {
@@ -185,7 +186,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) @Nullable Consumer<?> callback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       InfluxDbQueryAdviceScope adviceScope =
-          InfluxDbQueryAdviceScope.start(query, retrofit, true, true);
+          InfluxDbQueryAdviceScope.start(query, retrofit, true, QueryMethod.CHUNKED_CONSUMER);
       Context parentContext = adviceScope.parentContext();
       InfluxDbQueryState queryState = adviceScope.queryState();
       if (parentContext == null || queryState == null) {
@@ -216,7 +217,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) @Nullable BiConsumer<?, ?> callback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       InfluxDbQueryAdviceScope adviceScope =
-          InfluxDbQueryAdviceScope.start(query, retrofit, true, true);
+          InfluxDbQueryAdviceScope.start(query, retrofit, true, QueryMethod.CHUNKED_BI_CONSUMER);
       Context parentContext = adviceScope.parentContext();
       InfluxDbQueryState queryState = adviceScope.queryState();
       if (parentContext == null || queryState == null) {
@@ -251,7 +252,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) @Nullable Runnable completionCallback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       InfluxDbQueryAdviceScope adviceScope =
-          InfluxDbQueryAdviceScope.start(query, retrofit, true, true);
+          InfluxDbQueryAdviceScope.start(
+              query, retrofit, true, QueryMethod.CHUNKED_CONSUMER_COMPLETION);
       Context parentContext = adviceScope.parentContext();
       InfluxDbQueryState queryState = adviceScope.queryState();
       if (parentContext == null || queryState == null) {
@@ -288,7 +290,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) @Nullable Runnable completionCallback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       InfluxDbQueryAdviceScope adviceScope =
-          InfluxDbQueryAdviceScope.start(query, retrofit, true, true);
+          InfluxDbQueryAdviceScope.start(
+              query, retrofit, true, QueryMethod.CHUNKED_BI_CONSUMER_COMPLETION);
       Context parentContext = adviceScope.parentContext();
       InfluxDbQueryState queryState = adviceScope.queryState();
       if (parentContext == null || queryState == null) {
@@ -327,7 +330,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(4) @Nullable Consumer<?> errorCallback,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       InfluxDbQueryAdviceScope adviceScope =
-          InfluxDbQueryAdviceScope.start(query, retrofit, true, false);
+          InfluxDbQueryAdviceScope.start(
+              query, retrofit, true, QueryMethod.CHUNKED_BI_CONSUMER_COMPLETION_ERROR);
       Context parentContext = adviceScope.parentContext();
       InfluxDbQueryState queryState = adviceScope.queryState();
       if (parentContext == null || queryState == null) {

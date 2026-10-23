@@ -39,6 +39,10 @@ val test225RuntimeClasspath = configurations.create("test225RuntimeClasspath") {
   extendsFrom(configurations.testRuntimeClasspath.get())
   resolutionStrategy.force("org.influxdb:influxdb-java:2.25")
 }
+val test29RuntimeClasspath = configurations.create("test29RuntimeClasspath") {
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  resolutionStrategy.force("org.influxdb:influxdb-java:2.9")
+}
 
 tasks {
   withType<Test>().configureEach {
@@ -80,7 +84,17 @@ tasks {
     }
   }
 
+  val test29 = register<Test>("test29") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().output + test29RuntimeClasspath
+    include("**/InfluxDbLegacyQueryLifecycleTest.class")
+
+    filter {
+      includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
+    }
+  }
+
   check {
-    dependsOn(testQuerySanitizationDisabled, test225)
+    dependsOn(testQuerySanitizationDisabled, test225, test29)
   }
 }
