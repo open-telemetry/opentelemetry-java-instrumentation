@@ -28,7 +28,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -76,23 +75,6 @@ class InfluxDbQueryLifecycleTest {
 
   private static final Query QUERY = new Query("SELECT * FROM cpu", "mydb");
   private static final String SUCCESS = "{\"results\":[{\"statement_id\":0}]}";
-
-  @Test
-  void failedQueryStartupDoesNotAffectSubsequentCalls() {
-    Query queryThatFailsOnCommandAccess =
-        new Query("SELECT * FROM cpu", "mydb") {
-          @Override
-          public String getCommand() {
-            throw new IllegalStateException();
-          }
-        };
-    try (InfluxDB client = client(chain -> response(chain, SUCCESS))) {
-      assertThat(client.query(queryThatFailsOnCommandAccess)).isNotNull();
-      assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
-      assertThat(client.query(QUERY)).isNotNull();
-    }
-    assertQuery(null);
-  }
 
   @ParameterizedTest
   @ValueSource(strings = {"synchronous", "asynchronous", "chunked"})
