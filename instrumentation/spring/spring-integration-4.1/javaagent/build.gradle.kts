@@ -45,6 +45,26 @@ dependencies {
   latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+") // documented limitation
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("version41Test") {
+      dependencies {
+        implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
+        implementation("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
+        implementation("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
+      }
+      targets.all {
+        testTask.configure {
+          // Exercise channel propagation independently of executor instrumentation.
+          jvmArgs("-Dotel.instrumentation.executors.enabled=false")
+          jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+          jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+        }
+      }
+    }
+  }
+}
+
 tasks {
   val testAmqpHandoffWithRabbitInstrumentation =
     register<Test>("testAmqpHandoffWithRabbitInstrumentation") {
@@ -107,6 +127,7 @@ tasks {
 
   check {
     dependsOn(
+      testing.suites,
       testAmqpHandoffWithRabbitInstrumentation,
       testWithRabbitInstrumentation,
       testWithProducerInstrumentation,
@@ -116,7 +137,9 @@ tasks {
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    if (name != "version41Test") {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    }
   }
 }
 
