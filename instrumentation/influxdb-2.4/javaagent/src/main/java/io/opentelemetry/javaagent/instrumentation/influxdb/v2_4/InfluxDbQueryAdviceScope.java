@@ -42,41 +42,32 @@ public class InfluxDbQueryAdviceScope {
   public static InfluxDbQueryAdviceScope start(
       @Nullable Query query, Retrofit retrofit, boolean asynchronous, boolean overloadDelegation) {
     CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
-    if (callDepth.getAndIncrement() > 0) {
-      try {
-        Context current = Context.current();
-        InfluxDbQueryState currentState = current.get(InfluxDbQueryState.KEY);
-        QueryDelegation delegation = currentQueryDelegation.get();
-        boolean delegated = false;
-        if (delegation != null && !delegation.consumed) {
-          delegation.consumed = true;
-          delegated = delegation.matches(query, retrofit, currentState);
-        }
-        if (delegated) {
-          InfluxDbQueryAdviceScope adviceScope =
-              new InfluxDbQueryAdviceScope(callDepth, null, null, null);
-          if (overloadDelegation && currentState != null) {
-            adviceScope.installDelegation(query, retrofit, currentState);
-          }
-          return adviceScope;
-        }
-        Scope scope =
-            currentState != null ? current.with(InfluxDbQueryState.KEY, null).makeCurrent() : null;
-        return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
-      } catch (Throwable t) {
-        callDepth.decrementAndGet();
-        throw t;
+    int depth = callDepth.getAndIncrement();
+    if (depth > 0) {
+      Context current = Context.current();
+      InfluxDbQueryState currentState = current.get(InfluxDbQueryState.KEY);
+      QueryDelegation delegation = currentQueryDelegation.get();
+      boolean delegated = false;
+      if (delegation != null && !delegation.consumed) {
+        delegation.consumed = true;
+        delegated = delegation.matches(query, retrofit, currentState);
       }
+      if (delegated) {
+        InfluxDbQueryAdviceScope adviceScope =
+            new InfluxDbQueryAdviceScope(callDepth, null, null, null);
+        if (overloadDelegation && currentState != null) {
+          adviceScope.installDelegation(query, retrofit, currentState);
+        }
+        return adviceScope;
+      }
+      Scope scope =
+          currentState != null ? current.with(InfluxDbQueryState.KEY, null).makeCurrent() : null;
+      return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
     }
     Context current = Context.current();
     if (current.get(InfluxDbQueryState.KEY) != null) {
-      try {
-        Scope scope = current.with(InfluxDbQueryState.KEY, null).makeCurrent();
-        return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
-      } catch (Throwable t) {
-        callDepth.decrementAndGet();
-        throw t;
-      }
+      Scope scope = current.with(InfluxDbQueryState.KEY, null).makeCurrent();
+      return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
     }
     if (query == null) {
       return new InfluxDbQueryAdviceScope(callDepth, null, null, null);
@@ -88,11 +79,7 @@ public class InfluxDbQueryAdviceScope {
         InfluxDbQuery.create(
             httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
     if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
-      Scope scope =
-          current.get(InfluxDbQueryState.KEY) != null
-              ? current.with(InfluxDbQueryState.KEY, null).makeCurrent()
-              : null;
-      return new InfluxDbQueryAdviceScope(callDepth, null, null, scope);
+      return new InfluxDbQueryAdviceScope(callDepth, null, null, null);
     }
 
     InfluxDbQueryState queryState =

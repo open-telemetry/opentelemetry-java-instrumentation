@@ -53,23 +53,22 @@ public final class InfluxDbQueryState {
   }
 
   public void onFailure(Throwable error) {
-    boolean jsonEncodingFailure =
-        error.getClass().getName().equals("com.squareup.moshi.JsonEncodingException")
-            || (error.getClass().getName().equals("org.influxdb.InfluxDBException")
-                && error.getCause() != null
-                && error
-                    .getCause()
-                    .getClass()
-                    .getName()
-                    .equals("com.squareup.moshi.JsonEncodingException"));
-    boolean readFailure =
-        !jsonEncodingFailure
-            && (error instanceof IOException
-                || (error.getClass().getName().equals("org.influxdb.InfluxDBException")
-                    && error.getCause() instanceof IOException));
-    if (callbackError == null && (!readFailure || call == null || !call.isCanceled())) {
-      callbackError = error;
+    if (callbackError != null) {
+      return;
     }
+
+    Throwable failure = error;
+    if (error.getClass().getName().equals("org.influxdb.InfluxDBException")
+        && error.getCause() != null) {
+      failure = error.getCause();
+    }
+    if (failure instanceof IOException
+        && !failure.getClass().getName().equals("com.squareup.moshi.JsonEncodingException")
+        && call != null
+        && call.isCanceled()) {
+      return;
+    }
+    callbackError = error;
   }
 
   public void end(@Nullable Throwable error) {
