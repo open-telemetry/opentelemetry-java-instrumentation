@@ -250,19 +250,6 @@ class VertxRedisClientTest {
   @ParameterizedTest
   @MethodSource("serverErrorReplyPrefixCases")
   void serverErrorReplyPrefixes(String reply, String expectedErrorType) throws Exception {
-    assertServerErrorReply(reply, expectedErrorType);
-  }
-
-  private static Stream<Arguments> serverErrorReplyPrefixCases() {
-    return Stream.of(
-        argumentSet("customPrefix", "Custom.Code! detail", "Custom.Code!"),
-        argumentSet("lowercasePrefix", "lowercase detail", "lowercase"),
-        argumentSet("prefixOnly", "PrefixOnly", "PrefixOnly"),
-        argumentSet("blankPrefix", " ", ErrorType.class.getName()));
-  }
-
-  private static void assertServerErrorReply(String reply, String expectedErrorType)
-      throws Exception {
     Object result =
         connection
             .send(
@@ -278,6 +265,14 @@ class VertxRedisClientTest {
     assertThat(result).isInstanceOf(ErrorType.class);
     assertErrorTypeTelemetry(
         expectedErrorType, "EVAL", "EVAL return redis.error_reply(ARGV[1]) 0 ?", null);
+  }
+
+  private static Stream<Arguments> serverErrorReplyPrefixCases() {
+    return Stream.of(
+        argumentSet("customPrefix", "Custom.Code! detail", "Custom.Code!"),
+        argumentSet("lowercasePrefix", "lowercase detail", "lowercase"),
+        argumentSet("prefixOnly", "PrefixOnly", "PrefixOnly"),
+        argumentSet("blankPrefix", " ", ErrorType.class.getName()));
   }
 
   private static void assertErrorTypeTelemetry(
