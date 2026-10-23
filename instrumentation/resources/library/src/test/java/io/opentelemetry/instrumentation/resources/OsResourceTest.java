@@ -36,7 +36,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.version", value = "5.10")
   void linux() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(LINUX);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
     assertThat(resource.getAttribute(OS_VERSION)).isEqualTo("5.10");
@@ -46,7 +46,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "MacOS X 11")
   void macos() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(DARWIN);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -55,7 +55,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "Windows 10")
   void windows() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(WINDOWS);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -64,7 +64,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "FreeBSD 10")
   void freebsd() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(FREEBSD);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -73,7 +73,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "NetBSD 10")
   void netbsd() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(NETBSD);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -82,7 +82,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "OpenBSD 10")
   void openbsd() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(OPENBSD);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -91,7 +91,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "DragonFlyBSD 10")
   void dragonflybsd() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(DRAGONFLYBSD);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -100,7 +100,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "HP-UX 10")
   void hpux() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(HPUX);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -109,7 +109,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "AIX 10")
   void aix() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(AIX);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -118,7 +118,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "Solaris 10")
   void solaris() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(SOLARIS);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -127,7 +127,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "Z/OS 10")
   void zos() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(ZOS);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
@@ -136,7 +136,7 @@ class OsResourceTest {
   @SetSystemProperty(key = "os.name", value = "RagOS 10")
   void unknown() {
     Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(resource.getAttribute(OS_TYPE)).isNull();
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
