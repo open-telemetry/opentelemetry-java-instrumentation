@@ -11,6 +11,7 @@ import java.net.InetSocketAddress;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.stream.Attributes;
 import scala.Function1;
+import scala.Product;
 import scala.runtime.AbstractFunction1;
 
 /**
@@ -21,14 +22,19 @@ import scala.runtime.AbstractFunction1;
  * http/1.1, never sees them. The parsing function is built from the stream attributes of the
  * connection, which carry {@link PekkoHttpServerRemoteAddress}, so the peer address can be recorded
  * on every request that the function produces.
+ *
+ * <p>In pekko-http 1.x the function returns the {@link HttpRequest}, pekko-http 2.x wraps it in a
+ * {@code RequestParsing.OkRequest}, or returns a {@code RequestParsing.BadRequest} when parsing
+ * fails. {@code OkRequest} does not exist in 1.x, so it is unwrapped as the single element case
+ * class that it is rather than referenced by name.
  */
-public class PekkoHttp2RequestParsingWrapper extends AbstractFunction1<Object, HttpRequest> {
+public class PekkoHttp2RequestParsingWrapper extends AbstractFunction1<Object, Object> {
 
-  private final Function1<Object, HttpRequest> parseRequest;
+  private final Function1<Object, Object> parseRequest;
   private final InetSocketAddress remoteAddress;
 
-  public static Function1<Object, HttpRequest> wrap(
-      Function1<Object, HttpRequest> parseRequest, Attributes attributes) {
+  public static Function1<Object, Object> wrap(
+      Function1<Object, Object> parseRequest, Attributes attributes) {
     InetSocketAddress remoteAddress =
         attributes
             .getAttribute(PekkoHttpServerRemoteAddress.class)
@@ -41,15 +47,31 @@ public class PekkoHttp2RequestParsingWrapper extends AbstractFunction1<Object, H
   }
 
   private PekkoHttp2RequestParsingWrapper(
-      Function1<Object, HttpRequest> parseRequest, InetSocketAddress remoteAddress) {
+      Function1<Object, Object> parseRequest, InetSocketAddress remoteAddress) {
     this.parseRequest = parseRequest;
     this.remoteAddress = remoteAddress;
   }
 
   @Override
-  public HttpRequest apply(Object subStream) {
-    HttpRequest request = parseRequest.apply(subStream);
-    HTTP_REQUEST_PEER_ADDRESS.set(request, remoteAddress);
-    return request;
+  public Object apply(Object subStream) {
+    Object result = parseRequest.apply(subStream);
+    HttpRequest request = getRequest(result);
+    if (request != null) {
+      HTTP_REQUEST_PEER_ADDRESS.set(request, remoteAddress);
+    }
+    return result;
+  }
+
+  private static HttpRequest getRequest(Object result) {
+    if (result instanceof HttpRequest) {
+      return (HttpRequest) result;
+    }
+    if (result instanceof Product) {
+      Product product = (Product) result;
+      if (product.productArity() == 1 && product.productElement(0) instanceof HttpRequest) {
+        return (HttpRequest) product.productElement(0);
+      }
+    }
+    return null;
   }
 }

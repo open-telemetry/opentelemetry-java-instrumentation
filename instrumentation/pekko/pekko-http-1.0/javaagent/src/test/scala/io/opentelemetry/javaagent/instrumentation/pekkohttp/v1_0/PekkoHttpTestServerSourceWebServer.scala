@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 import org.apache.pekko.http.scaladsl.model.StatusCodes.Found
 import org.apache.pekko.http.scaladsl.model.headers.`Timeout-Access`
@@ -28,7 +27,7 @@ object PekkoHttpTestServerSourceWebServer {
   var route = get {
     concat(
       path("timeout") {
-        headerValueByType[`Timeout-Access`](()) { timeout =>
+        headerValueByType(`Timeout-Access`) { timeout =>
           timeout.timeoutAccess.updateTimeout(Duration(1, MILLISECONDS))
           complete {
             after(Duration(1, SECONDS)) {
@@ -118,8 +117,8 @@ object PekkoHttpTestServerSourceWebServer {
     if (binding == null) {
       import scala.concurrent.duration._
       binding = Await.result(
-        Http()
-          .bind("localhost", port)
+        PekkoHttpTestBinding
+          .connectionSource("localhost", port)
           .map(_.handleWith(route))
           .to(Sink.ignore)
           .run(),
