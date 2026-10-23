@@ -131,6 +131,20 @@ class TracingSubscriberTest {
     assertSignals(subscriber, actual, ACTIVE);
   }
 
+  @Test
+  void noCaptureDoesNotRetainImplicitSubscriptionContext() {
+    reactor.util.context.Context reactorContext =
+        ContextPropagationOperator.withoutSubscriptionContextCapture(
+            reactor.util.context.Context.empty());
+    RecordingSubscriber actual = new RecordingSubscriber();
+    TracingSubscriber<String> subscriber;
+    try (Scope ignored = ACTIVE.with(KEY, "subscription").makeCurrent()) {
+      subscriber = new TracingSubscriber<>(actual, reactorContext);
+    }
+    assertThat(subscriber).extracting("traceContext").isSameAs(Context.root());
+    assertSignals(subscriber, actual, ACTIVE);
+  }
+
   @ParameterizedTest
   @MethodSource("explicitContexts")
   void storingContextReplacesNoCapture(Context expected) {
