@@ -81,7 +81,10 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
       ExecutionAttributes executionAttributes,
       @Nullable Response response,
       @Nullable Throwable error) {
-    return getServiceErrorCode(error);
+    String serviceErrorCode = getServiceErrorCode(error);
+    return serviceErrorCode != null
+        ? serviceErrorCode
+        : error == null ? null : error.getClass().getName();
   }
 
   @Nullable
@@ -90,10 +93,7 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
       return null;
     }
     AwsErrorDetails details = ((AwsServiceException) error).awsErrorDetails();
-    if (details == null) {
-      return null;
-    }
-    return details.errorCode();
+    return details == null ? null : details.errorCode();
   }
 
   @Override

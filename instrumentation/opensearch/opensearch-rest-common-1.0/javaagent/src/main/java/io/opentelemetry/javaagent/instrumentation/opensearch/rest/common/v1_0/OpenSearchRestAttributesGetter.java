@@ -53,7 +53,7 @@ final class OpenSearchRestAttributesGetter
     if (statusCode != null && statusCode >= 400) {
       return Integer.toString(statusCode);
     }
-    return null;
+    return DbClientAttributesGetter.super.getErrorType(request, response, error);
   }
 
   @Override

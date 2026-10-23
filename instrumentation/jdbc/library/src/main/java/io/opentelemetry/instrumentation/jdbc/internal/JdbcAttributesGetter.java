@@ -58,10 +58,12 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
       return error.getClass().getName();
     }
     if (!(error instanceof SQLException)) {
-      return null;
+      return SqlClientAttributesGetter.super.getErrorType(request, response, error);
     }
     String responseStatusCode = getDbResponseStatusCode(request, (SQLException) error);
-    return "00000".equals(responseStatusCode) ? null : responseStatusCode;
+    return responseStatusCode != null && !"00000".equals(responseStatusCode)
+        ? responseStatusCode
+        : SqlClientAttributesGetter.super.getErrorType(request, response, error);
   }
 
   @Nullable
