@@ -90,7 +90,46 @@ class JedisRequestContextTest {
 
     JedisRequestContext.captureServerError(nestedServerFailure);
     assertThat(nestedContext.detachAndEnd(null)).isNull();
+    assertThat(batchContext.isServerError(nestedServerFailure)).isTrue();
     assertThat(batchContext.detachAndEnd(null)).isNull();
+    assertDetached();
+  }
+
+  @Test
+  void deferredNestedBatchServerErrorReturnedByEnclosingBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext<Object> nestedContext = JedisRequestContext.attachForBatch();
+      Throwable firstFailure = new IllegalStateException("WRONGTYPE first nested failure");
+      Throwable deferredFailure = new IllegalStateException("ERR deferred nested failure");
+      JedisRequestContext.captureServerError(firstFailure);
+      JedisRequestContext.captureServerError(deferredFailure);
+
+      assertThat(nestedContext.detachAndEnd(null)).isSameAs(firstFailure);
+      assertThat(batchContext.isServerError(firstFailure)).isTrue();
+      assertThat(batchContext.isServerError(deferredFailure)).isTrue();
+      assertThat(batchContext.detachAndEnd(null, asList(deferredFailure, "OK")))
+          .isSameAs(deferredFailure);
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void handledNestedBatchServerErrorDoesNotFailEnclosingBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext<Object> nestedContext = JedisRequestContext.attachForBatch();
+      Throwable failure = new IllegalStateException("WRONGTYPE handled nested failure");
+      JedisRequestContext.captureServerError(failure);
+
+      assertThat(nestedContext.detachAndEnd(null)).isSameAs(failure);
+      assertThat(batchContext.isServerError(failure)).isTrue();
+      assertThat(batchContext.detachAndEnd(null, asList("PONG", "OK"))).isNull();
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
     assertDetached();
   }
 

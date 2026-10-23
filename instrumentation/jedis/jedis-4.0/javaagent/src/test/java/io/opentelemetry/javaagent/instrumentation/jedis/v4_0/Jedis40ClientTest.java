@@ -61,6 +61,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
@@ -494,6 +495,37 @@ class Jedis40ClientTest {
               @Override
               public String build(Object response) {
                 return nestedClient.get("nested-wrong-type");
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    List<Object> results = outer.syncAndReturnAll();
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0))
+        .isInstanceOf(JedisDataException.class)
+        .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    assertThat(results.get(1)).isEqualTo("OK");
+    assertErrorType("WRONGTYPE");
+  }
+
+  @Test
+  void deferredNestedPipelineServerErrorFailsOuterPipeline() {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    testing.clearData();
+
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                Pipeline nested = nestedClient.pipelined();
+                Response<String> deferred = nested.get("nested-wrong-type");
+                nested.sync();
+                return deferred.get();
               }
             }));
     outer.set("outer-pipeline", "value");
