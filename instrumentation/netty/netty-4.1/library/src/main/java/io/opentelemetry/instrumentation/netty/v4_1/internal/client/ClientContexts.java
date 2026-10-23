@@ -48,9 +48,10 @@ public final class ClientContexts {
         Context context = channel.attr(AttributeKeys.CLIENT_CONTEXT).get();
         NettyCommonRequest request = channel.attr(HTTP_CLIENT_REQUEST).get();
         if (context != null && request != null) {
-          Context parent = channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get();
+          Context parent = channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).getAndSet(null);
           RequestState transferred = takeUpgradedRequest(channel, request);
           if (transferred != null) {
+            transferred.upgraded = false;
             contexts.requests.add(transferred);
           } else if (channel.parent() == null || channel.parent().attr(KEY).get() == null) {
             contexts.requests.add(
@@ -169,12 +170,16 @@ public final class ClientContexts {
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
       @Nullable Throwable cause,
       boolean clear) {
-    if (!channel.hasAttr(KEY)) {
-      return;
-    }
-    ClientContexts contexts = channel.attr(KEY).get();
+    ClientContexts contexts = channel.hasAttr(KEY) ? channel.attr(KEY).get() : null;
     if (contexts == null) {
-      return;
+      if (!channel.hasAttr(AttributeKeys.CLIENT_CONTEXT)
+          || !channel.hasAttr(HTTP_CLIENT_REQUEST)
+          || channel.attr(AttributeKeys.CLIENT_CONTEXT).get() == null
+          || channel.attr(HTTP_CLIENT_REQUEST).get() == null) {
+        return;
+      }
+      // Finagle may copy the HTTP/1 upgrade state before the stream has initialized its handlers.
+      contexts = get(channel);
     }
     if (cause != null && !clear) {
       contexts.fail(channel, instrumenter, cause);

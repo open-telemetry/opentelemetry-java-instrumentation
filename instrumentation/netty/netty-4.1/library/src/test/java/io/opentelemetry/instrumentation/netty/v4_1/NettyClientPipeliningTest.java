@@ -41,10 +41,14 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
@@ -633,6 +637,7 @@ class NettyClientPipeliningTest {
         parent.close();
       }
       response(stream, 103);
+      assertThat(stream.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get()).isNull();
       parent.close();
       if (parentClosedBeforeRead) {
         assertThat(testing.spans()).hasSize(1);
@@ -648,6 +653,107 @@ class NettyClientPipeliningTest {
       stream.finishAndReleaseAll();
       parent.finishAndReleaseAll();
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void upgradedRequestEndsWithErrorWhenStreamCloses(boolean partialResponse) {
+    EmbeddedChannel parent = channel(new ChannelOutboundHandlerAdapter());
+    EmbeddedChannel stream =
+        new EmbeddedChannel(
+            NettyClientTelemetry.builder(testing.getOpenTelemetry())
+                .build()
+                .createCombinedHandler()) {
+          @Override
+          public Channel parent() {
+            return parent;
+          }
+        };
+    try {
+      parent.writeOutbound(request("/upgrade"));
+      response(parent, 101);
+      copyUpgradedRequest(parent, stream);
+
+      if (partialResponse) {
+        stream.writeInbound(new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.OK));
+        stream.writeInbound(new DefaultHttpContent(Unpooled.copiedBuffer("partial", UTF_8)));
+      }
+      stream.pipeline().fireChannelInactive();
+      parent.close();
+
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+      assertThat(testing.spans().get(0).getEvents())
+          .singleElement()
+          .satisfies(
+              event ->
+                  assertThat(event.getAttributes().get(EXCEPTION_TYPE))
+                      .isEqualTo(ClosedChannelException.class.getName()));
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(partialResponse ? 200L : null);
+      assertThat(parent.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
+      assertThat(stream.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
+    } finally {
+      stream.finishAndReleaseAll();
+      parent.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void downstreamExceptionBeforeStreamInitializationEndsCopiedRequest() {
+    Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
+        new NettyClientInstrumenterFactory(
+                NettyClientInstrumenterBuilderFactory.create(
+                    "io.opentelemetry.netty-4.1", testing.getOpenTelemetry()),
+                NettyConnectionInstrumentationFlag.DISABLED,
+                NettyConnectionInstrumentationFlag.DISABLED)
+            .instrumenter();
+    NettyClientHandlerFactory handlerFactory = new NettyClientHandlerFactory(instrumenter, false);
+    EmbeddedChannel parent = new EmbeddedChannel(handlerFactory.createCombinedHandler());
+    EmbeddedChannel stream =
+        new EmbeddedChannel() {
+          @Override
+          public Channel parent() {
+            return parent;
+          }
+        };
+    try {
+      parent.writeOutbound(request("/upgrade"));
+      response(parent, 101);
+      copyUpgradedRequest(parent, stream);
+      AttributeKey<ClientContexts> key =
+          AttributeKey.valueOf(ClientContexts.class, "client-contexts");
+      assertThat(stream.hasAttr(key)).isFalse();
+
+      IOException failure = new IOException("downstream handler failed");
+      ClientContexts.end(stream, instrumenter, failure, false);
+      parent.close();
+
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(testing.spans().get(0).getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+      assertThat(testing.spans().get(0).getEvents())
+          .singleElement()
+          .satisfies(
+              event ->
+                  assertThat(event.getAttributes().get(EXCEPTION_TYPE))
+                      .isEqualTo(IOException.class.getName()));
+      assertThat(parent.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
+      assertThat(stream.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
+      assertThat(stream.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get()).isNull();
+    } finally {
+      stream.finishAndReleaseAll();
+      parent.finishAndReleaseAll();
+    }
+  }
+
+  private static void copyUpgradedRequest(Channel parent, Channel stream) {
+    stream.attr(AttributeKeys.CLIENT_CONTEXT).set(parent.attr(AttributeKeys.CLIENT_CONTEXT).get());
+    stream
+        .attr(AttributeKeys.CLIENT_PARENT_CONTEXT)
+        .set(parent.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get());
+    stream
+        .attr(HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST)
+        .set(parent.attr(HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST).get());
   }
 
   private static DefaultFullHttpRequest request(String uri) {
