@@ -53,10 +53,12 @@ class InfluxDbLegacyQueryLifecycleTest {
   @Test
   void sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery() throws Exception {
     CountDownLatch nestedCallback = new CountDownLatch(1);
+    CountDownLatch nestedCallbackCompleted = new CountDownLatch(1);
     CountDownLatch callbacksCompleted = new CountDownLatch(2);
     CountDownLatch outerBlocked = new CountDownLatch(1);
     CountDownLatch releaseOuter = new CountDownLatch(1);
     AtomicReference<InfluxDB> clientReference = new AtomicReference<>();
+    AtomicReference<Thread> nestedCallbackThread = new AtomicReference<>();
     AtomicBoolean reenter = new AtomicBoolean(true);
     AtomicBoolean nestedSucceeded = new AtomicBoolean();
     AtomicInteger queryRequests = new AtomicInteger();
@@ -64,6 +66,9 @@ class InfluxDbLegacyQueryLifecycleTest {
         new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, SECONDS, new SynchronousQueue<>()) {
           @Override
           protected void afterExecute(Runnable runnable, Throwable error) {
+            if (Thread.currentThread() == nestedCallbackThread.get()) {
+              nestedCallbackCompleted.countDown();
+            }
             callbacksCompleted.countDown();
           }
         };
@@ -77,11 +82,16 @@ class InfluxDbLegacyQueryLifecycleTest {
                   .query(
                       this,
                       result -> {
+                        nestedCallbackThread.set(Thread.currentThread());
                         nestedSucceeded.set(true);
                         nestedCallback.countDown();
                       },
-                      error -> nestedCallback.countDown());
+                      error -> {
+                        nestedCallbackThread.set(Thread.currentThread());
+                        nestedCallback.countDown();
+                      });
               await(nestedCallback);
+              await(nestedCallbackCompleted);
               outerBlocked.countDown();
               await(releaseOuter);
             }
