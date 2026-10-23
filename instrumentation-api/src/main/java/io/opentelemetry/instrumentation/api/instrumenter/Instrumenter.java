@@ -6,11 +6,9 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
@@ -19,6 +17,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.internal.ExceptionRecorder;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
@@ -296,13 +295,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
       @Nullable Instant endTime) {
     if (error != null) {
       error = errorCauseExtractor.extract(error);
-      if (emitExceptionAsSpanEvents()) {
-        span.recordException(error);
-      }
-      // Exception logs are intentionally emitted even when the span is not recording.
-      if (emitExceptionAsLogs() && exceptionEventExtractor != null) {
-        emitExceptionLog(context, error, request, endTime);
-      }
+      ExceptionRecorder.recordException(
+          context, span, error, logger, exceptionEventExtractor, request, endTime);
     }
 
     UnsafeAttributes attributes = new UnsafeAttributes();
@@ -335,23 +329,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
         operationListeners[i].onEnd(context, attributes, endNanos);
       }
     }
-  }
-
-  private void emitExceptionLog(
-      Context context, Throwable throwable, REQUEST request, @Nullable Instant endTime) {
-    if (logger == null || exceptionEventExtractor == null) {
-      // this condition is to keep nullaway happy
-      // doEnd already guards on exceptionEventExtractor != null, so this is unreachable
-      return;
-    }
-    LogRecordBuilder logRecordBuilder = logger.logRecordBuilder();
-    logRecordBuilder.setContext(context);
-    if (endTime != null) {
-      logRecordBuilder.setTimestamp(endTime);
-    }
-    exceptionEventExtractor.extract(logRecordBuilder, context, request);
-    logRecordBuilder.setException(throwable);
-    logRecordBuilder.emit();
   }
 
   // Per semconv

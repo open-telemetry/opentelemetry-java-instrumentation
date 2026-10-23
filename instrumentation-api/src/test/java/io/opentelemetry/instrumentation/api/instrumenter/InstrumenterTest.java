@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
@@ -51,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -357,16 +359,24 @@ class InstrumenterTest {
 
   @Test
   void client_error() {
+    AtomicInteger errorCauseExtractions = new AtomicInteger();
+    IllegalStateException error = new IllegalStateException("test");
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractor(new AttributesExtractor1())
-            .addAttributesExtractor(new AttributesExtractor2());
+            .addAttributesExtractor(new AttributesExtractor2())
+            .setErrorCauseExtractor(
+                throwable -> {
+                  errorCauseExtractions.incrementAndGet();
+                  return requireNonNull(throwable.getCause());
+                });
     Experimental.setExceptionEventExtractor(
         builder,
         (logRecordBuilder, context, request) -> {
           logRecordBuilder.setEventName("http.client.request.exception");
           logRecordBuilder.setSeverity(Severity.WARN);
+          logRecordBuilder.setAttribute("custom", request.get("req1"));
         });
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         builder.buildClientInstrumenter(Map::put);
@@ -378,8 +388,8 @@ class InstrumenterTest {
     assertThat(spanContext.isValid()).isTrue();
     assertThat(request).containsKey("traceparent");
 
-    IllegalStateException error = new IllegalStateException("test");
-    instrumenter.end(context, request, RESPONSE, error);
+    instrumenter.end(context, request, RESPONSE, new RuntimeException(error));
+    assertThat(errorCauseExtractions).hasValue(1);
 
     otelTesting
         .assertTraces()
@@ -397,7 +407,9 @@ class InstrumenterTest {
       assertThat(logs.get(0))
           .hasSeverity(Severity.WARN)
           .hasEventName("http.client.request.exception")
+          .hasSpanContext(Span.fromContext(context).getSpanContext())
           .hasAttributesSatisfyingExactly(
+              equalTo(stringKey("custom"), "req1_value"),
               equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
               equalTo(EXCEPTION_MESSAGE, "test"),
               satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
@@ -458,6 +470,38 @@ class InstrumenterTest {
       List<LogRecordData> logs = otelTesting.getLogRecords();
       assertThat(logs).hasSize(1);
       assertThat(logs.get(0).getTimestampEpochNanos()).isEqualTo(123_000_000_456L);
+    }
+  }
+
+  @Test
+  void error_logs_are_emitted_for_non_recording_span() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildInstrumenter();
+    SpanContext parentSpanContext =
+        SpanContext.create(
+            TraceId.fromLongs(1, 2),
+            SpanId.fromLong(3),
+            TraceFlags.getDefault(),
+            TraceState.getDefault());
+    Context context =
+        instrumenter.start(Context.root().with(Span.wrap(parentSpanContext)), REQUEST);
+    Span span = Span.fromContext(context);
+
+    assertThat(span.isRecording()).isFalse();
+
+    instrumenter.end(context, REQUEST, RESPONSE, new IllegalStateException("test"));
+
+    List<LogRecordData> logs = otelTesting.getLogRecords();
+    if (emitExceptionAsLogs()) {
+      assertThat(logs)
+          .singleElement()
+          .satisfies(
+              log ->
+                  assertThat(log).hasEventName("exception").hasSpanContext(span.getSpanContext()));
+    } else {
+      assertThat(logs).isEmpty();
     }
   }
 
