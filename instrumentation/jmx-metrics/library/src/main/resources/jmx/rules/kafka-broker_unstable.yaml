@@ -10,7 +10,7 @@ rules:
       kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.server.message.count
+        metric: kafka.server.messages
         type: counter
         desc: The number of messages received by the broker
         unit: "{message}"
@@ -21,7 +21,7 @@ rules:
       kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.server.request.count
+        metric: kafka.server.requests
         type: counter
         desc: &desc The number of requests received by the broker
         unit: "{request}"
@@ -32,7 +32,7 @@ rules:
       kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.server.request.count
+        metric: kafka.server.requests
         type: counter
         desc: *desc
         unit: "{request}"
@@ -43,7 +43,7 @@ rules:
       kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.server.request.failed
+        metric: kafka.server.failed_requests
         type: counter
         desc: &desc The number of requests to the broker resulting in a failure
         unit: "{request}"
@@ -54,7 +54,7 @@ rules:
       kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.server.request.failed
+        metric: kafka.server.failed_requests
         type: counter
         desc: *desc
         unit: "{request}"
@@ -102,11 +102,11 @@ rules:
     metricAttribute:
       kafka.request.type: lowercase(param(request))
     mapping:
-      # This is not redundant with kafka.server.request.count because a single network request can trigger
-      # multiple increments to 'kafka.server.request.count'. It also provides an additional breakdown of
+      # This is not redundant with kafka.server.requests because a single network request can trigger
+      # multiple increments to 'kafka.server.requests'. It also provides an additional breakdown of
       # fetch requests with 'fetchconsumer' and 'fetchfollower' request types.
       Count:
-        metric: kafka.network.request.count
+        metric: kafka.network.requests
         type: counter
         desc: The number of network requests received by the broker
         unit: "{request}"
@@ -159,20 +159,20 @@ rules:
 
   - bean: kafka.server:type=ReplicaManager,name=IsrShrinksPerSec
     metricAttribute:
-      kafka.isr.operation: const(shrink)
+      kafka.server.isr.operation: const(shrink)
     mapping:
       Count:
-        metric: kafka.server.isr.operation.count
+        metric: kafka.server.isr.operations
         type: counter
         desc: &desc The number of in-sync replica operations
         unit: "{operation}"
 
   - bean: kafka.server:type=ReplicaManager,name=IsrExpandsPerSec
     metricAttribute:
-      kafka.isr.operation: const(expand)
+      kafka.server.isr.operation: const(expand)
     mapping:
       Count:
-        metric: kafka.server.isr.operation.count
+        metric: kafka.server.isr.operations
         type: counter
         desc: *desc
         unit: "{operation}"
@@ -195,7 +195,7 @@ rules:
   - bean: kafka.controller:type=ControllerStats,name=LeaderElectionRateAndTimeMs
     mapping:
       Count:
-        metric: kafka.controller.leader_election.count
+        metric: kafka.controller.leader_elections
         type: counter
         desc: The leader election count
         unit: "{election}"
@@ -203,7 +203,7 @@ rules:
   - bean: kafka.controller:type=ControllerStats,name=UncleanLeaderElectionsPerSec
     mapping:
       Count:
-        metric: kafka.controller.leader_election.unclean.count
+        metric: kafka.controller.unclean_leader_elections
         type: counter
         desc: Unclean leader election count
         unit: "{election}"
@@ -214,7 +214,7 @@ rules:
     type: gauge
     mapping:
       Count:
-        metric: kafka.log.flush.count
+        metric: kafka.log.flushes
         type: counter
         unit: "{flush}"
         desc: Log flush count

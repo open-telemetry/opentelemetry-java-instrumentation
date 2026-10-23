@@ -61,7 +61,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                     optionalMetrics(zookeeperImage != null))
                 .checkRegisteredAttributes(
                     "kafka.",
-                    asList("kafka.request.type", "kafka.topic.name", "kafka.isr.operation"),
+                    asList("kafka.request.type", "kafka.topic.name", "kafka.server.isr.operation"),
                     emptyList()));
 
     List<GenericContainer<?>> dependencies = emptyList();
@@ -84,22 +84,22 @@ class KafkaBrokerTest extends TargetSystemTest {
     List<String> metrics =
         new ArrayList<>(
             asList(
-                "kafka.server.message.count",
-                "kafka.server.request.count",
-                "kafka.server.request.failed",
+                "kafka.server.messages",
+                "kafka.server.requests",
+                "kafka.server.failed_requests",
                 "kafka.server.network.io",
                 "kafka.server.purgatory.size",
-                "kafka.network.request.count",
+                "kafka.network.requests",
                 "kafka.network.request.duration.p50",
                 "kafka.network.request.duration.p99",
                 "kafka.network.request.queue",
                 "kafka.server.partition.count",
                 "kafka.controller.partition.offline",
                 "kafka.server.partition.under_replicated",
-                "kafka.server.isr.operation.count",
+                "kafka.server.isr.operations",
                 "kafka.server.lag.max",
                 "kafka.controller.active.count",
-                "kafka.log.flush.count",
+                "kafka.log.flushes",
                 "kafka.log.flush.duration.p50",
                 "kafka.log.flush.duration.p99"));
     if (useZookeeper) {
@@ -114,8 +114,7 @@ class KafkaBrokerTest extends TargetSystemTest {
 
   // those metrics are only reported when using zookeeper
   private static List<String> zookeeperOnlyMetrics() {
-    return asList(
-        "kafka.controller.leader_election.count", "kafka.controller.leader_election.unclean.count");
+    return asList("kafka.controller.leader_elections", "kafka.controller.unclean_leader_elections");
   }
 
   private static MetricsVerifier createMetricsVerifier(boolean useZookeeper) {
@@ -137,7 +136,7 @@ class KafkaBrokerTest extends TargetSystemTest {
     MetricsVerifier verifier =
         MetricsVerifier.create()
             .add(
-                "kafka.server.message.count",
+                "kafka.server.messages",
                 metric ->
                     metric
                         .isCounter()
@@ -146,7 +145,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDataPointsWithAttributes(
                             attributeGroup(sampleTopic), attributeGroup(offsetsTopic)))
             .add(
-                "kafka.server.request.count",
+                "kafka.server.requests",
                 metric ->
                     metric
                         .isCounter()
@@ -160,7 +159,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                             attributeGroup(
                                 attribute("kafka.request.type", "produce"), compactedTopic)))
             .add(
-                "kafka.server.request.failed",
+                "kafka.server.failed_requests",
                 metric ->
                     metric
                         .isCounter()
@@ -213,15 +212,15 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The number of under-replicated partitions")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.server.isr.operation.count",
+                "kafka.server.isr.operations",
                 metric ->
                     metric
                         .isCounter()
                         .hasUnit("{operation}")
                         .hasDescription("The number of in-sync replica operations")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("kafka.isr.operation", "shrink")),
-                            attributeGroup(attribute("kafka.isr.operation", "expand"))))
+                            attributeGroup(attribute("kafka.server.isr.operation", "shrink")),
+                            attributeGroup(attribute("kafka.server.isr.operation", "expand"))))
             .add(
                 "kafka.server.lag.max",
                 metric ->
@@ -232,7 +231,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                             "The max lag in messages between follower and leader replicas")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.network.request.count",
+                "kafka.network.requests",
                 metric ->
                     metric
                         .isCounter()
@@ -285,7 +284,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .hasDescription("The number of controllers active on the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.log.flush.count",
+                "kafka.log.flushes",
                 metric ->
                     metric
                         .isCounter()
@@ -313,7 +312,7 @@ class KafkaBrokerTest extends TargetSystemTest {
       // those metrics are only reported when using zookeeper
       verifier
           .add(
-              "kafka.controller.leader_election.count",
+              "kafka.controller.leader_elections",
               metric ->
                   metric
                       .isCounter()
@@ -321,7 +320,7 @@ class KafkaBrokerTest extends TargetSystemTest {
                       .hasDescription("The leader election count")
                       .hasDataPointsWithoutAttributes())
           .add(
-              "kafka.controller.leader_election.unclean.count",
+              "kafka.controller.unclean_leader_elections",
               metric ->
                   metric
                       .isCounter()

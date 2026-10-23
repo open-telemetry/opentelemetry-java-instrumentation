@@ -35,7 +35,7 @@ groups:
         brief: Kafka topic name.
         examples:
           - "my-topic"
-      - id: kafka.isr.operation
+      - id: kafka.server.isr.operation
         type:
           members:
             - id: shrink
@@ -52,8 +52,8 @@ groups:
           - "shrink"
           - "expand"
 
-  - id: metric.kafka.server.message.count
-    metric_name: kafka.server.message.count
+  - id: metric.kafka.server.messages
+    metric_name: kafka.server.messages
     type: metric
     stability: development
     brief: The number of messages received by the broker.
@@ -62,8 +62,8 @@ groups:
     attributes:
       - ref: kafka.topic.name
 
-  - id: metric.kafka.server.request.count
-    metric_name: kafka.server.request.count
+  - id: metric.kafka.server.requests
+    metric_name: kafka.server.requests
     type: metric
     stability: development
     brief: The number of requests received by the broker.
@@ -73,8 +73,8 @@ groups:
       - ref: kafka.request.type
       - ref: kafka.topic.name
 
-  - id: metric.kafka.server.request.failed
-    metric_name: kafka.server.request.failed
+  - id: metric.kafka.server.failed_requests
+    metric_name: kafka.server.failed_requests
     type: metric
     stability: development
     brief: The number of requests to the broker resulting in a failure.
@@ -105,8 +105,8 @@ groups:
     attributes:
       - ref: kafka.request.type
 
-  - id: metric.kafka.network.request.count
-    metric_name: kafka.network.request.count
+  - id: metric.kafka.network.requests
+    metric_name: kafka.network.requests
     type: metric
     stability: development
     brief: The number of network requests received by the broker.
@@ -167,15 +167,15 @@ groups:
     unit: "{partition}"
     instrument: updowncounter
 
-  - id: metric.kafka.server.isr.operation.count
-    metric_name: kafka.server.isr.operation.count
+  - id: metric.kafka.server.isr.operations
+    metric_name: kafka.server.isr.operations
     type: metric
     stability: development
     brief: The number of in-sync replica operations.
     unit: "{operation}"
     instrument: counter
     attributes:
-      - ref: kafka.isr.operation
+      - ref: kafka.server.isr.operation
 
   - id: metric.kafka.server.lag.max
     metric_name: kafka.server.lag.max
@@ -193,24 +193,24 @@ groups:
     unit: "{controller}"
     instrument: updowncounter
 
-  - id: metric.kafka.controller.leader_election.count
-    metric_name: kafka.controller.leader_election.count
+  - id: metric.kafka.controller.leader_elections
+    metric_name: kafka.controller.leader_elections
     type: metric
     stability: development
     brief: The leader election count.
     unit: "{election}"
     instrument: counter
 
-  - id: metric.kafka.controller.leader_election.unclean.count
-    metric_name: kafka.controller.leader_election.unclean.count
+  - id: metric.kafka.controller.unclean_leader_elections
+    metric_name: kafka.controller.unclean_leader_elections
     type: metric
     stability: development
     brief: Unclean leader election count.
     unit: "{election}"
     instrument: counter
 
-  - id: metric.kafka.log.flush.count
-    metric_name: kafka.log.flush.count
+  - id: metric.kafka.log.flushes
+    metric_name: kafka.log.flushes
     type: metric
     stability: development
     brief: Log flush count.
