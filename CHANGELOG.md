@@ -305,6 +305,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `HttpClientInstrumentationExtension.forAgent()` and
+  `HttpServerInstrumentationExtension.forAgent()`; use
+  `AgentHttpClientInstrumentationExtension.create()` and
+  `AgentHttpServerInstrumentationExtension.create()` instead.
 - `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
   `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
 - Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
@@ -419,10 +423,6 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `HttpClientInstrumentationExtension.forAgent()` and
-  `HttpServerInstrumentationExtension.forAgent()` in favor of
-  `AgentHttpClientInstrumentationExtension.create()` and
-  `AgentHttpServerInstrumentationExtension.create()`, respectively, for removal in a future minor release.
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.
