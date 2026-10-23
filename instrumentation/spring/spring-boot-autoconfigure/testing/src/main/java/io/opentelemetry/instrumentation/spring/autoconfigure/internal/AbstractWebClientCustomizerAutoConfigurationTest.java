@@ -8,13 +8,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -86,59 +83,6 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
   }
 
   @Test
-  void shouldNotAddTracingFilterWhenAlreadyInstalled() {
-    contextRunner.run(
-        context -> {
-          T customizer = context.getBean("otelWebClientCustomizer", webClientCustomizerClass());
-          WebClient.Builder instrumentedBuilder = WebClient.builder();
-          customizeWebClient(customizer, instrumentedBuilder);
-          ExchangeFilterFunction existingFilter = getFilters(instrumentedBuilder).get(0);
-
-          WebClient.Builder builder = WebClient.builder().filter(existingFilter);
-          customizeWebClient(customizer, builder);
-
-          assertThat(getFilters(builder)).containsExactly(existingFilter);
-        });
-  }
-
-  @Test
-  void shouldNotAddTracingFilterToMutatedInstrumentedClient() {
-    contextRunner.run(
-        context -> {
-          T customizer = context.getBean("otelWebClientCustomizer", webClientCustomizerClass());
-          WebClient.Builder builder = WebClient.builder();
-          customizeWebClient(customizer, builder);
-          WebClient instrumentedClient = builder.build();
-
-          WebClient.Builder mutatedBuilder = instrumentedClient.mutate();
-          customizeWebClient(customizer, mutatedBuilder);
-
-          assertThat(getFilters(mutatedBuilder))
-              .filteredOn(
-                  filter ->
-                      filter.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
-              .hasSize(1);
-        });
-  }
-
-  @Test
-  void shouldNotAddTracingFilterWhenCustomizerAppliedRepeatedly() {
-    contextRunner.run(
-        context -> {
-          T customizer = context.getBean("otelWebClientCustomizer", webClientCustomizerClass());
-          WebClient.Builder builder = WebClient.builder();
-          customizeWebClient(customizer, builder);
-          customizeWebClient(customizer, builder);
-
-          assertThat(getFilters(builder))
-              .filteredOn(
-                  filter ->
-                      filter.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
-              .hasSize(1);
-        });
-  }
-
-  @Test
   void shouldNotCreateCustomizerWhenWebClientCustomizerNotOnClasspath() {
     contextRunner
         .withClassLoader(new FilteredClassLoader(webClientCustomizerClass()))
@@ -150,11 +94,5 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
     contextRunner
         .withClassLoader(new FilteredClassLoader(WebClient.class))
         .run(context -> assertThat(context).doesNotHaveBean("otelWebClientCustomizer"));
-  }
-
-  private static List<ExchangeFilterFunction> getFilters(WebClient.Builder builder) {
-    List<ExchangeFilterFunction> filters = new ArrayList<>();
-    builder.filters(filters::addAll);
-    return filters;
   }
 }

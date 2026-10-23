@@ -34,10 +34,6 @@ public class SpringWebClientInstrumentationSpringBoot4AutoConfiguration {
   WebClientCustomizer otelWebClientCustomizer(OpenTelemetry openTelemetry) {
     SpringWebfluxClientTelemetry webfluxClientTelemetry =
         WebClientBeanPostProcessor.getWebfluxClientTelemetry(openTelemetry);
-    return builder ->
-        builder.filters(
-            filters ->
-                WebClientBeanPostProcessor.addFilterIfNotPresent(
-                    filters, webfluxClientTelemetry::createFilter));
+    return builder -> builder.filter(webfluxClientTelemetry.createFilter());
   }
 }
