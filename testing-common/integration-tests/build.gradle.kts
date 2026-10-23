@@ -19,7 +19,7 @@ dependencies {
   testImplementation("net.bytebuddy:byte-buddy")
   testImplementation("net.bytebuddy:byte-buddy-agent")
 
-  testImplementation("com.google.guava:guava")
+  testImplementation("com.google.guava:guava:33.7.2-jre")
   testImplementation(project(":instrumentation-annotations"))
 
   testImplementation("cglib:cglib:3.3.0")
