@@ -28,6 +28,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-rabbit-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
 
@@ -47,6 +48,19 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("cloudStream3Test") {
+      dependencies {
+        implementation("org.springframework.boot:spring-boot-starter:2.7.18")
+        implementation("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.2.10")
+        implementation("org.testcontainers:testcontainers")
+      }
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+          jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+        }
+      }
+    }
     register<JvmTestSuite>("version41Test") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
@@ -143,7 +157,9 @@ tasks {
   }
 }
 
-configurations.testRuntimeClasspath {
+configurations.matching {
+  it.name == "testRuntimeClasspath" || it.name == "cloudStream3TestRuntimeClasspath"
+}.configureEach {
   resolutionStrategy {
     // requires old logback (and therefore also old slf4j)
     force("ch.qos.logback:logback-classic:1.2.11")
