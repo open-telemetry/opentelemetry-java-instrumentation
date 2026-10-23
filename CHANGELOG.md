@@ -4,7 +4,6 @@
 
 ### ⚠️ Breaking changes
 
-- Drop R2DBC SPI 0.9 support; R2DBC instrumentation now requires SPI 1.0 or later.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to

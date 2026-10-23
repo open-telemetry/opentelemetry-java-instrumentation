@@ -1,4 +1,4 @@
-# Library Instrumentation for R2dbc version 1.0 and higher
+# Library Instrumentation for R2dbc version 0.9 and higher
 
 Provides OpenTelemetry instrumentation for [R2dbc](https://r2dbc.io/).
 

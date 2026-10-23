@@ -8,10 +8,8 @@ muzzle {
   pass {
     group.set("io.r2dbc")
     module.set("r2dbc-spi")
-    versions.set("[1.0.0.RELEASE,)")
+    versions.set("[0.9.0.RELEASE,)")
     assertInverse.set(true)
-    // SPI 0.9 is unsupported, but its Integer update counts erase to the same signature as 1.0's Long.
-    skip("0.9.0.RELEASE", "0.9.1.RELEASE")
     extraDependency("io.projectreactor:reactor-core:3.4.12")
   }
 }
@@ -34,19 +32,41 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("testSpi09") {
+      sources {
+        java {
+          setSrcDirs(
+            listOf(
+              "src/testSpi09/java",
+              project(":instrumentation:r2dbc-1.0:testing").file("src/testSpi09/java"),
+            )
+          )
+        }
+      }
+      dependencies {
+        implementation("io.r2dbc:r2dbc-h2:0.9.0.RELEASE")
+      }
+    }
+  }
+}
+
 tasks {
-  withType<Test>().configureEach {
+  named<Test>("test") {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     jvmArgs("-Dotel.semconv-stability.preview=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
   check {
+    dependsOn(testing.suites)
     dependsOn(testPreviewSemconv)
   }
 }

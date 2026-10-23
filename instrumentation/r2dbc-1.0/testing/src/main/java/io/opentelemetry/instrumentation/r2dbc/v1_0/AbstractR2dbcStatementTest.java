@@ -243,6 +243,84 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   @Test
+  void mapFunctionConsumptionFinishesQuerySpan() {
+    ConnectionFactoryOptions options =
+        ConnectionFactoryOptions.parse("r2dbc:h2:mem:///map_function_" + UUID.randomUUID());
+    Connection connection =
+        Mono.from(createProxyConnectionFactory(options).create()).block(Duration.ofSeconds(10));
+    try {
+      getTesting()
+          .runWithSpan(
+              "parent",
+              () ->
+                  assertThat(
+                          Flux.from(
+                                  Mono.from(connection.createStatement("SELECT 42").execute())
+                                      .flatMapMany(
+                                          result ->
+                                              result.map(
+                                                  readable -> readable.get(0, Integer.class))))
+                              .single()
+                              .block(Duration.ofSeconds(10)))
+                      .isEqualTo(42));
+    } finally {
+      Mono.from(connection.close()).block(Duration.ofSeconds(10));
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("SELECT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void plainUpdateResultConsumptionFinishesQuerySpan() {
+    ConnectionFactoryOptions options =
+        ConnectionFactoryOptions.parse("r2dbc:h2:mem:///plain_update_" + UUID.randomUUID());
+    Connection connection =
+        Mono.from(createProxyConnectionFactory(options).create()).block(Duration.ofSeconds(10));
+    try {
+      Flux.from(connection.createStatement("CREATE TABLE test (id INT)").execute())
+          .flatMap(result -> Flux.from(result.getRowsUpdated()))
+          .then()
+          .block(Duration.ofSeconds(10));
+      getTesting().waitForTraces(1);
+      getTesting().clearData();
+
+      getTesting()
+          .runWithSpan(
+              "parent",
+              () ->
+                  assertThat(
+                          Flux.from(
+                                  connection
+                                      .createStatement("INSERT INTO test VALUES (1)")
+                                      .execute())
+                              .flatMap(result -> Flux.from(result.getRowsUpdated()))
+                              .single()
+                              .block(Duration.ofSeconds(10)))
+                      .isEqualTo(1L));
+    } finally {
+      Mono.from(connection.close()).block(Duration.ofSeconds(10));
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("INSERT test")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void filteredUpdateResultConsumptionFinishesQuerySpan() {
     ConnectionFactoryOptions options =
         ConnectionFactoryOptions.parse("r2dbc:h2:mem:///filtered_update_" + UUID.randomUUID());
