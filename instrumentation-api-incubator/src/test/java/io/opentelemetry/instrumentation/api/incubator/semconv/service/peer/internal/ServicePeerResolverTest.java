@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitPreviewServicePeerSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
-import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAMESPACE;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,6 +53,9 @@ class ServicePeerResolverTest {
 
     assertName(expectedName, result);
     assertNamespace(expectedNamespace, result);
+    assertThat(result.get(stringKey("peer.service"))).isNull();
+    assertThat(result.get(stringKey("service.peer.name"))).isNull();
+    assertThat(result.get(stringKey("service.peer.namespace"))).isNull();
   }
 
   static Stream<Arguments> resolutionCases() {
@@ -113,6 +114,32 @@ class ServicePeerResolverTest {
     assertThat(attrs.build().isEmpty()).isTrue();
   }
 
+  @Test
+  void firstDuplicateMappingWins() {
+    ServicePeerResolver r =
+        createResolver(
+            mapping("example.com", "first", null), mapping("example.com", "second", null));
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve("example.com", null, () -> null, attrs::put);
+
+    assertName("first", attrs.build());
+  }
+
+  @Test
+  void exactTargetMatchTakesPriorityOverHostPortAndPathMatches() {
+    ServicePeerResolver r =
+        createResolver(
+            mapping("example.com:8080/api", "exact", null),
+            mapping("example.com:8080", "port", null),
+            mapping("example.com/api", "path", null));
+
+    AttributesBuilder attrs = Attributes.builder();
+    r.resolve("example.com:8080/api", null, () -> null, attrs::put);
+
+    assertName("exact", attrs.build());
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -142,11 +169,11 @@ class ServicePeerResolverTest {
   }
 
   @Test
-  void shouldSkipEntryWithNullPeer() {
+  void shouldSkipEntryWithNullTarget() {
     ServicePeerResolver r =
         createResolver(mapping(null, "svc", null), mapping("valid.com", "validSvc", null));
 
-    // null-peer entry is skipped, but resolver is not empty due to the valid entry
+    // null-target entry is skipped, but resolver is not empty due to the valid entry
     assertThat(r.isEmpty()).isFalse();
 
     AttributesBuilder attrs = Attributes.builder();
@@ -172,7 +199,7 @@ class ServicePeerResolverTest {
   }
 
   private static void assertName(@Nullable String expected, Attributes attrs) {
-    AttributeKey<String> key = maybeStablePeerService();
+    AttributeKey<String> key = AttributeKey.stringKey("server.service.name");
     if (expected != null) {
       assertThat(attrs.get(key)).isEqualTo(expected);
     } else {
@@ -181,35 +208,30 @@ class ServicePeerResolverTest {
   }
 
   private static void assertNamespace(@Nullable String expected, Attributes attrs) {
-    if (emitPreviewServicePeerSemconv()) {
-      if (expected != null) {
-        assertThat(attrs.get(SERVICE_PEER_NAMESPACE)).isEqualTo(expected);
-      } else {
-        assertThat(attrs.get(SERVICE_PEER_NAMESPACE)).isNull();
-      }
+    AttributeKey<String> key = AttributeKey.stringKey("server.service.namespace");
+    if (expected != null) {
+      assertThat(attrs.get(key)).isEqualTo(expected);
     } else {
-      // namespace is never emitted in old semconv mode
-      assertThat(attrs.get(SERVICE_PEER_NAMESPACE)).isNull();
+      assertThat(attrs.get(key)).isNull();
     }
   }
 
   private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
-    when(otel.getGeneralInstrumentationConfig()).thenReturn(DeclarativeConfigProperties.empty());
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
 
     List<DeclarativeConfigProperties> entryList = asList(entries);
-    when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);
+    when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
+        .thenReturn(entryList);
 
     return new ServicePeerResolver(otel);
   }
 
   private static DeclarativeConfigProperties mapping(
-      @Nullable String peer, @Nullable String serviceName, @Nullable String serviceNamespace) {
+      @Nullable String target, @Nullable String serviceName, @Nullable String serviceNamespace) {
     DeclarativeConfigProperties props = mock(DeclarativeConfigProperties.class);
-    when(props.getString("peer")).thenReturn(peer);
+    when(props.getString("target")).thenReturn(target);
     when(props.getString("service_name")).thenReturn(serviceName);
     when(props.getString("service_namespace")).thenReturn(serviceNamespace);
     return props;

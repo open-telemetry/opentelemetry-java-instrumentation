@@ -98,7 +98,7 @@ or test failure that CI will report.
   `otel.semconv-stability.preview=<domain>` for preview conventions, replacing `<domain>` with a
   supported selector. Name the tasks `testStableSemconv` for stable selection and
   `testPreviewSemconv` for preview selection; define both when both are exercised. Preserve explicit
-  legacy opt-in compatibility tests. `/dup` coverage is required for RPC, not service-peer.
+  legacy opt-in compatibility tests. `/dup` coverage is required for RPC.
   Code and database conventions are stable-only and need no selection task. Keep mixed variants
   that exercise selectable domains. For default enablement, use a separate `testDisabled` JVM rather
   than setting a property after agent

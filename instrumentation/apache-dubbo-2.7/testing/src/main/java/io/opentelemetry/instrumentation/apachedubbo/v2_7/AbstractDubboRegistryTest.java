@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -179,7 +179,7 @@ public abstract class AbstractDubboRegistryTest {
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(
-                                    maybeStablePeerService(),
+                                    stringKey("server.service.name"),
                                     testLatestDeps() && !emitPreviewRpcSemconv()
                                         ? testing().expectedPeerService()
                                         : null),
@@ -228,7 +228,7 @@ public abstract class AbstractDubboRegistryTest {
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
                                 equalTo(
-                                    maybeStablePeerService(),
+                                    stringKey("server.service.name"),
                                     testLatestDeps() ? testing().expectedPeerService() : null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),

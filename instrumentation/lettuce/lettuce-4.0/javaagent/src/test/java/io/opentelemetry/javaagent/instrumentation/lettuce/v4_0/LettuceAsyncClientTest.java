@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -187,7 +187,8 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), testing.expectedPeerService()))));
   }
 
   @Test
@@ -355,7 +356,8 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_PORT, incorrectPort),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), testing.expectedPeerService()))));
   }
 
   @Test

@@ -34,7 +34,7 @@ configurations:
       database experts before enabling.
     type: boolean
   - ref: common.db.sqlcommenter.enabled
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping
   - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
     declarative_name: java.jdbc.capture_query_parameters/development
     description: >

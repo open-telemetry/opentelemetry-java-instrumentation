@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -104,7 +104,8 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(
-                                    maybeStablePeerService(), getTesting().expectedPeerService()),
+                                    stringKey("server.service.name"),
+                                    getTesting().expectedPeerService()),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -177,7 +178,8 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(
-                                    maybeStablePeerService(), getTesting().expectedPeerService()),
+                                    stringKey("server.service.name"),
+                                    getTesting().expectedPeerService()),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                     span ->

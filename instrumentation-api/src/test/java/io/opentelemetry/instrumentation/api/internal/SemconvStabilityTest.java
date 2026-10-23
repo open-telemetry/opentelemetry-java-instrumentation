@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldServicePeerSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewServicePeerSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -46,12 +44,11 @@ class SemconvStabilityTest {
   @Test
   void resolveGeneralStableFlags_parsesCommaSeparatedList() {
     // general:
-    //   stability_opt_in_list: "database/dup, code, service.peer"
-    DeclarativeConfigProperties general =
-        general(stabilityOptInList(" database/dup, code , service.peer "));
+    //   stability_opt_in_list: "database/dup, code"
+    DeclarativeConfigProperties general = general(stabilityOptInList(" database/dup, code "));
 
     assertThat(SemconvSelectionResolver.resolveGeneralStableFlags(general))
-        .containsExactlyInAnyOrder("database/dup", "code", "service.peer");
+        .containsExactlyInAnyOrder("database/dup", "code");
   }
 
   @Test
@@ -123,8 +120,8 @@ class SemconvStabilityTest {
 
   @Test
   void parseCommaSeparatedSet_ignoresBlankEntries() {
-    assertThat(SemconvSelectionResolver.parseCommaSeparatedSet("rpc, service.peer, ,database/dup,"))
-        .containsExactlyInAnyOrder("rpc", "service.peer", "database/dup");
+    assertThat(SemconvSelectionResolver.parseCommaSeparatedSet("rpc, code, ,database/dup,"))
+        .containsExactlyInAnyOrder("rpc", "code", "database/dup");
   }
 
   @Test
@@ -191,46 +188,41 @@ class SemconvStabilityTest {
     // java:
     //   common:
     //     semconv_stability:
-    //       preview: [rpc, service.peer]
+    //       preview: [rpc]
     DeclarativeConfigProperties general = general();
-    // otel.semconv-stability.preview=rpc,service.peer
-    Set<String> preview = preview("rpc", "service.peer");
+    // otel.semconv-stability.preview=rpc
+    Set<String> preview = preview("rpc");
 
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, noStableOptIn(), preview);
     SemconvMode rpc = resolver.rpc();
-    SemconvMode servicePeer = resolver.servicePeer();
 
     assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
   @Test
   void domainsResolveIndependently() {
     SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(
-            general(), stableOptIn("rpc", "service.peer"), preview("rpc/dup", "service.peer/dup"));
+        new SemconvSelectionResolver(general(), stableOptIn("rpc"), preview("rpc/dup"));
 
     assertThat(resolver.rpc()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
-    assertThat(resolver.servicePeer()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
   }
 
   @ParameterizedTest
   @MethodSource("previewSelections")
   @SetSystemProperty(key = "otel.semconv-stability.opt-in", value = "")
   @SetSystemProperty(key = "otel.semconv-stability.preview", value = "")
-  void previewSelectionFromFlatConfig(
-      String domain, String optIn, String preview, SemconvMode expected) {
+  void previewSelectionFromFlatConfig(String optIn, String preview, SemconvMode expected) {
     System.setProperty("otel.semconv-stability.opt-in", optIn);
     System.setProperty("otel.semconv-stability.preview", preview);
     OpenTelemetry openTelemetry = OpenTelemetry.noop();
     SemconvSelectionResolver resolver = new SemconvSelectionResolver(openTelemetry, general());
 
-    assertThat(domain.equals("rpc") ? resolver.rpc() : resolver.servicePeer()).isEqualTo(expected);
+    assertThat(resolver.rpc()).isEqualTo(expected);
   }
 
   @Test
-  @SetSystemProperty(key = "otel.semconv-stability.preview", value = "rpc/dup,service.peer")
+  @SetSystemProperty(key = "otel.semconv-stability.preview", value = "rpc/dup")
   void declarativePreviewOverridesSystemPropertyFallback() {
     String yaml =
         "file_format: 1.1\n"
@@ -238,7 +230,7 @@ class SemconvStabilityTest {
             + "  java:\n"
             + "    common:\n"
             + "      semconv_stability:\n"
-            + "        preview: [rpc, service.peer/dup]\n";
+            + "        preview: [rpc]\n";
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
     ConfigProvider configProvider =
@@ -247,12 +239,10 @@ class SemconvStabilityTest {
     OpenTelemetry openTelemetry = openTelemetry(configProvider);
     assertThat(emitOldRpcSemconv(openTelemetry)).isFalse();
     assertThat(emitPreviewRpcSemconv(openTelemetry)).isTrue();
-    assertThat(emitOldServicePeerSemconv(openTelemetry)).isTrue();
-    assertThat(emitPreviewServicePeerSemconv(openTelemetry)).isTrue();
   }
 
   @Test
-  @SetSystemProperty(key = "otel.semconv-stability.preview", value = "rpc/dup,service.peer/dup")
+  @SetSystemProperty(key = "otel.semconv-stability.preview", value = "rpc/dup")
   void emptyDeclarativePreviewDisablesSystemPropertyFallback() {
     String yaml =
         "file_format: 1.1\n"
@@ -269,8 +259,6 @@ class SemconvStabilityTest {
     OpenTelemetry openTelemetry = openTelemetry(configProvider);
     assertThat(emitOldRpcSemconv(openTelemetry)).isTrue();
     assertThat(emitPreviewRpcSemconv(openTelemetry)).isFalse();
-    assertThat(emitOldServicePeerSemconv(openTelemetry)).isTrue();
-    assertThat(emitPreviewServicePeerSemconv(openTelemetry)).isFalse();
   }
 
   @ParameterizedTest
@@ -315,20 +303,12 @@ class SemconvStabilityTest {
   }
 
   private static Stream<Arguments> previewSelections() {
-    return Stream.of("rpc", "service.peer")
-        .flatMap(
-            domain ->
-                Stream.of(
-                    Arguments.of(domain, "", "", SemconvMode.V0_STABLE),
-                    Arguments.of(domain, "", domain, SemconvMode.V1_EXPERIMENTAL),
-                    Arguments.of(
-                        domain, "", domain + "/dup", SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
-                    Arguments.of(domain, domain + "/dup", domain, SemconvMode.V1_EXPERIMENTAL),
-                    Arguments.of(
-                        domain,
-                        domain,
-                        domain + "/dup",
-                        SemconvMode.V1_EXPERIMENTAL.withDualEmit())));
+    return Stream.of(
+        Arguments.of("", "", SemconvMode.V0_STABLE),
+        Arguments.of("", "rpc", SemconvMode.V1_EXPERIMENTAL),
+        Arguments.of("", "rpc/dup", SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
+        Arguments.of("rpc/dup", "rpc", SemconvMode.V1_EXPERIMENTAL),
+        Arguments.of("rpc", "rpc/dup", SemconvMode.V1_EXPERIMENTAL.withDualEmit()));
   }
 
   private static OpenTelemetry openTelemetry(ConfigProvider configProvider) {

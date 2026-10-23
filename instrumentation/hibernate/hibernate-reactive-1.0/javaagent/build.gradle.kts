@@ -85,16 +85,6 @@ tasks {
     }
   }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-      }
-    }
-
   if (testJavaVersion.isJava8) {
     named("hibernateReactive2TestPreviewSemconv", Test::class).configure {
       enabled = false
@@ -112,7 +102,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites)
   }
 }
 

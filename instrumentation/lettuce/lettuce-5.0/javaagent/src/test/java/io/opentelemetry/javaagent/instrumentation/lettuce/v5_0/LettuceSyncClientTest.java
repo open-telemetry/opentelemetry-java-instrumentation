@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -124,7 +124,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), testing.expectedPeerService()))));
   }
 
   @Test
@@ -151,7 +152,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_PORT, incorrectPort),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))
+                            equalTo(
+                                stringKey("server.service.name"), testing.expectedPeerService()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event

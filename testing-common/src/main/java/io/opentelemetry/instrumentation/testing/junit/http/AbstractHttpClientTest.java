@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -1125,11 +1125,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              String expectedPeerService = testing.expectedPeerService();
-              if (expectedPeerService != null) {
-                assertThat(attrs).containsEntry(maybeStablePeerService(), expectedPeerService);
+              String expectedServerServiceName = testing.expectedPeerService();
+              if (expectedServerServiceName != null) {
+                assertThat(attrs)
+                    .containsEntry(stringKey("server.service.name"), expectedServerServiceName);
               } else {
-                assertThat(attrs).doesNotContainKey(maybeStablePeerService());
+                assertThat(attrs).doesNotContainKey(stringKey("server.service.name"));
               }
 
               // we're opting out of these attributes in the new semconv

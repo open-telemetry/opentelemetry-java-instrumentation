@@ -38,9 +38,6 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-        }
       }
     }
   }

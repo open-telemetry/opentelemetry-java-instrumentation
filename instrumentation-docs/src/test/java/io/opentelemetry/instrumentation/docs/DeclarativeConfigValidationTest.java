@@ -324,7 +324,7 @@ class DeclarativeConfigValidationTest {
     ConfigurationType type = config.type();
 
     // The declarative form is a structured list when either the flat type is structured_list
-    // (legacy) or the dedicated declarative_type marks it as such. service_peer_mapping uses
+    // (legacy) or the dedicated declarative_type marks it as such. server_service_mapping uses
     // type: map (the flat host=service form) + declarative_type: structured_list.
     boolean structuredList =
         type == ConfigurationType.STRUCTURED_LIST
@@ -367,9 +367,9 @@ class DeclarativeConfigValidationTest {
     };
   }
 
-  // The only structured_list config with a flat property is the common peer-service-mapping. Its
-  // flat form is a host=service map, which the bridge turns into a list of {peer, service_name}
-  // entries. readPeerServiceMappingAsMap below rebuilds the host->service map from those entries,
+  // The only structured_list config with a flat property is the common server-service-mapping. Its
+  // flat form is a host=service map, which the bridge turns into a list of {target, service_name}
+  // entries. readServerServiceMappingAsMap below rebuilds the host->service map from those entries,
   // so
   // the comparison exercises getStructuredList (what the consumer uses) rather than a string
   // lookup.
@@ -404,7 +404,7 @@ class DeclarativeConfigValidationTest {
 
     String lastSegment = segments[segments.length - 1];
     if (structuredList) {
-      return readPeerServiceMappingAsMap(current, lastSegment);
+      return readServerServiceMappingAsMap(current, lastSegment);
     }
     return switch (type) {
       case BOOLEAN -> current.getBoolean(lastSegment);
@@ -416,13 +416,13 @@ class DeclarativeConfigValidationTest {
   }
 
   /**
-   * Reads the peer-service-mapping structured list through the bridge (the same {@code
-   * getStructuredList} call {@code ServicePeerResolver} makes) and collapses its {@code {peer,
+   * Reads the server-service-mapping structured list through the bridge (the same {@code
+   * getStructuredList} call {@code ServicePeerResolver} makes) and collapses its {@code {target,
    * service_name}} entries back into a {@code host -> service} map, so it can be compared against
-   * the flat-property value the test fed in. This is specific to peer-service-mapping, which is
+   * the flat-property value the test fed in. This is specific to server-service-mapping, which is
    * currently the only {@code structured_list} config.
    */
-  private static Object readPeerServiceMappingAsMap(
+  private static Object readServerServiceMappingAsMap(
       DeclarativeConfigProperties current, String lastSegment) {
     List<DeclarativeConfigProperties> entries = current.getStructuredList(lastSegment);
     if (entries == null) {
@@ -430,7 +430,7 @@ class DeclarativeConfigValidationTest {
     }
     Map<String, String> mapping = new HashMap<>();
     for (DeclarativeConfigProperties entry : entries) {
-      mapping.put(entry.getString("peer"), entry.getString("service_name"));
+      mapping.put(entry.getString("target"), entry.getString("service_name"));
     }
     return mapping;
   }

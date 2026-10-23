@@ -18,9 +18,6 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        }
       }
     }
   }

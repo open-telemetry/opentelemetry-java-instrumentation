@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -192,7 +192,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_NAMESPACE, DB),
                                 equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
                                 equalTo(DB_QUERY_SUMMARY, parameter.getQuerySummary()),
-                                equalTo(maybeStablePeerService(), expectedPeerService()),
+                                equalTo(stringKey("server.service.name"), expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -375,7 +375,7 @@ public abstract class AbstractR2dbcStatementTest {
                                   equalTo(DB_NAMESPACE, DB),
                                   equalTo(DB_QUERY_SUMMARY, "BATCH"),
                                   equalTo(DB_OPERATION_BATCH_SIZE, 0L),
-                                  equalTo(maybeStablePeerService(), expectedPeerService()),
+                                  equalTo(stringKey("server.service.name"), expectedPeerService()),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
@@ -398,7 +398,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_QUERY_TEXT, scenario.queryText),
                                 equalTo(DB_QUERY_SUMMARY, scenario.summary),
                                 equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                                equalTo(maybeStablePeerService(), expectedPeerService()),
+                                equalTo(stringKey("server.service.name"), expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port))));
   }

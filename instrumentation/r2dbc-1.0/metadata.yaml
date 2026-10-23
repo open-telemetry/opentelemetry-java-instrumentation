@@ -25,4 +25,4 @@ configurations:
       query texts unique, which may have adverse impact on database performance.
     type: boolean
   - ref: common.db.sqlcommenter.enabled
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping

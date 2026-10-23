@@ -93,9 +93,6 @@ tasks {
           systemProperty("ratpack14Test", true)
         }
       }
-      register("PreviewSemconv") {
-        telemetryConfig("otel.semconv-stability.preview", "service.peer")
-      }
       register("ControllerTelemetryDisabled") {
         filter {
           includeTestsMatching(

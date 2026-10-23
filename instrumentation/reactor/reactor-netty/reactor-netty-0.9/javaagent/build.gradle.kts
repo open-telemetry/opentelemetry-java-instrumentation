@@ -53,12 +53,6 @@ testing {
           include("**/ReactorNettyConnectionSpanTest.*")
           telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
         }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          filter {
-            excludeTestsMatching("ReactorNettyConnectionSpanTest")
-          }
-        }
       }
     }
   }

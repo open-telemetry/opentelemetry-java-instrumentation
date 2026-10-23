@@ -5,19 +5,16 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
-import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
-import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAMESPACE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -92,9 +89,8 @@ class RpcInstanceSemconvTest {
                           equalTo(RPC_SERVICE, old ? "package.Service" : null),
                           equalTo(RPC_SYSTEM_NAME, preview ? "test" : null),
                           equalTo(RPC_METHOD, preview ? "Service/Method" : "Method"),
-                          equalTo(PEER_SERVICE, old ? "peer" : null),
-                          equalTo(SERVICE_PEER_NAME, preview ? "peer" : null),
-                          equalTo(SERVICE_PEER_NAMESPACE, preview ? "namespace" : null),
+                          equalTo(stringKey("server.service.name"), "payments"),
+                          equalTo(stringKey("server.service.namespace"), "checkout"),
                           equalTo(ERROR_TYPE, preview ? "java.lang.IllegalStateException" : null)));
       assertThat(instance.spanExporter.getFinishedSpanItems().get(0).getInstrumentationScopeInfo())
           .satisfies(scope -> assertThat(scope.getSchemaUrl()).isEqualTo(schemaUrl));
@@ -288,18 +284,11 @@ class RpcInstanceSemconvTest {
       when(semconv.getBoolean("dual_emit", false)).thenReturn(dualEmit);
       DeclarativeConfigProperties common =
           mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-      DeclarativeConfigProperties previewConfig = common.get("semconv_stability");
-      when(previewConfig.getPropertyKeys()).thenReturn(singleton("preview"));
-      when(previewConfig.getScalarList("preview", String.class, emptyList()))
-          .thenReturn(
-              preview
-                  ? singletonList(dualEmit ? "service.peer/dup" : "service.peer")
-                  : emptyList());
       DeclarativeConfigProperties mapping = mock(DeclarativeConfigProperties.class);
-      when(mapping.getString("peer")).thenReturn("example.com");
-      when(mapping.getString("service_name")).thenReturn("peer");
-      when(mapping.getString("service_namespace")).thenReturn("namespace");
-      when(common.getStructuredList("service_peer_mapping", emptyList()))
+      when(mapping.getString("target")).thenReturn("example.com");
+      when(mapping.getString("service_name")).thenReturn("payments");
+      when(mapping.getString("service_namespace")).thenReturn("checkout");
+      when(common.getStructuredList("server_service_mapping", emptyList()))
           .thenReturn(singletonList(mapping));
       ConfigProvider configProvider = mock(ConfigProvider.class);
       when(configProvider.getInstrumentationConfig("common")).thenReturn(common);

@@ -21,14 +21,6 @@ public final class SemconvStability {
 
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()
-  public static boolean emitOldServicePeerSemconv(OpenTelemetry openTelemetry) {
-    return emitOld(selectionResolver(openTelemetry).servicePeer());
-  }
-
-  public static boolean emitPreviewServicePeerSemconv(OpenTelemetry openTelemetry) {
-    return emitStable(selectionResolver(openTelemetry).servicePeer());
-  }
-
   public static boolean emitOldRpcSemconv(OpenTelemetry openTelemetry) {
     return emitOld(selectionResolver(openTelemetry).rpc());
   }

@@ -18,18 +18,18 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Bridges the flat config property {@code otel.instrumentation.common.peer-service-mapping} to the
- * declarative config structure at {@code java.common.service_peer_mapping}.
+ * Bridges the flat config property {@code otel.instrumentation.common.server-service-mapping} to
+ * the declarative config structure at {@code java.common.server_service_mapping}.
  *
  * <p>The flat property format is: {@code host=serviceName,host2=serviceName2}
  *
  * <p>The declarative config format is:
  *
  * <pre>
- * service_peer_mapping:
- *   - peer: host
+ * server_service_mapping:
+ *   - target: host
  *     service_name: serviceName
- *   - peer: host2
+ *   - target: host2
  *     service_name: serviceName2
  * </pre>
  *
@@ -44,14 +44,14 @@ final class ServicePeerMapping implements DeclarativeConfigProperties {
   @Nullable
   static List<DeclarativeConfigProperties> getList(ConfigProperties configProperties) {
     Map<String, String> map =
-        configProperties.getMap("otel.instrumentation.common.peer-service-mapping");
+        configProperties.getMap("otel.instrumentation.common.server-service-mapping");
     if (map.isEmpty()) {
       return null;
     }
     List<DeclarativeConfigProperties> result = new ArrayList<>();
     for (Map.Entry<String, String> entry : map.entrySet()) {
       Map<String, String> fields = new HashMap<>();
-      fields.put("peer", entry.getKey());
+      fields.put("target", entry.getKey());
       fields.put("service_name", entry.getValue());
       // service_namespace is not supported in flat config, will be null
       result.add(new ServicePeerMapping(fields, configProperties.getComponentLoader()));

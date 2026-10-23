@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitOldServicePeerSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitPreviewServicePeerSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
-import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.entry;
@@ -81,8 +77,7 @@ class ServicePeerAttributesExtractorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  void shouldSetPeerNameIfItMatches() {
+  void shouldSetServerServiceIdentityIfItMatches() {
     // given
     ServicePeerResolver resolver =
         createResolver(
@@ -105,16 +100,13 @@ class ServicePeerAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     Attributes attrs = endAttributes.build();
-    if (emitOldServicePeerSemconv() && emitPreviewServicePeerSemconv()) {
-      assertThat(attrs)
-          .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
-    } else {
-      assertThat(attrs).containsOnly(entry(maybeStablePeerService(), "myService"));
-    }
+    assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
+    assertThat(attrs.get(stringKey("peer.service"))).isNull();
+    assertThat(attrs.get(stringKey("service.peer.name"))).isNull();
+    assertThat(attrs.get(stringKey("service.peer.namespace"))).isNull();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void shouldMatchConfiguredTargetExactly() {
     String target = "db1.example:5432,db2.example:5432";
     ServicePeerResolver resolver = createResolver(mapping(target, "myService", null));
@@ -126,29 +118,23 @@ class ServicePeerAttributesExtractorTest {
     underTest.onEnd(attributes, Context.root(), "request", "response", null);
 
     Attributes attrs = attributes.build();
-    if (emitOldServicePeerSemconv() && emitPreviewServicePeerSemconv()) {
-      assertThat(attrs)
-          .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
-    } else {
-      assertThat(attrs).containsOnly(entry(maybeStablePeerService(), "myService"));
-    }
+    assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
   }
 
   private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
-    when(otel.getGeneralInstrumentationConfig()).thenReturn(DeclarativeConfigProperties.empty());
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
     List<DeclarativeConfigProperties> entryList = asList(entries);
-    when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);
+    when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
+        .thenReturn(entryList);
     return new ServicePeerResolver(otel);
   }
 
   private static DeclarativeConfigProperties mapping(
-      String peer, @Nullable String serviceName, @Nullable String serviceNamespace) {
+      String target, @Nullable String serviceName, @Nullable String serviceNamespace) {
     DeclarativeConfigProperties props = mock(DeclarativeConfigProperties.class);
-    when(props.getString("peer")).thenReturn(peer);
+    when(props.getString("target")).thenReturn(target);
     when(props.getString("service_name")).thenReturn(serviceName);
     when(props.getString("service_namespace")).thenReturn(serviceNamespace);
     return props;

@@ -97,10 +97,10 @@ testing {
           inputs.dir(jflexOutputDir)
         }
         register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
+          jvmArgs("-Dotel.semconv-stability.preview=rpc")
         }
         register("BothSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer/dup")
+          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
         }
         register("ExceptionSignalLogs") {
           jvmArgs("-Dotel.semconv.exception.signal.preview=logs")

@@ -245,7 +245,7 @@ class SpringConfigPropertiesTest {
   void mapPropertyCaching() {
     this.contextRunner
         .withSystemProperties(
-            "otel.instrumentation.common.peer-service-mapping=host1=serviceA,host2=serviceB")
+            "otel.instrumentation.common.server-service-mapping=host1=serviceA,host2=serviceB")
         .run(
             context -> {
               Environment realEnvironment = context.getBean("environment", Environment.class);
@@ -261,7 +261,7 @@ class SpringConfigPropertiesTest {
 
               for (int i = 0; i < 100; i++) {
                 Map<String, String> mapping =
-                    config.getMap("otel.instrumentation.common.peer-service-mapping");
+                    config.getMap("otel.instrumentation.common.server-service-mapping");
                 assertThat(mapping)
                     .containsEntry("host1", "serviceA")
                     .containsEntry("host2", "serviceB");
@@ -271,7 +271,7 @@ class SpringConfigPropertiesTest {
               // String.class)
               verify(spyEnvironment, times(1))
                   .getProperty(
-                      eq("otel.instrumentation.common.peer-service-mapping"), eq(String.class));
+                      eq("otel.instrumentation.common.server-service-mapping"), eq(String.class));
             });
   }
 

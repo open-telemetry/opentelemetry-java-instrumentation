@@ -78,16 +78,6 @@ testing {
             enabled = false
           }
         }
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-              "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-              "otel.semconv-stability.preview=service.peer"
-          )
-        }
       }
     }
   }
