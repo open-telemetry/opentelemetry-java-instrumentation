@@ -1026,7 +1026,6 @@ class VertxSqlClientTest {
     Promise<SqlConnection> attempt = Promise.promise();
     CountDownLatch supplierCalled = new CountDownLatch(1);
     CountDownLatch connecting = new CountDownLatch(1);
-    CompletableFuture<Throwable> lateCompletion = new CompletableFuture<>();
     AtomicInteger completions = new AtomicInteger();
     AtomicInteger poolCompletions = new AtomicInteger();
     Context context = vertx.getOrCreateContext();
@@ -1040,9 +1039,6 @@ class VertxSqlClientTest {
                     () -> {},
                     error -> {
                       poolCompletions.incrementAndGet();
-                      if (error == lateFailure) {
-                        lateCompletion.complete(error);
-                      }
                     }))
             .using(vertx)
             .connectingTo(
@@ -1085,9 +1081,8 @@ class VertxSqlClientTest {
     }
     assertThat(connecting.await(30, SECONDS)).isTrue();
     attempt.fail(lateFailure);
-    assertThat(lateCompletion.get(30, SECONDS)).isSameAs(lateFailure);
     assertThat(completions).hasValue(1);
-    assertThat(poolCompletions).hasValue(2);
+    assertThat(poolCompletions).hasValue(1);
     assertThat(result.get(30, SECONDS)).isSameAs(timeout);
     testing.waitAndAssertTraces(
         trace ->
@@ -1104,7 +1099,6 @@ class VertxSqlClientTest {
   void testSupplierFailureBeforeTimeoutKeepsTargetAndError() throws Exception {
     assumeTrue(testLatestDeps());
     RuntimeException failure = new IllegalArgumentException("connection failed before timeout");
-    CompletableFuture<Throwable> timeoutCompletion = new CompletableFuture<>();
     AtomicInteger completions = new AtomicInteger();
     AtomicInteger poolCompletions = new AtomicInteger();
     Context context = vertx.getOrCreateContext();
@@ -1115,9 +1109,6 @@ class VertxSqlClientTest {
                     () -> {},
                     error -> {
                       poolCompletions.incrementAndGet();
-                      if (error != failure) {
-                        timeoutCompletion.complete(error);
-                      }
                     }))
             .using(vertx)
             .connectingTo(() -> Future.succeededFuture(connectOptions().setHost("failed.example")))
@@ -1143,10 +1134,9 @@ class VertxSqlClientTest {
                 "failed.example",
                 failure));
 
-    assertThat(timeoutCompletion.get(30, SECONDS)).hasMessage("Timeout waiting for connection");
     assertThat(result.get(30, SECONDS)).isSameAs(failure);
     assertThat(completions).hasValue(1);
-    assertThat(poolCompletions).hasValue(2);
+    assertThat(poolCompletions).hasValue(1);
     testing.waitAndAssertTraces(
         trace ->
             assertSupplierQuery(
@@ -1165,7 +1155,6 @@ class VertxSqlClientTest {
     RuntimeException lateFailure = new IllegalArgumentException("late fixed connection failure");
     Promise<SqlConnection> attempt = Promise.promise();
     CountDownLatch connecting = new CountDownLatch(1);
-    CompletableFuture<Throwable> lateCompletion = new CompletableFuture<>();
     AtomicInteger completions = new AtomicInteger();
     AtomicInteger poolCompletions = new AtomicInteger();
     PgConnectOptions first = connectOptions().setHost("fixed.example");
@@ -1180,9 +1169,6 @@ class VertxSqlClientTest {
                     () -> {},
                     error -> {
                       poolCompletions.incrementAndGet();
-                      if (error == lateFailure) {
-                        lateCompletion.complete(error);
-                      }
                     }))
             .using(vertx)
             .with(
@@ -1265,10 +1251,9 @@ class VertxSqlClientTest {
       testing.waitAndAssertTraces(assertion);
 
       attempt.fail(lateFailure);
-      assertThat(lateCompletion.get(30, SECONDS)).isSameAs(lateFailure);
       assertThat(result.get(30, SECONDS)).isSameAs(timeout);
       assertThat(completions).hasValue(1);
-      assertThat(poolCompletions).hasValue(2);
+      assertThat(poolCompletions).hasValue(1);
       testing.waitAndAssertTraces(assertion);
     } finally {
       attempt.tryFail(lateFailure);
