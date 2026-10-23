@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -27,7 +28,7 @@ class RpcSpanNameExtractorTest {
     RpcRequest request = new RpcRequest();
 
     if (emitPreviewRpcSemconv()) {
-      when(getter.getRpcSystemName(request)).thenReturn("custom_rpc");
+      lenient().when(getter.getRpcSystemName(request)).thenReturn("custom_rpc");
       when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
     } else {
       when(getter.getService(request)).thenReturn("my.Service");

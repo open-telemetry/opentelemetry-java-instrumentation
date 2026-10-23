@@ -608,8 +608,8 @@ public abstract class AbstractDubboTest {
 
   /**
    * Tests unknown service span capture for the Triple protocol (gRPC over HTTP/2). Unlike the Dubbo
-   * binary protocol, Triple transmits trace context as HTTP/2 headers, so the server "dubbo" span is
-   * always a child of the client span — resulting in 1 trace with 2 spans.
+   * binary protocol, Triple transmits trace context as HTTP/2 headers, so the server "dubbo" span
+   * is always a child of the client span — resulting in 1 trace with 2 spans.
    */
   @Test
   void testTripleUnknownService() throws ReflectiveOperationException {
