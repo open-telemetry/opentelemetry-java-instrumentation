@@ -29,10 +29,11 @@ dependencies {
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-data:spring-data-common:testing"))
+  testImplementation(platform("org.springframework:spring-framework-bom:3.2.10.RELEASE"))
 
   testLibrary("org.hibernate:hibernate-entitymanager:4.3.0.Final")
   testLibrary("org.springframework.data:spring-data-jpa:1.6.0.RELEASE")
-  testLibrary("org.springframework:spring-test:3.0.0.RELEASE")
+  testLibrary("org.springframework:spring-test:3.2.10.RELEASE")
 
   testImplementation("org.hsqldb:hsqldb:2.0.0")
 
@@ -44,11 +45,6 @@ dependencies {
 }
 
 tasks {
-  compileTestJava {
-    // Spring 3.2's class scanner cannot read MethodParameters attributes.
-    options.compilerArgs.remove("-parameters")
-  }
-
   withType<Test>().configureEach {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
