@@ -28,14 +28,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import org.hornetq.api.core.TransportConfiguration;
@@ -55,6 +53,7 @@ import org.hornetq.core.server.HornetQServers;
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 import org.springframework.jms.listener.SessionAwareMessageListener;
@@ -73,6 +72,8 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
 
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  @TempDir private static File tempDir;
 
   @Test
   void receivesMessagesInSpringListener() throws Exception {
@@ -93,12 +94,7 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     container.setDurableSubscriptionName(SUBSCRIPTION_NAME);
     @SuppressWarnings("rawtypes")
     SessionAwareMessageListener listener =
-        new SessionAwareMessageListener() {
-          @Override
-          public void onMessage(Message message, Session session) {
-            listenerContext.complete(Span.current().getSpanContext());
-          }
-        };
+        (message, session) -> listenerContext.complete(Span.current().getSpanContext());
     container.setMessageListener(listener);
     cleanup.deferCleanup(container::destroy);
     container.afterPropertiesSet();
@@ -200,9 +196,6 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
   }
 
   private static HornetQServer createServer() throws Exception {
-    File tempDir = Files.createTempDirectory("spring-jms-20").toFile();
-    tempDir.deleteOnExit();
-
     Configuration config = new ConfigurationImpl();
     config.setBindingsDirectory(tempDir.getPath());
     config.setJournalDirectory(tempDir.getPath());
@@ -218,24 +211,16 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     HornetQServer server = HornetQServers.newHornetQServer(config);
     server.start();
 
-    ServerLocator serverLocator =
-        HornetQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
-    try {
-      ClientSessionFactory sessionFactory = serverLocator.createSessionFactory();
-      try {
-        ClientSession session = sessionFactory.createSession(false, false, false);
-        try {
+    TransportConfiguration transportConfiguration =
+        new TransportConfiguration(InVMConnectorFactory.class.getName());
+    try (ServerLocator serverLocator =
+        HornetQClient.createServerLocatorWithoutHA(transportConfiguration)) {
+      try (ClientSessionFactory sessionFactory = serverLocator.createSessionFactory()) {
+        try (ClientSession session = sessionFactory.createSession(false, false, false)) {
           String topic = "jms.topic." + DESTINATION_NAME;
           session.createQueue(topic, topic, true);
-        } finally {
-          session.close();
         }
-      } finally {
-        sessionFactory.close();
       }
-    } finally {
-      serverLocator.close();
     }
     return server;
   }
