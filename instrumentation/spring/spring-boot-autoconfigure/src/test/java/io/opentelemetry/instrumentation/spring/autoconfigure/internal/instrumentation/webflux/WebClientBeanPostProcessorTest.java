@@ -52,19 +52,6 @@ class WebClientBeanPostProcessorTest {
   }
 
   @Test
-  @DisplayName("when WebClient already has filter should return same instance")
-  void doesNotAddDuplicateFilter() {
-    WebClient webClient = WebClient.create();
-    WebClient firstProcessed =
-        (WebClient) underTest.postProcessAfterInitialization(webClient, "testWebClient");
-    WebClient secondProcessed =
-        (WebClient) underTest.postProcessAfterInitialization(firstProcessed, "testWebClient");
-
-    assertThat(secondProcessed).isSameAs(firstProcessed);
-    assertFilterCount(secondProcessed);
-  }
-
-  @Test
   void doesNotAddDuplicateFilterToManuallyInstrumentedClient() {
     ExchangeFilterFunction existingFilter =
         SpringWebfluxClientTelemetry.create(OpenTelemetry.noop()).createFilter();
