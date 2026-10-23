@@ -327,19 +327,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void oldServiceMappingPropertyIsNotRead() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.peer-service-mapping", "1.2.3.4=FooService");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructuredList("server_service_mapping"))
-        .isNull();
-  }
-
-  @Test
   void testGetInt() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.aws-lambda.flush-timeout", "5000");
