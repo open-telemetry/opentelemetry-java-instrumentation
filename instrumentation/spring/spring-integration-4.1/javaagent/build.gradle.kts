@@ -27,7 +27,7 @@ dependencies {
   compileOnly("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-rabbit-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-rabbit-1.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
 
