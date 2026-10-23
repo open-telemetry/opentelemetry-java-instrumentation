@@ -49,7 +49,9 @@ REPO=/absolute/path/to/opentelemetry-java-instrumentation
   :javaagent:spotlessJavaCheck
 # Also run the child JVMs on JDK 11:
 "$REPO/gradlew" -p "$REPO" :javaagent:test \
-  --tests io.opentelemetry.javaagent.CustomSystemClassLoaderTest -PtestJavaVersion=11
+  --tests io.opentelemetry.javaagent.CustomSystemClassLoaderTest \
+  --tests io.opentelemetry.javaagent.AgentLoadedIntoBootstrapTest \
+  -PtestJavaVersion=11 :javaagent:spotlessCheck :javaagent:checkstyleTest
 ```
 
 The test asserts the exact exception and `initialize` / `startAgent` / `premain`
@@ -71,7 +73,7 @@ WORK=$(mktemp -d)
 curl -fL https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.33.0/opentelemetry-javaagent.jar \
   -o "$WORK/opentelemetry-javaagent-2.33.0.jar"
 AGENT="$WORK/opentelemetry-javaagent-2.33.0.jar"
-echo "5f9d1f10056ed2b246fbb19543519b8066cda23d6aff19022dbdb84402d6c3ab  $AGENT" | sha256sum -c -
+echo "5f9d1f10056ed2b246fbb19543519b8066cda23d6aff19022dbdb84402d6c3ab  $AGENT" | sha256sum -c - || exit 1
 "$JAVA_HOME/bin/java" -version
 "$JAVA_HOME/bin/java" -jar "$AGENT"
 
@@ -91,14 +93,30 @@ for mode in normal parent-first child-first; do
     status=$?
     cat "$WORK/$mode.log"
     echo "$mode exit=$status"
-    test "$status" -eq 0
-  ) || break
+    test "$status" -eq 0 || exit 1
+    grep -Fxq 'application-main-completed' "$WORK/$mode.log" || exit 1
+    if [ "$mode" = child-first ]; then
+      grep -Fxq 'java.lang.IllegalStateException: agent initializer should be loaded in boot loader' \
+        "$WORK/$mode.log" || exit 1
+      grep -Fxq 'initializer-loader=jvmbootstraptest.ChildFirstSystemClassLoader' \
+        "$WORK/$mode.log" || exit 1
+      started=false
+    else
+      if grep -Fq 'ERROR io.opentelemetry.javaagent.OpenTelemetryAgent' "$WORK/$mode.log"; then
+        exit 1
+      fi
+      grep -Fxq 'initializer-loader=bootstrap' "$WORK/$mode.log" || exit 1
+      started=true
+    fi
+    grep -Fxq "agent-started=$started" "$WORK/$mode.log" || exit 1
+    grep -Fxq "same-bootstrap-initializer=$started" "$WORK/$mode.log" || exit 1
+  ) || exit 1
 done
 ```
 
 Exporters are disabled to make startup independent of a collector. For a
 source-built agent, build with JDK 25 using
-`"$REPO/gradlew" -p "$REPO" :javaagent:shadowJar`, set
+`JAVA_HOME=/absolute/path/to/jdk-25 "$REPO/gradlew" -p "$REPO" :javaagent:shadowJar`, set
 `AGENT="$REPO/javaagent/build/libs/opentelemetry-javaagent-3.0.0-SNAPSHOT.jar"`,
 and repeat the loop. The JUnit test above provides automated output assertions.
 
@@ -107,6 +125,16 @@ Observed on Ubuntu 24.04.5 with Temurin 11.0.32.1+1 and 25.0.4.1+1-LTS:
 | Agent | Normal loader | Custom parent-first | Custom child-first |
 | --- | --- | --- | --- |
 | Released 2.33.0 (SHA-256 above) | Started | Started | Exact reported exception; not started |
+| Source-built 3.0.0-SNAPSHOT | Started | Started | Exact reported exception; not started |
+
+The source build used production sources from `main` commit
+`fa6160741fc71a196de38ad53020a050aba2002a`, without production changes.
+Its SHA-256 was
+`35515d45a66162384f7928ef0712b4390fb926bf7667a7548c1e5d77ee0f95e4`.
+All three new JUnit tests passed on both JDKs; all three existing
+`AgentLoadedIntoBootstrapTest` tests also passed on JDK 11. Spotless and
+`:javaagent:checkstyleTest` passed. The released agent was checked standalone
+in all three modes on both JDKs, asserting the exception, probe output, and exit code.
 
 In both controls, output includes `initializer-loader=bootstrap`,
 `agent-started=true`, and `same-bootstrap-initializer=true`, with no agent startup
