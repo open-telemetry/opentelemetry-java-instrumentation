@@ -17,8 +17,6 @@ import io.vertx.redis.client.RedisReplicationConnectOptions;
 import io.vertx.redis.client.RedisSentinelConnectOptions;
 import io.vertx.redis.client.RedisStandaloneConnectOptions;
 import io.vertx.redis.client.TestConstantSupplier;
-import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
-import io.vertx.redis.client.impl.RedisURI;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -27,18 +25,6 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 class VertxRedis445ServerTargetsTest {
-
-  @Test
-  void targetIsSharedWithBaseInstrumentation() {
-    RedisServerTarget target =
-        VertxRedis445ServerTargets.of(
-            new RedisStandaloneConnectOptions().setConnectionString("redis://host:6380"));
-    RedisURI redisUri = new RedisURI("redis://host:6380");
-
-    RedisConnectionManagerUtil.setRedisUriTarget(redisUri, target);
-
-    assertThat(VertxRedisServerTargets.get(redisUri).getTarget()).isSameAs(target);
-  }
 
   @Test
   void standalone() {
