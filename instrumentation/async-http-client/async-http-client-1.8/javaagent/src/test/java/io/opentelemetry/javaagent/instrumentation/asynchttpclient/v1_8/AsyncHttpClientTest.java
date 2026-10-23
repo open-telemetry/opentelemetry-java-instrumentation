@@ -17,7 +17,7 @@ import com.ning.http.client.Response;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
   private static final int READ_TIMEOUT_MS = (int) READ_TIMEOUT.toMillis();

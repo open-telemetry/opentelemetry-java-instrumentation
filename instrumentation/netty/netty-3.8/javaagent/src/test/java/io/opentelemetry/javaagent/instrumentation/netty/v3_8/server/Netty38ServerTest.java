@@ -23,7 +23,7 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.InetSocketAddress;
@@ -59,7 +59,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   static final LoggingHandler loggingHandler;
 

@@ -16,7 +16,7 @@ import com.squareup.okhttp.Response;
 import com.squareup.okhttp.internal.http.HttpMethod;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class OkHttp2Test extends AbstractHttpClientTest<Request> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   private static final OkHttpClient client = new OkHttpClient();
   private static final OkHttpClient clientWithReadTimeout = new OkHttpClient();

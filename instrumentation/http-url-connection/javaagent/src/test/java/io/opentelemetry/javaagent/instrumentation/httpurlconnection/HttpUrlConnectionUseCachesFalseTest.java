@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class HttpUrlConnectionUseCachesFalseTest extends AbstractHttpClientTest<HttpURLConnection> {
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @Override
   public HttpURLConnection buildRequest(String method, URI uri, Map<String, String> headers)

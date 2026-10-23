@@ -17,7 +17,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.HashSet;
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 

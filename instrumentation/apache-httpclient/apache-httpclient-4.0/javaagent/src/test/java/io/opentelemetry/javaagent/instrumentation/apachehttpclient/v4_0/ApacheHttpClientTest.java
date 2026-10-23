@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpCl
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApacheHttpClientTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   private final DefaultHttpClient client = buildClient(false);
   private final DefaultHttpClient clientWithReadTimeout = buildClient(true);

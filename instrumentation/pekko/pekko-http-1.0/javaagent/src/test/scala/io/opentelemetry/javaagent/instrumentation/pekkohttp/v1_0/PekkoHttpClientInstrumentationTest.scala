@@ -17,7 +17,7 @@ import org.apache.pekko.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpClientTest,
-  HttpClientInstrumentationExtension,
+  AgentHttpClientInstrumentationExtension,
   HttpClientResult,
   HttpClientTestOptions,
   SingleConnection
@@ -40,7 +40,7 @@ class PekkoHttpClientInstrumentationTest
     extends AbstractHttpClientTest[HttpRequest] {
 
   @RegisterExtension val extension: InstrumentationExtension =
-    HttpClientInstrumentationExtension.forAgent()
+    AgentHttpClientInstrumentationExtension.create()
 
   val system: ActorSystem = ActorSystem.create()
   val materializer: ActorMaterializer = ActorMaterializer.create(system)

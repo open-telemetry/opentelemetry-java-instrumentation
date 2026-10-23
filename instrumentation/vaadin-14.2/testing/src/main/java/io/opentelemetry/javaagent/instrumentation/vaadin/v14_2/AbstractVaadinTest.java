@@ -17,7 +17,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +55,7 @@ public abstract class AbstractVaadinTest
   private static final Logger logger = LoggerFactory.getLogger(AbstractVaadinTest.class);
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 

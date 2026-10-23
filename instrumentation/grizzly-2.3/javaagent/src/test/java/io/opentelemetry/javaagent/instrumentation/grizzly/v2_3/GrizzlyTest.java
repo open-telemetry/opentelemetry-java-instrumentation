@@ -17,7 +17,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.util.HashSet;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 abstract class GrizzlyTest extends AbstractHttpServerTest<HttpServer> {
 
   @RegisterExtension
-  final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected HttpServer setupServer() throws Exception {

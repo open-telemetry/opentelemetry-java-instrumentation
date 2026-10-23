@@ -8,14 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 import io.netty.channel.ChannelPipeline;
 import io.opentelemetry.instrumentation.netty.v4_1.AbstractNetty41ServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty41ServerTest extends AbstractNetty41ServerTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected void configure(HttpServerTestOptions options) {

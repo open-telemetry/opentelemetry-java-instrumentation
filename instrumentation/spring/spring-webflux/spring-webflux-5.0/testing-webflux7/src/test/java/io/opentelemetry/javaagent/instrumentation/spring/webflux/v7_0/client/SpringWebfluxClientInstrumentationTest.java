@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v7_0.client;
 
 import io.opentelemetry.instrumentation.spring.webflux.client.AbstractSpringWebfluxClientInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -17,7 +17,7 @@ class SpringWebfluxClientInstrumentationTest
     extends AbstractSpringWebfluxClientInstrumentationTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @Override
   protected WebClient.Builder instrument(WebClient.Builder builder) {

@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.test.hello_web_service.HelloRequest;
 import io.opentelemetry.test.hello_web_service.HelloResponse;
@@ -30,7 +30,7 @@ import org.springframework.ws.soap.client.SoapFaultClientException;
 public abstract class AbstractJaxWs3Test extends AbstractHttpServerUsingTest<Server> {
   @RegisterExtension
   protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+      AgentHttpServerInstrumentationExtension.create();
 
   private final Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
   private final WebServiceTemplate webServiceTemplate = new WebServiceTemplate(marshaller);

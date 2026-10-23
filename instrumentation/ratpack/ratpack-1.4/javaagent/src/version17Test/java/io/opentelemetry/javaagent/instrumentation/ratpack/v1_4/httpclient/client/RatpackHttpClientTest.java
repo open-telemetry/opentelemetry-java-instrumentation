@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.ratpack.client.AbstractRatpackHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpClientInstrumentationExtension.create();
 
   @Override
   protected boolean useNettyClientAttributes() {

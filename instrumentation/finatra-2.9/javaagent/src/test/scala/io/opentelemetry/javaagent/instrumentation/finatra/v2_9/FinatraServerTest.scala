@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
-  HttpServerInstrumentationExtension,
+  AgentHttpServerInstrumentationExtension,
   HttpServerTestOptions,
   ServerEndpoint
 }
@@ -32,7 +32,7 @@ import scala.language.postfixOps
 class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
 
   @RegisterExtension val _: InstrumentationExtension =
-    HttpServerInstrumentationExtension.forAgent()
+    AgentHttpServerInstrumentationExtension.create()
 
   private val startupThread = Executors.newSingleThreadExecutor()
 

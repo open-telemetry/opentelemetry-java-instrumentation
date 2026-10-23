@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
-import io.opentelemetry.instrumentation.testing.AgentTestRunner;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -20,9 +19,13 @@ public class HttpClientInstrumentationExtension extends InstrumentationExtension
   /**
    * Returns a {@link InstrumentationExtension} to be used with {@link AbstractHttpClientTest} for
    * javaagent instrumentation.
+   *
+   * @deprecated Use {@link AgentHttpClientInstrumentationExtension#create()}. This method will be
+   *     removed in a future minor release.
    */
+  @Deprecated
   public static InstrumentationExtension forAgent() {
-    return new HttpClientInstrumentationExtension(AgentTestRunner.instance());
+    return AgentHttpClientInstrumentationExtension.create();
   }
 
   /**
@@ -35,7 +38,7 @@ public class HttpClientInstrumentationExtension extends InstrumentationExtension
 
   private final HttpClientTestServer server;
 
-  private HttpClientInstrumentationExtension(InstrumentationTestRunner runner) {
+  protected HttpClientInstrumentationExtension(InstrumentationTestRunner runner) {
     super(runner);
 
     server = new HttpClientTestServer(getOpenTelemetry());

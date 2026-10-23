@@ -9,7 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import jakarta.servlet.Servlet;
 import java.net.InetSocketAddress;
@@ -23,7 +23,7 @@ public abstract class Jetty12Servlet5Test
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+      AgentHttpServerInstrumentationExtension.create();
 
   @Override
   protected void configure(HttpServerTestOptions options) {

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.javahttpclient;
 
 import io.opentelemetry.instrumentation.javahttpclient.AbstractJavaHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.http.HttpClient;
 import org.junit.jupiter.api.Nested;
@@ -17,7 +17,8 @@ class JavaHttpClientTest {
 
   abstract static class AbstractTest extends AbstractJavaHttpClientTest {
     @RegisterExtension
-    static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+    static final InstrumentationExtension testing =
+        AgentHttpClientInstrumentationExtension.create();
 
     @Override
     protected HttpClient configureHttpClient(HttpClient httpClient) {

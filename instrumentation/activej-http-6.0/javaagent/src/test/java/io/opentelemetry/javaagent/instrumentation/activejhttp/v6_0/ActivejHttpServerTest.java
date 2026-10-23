@@ -28,7 +28,7 @@ import io.activej.http.RoutingServlet;
 import io.activej.promise.Promise;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.AgentHttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.util.Set;
@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = AgentHttpServerInstrumentationExtension.create();
 
   private static final Eventloop eventloop =
       Eventloop.builder().withCurrentThread().withFatalErrorHandler(logging()).build();
