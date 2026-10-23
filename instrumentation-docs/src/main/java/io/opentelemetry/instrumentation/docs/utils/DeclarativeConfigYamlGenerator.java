@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
+import io.opentelemetry.instrumentation.docs.internal.SharedConfigurationRegistry;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,7 +46,8 @@ public class DeclarativeConfigYamlGenerator {
   private static final Yaml SCALAR_YAML = new Yaml();
 
   /**
-   * Generates a declarative configuration YAML file from instrumentation modules.
+   * Generates a declarative configuration YAML file from instrumentation modules and the global
+   * configurations of the {@link SharedConfigurationRegistry}.
    *
    * @param modules the list of instrumentation modules
    * @param writer the writer to output the YAML to
@@ -53,8 +55,30 @@ public class DeclarativeConfigYamlGenerator {
    */
   public static void generateConfigurationYaml(
       List<InstrumentationModule> modules, BufferedWriter writer) throws IOException {
+    generateConfigurationYaml(
+        modules,
+        List.copyOf(SharedConfigurationRegistry.getInstance().globalConfigurations().values()),
+        writer);
+  }
 
-    Map<String, Object> configTree = buildConfigTree(modules);
+  /**
+   * Generates a declarative configuration YAML file from instrumentation modules and global
+   * configurations.
+   *
+   * @param modules the list of instrumentation modules
+   * @param globalConfigurations configurations read by the agent or the instrumentation API itself
+   *     rather than by a specific module, included regardless of the modules
+   * @param writer the writer to output the YAML to
+   * @throws IOException if an I/O error occurs
+   */
+  // Visible for testing
+  static void generateConfigurationYaml(
+      List<InstrumentationModule> modules,
+      List<ConfigurationOption> globalConfigurations,
+      BufferedWriter writer)
+      throws IOException {
+
+    Map<String, Object> configTree = buildConfigTree(modules, globalConfigurations);
 
     writeYaml(configTree, writer, 0);
   }
@@ -63,36 +87,51 @@ public class DeclarativeConfigYamlGenerator {
    * Builds a nested tree structure from all configurations.
    *
    * @param modules the list of instrumentation modules
+   * @param globalConfigurations configurations included regardless of the modules
    * @return the configuration tree
    */
-  private static Map<String, Object> buildConfigTree(List<InstrumentationModule> modules) {
+  private static Map<String, Object> buildConfigTree(
+      List<InstrumentationModule> modules, List<ConfigurationOption> globalConfigurations) {
     Map<String, Object> tree = new TreeMap<>();
     Set<String> seenConfigs = new HashSet<>();
 
+    for (ConfigurationOption config : globalConfigurations) {
+      addConfig(tree, seenConfigs, config);
+    }
     for (InstrumentationModule module : modules) {
-      List<ConfigurationOption> configs = module.getMetadata().getConfigurations();
-
-      for (ConfigurationOption config : configs) {
-        String declarativeName = config.declarativeName();
-
-        // Skip configurations that don't declare a declarative config name.
-        if (declarativeName == null || declarativeName.isBlank()) {
-          continue;
-        }
-
-        // Skip duplicates (e.g. common configurations shared across many modules).
-        if (!seenConfigs.add(declarativeName)) {
-          continue;
-        }
-
-        // declarative_name is relative to the "instrumentation" config node (e.g.
-        // "java.grpc.emit_message_events" or "general.http.client.request_captured_headers"),
-        // so nest it under "instrumentation" to form a complete declarative config path.
-        insertIntoTree(tree, "instrumentation/development." + declarativeName, config);
+      for (ConfigurationOption config : module.getMetadata().getConfigurations()) {
+        addConfig(tree, seenConfigs, config);
       }
     }
 
     return tree;
+  }
+
+  private static void addConfig(
+      Map<String, Object> tree, Set<String> seenConfigs, ConfigurationOption config) {
+    String declarativeName = config.declarativeName();
+
+    // Skip configurations that don't declare a declarative config name.
+    if (declarativeName == null || declarativeName.isBlank()) {
+      return;
+    }
+
+    // The example is meant to be copied, so it only contains keys that are safe to set to the
+    // value shown. A deprecated key, or a key whose absence means falling back to another setting,
+    // can change behavior (or log a deprecation warning) merely by being present.
+    if (config.isDeprecated() || config.defaultValue() == null) {
+      return;
+    }
+
+    // Skip duplicates (e.g. common configurations shared across many modules).
+    if (!seenConfigs.add(declarativeName)) {
+      return;
+    }
+
+    // declarative_name is relative to the "instrumentation" config node (e.g.
+    // "java.grpc.emit_message_events" or "general.http.client.request_captured_headers"),
+    // so nest it under "instrumentation" to form a complete declarative config path.
+    insertIntoTree(tree, "instrumentation/development." + declarativeName, config);
   }
 
   /**

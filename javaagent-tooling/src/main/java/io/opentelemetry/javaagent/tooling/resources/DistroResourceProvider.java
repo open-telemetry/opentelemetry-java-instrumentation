@@ -20,7 +20,7 @@ public class DistroResourceProvider implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    return get("opentelemetry-java-instrumentation");
+    return get("opentelemetry-javaagent");
   }
 
   static Resource get(String distroName) {

@@ -32,14 +32,14 @@ public class RetryingCallableInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RpcCallAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.FieldValue(value = "tableName") TableName tableName) {
       if (tableName != null) {
         setTableName(tableName);
       }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
       resetTableName();
     }

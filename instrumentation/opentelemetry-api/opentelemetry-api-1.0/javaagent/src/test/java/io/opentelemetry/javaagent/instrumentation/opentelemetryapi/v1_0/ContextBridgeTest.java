@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -28,7 +27,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // testing old code semconv
 class ContextBridgeTest {
 
   @RegisterExtension
@@ -87,8 +85,7 @@ class ContextBridgeTest {
                     span.hasName("test")
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION, "run"),
-                            equalTo(CODE_NAMESPACE, runnable.getClass().getName()),
+                            equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
                             equalTo(stringKey("cat"), "yes"))));
   }
 
@@ -150,8 +147,7 @@ class ContextBridgeTest {
                     span.hasName("test")
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION, "run"),
-                            equalTo(CODE_NAMESPACE, runnable.getClass().getName()),
+                            equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
                             equalTo(stringKey("cat"), "yes"))));
   }
 

@@ -48,23 +48,24 @@ public class KafkaProducerTelemetry {
    * @param record the producer record to inject span info.
    */
   public <K, V> ProducerRecord<K, V> buildAndInjectSpan(
-      ProducerRecord<K, V> record, @Nullable String clientId, @Nullable String bootstrapServers) {
+      ProducerRecord<K, V> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId) {
     Context parentContext = Context.current();
 
     KafkaProducerRequest request =
         KafkaProducerRequest.create(
-            record, clientId, bootstrapServers, producerSpanContextPropagationEnabled);
+            record, clientId, bootstrapServers, producerSpanContextPropagationEnabled, clusterId);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return record;
     }
 
+    // The interceptor runs before send, so end immediately without measuring send duration.
     Context context = producerInstrumenter.start(parentContext, request);
-    try {
-      if (producerPropagationEnabled) {
-        record = KafkaPropagation.propagateContext(propagator, context, record);
-      }
-    } finally {
-      producerInstrumenter.end(context, request, null, null);
+    producerInstrumenter.end(context, request, null, null);
+    if (producerPropagationEnabled) {
+      record = KafkaPropagation.propagateContext(propagator, context, record);
     }
     return record;
   }

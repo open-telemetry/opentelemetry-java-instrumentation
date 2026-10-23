@@ -45,16 +45,12 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       ElementMatcher<? super MethodDescription> methodMatcher,
       Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
       String adviceClassName) {
-    // default strategy used by AgentBuilder.Transformer.ForAdvice
-    AgentBuilder.PoolStrategy poolStrategy = AgentBuilder.PoolStrategy.Default.FAST;
-
     agentBuilder =
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(mappingCustomizer.apply(adviceMapping))
                 .advice(methodMatcher, adviceClassName)
-                // change inline attribute for advice OnMethodEnter and OnMethodExit annotations to
-                // false
-                .with(new AdviceInliningPoolStrategy(poolStrategy, false))
+                // default strategy used by AgentBuilder.Transformer.ForAdvice
+                .with(AgentBuilder.PoolStrategy.Default.FAST)
                 .include(getAdviceLocator(instrumentationModule.getClass().getClassLoader()))
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }

@@ -54,13 +54,11 @@ tasks {
     jvmArgs("--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    jvmArgs("-Dotel.instrumentation.common.view-telemetry.enabled=true")
   }
 
   test {
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.view-telemetry.enabled=true")
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -68,7 +66,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jsp.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true")
   }
 
   check {

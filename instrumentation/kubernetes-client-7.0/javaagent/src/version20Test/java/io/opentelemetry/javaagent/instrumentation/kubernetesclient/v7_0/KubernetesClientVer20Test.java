@@ -102,7 +102,7 @@ class KubernetesClientVer20Test {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -164,7 +164,7 @@ class KubernetesClientVer20Test {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(ERROR_TYPE, "451"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -219,7 +219,7 @@ class KubernetesClientVer20Test {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -283,7 +283,7 @@ class KubernetesClientVer20Test {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(ERROR_TYPE, "451"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),

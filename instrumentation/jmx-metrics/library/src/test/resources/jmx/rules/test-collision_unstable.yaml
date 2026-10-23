@@ -1,0 +1,11 @@
+---
+rules:
+  - bean: java.lang:type=Threading
+    metricAttribute:
+      test.source: const(embedded)
+    mapping:
+      PeakThreadCount:
+        metric: test.collision.count
+        type: gauge
+        unit: '{thread}'
+        desc: Current number of threads.

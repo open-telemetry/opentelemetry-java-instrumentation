@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -1206,10 +1207,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertThat(attrs).doesNotContainKey(HTTP_REQUEST_RESEND_COUNT);
               }
             })
-        .satisfies(
-            spanData ->
-                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_41_0));
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
   }
 
   protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {

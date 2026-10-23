@@ -1,11 +1,8 @@
 # [Javaagent] Advice Patterns
 
-## Quick Reference
-
-- Use when: reviewing ByteBuddy advice classes/methods (`@Advice.OnMethodEnter` /
-  `@Advice.OnMethodExit`), helpers called by advice, or `Java8BytecodeBridge` usage
-- Review focus: nested advice classes, static advice methods, advice-called helpers,
-  `suppress = Throwable.class`, no-throw behavior
+Consult this article when implementing or changing executable Byte Buddy advice
+and its helpers. It explains advice registration, exception handling, and
+scope ownership with examples of the relevant runtime behavior.
 
 ## Advice Classes as Nested Classes
 
@@ -19,7 +16,7 @@ class MyInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class MethodAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(/* ... */) { /* ... */ }
   }
 }
@@ -29,7 +26,7 @@ class MyInstrumentation implements TypeInstrumentation {
 // ❌ Wrong: separate top-level file
 // File: MyAdvice.java
 public class MyAdvice {
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static void onEnter(/* ... */) { /* ... */ }
 }
 ```
@@ -47,36 +44,54 @@ suppressions to a single advice method.
 ## Advice Methods Must Be Static
 
 All `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` methods **must be `static`**. ByteBuddy
-inlines advice code directly into the instrumented method by default — there is no advice object
-instance. Do not add or remove `inline = false` as cleanup; it is a semantic signal used by
-muzzle/indy tooling.
+defaults to inlining advice code directly into the instrumented method — there is no advice object
+instance. For production javaagent advice, explicitly set `inline = false` on both annotations in
+every module except `instrumentation/internal/internal-class-loader` and
+`instrumentation/internal/internal-lambda`.
 
 ```java
 // ✅ Correct
-@Advice.OnMethodEnter(suppress = Throwable.class)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 public static void onEnter(/* ... */) { /* ... */ }
 
 // ❌ Wrong — instance method
-@Advice.OnMethodEnter(suppress = Throwable.class)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 public void onEnter(/* ... */) { /* ... */ }
 ```
 
 Advice classes should also have **no instance fields** — they are never instantiated.
 
-## `Java8BytecodeBridge`
+## Keep production advice non-inlined
 
-When building or reviewing advice, inspect both the annotated advice bodies and every helper they
-call for `Java8BytecodeBridge` usage.
+Use `inline = false` consistently throughout each production module. Mixing inlined and non-inlined advice disables automatic indy isolation.
 
-Use the bridge only for supported OpenTelemetry API calls written directly in
-`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` methods, which classic mode may copy into
-pre-Java-8 bytecode. Everywhere else, use the direct OpenTelemetry API, for example
-`Context.current()` instead of `Java8BytecodeBridge.currentContext()` and
-`Span.fromContext(context)` instead of `Java8BytecodeBridge.spanFromContext(context)`.
+Use OpenTelemetry APIs directly in non-inlined advice and ordinary helpers, for example
+`Context.current()` and `Span.fromContext(context)`.
+
+In genuinely inlined advice in the two internal exceptions, static interface calls cannot be
+copied into pre-Java-8 class files. Call them through a Java-8-compiled helper instead.
 
 Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
-method, even when the helper is nested in an advice class. Source-level `inline = false` does not
-create an exception; the transformer controls inlining.
+method, even when the helper is nested in an advice class.
+
+## Returned-value assignment typing
+
+Both `TypeTransformerImpl` and `IndyTypeTransformerImpl` install
+`ForceDynamicallyTypedAssignReturnedFactory`. It forces dynamic typing for
+`@Advice.AssignReturned` mappings, including nested `@ToArgument` and `@ToField` annotations.
+Omit explicit `typing = Assigner.Typing.DYNAMIC` on these mappings:
+
+```java
+@AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
+```
+
+This does not configure advice parameter bindings such as `@Advice.Argument` or `@Advice.Return`.
+Those may still need explicit dynamic typing. Matchers and replacement values must remain
+compatible with the supported signatures; dynamic typing does not make an invalid cast safe.
+For custom transformation pipelines, verify that the factory is installed before omitting typing.
+
+See [the factory](../../../javaagent-tooling/src/main/java/io/opentelemetry/javaagent/tooling/instrumentation/indy/ForceDynamicallyTypedAssignReturnedFactory.java)
+and [its test](../../../javaagent-tooling/src/test/java/io/opentelemetry/javaagent/tooling/instrumentation/indy/ForceDynamicallyTypedAssignReturnedFactoryTest.java).
 
 ## Use `suppress = Throwable.class` by Default
 
@@ -88,10 +103,10 @@ Both `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` should include
 `suppress = Throwable.class`:
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 public static void onEnter(/* ... */) { /* ... */ }
 
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
 public static void onExit(/* ... */) { /* ... */ }
 ```
 
@@ -120,7 +135,7 @@ Rule of thumb:
 
 ```java
 // ✅ Cleanup advice — needs onThrowable so Scope is always closed
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
 public static void onExit(@Advice.Enter @Nullable Scope scope) {
   if (scope != null) {
     scope.close();
@@ -128,7 +143,7 @@ public static void onExit(@Advice.Enter @Nullable Scope scope) {
 }
 
 // ✅ Return-only advice — omit onThrowable; nothing to clean up on exception
-@Advice.OnMethodExit(suppress = Throwable.class)
+@Advice.OnMethodExit(suppress = Throwable.class, inline = false)
 public static CompletableFuture<?> onExit(@Advice.Return CompletableFuture<?> result) {
   return CompletableFutureWrapper.wrap(result, currentContext());
 }
@@ -144,8 +159,8 @@ Keep `suppress = Throwable.class` in both cases — it is always required.
 - **Test code** (`testing-common/`, test sources): Not production instrumentation — suppress
   is not required.
 
-When reviewing, **do not flag** these patterns. Focus on advice methods with non-trivial
-bodies (library calls, collection iteration, reflection) that are missing `suppress`.
+These exceptions do not need `suppress`. For methods with non-trivial bodies
+(library calls, collection iteration, reflection), retain it.
 
 ### When omitting `suppress` is also acceptable — provably throw-free bodies
 
@@ -156,27 +171,26 @@ adds no value and should be omitted rather than added:
 ```java
 // ✅ Omit suppress — return literal, cannot throw
 @AssignReturned.ToReturned
-@Advice.OnMethodExit
+@Advice.OnMethodExit(inline = false)
 public static boolean methodExit() {
   return true;
 }
 
 // ✅ Keep suppress — calls into library code that may throw
 @AssignReturned.ToReturned
-@Advice.OnMethodExit(suppress = Throwable.class)
+@Advice.OnMethodExit(suppress = Throwable.class, inline = false)
 public static OpenTelemetry methodExit() {
   return application.io.opentelemetry.api.GlobalOpenTelemetry.get();
 }
 ```
 
-**Do not add `suppress = Throwable.class`** when writing or reviewing such trivially-safe advice
-methods. Equally, **do not flag the absence of `suppress`** on these methods as a review issue.
+Do not add `suppress = Throwable.class` to such trivially safe advice methods.
 
 ### Helper-injection-only advice (`none()` selector) — `suppress` is meaningless
 
 Some instrumentations use a "dummy" advice class solely to force helper class injection.
 The `transform()` call uses `none()` as the method matcher, so the advice **never runs**. Check
-for this registration pattern before adding or flagging missing `suppress = Throwable.class`:
+for this registration pattern before adding `suppress = Throwable.class`:
 
 ```java
 @Override
@@ -187,7 +201,7 @@ public void transform(TypeTransformer transformer) {
 
 @SuppressWarnings({"ReturnValueIgnored", "unused"})
 public static class InitAdvice {
-  @Advice.OnMethodEnter   // no suppress needed — this code is never invoked
+  @Advice.OnMethodEnter(inline = false)   // no suppress needed — this code is never invoked
   public static void init() {
     // ensures helper class is recognized and injected into classloader
     SomeHelperClass.class.getName();
@@ -196,15 +210,79 @@ public static class InitAdvice {
 ```
 
 Because `none()` matches no methods, ByteBuddy never inlines this advice into anything.
-`suppress = Throwable.class` on such a method is entirely meaningless — **do not add it**,
-**remove it when found**, and **do not flag its absence** during review, even if the advice body
-contains a helper call.
+`suppress = Throwable.class` on such a method is meaningless. Remove it if
+present, and leave it out even if the advice body contains a helper call.
 
 ## AdviceScope Patterns
 
+### Make scope ownership visible
+
+Scope acquisition and closure must make ownership visually obvious. In ordinary code, call
+`makeCurrent()` at the call site and use try-with-resources:
+
+```java
+try (Scope ignored = context.makeCurrent()) {
+  doWork();
+}
+```
+
+When method advice passes a raw `Scope` through `@Advice.Enter`, call `makeCurrent()` directly in
+`@Advice.OnMethodEnter` and close that same returned scope in the paired
+`@Advice.OnMethodExit`:
+
+```java
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+public static @Nullable Scope onEnter(Request request) {
+  Context context = startContext(request);
+  if (context == null) {
+    return null;
+  }
+  return context.makeCurrent();
+}
+
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+public static void onExit(@Advice.Enter @Nullable Scope scope) {
+  if (scope != null) {
+    scope.close();
+  }
+}
+```
+
+Do not hide `makeCurrent()` in a general helper that returns an open raw `Scope` for its caller to
+close. That pattern obscures ownership and makes leaks easy. A helper may instead return a
+`Context`, target, or other state, leaving the enter advice to call `makeCurrent()`.
+
+Instrumentation in this repository assumes OpenTelemetry `Context.makeCurrent()` does not throw,
+just as it assumes `Scope.close()` does not throw. Do not add a defensive `catch` or
+`try`/`finally` solely for a hypothetical failure from `makeCurrent()`. This is a coding
+assumption, not a guarantee about arbitrary `ContextStorage` implementations.
+
+Call `makeCurrent()` last, immediately before returning from suppressed enter advice. Complete
+fallible setup beforehand so a later failure cannot strand a scope that exit advice never receives.
+If independent fallible work must run after acquisition, close the acquired scope if that work
+fails. A dedicated `AdviceScope` remains valid when it clearly owns both acquisition and closure
+through the established `start()` / `end()` pattern below.
+
 `AdviceScope` usage in this repository falls into **two justified state patterns**.
-Review new code against these patterns instead of treating every existing variation as equally
+Use these patterns for new advice instead of treating every existing variation as equally
 canonical.
+
+### Close `Scope` before fallible completion work
+
+Method-exit advice and `AdviceScope` completion should close an entered `Scope` at the first safe
+point, before other fallible completion or cleanup work. Otherwise, a later failure suppressed by
+the advice can leave the context attached to the thread. Closing early also keeps the scope
+lifetime as short as possible.
+
+Close the scope directly before fallible work rather than deferring it to a `finally` block.
+Closing it in `finally` also avoids a leak, but unnecessarily keeps the context current during the
+preceding work. Defer the close only when that exit work intentionally requires the context to
+remain current.
+
+Instrumentation in this repository assumes OpenTelemetry `Scope.close()` does not throw. If another
+cleanup action follows it, close the scope and then perform that action directly; do not wrap the
+close in `try`/`finally` solely to guard against a hypothetical failure from `Scope.close()`. Use
+`try`/`finally` when earlier fallible work must complete before the scope can be closed.
 
 ### Pattern 1 — Nullable `AdviceScope` for ordinary advice
 
@@ -248,7 +326,7 @@ public static class AdviceScope {
   }
 }
 
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
 public static void onExit(
     @Advice.Thrown @Nullable Throwable throwable,
     @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -298,20 +376,3 @@ the instrumentation automatically rather than letting it fail at runtime.
 - Do not throw exceptions in advice code.
 - Do not throw exceptions in helper classes called from advice.
 - Use `suppress = Throwable.class` as the last safety net (see above).
-
-## What to Flag in Review
-
-- **Advice class is a top-level file** instead of a static nested class inside the `TypeInstrumentation` — move it inside.
-- **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation. Always place the annotation **at the class level**, never moved down to individual methods.
-- **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` method is not `static`** — advice methods must be static.
-- **Advice class has instance fields** — advice classes are never instantiated; state must not be stored on them.
-- **Incorrect `Java8BytecodeBridge` use** — use the bridge for supported calls directly in
-  annotated advice methods, but direct APIs in helpers called by advice. Ignore source-level
-  `inline = false`; the transformer controls inlining.
-- **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: helper-injection-only advice registered with `none()`, `instrumentation/internal/` infrastructure code, test sources, and methods whose bodies provably cannot throw (e.g., `return true;`, returning a literal or a single constant). Do not add or flag `suppress` on these exceptions.
-- **Exception thrown in advice code or a helper called from advice** — javaagent code must never throw; use `suppress = Throwable.class` as the safety net.
-- **`@Advice.OnMethodExit` method named `onEnter`** (or vice versa) — the method name should match the annotation. A mismatch is a copy-paste bug that compiles but confuses readers and may mask intent errors.
-- **Advice referenced in `transform()` using anything other than `getClass().getName() + "$InnerAdvice"`** — see `javaagent-module-patterns.md` for the canonical pattern. Flag `this.getClass().getName() + "$InnerAdvice"` as a redundant qualifier, and flag both `InnerAdvice.class.getName()` and `OuterInstrumentation.class.getName() + "$InnerAdvice"` because any `.class` literal in a `transform()` method triggers unwanted class loading.
-- **`onThrowable = Throwable.class` on return-only exit advice** — if the exit method only processes `@Advice.Return` and has no `@Advice.Enter` state to clean up, `onThrowable` should be omitted. The return value is `null`/zero on the exceptional path, and dereferencing it causes a suppressed exception for no benefit. Keep `suppress = Throwable.class` but remove `onThrowable`.
-- **One-off `AdviceScope` method naming** — for new ordinary advice, prefer `start()` / `end()` for `AdviceScope` methods, and avoid introducing unique names such as `create()`.
-- **Defensive hybrid `AdviceScope` in simple advice** — if `@Advice.Enter` is already nullable, flag simple advice that also stores a nullable inner `Scope`/`Context` and re-checks it inside `AdviceScope.end()`. Prefer returning `null` from the factory and keeping the created `AdviceScope` fully initialized.

@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Log4j27InstrumentationModule extends InstrumentationModule {
   public Log4j27InstrumentationModule() {
-    super("log4j-context-data", "log4j-context-data-2.7");
+    super("log4j-context-data-2.7", "log4j-context-data", "log4j");
   }
 
   @Override

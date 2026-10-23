@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
@@ -67,24 +68,6 @@ public final class NettyServerTelemetryBuilder {
   }
 
   /**
-   * Configures HTTP request headers to capture as span attributes.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param capturedRequestHeaders HTTP header names to capture.
-   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead, which matches glob patterns
-   *     rather than literal header names. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setCapturedRequestHeaders(
-      Collection<String> capturedRequestHeaders) {
-    builder.setCapturedRequestHeaders(capturedRequestHeaders);
-    return this;
-  }
-
-  /**
    * Configures which HTTP response headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code http.response.header.<key>} attribute key. The
@@ -103,20 +86,13 @@ public final class NettyServerTelemetryBuilder {
   }
 
   /**
-   * Configures HTTP response headers to capture as span attributes.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param capturedResponseHeaders HTTP header names to capture.
-   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead, which matches glob
-   *     patterns rather than literal header names. May be removed in the next minor release.
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
    */
-  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setCapturedResponseHeaders(
-      Collection<String> capturedResponseHeaders) {
-    builder.setCapturedResponseHeaders(capturedResponseHeaders);
+  public NettyServerTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<NettyRequest, HttpResponse> attributesExtractor) {
+    builder.addAttributesExtractor(new AttributesExtractorAdapter(attributesExtractor));
     return this;
   }
 

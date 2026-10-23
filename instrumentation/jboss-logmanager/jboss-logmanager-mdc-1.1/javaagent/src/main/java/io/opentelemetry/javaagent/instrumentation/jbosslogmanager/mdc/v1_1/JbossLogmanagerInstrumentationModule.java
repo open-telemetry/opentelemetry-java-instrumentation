@@ -16,7 +16,7 @@ import java.util.List;
 public class JbossLogmanagerInstrumentationModule extends InstrumentationModule {
 
   public JbossLogmanagerInstrumentationModule() {
-    super("jboss-logmanager-mdc", "jboss-logmanager-mdc-1.1");
+    super("jboss-logmanager-mdc-1.1", "jboss-logmanager-mdc", "jboss-logmanager");
   }
 
   @Override

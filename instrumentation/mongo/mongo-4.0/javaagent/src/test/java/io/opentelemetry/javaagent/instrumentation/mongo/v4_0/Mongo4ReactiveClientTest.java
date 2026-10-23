@@ -55,6 +55,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
+  protected boolean supportsNetworkPeer() {
+    // The reactive driver does not use the synchronous SocketStream connection path.
+    return false;
+  }
+
+  @Override
   protected void createCollection(String dbName, String collectionName)
       throws InterruptedException {
     MongoDatabase db = client.getDatabase(dbName);
@@ -124,6 +130,23 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
                 });
     ignoreTracesAndClear(1);
     return collection;
+  }
+
+  @Override
+  protected Document runCommand(String dbName, Document command) throws Exception {
+    MongoDatabase db = client.getDatabase(dbName);
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    db.runCommand(command)
+        .subscribe(
+            toSubscriber(
+                value -> {
+                  if (value instanceof Throwable) {
+                    result.completeExceptionally((Throwable) value);
+                  } else {
+                    result.complete(value);
+                  }
+                }));
+    return (Document) result.get(30, SECONDS);
   }
 
   @Override

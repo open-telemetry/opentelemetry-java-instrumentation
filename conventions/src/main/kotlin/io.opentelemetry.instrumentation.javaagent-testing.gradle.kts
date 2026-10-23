@@ -12,10 +12,6 @@ val failOnContextLeakProperty = providers.gradleProperty("failOnContextLeak")
   .map { it != "false" }
   .orElse(true)
 
-val testIndyProperty = providers.gradleProperty("testIndy")
-  .map { it == "true" }
-  .orElse(false)
-
 val otelProps = the<OtelPropsExtension>()
 
 dependencies {
@@ -88,9 +84,6 @@ class JavaagentTestArgumentsProvider(
   val failOnContextLeak: Boolean,
 
   @get:Input
-  val testIndy: Boolean,
-
-  @get:Input
   val denyUnsafe: Boolean,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> {
@@ -108,7 +101,6 @@ class JavaagentTestArgumentsProvider(
       // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
       // in smoke tests instead.
       "-Dotel.javaagent.add-thread-details=false",
-      "-Dotel.javaagent.experimental.indy=$testIndy",
       // suppress repeated logging of "No metric data to export - skipping export."
       // since PeriodicMetricReader is configured with a short interval
       "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
@@ -143,14 +135,17 @@ afterEvaluate {
     dependsOn(agentForTesting.buildDependencies)
 
     val failOnContextLeakOverride = failOnContextLeakProperty.get()
-    val testIndyEnabled = testIndyProperty.get()
+
+    val suite = testing.suites.findByName(name) as? JvmTestSuite
+    if (suite != null && suite.name.endsWith("unitTests", true)) {
+      return@configureEach
+    }
 
     jvmArgumentProviders.add(
       JavaagentTestArgumentsProvider(
         agentShadowJar,
         shadowJar.archiveFile.get().asFile,
         failOnContextLeakOverride,
-        testIndyEnabled,
         otelProps.denyUnsafe
       )
     )

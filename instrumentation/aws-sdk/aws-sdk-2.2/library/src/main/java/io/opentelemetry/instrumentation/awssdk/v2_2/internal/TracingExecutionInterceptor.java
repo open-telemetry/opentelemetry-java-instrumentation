@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.RDS_DATA;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -20,12 +21,14 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
@@ -68,6 +71,10 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".SdkHttpRequest");
   static final ExecutionAttribute<SdkRequest> SDK_REQUEST_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".SdkRequest");
+  private static final ExecutionAttribute<List<io.opentelemetry.context.Context>>
+      BATCH_MESSAGE_CONTEXTS_ATTRIBUTE =
+          new ExecutionAttribute<>(
+              TracingExecutionInterceptor.class.getName() + ".BatchMessageContexts");
   private static final ExecutionAttribute<RequestSpanFinisher> REQUEST_FINISHER_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestFinisher");
   private static final ExecutionAttribute<Timer> REQUEST_TIMER_ATTRIBUTE =
@@ -79,9 +86,11 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
+  private final Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> settleInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
 
@@ -106,10 +115,24 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return useXrayPropagator;
   }
 
+  static void setBatchMessageContexts(
+      ExecutionAttributes executionAttributes,
+      List<io.opentelemetry.context.Context> creationContexts) {
+    executionAttributes.putAttribute(BATCH_MESSAGE_CONTEXTS_ATTRIBUTE, creationContexts);
+  }
+
+  static List<io.opentelemetry.context.Context> getBatchMessageContexts(
+      ExecutionAttributes executionAttributes) {
+    List<io.opentelemetry.context.Context> creationContexts =
+        executionAttributes.getAttribute(BATCH_MESSAGE_CONTEXTS_ATTRIBUTE);
+    return creationContexts != null ? creationContexts : emptyList();
+  }
+
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
   private final boolean genAiCaptureMessageContent;
+  private final boolean messageCreateSpansEnabled;
   private final FieldMapper fieldMapper;
 
   @SuppressWarnings("TooManyParameters") // internal method
@@ -117,28 +140,34 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Instrumenter<ExecutionAttributes, Response> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
       Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
       Instrumenter<ExecutionAttributes, Response> settleInstrumenter,
       Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter,
       Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter,
       Logger eventLogger,
       boolean captureExperimentalSpanAttributes,
       TextMapPropagator messagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
-      boolean genAiCaptureMessageContent) {
+      boolean genAiCaptureMessageContent,
+      boolean messageCreateSpansEnabled) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
+    this.producerCreateInstrumenter = producerCreateInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
     this.settleInstrumenter = settleInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
+    this.rdsDataInstrumenter = rdsDataInstrumenter;
     this.bedrockRuntimeInstrumenter = bedrockRuntimeInstrumenter;
     this.eventLogger = eventLogger;
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
     this.recordIndividualHttpError = recordIndividualHttpError;
     this.genAiCaptureMessageContent = genAiCaptureMessageContent;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
     this.fieldMapper = new FieldMapper(captureExperimentalSpanAttributes);
   }
 
@@ -165,11 +194,24 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       return request;
     }
 
+    SdkRequest preparedRequest =
+        SqsAccess.prepareBatchRequest(
+            request,
+            executionAttributes,
+            parentOtelContext,
+            producerCreateInstrumenter,
+            useXrayPropagator,
+            messagingPropagator,
+            messageCreateSpansEnabled);
+    if (preparedRequest != null) {
+      request = preparedRequest;
+    }
+
     executionAttributes.putAttribute(SDK_REQUEST_ATTRIBUTE, request);
     AwsSdkRequest awsSdkRequest = AwsSdkRequest.ofSdkRequest(request);
     executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
     Instrumenter<ExecutionAttributes, Response> instrumenter =
-        getInstrumenter(request, awsSdkRequest);
+        getInstrumenter(parentOtelContext, request, awsSdkRequest);
 
     if (!instrumenter.shouldStart(parentOtelContext, executionAttributes)) {
       // NB: We also skip injection in case we don't start.
@@ -478,20 +520,34 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   private Instrumenter<ExecutionAttributes, Response> getInstrumenter(
-      SdkRequest request, AwsSdkRequest awsSdkRequest) {
+      io.opentelemetry.context.Context otelContext,
+      SdkRequest request,
+      AwsSdkRequest awsSdkRequest) {
     if (SqsAccess.isSqsProducerRequest(request)) {
       return producerInstrumenter;
     }
-    if (emitStableMessagingSemconv() && SqsAccess.isSqsDeleteRequest(request)) {
+    if (SqsAccess.isSqsDeleteRequest(request)) {
       return settleInstrumenter;
     }
-    if (BedrockRuntimeAccess.isBedrockRuntimeRequest(request)) {
+    // if there already is an active gen-ai span create a regular aws request span instead of
+    // bedrock gen-ai span
+    if (shouldUseBedrockRuntimeInstrumenter(otelContext, request)) {
       return bedrockRuntimeInstrumenter;
     }
     if (awsSdkRequest != null && awsSdkRequest.type() == DYNAMODB) {
       return dynamoDbInstrumenter;
     }
+    if (awsSdkRequest != null && awsSdkRequest.type() == RDS_DATA) {
+      return rdsDataInstrumenter;
+    }
     return requestInstrumenter;
+  }
+
+  // visible for testing
+  static boolean shouldUseBedrockRuntimeInstrumenter(
+      io.opentelemetry.context.Context otelContext, SdkRequest request) {
+    return BedrockRuntimeAccess.isBedrockRuntimeRequest(request)
+        && SpanKey.GEN_AI_CLIENT.fromContextOrNull(otelContext) == null;
   }
 
   private interface RequestSpanFinisher {

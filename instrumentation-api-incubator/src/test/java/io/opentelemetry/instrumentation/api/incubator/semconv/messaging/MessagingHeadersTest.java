@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -95,8 +95,7 @@ class MessagingHeadersTest {
 
   @Test
   void exactNamesAreCapturedWithoutHeaderNameEnumeration() {
-    // simulates a third party getter that implements only getMessageHeader
-    MapGetter getter = new MapGetter(false);
+    MapGetter getter = new MapGetter(true);
 
     AttributesBuilder attributes = Attributes.builder();
     extractor(getter, selector(singletonList("Test-Message-Header"), emptyList()))
@@ -106,15 +105,26 @@ class MessagingHeadersTest {
   }
 
   @Test
-  void wildcardCapturesNothingWithoutHeaderNameEnumeration() {
-    // a third party getter that implements only getMessageHeader cannot resolve wildcards
-    MapGetter getter = new MapGetter(false);
-
+  void wildcardCapturesNothingWithoutHeaders() {
     AttributesBuilder attributes = Attributes.builder();
-    extractor(getter, selector(singletonList("Test-Message-*"), emptyList()))
-        .onEnd(attributes, Context.root(), MESSAGE, null, null);
+    extractor(new MapGetter(false), selector(singletonList("Test-Message-*"), emptyList()))
+        .onEnd(attributes, Context.root(), emptyMap(), null, null);
 
     assertThat(attributes.build().asMap()).isEmpty();
+  }
+
+  @Test
+  void excludeOnlyCapturesNothingWithoutHeaders() {
+    AttributesBuilder attributes = Attributes.builder();
+    extractor(new MapGetter(false), selector(emptyList(), singletonList("Authorization")))
+        .onEnd(attributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(attributes.build().asMap()).isEmpty();
+  }
+
+  @Test
+  void exactNamesAreNotNormalized() {
+    assertThat(capture(selector(singletonList("test-message-header"), emptyList()))).isEmpty();
   }
 
   @SuppressWarnings("deprecation") // testing deprecated API
@@ -167,7 +177,7 @@ class MessagingHeadersTest {
 
   private static Map<AttributeKey<?>, Object> capture(IncludeExclude headers) {
     AttributesBuilder attributes = Attributes.builder();
-    extractor(new MapGetter(true), headers).onEnd(attributes, Context.root(), MESSAGE, null, null);
+    extractor(new MapGetter(false), headers).onEnd(attributes, Context.root(), MESSAGE, null, null);
     return attributes.build().asMap();
   }
 
@@ -183,7 +193,7 @@ class MessagingHeadersTest {
 
   private static MessagingAttributesExtractorBuilder<Map<String, String>, Void> builder() {
     return MessagingAttributesExtractor.builder(
-        new MapGetter(true), MessagingOperationType.PROCESS, "process");
+        new MapGetter(false), MessagingOperationType.PROCESS, "process");
   }
 
   private static IncludeExclude selector(List<String> included, List<String> excluded) {
@@ -191,18 +201,16 @@ class MessagingHeadersTest {
   }
 
   private static Map.Entry<AttributeKey<?>, Object> headerEntry(String name, String value) {
-    String attributeName = v3Preview() ? name : name.replace('-', '_');
-    return new SimpleEntry<>(
-        stringArrayKey("messaging.header." + attributeName), singletonList(value));
+    return new SimpleEntry<>(stringArrayKey("messaging.header." + name), singletonList(value));
   }
 
   private static final class MapGetter
       implements MessagingAttributesGetter<Map<String, String>, Void> {
 
-    private final boolean enumerateNames;
+    private final boolean failOnEnumeration;
 
-    MapGetter(boolean enumerateNames) {
-      this.enumerateNames = enumerateNames;
+    MapGetter(boolean failOnEnumeration) {
+      this.failOnEnumeration = failOnEnumeration;
     }
 
     @Override
@@ -236,16 +244,6 @@ class MessagingHeadersTest {
     }
 
     @Override
-    public Long getMessageBodySize(Map<String, String> request) {
-      return null;
-    }
-
-    @Override
-    public Long getMessageEnvelopeSize(Map<String, String> request) {
-      return null;
-    }
-
-    @Override
     public String getMessageId(Map<String, String> request, Void response) {
       return null;
     }
@@ -268,7 +266,10 @@ class MessagingHeadersTest {
 
     @Override
     public Collection<String> getMessageHeaderNames(Map<String, String> request) {
-      return enumerateNames ? new ArrayList<>(request.keySet()) : emptyList();
+      if (failOnEnumeration) {
+        throw new AssertionError("Exact header names must not require enumeration");
+      }
+      return new ArrayList<>(request.keySet());
     }
   }
 }

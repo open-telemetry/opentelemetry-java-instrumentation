@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class TomcatJdbcInstrumentationModule extends InstrumentationModule {
   public TomcatJdbcInstrumentationModule() {
-    super("tomcat-jdbc", "tomcat-jdbc-8.5");
+    super("tomcat-jdbc-8.5", "tomcat-jdbc");
   }
 
   @Override

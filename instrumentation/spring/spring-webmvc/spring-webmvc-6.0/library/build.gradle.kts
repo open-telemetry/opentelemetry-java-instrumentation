@@ -8,6 +8,7 @@ dependencies {
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
   testLibrary("org.springframework.boot:spring-boot-starter-web:3.0.0")
+  testLibrary("org.springframework.boot:spring-boot-starter-actuator:3.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.0.0")
 }
 

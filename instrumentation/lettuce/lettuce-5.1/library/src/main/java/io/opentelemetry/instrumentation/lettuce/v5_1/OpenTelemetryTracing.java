@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
+import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
 import io.lettuce.core.protocol.ProtocolKeyword;
@@ -34,11 +34,8 @@ final class OpenTelemetryTracing implements Tracing {
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(
-      Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-      RedisCommandSanitizer sanitizer,
-      boolean encodingEventsEnabled) {
-    this.tracerProvider =
-        new OpenTelemetryTracerProvider(instrumenter, sanitizer, encodingEventsEnabled);
+      Instrumenter<LettuceRequest, LettuceResponse> instrumenter, RedisCommandSanitizer sanitizer) {
+    this.tracerProvider = new OpenTelemetryTracerProvider(instrumenter, sanitizer);
   }
 
   @Override
@@ -77,9 +74,8 @@ final class OpenTelemetryTracing implements Tracing {
 
     OpenTelemetryTracerProvider(
         Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-        RedisCommandSanitizer sanitizer,
-        boolean encodingEventsEnabled) {
-      openTelemetryTracer = new OpenTelemetryTracer(instrumenter, sanitizer, encodingEventsEnabled);
+        RedisCommandSanitizer sanitizer) {
+      openTelemetryTracer = new OpenTelemetryTracer(instrumenter, sanitizer);
     }
 
     @Override
@@ -120,15 +116,12 @@ final class OpenTelemetryTracing implements Tracing {
 
     private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
     private final RedisCommandSanitizer sanitizer;
-    private final boolean encodingEventsEnabled;
 
     OpenTelemetryTracer(
         Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-        RedisCommandSanitizer sanitizer,
-        boolean encodingEventsEnabled) {
+        RedisCommandSanitizer sanitizer) {
       this.instrumenter = instrumenter;
       this.sanitizer = sanitizer;
-      this.encodingEventsEnabled = encodingEventsEnabled;
     }
 
     @Override
@@ -147,48 +140,42 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     private OpenTelemetrySpan nextSpan(Context parentContext) {
-      return new OpenTelemetrySpan(parentContext, instrumenter, sanitizer, encodingEventsEnabled);
+      return new OpenTelemetrySpan(parentContext, instrumenter, sanitizer);
     }
   }
 
-  // The order that callbacks will be called in or which thread they are called from is not well
-  // defined. We go ahead and buffer all data until we know we have a span. This implementation is
-  // particularly safe, synchronizing all accesses. Relying on implementation details would allow
-  // reducing synchronization but the impact should be minimal.
+  // Callback registration publishes initialized span state to the completing thread.
+  // Each completion callback runs once, and encoding annotations do not access span state.
   private static class OpenTelemetrySpan extends Tracer.Span {
 
     private final Context parentContext;
     private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
-    private final boolean encodingEventsEnabled;
     private final LettuceRequest request;
 
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
-    @Nullable private String errorMessage;
-    @Nullable private LettuceResponse response;
+    @Nullable private String taggedErrorMessage;
     @Nullable private Context context;
 
     OpenTelemetrySpan(
         Context parentContext,
         Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
-        RedisCommandSanitizer sanitizer,
-        boolean encodingEventsEnabled) {
+        RedisCommandSanitizer sanitizer) {
       this.parentContext = parentContext;
       this.instrumenter = instrumenter;
-      this.encodingEventsEnabled = encodingEventsEnabled;
       this.request = new LettuceRequest(sanitizer);
     }
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span name(String name) {
+    public Tracer.Span name(String name) {
       request.setCommand(name);
       return this;
     }
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
+    public Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
         OpenTelemetryEndpoint openTelemetryEndpoint = (OpenTelemetryEndpoint) endpoint;
         request.setAddress(openTelemetryEndpoint.address);
@@ -200,7 +187,7 @@ final class OpenTelemetryTracing implements Tracing {
     // @Override
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
-    public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
+    public Tracer.Span start(RedisCommand<?, ?, ?> command) {
       // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
       // so take name from the command. Later versions already set the name correctly,
       // so only fill it in when it is still null.
@@ -223,11 +210,19 @@ final class OpenTelemetryTracing implements Tracing {
 
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
+        AsyncCommand<?, ?, ?> asyncCommand = CommandWrapper.unwrap(command, AsyncCommand.class);
         completeableCommand.onComplete(
             (o, throwable) -> {
-              CommandOutput<?, ?, ?> output = command.getOutput();
-              String errorMsg = output != null ? output.getError() : null;
-              finishWithResponse(new LettuceResponse(errorMsg, throwable));
+              Throwable error = throwable != null ? throwable : this.error;
+              // CommandWrapper can report null even when its async delegate failed.
+              if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
+                asyncCommand.whenComplete(
+                    (result, terminalError) ->
+                        finishFromOutput(
+                            command.getOutput(), terminalError != null ? terminalError : error));
+              } else {
+                finishFromOutput(command.getOutput(), error);
+              }
             });
       }
 
@@ -237,7 +232,7 @@ final class OpenTelemetryTracing implements Tracing {
     // Not called by Lettuce in 6.0+ (though we call it ourselves above).
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span start() {
+    public Tracer.Span start() {
       if (instrumenter.shouldStart(parentContext, request)) {
         context = instrumenter.start(parentContext, request);
 
@@ -256,8 +251,8 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span annotate(String value) {
-      if (!encodingEventsEnabled && value.startsWith("redis.encode.")) {
+    public Tracer.Span annotate(String value) {
+      if (value.startsWith("redis.encode.")) {
         // skip noisy encode events produced by io.lettuce.core.protocol.TracedCommand
         return this;
       }
@@ -276,12 +271,13 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span tag(String key, String value) {
-      if (value == null || value.isEmpty()) {
+    public Tracer.Span tag(String key, String value) {
+      if (key.equals("error")) {
+        taggedErrorMessage = value;
         return this;
       }
-      if (key.equals("error")) {
-        errorMessage = value;
+      if (value == null || value.isEmpty()) {
+        return this;
       }
       if (key.equals("redis.args")) {
         request.setArgsString(value);
@@ -295,41 +291,40 @@ final class OpenTelemetryTracing implements Tracing {
         }
         return this;
       }
-      // Under old semconv forward unknown tags as raw span attributes for backward compatibility;
-      // under stable semconv these are either captured structurally (e.g. error.type) or not needed
-      if (emitOldDatabaseSemconv() && context != null) {
-        Span.fromContext(context).setAttribute(key, value);
-      }
       return this;
     }
 
     @Override
     @CanIgnoreReturnValue
-    public synchronized Tracer.Span error(Throwable throwable) {
+    public Tracer.Span error(Throwable throwable) {
       this.error = throwable;
       return this;
     }
 
-    private synchronized void finishWithResponse(LettuceResponse resp) {
-      this.response = resp;
-      if (this.error == null && resp.getThrowable() != null) {
-        this.error = resp.getThrowable();
+    @Override
+    public void finish() {
+      if (error != null) {
+        end(null, error);
+      } else {
+        // Lettuce 5.x tags both server and client errors here, suppressing their throwable.
+        end(taggedErrorMessage != null ? LettuceResponse.unknownFailure() : null, null);
       }
-      finish();
     }
 
-    @Override
-    public synchronized void finish() {
-      if (context != null) {
-        LettuceResponse response = this.response;
-        if (response == null && errorMessage != null) {
-          response = new LettuceResponse(errorMessage, null);
-        }
+    private void finishFromOutput(
+        @Nullable CommandOutput<?, ?, ?> output, @Nullable Throwable error) {
+      if (error != null) {
+        end(null, error);
+      } else {
+        end(LettuceResponse.fromCommandOutput(output), null);
+      }
+    }
 
+    private void end(@Nullable LettuceResponse response, @Nullable Throwable error) {
+      Context context = this.context;
+      if (context != null) {
+        this.context = null;
         instrumenter.end(context, request, response, error);
-        // Null out context to prevent double-ending if both the onComplete callback and Lettuce's
-        // direct finish() call execute.
-        context = null;
       }
     }
   }

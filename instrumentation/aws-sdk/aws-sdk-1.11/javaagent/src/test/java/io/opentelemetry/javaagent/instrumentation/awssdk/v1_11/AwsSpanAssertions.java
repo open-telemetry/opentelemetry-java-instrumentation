@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -37,8 +38,8 @@ class AwsSpanAssertions {
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(stringKey("aws.queue.name"), queueName),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+            equalTo(stringKey("aws.queue.name"), experimental(queueName)),
             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
             equalTo(RPC_METHOD, rpcMethod),
@@ -68,7 +69,7 @@ class AwsSpanAssertions {
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(AWS_S3_BUCKET, bucketName),
             equalTo(RPC_METHOD, rpcMethod),
             equalTo(RPC_SYSTEM, "aws-api"),
@@ -92,7 +93,7 @@ class AwsSpanAssertions {
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(MESSAGING_DESTINATION_NAME, topicArn),
             satisfies(AWS_SNS_TOPIC_ARN, val -> val.isInstanceOf(String.class)),
             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),

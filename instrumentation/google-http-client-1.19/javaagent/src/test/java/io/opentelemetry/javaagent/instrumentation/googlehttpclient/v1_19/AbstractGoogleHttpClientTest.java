@@ -113,7 +113,7 @@ abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpR
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
                 equalTo(ERROR_TYPE, "500"),
-                equalTo(maybeStablePeerService(), "test-peer-service")));
+                equalTo(maybeStablePeerService(), testing.expectedPeerService())));
 
     testing.waitAndAssertTraces(
         trace ->

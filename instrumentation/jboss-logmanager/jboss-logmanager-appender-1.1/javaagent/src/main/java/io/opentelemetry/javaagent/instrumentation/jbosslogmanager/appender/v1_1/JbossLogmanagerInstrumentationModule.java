@@ -16,7 +16,7 @@ import java.util.List;
 public class JbossLogmanagerInstrumentationModule extends InstrumentationModule {
 
   public JbossLogmanagerInstrumentationModule() {
-    super("jboss-logmanager-appender", "jboss-logmanager-appender-1.1");
+    super("jboss-logmanager-appender-1.1", "jboss-logmanager-appender", "jboss-logmanager");
   }
 
   @Override

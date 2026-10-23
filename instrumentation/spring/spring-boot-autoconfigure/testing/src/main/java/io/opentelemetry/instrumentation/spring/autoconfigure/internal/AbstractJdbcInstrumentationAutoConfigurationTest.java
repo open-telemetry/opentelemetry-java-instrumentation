@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -55,7 +54,7 @@ public abstract class AbstractJdbcInstrumentationAutoConfigurationTest {
               .waitAndAssertTraces(
                   trace ->
                       trace.hasSpansSatisfyingExactly(
-                          span -> span.hasAttribute(maybeStable(DB_STATEMENT), "SELECT ?")));
+                          span -> span.hasAttribute(DB_QUERY_TEXT, "SELECT ?")));
         });
   }
 }

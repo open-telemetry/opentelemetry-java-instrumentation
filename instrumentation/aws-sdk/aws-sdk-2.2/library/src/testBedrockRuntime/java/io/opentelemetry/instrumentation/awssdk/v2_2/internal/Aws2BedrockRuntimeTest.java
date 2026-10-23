@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVEN
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOKEN_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
@@ -19,7 +20,6 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,9 +74,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlockDelta;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlockStart;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
-// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
-// is resolved.
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
 
   @RegisterExtension
@@ -229,7 +227,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -365,7 +363,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -575,7 +573,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -672,6 +670,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
@@ -730,7 +729,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1014,7 +1013,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1179,7 +1178,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1398,6 +1397,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 165),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
@@ -1455,7 +1455,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1605,6 +1605,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 558),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 58),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
@@ -1663,7 +1664,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1871,7 +1872,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2014,7 +2015,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2236,6 +2237,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 144),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
@@ -2293,7 +2295,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2418,6 +2420,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 601),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 145),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
@@ -2476,7 +2479,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),

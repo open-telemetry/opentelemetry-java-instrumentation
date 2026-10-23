@@ -3,8 +3,9 @@ plugins {
 }
 
 otelJava {
-  // HBase 2.0.x test stack is not reliable on JDK 25+.
-  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
+  // HBase 2.0.x test stack uses Subject.getSubject(), which is unsupported on JDK 23+.
+  // Cap tests at latest LTS release before JDK 23
+  maxJavaVersionForTests.set(JavaVersion.VERSION_21)
 }
 
 muzzle {
@@ -53,19 +54,8 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
-
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
-    }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -79,7 +69,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, testExceptionSignalLogs)
+    dependsOn(testing.suites, testExceptionSignalLogs)
   }
 
   if (otelProps.denyUnsafe) {

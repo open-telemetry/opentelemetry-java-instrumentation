@@ -10,11 +10,12 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSin
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.lambdaworks.redis.protocol.AsyncCommand;
+import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -31,7 +32,9 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SaveContextAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand"))),
+        getClass().getName() + "$SaveContextAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "completeExceptionally", "cancel"),
         getClass().getName() + "$RestoreContextAdvice");
@@ -41,11 +44,14 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
   public static class SaveContextAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void saveContext(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
-      Context context = Java8BytecodeBridge.currentContext();
+    public static void saveContext(
+        @Advice.This AsyncCommand<?, ?, ?> asyncCommand,
+        @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
+      Context context = Context.current();
       // get the context that submitted this command and attach it, it will be used to run callbacks
       context = context.get(COMMAND_CONTEXT_KEY);
       CONTEXT.set(asyncCommand, context);
+      LettuceSingletons.linkCommandPeer(asyncCommand, command);
     }
   }
 
@@ -63,9 +69,13 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+    public static void onExit(
+        @Advice.This AsyncCommand<?, ?, ?> asyncCommand, @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
+      }
+      if (asyncCommand.isDone()) {
+        LettuceSingletons.clearCommandPeer(asyncCommand);
       }
     }
   }

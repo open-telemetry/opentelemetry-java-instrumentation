@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.boot.resources;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.resources.Resource;
@@ -15,6 +16,7 @@ import io.opentelemetry.sdk.resources.Resource;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
+@AutoService(ComponentProvider.class)
 public class SpringResourceComponentProvider implements ComponentProvider {
 
   @Override

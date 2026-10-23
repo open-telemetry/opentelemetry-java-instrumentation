@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.inter
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.openai.models.chat.completions.ChatCompletion;
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
@@ -17,6 +16,7 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.internal.GenAiSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -51,15 +51,16 @@ public final class OpenAITelemetryBuilder {
    */
   public OpenAITelemetry build() {
     ChatAttributesGetter chatAttributesGetter = new ChatAttributesGetter();
-    InstrumenterBuilder<ChatCompletionCreateParams, ChatCompletion> chatBuilder =
-        Instrumenter.<ChatCompletionCreateParams, ChatCompletion>builder(
+    InstrumenterBuilder<ChatCompletionRequest, ChatCompletion> chatBuilder =
+        Instrumenter.<ChatCompletionRequest, ChatCompletion>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(chatAttributesGetter))
+            .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(GenAiAttributesExtractor.create(chatAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(chatBuilder);
-    Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter =
+    Instrumenter<ChatCompletionRequest, ChatCompletion> chatInstrumenter =
         chatBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     EmbeddingAttributesGetter embeddingAttributesGetter = new EmbeddingAttributesGetter();
@@ -68,13 +69,19 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(embeddingAttributesGetter))
+            .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(GenAiAttributesExtractor.create(embeddingAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(embeddingsBuilder);
     Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter =
         embeddingsBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
-    Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
+    Logger eventLogger =
+        openTelemetry
+            .getLogsBridge()
+            .loggerBuilder(INSTRUMENTATION_NAME)
+            .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
+            .build();
     return new OpenAITelemetry(
         chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent);
   }

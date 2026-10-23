@@ -32,7 +32,7 @@ object PekkoHttpTestSyncWebServer {
         () => {
           val resp = HttpResponse(status = endpoint.getStatus)
           endpoint match {
-            case SUCCESS => resp.withEntity(endpoint.getBody)
+            case SUCCESS       => resp.withEntity(endpoint.getBody)
             case INDEXED_CHILD =>
               INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
                 override def getParameter(name: String): String =
@@ -40,12 +40,12 @@ object PekkoHttpTestSyncWebServer {
               })
               resp.withEntity(endpoint.getBody)
             case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
-            case REDIRECT =>
+            case REDIRECT    =>
               resp.withHeaders(headers.Location(endpoint.getBody))
             case ERROR     => resp.withEntity(endpoint.getBody)
             case TIMEOUT   => resp.withEntity(endpoint.getBody)
             case EXCEPTION => throw new IllegalStateException(endpoint.getBody)
-            case _ =>
+            case _         =>
               HttpResponse(status = NOT_FOUND.getStatus)
                 .withEntity(NOT_FOUND.getBody)
           }

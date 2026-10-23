@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -29,7 +28,7 @@ import org.apache.coyote.Response;
 public class Tomcat10InstrumentationModule extends InstrumentationModule {
 
   public Tomcat10InstrumentationModule() {
-    super("tomcat", "tomcat-10.0");
+    super("tomcat-10.0", "tomcat");
   }
 
   @Override
@@ -59,7 +58,7 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule {
         @Advice.Argument(2) Response response, @Advice.Return boolean success) {
 
       if (success) {
-        helper().attachResponseToRequest(Java8BytecodeBridge.currentContext(), response);
+        helper().attachResponseToRequest(Context.current(), response);
       }
     }
   }

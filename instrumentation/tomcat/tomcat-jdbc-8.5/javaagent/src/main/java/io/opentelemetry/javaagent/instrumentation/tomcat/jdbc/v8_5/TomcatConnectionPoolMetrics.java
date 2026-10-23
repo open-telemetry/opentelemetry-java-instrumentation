@@ -9,14 +9,10 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
-import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,17 +22,8 @@ import org.apache.tomcat.jdbc.pool.PoolConfiguration;
 public class TomcatConnectionPoolMetrics {
 
   private static final OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-  // version file is generated from the gradle module name; look it up explicitly so the legacy
-  // scope name still resolves to a version
-  private static final String VERSION_LOOKUP_NAME = "io.opentelemetry.tomcat-jdbc-8.5";
-  private static final String INSTRUMENTATION_NAME =
-      AgentCommonConfig.get().isV3Preview()
-          ? VERSION_LOOKUP_NAME
-          // keep the pre-rename scope name so existing dashboards/filters on
-          // otel.scope.name="io.opentelemetry.tomcat-jdbc" continue to work
-          : "io.opentelemetry.tomcat-jdbc";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-jdbc-8.5";
   private static final String DEFAULT_POOL_NAME = "tomcat-jdbc";
-  private static final Meter meter = buildMeter();
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // DataSourceProxy does not implement equals()/hashCode(), so it's safe to keep them in a plain
@@ -48,10 +35,20 @@ public class TomcatConnectionPoolMetrics {
     dataSourceMetrics.computeIfAbsent(dataSource, TomcatConnectionPoolMetrics::createInstruments);
   }
 
-  @SuppressWarnings("deprecation") // deprecated overload keeps the legacy scope by default
   private static BatchCallback createInstruments(DataSourceProxy dataSource) {
+    DbInfo dbInfo = getDbInfo(dataSource);
+    PoolConfiguration poolProperties = dataSource.getPoolProperties();
+    String configuredPoolName = dataSource.getPoolName();
+    String poolName =
+        configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)
+            ? configuredPoolName
+            : null;
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(meter, getPoolName(dataSource));
+        DbConnectionPoolMetrics.create(
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            JdbcConnectionPoolMetricsUtil.poolName(dbInfo, poolName, DEFAULT_POOL_NAME),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
@@ -79,16 +76,9 @@ public class TomcatConnectionPoolMetrics {
         pendingRequestsForConnection);
   }
 
-  private static String getPoolName(DataSourceProxy dataSource) {
+  private static DbInfo getDbInfo(DataSourceProxy dataSource) {
     PoolConfiguration poolProperties = dataSource.getPoolProperties();
-    String configuredPoolName = dataSource.getPoolName();
-    if (configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)) {
-      return configuredPoolName;
-    }
-
-    DbInfo dbInfo =
-        JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
-    return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_POOL_NAME);
+    return JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {
@@ -96,15 +86,6 @@ public class TomcatConnectionPoolMetrics {
     if (callback != null) {
       callback.close();
     }
-  }
-
-  private static Meter buildMeter() {
-    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
-    String version = EmbeddedInstrumentationProperties.findVersion(VERSION_LOOKUP_NAME);
-    if (version != null) {
-      meterBuilder.setInstrumentationVersion(version);
-    }
-    return meterBuilder.build();
   }
 
   private TomcatConnectionPoolMetrics() {}

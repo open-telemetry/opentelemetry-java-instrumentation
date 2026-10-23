@@ -9,15 +9,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.InvocationTargetException;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.wicket.WicketRuntimeException;
 
 class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
 
@@ -38,15 +36,10 @@ class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Exception exception) {
-      Span serverSpan = LocalRootSpan.fromContextOrNull(Java8BytecodeBridge.currentContext());
+      Span serverSpan = LocalRootSpan.fromContextOrNull(Context.current());
       if (serverSpan != null) {
         // unwrap exception
-        Throwable throwable = exception;
-        while (throwable.getCause() != null
-            && (throwable instanceof WicketRuntimeException
-                || throwable instanceof InvocationTargetException)) {
-          throwable = throwable.getCause();
-        }
+        Throwable throwable = WicketErrorUnwrapper.unwrap(exception);
         // as we don't create a span for wicket we record exception on server span
         serverSpan.recordException(throwable);
       }

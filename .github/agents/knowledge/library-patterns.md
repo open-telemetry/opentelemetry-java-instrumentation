@@ -1,9 +1,8 @@
 # [Library] TelemetryBuilder and Getter Patterns
 
-## Quick Reference
-
-- Use when: reviewing library instrumentation telemetry/builder/getter/setter patterns
-- Review focus: factory entry points, fluent builder contract
+Use this article when creating or changing a published library
+instrumentation entry point. It shows when a `*Telemetry` factory needs a
+builder and how its methods and getters fit together.
 
 ## How `{Library}Telemetry` Instances Are Created
 

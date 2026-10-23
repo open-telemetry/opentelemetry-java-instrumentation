@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttp3Singletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -32,7 +30,14 @@ class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("enqueue", "enqueue$okhttp")
-            .and(takesArgument(0, implementsInterface(named(Runnable.class.getName())))),
+            .and(
+                takesArgument(
+                    0,
+                    // enqueue declares RealCall.AsyncCall, which lives in okhttp3 or
+                    // okhttp3.internal.connection depending on the OkHttp version.
+                    namedOneOf(
+                        "okhttp3.RealCall$AsyncCall",
+                        "okhttp3.internal.connection.RealCall$AsyncCall"))),
         getClass().getName() + "$AttachStateAdvice");
   }
 
@@ -42,7 +47,7 @@ class OkHttp3DispatcherInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static PropagatedContext onEnter(@Advice.Argument(0) Runnable call) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, call)) {
         return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, call);
       }

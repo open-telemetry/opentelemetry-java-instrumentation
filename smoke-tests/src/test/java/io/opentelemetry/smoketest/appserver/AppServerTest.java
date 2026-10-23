@@ -51,6 +51,10 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
     var jdk = appServer.jdk();
     isWindows = TestContainerManager.useWindowsContainers();
 
+    // In reduced app-server mode (PR builds), only run a representative subset of the full matrix.
+    // The full matrix runs on merge to main.
+    assumeTrue(appServer.inReducedMatrix() || !Boolean.getBoolean("reducedAppServerTests"));
+
     // ibm-semeru-runtimes doesn't publish windows images
     // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
     assumeFalse(isWindows && jdk.endsWith("-openj9"));

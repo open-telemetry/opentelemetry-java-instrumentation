@@ -17,7 +17,8 @@ import java.util.List;
 public class JwsInstrumentationModule extends InstrumentationModule {
 
   public JwsInstrumentationModule() {
-    super("jaxws-jws-api", "jaxws-jws-api-1.1", "jaxws");
+    // Default-off annotations must not share the jaxws selector with default-on providers.
+    super("jaxws-jws-api-1.1", "jaxws-jws-api");
   }
 
   @Override

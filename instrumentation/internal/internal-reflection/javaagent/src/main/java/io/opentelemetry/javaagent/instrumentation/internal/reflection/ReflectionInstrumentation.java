@@ -33,7 +33,6 @@ class ReflectionInstrumentation implements TypeInstrumentation {
         named("filterFields")
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
-            .and(takesArgument(1, Field[].class))
             .and(isPublic())
             .and(isStatic()),
         getClass().getName() + "$FilterFieldsAdvice");
@@ -42,7 +41,6 @@ class ReflectionInstrumentation implements TypeInstrumentation {
         named("filterMethods")
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
-            .and(takesArgument(1, Method[].class))
             .and(isPublic())
             .and(isStatic()),
         getClass().getName() + "$FilterMethodsAdvice");

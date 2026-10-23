@@ -27,7 +27,7 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 @AutoService(InstrumentationModule.class)
 public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
-    super("play-ws", "play-ws-1.0");
+    super("play-ws-1.0", "play-ws", "play");
   }
 
   @Override
@@ -85,10 +85,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     @Advice.AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
-        @Advice.Argument(0) Request request,
-        @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
-      // intermediate variable required for inlined advice
-      AsyncHandler<?> asyncHandler = originalAsyncHandler;
+        @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> asyncHandler) {
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope != null) {
         asyncHandler = adviceScope.wrap(asyncHandler);

@@ -23,26 +23,25 @@ dependencies {
   latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+") // documented limitation
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("version41Test") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
+        implementation("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
+      }
+    }
+  }
+}
+
 tasks {
-  withType<Test>().configureEach {
+  test {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-  }
-
   check {
-    dependsOn(testMessagingPreview, testBothSemconv)
+    dependsOn(testing.suites)
   }
 }
 

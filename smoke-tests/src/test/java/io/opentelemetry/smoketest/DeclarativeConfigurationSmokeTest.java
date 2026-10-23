@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ContainerAttributes.CONTAINER_ID;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_NAME;
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH;
 
@@ -28,7 +29,7 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 25})
+  @ValueSource(ints = {8, 11, 17, 21, 25, 27})
   void springBootSmokeTest(int jdk) {
     start(jdk);
 
@@ -49,5 +50,10 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
                                     satisfies(PROCESS_EXECUTABLE_PATH, val -> val.isNotBlank()))
                                 .hasAttribute(satisfies(HOST_NAME, val -> val.isNotBlank()))
                                 .hasAttribute(TELEMETRY_DISTRO_NAME, "opentelemetry-javaagent"))));
+    testing.clearData();
+    client().get("/actuator/health").aggregate().join();
+    client().get("/greeting").aggregate().join();
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasAttribute(URL_PATH, "/greeting")));
   }
 }

@@ -22,7 +22,7 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
   private static final String BASE_PACKAGE = "javax.servlet";
 
   public Servlet2InstrumentationModule() {
-    super("servlet", "servlet-2.2");
+    super("servlet-2.2", "servlet");
   }
 
   // this is required to make sure servlet 2 instrumentation won't apply to servlet 3

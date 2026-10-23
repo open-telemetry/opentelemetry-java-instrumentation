@@ -6,10 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
+import redis.actors.ReplyErrorException;
 
-class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
+final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
   @Override
   public String getDbSystemName(RediscalaRequest request) {
@@ -25,14 +28,6 @@ class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaReq
     return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getDbName(RediscalaRequest request) {
-    // old semconv reports the redis database index as db.redis.database_index, not db.name
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbQueryText(RediscalaRequest request) {
@@ -41,12 +36,6 @@ class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaReq
 
   @Override
   public String getDbOperationName(RediscalaRequest request) {
-    return request.getStableOperationName();
-  }
-
-  @Override
-  @SuppressWarnings("deprecation") // old database semconv still use db.operation
-  public String getDbOperation(RediscalaRequest request) {
     return request.getOperationName();
   }
 
@@ -58,13 +47,28 @@ class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaReq
 
   @Nullable
   @Override
+  public String getErrorType(
+      RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
+    // error prefix; a missing prefix preserves the shared exception-class fallback.
+    // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
+    if (!(error instanceof ReplyErrorException)) {
+      return null;
+    }
+    return RedisErrorPrefix.extract(error.getMessage());
+  }
+
+  @Nullable
+  @Override
   public String getServerAddress(RediscalaRequest request) {
-    return request.getHost();
+    RedisServerTarget serverTarget = request.getServerTarget();
+    return serverTarget != null ? serverTarget.getAddress() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RediscalaRequest request) {
-    return request.getPort();
+    RedisServerTarget serverTarget = request.getServerTarget();
+    return serverTarget != null ? serverTarget.getPort() : null;
   }
 }

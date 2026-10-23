@@ -55,18 +55,6 @@ final class KafkaProducerAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(KafkaProducerRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(KafkaProducerRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(
