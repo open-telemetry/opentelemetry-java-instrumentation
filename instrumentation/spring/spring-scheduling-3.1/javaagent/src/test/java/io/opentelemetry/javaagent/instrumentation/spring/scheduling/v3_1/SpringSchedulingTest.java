@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -24,17 +25,19 @@ import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component.TaskWithError;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component.TriggerTask;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.EnhancedClassTaskConfig;
-import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.IntervalTaskConfig;
-import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.LambdaTaskConfig;
-import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.OneTimeTaskConfig;
-import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.TaskWithErrorConfig;
-import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.TriggerTaskConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.service.LambdaTaskConfigurer;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.util.ErrorHandler;
 
 class SpringSchedulingTest {
 
@@ -48,26 +51,25 @@ class SpringSchedulingTest {
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
-  void scheduleOneTimeTest() throws InterruptedException {
-    AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(OneTimeTaskConfig.class);
-    cleanup.deferCleanup(context);
+  void scheduleOneTimeTest() throws Exception {
+    ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+    cleanup.deferCleanup(scheduler::destroy);
+    scheduler.initialize();
 
-    OneTimeTask task = context.getBean(OneTimeTask.class);
-    task.blockUntilExecute();
-
-    assertThat(task).isNotNull();
+    OneTimeTask task = new OneTimeTask();
+    scheduler.schedule(task, new Date()).get(5, SECONDS);
+    assertThat(task.blockUntilExecute()).isTrue();
+    scheduler.shutdown();
     assertThat(testing.waitForTraces(0)).isEmpty();
   }
 
   @Test
   void scheduleCronExpressionTest() throws InterruptedException {
-    AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(TriggerTaskConfig.class);
-    cleanup.deferCleanup(context);
+    GenericApplicationContext context = createContext(TriggerTask.class);
+    context.refresh();
 
     TriggerTask task = context.getBean(TriggerTask.class);
-    task.blockUntilExecute();
+    assertThat(task.blockUntilExecute()).isTrue();
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -83,12 +85,11 @@ class SpringSchedulingTest {
 
   @Test
   void scheduleIntervalTest() throws InterruptedException {
-    AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(IntervalTaskConfig.class);
-    cleanup.deferCleanup(context);
+    GenericApplicationContext context = createContext(IntervalTask.class);
+    context.refresh();
 
     IntervalTask task = context.getBean(IntervalTask.class);
-    task.blockUntilExecute();
+    assertThat(task.blockUntilExecute()).isTrue();
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -104,9 +105,8 @@ class SpringSchedulingTest {
 
   @Test
   void scheduleLambdaTest() throws InterruptedException {
-    AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(LambdaTaskConfig.class);
-    cleanup.deferCleanup(context);
+    GenericApplicationContext context = createContext(LambdaTaskConfigurer.class);
+    context.refresh();
 
     LambdaTaskConfigurer configurer = context.getBean(LambdaTaskConfigurer.class);
     assertThat(configurer.singleUseLatch.await(2000, MILLISECONDS)).isTrue();
@@ -129,10 +129,15 @@ class SpringSchedulingTest {
   }
 
   @Test
+  @Tag("enhanced")
   void scheduleEnhancedClassTest() throws InterruptedException {
-    AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(EnhancedClassTaskConfig.class);
-    cleanup.deferCleanup(context);
+    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+    cleanup.deferCleanup(() -> context.close());
+    context.register(EnhancedClassTaskConfig.class);
+    context.refresh();
+
+    assertThat(context.getBean(EnhancedClassTaskConfig.class).getClass())
+        .isNotEqualTo(EnhancedClassTaskConfig.class);
 
     CountDownLatch latch = context.getBean(CountDownLatch.class);
     assertThat(latch.await(5, SECONDS)).isTrue();
@@ -153,12 +158,18 @@ class SpringSchedulingTest {
 
   @Test
   void taskWithErrorTest() throws InterruptedException {
-    AnnotationConfigApplicationContext context =
-        new AnnotationConfigApplicationContext(TaskWithErrorConfig.class);
-    cleanup.deferCleanup(context);
+    GenericApplicationContext context = createContext(TaskWithError.class);
+    RootBeanDefinition scheduler = new RootBeanDefinition(ThreadPoolTaskScheduler.class);
+    scheduler
+        .getPropertyValues()
+        .add(
+            "errorHandler",
+            (ErrorHandler) throwable -> GlobalTraceUtil.runWithSpan("error-handler", () -> {}));
+    context.registerBeanDefinition("scheduler", scheduler);
+    context.refresh();
 
     TaskWithError task = context.getBean(TaskWithError.class);
-    task.blockUntilExecute();
+    assertThat(task.blockUntilExecute()).isTrue();
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -183,6 +194,15 @@ class SpringSchedulingTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class)))),
                 span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
+  }
+
+  private static GenericApplicationContext createContext(Class<?> beanClass) {
+    GenericApplicationContext context = new GenericApplicationContext();
+    cleanup.deferCleanup(() -> context.close());
+    context.registerBeanDefinition(
+        "schedulingProcessor", new RootBeanDefinition(ScheduledAnnotationBeanPostProcessor.class));
+    context.registerBeanDefinition("task", new RootBeanDefinition(beanClass));
+    return context;
   }
 
   private static <T> T experimental(T value) {

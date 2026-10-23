@@ -15,10 +15,26 @@ muzzle {
 dependencies {
   bootstrap(project(":instrumentation:spring:spring-scheduling-3.1:bootstrap"))
 
-  // 3.2.3 is the first version with which the tests will run. Lower versions require other
-  // classes and packages to be imported. Versions 3.1.0+ work with the instrumentation.
   library("org.springframework:spring-context:3.1.0.RELEASE")
-  testLibrary("org.springframework:spring-context:3.2.3.RELEASE")
+}
+
+testing {
+  suites {
+    // Spring 3.1 needs external CGLIB for @Configuration enhancement.
+    register<JvmTestSuite>("testEnhanced") {
+      sources.java.srcDir("src/test/java")
+      dependencies {
+        implementation("org.springframework:spring-context:${baseVersion("3.2.3.RELEASE").orLatest()}")
+      }
+      targets.configureEach {
+        testTask.configure {
+          useJUnitPlatform {
+            includeTags("enhanced")
+          }
+        }
+      }
+    }
+  }
 }
 
 tasks {
@@ -28,15 +44,34 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
+  test {
+    useJUnitPlatform {
+      excludeTags("enhanced")
+    }
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform {
+      excludeTags("enhanced")
+    }
+    jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+  }
+
+  val testEnhancedExperimental = register<Test>("testEnhancedExperimental") {
+    testClassesDirs = sourceSets["testEnhanced"].output.classesDirs
+    classpath = sourceSets["testEnhanced"].runtimeClasspath
+    useJUnitPlatform {
+      includeTags("enhanced")
+    }
     jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testing.suites.named("testEnhanced"), testEnhancedExperimental)
   }
 }
 
