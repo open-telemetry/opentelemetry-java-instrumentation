@@ -18,6 +18,7 @@ muzzle {
 dependencies {
   api(project(":instrumentation:servlet:servlet-common:javaagent"))
   api(project(":instrumentation:servlet:servlet-3.0:library"))
+  api(project(":instrumentation:servlet:servlet-common-javax:library"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
