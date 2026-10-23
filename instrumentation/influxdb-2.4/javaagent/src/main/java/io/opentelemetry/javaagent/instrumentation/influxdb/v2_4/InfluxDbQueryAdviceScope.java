@@ -17,6 +17,11 @@ import org.influxdb.dto.Query;
 import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
+/**
+ * Balances method-entry call-depth bookkeeping and restores any installed context at method exit.
+ * Query state may outlive this scope until asynchronous callbacks finish. Even calls that start no
+ * span need a placeholder to balance call depth.
+ */
 public class InfluxDbQueryAdviceScope {
   private static final ScopedThreadValue<QueryDelegation> currentQueryDelegation =
       new ScopedThreadValue<>();
@@ -43,15 +48,14 @@ public class InfluxDbQueryAdviceScope {
       @Nullable Query query, Retrofit retrofit, boolean asynchronous, QueryMethod queryMethod) {
     CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
     int depth = callDepth.getAndIncrement();
+    // Independent calls keep the tracing parent but must not inherit another query's completion
+    // state, including when asynchronous work propagates it to a new thread.
     if (depth > 0) {
       Context current = Context.current();
       InfluxDbQueryState currentState = current.get(InfluxDbQueryState.KEY);
       QueryDelegation delegation = currentQueryDelegation.get();
-      boolean delegated = false;
-      if (delegation != null && !delegation.consumed) {
-        delegation.consumed = true;
-        delegated = delegation.matches(query, retrofit, currentState, queryMethod);
-      }
+      boolean delegated =
+          delegation != null && delegation.tryConsume(query, retrofit, currentState, queryMethod);
       if (delegated) {
         InfluxDbQueryAdviceScope adviceScope =
             new InfluxDbQueryAdviceScope(callDepth, null, null, null);
@@ -96,12 +100,13 @@ public class InfluxDbQueryAdviceScope {
       Retrofit retrofit,
       InfluxDbQueryState queryState,
       QueryMethod queryMethod) {
-    QueryMethod nextMethod = queryMethod.next();
-    if (nextMethod == null) {
+    QueryMethod expectedMethod = queryMethod.expectedDelegationTarget();
+    if (expectedMethod == null) {
       return;
     }
     previousDelegation =
-        currentQueryDelegation.set(new QueryDelegation(query, retrofit, queryState, nextMethod));
+        currentQueryDelegation.set(
+            new QueryDelegation(query, retrofit, queryState, expectedMethod));
     delegationInstalled = true;
   }
 
@@ -138,7 +143,7 @@ public class InfluxDbQueryAdviceScope {
     CHUNKED_BI_CONSUMER_COMPLETION_ERROR;
 
     @Nullable
-    private QueryMethod next() {
+    private QueryMethod expectedDelegationTarget() {
       switch (this) {
         case CHUNKED_CONSUMER:
           return CHUNKED_CONSUMER_COMPLETION;
@@ -169,6 +174,19 @@ public class InfluxDbQueryAdviceScope {
       this.retrofit = retrofit;
       this.queryState = queryState;
       this.expectedMethod = expectedMethod;
+    }
+
+    private boolean tryConsume(
+        @Nullable Query query,
+        Retrofit retrofit,
+        @Nullable InfluxDbQueryState queryState,
+        QueryMethod queryMethod) {
+      if (consumed) {
+        return false;
+      }
+      // Only the next nested entry may claim this delegation, even when it does not match.
+      consumed = true;
+      return matches(query, retrofit, queryState, queryMethod);
     }
 
     private boolean matches(
