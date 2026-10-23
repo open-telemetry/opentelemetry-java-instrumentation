@@ -39,7 +39,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     include("**/SpringWebfluxClientInstrumentationTest*")
     systemProperty("otel.instrumentation.http.client.emit-experimental-telemetry", true)
-    systemProperty("metadataConfig", "Experimental.setEmitExperimentalTelemetry")
+    systemProperty("metadataConfig", "Experimental.setEmitExperimentalTelemetry(telemetryBuilder, true)")
   }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
