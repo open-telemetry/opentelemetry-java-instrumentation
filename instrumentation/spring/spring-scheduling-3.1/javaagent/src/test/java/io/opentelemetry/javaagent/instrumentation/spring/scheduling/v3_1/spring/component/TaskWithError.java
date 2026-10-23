@@ -23,7 +23,7 @@ public class TaskWithError implements Runnable {
     throw new IllegalStateException("failure");
   }
 
-  public void blockUntilExecute() throws InterruptedException {
-    latch.await(5, SECONDS);
+  public boolean blockUntilExecute() throws InterruptedException {
+    return latch.await(5, SECONDS);
   }
 }
