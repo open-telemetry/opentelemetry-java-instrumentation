@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -42,10 +43,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
+import redis.clients.jedis.Builder;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Protocol;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
@@ -229,6 +233,62 @@ class Jedis30ClientTest {
     testing.clearData();
     jedis.set("after-error", "value");
     assertErrorType(null);
+  }
+
+  @Test
+  void nestedMultiServerErrorDoesNotFailSuccessfulOuterPipeline() {
+    String username = "otel-no-multi";
+    jedis
+        .getClient()
+        .sendCommand(
+            () -> "ACL".getBytes(UTF_8),
+            "SETUSER",
+            username,
+            "on",
+            "nopass",
+            "~*",
+            "+@all",
+            "-multi");
+    assertThat(jedis.getClient().getStatusCodeReply()).isEqualTo("OK");
+
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.getClient().sendCommand(Protocol.Command.AUTH, username, "unused-password");
+    assertThat(nestedClient.getClient().getStatusCodeReply()).isEqualTo("OK");
+    testing.clearData();
+
+    NestedMultiPipeline outer = new NestedMultiPipeline(nestedClient);
+    outer.setClient(jedis.getClient());
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("OK");
+    assertThat(outer.nestedMultiError).hasMessageStartingWith("NOPERM");
+    assertErrorType(null);
+  }
+
+  private static class NestedMultiPipeline extends Pipeline {
+    private final Jedis nestedClient;
+    private JedisDataException nestedMultiError;
+
+    private NestedMultiPipeline(Jedis nestedClient) {
+      this.nestedClient = nestedClient;
+    }
+
+    @Override
+    protected <T> Response<T> getResponse(Builder<T> builder) {
+      return super.getResponse(
+          new Builder<T>() {
+            @Override
+            public T build(Object response) {
+              try {
+                nestedClient.multi();
+              } catch (JedisDataException e) {
+                nestedMultiError = e;
+              }
+              return builder.build(response);
+            }
+          });
+    }
   }
 
   private static void assertErrorType(String errorType) {

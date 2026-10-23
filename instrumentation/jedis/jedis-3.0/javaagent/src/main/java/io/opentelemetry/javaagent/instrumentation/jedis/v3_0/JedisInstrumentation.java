@@ -54,7 +54,6 @@ class JedisInstrumentation implements TypeInstrumentation {
                         "disconnect",
                         "getConnection",
                         "isBroken",
-                        "multi",
                         "toString"))),
         getClass().getName() + "$JedisMethodAdvice");
     transformer.applyAdviceToMethod(
