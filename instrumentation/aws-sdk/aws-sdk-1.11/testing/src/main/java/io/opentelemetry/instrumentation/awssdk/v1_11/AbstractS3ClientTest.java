@@ -144,7 +144,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                             .hasStatus(StatusData.error())
                             .hasException(emitExceptionAsSpanEvents() ? error : null)
                             .hasNoParent()
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(URL_FULL, endpoint.getServiceEndpoint()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),

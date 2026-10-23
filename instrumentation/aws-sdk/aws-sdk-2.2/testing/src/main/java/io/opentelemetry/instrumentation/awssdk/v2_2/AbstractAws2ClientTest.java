@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.testing.util.InstrumentationScope
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -554,7 +553,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                             .hasStatus(StatusData.error())
                             .hasException(emitExceptionAsSpanEvents() ? error : null)
                             .hasNoParent()
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasAttributesSatisfyingExactly(
                                 satisfies(
                                     SERVER_ADDRESS,
@@ -582,8 +581,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_METHOD, "ListObjectsV2"),
                                 equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                                 equalTo(AWS_S3_BUCKET, "somebucket"),
-                                equalTo(AWS_REQUEST_ID, null),
-                                equalTo(ERROR_TYPE, null))));
+                                equalTo(AWS_REQUEST_ID, null))));
 
     if (emitExceptionAsLogs()) {
       getTesting()
