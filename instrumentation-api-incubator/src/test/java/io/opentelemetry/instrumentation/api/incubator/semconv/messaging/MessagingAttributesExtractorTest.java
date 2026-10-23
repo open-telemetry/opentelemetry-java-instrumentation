@@ -317,8 +317,7 @@ class MessagingAttributesExtractorTest {
     }
 
     @Override
-    public String getErrorType(
-        Map<String, String> request, @Nullable String response, @Nullable Throwable error) {
+    public String getErrorType(Map<String, String> request, String response, Throwable error) {
       return "failure".equals(response)
           ? response
           : MessagingAttributesGetter.super.getErrorType(request, response, error);
