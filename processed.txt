@@ -633,3 +633,4 @@ mongo-3.1:javaagent-unit-tests
 jaxrs-1.0-annotations:javaagent
 spring-ai-1.0:javaagent
 jedis-common:javaagent
+spark-2.4:javaagent
