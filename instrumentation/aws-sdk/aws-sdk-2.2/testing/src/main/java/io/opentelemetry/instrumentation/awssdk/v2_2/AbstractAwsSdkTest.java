@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 
 public abstract class AbstractAwsSdkTest {
@@ -14,12 +13,10 @@ public abstract class AbstractAwsSdkTest {
 
   protected abstract InstrumentationExtension getTesting();
 
-  // Plain library fixtures enable capture through the builder. Agent fixtures use the property.
-  // Library-autoconfigure fixtures override this method because they also use the property.
+  // Plain library fixtures enable capture through the builder.
+  // Agent and library-autoconfigure fixtures override this to use the instrumentation property.
   protected boolean captureExperimentalSpanAttributes() {
-    return getTesting() instanceof AgentInstrumentationExtension
-        ? EXPERIMENTAL_ATTRIBUTES
-        : Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+    return Boolean.getBoolean("test.captureExperimentalSpanAttributes");
   }
 
   protected final String experimental(String value) {
