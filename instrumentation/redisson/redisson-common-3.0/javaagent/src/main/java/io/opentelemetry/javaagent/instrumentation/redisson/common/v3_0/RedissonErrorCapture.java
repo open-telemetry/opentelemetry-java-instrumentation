@@ -33,8 +33,8 @@ public final class RedissonErrorCapture {
 
   private static final ScopedThreadValue<String> currentServerErrorType = new ScopedThreadValue<>();
 
-  private static final VirtualField<RedisException, RedisServerError> SERVER_ERROR =
-      VirtualField.find(RedisException.class, RedisServerError.class);
+  private static final VirtualField<RedisException, String> SERVER_ERROR =
+      VirtualField.find(RedisException.class, String.class, "redissonServerErrorType");
 
   public static ScopedThreadValue<String> currentServerErrorType() {
     return currentServerErrorType;
@@ -78,7 +78,7 @@ public final class RedissonErrorCapture {
 
     String errorType = currentServerErrorType.get();
     if (errorType != null) {
-      SERVER_ERROR.set((RedisException) error, new RedisServerError(errorType));
+      SERVER_ERROR.set((RedisException) error, errorType);
       // consume so completion callbacks run by tryFailure cannot attribute it to another command
       currentServerErrorType.set(null);
     }
@@ -90,21 +90,12 @@ public final class RedissonErrorCapture {
       return null;
     }
 
-    RedisServerError redisServerError = SERVER_ERROR.get((RedisException) error);
-    return redisServerError != null ? redisServerError.errorType : null;
+    return SERVER_ERROR.get((RedisException) error);
   }
 
   public static void clearServerError(@Nullable Throwable error) {
     if (error instanceof RedisException) {
       SERVER_ERROR.set((RedisException) error, null);
-    }
-  }
-
-  private static final class RedisServerError {
-    private final String errorType;
-
-    private RedisServerError(String errorType) {
-      this.errorType = errorType;
     }
   }
 

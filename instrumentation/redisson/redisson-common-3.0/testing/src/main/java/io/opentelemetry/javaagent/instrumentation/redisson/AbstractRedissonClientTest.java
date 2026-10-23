@@ -317,7 +317,7 @@ public abstract class AbstractRedissonClientTest {
     try {
       config = createConfig(0, null);
     } catch (ReflectiveOperationException e) {
-      throw new AssertionError(e);
+      throw new LinkageError(e.getMessage(), e);
     }
     config.useSingleServer().setConnectionPoolSize(1).setConnectionMinimumIdleSize(1);
 
@@ -384,7 +384,7 @@ public abstract class AbstractRedissonClientTest {
             assertThatThrownBy(serverError::join).hasRootCauseInstanceOf(RedisException.class);
             assertThat(failureCallbackCalled).isTrue();
             assertThat(getMappedInFailureCallback).isTrue();
-            assertThat(clientError.get()).isNotNull();
+            assertThat((Object) clientError.get()).isNotNull();
             assertThatThrownBy(() -> clientError.get().join())
                 .hasRootCauseInstanceOf(RedisException.class);
             callbackClient.getBucket("callback-success").set("success");
@@ -475,7 +475,7 @@ public abstract class AbstractRedissonClientTest {
           .getMethod("setCommandMapper", commandMapperType)
           .invoke(config, commandMapper);
     } catch (ReflectiveOperationException e) {
-      throw new AssertionError(e);
+      throw new LinkageError(e.getMessage(), e);
     }
   }
 
