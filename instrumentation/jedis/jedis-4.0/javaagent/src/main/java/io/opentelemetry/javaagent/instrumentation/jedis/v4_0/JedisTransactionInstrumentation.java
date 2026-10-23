@@ -25,8 +25,12 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
     private boolean acquiredTransactionFramingSuppression;
 
     public void complete(@Nullable Throwable throwable) {
+      complete(throwable, null);
+    }
+
+    public void complete(@Nullable Throwable throwable, @Nullable Object result) {
       if (requestContext != null) {
-        requestContext.detachAndEnd(throwable);
+        requestContext.detachAndEnd(throwable, result);
       }
     }
   }
@@ -77,12 +81,13 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable List<?> result,
         @Advice.Enter @Nullable TransactionState state) {
       if (state != null) {
         if (state.acquiredTransactionFramingSuppression) {
           transactionFramingSuppression().release();
         }
-        state.complete(throwable);
+        state.complete(throwable, result);
       }
     }
   }

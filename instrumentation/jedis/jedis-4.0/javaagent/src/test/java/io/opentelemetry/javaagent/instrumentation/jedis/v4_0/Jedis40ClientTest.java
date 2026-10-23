@@ -480,6 +480,63 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void uncaughtNestedCommandServerErrorFailsOuterPipeline() {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    testing.clearData();
+
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                return nestedClient.get("nested-wrong-type");
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    List<Object> results = outer.syncAndReturnAll();
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0))
+        .isInstanceOf(JedisDataException.class)
+        .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    assertThat(results.get(1)).isEqualTo("OK");
+    assertErrorType("WRONGTYPE");
+  }
+
+  @Test
+  void uncaughtNestedCommandServerErrorFailsOuterTransaction() throws ReflectiveOperationException {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    testing.clearData();
+
+    Transaction outer = jedis.multi();
+    appendCommand(
+        outer,
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                return nestedClient.get("nested-wrong-type");
+              }
+            }));
+    outer.set("outer-transaction", "value");
+
+    List<Object> results = outer.exec();
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0))
+        .isInstanceOf(JedisDataException.class)
+        .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    assertThat(results.get(1)).isEqualTo("OK");
+    assertErrorType("WRONGTYPE");
+  }
+
+  @Test
   void terminalTransactionServerFailureWinsOverQueuedError() {
     Jedis client = new Jedis(host, port);
     cleanup.deferCleanup(client::disconnect);

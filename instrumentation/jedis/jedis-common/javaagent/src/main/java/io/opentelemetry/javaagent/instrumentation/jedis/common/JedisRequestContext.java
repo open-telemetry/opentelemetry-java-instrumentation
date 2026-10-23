@@ -98,13 +98,30 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
 
   @Nullable
   public Throwable detachAndEnd(@Nullable Throwable methodThrowable) {
+    return detachAndEnd(methodThrowable, null);
+  }
+
+  @Nullable
+  public Throwable detachAndEnd(@Nullable Throwable methodThrowable, @Nullable Object result) {
     if (scope != null) {
       scope.close();
     }
     if (currentRequestContext.get() == this) {
       currentRequestContext.restore(previousContext);
     }
+    if (methodThrowable != null && previousContext != null && isServerError(methodThrowable)) {
+      // Retain confirmation without failing an enclosing batch that may handle this exception.
+      previousContext.addServerError(methodThrowable);
+    }
     Throwable completionThrowable = methodThrowable;
+    if (completionThrowable == null && captureServerErrors && result instanceof List<?>) {
+      for (Object value : (List<?>) result) {
+        if (value instanceof Throwable) {
+          completionThrowable = (Throwable) value;
+          break;
+        }
+      }
+    }
     if (completionThrowable == null && captureServerErrors) {
       completionThrowable = firstServerErrorThrowable;
     }

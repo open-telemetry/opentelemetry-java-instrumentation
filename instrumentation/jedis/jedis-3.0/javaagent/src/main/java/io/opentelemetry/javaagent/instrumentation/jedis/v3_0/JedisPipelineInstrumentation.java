@@ -19,6 +19,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.PipelineBase;
 
@@ -76,9 +77,10 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {
-        requestContext.detachAndEnd(throwable);
+        requestContext.detachAndEnd(throwable, result);
       }
     }
   }

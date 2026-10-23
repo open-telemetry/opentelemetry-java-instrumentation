@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.TransactionFraming;
+import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -27,8 +28,12 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
     @Nullable private TransactionFraming previousTransactionFraming;
 
     public void complete(@Nullable Throwable throwable) {
+      complete(throwable, null);
+    }
+
+    public void complete(@Nullable Throwable throwable, @Nullable Object result) {
       if (requestContext != null) {
-        requestContext.detachAndEnd(throwable);
+        requestContext.detachAndEnd(throwable, result);
       }
     }
   }
@@ -85,12 +90,13 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable List<?> result,
         @Advice.Enter @Nullable TransactionState state) {
       if (state == null) {
         return;
       }
       currentTransactionFraming().restore(state.previousTransactionFraming);
-      state.complete(throwable);
+      state.complete(throwable, result);
     }
   }
 
