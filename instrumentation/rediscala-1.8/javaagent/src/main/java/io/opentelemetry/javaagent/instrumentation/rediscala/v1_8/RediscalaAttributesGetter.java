@@ -70,7 +70,7 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
         return errorType;
       }
     }
-    return DbClientAttributesGetter.super.getErrorType(request, unused, error);
+    return DbClientAttributesGetter.super.getErrorType(request, null, error);
   }
 
   @Nullable

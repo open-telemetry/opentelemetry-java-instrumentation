@@ -45,7 +45,7 @@ final class OpenSearchAttributesGetter
     Integer statusCode = getErrorCode(error);
     return statusCode != null && (statusCode >= 400 || statusCode < 100)
         ? statusCode.toString()
-        : DbClientAttributesGetter.super.getErrorType(request, response, error);
+        : DbClientAttributesGetter.super.getErrorType(request, null, error);
   }
 
   @Override

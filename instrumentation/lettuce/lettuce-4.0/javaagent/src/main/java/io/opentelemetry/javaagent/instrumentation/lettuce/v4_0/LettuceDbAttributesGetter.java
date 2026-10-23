@@ -53,7 +53,7 @@ final class LettuceDbAttributesGetter
     String errorType = LettuceRedisErrorCode.getErrorCode(error);
     return errorType != null
         ? errorType
-        : DbClientAttributesGetter.super.getErrorType(request, response, error);
+        : DbClientAttributesGetter.super.getErrorType(request, null, error);
   }
 
   @Nullable

@@ -81,7 +81,7 @@ class VertxSqlClientAttributesGetter
     String errorType = responseStatusExtractor.apply(error);
     return errorType != null
         ? errorType
-        : SqlClientAttributesGetter.super.getErrorType(request, response, error);
+        : SqlClientAttributesGetter.super.getErrorType(request, null, error);
   }
 
   @Nullable
