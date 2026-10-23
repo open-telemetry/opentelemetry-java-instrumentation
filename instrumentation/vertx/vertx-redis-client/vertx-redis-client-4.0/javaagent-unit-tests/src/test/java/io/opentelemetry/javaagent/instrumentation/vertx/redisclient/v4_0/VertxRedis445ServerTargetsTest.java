@@ -326,7 +326,7 @@ class VertxRedis445ServerTargetsTest {
   @Test
   void sentinelWithoutMasterKeepsTheSentinelEndpoints() {
     RedisServerTarget target =
-        VertxRedisServerTargets.of(
+        VertxRedis445ServerTargets.of(
             new RedisSentinelConnectOptions()
                 .setMasterName("  ")
                 .addConnectionString("redis://sentinel1:26379")
