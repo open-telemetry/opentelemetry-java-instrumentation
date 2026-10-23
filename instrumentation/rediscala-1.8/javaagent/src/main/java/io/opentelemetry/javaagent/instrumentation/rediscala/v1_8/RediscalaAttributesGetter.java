@@ -64,10 +64,13 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
     // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
     // error prefix; a missing prefix preserves the shared exception-class fallback.
     // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
-    if (!(error instanceof ReplyErrorException)) {
-      return null;
+    if (error instanceof ReplyErrorException) {
+      String errorType = RedisErrorPrefix.extract(error.getMessage());
+      if (errorType != null) {
+        return errorType;
+      }
     }
-    return RedisErrorPrefix.extract(error.getMessage());
+    return DbClientAttributesGetter.super.getErrorType(request, unused, error);
   }
 
   @Nullable

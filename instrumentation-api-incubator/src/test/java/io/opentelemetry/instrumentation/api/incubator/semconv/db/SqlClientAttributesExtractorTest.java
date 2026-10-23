@@ -66,6 +66,37 @@ class SqlClientAttributesExtractorTest {
   }
 
   @Test
+  void shouldInheritExceptionClassFallback() {
+    TestAttributesGetter getter = new TestAttributesGetter();
+    IllegalStateException error = new IllegalStateException();
+    assertThat(getter.getErrorType(emptyMap(), null, error))
+        .isEqualTo(IllegalStateException.class.getName());
+
+    AttributesBuilder attributes = Attributes.builder();
+    SqlClientAttributesExtractor.create(getter)
+        .onEnd(attributes, Context.root(), emptyMap(), null, error);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
+  }
+
+  @Test
+  void shouldRespectExplicitNullDespiteException() {
+    AttributesBuilder attributes = Attributes.builder();
+    SqlClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, Object> request, Void response, Throwable error) {
+                return null;
+              }
+            })
+        .onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build()).isEmpty();
+  }
+
+  @Test
   void shouldRetainNetworkPeerWithoutProtocolAttributes() {
     AttributesExtractor<Map<String, Object>, Void> extractor =
         SqlClientAttributesExtractor.create(

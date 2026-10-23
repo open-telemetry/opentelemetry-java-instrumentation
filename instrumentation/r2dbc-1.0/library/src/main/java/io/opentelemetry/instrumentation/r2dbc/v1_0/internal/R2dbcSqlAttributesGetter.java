@@ -59,7 +59,10 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public String getErrorType(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
-    return getSqlState(error);
+    String sqlState = getSqlState(error);
+    return sqlState != null
+        ? sqlState
+        : SqlClientAttributesGetter.super.getErrorType(request, response, error);
   }
 
   @Nullable
@@ -101,7 +104,10 @@ public final class R2dbcSqlAttributesGetter
   @Nullable
   private static String getSqlState(@Nullable Throwable error) {
     if (error instanceof R2dbcException) {
-      return ((R2dbcException) error).getSqlState();
+      String sqlState = ((R2dbcException) error).getSqlState();
+      if (sqlState != null) {
+        return sqlState;
+      }
     }
     return null;
   }

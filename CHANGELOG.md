@@ -15,6 +15,9 @@
   error.getClass().getName()` for exception-class fallback.
 - Require R2DBC SPI 1.0 or later.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
+- `DbClientAttributesGetter.getErrorType()` now returns the final `error.type`; returning `null`
+  omits it even with an exception. Overrides needing exception-class fallback must delegate to
+  their inherited default.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in

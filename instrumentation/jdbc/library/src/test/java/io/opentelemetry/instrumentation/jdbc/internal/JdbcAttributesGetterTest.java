@@ -175,9 +175,9 @@ class JdbcAttributesGetterTest {
     return Stream.of(
         argumentSet("both codes", "42000", 1071, "42000/1071", "1071"),
         argumentSet("SQLSTATE only", "42000", 0, "42000", "42000"),
-        argumentSet("success SQLSTATE", "00000", 0, "00000", null),
+        argumentSet("success SQLSTATE", "00000", 0, "00000", SQLException.class.getName()),
         argumentSet("vendor code only", null, 1071, "1071", "1071"),
-        argumentSet("neither code", null, 0, null, null));
+        argumentSet("neither code", null, 0, null, SQLException.class.getName()));
   }
 
   @ParameterizedTest
@@ -225,10 +225,14 @@ class JdbcAttributesGetterTest {
             "positive vendor code takes precedence for error type", 42, "42601", "42", "42601"),
         argumentSet("negative vendor code", -42, null, "-42", "-42"),
         argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601", "42601"),
-        argumentSet("null SQLSTATE is unavailable", 0, null, null, null),
-        argumentSet("empty SQLSTATE is unavailable", 0, "", null, null),
+        argumentSet("null SQLSTATE is unavailable", 0, null, SQLException.class.getName(), null),
+        argumentSet("empty SQLSTATE is unavailable", 0, "", SQLException.class.getName(), null),
         argumentSet(
-            "successful completion SQLSTATE is available for status", 0, "00000", null, "00000"));
+            "successful completion SQLSTATE is available for status",
+            0,
+            "00000",
+            SQLException.class.getName(),
+            "00000"));
   }
 
   @Test
