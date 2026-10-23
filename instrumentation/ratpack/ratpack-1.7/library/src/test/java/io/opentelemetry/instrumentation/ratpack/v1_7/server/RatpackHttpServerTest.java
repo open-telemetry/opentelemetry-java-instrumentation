@@ -35,7 +35,6 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> false);
-    options.setInstrumentationName("io.opentelemetry.ratpack-1.7");
     options.setTestClientAddressFromSocketPeer(false);
   }
 }

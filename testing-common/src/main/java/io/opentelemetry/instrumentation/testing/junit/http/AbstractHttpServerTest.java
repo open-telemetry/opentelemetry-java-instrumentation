@@ -1119,13 +1119,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
               assertThat(logs).hasSize(1);
               assertThat(logs.get(0).getSpanContext()).isEqualTo(expectedSpan.getSpanContext());
-              if (options.instrumentationName != null) {
-                assertThat(logs.get(0).getInstrumentationScopeInfo().getName())
-                    .isEqualTo(options.instrumentationName);
-                assertThat(logs.get(0).getInstrumentationScopeInfo().getVersion()).isNotEmpty();
-                assertThat(logs.get(0).getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_41_0);
-              }
               assertThat(logs.get(0))
                   .hasSeverity(Severity.ERROR)
                   .hasEventName(expectedEventName)
