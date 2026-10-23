@@ -21,3 +21,4 @@ jaxrs-1.0-annotations:javaagent	2026-10-02T18:42:55Z	agent artifact missing clea
 spring-ai-1.0:javaagent	2026-10-16T07:39:47Z	agent artifact missing cleanup.patch/cleanup.noop
 jedis-common:javaagent	2026-10-20T07:42:32Z	agent artifact missing cleanup.patch/cleanup.noop
 spark-2.4:javaagent	2026-10-23T05:38:43Z	agent artifact missing cleanup.patch/cleanup.noop
+spring-rabbit-1.1:javaagent	2026-10-23T05:42:48Z	agent artifact missing cleanup.patch/cleanup.noop
