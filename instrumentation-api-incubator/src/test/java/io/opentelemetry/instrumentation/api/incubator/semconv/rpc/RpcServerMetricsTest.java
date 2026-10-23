@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
@@ -29,7 +30,10 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.sdk.metrics.Aggregation;
+import io.opentelemetry.sdk.metrics.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.View;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
@@ -38,6 +42,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RpcServerMetricsTest {
+
+  private static final double[] DURATION_BUCKETS = {
+    0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10
+  };
+  private static final double[] LEGACY_BUCKETS = {
+    0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000
+  };
+  private static final double[] CUSTOM_BUCKETS = {0.1, 0.2, 0.3};
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -123,12 +135,14 @@ class RpcServerMetricsTest {
                   assertThat(metric)
                       .hasName("rpc.server.duration")
                       .hasUnit("ms")
+                      .hasDescription("The duration of an inbound RPC invocation.")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
                                       point
                                           .hasSum(150 /* millis */)
+                                          .hasBucketBoundaries(LEGACY_BUCKETS)
                                           .hasAttributesSatisfyingExactly(
                                               equalTo(RPC_SYSTEM, "grpc"),
                                               equalTo(RPC_SERVICE, "myservice.EchoService"),
@@ -204,12 +218,15 @@ class RpcServerMetricsTest {
                   assertThat(metric)
                       .hasName("rpc.server.call.duration")
                       .hasUnit("s")
+                      .hasDescription(
+                          "Measures the duration of inbound remote procedure calls (RPC).")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
                                       point
                                           .hasSum(0.15)
+                                          .hasBucketBoundaries(DURATION_BUCKETS)
                                           .hasAttributesSatisfyingExactly(
                                               equalTo(
                                                   RPC_METHOD,
@@ -270,6 +287,39 @@ class RpcServerMetricsTest {
                                                   "myservice.EchoService/exampleMethod"),
                                               equalTo(RPC_SYSTEM_NAME, "grpc"),
                                               equalTo(SERVER_PORT, 8080)))));
+    }
+  }
+
+  @Test
+  void customViewOverridesBucketAdvice() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder()
+            .registerMetricReader(metricReader)
+            .registerView(
+                InstrumentSelector.builder().setName("rpc.server.call.duration").build(),
+                View.builder()
+                    .setAggregation(Aggregation.explicitBucketHistogram(asList(0.1, 0.2, 0.3)))
+                    .build())
+            .build();
+    cleanup.deferCleanup(meterProvider);
+
+    OperationListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
+    Context context = listener.onStart(Context.root(), Attributes.empty(), nanos(100));
+    listener.onEnd(context, Attributes.empty(), nanos(250));
+
+    if (emitPreviewRpcSemconv()) {
+      assertThat(metricReader.collectAllMetrics())
+          .anySatisfy(
+              metric ->
+                  assertThat(metric)
+                      .hasName("rpc.server.call.duration")
+                      .hasUnit("s")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point ->
+                                      point.hasSum(0.15).hasBucketBoundaries(CUSTOM_BUCKETS))));
     }
   }
 
