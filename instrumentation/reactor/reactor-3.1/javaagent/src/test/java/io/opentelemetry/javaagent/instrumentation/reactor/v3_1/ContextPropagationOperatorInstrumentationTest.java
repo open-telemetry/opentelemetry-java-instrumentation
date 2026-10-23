@@ -276,7 +276,7 @@ class ContextPropagationOperatorInstrumentationTest {
                                   }),
                           innerReactorContext)
                       .block();
-                  assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("application");
+                  assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
                 })
             .block();
       }
@@ -386,7 +386,7 @@ class ContextPropagationOperatorInstrumentationTest {
 
   @ParameterizedTest
   @CsvSource({"false,false", "false,true", "true,false", "true,true"})
-  void runWithContextsMarksApplicationTracingSubscriber(
+  void runWithContextsPreservesApplicationTracingSubscribersCapturedContext(
       boolean flux, boolean rootApplicationContext) {
     Context capturedContext = Context.root().with(APPLICATION_KEY, "captured");
     Context applicationContext =
@@ -438,9 +438,7 @@ class ContextPropagationOperatorInstrumentationTest {
       assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("captured");
     }
 
-    String expectedApplication = rootApplicationContext ? null : "application";
-    assertThat(observed)
-        .containsExactly(expectedApplication, expectedApplication, expectedApplication);
+    assertThat(observed).containsExactly("captured", "captured", "captured");
   }
 
   private static void assertRootContext(AgentContextState agentState) {

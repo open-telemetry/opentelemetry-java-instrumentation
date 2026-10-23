@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -51,25 +52,22 @@ public abstract class AbstractContextBoundaryTest {
 
   @ParameterizedTest
   @CsvSource({"false,false", "false,true", "true,false", "true,true"})
-  void hookedDownstreamChainUsesApplicationContext(boolean mono, boolean rootApplication) {
+  void transparentHookedDownstreamChainUsesApplicationContext(
+      boolean mono, boolean rootApplication) {
     registerHooks();
     Context application = rootApplication ? Context.root() : APPLICATION;
     AtomicReference<Context> observed = new AtomicReference<>();
-    try (Scope ignored = UNRELATED.makeCurrent()) {
+    try (Scope ignored = Context.root().makeCurrent()) {
       Flux.from(runWithContext(source(mono, "value"), OPERATION, application))
           .map(value -> value)
           .doOnNext(
               value -> {
-                Flux.from(runWithContext(source(mono, value), OPERATION, APPLICATION))
-                    .doOnNext(unused -> assertContext(Context.current(), APPLICATION))
-                    .collectList()
-                    .block();
                 assertContext(Context.current(), application);
                 observed.set(Context.current());
               })
           .collectList()
           .block();
-      assertContext(Context.current(), UNRELATED);
+      assertContext(Context.current(), Context.root());
     }
     assertContext(observed.get(), application);
   }
@@ -85,7 +83,7 @@ public abstract class AbstractContextBoundaryTest {
     "true,true,false",
     "true,true,true"
   })
-  void deferredBoundaryUsesApplicationContext(
+  void deferredBoundaryRetainsItsCapturedContext(
       boolean mono, boolean rootApplication, boolean schedulerHop) {
     assumeSchedulerHooksSupported(schedulerHop);
     registerHooks();
@@ -106,7 +104,7 @@ public abstract class AbstractContextBoundaryTest {
             .doOnNext(
                 value -> {
                   observed.set(Context.current());
-                  assertContext(Context.current(), application);
+                  assertContext(Context.current(), subscription);
                 })
             .collectList()
             .block();
@@ -117,12 +115,12 @@ public abstract class AbstractContextBoundaryTest {
         scheduler.dispose();
       }
     }
-    assertContext(observed.get(), application);
+    assertContext(observed.get(), subscription);
   }
 
   @ParameterizedTest
   @CsvSource({"false,false", "false,true", "true,false", "true,true"})
-  void schedulerHopUsesApplicationContext(boolean mono, boolean rootApplication) {
+  void schedulerHopRetainsItsCapturedContext(boolean mono, boolean rootApplication) {
     assumeSchedulerHooksSupported(true);
     registerHooks();
     Context application = rootApplication ? Context.root() : APPLICATION;
@@ -135,7 +133,7 @@ public abstract class AbstractContextBoundaryTest {
             .map(value -> value)
             .doOnNext(
                 value -> {
-                  assertContext(Context.current(), application);
+                  assertContext(Context.current(), UNRELATED);
                   observed.set(Context.current());
                 })
             .collectList()
@@ -152,7 +150,7 @@ public abstract class AbstractContextBoundaryTest {
     } finally {
       scheduler.dispose();
     }
-    assertContext(observed.get(), application);
+    assertContext(observed.get(), UNRELATED);
   }
 
   @ParameterizedTest
@@ -190,7 +188,7 @@ public abstract class AbstractContextBoundaryTest {
       if (schedulerHop) {
         boundary = boundary.publishOn(scheduler);
       }
-      try (Scope ignored = UNRELATED.makeCurrent()) {
+      try (Scope ignored = Context.root().makeCurrent()) {
         boundary
             .doOnNext(
                 value -> {
@@ -200,7 +198,7 @@ public abstract class AbstractContextBoundaryTest {
                 })
             .collectList()
             .block();
-        assertContext(Context.current(), UNRELATED);
+        assertContext(Context.current(), Context.root());
       }
     } finally {
       if (scheduler != null) {
@@ -212,7 +210,7 @@ public abstract class AbstractContextBoundaryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void delayedDemandOutsideBoundaryUsesApplicationContext(boolean rootApplication)
+  void delayedDemandOutsideBoundaryRetainsItsCapturedContext(boolean rootApplication)
       throws InterruptedException {
     assumeSchedulerHooksSupported(true);
     registerHooks();
@@ -267,9 +265,9 @@ public abstract class AbstractContextBoundaryTest {
       }
       assertThat(callbackFinished.await(10, SECONDS)).isTrue();
       assertThat(workerReused.await(10, SECONDS)).isTrue();
-      assertContext(callbackContext.get(), application);
+      assertContext(callbackContext.get(), UNRELATED);
       assertContext(independentContext.get(), INNER);
-      assertContext(contextAfterIndependentSignal.get(), application);
+      assertContext(contextAfterIndependentSignal.get(), UNRELATED);
       assertThat(reusedWorkerThread.get()).isSameAs(callbackThread.get());
     } finally {
       scheduler.dispose();
@@ -278,7 +276,7 @@ public abstract class AbstractContextBoundaryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void delayedDemandFromAnotherBoundaryUsesItsApplicationContext(boolean rootApplication)
+  void delayedDemandFromAnotherBoundaryRetainsItsCapturedContext(boolean rootApplication)
       throws InterruptedException {
     assumeSchedulerHooksSupported(true);
     registerHooks();
@@ -308,7 +306,7 @@ public abstract class AbstractContextBoundaryTest {
         Flux.from(runWithContext(Mono.just("outer"), OPERATION, outerApplication))
             .doOnNext(
                 value -> {
-                  assertContext(Context.current(), outerApplication);
+                  assertContext(Context.current(), UNRELATED);
                   subscription.get().request(1);
                   outerCallbackContext.set(Context.current());
                 })
@@ -316,8 +314,8 @@ public abstract class AbstractContextBoundaryTest {
         assertContext(Context.current(), UNRELATED);
       }
       assertThat(boundaryCallbackFinished.await(10, SECONDS)).isTrue();
-      assertContext(boundaryCallbackContext.get(), boundaryApplication);
-      assertContext(outerCallbackContext.get(), outerApplication);
+      assertContext(boundaryCallbackContext.get(), UNRELATED);
+      assertContext(outerCallbackContext.get(), UNRELATED);
     } finally {
       scheduler.dispose();
     }
@@ -325,7 +323,7 @@ public abstract class AbstractContextBoundaryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void temporaryOnSubscribeContextDoesNotReplaceApplicationContext(boolean rootApplication)
+  void temporaryOnSubscribeContextRestoresSubscriptionContext(boolean rootApplication)
       throws InterruptedException {
     assumeSchedulerHooksSupported(true);
     registerHooks();
@@ -388,13 +386,111 @@ public abstract class AbstractContextBoundaryTest {
       releaseWorker.countDown();
       assertThat(callbackFinished.await(10, SECONDS)).isTrue();
       assertContext(requestContext.get(), temporaryContext);
-      assertContext(contextAfterTemporaryScope.get(), application);
+      assertContext(contextAfterTemporaryScope.get(), subscriptionContext);
       assertThat(callbackError.get()).isNull();
-      assertContext(callbackContext.get(), application);
+      assertContext(callbackContext.get(), subscriptionContext);
     } finally {
       releaseWorker.countDown();
       scheduler.dispose();
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void innerBoundariesRetainSharedSubscribersCapturedContext(boolean rootSecondApplication)
+      throws InterruptedException {
+    assumeSchedulerHooksSupported(true);
+    registerHooks();
+    Context subscriptionContext = Context.root().with(KEY, "subscription");
+    Context secondApplication = rootSecondApplication ? Context.root() : INNER;
+    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
+    AtomicReference<MonoSink<String>> firstSink = new AtomicReference<>();
+    AtomicReference<MonoSink<String>> secondSink = new AtomicReference<>();
+    AtomicReference<Subscription> subscription = new AtomicReference<>();
+    AtomicReference<Context> firstCallbackContext = new AtomicReference<>();
+    AtomicReference<Context> secondCallbackContext = new AtomicReference<>();
+    CountDownLatch initialDrainFinished = new CountDownLatch(1);
+    CountDownLatch callbacksFinished = new CountDownLatch(2);
+    try {
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        Flux.just(0, 1)
+            .flatMap(
+                index ->
+                    Flux.from(
+                        runWithContext(
+                            Mono.<String>create(
+                                sink -> (index == 0 ? firstSink : secondSink).set(sink)),
+                            OPERATION,
+                            index == 0 ? APPLICATION : secondApplication)))
+            .publishOn(scheduler)
+            .doOnNext(
+                value -> {
+                  if (value.equals("first")) {
+                    firstCallbackContext.set(Context.current());
+                  } else {
+                    secondCallbackContext.set(Context.current());
+                  }
+                  callbacksFinished.countDown();
+                })
+            .subscribe(noDemandSubscriber(subscription::set));
+        assertContext(Context.current(), subscriptionContext);
+      }
+
+      assertThat(firstSink.get()).isNotNull();
+      assertThat(secondSink.get()).isNotNull();
+      firstSink.get().success("first");
+      secondSink.get().success("second");
+      scheduler.schedule(initialDrainFinished::countDown);
+      assertThat(initialDrainFinished.await(10, SECONDS)).isTrue();
+
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        assertThat(subscription.get()).isNotNull();
+        subscription.get().request(2);
+        assertContext(Context.current(), UNRELATED);
+      }
+      assertThat(callbacksFinished.await(10, SECONDS)).isTrue();
+      assertContext(firstCallbackContext.get(), subscriptionContext);
+      assertContext(secondCallbackContext.get(), subscriptionContext);
+    } finally {
+      scheduler.dispose();
+    }
+  }
+
+  @Test
+  void transparentSharedSubscriberSeesEachSynchronousInnerContext() {
+    registerHooks();
+    AtomicReference<MonoSink<String>> firstSink = new AtomicReference<>();
+    AtomicReference<MonoSink<String>> secondSink = new AtomicReference<>();
+    AtomicReference<Context> firstCallbackContext = new AtomicReference<>();
+    AtomicReference<Context> secondCallbackContext = new AtomicReference<>();
+    try (Scope ignored = Context.root().makeCurrent()) {
+      Flux.just(0, 1)
+          .flatMap(
+              index ->
+                  Flux.from(
+                      runWithContext(
+                          Mono.<String>create(
+                              sink -> (index == 0 ? firstSink : secondSink).set(sink)),
+                          OPERATION,
+                          index == 0 ? APPLICATION : INNER)))
+          .doOnNext(
+              value -> {
+                if (value.equals("first")) {
+                  firstCallbackContext.set(Context.current());
+                } else {
+                  secondCallbackContext.set(Context.current());
+                }
+              })
+          .subscribe();
+
+      assertThat(firstSink.get()).isNotNull();
+      assertThat(secondSink.get()).isNotNull();
+      firstSink.get().success("first");
+      secondSink.get().success("second");
+      assertContext(Context.current(), Context.root());
+    }
+    assertContext(firstCallbackContext.get(), APPLICATION);
+    assertContext(secondCallbackContext.get(), INNER);
   }
 
   private static Publisher<String> source(boolean mono, String value) {

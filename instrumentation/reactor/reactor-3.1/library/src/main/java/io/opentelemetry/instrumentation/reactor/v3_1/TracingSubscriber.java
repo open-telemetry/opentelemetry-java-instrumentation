@@ -21,7 +21,6 @@
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
 import io.opentelemetry.context.Scope;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.reactivestreams.Subscriber;
@@ -43,8 +42,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   private final io.opentelemetry.context.Context traceContext;
   private final Subscriber<? super T> subscriber;
   private final Context context;
-  @Nullable private Consumer<Runnable> applicationContextScope;
-  private final boolean hasExplicitContext;
   private final boolean hasContextToPropagate;
 
   /**
@@ -78,64 +75,48 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
     io.opentelemetry.context.Context storedContext =
         ContextPropagationOperator.getOpenTelemetryContext(ctx, null);
     this.traceContext = storedContext != null ? storedContext : contextToPropagate;
-    this.hasExplicitContext = storedContext != null || explicitFallback;
     this.hasContextToPropagate =
-        hasExplicitContext
+        storedContext != null
+            || explicitFallback
             || (!ContextPropagationOperator.isSubscriptionContextCaptureDisabled(ctx)
                 && traceContext != io.opentelemetry.context.Context.root());
   }
 
   @Override
   public void onSubscribe(Subscription subscription) {
-    if (!hasExplicitContext && applicationContextScope != null) {
-      applicationContextScope.accept(() -> subscriber.onSubscribe(subscription));
-    } else {
-      try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
-        subscriber.onSubscribe(subscription);
-      }
+    try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
+      subscriber.onSubscribe(subscription);
     }
   }
 
   @Override
   public void onNext(T o) {
-    if (!hasExplicitContext && applicationContextScope != null) {
-      applicationContextScope.accept(() -> subscriber.onNext(o));
-    } else {
-      try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
-        subscriber.onNext(o);
-      }
+    try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
+      subscriber.onNext(o);
     }
   }
 
   @Override
   public void onError(Throwable throwable) {
-    if (!hasExplicitContext && applicationContextScope != null) {
-      applicationContextScope.accept(() -> subscriber.onError(throwable));
+    Supplier<Scope> scopeSupplier;
+    if (!hasContextToPropagate
+        && (fluxRetrySubscriberClass == subscriber.getClass()
+            || fluxRetryWhenSubscriberClass == subscriber.getClass())) {
+      // clear context for retry to avoid having retried operations run with currently active
+      // context as parent context
+      scopeSupplier = () -> openScope(io.opentelemetry.context.Context.root());
     } else {
-      Supplier<Scope> scopeSupplier;
-      if (!hasContextToPropagate
-          && (fluxRetrySubscriberClass == subscriber.getClass()
-              || fluxRetryWhenSubscriberClass == subscriber.getClass())) {
-        // clear context for retry to avoid having retried operations run with currently active
-        // context as parent context
-        scopeSupplier = () -> openScope(io.opentelemetry.context.Context.root());
-      } else {
-        scopeSupplier = () -> openScope(hasContextToPropagate ? traceContext : null);
-      }
-      try (Scope ignore = scopeSupplier.get()) {
-        subscriber.onError(throwable);
-      }
+      scopeSupplier = () -> openScope(hasContextToPropagate ? traceContext : null);
+    }
+    try (Scope ignore = scopeSupplier.get()) {
+      subscriber.onError(throwable);
     }
   }
 
   @Override
   public void onComplete() {
-    if (!hasExplicitContext && applicationContextScope != null) {
-      applicationContextScope.accept(subscriber::onComplete);
-    } else {
-      try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
-        subscriber.onComplete();
-      }
+    try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
+      subscriber.onComplete();
     }
   }
 
@@ -149,10 +130,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
   public Object scanUnsafe(Scannable.Attr attr) {
     return attr == Scannable.Attr.ACTUAL ? subscriber : null;
-  }
-
-  void markDownstreamOfContextBoundary(Consumer<Runnable> applicationContextScope) {
-    this.applicationContextScope = applicationContextScope;
   }
 
   @Nullable

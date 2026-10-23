@@ -77,9 +77,11 @@ Mono<Response> response = ContextPropagationOperator.runWithContext(
     Mono.defer(() -> client.exchange(request)), operationContext, applicationContext);
 ```
 
-Source subscription, upstream demand and cancellation run under `operationContext`. Downstream
-`onSubscribe`, value, error and completion callbacks run under `applicationContext`, including root.
-Unrelated Reactor context entries are preserved. The helper neither starts nor ends spans.
+Source subscription, upstream demand and cancellation run under `operationContext`. Callbacks to
+the immediate downstream subscriber run under `applicationContext`, including root. Downstream
+tracing subscribers retain their own context policy; the helper does not carry an inner
+application context with values across fan-in operators. Unrelated Reactor context entries are
+preserved. The helper neither starts nor ends spans.
 
 These overloads do not register global hooks. Their direct subscription, demand, cancellation and
 callback scopes work without hooks; propagation through arbitrary asynchronous upstream operators

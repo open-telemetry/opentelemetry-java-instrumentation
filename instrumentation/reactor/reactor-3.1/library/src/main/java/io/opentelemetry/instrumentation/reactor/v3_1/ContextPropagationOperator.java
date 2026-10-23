@@ -31,10 +31,7 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -78,25 +75,6 @@ public final class ContextPropagationOperator {
       };
 
   private static final Object NO_SUBSCRIPTION_CONTEXT_CAPTURE_KEY = new Object();
-
-  private static final ClassValue<Method> TRACING_SUBSCRIBER_MARK_METHOD =
-      new ClassValue<Method>() {
-        @Override
-        protected Method computeValue(Class<?> type) {
-          Class<?> current = type;
-          while (current != null) {
-            try {
-              Method method =
-                  current.getDeclaredMethod("markDownstreamOfContextBoundary", Consumer.class);
-              method.setAccessible(true);
-              return method;
-            } catch (NoSuchMethodException ignored) {
-              current = current.getSuperclass();
-            }
-          }
-          throw new IllegalStateException(type.getName());
-        }
-      };
 
   private static final Object lock = new Object();
 
@@ -322,12 +300,14 @@ public final class ContextPropagationOperator {
 
   /**
    * Runs the source subscription, upstream Reactor context lookup, and request and cancellation
-   * calls in {@code operationContext}, and downstream callbacks in {@code applicationContext},
-   * including when either context is {@link Context#root()}.
+   * calls in {@code operationContext}, and callbacks to the immediate downstream subscriber in
+   * {@code applicationContext}, including when either context is {@link Context#root()}.
    *
    * <p>The source sees {@code operationContext} in its Reactor context, preserving all unrelated
-   * entries. This boundary works without registering propagation hooks; it does not propagate
-   * context across arbitrary asynchronous work inside the source.
+   * entries. Downstream tracing subscribers retain their own context policy, so this boundary does
+   * not associate an application context with values across fan-in operators. It works without
+   * registering propagation hooks; it does not propagate context across arbitrary asynchronous work
+   * inside the source.
    */
   public static <T> Mono<T> runWithContext(
       Mono<T> source, Context operationContext, Context applicationContext) {
@@ -336,12 +316,14 @@ public final class ContextPropagationOperator {
 
   /**
    * Runs the source subscription, upstream Reactor context lookup, and request and cancellation
-   * calls in {@code operationContext}, and downstream callbacks in {@code applicationContext},
-   * including when either context is {@link Context#root()}.
+   * calls in {@code operationContext}, and callbacks to the immediate downstream subscriber in
+   * {@code applicationContext}, including when either context is {@link Context#root()}.
    *
    * <p>The source sees {@code operationContext} in its Reactor context, preserving all unrelated
-   * entries. This boundary works without registering propagation hooks; it does not propagate
-   * context across arbitrary asynchronous work inside the source.
+   * entries. Downstream tracing subscribers retain their own context policy, so this boundary does
+   * not associate an application context with values across fan-in operators. It works without
+   * registering propagation hooks; it does not propagate context across arbitrary asynchronous work
+   * inside the source.
    */
   public static <T> Flux<T> runWithContext(
       Flux<T> source, Context operationContext, Context applicationContext) {
@@ -387,7 +369,6 @@ public final class ContextPropagationOperator {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-      markDownstreamOfContextBoundary(actual, applicationContext);
       try (Scope ignored = operationContext.makeCurrent()) {
         source.subscribe(
             new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
@@ -416,7 +397,6 @@ public final class ContextPropagationOperator {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-      markDownstreamOfContextBoundary(actual, applicationContext);
       try (Scope ignored = operationContext.makeCurrent()) {
         source.subscribe(
             new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
@@ -511,46 +491,6 @@ public final class ContextPropagationOperator {
     public CoreSubscriber<? super T> apply(Scannable publisher, CoreSubscriber<? super T> sub) {
       return new TracingSubscriber<>(sub, sub.currentContext());
     }
-  }
-
-  private static void markDownstreamOfContextBoundary(
-      CoreSubscriber<?> actual, Context applicationContext) {
-    Scannable scannable = Scannable.from(actual);
-    Consumer<Runnable> applicationContextScope =
-        callback -> {
-          try (Scope ignored = applicationContext.makeCurrent()) {
-            callback.run();
-          }
-        };
-    markDownstreamOfContextBoundary(scannable, applicationContextScope);
-    scannable
-        .actuals()
-        .forEach(
-            subscriber -> markDownstreamOfContextBoundary(subscriber, applicationContextScope));
-  }
-
-  private static void markDownstreamOfContextBoundary(
-      Scannable scannable, Consumer<Runnable> applicationContextScope) {
-    if (scannable instanceof TracingSubscriber) {
-      ((TracingSubscriber<?>) scannable).markDownstreamOfContextBoundary(applicationContextScope);
-    } else if (isTracingSubscriber(scannable.getClass())) {
-      // The javaagent can have a second, shaded copy in the same subscriber chain.
-      try {
-        Method method = TRACING_SUBSCRIBER_MARK_METHOD.get(scannable.getClass());
-        method.invoke(scannable, applicationContextScope);
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        throw new IllegalStateException(e);
-      }
-    }
-  }
-
-  private static boolean isTracingSubscriber(Class<?> type) {
-    for (Class<?> current = type; current != null; current = current.getSuperclass()) {
-      if (current.getName().endsWith(".instrumentation.reactor.v3_1.TracingSubscriber")) {
-        return true;
-      }
-    }
-    return false;
   }
 
   static void subscribeInActiveSpan(CoreSubscriber<? super Object> actual, Object value) {

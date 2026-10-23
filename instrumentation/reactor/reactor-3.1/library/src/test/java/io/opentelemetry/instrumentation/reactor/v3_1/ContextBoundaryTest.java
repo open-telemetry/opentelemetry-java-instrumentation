@@ -153,7 +153,7 @@ class ContextBoundaryTest {
   void keepsExplicitContextForIndependentPublisher(boolean mono, Context inner) {
     operator.registerOnEachOperator();
     AtomicReference<Context> observed = new AtomicReference<>();
-    try (Scope ignored = UNRELATED.makeCurrent()) {
+    try (Scope ignored = Context.root().makeCurrent()) {
       if (mono) {
         ContextPropagationOperator.runWithContext(Mono.just("value"), OPERATION, APPLICATION)
             .map(value -> value)
@@ -192,17 +192,17 @@ class ContextBoundaryTest {
             .collectList()
             .block();
       }
-      assertThat(Context.current()).isSameAs(UNRELATED);
+      assertThat(Context.current()).isSameAs(Context.root());
     }
     assertThat(observed.get()).isSameAs(APPLICATION);
   }
 
   @ParameterizedTest
   @MethodSource("directSubscriberBoundaries")
-  void marksDirectlyConstructedTracingSubscribers(
+  void directlyConstructedTracingSubscribersKeepTheirCapturedContext(
       boolean mono, boolean rootApplication, boolean wrapped) {
     Context application = rootApplication ? Context.root() : APPLICATION;
-    RecordingSubscriber recording = new RecordingSubscriber(application);
+    RecordingSubscriber recording = new RecordingSubscriber(UNRELATED);
     TracingSubscriber<String> subscriber;
     try (Scope ignored = UNRELATED.makeCurrent()) {
       subscriber = new TracingSubscriber<>(recording, reactor.util.context.Context.empty());
@@ -220,7 +220,7 @@ class ContextBoundaryTest {
     }
     recording.subscription.request(1);
 
-    assertThat(recording.contexts).containsExactly(application, application, application);
+    assertThat(recording.contexts).containsExactly(UNRELATED, UNRELATED, UNRELATED);
     assertThat(recording.values).containsExactly("value");
     assertThat(recording.complete).isTrue();
   }
