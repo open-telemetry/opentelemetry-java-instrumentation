@@ -17,10 +17,6 @@ public class ServletOutputStreamInjectionState {
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet5SnippetInjectingResponseWrapper wrapper) {
     InjectionState state = VIRTUAL_FIELD.get(servletOutputStream);
-    if (!wrapper.isContentTypeTextHtml()) {
-      VIRTUAL_FIELD.set(servletOutputStream, null);
-      return;
-    }
     if (state == null || state.getWrapper() != wrapper) {
       state = new InjectionState(wrapper);
       VIRTUAL_FIELD.set(servletOutputStream, state);

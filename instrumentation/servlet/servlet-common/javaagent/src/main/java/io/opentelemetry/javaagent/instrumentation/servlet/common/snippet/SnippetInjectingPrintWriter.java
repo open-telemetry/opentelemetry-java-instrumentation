@@ -22,7 +22,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(String s, int off, int len) {
-    if (state.isHeadTagWritten()) {
+    if (!state.shouldProcessWrite()) {
       super.write(s, off, len);
       return;
     }
@@ -34,7 +34,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
   @Override
   public void write(int b) {
     super.write(b);
-    if (state.isHeadTagWritten()) {
+    if (!state.shouldProcessWrite()) {
       return;
     }
     boolean endOfHeadTagFound = state.processByte(b);
@@ -51,7 +51,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(char[] buf, int off, int len) {
-    if (state.isHeadTagWritten()) {
+    if (!state.shouldProcessWrite()) {
       super.write(buf, off, len);
       return;
     }
