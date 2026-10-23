@@ -38,6 +38,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
@@ -455,6 +456,86 @@ class ContextPropagationOperatorInstrumentationTest {
   }
 
   @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void delayedDemandFromAnotherBoundaryKeepsMatchingApplicationContext(
+      boolean rootApplicationContext) throws InterruptedException {
+    Context boundaryApplicationContext =
+        rootApplicationContext
+            ? Context.root()
+            : Context.root().with(APPLICATION_KEY, "boundary-application");
+    Context boundaryOperationContext = Context.root().with(APPLICATION_KEY, "boundary-operation");
+    Context outerApplicationContext = Context.root().with(APPLICATION_KEY, "outer-application");
+    Context outerOperationContext = Context.root().with(APPLICATION_KEY, "outer-operation");
+    Context subscriptionContext = Context.root().with(APPLICATION_KEY, "subscription");
+    ContextPropagationOperator operator = ContextPropagationOperator.create();
+    operator.resetOnEachOperator();
+    operator.registerOnEachOperator();
+    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
+    AtomicReference<Subscription> subscription = new AtomicReference<>();
+    AtomicReference<String> boundaryCallbackContext = new AtomicReference<>();
+    AtomicReference<String> outerCallbackContext = new AtomicReference<>();
+    CountDownLatch initialDrainFinished = new CountDownLatch(1);
+    CountDownLatch boundaryCallbackFinished = new CountDownLatch(1);
+    try {
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        ContextPropagationOperator.runWithContext(
+                Flux.just("boundary"), boundaryOperationContext, boundaryApplicationContext)
+            .publishOn(scheduler)
+            .doOnNext(
+                value -> {
+                  boundaryCallbackContext.set(Context.current().get(APPLICATION_KEY));
+                  boundaryCallbackFinished.countDown();
+                })
+            .subscribe(
+                new CoreSubscriber<String>() {
+                  @Override
+                  public reactor.util.context.Context currentContext() {
+                    return reactor.util.context.Context.empty();
+                  }
+
+                  @Override
+                  public void onSubscribe(Subscription actualSubscription) {
+                    subscription.set(actualSubscription);
+                  }
+
+                  @Override
+                  public void onNext(String value) {}
+
+                  @Override
+                  public void onError(Throwable error) {
+                    throw new AssertionError(error);
+                  }
+
+                  @Override
+                  public void onComplete() {}
+                });
+      }
+
+      scheduler.schedule(initialDrainFinished::countDown);
+      assertThat(initialDrainFinished.await(10, SECONDS)).isTrue();
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        ContextPropagationOperator.runWithContext(
+                Mono.just("outer"), outerOperationContext, outerApplicationContext)
+            .doOnNext(
+                value -> {
+                  assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("outer-application");
+                  subscription.get().request(1);
+                  outerCallbackContext.set(Context.current().get(APPLICATION_KEY));
+                })
+            .block();
+        assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+      }
+      assertThat(boundaryCallbackFinished.await(10, SECONDS)).isTrue();
+      assertThat(boundaryCallbackContext.get())
+          .isEqualTo(rootApplicationContext ? null : "boundary-application");
+      assertThat(outerCallbackContext.get()).isEqualTo("outer-application");
+    } finally {
+      operator.resetOnEachOperator();
+      scheduler.dispose();
+    }
+  }
+
+  @ParameterizedTest
   @CsvSource({
     "false,false,false",
     "false,false,true",
@@ -779,7 +860,7 @@ class ContextPropagationOperatorInstrumentationTest {
         };
     TracingSubscriber<String> subscriber;
     try (Scope ignored = capturedContext.makeCurrent()) {
-      subscriber = new TracingSubscriber<>(actual, reactor.util.context.Context.empty());
+      subscriber = new TracingSubscriber<String>(actual, reactor.util.context.Context.empty()) {};
       Mono<String> source =
           Mono.fromCallable(
               () -> {

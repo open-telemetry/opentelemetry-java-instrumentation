@@ -91,7 +91,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   @Override
   public void onSubscribe(Subscription subscription) {
     if (!hasExplicitContext && applicationContextScope != null) {
-      runInBoundaryScope(applicationContextScope, () -> subscriber.onSubscribe(subscription));
+      applicationContextScope.accept(() -> subscriber.onSubscribe(subscription));
     } else {
       try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
         subscriber.onSubscribe(subscription);
@@ -102,7 +102,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   @Override
   public void onNext(T o) {
     if (!hasExplicitContext && applicationContextScope != null) {
-      runInBoundaryScope(applicationContextScope, () -> subscriber.onNext(o));
+      applicationContextScope.accept(() -> subscriber.onNext(o));
     } else {
       try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
         subscriber.onNext(o);
@@ -113,7 +113,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   @Override
   public void onError(Throwable throwable) {
     if (!hasExplicitContext && applicationContextScope != null) {
-      runInBoundaryScope(applicationContextScope, () -> subscriber.onError(throwable));
+      applicationContextScope.accept(() -> subscriber.onError(throwable));
     } else {
       Supplier<Scope> scopeSupplier;
       if (!hasContextToPropagate
@@ -134,7 +134,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   @Override
   public void onComplete() {
     if (!hasExplicitContext && applicationContextScope != null) {
-      runInBoundaryScope(applicationContextScope, subscriber::onComplete);
+      applicationContextScope.accept(subscriber::onComplete);
     } else {
       try (Scope ignore = openScope(hasContextToPropagate ? traceContext : null)) {
         subscriber.onComplete();
@@ -161,14 +161,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
   void markDownstreamOfContextBoundary(Consumer<Runnable> applicationContextScope) {
     downstreamOfContextBoundary = true;
     this.applicationContextScope = applicationContextScope;
-  }
-
-  private static void runInBoundaryScope(Consumer<Runnable> scope, Runnable callback) {
-    if (ContextPropagationOperator.isApplicationContextBoundaryActive()) {
-      callback.run();
-    } else {
-      scope.accept(callback);
-    }
   }
 
   @Nullable

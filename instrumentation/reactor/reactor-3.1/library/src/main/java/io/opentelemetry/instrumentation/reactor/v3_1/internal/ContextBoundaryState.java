@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.reactor.v3_1.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
 
 /**
  * Tracks the application context while a Reactor context boundary delivers downstream signals.
@@ -15,14 +16,14 @@ import io.opentelemetry.context.Scope;
  * at any time.
  */
 public final class ContextBoundaryState {
-  private static final ThreadLocal<Boolean> APPLICATION_CONTEXT_BOUNDARY = new ThreadLocal<>();
+  private static final ThreadLocal<Object> APPLICATION_CONTEXT_BOUNDARY = new ThreadLocal<>();
 
   private ContextBoundaryState() {}
 
-  public static Scope enter(Context context) {
+  public static Scope enter(Context context, Object boundary) {
     Scope scope = context.makeCurrent();
-    Boolean previous = APPLICATION_CONTEXT_BOUNDARY.get();
-    APPLICATION_CONTEXT_BOUNDARY.set(true);
+    Object previous = APPLICATION_CONTEXT_BOUNDARY.get();
+    APPLICATION_CONTEXT_BOUNDARY.set(boundary);
     return () -> {
       if (previous == null) {
         APPLICATION_CONTEXT_BOUNDARY.remove();
@@ -35,5 +36,18 @@ public final class ContextBoundaryState {
 
   public static boolean isActive() {
     return APPLICATION_CONTEXT_BOUNDARY.get() != null;
+  }
+
+  public static boolean isActive(Object boundary) {
+    return APPLICATION_CONTEXT_BOUNDARY.get() == boundary;
+  }
+
+  @Nullable
+  public static Object currentBoundary() {
+    return APPLICATION_CONTEXT_BOUNDARY.get();
+  }
+
+  public static Object newBoundary() {
+    return new Object();
   }
 }

@@ -468,6 +468,78 @@ class ContextBoundaryTest {
   }
 
   @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void keepsMatchingApplicationContextForDelayedDemandFromAnotherBoundary(boolean rootApplication)
+      throws InterruptedException {
+    operator.registerOnEachOperator();
+    Context boundaryApplication =
+        rootApplication ? Context.root() : Context.root().with(KEY, "boundary");
+    Context outerApplication = Context.root().with(KEY, "outer");
+    Context boundaryOperation = Context.root().with(KEY, "boundary-operation");
+    Scheduler scheduler = Schedulers.newSingle("context-boundary-test");
+    AtomicReference<Subscription> subscription = new AtomicReference<>();
+    AtomicReference<Context> boundaryCallbackContext = new AtomicReference<>();
+    AtomicReference<Context> outerCallbackContext = new AtomicReference<>();
+    CountDownLatch initialDrainFinished = new CountDownLatch(1);
+    CountDownLatch boundaryCallbackFinished = new CountDownLatch(1);
+    try {
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        ContextPropagationOperator.runWithContext(
+                Flux.just("boundary"), boundaryOperation, boundaryApplication)
+            .publishOn(scheduler)
+            .doOnNext(
+                value -> {
+                  boundaryCallbackContext.set(Context.current());
+                  boundaryCallbackFinished.countDown();
+                })
+            .subscribe(
+                new CoreSubscriber<String>() {
+                  @Override
+                  public reactor.util.context.Context currentContext() {
+                    return reactor.util.context.Context.empty();
+                  }
+
+                  @Override
+                  public void onSubscribe(Subscription actualSubscription) {
+                    subscription.set(actualSubscription);
+                  }
+
+                  @Override
+                  public void onNext(String value) {}
+
+                  @Override
+                  public void onError(Throwable error) {
+                    throw new AssertionError(error);
+                  }
+
+                  @Override
+                  public void onComplete() {}
+                });
+      }
+
+      scheduler.schedule(initialDrainFinished::countDown);
+      assertThat(initialDrainFinished.await(10, SECONDS)).isTrue();
+      try (Scope ignored = UNRELATED.makeCurrent()) {
+        ContextPropagationOperator.runWithContext(Mono.just("outer"), OPERATION, outerApplication)
+            .doOnNext(
+                value -> {
+                  assertThat(Context.current()).isSameAs(outerApplication);
+                  subscription.get().request(1);
+                  outerCallbackContext.set(Context.current());
+                })
+            .block();
+        assertThat(Context.current()).isSameAs(UNRELATED);
+      }
+      assertThat(boundaryCallbackFinished.await(10, SECONDS)).isTrue();
+      assertThat(boundaryCallbackContext.get()).isSameAs(boundaryApplication);
+      assertThat(outerCallbackContext.get()).isSameAs(outerApplication);
+    } finally {
+      scheduler.dispose();
+      operator.resetOnEachOperator();
+    }
+  }
+
+  @ParameterizedTest
   @MethodSource("directSubscriberBoundaries")
   void marksDirectlyConstructedTracingSubscribers(
       boolean mono, boolean rootApplication, boolean wrapped) {
