@@ -72,18 +72,21 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   Long getUsageOutputTokens(REQUEST request, @Nullable RESPONSE response);
 
   /**
-   * Returns a description of a class of error the operation ended with.
+   * Returns the final error type for the operation.
    *
-   * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
-   * type.
+   * <p>The default implementation returns the exception class name when an exception is present,
+   * and {@code null} otherwise. Returning {@code null} from an override omits the {@code
+   * error.type} attribute. To use the default exception-class fallback when no more specific
+   * classification is available, an override can delegate to {@code
+   * GenAiAttributesGetter.super.getErrorType(request, response, error)}.
    *
-   * <p>The cardinality of the error type should be low. The instrumentations implementing this
-   * method are recommended to document the custom values they support.
+   * <p>The cardinality of the error type should be low. Implementations are recommended to document
+   * the custom values they support.
    */
   @Nullable
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable
