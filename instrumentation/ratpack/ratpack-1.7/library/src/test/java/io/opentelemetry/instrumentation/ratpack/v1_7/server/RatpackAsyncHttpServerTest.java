@@ -35,7 +35,7 @@ class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest {
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> false);
-    options.setExceptionLogInstrumentationName("io.opentelemetry.ratpack-1.7");
+    options.setInstrumentationName("io.opentelemetry.ratpack-1.7");
     options.setTestClientAddressFromSocketPeer(false);
   }
 }

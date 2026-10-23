@@ -177,7 +177,7 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setExceptionLogInstrumentationName("io.opentelemetry.armeria-1.3");
+    options.setInstrumentationName("io.opentelemetry.armeria-1.3");
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
           if (endpoint == ServerEndpoint.NOT_FOUND) {

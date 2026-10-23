@@ -53,7 +53,7 @@ public class HttpServerTestOptions {
 
   Predicate<ServerEndpoint> hasExceptionOnServerSpan = endpoint -> !hasHandlerSpan.test(endpoint);
   Predicate<ServerEndpoint> hasExceptionLog = endpoint -> hasExceptionOnServerSpan.test(endpoint);
-  @Nullable String exceptionLogInstrumentationName;
+  @Nullable String instrumentationName;
   boolean exceptionLogOnHandlerSpan;
 
   boolean testRedirect = true;
@@ -120,8 +120,8 @@ public class HttpServerTestOptions {
   }
 
   @CanIgnoreReturnValue
-  public HttpServerTestOptions setExceptionLogInstrumentationName(String instrumentationName) {
-    this.exceptionLogInstrumentationName = instrumentationName;
+  public HttpServerTestOptions setInstrumentationName(String instrumentationName) {
+    this.instrumentationName = instrumentationName;
     return this;
   }
 
