@@ -60,7 +60,7 @@ final class LettuceDbAttributesGetter
         return "_OTHER";
       }
     }
-    return DbClientAttributesGetter.super.getErrorType(request, response, error);
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable

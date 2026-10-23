@@ -144,7 +144,7 @@ final class ElasticsearchDbAttributesGetter
     if (statusCode != null && statusCode >= 400) {
       return Integer.toString(statusCode);
     }
-    return DbClientAttributesGetter.super.getErrorType(request, response, error);
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override

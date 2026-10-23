@@ -81,10 +81,9 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
    * {@code null} to omit the attribute, even when an exception is available.
    *
    * <p>The default implementation returns the exception class name, or {@code null} if there is no
-   * exception. Overrides can delegate to {@code
-   * DbClientAttributesGetter.super.getErrorType(request, response, error)} (or their inherited
-   * default) to use this fallback after checking custom classifications. Attribute extractors use
-   * the returned value without any further fallback.
+   * exception. An override that wants this fallback after checking custom classifications can
+   * return {@code error == null ? null : error.getClass().getName()}. Attribute extractors use the
+   * returned value without any further fallback.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.

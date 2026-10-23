@@ -69,15 +69,16 @@ class SpymemcachedAttributesGetter
   public String getErrorType(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
     if (error != null && !(error instanceof OperationException)) {
-      return DbClientAttributesGetter.super.getErrorType(request, response, error);
+      return error.getClass().getName();
     }
     if (response instanceof Future && ((Future<?>) response).isCancelled()) {
-      return DbClientAttributesGetter.super.getErrorType(request, response, error);
+      return error == null ? null : error.getClass().getName();
     }
     String responseStatusCode = getDbResponseStatusCode(request, response, error);
-    return responseStatusCode != null
-        ? responseStatusCode
-        : DbClientAttributesGetter.super.getErrorType(request, response, error);
+    if (responseStatusCode != null) {
+      return responseStatusCode;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override

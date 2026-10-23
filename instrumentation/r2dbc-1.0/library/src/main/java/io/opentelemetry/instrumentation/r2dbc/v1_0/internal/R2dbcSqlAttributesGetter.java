@@ -57,9 +57,10 @@ public final class R2dbcSqlAttributesGetter
       return error.getClass().getName();
     }
     String responseStatusCode = getResponseStatusCode(request, error);
-    return responseStatusCode != null && !"00000".equals(responseStatusCode)
-        ? responseStatusCode
-        : SqlClientAttributesGetter.super.getErrorType(request, null, error);
+    if (responseStatusCode != null && !"00000".equals(responseStatusCode)) {
+      return responseStatusCode;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable

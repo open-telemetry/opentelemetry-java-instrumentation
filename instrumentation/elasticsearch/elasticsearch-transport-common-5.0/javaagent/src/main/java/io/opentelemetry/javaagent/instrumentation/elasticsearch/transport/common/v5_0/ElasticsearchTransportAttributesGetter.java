@@ -45,13 +45,13 @@ public class ElasticsearchTransportAttributesGetter
       @Nullable ActionResponse response,
       @Nullable Throwable error) {
     if (!(error instanceof ElasticsearchException)) {
-      return DbClientAttributesGetter.super.getErrorType(request, response, error);
+      return error == null ? null : error.getClass().getName();
     }
     // Elasticsearch wraps the failure that actually occurred, such as IndexNotFoundException, in a
     // generic wrapper such as RemoteTransportException. unwrapCause() peels off the classes that
     // Elasticsearch itself marks as wrappers, leaving the exception that identifies the failure.
     Throwable cause = ((ElasticsearchException) error).unwrapCause();
-    return DbClientAttributesGetter.super.getErrorType(request, response, cause);
+    return cause == null ? null : cause.getClass().getName();
   }
 
   @Override
