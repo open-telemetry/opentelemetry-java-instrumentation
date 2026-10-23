@@ -63,8 +63,8 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Returning {@code null} omits {@code error.type}, even when {@code error} is non-null. The
    * default implementation returns the exception class name when {@code error} is non-null, and
-   * {@code null} otherwise. An override that wants this fallback can delegate to {@code
-   * MessagingAttributesGetter.super.getErrorType(request, response, error)}.
+   * {@code null} otherwise. An override that wants this fallback can return {@code error == null ?
+   * null : error.getClass().getName()}.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.

@@ -320,7 +320,7 @@ class MessagingAttributesExtractorTest {
     public String getErrorType(Map<String, String> request, String response, Throwable error) {
       return "failure".equals(response)
           ? response
-          : MessagingAttributesGetter.super.getErrorType(request, response, error);
+          : error == null ? null : error.getClass().getName();
     }
 
     @Override

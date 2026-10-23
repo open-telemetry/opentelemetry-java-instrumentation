@@ -4,9 +4,9 @@
 
 ### ⚠️ Breaking changes
 
-- Messaging `MessagingAttributesGetter.getErrorType()` implementations now return the final
-  `error.type` value. Return `null` to omit it, or delegate to the default method for exception-class
-  fallback.
+- Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
+  `error.type` value. Return `null` to omit it, or return `error == null ? null :
+  error.getClass().getName()` for exception-class fallback.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
