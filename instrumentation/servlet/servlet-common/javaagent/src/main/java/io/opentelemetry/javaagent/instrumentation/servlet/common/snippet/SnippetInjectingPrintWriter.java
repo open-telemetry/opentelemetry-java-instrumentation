@@ -27,7 +27,8 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
       return;
     }
     for (int i = off; i < s.length() && i - off < len; i++) {
-      write(s.charAt(i));
+      super.write(s.charAt(i));
+      processCharacter(s.charAt(i));
     }
   }
 
@@ -37,6 +38,22 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
     if (!state.shouldProcessWrite()) {
       return;
     }
+    processCharacter(b);
+  }
+
+  @Override
+  public void write(char[] buf, int off, int len) {
+    if (!state.shouldProcessWrite()) {
+      super.write(buf, off, len);
+      return;
+    }
+    for (int i = off; i < buf.length && i - off < len; i++) {
+      super.write(buf[i]);
+      processCharacter(buf[i]);
+    }
+  }
+
+  private void processCharacter(int b) {
     boolean endOfHeadTagFound = state.processByte(b);
     if (!endOfHeadTagFound) {
       return;
@@ -47,16 +64,5 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
     }
     state.getWrapper().updateContentLengthIfPreviouslySet();
     super.write(snippet);
-  }
-
-  @Override
-  public void write(char[] buf, int off, int len) {
-    if (!state.shouldProcessWrite()) {
-      super.write(buf, off, len);
-      return;
-    }
-    for (int i = off; i < buf.length && i - off < len; i++) {
-      write(buf[i]);
-    }
   }
 }

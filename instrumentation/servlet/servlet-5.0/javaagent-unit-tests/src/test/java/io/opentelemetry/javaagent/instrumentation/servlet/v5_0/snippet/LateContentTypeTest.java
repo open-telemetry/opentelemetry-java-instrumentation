@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -141,6 +144,33 @@ class LateContentTypeTest {
     fixture.write("<head>");
     assertThat(fixture.content()).isEqualTo("<head>");
     verify(fixture.response, never()).setContentLength(6 + SNIPPET.length());
+  }
+
+  @Test
+  void bulkWriterWritesCheckContentTypeOnce() throws IOException {
+    char[] chars = new char[10_000];
+    Arrays.fill(chars, 'x');
+    String content = new String(chars);
+
+    for (Output output : new Output[] {Output.WRITER_STRING, Output.WRITER_CHARS}) {
+      Fixture fixture = new Fixture(output);
+      fixture.wrapper.setContentType("text/html");
+      fixture.write(content);
+
+      assertThat(fixture.content()).isEqualTo(content);
+      verify(fixture.response, times(1)).getContentType();
+    }
+  }
+
+  @Test
+  void standaloneWriterWritesCheckContentTypeForEachCharacter() throws IOException {
+    Fixture fixture = new Fixture(Output.WRITER_INT);
+    fixture.wrapper.setContentType("text/html");
+
+    fixture.write("<head>");
+
+    assertThat(fixture.content()).isEqualTo("<head>" + SNIPPET);
+    verify(fixture.response, times(6)).getContentType();
   }
 
   enum Output {
