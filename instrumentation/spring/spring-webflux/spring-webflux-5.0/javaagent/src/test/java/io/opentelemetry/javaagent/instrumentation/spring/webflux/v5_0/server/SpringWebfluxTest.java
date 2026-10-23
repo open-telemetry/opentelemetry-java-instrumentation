@@ -13,14 +13,10 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.webflux.server.AbstractSpringWebfluxTest;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
@@ -44,20 +40,15 @@ import server.SpringWebFluxTestApplication;
       SpringWebfluxTest.ForceNettyAutoConfiguration.class
     })
 class SpringWebfluxTest extends AbstractSpringWebfluxTest {
-  @Value("${local.server.port}")
-  private int port;
-
   @Autowired private ProxiedHandler proxiedHandler;
 
   @Test
   void shouldNormalizeProxyHandlerSpanName() {
-    AggregatedHttpResponse response =
-        WebClient.of("h1c://localhost:" + port).get("/proxy-handler").aggregate().join();
+    AggregatedHttpResponse response = client.get("/proxy-handler").aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("HELLO");
 
-    InstrumentationExtension testing = AgentInstrumentationExtension.create();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
