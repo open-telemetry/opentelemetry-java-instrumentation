@@ -152,6 +152,9 @@ final class ElasticsearchDbAttributesGetter
   @Nullable
   public String getDbResponseStatusCode(
       ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
+    if (response == null || response.getStatusLine().getStatusCode() < 400) {
+      return null;
+    }
     return getErrorType(request, response, error);
   }
 

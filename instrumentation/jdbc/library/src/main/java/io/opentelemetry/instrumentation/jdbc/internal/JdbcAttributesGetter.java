@@ -52,13 +52,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return getDbResponseStatusCode(request, null, error);
-  }
-
-  @Nullable
-  @Override
-  public String getDbResponseStatusCode(
-      DbRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       SQLException sqlException = (SQLException) error;
       int errorCode = sqlException.getErrorCode();
@@ -72,6 +65,20 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
       return sqlState;
     }
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      DbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if ("oracle.db".equals(getDbSystemName(request)) && error instanceof SQLException) {
+      int errorCode = ((SQLException) error).getErrorCode();
+      // Oracle Statement.ensureOpen() generates these locally, before any server request.
+      if (errorCode == 17008 || errorCode == 17009) {
+        return null;
+      }
+    }
+    return getErrorType(request, null, error);
   }
 
   @Override
