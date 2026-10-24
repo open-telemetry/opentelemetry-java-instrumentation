@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.ziohttp.v3_0
 
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
   LongAssertConsumer,
@@ -48,13 +47,14 @@ class ZioHttpTest {
 
   @BeforeAll
   def setup(): Unit = {
-    port = PortUtils.findOpenPort
-    ZioHttpTestApplication.port = port
     val t = new Thread(() => {
       ZioHttpTestApplication.main(Array())
     })
     t.start()
-    ZioHttpTestApplication.started.await(10, TimeUnit.SECONDS)
+    assertThat(
+      ZioHttpTestApplication.started.await(10, TimeUnit.SECONDS)
+    ).isTrue
+    port = ZioHttpTestApplication.port
     client = WebClient.of("h1c://localhost:" + port)
   }
 

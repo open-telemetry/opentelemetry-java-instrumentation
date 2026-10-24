@@ -37,7 +37,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -46,7 +45,6 @@ import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder;
-import io.vertx.reactivex.core.Vertx;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -67,13 +65,13 @@ class VertxReactivePropagationTest {
 
   private static WebClient client;
   private static int port;
-  private static Vertx server;
+  private static VertxReactiveWebServer.StartedServer server;
 
   @BeforeAll
   static void setUp() throws ExecutionException, InterruptedException, TimeoutException {
-    port = PortUtils.findOpenPort();
-    server = VertxReactiveWebServer.start(port);
-    cleanup.deferAfterAll(server::close);
+    server = VertxReactiveWebServer.start(0);
+    port = server.port;
+    cleanup.deferAfterAll(server.vertx::close);
     client = WebClient.of("h1c://localhost:" + port);
   }
 
