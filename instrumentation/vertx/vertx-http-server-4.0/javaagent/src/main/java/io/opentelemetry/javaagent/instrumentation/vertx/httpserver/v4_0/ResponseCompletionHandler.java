@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.V
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.STATE;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.currentWriteState;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -18,7 +19,7 @@ import javax.annotation.Nullable;
 
 public final class ResponseCompletionHandler implements Handler<AsyncResult<Void>> {
   private final HttpServerResponse response;
-  private final VertxHttpServerState state;
+  private final Context context;
   @Nullable private final Handler<AsyncResult<Void>> delegate;
   private final boolean completeResponse;
 
@@ -28,10 +29,6 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
     Object connection = request == null ? null : request.connection();
     VertxHttpServerState state = responseState == null ? null : responseState.state;
     return new CurrentWriteState(response, state, connection);
-  }
-
-  static final class WriteState {
-    @Nullable CurrentWriteState previous;
   }
 
   @Nullable
@@ -84,18 +81,18 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
       @Nullable Handler<AsyncResult<Void>> delegate,
       boolean completeResponse) {
     this.response = response;
-    this.state = state;
+    this.context = ResponseContextHandler.capture(state);
     this.delegate = delegate;
     this.completeResponse = completeResponse;
   }
 
   @Override
   public void handle(AsyncResult<Void> result) {
-    if (completeResponse) {
+    if (completeResponse || result.failed()) {
       VertxHttpServerSingletons.endResponse(response, result.cause());
     }
     if (delegate != null) {
-      try (Scope ignored = state.context.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate.handle(result);
       }
     }

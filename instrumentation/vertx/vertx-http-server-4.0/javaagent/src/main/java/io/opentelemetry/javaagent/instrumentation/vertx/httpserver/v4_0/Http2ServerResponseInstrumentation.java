@@ -76,30 +76,26 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
         @Advice.This HttpServerResponse response,
         @Advice.Argument(2) @Nullable Handler<AsyncResult<Void>> handler) {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
-      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state.context);
+      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state);
     }
   }
 
   @SuppressWarnings("unused")
   public static class WriteStateAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static ResponseCompletionHandler.WriteState onEnter(
+    public static ResponseCompletionHandler.CurrentWriteState onEnter(
         @Advice.This HttpServerResponse response) {
       ResponseCompletionHandler.CurrentWriteState current =
           ResponseCompletionHandler.writeState(response);
-      ResponseCompletionHandler.WriteState writeState = new ResponseCompletionHandler.WriteState();
-      writeState.previous = currentWriteState().set(current);
-      return writeState;
+      return currentWriteState().set(current);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This HttpServerResponse response,
-        @Advice.Enter @Nullable ResponseCompletionHandler.WriteState writeState,
+        @Advice.Enter @Nullable ResponseCompletionHandler.CurrentWriteState previous,
         @Advice.Thrown @Nullable Throwable error) {
-      if (writeState != null) {
-        currentWriteState().restore(writeState.previous);
-      }
+      currentWriteState().restore(previous);
       if (error != null) {
         VertxHttpServerSingletons.endResponse(response, error);
       }
@@ -115,7 +111,7 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
         @Advice.This HttpServerResponse response,
         @Advice.Argument(3) @Nullable Handler<AsyncResult<Void>> handler) {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
-      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state.context);
+      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -209,7 +205,7 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
         @Advice.This HttpServerResponse response,
         @Advice.Argument(0) @Nullable Handler<?> handler) {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
-      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state.context);
+      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state);
     }
   }
 }

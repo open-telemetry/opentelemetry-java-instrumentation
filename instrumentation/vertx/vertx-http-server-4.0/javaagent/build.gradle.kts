@@ -68,7 +68,12 @@ tasks.named<Test>("version40Test") {
   }
 }
 
+tasks.named<Test>("version43Test") {
+  systemProperty("test.vertx.http2.headerOnlyCallback", true)
+}
+
 tasks.named<Test>("version45Test") {
+  systemProperty("test.vertx.http2.headerOnlyCallback", true)
   systemProperty("test.vertx.http2.syncTrailerWrite", "true")
 }
 

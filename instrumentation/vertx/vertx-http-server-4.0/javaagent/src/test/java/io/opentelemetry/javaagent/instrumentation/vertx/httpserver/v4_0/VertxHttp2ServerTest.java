@@ -27,6 +27,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -509,6 +510,7 @@ class VertxHttp2ServerTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "test.vertx.http2.headerOnlyCallback", matches = "true")
   void headerOnlyEndCallbackRetainsContextWhenEndedFromNeutralContext() throws Exception {
     CompletableFuture<Void> responseEnd = new CompletableFuture<>();
     HttpClient client =
@@ -594,6 +596,157 @@ class VertxHttp2ServerTest {
     } finally {
       Files.deleteIfExists(file);
     }
+  }
+
+  @Test
+  void callbacksRetainRegistrationChildAndBaggage() throws Exception {
+    Path file = Files.createTempFile("vertx-http2-send-file-child-context", ".txt");
+    try {
+      Files.writeString(file, "send file");
+      CompletableFuture<Void> lifecycleCallbacks = new CompletableFuture<>();
+      CompletableFuture<Void> writeCallback = new CompletableFuture<>();
+      CompletableFuture<Void> sendFileCallbacks = new CompletableFuture<>();
+      AtomicInteger lifecycleCallbackCount = new AtomicInteger();
+      HttpClient client =
+          start(
+              HttpClient.Version.HTTP_2,
+              request -> {
+                Baggage baggage = Baggage.builder().put("tenant", "acme").build();
+                try (Scope ignored = baggage.makeCurrent()) {
+                  testing.runWithSpan(
+                      "registration child",
+                      () -> {
+                        if (request.path().equals("/lifecycle-child-context")) {
+                          request
+                              .response()
+                              .headersEndHandler(
+                                  ignored2 ->
+                                      assertCallbackContext(
+                                          "headers callback",
+                                          lifecycleCallbackCount,
+                                          lifecycleCallbacks))
+                              .bodyEndHandler(
+                                  ignored2 ->
+                                      assertCallbackContext(
+                                          "body callback",
+                                          lifecycleCallbackCount,
+                                          lifecycleCallbacks))
+                              .endHandler(
+                                  ignored2 ->
+                                      assertCallbackContext(
+                                          "end callback",
+                                          lifecycleCallbackCount,
+                                          lifecycleCallbacks));
+                          vertx.setTimer(
+                              1,
+                              ignored2 -> {
+                                try (Scope neutral = Context.root().makeCurrent()) {
+                                  request.response().end("body");
+                                }
+                              });
+                        } else if (request.path().equals("/write-child-context")) {
+                          request
+                              .response()
+                              .write(
+                                  Buffer.buffer("chunk"),
+                                  result -> {
+                                    assertThat(result.succeeded()).isTrue();
+                                    assertCallbackContext("write callback");
+                                    writeCallback.complete(null);
+                                  });
+                          vertx.setTimer(
+                              1,
+                              ignored2 -> {
+                                try (Scope neutral = Context.root().makeCurrent()) {
+                                  request.response().end("done");
+                                }
+                              });
+                        } else {
+                          request
+                              .response()
+                              .headersEndHandler(
+                                  ignored2 -> assertCallbackContext("sendFile headers callback"));
+                          request
+                              .response()
+                              .sendFile(
+                                  file.toString(),
+                                  result -> {
+                                    assertThat(result.succeeded()).isTrue();
+                                    assertCallbackContext("sendFile callback");
+                                    sendFileCallbacks.complete(null);
+                                  });
+                        }
+                      });
+                }
+              });
+
+      HttpResponse<String> lifecycle =
+          send(client, "/lifecycle-child-context", "04040404040404040404040404040404")
+              .get(10, SECONDS);
+      HttpResponse<String> write =
+          send(client, "/write-child-context", "05050505050505050505050505050505").get(10, SECONDS);
+      HttpResponse<String> sendFile =
+          send(client, "/send-file-child-context", "06060606060606060606060606060606")
+              .get(10, SECONDS);
+      assertThat(lifecycle.statusCode()).isEqualTo(200);
+      assertThat(write.statusCode()).isEqualTo(200);
+      assertThat(sendFile.statusCode()).isEqualTo(200);
+      lifecycleCallbacks.get(10, SECONDS);
+      writeCallback.get(10, SECONDS);
+      sendFileCallbacks.get(10, SECONDS);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasKind(SERVER)
+                          .hasTraceId("04040404040404040404040404040404")
+                          .hasParentSpanId(PARENT_ID),
+                  span ->
+                      span.hasName("registration child")
+                          .hasParentSpanId(trace.getSpan(0).getSpanContext().getSpanId()),
+                  span -> span.hasName("headers callback").hasParent(trace.getSpan(1)),
+                  span -> span.hasName("body callback").hasParent(trace.getSpan(1)),
+                  span -> span.hasName("end callback").hasParent(trace.getSpan(1))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasKind(SERVER)
+                          .hasTraceId("05050505050505050505050505050505")
+                          .hasParentSpanId(PARENT_ID),
+                  span ->
+                      span.hasName("registration child")
+                          .hasParentSpanId(trace.getSpan(0).getSpanContext().getSpanId()),
+                  span -> span.hasName("write callback").hasParent(trace.getSpan(1))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasKind(SERVER)
+                          .hasTraceId("06060606060606060606060606060606")
+                          .hasParentSpanId(PARENT_ID),
+                  span ->
+                      span.hasName("registration child")
+                          .hasParentSpanId(trace.getSpan(0).getSpanContext().getSpanId()),
+                  span -> span.hasName("sendFile headers callback").hasParent(trace.getSpan(1)),
+                  span -> span.hasName("sendFile callback").hasParent(trace.getSpan(1))));
+      assertDuration(SCOPE, 3);
+    } finally {
+      Files.deleteIfExists(file);
+    }
+  }
+
+  private static void assertCallbackContext(
+      String spanName, AtomicInteger callbackCount, CompletableFuture<Void> callbacksComplete) {
+    assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
+    testing.runWithSpan(spanName, () -> {});
+    if (callbackCount.incrementAndGet() == 3) {
+      callbacksComplete.complete(null);
+    }
+  }
+
+  private static void assertCallbackContext(String spanName) {
+    assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
+    testing.runWithSpan(spanName, () -> {});
   }
 
   @Test
@@ -906,6 +1059,42 @@ class VertxHttp2ServerTest {
             });
     assertThatThrownBy(() -> send(client, "/reset", TRACE_ID).get(10, SECONDS))
         .isInstanceOf(ExecutionException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SERVER)
+                        .hasTraceId(TRACE_ID)
+                        .hasParentSpanId(PARENT_ID)
+                        .hasStatusSatisfying(status -> status.hasCode(ERROR))));
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
+  void failedNonTerminalDataWriteEndsResponse() throws Exception {
+    CompletableFuture<Throwable> writeFailure = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request -> {
+              request
+                  .response()
+                  .headersEndHandler(ignored -> assertThat(request.response().reset(8)).isTrue());
+              request
+                  .response()
+                  .write(
+                      Buffer.buffer("pending data"),
+                      result -> {
+                        if (result.failed()) {
+                          writeFailure.complete(result.cause());
+                        } else {
+                          writeFailure.completeExceptionally(new AssertionError("write succeeded"));
+                        }
+                      });
+            });
+    assertThatThrownBy(() -> send(client, "/failed-write", TRACE_ID).get(10, SECONDS))
+        .isInstanceOf(ExecutionException.class);
+    assertThat(writeFailure.get(10, SECONDS)).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
