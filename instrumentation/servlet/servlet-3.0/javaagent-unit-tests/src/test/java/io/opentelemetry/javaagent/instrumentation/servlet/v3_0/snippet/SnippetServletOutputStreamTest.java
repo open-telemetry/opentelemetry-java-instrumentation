@@ -165,6 +165,7 @@ class SnippetServletOutputStreamTest {
 
   private static InjectionState createInjectionStateForTesting(String snippet, Charset charset) {
     HttpServletResponse response = mock(HttpServletResponse.class);
+    when(response.getContentType()).thenReturn("text/html");
     when(response.isCommitted()).thenReturn(false);
     when(response.getCharacterEncoding()).thenReturn(charset.name());
     return new InjectionState(new Servlet3SnippetInjectingResponseWrapper(response, snippet));
