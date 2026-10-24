@@ -85,22 +85,6 @@ tasks {
     }
   }
 
-  if (testJavaVersion.isJava8) {
-    named("hibernateReactive2TestPreviewSemconv", Test::class).configure {
-      enabled = false
-    }
-    if (otelProps.testLatestDeps) {
-      named("hibernateReactive1TestPreviewSemconv", Test::class).configure {
-        enabled = false
-      }
-    }
-  }
-  if (testJavaVersion.isJava8 || testJavaVersion.isJava11) {
-    named("hibernateReactive4TestPreviewSemconv", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
     dependsOn(testing.suites)
   }
