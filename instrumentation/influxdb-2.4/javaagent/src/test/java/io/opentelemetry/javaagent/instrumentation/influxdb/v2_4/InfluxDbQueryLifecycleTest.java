@@ -124,8 +124,8 @@ class InfluxDbQueryLifecycleTest {
               try {
                 assertThat(adapter.fromJson(new Buffer().writeUtf8("\"not an integer\"")))
                     .isNotNull();
-              } catch (JsonDataException error) {
-                caughtError.set(error);
+              } catch (JsonDataException e) {
+                caughtError.set(e);
               }
               return response(chain, SUCCESS);
             })) {
