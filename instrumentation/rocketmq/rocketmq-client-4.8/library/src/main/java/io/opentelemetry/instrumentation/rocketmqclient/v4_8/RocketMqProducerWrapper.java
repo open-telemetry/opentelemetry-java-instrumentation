@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
@@ -127,46 +125,23 @@ final class RocketMqProducerWrapper implements InvocationHandler {
     BatchSendContext request =
         new BatchSendContext(
             envelope, RocketMqNamespaceUtil.getNamespace(producer), originals.size());
-    int callbackIndex = -1;
-    for (int i = 1; i < method.getParameterTypes().length; i++) {
-      if (method.getParameterTypes()[i] == SendCallback.class) {
-        callbackIndex = i;
-        break;
-      }
-    }
-    request.setCommunicationMode(
-        callbackIndex == -1 ? CommunicationMode.SYNC : CommunicationMode.ASYNC);
-    Context parentContext = Context.current();
-    Context context =
-        instrumenter.shouldStart(parentContext, request)
-            ? instrumenter.start(parentContext, request)
-            : null;
-    SendState state = new SendState(instrumenter, request, parentContext, context, messages);
-    try (Scope ignored = context == null ? null : context.makeCurrent()) {
-      for (Message original : originals) {
-        SendMessage message = new SendMessage(original);
-        message.state = state;
-        state.messages.add(message);
-        messages.add(message);
-        if (context != null) {
-          propagator.inject(context, message, RocketMqProducerWrapper::setProperty);
-        }
-      }
-      Object[] delegateArgs = args.clone();
-      delegateArgs[0] = messages;
-      if (callbackIndex != -1) {
-        delegateArgs[callbackIndex] = state.wrap((SendCallback) args[callbackIndex]);
-      }
-      Object result = invokeDelegate(method, delegateArgs);
-      if (callbackIndex == -1) {
-        request.setSendResult((SendResult) result);
-        state.end(null);
-      }
-      return result;
-    } catch (Throwable t) {
-      state.end(t);
-      throw t;
-    }
+    return invokeSend(
+        method,
+        args,
+        request,
+        false,
+        (delegateArgs, state, context) -> {
+          for (Message original : originals) {
+            SendMessage message = new SendMessage(original);
+            message.state = state;
+            state.messages.add(message);
+            messages.add(message);
+            if (context != null) {
+              propagator.inject(context, message, RocketMqProducerWrapper::setProperty);
+            }
+          }
+          delegateArgs[0] = messages;
+        });
   }
 
   @Nullable
@@ -180,13 +155,17 @@ final class RocketMqProducerWrapper implements InvocationHandler {
     }
     SendMessageContext request =
         new SingleSendContext(message, RocketMqNamespaceUtil.getNamespace(producer));
-    int callbackIndex = -1;
-    for (int i = 1; i < method.getParameterCount(); i++) {
-      if (method.getParameterTypes()[i] == SendCallback.class) {
-        callbackIndex = i;
-        break;
-      }
-    }
+    return invokeSend(method, args, request, true, (delegateArgs, state, context) -> {});
+  }
+
+  private Object invokeSend(
+      Method method,
+      Object[] args,
+      SendMessageContext request,
+      boolean singleSend,
+      SendPreparation preparation)
+      throws Throwable {
+    int callbackIndex = findCallbackIndex(method);
     request.setCommunicationMode(
         method.getName().equals("sendOneway")
             ? CommunicationMode.ONEWAY
@@ -196,13 +175,17 @@ final class RocketMqProducerWrapper implements InvocationHandler {
         instrumenter.shouldStart(parentContext, request)
             ? instrumenter.start(parentContext, request)
             : null;
-    SendState state = new SendState(instrumenter, request, parentContext, context, emptyList());
+    SendState state = new SendState(instrumenter, request, parentContext, context);
     Object[] delegateArgs = args.clone();
     if (callbackIndex != -1) {
       delegateArgs[callbackIndex] = state.wrap((SendCallback) args[callbackIndex]);
     }
-    Context operationContext = (context == null ? parentContext : context).with(SEND_STATE, state);
-    try (Scope ignored = operationContext.makeCurrent()) {
+    Context operationContext = context == null ? parentContext : context;
+    if (singleSend) {
+      operationContext = operationContext.with(SEND_STATE, state);
+    }
+    try (Scope ignored = singleSend || context != null ? operationContext.makeCurrent() : null) {
+      preparation.prepare(delegateArgs, state, context);
       Object result = invokeDelegate(method, delegateArgs);
       if (callbackIndex == -1) {
         request.setSendResult((SendResult) result);
@@ -210,9 +193,18 @@ final class RocketMqProducerWrapper implements InvocationHandler {
       }
       return result;
     } catch (Throwable t) {
-      state.end(request.getException() == null ? t : request.getException());
+      state.end(singleSend && request.getException() != null ? request.getException() : t);
       throw t;
     }
+  }
+
+  private static int findCallbackIndex(Method method) {
+    for (int i = 1; i < method.getParameterCount(); i++) {
+      if (method.getParameterTypes()[i] == SendCallback.class) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   @Nullable
@@ -298,6 +290,10 @@ final class RocketMqProducerWrapper implements InvocationHandler {
     }
   }
 
+  private interface SendPreparation {
+    void prepare(Object[] delegateArgs, SendState state, @Nullable Context context);
+  }
+
   static final class SendState {
     private final Instrumenter<SendMessageContext, Void> instrumenter;
     private final SendMessageContext request;
@@ -310,13 +306,12 @@ final class RocketMqProducerWrapper implements InvocationHandler {
         Instrumenter<SendMessageContext, Void> instrumenter,
         SendMessageContext request,
         Context parentContext,
-        @Nullable Context context,
-        List<SendMessage> messages) {
+        @Nullable Context context) {
       this.instrumenter = instrumenter;
       this.request = request;
       this.parentContext = parentContext;
       this.context = context;
-      this.messages = new ArrayList<>(messages);
+      this.messages = new ArrayList<>();
     }
 
     void copyFrom(SendMessageContext context) {

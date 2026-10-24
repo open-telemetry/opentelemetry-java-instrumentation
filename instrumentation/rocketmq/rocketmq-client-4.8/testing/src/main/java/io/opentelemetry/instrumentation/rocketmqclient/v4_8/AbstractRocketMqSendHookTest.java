@@ -400,33 +400,26 @@ abstract class AbstractRocketMqSendHookTest {
   }
 
   private static Stream<Arguments> sendModes() {
-    Stream<Arguments> modes =
-        Stream.of(false, true)
-            .flatMap(
-                batch ->
-                    Stream.of(CommunicationMode.values())
-                        .filter(mode -> !batch || mode != CommunicationMode.ONEWAY)
-                        .flatMap(
-                            mode ->
-                                Stream.of(false, true)
-                                    .filter(
-                                        deferred -> !deferred || mode == CommunicationMode.ASYNC)
-                                    .flatMap(
-                                        deferred ->
-                                            Stream.of(false, true)
-                                                .flatMap(
-                                                    failure ->
-                                                        Stream.of(false, true)
-                                                            .map(
-                                                                parent ->
-                                                                    Arguments.of(
-                                                                        batch, mode, deferred,
-                                                                        failure, parent,
-                                                                        false))))));
-    return Stream.concat(
-        modes,
-        Stream.of(
-            Arguments.of(true, CommunicationMode.SYNC, false, false, true, true),
-            Arguments.of(true, CommunicationMode.SYNC, false, true, true, true)));
+    List<Arguments> arguments = new ArrayList<>();
+    for (boolean batch : new boolean[] {false, true}) {
+      for (CommunicationMode mode : CommunicationMode.values()) {
+        if (batch && mode == CommunicationMode.ONEWAY) {
+          continue;
+        }
+        for (boolean deferred : new boolean[] {false, true}) {
+          if (deferred && mode != CommunicationMode.ASYNC) {
+            continue;
+          }
+          for (boolean failure : new boolean[] {false, true}) {
+            for (boolean parent : new boolean[] {false, true}) {
+              arguments.add(Arguments.of(batch, mode, deferred, failure, parent, false));
+            }
+          }
+        }
+      }
+    }
+    arguments.add(Arguments.of(true, CommunicationMode.SYNC, false, false, true, true));
+    arguments.add(Arguments.of(true, CommunicationMode.SYNC, false, true, true, true));
+    return arguments.stream();
   }
 }
