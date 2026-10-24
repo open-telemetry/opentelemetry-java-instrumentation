@@ -35,13 +35,13 @@ class MySqlReplicationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final String password = UUID.randomUUID().toString();
+  private static final String PASSWORD = UUID.randomUUID().toString();
   private static final GenericContainer<?> source = mysql();
   private static final GenericContainer<?> replica = mysql();
 
   private static GenericContainer<?> mysql() {
     return new GenericContainer<>("mysql:8.0.32")
-        .withEnv("MYSQL_ROOT_PASSWORD", password)
+        .withEnv("MYSQL_ROOT_PASSWORD", PASSWORD)
         .withEnv("MYSQL_DATABASE", "shop")
         .withExposedPorts(3306)
         .waitingFor(Wait.forLogMessage(".*ready for connections.*port: 3306.*", 1));
@@ -75,7 +75,7 @@ class MySqlReplicationTest {
             + target
             + "/shop?sslMode=DISABLED&allowPublicKeyRetrieval=true&openTelemetry=DISABLED&useServerPrepStmts="
             + serverPrepared;
-    try (Connection connection = DriverManager.getConnection(url, "root", password)) {
+    try (Connection connection = DriverManager.getConnection(url, "root", PASSWORD)) {
       String sourceId = query(connection, false, prepared, target);
       String replicaId = query(connection, true, prepared, target);
       assertThat(replicaId).isNotEqualTo(sourceId);
