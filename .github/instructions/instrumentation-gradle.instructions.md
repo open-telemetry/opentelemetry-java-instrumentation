@@ -53,17 +53,18 @@ or test failure that CI will report.
   normally selecting the higher version. Exercise the newer runtime in a wired version-specific
   test suite.
 - Inspect test sources before requiring `testcontainersBuildService`; a transitive dependency
-  alone is not enough. In a project whose tests use Testcontainers, declare
-  `usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)` once
-  in `tasks.withType<Test>().configureEach`, or `withType<Test>().configureEach` inside `tasks`.
-  Apply it unconditionally to all `Test` tasks, even with only the default test task. Accept
-  brief slot use by container-free variants rather than adding task-name filters, source-set
-  inspection, automatic detection, or helpers to optimize slots. Narrower registration requires
-  an evidenced meaningful scheduling problem.
+  alone is not enough. In projects whose tests use Testcontainers, declare
+  `usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)` once.
+  For a project with only the standard `test` task, use `tasks.test { ... }` (or `test { ... }`
+  inside `tasks`). For projects with multiple explicitly declared test tasks or JVM test suites,
+  use `tasks.withType<Test>().configureEach { ... }` (or `withType<Test>().configureEach { ... }`
+  inside `tasks`) to apply the service to all test tasks. Accept brief slot use by container-free
+  variants rather than adding task-name filters, source-set inspection, automatic detection, or
+  helpers to optimize slots. Narrower registration requires an evidenced meaningful scheduling
+  problem.
 - Use `withType<Test>().configureEach` for configuration shared by multiple explicitly declared
-  test tasks; not for a module with only `tasks.test` (implicit `latestDepTest` does not count),
-  except for the project-wide Testcontainers service registration above. This exception does
-  not broaden unrelated JVM settings or system properties.
+  test tasks or JVM test suites; not for a module with only `tasks.test` (implicit `latestDepTest`
+  does not count). This does not broaden unrelated JVM settings or system properties.
 - Check metadata collection when its wiring or collected telemetry changes, not as unrelated
   cleanup. Collect default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's

@@ -28,11 +28,8 @@ dependencies {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-}
-
 tasks.test {
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
