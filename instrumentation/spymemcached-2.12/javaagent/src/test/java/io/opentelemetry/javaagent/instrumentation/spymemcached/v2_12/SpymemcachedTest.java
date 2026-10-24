@@ -36,6 +36,7 @@ import static org.awaitility.Awaitility.await;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -54,6 +55,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -437,6 +439,7 @@ class SpymemcachedTest {
     "iterator,true,false"
   })
   void bulkGet(String overload, boolean async, boolean capturesKeys) throws Exception {
+    Context original = Context.current();
     Map<String, String> testData = new HashMap<>();
     testData.put("test-get", "get test");
     testData.put("test-get-2", "get test 2");
@@ -465,6 +468,7 @@ class SpymemcachedTest {
                       : memcached.getBulk(keys.toArray(new String[0]));
               }
             });
+    assertThat(Context.current()).isSameAs(original);
     assertThat(result)
         .hasSize(2)
         .containsEntry(key("test-get"), "get test")
@@ -492,6 +496,52 @@ class SpymemcachedTest {
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+  }
+
+  @Test
+  void bulkGetCancellationPreservesQueryAndDoesNotReportError() {
+    ReentrantLock queueLock = new ReentrantLock();
+    MemcachedClient memcached =
+        getMemcached(
+            emptyMap(),
+            builder ->
+                builder.setOpQueueFactory(
+                    () -> getLockableQueue(queueLock, (queue, operation) -> operation.cancel())));
+    Context original = Context.current();
+    queueLock.lock();
+    try {
+      testing.runWithSpan(
+          "parent",
+          () ->
+              assertThatThrownBy(() -> memcached.getBulk(key("cancel-bulk")))
+                  .isInstanceOf(CancellationException.class));
+    } finally {
+      queueLock.unlock();
+    }
+    assertThat(Context.current()).isSameAs(original);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "getBulk " + key("cancel-bulk")),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()),
+                            equalTo(
+                                booleanKey("spymemcached.command.cancelled"),
+                                experimental(true)))));
   }
 
   @Test

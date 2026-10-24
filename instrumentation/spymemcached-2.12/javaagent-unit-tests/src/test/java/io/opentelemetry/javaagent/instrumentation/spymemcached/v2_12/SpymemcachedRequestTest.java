@@ -65,6 +65,28 @@ class SpymemcachedRequestTest {
   }
 
   @Test
+  void synchronousBulkSnapshotOnlyAppliesToBulkRequests() {
+    MemcachedConnection connection = mock(MemcachedConnection.class);
+    try (Scope scope =
+        Context.root()
+            .with(SpymemcachedRequest.BULK_QUERY_TEXT, "getBulk key1 key2")
+            .makeCurrent()) {
+      assertThat(
+              SpymemcachedRequest.create(
+                      connection,
+                      "asyncGetBulk",
+                      "",
+                      new Object[] {asList("key1", "key2").iterator()})
+                  .getQueryText())
+          .isEqualTo("getBulk key1 key2");
+      assertThat(
+              SpymemcachedRequest.create(connection, "asyncGet", "", new Object[] {"key3"})
+                  .getQueryText())
+          .isEqualTo("get key3");
+    }
+  }
+
+  @Test
   void requestCarriesTheTargetItsConnectionWasCreatedFor() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedSingletons.setServerTarget(

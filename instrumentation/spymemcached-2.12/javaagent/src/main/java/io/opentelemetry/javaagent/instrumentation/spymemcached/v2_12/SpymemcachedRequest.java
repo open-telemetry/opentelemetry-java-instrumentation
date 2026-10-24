@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -16,6 +18,9 @@ import net.spy.memcached.MemcachedNode;
 @AutoValue
 public abstract class SpymemcachedRequest {
 
+  static final ContextKey<String> BULK_QUERY_TEXT =
+      ContextKey.named("opentelemetry-spymemcached-bulk-query-text");
+
   public static SpymemcachedRequest create(MemcachedConnection connection, String methodName) {
     return create(connection, methodName, "", new Object[0]);
   }
@@ -23,10 +28,14 @@ public abstract class SpymemcachedRequest {
   public static SpymemcachedRequest create(
       MemcachedConnection connection, String methodName, String descriptor, Object[] args) {
     String operationName = operationName(methodName);
+    String queryText =
+        operationName.equals("getBulk") ? Context.current().get(BULK_QUERY_TEXT) : null;
     return new AutoValue_SpymemcachedRequest(
         connection,
         operationName,
-        SpymemcachedQuerySanitizer.sanitize(operationName, descriptor, args),
+        queryText != null
+            ? queryText
+            : SpymemcachedQuerySanitizer.sanitize(operationName, descriptor, args),
         SpymemcachedSingletons.serverTarget(connection));
   }
 

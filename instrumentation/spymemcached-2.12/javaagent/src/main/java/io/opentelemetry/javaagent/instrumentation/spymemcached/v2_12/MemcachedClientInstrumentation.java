@@ -49,8 +49,9 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
         isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.BulkFuture"))),
         getClass().getName() + "$AsyncBulkAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(namedOneOf("incr", "decr", "getBulk")),
-        getClass().getName() + "$SyncOperationAdvice");
+        isPublic().and(namedOneOf("incr", "decr")), getClass().getName() + "$SyncOperationAdvice");
+    transformer.applyAdviceToMethod(
+        isPublic().and(named("getBulk")), getClass().getName() + "$SyncBulkAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -137,6 +138,26 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
+  public static class SyncBulkAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Scope methodEnter(@Advice.AllArguments Object[] args) {
+      String queryText = SpymemcachedQuerySanitizer.sanitize("getBulk", "", args);
+      if (queryText.equals("getBulk")) {
+        return null;
+      }
+      return Context.current().with(SpymemcachedRequest.BULK_QUERY_TEXT, queryText).makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void methodExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
   public static class AdviceScope<F, T extends CompletionListener<?>> {
     private final CallDepth callDepth;
     private final Handler<F, T> handler;
@@ -161,12 +182,11 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
         return new AdviceScope<>(handler, callDepth, null);
       }
 
-      return new AdviceScope<>(
-          handler,
-          callDepth,
-          handler.create(
-              Context.current(),
-              SpymemcachedRequest.create(client.getConnection(), methodName, descriptor, args)));
+      SpymemcachedRequest request =
+          SpymemcachedRequest.create(client.getConnection(), methodName, descriptor, args);
+      // Consume the synchronous bulk snapshot without propagating it to nested client calls.
+      Context parentContext = Context.current().with(SpymemcachedRequest.BULK_QUERY_TEXT, null);
+      return new AdviceScope<>(handler, callDepth, handler.create(parentContext, request));
     }
 
     public void end(@Nullable F future, @Nullable Throwable throwable) {
