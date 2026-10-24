@@ -18,6 +18,7 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
   private final HttpServerResponse response;
   private final VertxHttpServerState state;
   @Nullable private final Handler<AsyncResult<Void>> delegate;
+  private final boolean completeResponse;
 
   @Nullable
   public static Handler<AsyncResult<Void>> wrapHeaders(
@@ -36,14 +37,25 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
       HttpServerResponse response,
       VertxHttpServerState state,
       @Nullable Handler<AsyncResult<Void>> delegate) {
+    this(response, state, delegate, true);
+  }
+
+  public ResponseCompletionHandler(
+      HttpServerResponse response,
+      VertxHttpServerState state,
+      @Nullable Handler<AsyncResult<Void>> delegate,
+      boolean completeResponse) {
     this.response = response;
     this.state = state;
     this.delegate = delegate;
+    this.completeResponse = completeResponse;
   }
 
   @Override
   public void handle(AsyncResult<Void> result) {
-    VertxHttpServerSingletons.endResponse(response, result.cause());
+    if (completeResponse) {
+      VertxHttpServerSingletons.endResponse(response, result.cause());
+    }
     if (delegate != null) {
       try (Scope ignored = state.context.makeCurrent()) {
         delegate.handle(result);

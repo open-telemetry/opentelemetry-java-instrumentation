@@ -34,6 +34,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -48,11 +49,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -225,6 +228,103 @@ class VertxHttp2ServerTest {
     assertDuration(SCOPE, 2);
   }
 
+  @Test
+  void backpressureDrainHandlersRetainStreamContexts() throws Exception {
+    String secondTraceId = "03030303030303030303030303030303";
+    CompletableFuture<Void> drained = new CompletableFuture<>();
+    CompletableFuture<Void> responsesEnded = new CompletableFuture<>();
+    AtomicInteger drainCount = new AtomicInteger();
+    AtomicInteger responseCount = new AtomicInteger();
+    AtomicInteger firstBytes = new AtomicInteger();
+    AtomicInteger secondBytes = new AtomicInteger();
+    CompletableFuture<HttpServerRequest> firstServerRequest = new CompletableFuture<>();
+    CompletableFuture<HttpServerRequest> secondServerRequest = new CompletableFuture<>();
+    start(
+        HttpClient.Version.HTTP_2,
+        request -> {
+          assertThat(request.version()).isEqualTo(HttpVersion.HTTP_2);
+          if (request.path().equals("/drain/first")) {
+            firstServerRequest.complete(request);
+          } else {
+            secondServerRequest.complete(request);
+          }
+          request
+              .response()
+              .setWriteQueueMaxSize(1024)
+              .drainHandler(
+                  ignored ->
+                      testing.runWithSpan(
+                          "drain " + request.path(),
+                          () -> {
+                            request.response().end();
+                            if (drainCount.incrementAndGet() == 2) {
+                              drained.complete(null);
+                            }
+                          }));
+          byte[] chunk = new byte[8192];
+          for (int i = 0; i < 512; i++) {
+            request.response().write(Buffer.buffer(chunk));
+          }
+          assertThat(request.response().writeQueueFull()).isTrue();
+        });
+    io.vertx.core.http.HttpClient client =
+        vertx.createHttpClient(
+            new HttpClientOptions()
+                .setSsl(true)
+                .setUseAlpn(true)
+                .setProtocolVersion(HttpVersion.HTTP_2)
+                .setMaxPoolSize(1)
+                .setTrustOptions(
+                    new PfxOptions()
+                        .setPath(System.getProperty("test.keystore"))
+                        .setPassword("testing")));
+    try {
+      HttpClientResponse first =
+          sendAndPause(client, "/drain/first", TRACE_ID, firstBytes, responseCount, responsesEnded)
+              .get(10, SECONDS);
+      HttpClientResponse second =
+          sendAndPause(
+                  client,
+                  "/drain/second",
+                  secondTraceId,
+                  secondBytes,
+                  responseCount,
+                  responsesEnded)
+              .get(10, SECONDS);
+      assertThat(firstServerRequest.get(10, SECONDS).connection())
+          .isSameAs(secondServerRequest.get(10, SECONDS).connection());
+      assertThat(drained.isDone()).isFalse();
+
+      CompletableFuture<Void> resumed = new CompletableFuture<>();
+      vertx.runOnContext(
+          ignored -> {
+            first.resume();
+            second.resume();
+            resumed.complete(null);
+          });
+      resumed.get(10, SECONDS);
+      drained.get(10, SECONDS);
+      responsesEnded.get(10, SECONDS);
+      assertThat(first.statusCode()).isEqualTo(200);
+      assertThat(second.statusCode()).isEqualTo(200);
+      assertThat(firstBytes.get()).isGreaterThan(65_536);
+      assertThat(secondBytes.get()).isGreaterThan(65_536);
+    } finally {
+      client.close();
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
+                span -> span.hasName("drain /drain/first").hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasKind(SERVER).hasTraceId(secondTraceId).hasParentSpanId(PARENT_ID),
+                span -> span.hasName("drain /drain/second").hasParent(trace.getSpan(0))));
+    assertDuration(SCOPE, 2);
+  }
+
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void responseEndsBeforeUpload(boolean trailers) throws Exception {
@@ -234,7 +334,11 @@ class VertxHttp2ServerTest {
         HttpClient.Version.HTTP_2,
         request -> {
           assertThat(request.version()).isEqualTo(HttpVersion.HTTP_2);
-          request.endHandler(ignored -> requestEnd.complete(null));
+          request.endHandler(
+              ignored -> {
+                testing.runWithSpan("late request end", () -> {});
+                requestEnd.complete(null);
+              });
           if (trailers) {
             request.response().putTrailer("x-finished", "yes");
           }
@@ -286,15 +390,98 @@ class VertxHttp2ServerTest {
       responseEnd.get(10, SECONDS);
       assertThat(requestEnd.isDone()).isFalse();
       assertDuration(SCOPE, 1);
+      request.end().toCompletionStage().toCompletableFuture().get(10, SECONDS);
+      requestEnd.get(10, SECONDS);
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
-                  span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID)));
-      request.end().toCompletionStage().toCompletableFuture().get(10, SECONDS);
-      requestEnd.get(10, SECONDS);
+                  span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
+                  span -> span.hasName("late request end").hasParent(trace.getSpan(0))));
       assertDuration(SCOPE, 1);
     } finally {
       client.close();
+    }
+  }
+
+  @Test
+  void sendFileFailureCanRecover() throws Exception {
+    Path missingFile = Files.createTempFile("vertx-http2-missing", ".txt");
+    Files.delete(missingFile);
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request ->
+                request
+                    .response()
+                    .sendFile(
+                        missingFile.toString(),
+                        result -> {
+                          assertThat(result.failed()).isTrue();
+                          testing.runWithSpan("sendFile callback", () -> {});
+                          vertx.setTimer(
+                              200,
+                              ignored -> request.response().setStatusCode(404).end("not found"));
+                        }));
+
+    HttpResponse<String> response = send(client, "/missing", TRACE_ID).get(10, SECONDS);
+    assertThat(response.statusCode()).isEqualTo(404);
+    assertThat(response.body()).isEqualTo("not found");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SERVER)
+                        .hasTraceId(TRACE_ID)
+                        .hasParentSpanId(PARENT_ID)
+                        .hasAttributesSatisfying(equalTo(HTTP_RESPONSE_STATUS_CODE, 404)),
+                span -> span.hasName("sendFile callback").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertMetrics(
+        SCOPE,
+        "http.server.request.duration",
+        metrics ->
+            metrics.satisfies(
+                data -> {
+                  assertThat(
+                          data.stream()
+                              .flatMap(metric -> metric.getHistogramData().getPoints().stream())
+                              .mapToLong(point -> point.getCount())
+                              .sum())
+                      .isEqualTo(1);
+                  assertThat(
+                          data.stream()
+                              .flatMap(metric -> metric.getHistogramData().getPoints().stream())
+                              .mapToDouble(point -> point.getSum())
+                              .sum())
+                      .isGreaterThan(0.1);
+                }));
+  }
+
+  @Test
+  void sendFileCompletesOnTerminalWrite() throws Exception {
+    Path file = Files.createTempFile("vertx-http2-send-file", ".txt");
+    try {
+      Files.writeString(file, "send file");
+      HttpClient client =
+          start(
+              HttpClient.Version.HTTP_2,
+              request ->
+                  request
+                      .response()
+                      .sendFile(
+                          file.toString(),
+                          result -> testing.runWithSpan("sendFile callback", () -> {})));
+
+      HttpResponse<String> response = send(client, "/send-file", TRACE_ID).get(10, SECONDS);
+      assertThat(response.statusCode()).isEqualTo(200);
+      assertThat(response.body()).isEqualTo("send file");
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
+                  span -> span.hasName("sendFile callback").hasParent(trace.getSpan(0))));
+      assertDuration(SCOPE, 1);
+    } finally {
+      Files.deleteIfExists(file);
     }
   }
 
@@ -376,5 +563,43 @@ class VertxHttp2ServerTest {
                               .sum())
                       .isEqualTo(count));
         });
+  }
+
+  private CompletableFuture<HttpClientResponse> sendAndPause(
+      io.vertx.core.http.HttpClient client,
+      String path,
+      String traceId,
+      AtomicInteger responseBytes,
+      AtomicInteger responseCount,
+      CompletableFuture<Void> responsesEnded) {
+    return client
+        .request(
+            new RequestOptions()
+                .setHost("localhost")
+                .setPort(port)
+                .setURI(path)
+                .setMethod(HttpMethod.GET))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .thenCompose(
+            request -> {
+              request
+                  .putHeader("traceparent", "00-" + traceId + "-" + PARENT_ID + "-01")
+                  .putHeader("user-agent", "test-client");
+              return request.send().toCompletionStage().toCompletableFuture();
+            })
+        .thenApply(
+            response -> {
+              response.handler(buffer -> responseBytes.addAndGet(buffer.length()));
+              response.endHandler(
+                  ignored -> {
+                    if (responseCount.incrementAndGet() == 2) {
+                      responsesEnded.complete(null);
+                    }
+                  });
+              response.exceptionHandler(responsesEnded::completeExceptionally);
+              response.pause();
+              return response;
+            });
   }
 }

@@ -85,6 +85,8 @@ public class Http2ServerRequestInstrumentation implements TypeInstrumentation {
         VertxHttpServerSingletons.end(request, error);
       } else if (method.equals("handleClose") && !request.response().ended()) {
         VertxHttpServerSingletons.end(request, new ClosedChannelException());
+      } else if (method.equals("handleEnd") || method.equals("handleClose")) {
+        VertxHttpServerSingletons.endInbound(request);
       }
     }
   }

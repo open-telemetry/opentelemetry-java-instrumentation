@@ -53,16 +53,22 @@ public final class VertxHttpServerSingletons {
   public static void end(HttpServerRequest request, @Nullable Throwable error) {
     try {
       VertxHttpServerState state = STATE.get(request);
-      if (state != null && state.ended.compareAndSet(false, true)) {
+      if (state == null) {
+        VertxHttpServerResponseState responseState = RESPONSE_STATE.get(request.response());
+        state = responseState == null ? null : responseState.state;
+      }
+      if (state != null) {
         STATE.set(request, null);
         RESPONSE_STATE.set(request.response(), null);
-        if (state.started) {
-          instrumenter.end(state.context, request, request.response(), error);
-        }
+        endTelemetry(state, request, error);
       }
     } catch (Throwable t) {
       logger.log(FINE, "Unable to end Vert.x HTTP server span", t);
     }
+  }
+
+  public static void endInbound(HttpServerRequest request) {
+    STATE.set(request, null);
   }
 
   public static void endResponse(HttpServerResponse response, @Nullable Throwable error) {
@@ -70,14 +76,20 @@ public final class VertxHttpServerSingletons {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
       if (state != null) {
         HttpServerRequest request = state.request.get();
+        RESPONSE_STATE.set(response, null);
         if (request != null) {
-          end(request, error);
-        } else {
-          RESPONSE_STATE.set(response, null);
+          endTelemetry(state.state, request, error);
         }
       }
     } catch (Throwable t) {
       logger.log(FINE, "Unable to end Vert.x HTTP server response span", t);
+    }
+  }
+
+  private static void endTelemetry(
+      VertxHttpServerState state, HttpServerRequest request, @Nullable Throwable error) {
+    if (state.ended.compareAndSet(false, true) && state.started) {
+      instrumenter.end(state.context, request, request.response(), error);
     }
   }
 

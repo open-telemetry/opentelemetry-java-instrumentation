@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.AsyncResult;
@@ -51,6 +52,9 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ExceptionAdvice");
     transformer.applyAdviceToMethod(
         named("reset").and(takesArguments(long.class)), getClass().getName() + "$ResetAdvice");
+    transformer.applyAdviceToMethod(
+        named("handlerWritabilityChanged").and(takesArguments(boolean.class)),
+        getClass().getName() + "$WritabilityAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -92,7 +96,7 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
       return state == null
           ? handler
-          : new ResponseCompletionHandler(response, state.state, handler);
+          : new ResponseCompletionHandler(response, state.state, handler, false);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -122,6 +126,23 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
         @Advice.Return boolean accepted) {
       if (accepted) {
         VertxHttpServerSingletons.endResponse(response, new StreamResetException(code));
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class WritabilityAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This HttpServerResponse response) {
+      VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
+      return state == null ? null : state.state.context.makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
     }
   }
