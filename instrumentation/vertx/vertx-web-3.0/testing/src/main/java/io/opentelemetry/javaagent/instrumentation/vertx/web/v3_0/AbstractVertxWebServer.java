@@ -36,7 +36,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
     for (String path :
         new String[] {"/standard", "/virtual", "/repeat/repeat", "/precedence/:id"}) {
       router
-          .get(path)
+          .route(path)
           .handler(
               ctx -> {
                 Span span = Span.current();
