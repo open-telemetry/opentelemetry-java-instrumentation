@@ -5,27 +5,47 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -155,6 +175,95 @@ public abstract class AbstractNetty41ClientTest
       return 443;
     } else {
       throw new IllegalArgumentException("Unexpected uri: " + uri);
+    }
+  }
+
+  @Test
+  void pipelinedRequests()
+      throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    try (ServerSocket server = new ServerSocket(PortUtils.findOpenPort())) {
+      CompletableFuture<Void> served =
+          CompletableFuture.runAsync(
+              () -> {
+                try (Socket socket = server.accept()) {
+                  socket.setSoTimeout(20_000);
+                  BufferedReader reader =
+                      new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
+                  // Do not send either response until both requests have arrived.
+                  for (int i = 0; i < 2; i++) {
+                    String line;
+                    do {
+                      line = reader.readLine();
+                    } while (line != null && !line.isEmpty());
+                  }
+                  socket
+                      .getOutputStream()
+                      .write(
+                          ("HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n"
+                                  + "HTTP/1.1 202 Accepted\r\nContent-Length: 0\r\n\r\n")
+                              .getBytes(US_ASCII));
+                  socket.getOutputStream().flush();
+                } catch (Exception e) {
+                  throw new IllegalStateException(e);
+                }
+              });
+      URI uri = URI.create("http://localhost:" + server.getLocalPort() + "/pipeline");
+      Channel channel =
+          clientExtension()
+              .getBootstrap(uri)
+              .connect("localhost", server.getLocalPort())
+              .sync()
+              .channel();
+      List<SpanContext> callbacks = new ArrayList<>();
+      CompletableFuture<Void> received = new CompletableFuture<>();
+      channel
+          .pipeline()
+          .addLast(
+              new SimpleChannelInboundHandler<HttpObject>() {
+                @Override
+                protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
+                  if (msg instanceof HttpResponse) {
+                    callbacks.add(Span.current().getSpanContext());
+                    if (callbacks.size() == 2) {
+                      received.complete(null);
+                    }
+                  }
+                }
+              });
+      List<SpanContext> parents = new ArrayList<>();
+      try {
+        for (int i = 0; i < 2; i++) {
+          Span parent =
+              testing.getOpenTelemetry().getTracer("test").spanBuilder("parent-" + i).startSpan();
+          parents.add(parent.getSpanContext());
+          try (Scope ignored = Context.current().with(parent).makeCurrent()) {
+            configureChannel(channel);
+            channel.writeAndFlush(buildRequest("GET", uri, emptyMap())).sync();
+          } finally {
+            parent.end();
+          }
+        }
+        received.get(20, SECONDS);
+        served.get(20, SECONDS);
+        assertThat(callbacks).containsExactlyElementsOf(parents);
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent-0"),
+                    span ->
+                        span.hasName("GET")
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfying(equalTo(HTTP_RESPONSE_STATUS_CODE, 201))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent-1"),
+                    span ->
+                        span.hasName("GET")
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfying(equalTo(HTTP_RESPONSE_STATUS_CODE, 202))));
+      } finally {
+        channel.close().sync();
+      }
     }
   }
 

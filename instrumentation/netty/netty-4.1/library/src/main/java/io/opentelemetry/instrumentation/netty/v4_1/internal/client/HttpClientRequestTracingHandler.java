@@ -8,15 +8,17 @@ package io.opentelemetry.instrumentation.netty.v4_1.internal.client;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.util.Attribute;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts.RequestState;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -36,39 +38,59 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
+    if (!(msg instanceof HttpRequest) && !(msg instanceof HttpContent)) {
+      super.write(ctx, msg, prm);
+      return;
+    }
+    ClientContexts contexts = ClientContexts.get(ctx.channel());
     if (!(msg instanceof HttpRequest)) {
-      super.write(ctx, msg, prm);
+      writeAndTrackFailure(ctx, msg, prm, contexts.outboundRequest(msg));
       return;
     }
 
-    Context parentContext = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get();
-    if (parentContext == null) {
-      parentContext = Context.current();
+    Context parentContext = contexts.parent(ctx.channel());
+    if (!contexts.isUsable()) {
+      super.write(ctx, msg, prm);
+      return;
     }
-
     NettyCommonRequest request = NettyCommonRequest.create((HttpRequest) msg, ctx.channel());
-    if (!instrumenter.shouldStart(parentContext, request) || isAwsRequest(request)) {
+    Context context =
+        !isAwsRequest(request) && instrumenter.shouldStart(parentContext, request)
+            ? instrumenter.start(parentContext, request)
+            : null;
+    RequestState state = new RequestState(contexts, instrumenter, parentContext, context, request);
+    if (!contexts.add(ctx.channel(), state, !(msg instanceof LastHttpContent))) {
+      state.end(instrumenter, contexts.failure());
       super.write(ctx, msg, prm);
       return;
     }
-
-    Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
-    Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-    Attribute<NettyCommonRequest> requestAttr = ctx.channel().attr(HTTP_CLIENT_REQUEST);
-
-    Context context = instrumenter.start(parentContext, request);
-    parentContextAttr.set(parentContext);
-    contextAttr.set(context);
-    requestAttr.set(request);
-
-    try (Scope ignored = context.makeCurrent()) {
-      super.write(ctx, msg, prm);
-    } catch (Throwable t) {
-      instrumenter.end(contextAttr.getAndSet(null), requestAttr.getAndSet(null), null, t);
-      parentContextAttr.set(null);
-      throw t;
+    try (Scope ignored = (context == null ? parentContext : context).makeCurrent()) {
+      writeAndTrackFailure(ctx, msg, prm, state);
     }
     // span is ended normally in HttpClientResponseTracingHandler
+  }
+
+  private void writeAndTrackFailure(
+      ChannelHandlerContext ctx, Object msg, ChannelPromise prm, @Nullable RequestState state)
+      throws Exception {
+    if (state == null) {
+      super.write(ctx, msg, prm);
+      return;
+    }
+    ChannelPromise promise;
+    if (prm.isVoid()) {
+      promise = ctx.newPromise();
+      promise.addListener(state.voidFailureListener());
+    } else {
+      promise = prm;
+      promise.addListener(state);
+    }
+    try {
+      super.write(ctx, msg, promise);
+    } catch (Throwable t) {
+      state.fail(t);
+      throw t;
+    }
   }
 
   private static boolean isAwsRequest(NettyCommonRequest request) {
