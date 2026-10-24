@@ -51,7 +51,7 @@ tasks {
   bootJar {
     enabled = false
   }
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
