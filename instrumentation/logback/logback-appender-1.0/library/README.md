@@ -82,16 +82,12 @@ public class Application {
 
 #### Asynchronous logging and trace correlation
 
-Attach the library exporting `OpenTelemetryAppender` directly to your logger, not behind
-Logback's `AsyncAppender`. An `AsyncAppender` invokes downstream appenders on its worker thread,
-where the application's OpenTelemetry context is unavailable, so exported log records lose
-trace/span correlation. Copying trace/span ID strings into MDC does not restore the exported
-record's actual span context. This limitation concerns the library exporting appender configuration,
-not the Java agent's automatic log capture.
+Attach `OpenTelemetryAppender` directly to your logger. Placing it behind Logback's `AsyncAppender`
+loses trace/span correlation because the logging thread's OpenTelemetry context is not propagated
+to the async worker. This limitation does not apply to the Java agent's automatic log capture.
 
-Use the SDK's `BatchLogRecordProcessor` for asynchronous export. Formatting, attribute extraction,
-and any synchronous log record processor work still execute on the logging thread (the application
-thread when OTel is attached directly). Console or file output can use a separate async branch:
+Use the SDK's `BatchLogRecordProcessor` for asynchronous export. Formatting and attribute extraction
+still run on the logging thread. Console or file appenders can remain asynchronous, as shown below:
 
 ```xml
 <configuration>
@@ -112,18 +108,12 @@ thread when OTel is attached directly). Console or file output can use a separat
 </configuration>
 ```
 
-For library installation, configure a `BatchLogRecordProcessor` on your `SdkLoggerProvider` and
-call `OpenTelemetryAppender.install(openTelemetrySdk)` after Logback configuration, as shown above.
-With the OpenTelemetry Spring Boot starter, use the same appender layout in `logback-spring.xml`;
-the starter installs the SDK on the exporting appender automatically. The starter's SDK
-autoconfiguration uses batch log export by default (`otel.blrp.*` properties tune batching).
+With the OpenTelemetry Spring Boot starter, use the same layout in `logback-spring.xml`. The starter
+configures SDK batch export by default.
 
-The exporting appender reports an advisory Logback status warning once per appender instance if
-configuration inspection finds it downstream of a known Logback async appender, including through
-nested attachments. Inspection happens when the SDK is installed on the appender, so assemble the
-appender graph first. Graphs attached or changed afterward are not guaranteed to be detected unless
-SDK installation is performed again. The warning does not reject the configuration or change log
-export.
+When the SDK is installed, `OpenTelemetryAppender` checks the configuration and warns once if it is
+behind a Logback async appender. Configure appenders before installing the SDK; later changes are
+not checked automatically. The warning does not change logging behavior.
 
 #### Settings for the Logback Appender
 
