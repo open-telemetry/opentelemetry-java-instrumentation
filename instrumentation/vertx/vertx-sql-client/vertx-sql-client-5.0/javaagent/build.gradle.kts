@@ -63,13 +63,8 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
-
-  withType<Test>()
-    .matching { it.name != "unitTests" }
-    .configureEach {
-      systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    }
 
   val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs

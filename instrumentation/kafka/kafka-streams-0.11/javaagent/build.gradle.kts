@@ -44,10 +44,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    if (name != "unitTests") {
-      systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    }
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
