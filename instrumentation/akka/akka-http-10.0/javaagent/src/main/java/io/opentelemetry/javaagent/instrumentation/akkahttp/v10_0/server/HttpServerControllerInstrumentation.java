@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.AkkaHttpParsingErrorSingletons.currentError;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -48,12 +49,13 @@ class HttpServerControllerInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ErrorInfo onEnter(@Advice.Argument(1) ErrorInfo info) {
-      return AkkaHttpParsingErrorSingletons.enter(info);
+      return currentError()
+          .set(AkkaHttpParsingErrorSingletons.consumeParsingError(info) ? info : null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable ErrorInfo previous) {
-      AkkaHttpParsingErrorSingletons.exit(previous);
+      currentError().restore(previous);
     }
   }
 
