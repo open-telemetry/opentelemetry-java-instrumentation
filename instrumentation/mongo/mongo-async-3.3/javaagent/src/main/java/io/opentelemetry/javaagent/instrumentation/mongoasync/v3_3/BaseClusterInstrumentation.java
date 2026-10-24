@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.mongodb.async.SingleResultCallback;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -31,7 +31,6 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("selectServerAsync"))
-            .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
             .and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
         getClass().getName() + "$SingleResultCallbackArg1Advice");
   }
@@ -43,7 +42,7 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(1) SingleResultCallback<Object> callback) {
-      return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+      return new SingleResultCallbackWrapper(Context.current(), callback);
     }
   }
 }

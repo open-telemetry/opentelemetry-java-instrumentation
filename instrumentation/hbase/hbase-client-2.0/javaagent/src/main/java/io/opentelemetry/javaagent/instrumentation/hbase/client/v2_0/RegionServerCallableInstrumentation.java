@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetTableName;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.resetTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.setTableName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -33,14 +33,14 @@ class RegionServerCallableInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RpcCallAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.FieldValue(value = "tableName") TableName tableName) {
       if (tableName != null) {
         setTableName(tableName);
       }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
       resetTableName();
     }

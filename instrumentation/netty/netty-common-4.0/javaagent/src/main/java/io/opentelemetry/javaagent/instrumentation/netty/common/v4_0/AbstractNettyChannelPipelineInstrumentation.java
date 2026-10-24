@@ -144,9 +144,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static ChannelHandler removeHandler(
-        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler returnHandler) {
-      // TODO remove this extra variable when migrating to "indy only" instrumentation.
-      ChannelHandler handler = returnHandler;
+        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
       ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
       if (ourHandler != null) {
         // Context is null when our handler has already been removed. This happens when calling
@@ -174,12 +172,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
     public static String addAfterHandler(
-        @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String nameArg) {
-      // TODO remove this extra variable when migrating to "indy only" instrumentation.
-      // using an intermediate variable is required to keep the advice work with "inlined" and
-      // "indy" this is probably a minor side-effect of using @Advice.AssignReturned.ToArguments
-      // with and inlined advice.
-      String name = nameArg;
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String name) {
       ChannelHandler handler = pipeline.get(name);
       if (handler != null) {
         ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);

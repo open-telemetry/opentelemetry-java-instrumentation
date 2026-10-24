@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -43,7 +42,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         isPublic()
             .and(named("query"))
             .and(takesArgument(0, String.class))
-            .and(takesArgument(1, isSubTypeOf(Map.class)))
+            .and(takesArgument(1, Map.class))
             .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings")))
             .and(returns(isSubTypeOf(CompletableFuture.class))),
         getClass().getName() + "$QueryAdvice");
@@ -72,7 +71,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
       CurrentServerInfo currentServerInfo = ClickHouseClientV2Singletons.currentServerInfo(client);
 
       String database = client.getConfiguration().get("database");
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       ClickHouseDbRequest request =
           ClickHouseDbRequest.create(currentServerInfo.getPeer(), serverTarget, database, sqlQuery);
 

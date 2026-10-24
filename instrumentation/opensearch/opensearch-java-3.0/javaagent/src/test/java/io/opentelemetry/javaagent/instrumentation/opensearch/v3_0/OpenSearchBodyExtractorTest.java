@@ -109,6 +109,6 @@ class OpenSearchBodyExtractorTest extends AbstractOpenSearchQueryTest {
                                         val.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 }

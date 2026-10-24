@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
@@ -28,9 +29,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,16 +43,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
-
-  @Test
-  void shouldProvideSchemaUrl() {
-    AttributesExtractor<Map<String, String>, String> extractor =
-        MessagingAttributesExtractor.create(
-            TestGetter.INSTANCE, MessagingOperationType.SEND, "send");
-
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(SchemaUrls.V1_43_0);
-  }
 
   @ParameterizedTest
   @MethodSource("destinations")
@@ -289,6 +278,11 @@ class MessagingAttributesExtractorTest {
     @Override
     public String getErrorType(Map<String, String> request, String response, Throwable error) {
       return "failure".equals(response) ? response : null;
+    }
+
+    @Override
+    public Iterable<String> getMessageHeaderNames(Map<String, String> request) {
+      return emptyList();
     }
   }
 }

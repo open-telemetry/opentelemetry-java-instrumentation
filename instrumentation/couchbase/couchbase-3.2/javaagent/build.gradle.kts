@@ -53,25 +53,25 @@ testing {
       }
     }
 
+    // SDK 3.4.3 covers the ProtostellarRequest constructor taking Core as its first argument.
     register<JvmTestSuite>("version343Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version343Test/java"))
-        }
-      }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.3")
       }
     }
 
+    // SDK 3.4.4 covers the eight-argument ProtostellarRequest constructor taking CoreProtostellar.
     register<JvmTestSuite>("version344Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version344Test/java"))
-        }
-      }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.4")
+      }
+    }
+
+    // RequestSpan.recordException is available in SDK 3.3.4+.
+    register<JvmTestSuite>("version334Test") {
+      dependencies {
+        implementation("com.couchbase.client:java-client:${baseVersion("3.3.4").orLatest()}")
+        implementation("org.testcontainers:testcontainers-couchbase")
       }
     }
   }
@@ -95,8 +95,18 @@ tasks {
     )
   }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*CouchbaseExceptionSignalTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testExceptionSignalLogs)
   }
 
   if (otelProps.denyUnsafe) {

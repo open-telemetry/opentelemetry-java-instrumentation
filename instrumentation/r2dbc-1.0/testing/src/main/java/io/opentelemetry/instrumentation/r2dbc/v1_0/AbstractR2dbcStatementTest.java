@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -65,6 +66,11 @@ public abstract class AbstractR2dbcStatementTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractR2dbcStatementTest.class);
 
   protected abstract InstrumentationExtension getTesting();
+
+  @Nullable
+  protected String expectedPeerService() {
+    return getTesting().expectedPeerService();
+  }
 
   private static final String USER_DB = "SA";
   private static final String PW_DB = "password123";
@@ -186,7 +192,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_NAMESPACE, DB),
                                 equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
                                 equalTo(DB_QUERY_SUMMARY, parameter.getQuerySummary()),
-                                equalTo(maybeStablePeerService(), "test-peer-service"),
+                                equalTo(maybeStablePeerService(), expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -369,7 +375,7 @@ public abstract class AbstractR2dbcStatementTest {
                                   equalTo(DB_NAMESPACE, DB),
                                   equalTo(DB_QUERY_SUMMARY, "BATCH"),
                                   equalTo(DB_OPERATION_BATCH_SIZE, 0L),
-                                  equalTo(maybeStablePeerService(), "test-peer-service"),
+                                  equalTo(maybeStablePeerService(), expectedPeerService()),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
@@ -392,7 +398,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_QUERY_TEXT, scenario.queryText),
                                 equalTo(DB_QUERY_SUMMARY, scenario.summary),
                                 equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                                equalTo(maybeStablePeerService(), "test-peer-service"),
+                                equalTo(maybeStablePeerService(), expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port))));
   }

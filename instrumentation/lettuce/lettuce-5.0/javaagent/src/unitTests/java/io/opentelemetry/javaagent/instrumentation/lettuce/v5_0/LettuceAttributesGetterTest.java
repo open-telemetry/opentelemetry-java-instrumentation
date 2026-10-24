@@ -13,6 +13,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.lettuce.core.ClientOptions;
+import io.lettuce.core.RedisCommandExecutionException;
+import io.lettuce.core.RedisCommandTimeoutException;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.StatefulRedisConnectionImpl;
 import io.lettuce.core.cluster.RedisClusterClient;
@@ -53,6 +55,23 @@ class LettuceAttributesGetterTest {
 
     assertThat(getter.getServerAddress(request)).isEqualTo(null);
     assertThat(getter.getServerPort(request)).isEqualTo(null);
+  }
+
+  @Test
+  void batchErrorUsesRequestOrderUnlessClientFails() {
+    Throwable first = new RedisCommandExecutionException("");
+    Throwable second = new RedisCommandExecutionException("Second.Code! details");
+    Throwable client = new RedisCommandTimeoutException("WRONGTYPE client timeout");
+
+    assertThat(LettuceBatchContext.getError(null, new Throwable[] {null, first, second}))
+        .isSameAs(first);
+    assertThat(LettuceBatchContext.getError(null, new Throwable[] {first, client}))
+        .isSameAs(client);
+    assertThat(LettuceBatchContext.getError(null, new Throwable[] {client, first}))
+        .isSameAs(client);
+    assertThat(LettuceBatchContext.getError(second, new Throwable[] {first})).isSameAs(second);
+    assertThat(LettuceBatchContext.getError(client, new Throwable[] {first})).isSameAs(client);
+    assertThat(LettuceBatchContext.getError(null, new Throwable[] {null, null})).isNull();
   }
 
   @Test

@@ -83,7 +83,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                         val.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   @Test
@@ -160,7 +160,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                             .startsWith(
                                                 httpHost + "/" + "_msearch?typed_keys=true")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   @Test
@@ -241,7 +241,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                         val.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_doc")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 201L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   private void assertQueryBody(String expected, String urlSuffix) {
@@ -271,7 +271,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                     URL_FULL,
                                     val -> val.asString().startsWith(httpHost + urlSuffix)),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   private static SearchRequest searchRequest(String field) {

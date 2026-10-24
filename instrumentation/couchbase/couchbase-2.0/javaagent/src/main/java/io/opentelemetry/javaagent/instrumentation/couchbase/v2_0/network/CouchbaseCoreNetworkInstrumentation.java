@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
@@ -46,7 +45,7 @@ class CouchbaseCoreNetworkInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context currentContext = Java8BytecodeBridge.currentContext();
+      Context currentContext = Context.current();
       requestInfo = CouchbaseRequestInfo.get(currentContext);
       if (requestInfo != null) {
         // The scope from the initial RxJava subscribe is not available to the networking layer.

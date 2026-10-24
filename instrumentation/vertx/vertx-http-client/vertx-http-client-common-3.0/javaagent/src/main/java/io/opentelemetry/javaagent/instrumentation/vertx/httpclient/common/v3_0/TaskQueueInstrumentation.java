@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -46,10 +45,9 @@ public class TaskQueueInstrumentation implements TypeInstrumentation {
       // method. This method places the task into queue and executes a runnable that starts
       // consuming tasks from the queue. Since we already attached context to the task, we don't
       // want to propagate context into the runnable that consumes tasks from the queue.
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       return new Object[] {
-        ContextPropagatingRunnable.propagateContext(task, context),
-        Java8BytecodeBridge.rootContext().makeCurrent()
+        ContextPropagatingRunnable.propagateContext(task, context), Context.root().makeCurrent()
       };
     }
 

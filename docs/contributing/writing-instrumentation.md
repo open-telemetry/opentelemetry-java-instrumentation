@@ -164,6 +164,11 @@ instrumented library: some of them expose interceptor/listener interfaces that c
 into the library, some others have a library interface that you can use to implement a decorator that
 emits telemetry when used.
 
+Factories and builders for instrumented library objects should return the library's interface or base
+class when it provides the full caller-facing contract. Concrete types are appropriate when required
+for supported setup or framework integration. This rule does not apply to OpenTelemetry-defined types
+or SPIs.
+
 Consider the following builder class:
 
 ```java

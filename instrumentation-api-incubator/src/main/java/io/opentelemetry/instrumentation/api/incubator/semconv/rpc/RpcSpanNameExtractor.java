@@ -5,16 +5,18 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
-
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 
 /** A {@link SpanNameExtractor} for RPC requests. */
-public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
+public final class RpcSpanNameExtractor<REQUEST>
+    implements SpanNameExtractor<REQUEST>, OpenTelemetryConfigurable {
 
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to RPC semantic
-   * conventions: {@code <rpc.service>/<rpc.method>}.
+   * conventions.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       RpcAttributesGetter<REQUEST, ?> attributesExtractor) {
@@ -22,17 +24,23 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
   }
 
   private final RpcAttributesGetter<REQUEST, ?> getter;
+  private final RpcSemconvSelection selection = new RpcSemconvSelection();
 
   private RpcSpanNameExtractor(RpcAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 
+  @Override
+  public void internalInitialize(OpenTelemetry openTelemetry) {
+    selection.initialize(openTelemetry);
+  }
+
   @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public String extract(REQUEST request) {
-    if (emitPreviewRpcSemconv()) {
+    if (selection.get().emitPreview()) {
       String method = getter.getRpcMethod(request);
-      if (method != null) {
+      if (method != null && !method.equals("_OTHER")) {
         return method;
       }
       // fall back to rpc.system.name

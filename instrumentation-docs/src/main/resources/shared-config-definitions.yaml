@@ -182,13 +182,6 @@ configurations:
 # ones, are left out of docs/declarative-configuration-example.yaml, because merely setting them there
 # would change behavior.
 global_configurations:
-  common.v3-preview:
-    name: otel.instrumentation.common.v3-preview
-    declarative_name: java.common.v3_preview
-    description: "Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring deprecated settings. The set of changes it enables can grow in any release."
-    type: boolean
-    default: false
-
   semconv-stability.opt-in:
     name: otel.semconv-stability.opt-in
     declarative_name: general.stability_opt_in_list
@@ -215,14 +208,6 @@ global_configurations:
     description: "Strategy for suppressing nested instrumentation spans: `semconv` suppresses a span nested in a span of the same semantic convention type, `span-kind` suppresses a span nested in a span of the same span kind, and `none` disables suppression."
     type: string
     default: semconv
-
-  span-suppression-strategy.deprecated:
-    name: otel.instrumentation.experimental.span-suppression-strategy
-    declarative_name: java.common.span_suppression_strategy/development
-    description: "Deprecated: use `otel.instrumentation.common.span-suppression-strategy` or `java.common.span_suppression_strategy` instead. This setting will be removed in 3.0."
-    type: string
-    deprecated: true
-    replaced_by: otel.instrumentation.common.span-suppression-strategy
 
   rpc.semconv.version:
     declarative_name: general.rpc.semconv.version

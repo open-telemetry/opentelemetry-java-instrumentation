@@ -11,8 +11,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -28,6 +26,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -37,7 +36,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -68,10 +67,10 @@ public final class AwsSdkInstrumenterFactory {
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       stringKey("messaging.message.id");
 
-  private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors = createAttributesExtractors(false);
-  private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      extendedAttributesExtractors = createAttributesExtractors(true);
+  private final List<AttributesExtractor<Request<?>, Response<?>>> defaultAttributesExtractors =
+      createAttributesExtractors(false);
+  private final List<AttributesExtractor<Request<?>, Response<?>>> extendedAttributesExtractors =
+      createAttributesExtractors(true);
 
   private final OpenTelemetry openTelemetry;
   private final IncludeExclude headers;
@@ -95,7 +94,6 @@ public final class AwsSdkInstrumenterFactory {
         new ArrayList<>(
             asList(
                 HttpClientAttributesExtractor.create(new AwsSdkHttpAttributesGetter()),
-                RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter()),
                 new SnsAttributesExtractor(),
                 new AwsSdkAttributesExtractor()));
     if (includeExperimental) {
@@ -110,7 +108,7 @@ public final class AwsSdkInstrumenterFactory {
         new AwsSdkSpanNameExtractor(),
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        builder -> setRpcClientExceptionEventExtractor(builder),
+        builder -> {},
         true);
   }
 
@@ -143,7 +141,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.get());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingReceiveExceptionEventExtractor(builder);
           builder.addSpanLinksExtractor(
               (spanLinks, parentContext, request) -> {
@@ -171,7 +169,7 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors()))
             .addAttributesExtractor(messagingAttributeExtractor)
             .addOperationMetrics(MessagingProcessMetrics.get())
-            .setSchemaUrl(messagingSchemaUrl());
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
     if (!messagingReceiveInstrumentationEnabled) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }
@@ -248,7 +246,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingProducerMetrics.get());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingSendExceptionEventExtractor(builder);
           builder.addSpanLinksExtractor(
               (spanLinks, parentContext, request) -> {
@@ -270,7 +268,7 @@ public final class AwsSdkInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
         .addAttributesExtractor(
             messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
-        .setSchemaUrl(messagingSchemaUrl())
+        .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
         .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
@@ -288,7 +286,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.get());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingSettleExceptionEventExtractor(builder);
         },
         true);
@@ -304,7 +302,7 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(new DynamoDbAttributesExtractor())
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(SchemaUrls.V1_44_0);
+              .setSchemaUrl(DbSchemaUrls.SCHEMA_URL);
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -340,6 +338,7 @@ public final class AwsSdkInstrumenterFactory {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .addAttributesExtractors(attributeExtractors)
             .setEnabled(enabled);
     customizer.accept(builder);

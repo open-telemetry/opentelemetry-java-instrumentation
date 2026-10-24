@@ -18,9 +18,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 abstract class AbstractWrapperTest extends KafkaClientBaseTest {
 
@@ -29,24 +28,16 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
+  protected static final boolean MESSAGING_RECEIVE_TELEMETRY_ENABLED =
+      Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
+  protected static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+
   protected long consumedOffset;
 
-  @ParameterizedTest
-  @CsvSource({
-    "true, true",
-    "false, false",
-  })
-  void testWrappers(boolean testHeaders, boolean testExperimental) throws InterruptedException {
-    KafkaTelemetryBuilder telemetryBuilder =
-        KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setHeaders(
-                IncludeExclude.builder()
-                    .setIncluded("Test-Message-*")
-                    .setExcluded("*-Excluded-Header")
-                    .build())
-            .setCaptureExperimentalSpanAttributes(testExperimental);
-    configure(telemetryBuilder);
-    KafkaTelemetry telemetry = telemetryBuilder.build();
+  @Test
+  void testWrappers() throws InterruptedException {
+    KafkaTelemetry telemetry = kafkaTelemetryBuilder().build();
 
     Producer<Integer, String> wrappedProducer = telemetry.wrap(producer);
 
@@ -55,10 +46,8 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
         () -> {
           ProducerRecord<Integer, String> producerRecord =
               new ProducerRecord<>(SHARED_TOPIC, greeting);
-          if (testHeaders) {
-            producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
-            producerRecord.headers().add("Uncaptured-Header", "password".getBytes(UTF_8));
-          }
+          producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
+          producerRecord.headers().add("Uncaptured-Header", "password".getBytes(UTF_8));
           wrappedProducer.send(
               producerRecord,
               (meta, ex) -> {
@@ -81,10 +70,28 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
       testing.runWithSpan("process child", () -> {});
     }
 
-    assertTraces(testHeaders, testExperimental);
+    assertTraces(true, CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES);
   }
 
-  abstract void configure(KafkaTelemetryBuilder builder);
+  protected KafkaTelemetryBuilder kafkaTelemetryBuilder() {
+    KafkaTelemetryBuilder telemetryBuilder =
+        KafkaTelemetry.builder(testing.getOpenTelemetry())
+            .setHeaders(
+                IncludeExclude.builder()
+                    .setIncluded("Test-Message-*")
+                    .setExcluded("*-Excluded-Header")
+                    .build());
+    if (MESSAGING_RECEIVE_TELEMETRY_ENABLED) {
+      telemetryBuilder.setMessagingReceiveTelemetryEnabled(true);
+    }
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      telemetryBuilder.setCaptureExperimentalSpanAttributes(true);
+    }
+    configure(telemetryBuilder);
+    return telemetryBuilder;
+  }
+
+  void configure(KafkaTelemetryBuilder builder) {}
 
   abstract void assertTraces(boolean testHeaders, boolean testExperimental);
 }

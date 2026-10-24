@@ -95,9 +95,9 @@ instrumentation/development:
           # adverse impact on database performance.
           enabled: false
       gen_ai:
-        # Determines whether Generative AI events include full content of user and assistant
-        # messages. Note that full content can have data privacy and size concerns and care should
-        # be taken when enabling this
+        # Enables including the full content of system, user, assistant, and tool messages in
+        # emitted log events. Note that full content can have data privacy and size concerns, and
+        # care should be taken when enabling this.
         capture_message_content: false
       http:
         client:
@@ -216,10 +216,6 @@ instrumentation/development:
           # Enables capturing the `user.roles` identity attribute. Identity attributes are not
           # captured by default.
           enabled: false
-
-      # Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring
-      # deprecated settings. The set of changes it enables can grow in any release.
-      v3_preview: false
       view_telemetry:
         # Enables the creation of experimental view spans.
         enabled: false

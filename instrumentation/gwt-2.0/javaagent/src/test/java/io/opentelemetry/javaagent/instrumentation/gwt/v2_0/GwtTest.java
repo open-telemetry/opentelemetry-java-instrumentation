@@ -7,11 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.gwt.v2_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.logs.Severity;
@@ -165,9 +169,16 @@ class GwtTest {
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "gwt"),
-                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(RPC_METHOD, "sendMessage"))));
+                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "gwt" : null),
+                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "gwt" : null),
+                            equalTo(
+                                RPC_SERVICE,
+                                emitOldRpcSemconv() ? "test.gwt.shared.MessageService" : null),
+                            equalTo(
+                                RPC_METHOD,
+                                emitPreviewRpcSemconv()
+                                    ? "test.gwt.shared.MessageService/sendMessage"
+                                    : "sendMessage"))));
 
     testing.clearData();
 
@@ -189,9 +200,19 @@ class GwtTest {
                         .hasStatus(StatusData.error())
                         .hasException(emitExceptionAsSpanEvents() ? new IOException() : null)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "gwt"),
-                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(RPC_METHOD, "sendMessage"))));
+                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "gwt" : null),
+                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "gwt" : null),
+                            equalTo(
+                                RPC_SERVICE,
+                                emitOldRpcSemconv() ? "test.gwt.shared.MessageService" : null),
+                            equalTo(
+                                RPC_METHOD,
+                                emitPreviewRpcSemconv()
+                                    ? "test.gwt.shared.MessageService/sendMessage"
+                                    : "sendMessage"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitPreviewRpcSemconv() ? IOException.class.getName() : null))));
 
     if (emitExceptionAsLogs()) {
       SpanData rpcSpan =
