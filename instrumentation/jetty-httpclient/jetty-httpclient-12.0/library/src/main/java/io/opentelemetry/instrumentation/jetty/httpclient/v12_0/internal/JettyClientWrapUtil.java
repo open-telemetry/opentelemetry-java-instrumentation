@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Response;
 
@@ -43,7 +44,15 @@ public final class JettyClientWrapUtil {
   @Nullable
   public static Response.CompleteListener wrapTheListener(
       @Nullable Response.CompleteListener listener, Context context) {
-    if (listener == null) {
+    return wrapListener(listener, () -> context);
+  }
+
+  @Nullable
+  // Callers use the supported response-listener interfaces implemented by the proxy.
+  @SuppressWarnings("unchecked")
+  public static <T extends Response.ResponseListener> T wrapListener(
+      @Nullable T listener, Supplier<Context> contextSupplier) {
+    if (listener == null || listener instanceof JettyClientTracingListener) {
       return listener;
     }
 
@@ -58,12 +67,12 @@ public final class JettyClientWrapUtil {
       return listener;
     }
 
-    return (Response.CompleteListener)
+    return (T)
         Proxy.newProxyInstance(
             listenerClass.getClassLoader(),
             interfaces.toArray(new Class<?>[0]),
             (proxy, method, args) -> {
-              try (Scope ignored = context.makeCurrent()) {
+              try (Scope ignored = contextSupplier.get().makeCurrent()) {
                 return method.invoke(listener, args);
               } catch (InvocationTargetException e) {
                 throw e.getCause();

@@ -22,7 +22,8 @@ import org.eclipse.jetty.client.transport.HttpRequest;
 class TracingHttpRequest extends HttpRequest {
 
   private final Instrumenter<Request, Response> instrumenter;
-  @Nullable private Context parentContext;
+  private Context parentContext = Context.root();
+  @Nullable private Context context;
 
   TracingHttpRequest(
       HttpClient client,
@@ -37,13 +38,64 @@ class TracingHttpRequest extends HttpRequest {
   public void send(Response.CompleteListener listener) {
     parentContext = Context.current();
     // start span and attach listeners - must handle all listeners, not just CompleteListener.
-    JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
-    super.send(JettyClientWrapUtil.wrapTheListener(listener, parentContext));
+    Context startedContext =
+        JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
+    context = startedContext == null ? parentContext : startedContext;
+    try (Scope ignored = openScope()) {
+      super.send(JettyClientWrapUtil.wrapTheListener(listener, parentContext));
+    }
   }
 
   @Nullable
   private Scope openScope() {
-    return parentContext != null ? parentContext.makeCurrent() : null;
+    return context != null ? context.makeCurrent() : null;
+  }
+
+  @Override
+  public Request onResponseBegin(Response.BeginListener listener) {
+    return super.onResponseBegin(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
+  }
+
+  @Override
+  public Request onResponseHeader(Response.HeaderListener listener) {
+    return super.onResponseHeader(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
+  }
+
+  @Override
+  public Request onResponseHeaders(Response.HeadersListener listener) {
+    return super.onResponseHeaders(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
+  }
+
+  @Override
+  public Request onResponseContent(Response.ContentListener listener) {
+    return super.onResponseContent(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
+  }
+
+  @Override
+  public Request onResponseContentAsync(Response.AsyncContentListener listener) {
+    return super.onResponseContentAsync(
+        JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
+  }
+
+  @Override
+  public Request onResponseContentSource(Response.ContentSourceListener listener) {
+    return super.onResponseContentSource(
+        JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
+  }
+
+  @Override
+  public Request onResponseSuccess(Response.SuccessListener listener) {
+    return super.onResponseSuccess(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
+  }
+
+  @Override
+  public Request onResponseFailure(Response.FailureListener listener) {
+    return super.onResponseFailure(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
+  }
+
+  @Override
+  public Request onComplete(Response.CompleteListener listener) {
+    return super.onComplete(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
   }
 
   @Override

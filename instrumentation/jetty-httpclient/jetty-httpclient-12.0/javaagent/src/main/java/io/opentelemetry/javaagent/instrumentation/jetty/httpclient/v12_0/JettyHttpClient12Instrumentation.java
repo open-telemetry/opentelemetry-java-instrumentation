@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.REQUEST_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -63,8 +64,9 @@ class JettyHttpClient12Instrumentation implements TypeInstrumentation {
       if (context == null) {
         return null;
       }
-      // store the parent context for request/response listener callbacks
+      // Response callbacks use the caller context; request hooks use the operation context.
       request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
+      REQUEST_CONTEXT.set(request, context);
 
       return new AdviceLocals(context, context.makeCurrent());
     }
@@ -93,7 +95,7 @@ class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnterNotify(@Advice.This HttpRequest request) {
-      Context context = (Context) request.getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
+      Context context = REQUEST_CONTEXT.get(request);
       if (context == null) {
         return null;
       }

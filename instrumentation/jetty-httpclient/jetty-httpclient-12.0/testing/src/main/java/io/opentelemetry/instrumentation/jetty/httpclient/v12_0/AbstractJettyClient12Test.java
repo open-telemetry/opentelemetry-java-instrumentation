@@ -8,26 +8,42 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
+import org.eclipse.jetty.client.StringRequestContent;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
@@ -146,6 +162,210 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                     span.hasName("onComplete")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "true, success, false",
+    "false, success, true",
+    "true, asyncFailure, true",
+    "false, asyncFailure, false",
+    "true, inlineFailure, true",
+    "false, inlineFailure, true"
+  })
+  void lifecycleContexts(boolean withParent, String outcome, boolean throwingListeners) {
+    ContextKey<String> key = ContextKey.named("jetty-test");
+    Map<String, Context> requestContexts = new ConcurrentHashMap<>();
+    Map<String, Context> responseContexts = new ConcurrentHashMap<>();
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    IOException failure = new IOException("request failed");
+    Request request =
+        client
+            .newRequest(resolveAddress("/success"))
+            .method("POST")
+            .body(new StringRequestContent("request body"));
+    request.listener(
+        new Request.Listener() {
+          private void record(String name) {
+            requestContexts.put(name, Context.current());
+            if (throwingListeners) {
+              throw new IllegalStateException("request listener");
+            }
+          }
+
+          @Override
+          public void onQueued(Request request) {
+            if (outcome.equals("inlineFailure")) {
+              request.abort(failure);
+            }
+            record("queued");
+          }
+
+          @Override
+          public void onBegin(Request request) {
+            testing.runWithSpan("request-hook", () -> {});
+            if (outcome.equals("asyncFailure")) {
+              request.abort(failure);
+            }
+            record("begin");
+          }
+
+          @Override
+          public void onHeaders(Request request) {
+            record("headers");
+          }
+
+          @Override
+          public void onCommit(Request request) {
+            record("commit");
+          }
+
+          @Override
+          public void onContent(Request request, ByteBuffer content) {
+            record("content");
+          }
+
+          @Override
+          public void onSuccess(Request request) {
+            record("success");
+          }
+
+          @Override
+          public void onFailure(Request request, Throwable cause) {
+            if (outcome.equals("inlineFailure")) {
+              testing.runWithSpan("request-hook", () -> {});
+            }
+            record("failure");
+          }
+        });
+    Response.Listener listener =
+        new Response.Listener() {
+          private void record(String name) {
+            responseContexts.put(name, Context.current());
+            if (throwingListeners) {
+              throw new IllegalStateException("response listener");
+            }
+          }
+
+          @Override
+          public void onHeaders(Response response) {
+            record("headers");
+          }
+
+          @Override
+          public void onSuccess(Response response) {
+            record("success");
+          }
+
+          @Override
+          public void onFailure(Response response, Throwable cause) {
+            record("failure");
+          }
+
+          @Override
+          public void onComplete(Result result) {
+            testing.runWithSpan("callback", () -> {});
+            try {
+              record("complete");
+            } finally {
+              completed.complete(result);
+            }
+          }
+        };
+    request.onResponseHeaders(response -> listener.onHeaders(response));
+    request.onResponseSuccess(
+        response -> responseContexts.put("registeredSuccess", Context.current()));
+    request.onResponseFailure(
+        (response, cause) -> responseContexts.put("registeredFailure", Context.current()));
+    request.onComplete(result -> responseContexts.put("registeredComplete", Context.current()));
+
+    Runnable send =
+        () -> {
+          Context caller = Context.current().with(key, "caller");
+          try (Scope ignored = caller.makeCurrent()) {
+            request.send(listener);
+            if (outcome.equals("inlineFailure")) {
+              assertThat(completed).isCompleted();
+            }
+            assertThat(Span.current().getSpanContext())
+                .isEqualTo(Span.fromContext(caller).getSpanContext());
+            assertThat(Context.current().get(key)).isEqualTo("caller");
+          }
+        };
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+    Result result = completed.join();
+    assertThat(result.isSucceeded()).isEqualTo(outcome.equals("success"));
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    assertThat(Context.current().get(key)).isNull();
+
+    if (outcome.equals("success")) {
+      assertThat(requestContexts)
+          .containsKeys("queued", "begin", "headers", "commit", "content", "success");
+      assertThat(responseContexts)
+          .containsKeys(
+              "headers", "success", "complete", "registeredSuccess", "registeredComplete");
+    } else {
+      assertThat(requestContexts).containsKey("failure");
+      assertThat(responseContexts)
+          .containsKeys("failure", "complete", "registeredFailure", "registeredComplete");
+      assertThat(result.getFailure()).isSameAs(failure);
+    }
+    Consumer<TraceAssert> operationTrace =
+        trace -> {
+          int clientIndex = withParent ? 1 : 0;
+          List<Consumer<SpanDataAssert>> spans = new ArrayList<>();
+          if (withParent) {
+            spans.add(span -> span.hasName("parent").hasNoParent());
+          }
+          spans.add(
+              span -> {
+                span.hasName("POST").hasKind(SpanKind.CLIENT);
+                if (withParent) {
+                  span.hasParent(trace.getSpan(0));
+                } else {
+                  span.hasNoParent();
+                }
+                SpanContext clientContext = trace.getSpan(clientIndex).getSpanContext();
+                requestContexts
+                    .values()
+                    .forEach(
+                        context -> {
+                          assertThat(Span.fromContext(context).getSpanContext().getSpanId())
+                              .isEqualTo(clientContext.getSpanId());
+                          assertThat(context.get(key)).isEqualTo("caller");
+                        });
+                SpanContext callerContext =
+                    withParent ? trace.getSpan(0).getSpanContext() : SpanContext.getInvalid();
+                responseContexts
+                    .values()
+                    .forEach(
+                        context -> {
+                          assertThat(Span.fromContext(context).getSpanContext().getSpanId())
+                              .isEqualTo(callerContext.getSpanId());
+                          assertThat(context.get(key)).isEqualTo("caller");
+                        });
+              });
+          spans.add(span -> span.hasName("request-hook").hasParent(trace.getSpan(clientIndex)));
+          if (outcome.equals("success")) {
+            spans.add(
+                span -> span.hasName("test-http-server").hasParent(trace.getSpan(clientIndex)));
+          }
+          if (withParent) {
+            spans.add(span -> span.hasName("callback").hasParent(trace.getSpan(0)));
+          }
+          trace.hasSpansSatisfyingExactly(spans);
+        };
+    if (withParent) {
+      testing.waitAndAssertTraces(operationTrace);
+    } else {
+      testing.waitAndAssertTraces(
+          operationTrace,
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("callback").hasNoParent()));
+    }
   }
 
   private class TracingResponseListener
