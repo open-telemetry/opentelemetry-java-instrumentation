@@ -283,6 +283,98 @@ class Netty41ClientPipelineTest {
   }
 
   @Test
+  void offloadedCompletedResponseExceptionForwardingPreservesPipelinedRequest() throws Exception {
+    DefaultEventExecutorGroup responseExecutor = new DefaultEventExecutorGroup(1);
+    DefaultEventExecutorGroup forwardingExecutor = new DefaultEventExecutorGroup(1);
+    DefaultEventExecutorGroup exceptionExecutor = new DefaultEventExecutorGroup(1);
+    cleanup.deferCleanup(() -> responseExecutor.shutdownGracefully().syncUninterruptibly());
+    cleanup.deferCleanup(() -> forwardingExecutor.shutdownGracefully().syncUninterruptibly());
+    cleanup.deferCleanup(() -> exceptionExecutor.shutdownGracefully().syncUninterruptibly());
+    EmbeddedChannel channel = new EmbeddedChannel(new HttpClientCodec());
+    IOException failure = new IOException("forwarded response callback failed");
+    List<Throwable> failures = new CopyOnWriteArrayList<>();
+    CountDownLatch[] responses = responseLatches();
+    CountDownLatch failureForwarded = new CountDownLatch(1);
+    CountDownLatch failureHandled = new CountDownLatch(1);
+    channel
+        .pipeline()
+        .addLast(
+            responseExecutor,
+            new ChannelInboundHandlerAdapter() {
+              private boolean failFirstResponse = true;
+              private int responseIndex;
+
+              @Override
+              public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                boolean completeResponse = msg instanceof LastHttpContent;
+                if (completeResponse) {
+                  responses[responseIndex++].countDown();
+                }
+                ReferenceCountUtil.release(msg);
+                if (completeResponse && failFirstResponse) {
+                  failFirstResponse = false;
+                  throw failure;
+                }
+              }
+            });
+    channel
+        .pipeline()
+        .addLast(
+            forwardingExecutor,
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                failureForwarded.countDown();
+                ctx.fireExceptionCaught(cause);
+              }
+            });
+    channel
+        .pipeline()
+        .addLast(
+            exceptionExecutor,
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                failures.add(cause);
+                failureHandled.countDown();
+              }
+            });
+    try {
+      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      DefaultFullHttpRequest second = request("/second");
+      testing.runWithSpan("second", () -> channel.writeOutbound(second));
+      assertThat(second.headers().contains("traceparent")).isTrue();
+
+      writeResponse(channel, 201);
+      assertThat(responses[0].await(20, SECONDS)).isTrue();
+      assertThat(failureForwarded.await(20, SECONDS)).isTrue();
+      assertThat(failureHandled.await(20, SECONDS)).isTrue();
+      assertThat(channel.isActive()).isTrue();
+
+      writeResponse(channel, 202);
+      assertThat(responses[1].await(20, SECONDS)).isTrue();
+      testing.runWithSpan(
+          "third",
+          () -> {
+            DefaultFullHttpRequest subsequent = request("/third");
+            channel.writeOutbound(subsequent);
+            assertThat(subsequent.headers().contains("traceparent")).isTrue();
+          });
+      writeResponse(channel, 203);
+      assertThat(responses[2].await(20, SECONDS)).isTrue();
+
+      assertThat(failures).containsExactly(failure);
+      assertThat(failures.get(0)).isSameAs(failure);
+      assertThreeRequestTraces();
+    } finally {
+      channel.finishAndReleaseAll();
+      responseExecutor.shutdownGracefully().syncUninterruptibly();
+      forwardingExecutor.shutdownGracefully().syncUninterruptibly();
+      exceptionExecutor.shutdownGracefully().syncUninterruptibly();
+    }
+  }
+
+  @Test
   void aggregatedCompletedResponseCallbackPreservesPipelinedRequest() throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new HttpClientCodec());
     channel.pipeline().addLast(new HttpObjectAggregator(65536));

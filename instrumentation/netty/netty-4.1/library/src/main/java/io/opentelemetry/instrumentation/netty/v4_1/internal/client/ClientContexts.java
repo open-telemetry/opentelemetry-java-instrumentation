@@ -162,6 +162,9 @@ public final class ClientContexts {
         return notification;
       }
     }
+    if (isResponseCallbackException(channel)) {
+      return new FailureNotification(channel, cause);
+    }
     return null;
   }
 
@@ -426,7 +429,7 @@ public final class ClientContexts {
       Channel channel,
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
       Throwable cause) {
-    if (isWriteFailureNotification(channel, cause)) {
+    if (isFailureNotification(channel, cause)) {
       return;
     }
     ClientContexts contexts = channel.hasAttr(KEY) ? channel.attr(KEY).get() : null;
@@ -447,7 +450,7 @@ public final class ClientContexts {
         && dispatch.messages[dispatch.depth - 1] == callback.message;
   }
 
-  private static boolean isWriteFailureNotification(Channel channel, Throwable cause) {
+  private static boolean isFailureNotification(Channel channel, Throwable cause) {
     for (FailureNotificationScope scope = FAILURE_NOTIFICATION.get();
         scope != null;
         scope = scope.previous) {
