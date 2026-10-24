@@ -57,6 +57,9 @@ final class OpenSearchRestAttributesGetter
       OpenSearchRestRequest request,
       @Nullable OpenSearchRestResponse response,
       @Nullable Throwable error) {
+    if (response == null || response.getStatusCode() < 400) {
+      return null;
+    }
     return getErrorType(request, response, error);
   }
 

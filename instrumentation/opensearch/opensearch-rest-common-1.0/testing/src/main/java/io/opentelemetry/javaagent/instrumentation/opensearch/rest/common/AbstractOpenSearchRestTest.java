@@ -104,7 +104,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
-                        span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+                        span.hasName("HEAD").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -125,7 +125,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
-                        span.hasName("HEAD")
+                        span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(

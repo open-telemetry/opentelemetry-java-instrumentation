@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class JdbcAttributesGetterTest {
 
@@ -83,6 +84,29 @@ class JdbcAttributesGetterTest {
             attributesGetter.getDbResponseStatusCode(
                 request, null, new SQLException("test", sqlState, errorCode)))
         .isEqualTo(expectedErrorType);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {17008, 17009})
+  void omitsOracleLocalClosedCodesWithoutChangingErrorType(int errorCode) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(ORACLE_DB).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Closed locally", "99999", errorCode);
+
+    assertThat(attributesGetter.getErrorType(request, null, error))
+        .isEqualTo(Integer.toString(errorCode));
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {17008, 17009})
+  void keepsOtherDatabaseCodesThatOverlapOracleLocalCodes(int errorCode) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Server failure", "99999", errorCode);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo(Integer.toString(errorCode));
   }
 
   @Test

@@ -1883,7 +1883,7 @@ class VertxSqlClientTest {
                     equalTo(SERVER_ADDRESS, "127.0.0.1"),
                     equalTo(SERVER_PORT, 1),
                     equalTo(ERROR_TYPE, "66000"),
-                    equalTo(DB_RESPONSE_STATUS_CODE, "66000")));
+                    equalTo(DB_RESPONSE_STATUS_CODE, null)));
   }
 
   private static void select(SqlClient client) throws Exception {

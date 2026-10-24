@@ -10,8 +10,10 @@ import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.ConnectException;
 import java.util.Collection;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -65,13 +67,19 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return getDbResponseStatusCode(request, null, error);
+    return responseStatusExtractor.apply(error);
   }
 
   @Nullable
   @Override
   public String getDbResponseStatusCode(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if (error != null
+        && "oracle.db".equals(request.getDbSystemName())
+        && CauseUnwrapper.unwrap(error, cause -> !(cause instanceof ConnectException))
+            instanceof ConnectException) {
+      return null;
+    }
     return responseStatusExtractor.apply(error);
   }
 

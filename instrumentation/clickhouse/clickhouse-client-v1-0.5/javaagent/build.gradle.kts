@@ -22,8 +22,23 @@ dependencies {
   testInstrumentation(project(":instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("com.clickhouse:clickhouse-client:0.5.0")
+      }
+    }
+  }
+}
+
 tasks {
-  withType<Test>().configureEach {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  check {
+    dependsOn(testing.suites)
   }
 }
