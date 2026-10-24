@@ -5,12 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil
+    .maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -24,6 +27,7 @@ import java.sql.Statement;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -81,6 +85,41 @@ class MySqlReplicationTest {
       assertThat(replicaId).isNotEqualTo(sourceId);
       assertThat(query(connection, false, prepared, target)).isEqualTo(sourceId);
     }
+  }
+
+  @Test
+  void decoratingDriverPreservesDelegateMetadata() throws Exception {
+    String host = source.getHost();
+    int port = source.getMappedPort(3306);
+    String target = host + ":" + port;
+    String url =
+        "jdbc:otel:mysql://"
+            + target
+            + "/shop?sslMode=DISABLED&allowPublicKeyRetrieval=true&openTelemetry=DISABLED";
+    String sql = "SELECT @@server_uuid";
+    try (Connection connection = DriverManager.getConnection(url, "root", PASSWORD);
+        Statement wrappedStatement = connection.createStatement()) {
+      Statement statement = wrappedStatement.unwrap(Statement.class);
+      assertThat(statement.getConnection()).isSameAs(connection.unwrap(Connection.class));
+      try (ResultSet result = statement.executeQuery(sql)) {
+        assertThat(result.next()).isTrue();
+      }
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "mysql"),
+                            equalTo(DB_NAMESPACE, "shop"),
+                            equalTo(DB_QUERY_TEXT, sql),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   private static String query(
