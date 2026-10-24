@@ -86,7 +86,7 @@ class ReleaseConfigTest(unittest.TestCase):
             with self.subTest(version=version):
                 self.assertEqual(
                     release_config.release_config(
-                        "release/v2.33.x", version, "## Version 2.32.0 (2026-10-03)\n",
+                        f"v{version}", version, "## Version 2.32.0 (2026-10-03)\n",
                         "maintenance/v2.x",
                     ),
                     {
@@ -97,7 +97,7 @@ class ReleaseConfigTest(unittest.TestCase):
                 )
         self.assertEqual(
             release_config.release_config(
-                "release/v3.1.x", "3.1.0", "## Version 3.0.0 (2026-10-03)\n", "main"
+                "v3.1.0", "3.1.0", "## Version 3.0.0 (2026-10-03)\n", "main"
             ),
             {
                 "VERSION": "3.1.0",
@@ -109,7 +109,7 @@ class ReleaseConfigTest(unittest.TestCase):
     def test_major_release_has_complete_previous_version(self):
         self.assertEqual(
             release_config.release_config(
-                "release/v3.0.x",
+                "v3.0.0",
                 "3.0.0",
                 "## Version 2.9.9 (2026-01-01)\n## Version 2.32.0 (2026-10-03)\n"
                 "## Version 2.32.10 (2026-10-05)\n## Version 2.32.9 (2026-10-04)\n",
@@ -121,7 +121,7 @@ class ReleaseConfigTest(unittest.TestCase):
     def test_minor_release_uses_highest_previous_patch(self):
         self.assertEqual(
             release_config.release_config(
-                "release/v2.33.x",
+                "v2.33.0",
                 "2.33.0",
                 "## Version 2.33.0 (2026-10-06)\n## Version 2.32.0 (2026-10-03)\n"
                 "## Version 2.32.10 (2026-10-05)\n## Version 2.32.9 (2026-10-04)\n",
@@ -131,7 +131,7 @@ class ReleaseConfigTest(unittest.TestCase):
         )
         self.assertEqual(
             release_config.release_config(
-                "release/v2.29.x", "2.29.0",
+                "v2.29.0", "2.29.0",
                 (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"),
                 "maintenance/v2.x",
             )["PRIOR_VERSION"],
@@ -142,18 +142,20 @@ class ReleaseConfigTest(unittest.TestCase):
         for ref, version in (
             ("main", "3.0.0"),
             ("maintenance/v2.x", "2.33.0"),
-            ("release/v2.32.x", "2.33.0"),
-            ("release/v2.33.x", "2.33.0-SNAPSHOT"),
-            ("release/v2.33.x", "2.33.0-alpha"),
+            ("release/v2.33.x", "2.33.0"),
+            ("v2.32.0", "2.33.0"),
+            ("v2.33.1", "2.33.0"),
+            ("v2.33.0", "2.33.0-SNAPSHOT"),
+            ("v2.33.0", "2.33.0-alpha"),
         ):
             with self.subTest(ref=ref, version=version):
                 with self.assertRaises(ValueError):
                     release_config.release_config(ref, version, "", "main")
-        for ref, version in (("release/v3.0.x", "3.0.0"), ("release/v2.33.x", "2.33.0")):
+        for ref, version in (("v3.0.0", "3.0.0"), ("v2.33.0", "2.33.0")):
             with self.subTest(ref=ref), self.assertRaises(ValueError):
                 release_config.release_config(ref, version, "", "main")
         with self.assertRaises(ValueError):
-            release_config.release_config("release/v3.1.x", "3.1.1", "", "maintenance/v2.x")
+            release_config.release_config("v3.1.1", "3.1.1", "", "maintenance/v2.x")
 
     def test_latest_release_policy(self):
         self.assertTrue(release_config.make_latest("2.33.0", ["v2.32.0"]))
@@ -318,7 +320,7 @@ class DevelopmentBranchResolutionTest(unittest.TestCase):
         )
         output = io.StringIO()
         with (
-            mock.patch.object(sys, "argv", ["release-config.py", "release", "--ref", "release/v2.33.x"]),
+            mock.patch.object(sys, "argv", ["release-config.py", "release", "--ref", "v2.33.0"]),
             contextlib.redirect_stdout(output),
         ):
             release_config.main()
@@ -329,7 +331,7 @@ class DevelopmentBranchResolutionTest(unittest.TestCase):
         run_command(["git", "update-ref", "-d", "refs/remotes/origin/maintenance/v2.x"], self.root)
         output = io.StringIO()
         with (
-            mock.patch.object(sys, "argv", ["release-config.py", "release", "--ref", "release/v2.33.x"]),
+            mock.patch.object(sys, "argv", ["release-config.py", "release", "--ref", "v2.33.0"]),
             contextlib.redirect_stdout(output),
             contextlib.redirect_stderr(io.StringIO()),
             self.assertRaises(SystemExit) as error,
@@ -337,6 +339,40 @@ class DevelopmentBranchResolutionTest(unittest.TestCase):
             release_config.main()
         self.assertEqual(error.exception.code, 2)
         self.assertEqual(output.getvalue(), "")
+
+    def test_release_workflow_exports_validated_tag_config(self):
+        self.add_branch("main", "3.0.0-SNAPSHOT")
+        self.add_branch("maintenance/v2.x", "2.34.0-SNAPSHOT")
+        scripts = self.root / ".github/scripts"
+        scripts.mkdir(parents=True)
+        shutil.copyfile(ROOT / ".github/scripts/release-config.py", scripts / "release-config.py")
+        (self.root / "CHANGELOG.md").write_text(
+            "## Version 2.32.1 (2026-10-03)\n", encoding="utf-8"
+        )
+        for version, tag, succeeds in (
+            ("2.33.0", "v2.33.0", True),
+            ("2.33.0-SNAPSHOT", "v2.33.0", False),
+            ("2.33.0", "v2.33.1", False),
+        ):
+            with self.subTest(version=version, tag=tag):
+                (self.root / "version.gradle.kts").write_text(
+                    f'val stableVersion = "{version}"\n', encoding="utf-8"
+                )
+                env_file = self.root / "github-env"
+                output_file = self.root / "github-output"
+                env_file.write_text("", encoding="utf-8")
+                output_file.write_text("", encoding="utf-8")
+                args = ["bash", "-eo", "pipefail", "-c", workflow_script("release.yml", "Set environment variables")]
+                env = dict(os.environ, GITHUB_REF_NAME=tag, GITHUB_ENV=str(env_file), GITHUB_OUTPUT=str(output_file))
+                if succeeds:
+                    run_command(args, self.root, env)
+                    expected = "VERSION=2.33.0\nDEVELOPMENT_BRANCH=maintenance/v2.x\nPRIOR_VERSION=2.32.1\n"
+                else:
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        run_command(args, self.root, env)
+                    expected = ""
+                self.assertEqual(env_file.read_text(encoding="utf-8"), expected)
+                self.assertEqual(output_file.read_text(encoding="utf-8"), expected)
 
     def test_git_subprocess_uses_no_window_flag(self):
         with mock.patch.object(release_config.subprocess, "run") as run:
@@ -440,13 +476,26 @@ gh() { printf '%s\\n' "$*" >> "$CALLS"; }
         release = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
         self.assertEqual(release.count("ref: ${{ env.DEVELOPMENT_BRANCH }}"), 2)
         self.assertIn("DEVELOPMENT_BRANCH: ${{ needs.release.outputs.development-branch }}", release)
+        self.assertIn("DEVELOPMENT_BRANCH: ${{ needs.sign-and-release.outputs.development-branch }}", release)
         self.assertIn('--latest="$MAKE_LATEST"', release)
-        self.assertIn("group: publish-release\n      cancel-in-progress: false", release)
+        self.assertIn("\nconcurrency:\n  group: publish-release\n  cancel-in-progress: false\n", release)
         self.assertLess(release.index("fetch-depth: 0"), release.index("Set environment variables"))
         self.assertLess(
+            release.index("  sign-and-release:"),
             release.index("Determine whether to mark the release as latest"),
-            release.index("Build and publish artifacts"),
         )
+        self.assertLess(
+            release.index("Determine whether to mark the release as latest"),
+            release.index("Create GitHub release"),
+        )
+        build, signing = release.split("  sign-and-release:", 1)
+        signing, post_release = signing.split("  post-release-updates:", 1)
+        for output in ("VERSION", "PRIOR_VERSION", "DEVELOPMENT_BRANCH"):
+            self.assertIn(f"steps.release-version.outputs.{output}", build)
+        self.assertNotIn("steps.create-github-release.outputs", build)
+        self.assertIn("development-branch: ${{ steps.create-github-release.outputs.development-branch }}", signing)
+        self.assertIn('echo "development-branch=$DEVELOPMENT_BRANCH" >> $GITHUB_OUTPUT', signing)
+        self.assertNotIn("needs.release.outputs", post_release)
         contributors = (ROOT / ".github/scripts/generate-release-contributors.sh").read_text(encoding="utf-8")
         self.assertIn('git merge-base "origin/$development_branch" HEAD', contributors)
         self.assertEqual(contributors.count("base:$development_branch"), 2)
