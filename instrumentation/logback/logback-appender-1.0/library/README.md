@@ -120,7 +120,10 @@ autoconfiguration uses batch log export by default (`otel.blrp.*` properties tun
 
 The exporting appender reports an advisory Logback status warning once per appender instance if
 configuration inspection finds it downstream of a known Logback async appender, including through
-nested attachments. The warning does not reject the configuration or change log export.
+nested attachments. Inspection happens when the SDK is installed on the appender, so assemble the
+appender graph first. Graphs attached or changed afterward are not guaranteed to be detected unless
+SDK installation is performed again. The warning does not reject the configuration or change log
+export.
 
 #### Settings for the Logback Appender
 

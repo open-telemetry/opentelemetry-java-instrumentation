@@ -61,7 +61,7 @@ class AsyncAppenderWarningTest {
   }
 
   @Test
-  void xmlConfigurationWarnsAtSdkInstallationOnlyOnceAcrossRestart() throws JoranException {
+  void xmlConfigurationWarnsAtSdkInstallationOnlyOnce() throws JoranException {
     OpenTelemetryAppender appender = configureXml();
     assertThat(warnings()).isEmpty();
 
@@ -69,48 +69,11 @@ class AsyncAppenderWarningTest {
     assertWarning(appender, "ASYNC");
 
     appender.setOpenTelemetry(testing.getOpenTelemetry());
-    appender.stop();
-    appender.start();
-    appender.setOpenTelemetry(testing.getOpenTelemetry());
-    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).info("after restart");
-    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).info("another event");
+    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).info("after installation");
 
     testing.waitAndAssertLogRecords(
-        log -> log.hasBody("after restart"), log -> log.hasBody("another event"));
+        log -> log.hasBody("after installation").hasSpanContext(SpanContext.getInvalid()));
     assertWarning(appender, "ASYNC");
-  }
-
-  @Test
-  void firstXmlEventDetectsAsyncParentAttachedAfterStart() throws JoranException {
-    OpenTelemetryAppender appender = configureXml();
-    assertThat(warnings()).isEmpty();
-
-    testing.runWithSpan(
-        "parent",
-        () -> loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).info("before SDK install"));
-    ((AsyncAppender) loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).getAppender("ASYNC")).stop();
-
-    assertWarning(appender, "ASYNC");
-    appender.setOpenTelemetry(testing.getOpenTelemetry());
-    testing.waitAndAssertLogRecords(
-        log -> log.hasBody("before SDK install").hasSpanContext(SpanContext.getInvalid()));
-    assertWarning(appender, "ASYNC");
-  }
-
-  @Test
-  void startWarnsForEachAffectedAppender() {
-    OpenTelemetryAppender first = createAppender("FIRST");
-    OpenTelemetryAppender second = createAppender("SECOND");
-    loggerContext.getLogger("first").addAppender(async("FIRST_ASYNC", first));
-    loggerContext.getLogger("second").addAppender(async("SECOND_ASYNC", second));
-
-    first.start();
-    second.start();
-
-    assertThat(warnings())
-        .satisfiesExactly(
-            warning -> assertWarning(warning, first, "FIRST_ASYNC"),
-            warning -> assertWarning(warning, second, "SECOND_ASYNC"));
   }
 
   @Test

@@ -12,11 +12,11 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.read.ListAppender;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.status.StatusListener;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,11 +25,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.DefaultBootstrapContext;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.StandardEnvironment;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 class LogbackAppenderWarningTest {
 
@@ -67,7 +65,7 @@ class LogbackAppenderWarningTest {
   }
 
   @Test
-  void installerWarnsBeforeLoggingForExistingAsyncAppenderOnlyOnceAcrossRestartAndReinstall() {
+  void sdkInstallationWarnsForExistingAsyncAppenderOnlyOnce() {
     OpenTelemetryAppender appender = new OpenTelemetryAppender();
     appender.setName("OTEL");
     appender.setContext(loggerContext);
@@ -81,48 +79,18 @@ class LogbackAppenderWarningTest {
     loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).addAppender(asyncAppender);
     assertThat(warnings).isEmpty();
 
-    ApplicationEnvironmentPreparedEvent event = environmentPreparedEvent();
-    LogbackAppenderInstaller.install(event);
+    try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+      context.registerBean(OpenTelemetry.class, OpenTelemetry::noop);
+      context.register(OpenTelemetryAppenderAutoConfiguration.class);
+      context.refresh();
+      context.publishEvent(
+          new ApplicationReadyEvent(
+              new SpringApplication(), new String[0], context, Duration.ZERO));
 
-    assertWarning(appender);
-    assertThat(appender.isStarted()).isTrue();
-    assertThat(asyncAppender.getAppender("OTEL")).isSameAs(appender);
-
-    appender.stop();
-    appender.start();
-    LogbackAppenderInstaller.install(event);
-    OpenTelemetryAppender.install(OpenTelemetry.noop());
-    LogbackAppenderInstaller.install(event);
-
-    assertWarning(appender);
-  }
-
-  @Test
-  void installerDoesNotWarnForAutoAddedDirectAppenderWithSeparateAsyncOutput() {
-    ListAppender<ILoggingEvent> output = new ListAppender<>();
-    output.setContext(loggerContext);
-    output.start();
-    AsyncAppender asyncAppender = new AsyncAppender();
-    asyncAppender.setName("ASYNC_OUTPUT");
-    asyncAppender.setContext(loggerContext);
-    asyncAppender.addAppender(output);
-    asyncAppender.start();
-    Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
-    root.addAppender(asyncAppender);
-
-    ApplicationEnvironmentPreparedEvent event = environmentPreparedEvent();
-    LogbackAppenderInstaller.install(event);
-    OpenTelemetryAppender.install(OpenTelemetry.noop());
-    LogbackAppenderInstaller.install(event);
-
-    List<Appender<ILoggingEvent>> appenders = new ArrayList<>();
-    root.iteratorForAppenders().forEachRemaining(appenders::add);
-    assertThat(appenders).hasSize(2).contains(asyncAppender);
-    assertThat(appenders)
-        .filteredOn(OpenTelemetryAppender.class::isInstance)
-        .singleElement()
-        .satisfies(appender -> assertThat(appender.isStarted()).isTrue());
-    assertThat(warnings).isEmpty();
+      assertWarning(appender);
+      OpenTelemetryAppender.install(OpenTelemetry.noop());
+      assertWarning(appender);
+    }
   }
 
   private void assertWarning(OpenTelemetryAppender appender) {
@@ -137,14 +105,5 @@ class LogbackAppenderWarningTest {
                       "Attach OpenTelemetryAppender directly",
                       "SDK batch export");
             });
-  }
-
-  private static ApplicationEnvironmentPreparedEvent environmentPreparedEvent() {
-    StandardEnvironment environment = new StandardEnvironment();
-    Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("otel.instrumentation.logback-mdc.enabled", false);
-    environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
-    return new ApplicationEnvironmentPreparedEvent(
-        new DefaultBootstrapContext(), new SpringApplication(), new String[0], environment);
   }
 }

@@ -64,7 +64,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
   private final AtomicBoolean asyncAppenderWarningLogged = new AtomicBoolean();
-  private final AtomicBoolean asyncAppenderCheckedOnAppend = new AtomicBoolean();
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -120,9 +119,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureArguments(captureArguments)
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
-    asyncAppenderCheckedOnAppend.set(false);
     super.start();
-    checkAsyncAppenderConfiguration();
   }
 
   private void checkAsyncAppenderConfiguration() {
@@ -246,11 +243,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @SuppressWarnings("SystemOut")
   @Override
   protected void append(ILoggingEvent event) {
-    // XML configuration starts appenders before attaching them to their parents.
-    if (!asyncAppenderCheckedOnAppend.get()
-        && asyncAppenderCheckedOnAppend.compareAndSet(false, true)) {
-      checkAsyncAppenderConfiguration();
-    }
     OpenTelemetry openTelemetry = this.openTelemetry;
     if (openTelemetry != null) {
       // optimization to avoid locking after the OpenTelemetry instance is set
