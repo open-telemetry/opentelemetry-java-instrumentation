@@ -15,13 +15,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpVersion;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
@@ -49,10 +49,10 @@ class VertxHttpClientResponseTest {
   private static final ServiceName SERVICE_NAME = ServiceName.create("echo", "Echo");
 
   private final Vertx vertx = Vertx.vertx();
-  private final int grpcPort = PortUtils.findOpenPort();
   private final Map<String, GrpcServerRequest<Buffer, Buffer>> concurrentRequests = new HashMap<>();
 
   private GrpcClient grpcClient;
+  private int grpcPort;
 
   @BeforeEach
   void startGrpcServer() throws Exception {
@@ -89,13 +89,15 @@ class VertxHttpClientResponseTest {
                   }
                 }));
 
-    vertx
-        .createHttpServer()
-        .requestHandler(grpcServer)
-        .listen(grpcPort, "localhost")
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+    HttpServer grpcHttpServer =
+        vertx
+            .createHttpServer()
+            .requestHandler(grpcServer)
+            .listen(0, "localhost")
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(30, SECONDS);
+    grpcPort = grpcHttpServer.actualPort();
   }
 
   @AfterEach
@@ -142,14 +144,15 @@ class VertxHttpClientResponseTest {
               routingContext.response().end("done");
             });
 
-    int routerPort = PortUtils.findOpenPort();
-    vertx
-        .createHttpServer()
-        .requestHandler(router)
-        .listen(routerPort, "localhost")
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+    HttpServer routerServer =
+        vertx
+            .createHttpServer()
+            .requestHandler(router)
+            .listen(0, "localhost")
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(30, SECONDS);
+    int routerPort = routerServer.actualPort();
 
     try (Socket socket = new Socket("localhost", routerPort)) {
       socket
@@ -165,11 +168,11 @@ class VertxHttpClientResponseTest {
 
     SpanContext parent = incomingContext.get(30, SECONDS);
     assertThat(parent.isValid()).isTrue();
-    assertThat(bodyContext.get(30, SECONDS).getTraceId()).isEqualTo(parent.getTraceId());
-    assertThat(endContext.get(30, SECONDS).getTraceId()).isEqualTo(parent.getTraceId());
-    assertThat(nextRouteContext.get(30, SECONDS).getTraceId()).isEqualTo(parent.getTraceId());
-    assertThat(secondBodyContext.get(30, SECONDS).getTraceId()).isEqualTo(parent.getTraceId());
-    assertThat(secondEndContext.get(30, SECONDS).getTraceId()).isEqualTo(parent.getTraceId());
+    assertThat(bodyContext.get(30, SECONDS)).isEqualTo(parent);
+    assertThat(endContext.get(30, SECONDS)).isEqualTo(parent);
+    assertThat(nextRouteContext.get(30, SECONDS)).isEqualTo(parent);
+    assertThat(secondBodyContext.get(30, SECONDS)).isEqualTo(parent);
+    assertThat(secondEndContext.get(30, SECONDS)).isEqualTo(parent);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -210,10 +213,8 @@ class VertxHttpClientResponseTest {
             });
 
     assertThat(firstParent.getTraceId()).isNotEqualTo(secondParent.getTraceId());
-    assertThat(firstResponseContext.get(30, SECONDS).getTraceId())
-        .isEqualTo(firstParent.getTraceId());
-    assertThat(secondResponseContext.get(30, SECONDS).getTraceId())
-        .isEqualTo(secondParent.getTraceId());
+    assertThat(firstResponseContext.get(30, SECONDS)).isEqualTo(firstParent);
+    assertThat(secondResponseContext.get(30, SECONDS)).isEqualTo(secondParent);
 
     testing.waitAndAssertSortedTraces(
         Comparator.comparing(trace -> trace.get(0).getName()),
@@ -245,8 +246,8 @@ class VertxHttpClientResponseTest {
               return context;
             });
 
-    assertThat(bodyContext.get(30, SECONDS).getTraceId()).isEqualTo(parent.getTraceId());
-    assertThat(failureContext.get(30, SECONDS).getTraceId()).isEqualTo(parent.getTraceId());
+    assertThat(bodyContext.get(30, SECONDS)).isEqualTo(parent);
+    assertThat(failureContext.get(30, SECONDS)).isEqualTo(parent);
 
     testing.waitAndAssertTraces(
         trace ->
