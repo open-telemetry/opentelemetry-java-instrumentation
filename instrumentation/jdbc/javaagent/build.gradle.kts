@@ -37,7 +37,6 @@ dependencies {
   latestDepTestLibrary("org.apache.derby:derbytools:latest.release")
 
   testImplementation(project(":instrumentation:jdbc:testing"))
-  testImplementation(project(":instrumentation:jdbc:library"))
 
   // these dependencies are for SlickTest
   testImplementation("org.scala-lang:scala-library:2.11.12")

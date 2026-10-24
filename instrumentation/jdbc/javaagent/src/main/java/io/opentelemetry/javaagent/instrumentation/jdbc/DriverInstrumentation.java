@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -65,15 +64,7 @@ class DriverInstrumentation implements TypeInstrumentation {
       // Multi-host drivers may expose the unwrapped connection through their statements.
       Connection unwrappedConnection = JdbcUtils.unwrapConnection(connection);
       if (unwrappedConnection != null && unwrappedConnection != connection) {
-        DbInfo existingDbInfo = JdbcData.CONNECTION_INFO.get(unwrappedConnection);
-        boolean hasExistingDbInfo =
-            existingDbInfo != null
-                && (existingDbInfo.getDbSystemName() != null
-                    || existingDbInfo.getDbNamespace() != null
-                    || existingDbInfo.getConfiguredServerTarget() != null);
-        if (!OTHER_SQL.equals(dbInfo.getDbSystemName()) || !hasExistingDbInfo) {
-          JdbcData.CONNECTION_INFO.set(unwrappedConnection, dbInfo);
-        }
+        JdbcData.CONNECTION_INFO.set(unwrappedConnection, dbInfo);
       }
     }
   }
