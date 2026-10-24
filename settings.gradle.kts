@@ -751,6 +751,7 @@ include(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagen
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-common-3.0:javaagent")
+include(":instrumentation:vertx:vertx-http-server-4.0:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing")

@@ -369,6 +369,8 @@ readonly INSTRUMENTATIONS=(
   "vertx:vertx-http-client:vertx-http-client-4.0:javaagent:testPreviewSemconv"
   "vertx:vertx-http-client:vertx-http-client-5.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-5.0:javaagent:testPreviewSemconv"
+  "vertx:vertx-http-server-4.0:javaagent:test"
+  "vertx:vertx-http-server-4.0:javaagent:testExperimental"
   "vertx:vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing:test"
   "vertx:vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing:testExperimental"
   "vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent:test"
