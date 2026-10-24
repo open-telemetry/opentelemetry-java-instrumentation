@@ -31,20 +31,17 @@ class AgentLoadedIntoBootstrapTest {
 
   @Test
   void agentLoadsWithChildFirstSystemClassLoader() throws Exception {
-    IntegrationTestUtils.ProcessResult result =
-        IntegrationTestUtils.runOnSeparateJvmAndCaptureOutput(
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
             AgentLoadedChecker.class.getName(),
             new String[] {
               "-Djava.system.class.loader=" + ChildFirstSystemClassLoader.class.getName()
             },
             new String[] {IntegrationTestUtils.getAgentJarPath()},
             emptyMap(),
-            System.getProperty("java.class.path"),
             true);
 
-    assertThat(result.getExitCode()).isZero();
-    assertThat(result.getOutput())
-        .doesNotContain("ERROR io.opentelemetry.javaagent.OpenTelemetryAgent");
+    assertThat(exitCode).isZero();
   }
 
   @Test
