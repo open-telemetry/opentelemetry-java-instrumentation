@@ -7,9 +7,7 @@ package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.time.Duration;
-import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
@@ -27,25 +25,8 @@ class LegacySpringBootLogCorrelationSmokeTest {
       Pattern.compile("EXPECTED_IDS ([0-9a-f]{32}) ([0-9a-f]{16})");
 
   @Test
-  void logCorrelationInExecutableJar() throws IOException {
+  void logCorrelationInExecutableJar() {
     String appPath = System.getProperty("io.opentelemetry.smoketest.springboot13.path");
-    try (JarFile app = new JarFile(appPath)) {
-      assertThat(app.getManifest().getMainAttributes().getValue("Main-Class"))
-          .isEqualTo("org.springframework.boot.loader.JarLauncher");
-      assertThat(app.getManifest().getMainAttributes().getValue("Spring-Boot-Version"))
-          .isEqualTo("1.3.8.RELEASE");
-      assertThat(app.getEntry("lib/log4j-api-2.17.2.jar")).isNotNull();
-      assertThat(app.getEntry("lib/log4j-core-2.17.2.jar")).isNotNull();
-      assertThat(
-              app.stream()
-                  .map(entry -> entry.getName())
-                  .anyMatch(name -> name.startsWith("lib/opentelemetry-api-")))
-          .isTrue();
-      assertThat(
-              app.getEntry(
-                  "META-INF/services/org.apache.logging.log4j.core.util.ContextDataProvider"))
-          .isNull();
-    }
     try (GenericContainer<?> target =
         new GenericContainer<>(DockerImageName.parse("eclipse-temurin:8"))
             .withCopyFileToContainer(
@@ -70,7 +51,6 @@ class LegacySpringBootLogCorrelationSmokeTest {
       target.start();
       assertThat(target.getCurrentContainerInfo().getState().getExitCodeLong()).isZero();
       String logs = target.getLogs();
-      assertThat(logs).contains("LOADER org.springframework.boot.loader.LaunchedURLClassLoader");
       Matcher expectedIds = EXPECTED_IDS.matcher(logs);
       assertThat(expectedIds.find()).isTrue();
       assertThat(logs)

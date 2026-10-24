@@ -1,6 +1,4 @@
-import org.springframework.boot.loader.tools.Libraries
 import org.springframework.boot.loader.tools.Library
-import org.springframework.boot.loader.tools.LibraryCallback
 import org.springframework.boot.loader.tools.LibraryScope
 import org.springframework.boot.loader.tools.Repackager
 
@@ -28,7 +26,7 @@ dependencies {
   implementation("org.apache.logging.log4j:log4j-core:2.17.2")
 }
 
-val runtimeClasspath = configurations.runtimeClasspath
+val runtimeClasspath = configurations.named("runtimeClasspath").map { it.files }
 
 tasks.jar {
   inputs.files(runtimeClasspath)
@@ -38,13 +36,11 @@ tasks.jar {
     Repackager(archiveFile.get().asFile).apply {
       setMainClass("io.opentelemetry.smoketest.springboot13.LogCorrelationApplication")
       setBackupSource(false)
-      repackage(object : Libraries {
-        override fun doWithLibraries(callback: LibraryCallback) {
-          inputs.files.files
-            .filter { it.isFile && it.extension == "jar" }
-            .forEach { callback.library(Library(it, LibraryScope.COMPILE)) }
-        }
-      })
+      repackage { callback ->
+        runtimeClasspath.get()
+          .filter { it.isFile && it.extension == "jar" }
+          .forEach { callback.library(Library(it, LibraryScope.COMPILE)) }
+      }
     }
   }
 }

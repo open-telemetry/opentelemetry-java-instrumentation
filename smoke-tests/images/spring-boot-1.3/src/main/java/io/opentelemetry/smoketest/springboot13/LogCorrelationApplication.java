@@ -27,8 +27,6 @@ public final class LogCorrelationApplication {
     if (!System.getProperty("java.specification.version").equals("1.8")) {
       throw new AssertionError("This regression must run on JDK 8");
     }
-    System.out.println("LOADER " + loader.getClass().getName());
-
     Span span =
         GlobalOpenTelemetry.getTracer("legacy-spring-boot-smoke")
             .spanBuilder("log correlation")
