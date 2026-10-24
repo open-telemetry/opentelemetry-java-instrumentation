@@ -11,16 +11,13 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import net.spy.memcached.MemcachedConnection;
 
 public class SyncCompletionListener extends CompletionListener<Void> {
 
   private static final Logger logger = Logger.getLogger(SyncCompletionListener.class.getName());
 
   @Nullable
-  public static SyncCompletionListener create(
-      Context parentContext, MemcachedConnection connection, String methodName) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName);
+  public static SyncCompletionListener create(Context parentContext, SpymemcachedRequest request) {
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }

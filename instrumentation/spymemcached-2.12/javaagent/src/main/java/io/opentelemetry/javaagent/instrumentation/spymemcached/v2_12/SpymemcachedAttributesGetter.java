@@ -29,9 +29,8 @@ class SpymemcachedAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
-    return null;
+    return spymemcachedRequest.getQueryText();
   }
 
   @Override

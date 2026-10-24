@@ -17,6 +17,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,9 +28,41 @@ import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SpymemcachedRequestTest {
+
+  @ParameterizedTest
+  @CsvSource({
+    "asyncGet, get, get",
+    "asyncGets, gets, gets",
+    "asyncCAS, cas, cas",
+    "asyncGetBulk, getBulk, get",
+    "asyncGetAndTouch, getAndTouch, gat"
+  })
+  void normalizesOperationNames(String method, String operation, String stableOperation) {
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(mock(MemcachedConnection.class), method);
+
+    assertThat(request.getOperationName()).isEqualTo(operation);
+    assertThat(request.getStableOperationName()).isEqualTo(stableOperation);
+  }
+
+  @Test
+  void queryArgumentsAreCapturedWithoutChangingOperationName() {
+    List<String> keys = new ArrayList<>(asList("key1", "key2"));
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(
+            mock(MemcachedConnection.class), "asyncGetBulk", "", new Object[] {keys});
+
+    keys.clear();
+
+    assertThat(request.getOperationName()).isEqualTo("getBulk");
+    assertThat(request.getStableOperationName()).isEqualTo("get");
+    assertThat(new SpymemcachedAttributesGetter().getDbQueryText(request))
+        .isEqualTo("getBulk key1 key2");
+  }
 
   @Test
   void requestCarriesTheTargetItsConnectionWasCreatedFor() {

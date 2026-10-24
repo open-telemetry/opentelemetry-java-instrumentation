@@ -16,12 +16,23 @@ import net.spy.memcached.MemcachedNode;
 @AutoValue
 public abstract class SpymemcachedRequest {
 
-  public static SpymemcachedRequest create(MemcachedConnection connection, String queryText) {
+  public static SpymemcachedRequest create(MemcachedConnection connection, String methodName) {
+    return create(connection, methodName, "", new Object[0]);
+  }
+
+  public static SpymemcachedRequest create(
+      MemcachedConnection connection, String methodName, String descriptor, Object[] args) {
+    String operationName = operationName(methodName);
     return new AutoValue_SpymemcachedRequest(
-        connection, queryText, SpymemcachedSingletons.serverTarget(connection));
+        connection,
+        operationName,
+        SpymemcachedQuerySanitizer.sanitize(operationName, descriptor, args),
+        SpymemcachedSingletons.serverTarget(connection));
   }
 
   public abstract MemcachedConnection getConnection();
+
+  public abstract String getOperationName();
 
   public abstract String getQueryText();
 
@@ -84,8 +95,7 @@ public abstract class SpymemcachedRequest {
     }
   }
 
-  public String getOperationName() {
-    String queryText = getQueryText();
+  private static String operationName(String queryText) {
     if (queryText.startsWith("async")) {
       queryText = queryText.substring("async".length());
     }

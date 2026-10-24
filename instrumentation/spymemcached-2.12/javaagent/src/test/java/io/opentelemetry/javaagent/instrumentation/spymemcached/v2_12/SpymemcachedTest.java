@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -85,6 +86,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -245,6 +247,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "set"),
+                            equalTo(DB_QUERY_TEXT, "set " + key("too-large") + " 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
                             equalTo(
@@ -281,6 +284,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-get")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -307,6 +311,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-get-key-that-doesn't-exist")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -346,6 +351,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-get")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -410,6 +416,7 @@ class SpymemcachedTest {
                                 "net.spy.memcached.internal.CheckedOperationTimeoutException"),
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-get")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -418,14 +425,29 @@ class SpymemcachedTest {
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
-  @Test
-  void bulkGet() {
+  @ParameterizedTest
+  @CsvSource({"varargs,true", "collection,true", "transcoder-varargs,true", "iterator,false"})
+  void bulkGet(String overload, boolean capturesKeys) {
     Map<String, String> testData = new HashMap<>();
     testData.put("test-get", "get test");
     testData.put("test-get-2", "get test 2");
     MemcachedClient memcached = getMemcached(testData);
+    List<String> keys = asList(key("test-get"), key("test-get-2"));
     Map<String, Object> result =
-        testing.runWithSpan("parent", () -> memcached.getBulk(key("test-get"), key("test-get-2")));
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              switch (overload) {
+                case "collection":
+                  return memcached.getBulk(keys);
+                case "transcoder-varargs":
+                  return memcached.getBulk(memcached.getTranscoder(), keys.toArray(new String[0]));
+                case "iterator":
+                  return memcached.getBulk(keys.iterator());
+                default:
+                  return memcached.getBulk(keys.toArray(new String[0]));
+              }
+            });
     assertThat(result)
         .hasSize(2)
         .containsEntry(key("test-get"), "get test")
@@ -442,6 +464,11 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                capturesKeys
+                                    ? "getBulk " + key("test-get") + " " + key("test-get-2")
+                                    : "getBulk"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -470,6 +497,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "set"),
+                            equalTo(DB_QUERY_TEXT, "set " + key("test-set") + " 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -510,6 +538,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "set"),
+                            equalTo(DB_QUERY_TEXT, "set " + key("test-set-cancel") + " 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -542,6 +571,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "add"),
+                            equalTo(DB_QUERY_TEXT, "add " + key("test-add") + " 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -555,6 +585,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-add")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -586,6 +617,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "add"),
+                            equalTo(DB_QUERY_TEXT, "add " + key("test-add2") + " 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -599,6 +631,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "add"),
+                            equalTo(DB_QUERY_TEXT, "add " + key("test-add2") + " 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -628,6 +661,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "delete"),
+                            equalTo(DB_QUERY_TEXT, "delete " + key("test-delete")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -641,6 +675,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-delete")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -670,6 +705,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "delete"),
+                            equalTo(DB_QUERY_TEXT, "delete " + key("test-delete-non-existent")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -700,6 +736,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "replace"),
+                            equalTo(DB_QUERY_TEXT, "replace " + key("test-replace") + " 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -713,6 +750,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-replace")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -746,6 +784,9 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "replace"),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "replace " + key("test-replace-non-existent") + " 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -777,6 +818,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "gets"),
+                            equalTo(DB_QUERY_TEXT, "gets " + key("test-append")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -790,6 +832,9 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "append"),
+                            satisfies(
+                                DB_QUERY_TEXT,
+                                val -> val.matches("append \\d+ " + key("test-append") + " \\?")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -803,6 +848,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-append")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -835,6 +881,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "gets"),
+                            equalTo(DB_QUERY_TEXT, "gets " + key("test-prepend")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -848,6 +895,9 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "prepend"),
+                            satisfies(
+                                DB_QUERY_TEXT,
+                                val -> val.matches("prepend \\d+ " + key("test-prepend") + " \\?")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -861,6 +911,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-prepend")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -893,6 +944,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "gets"),
+                            equalTo(DB_QUERY_TEXT, "gets " + key("test-cas")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -906,6 +958,9 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "cas"),
+                            satisfies(
+                                DB_QUERY_TEXT,
+                                val -> val.matches("cas " + key("test-cas") + " \\d+ 3600 \\?")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -936,12 +991,55 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "cas"),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "cas " + key("test-cas-doesnt-exist") + " 1234 3600 ?"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void casNumericValueIsSanitized(boolean withExpiration) throws Exception {
+    MemcachedClient memcached = getMemcached();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          OperationFuture<CASResponse> future =
+              withExpiration
+                  ? memcached.asyncCAS(
+                      key("numeric-cas"), 1234, EXPIRATION_SECONDS, 5678, memcached.getTranscoder())
+                  : memcached.asyncCAS(key("numeric-cas"), 1234, 5678, memcached.getTranscoder());
+          assertThat(future.get()).isEqualTo(CASResponse.NOT_FOUND);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("cas"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "cas"),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "cas "
+                                    + key("numeric-cas")
+                                    + " 1234"
+                                    + (withExpiration ? " 3600 ?" : " ?")),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -964,6 +1062,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "touch"),
+                            equalTo(DB_QUERY_TEXT, "touch " + key("test-touch") + " 3600"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -993,6 +1092,8 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "touch"),
+                            equalTo(
+                                DB_QUERY_TEXT, "touch " + key("test-touch-non-existent") + " 3600"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1022,6 +1123,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "gat"),
+                            equalTo(DB_QUERY_TEXT, "getAndTouch " + key("test-touch") + " 3600"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1051,6 +1153,9 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "gat"),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "getAndTouch " + key("test-touch-non-existent") + " 3600"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1084,6 +1189,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "decr"),
+                            equalTo(DB_QUERY_TEXT, "decr " + key("test-decr") + " 5"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1097,6 +1203,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-decr")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1126,6 +1233,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "decr"),
+                            equalTo(DB_QUERY_TEXT, "decr " + key("test-decr-non-existent") + " 5"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1154,6 +1262,8 @@ class SpymemcachedTest {
                             equalTo(ERROR_TYPE, "java.lang.IllegalArgumentException"),
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "decr"),
+                            equalTo(
+                                DB_QUERY_TEXT, "decr " + key("long key: " + longString()) + " 5"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(SERVER_PORT, (long) memcachedAddress.getPort()))));
   }
@@ -1183,6 +1293,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "incr"),
+                            equalTo(DB_QUERY_TEXT, "incr " + key("test-incr") + " 5"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1196,6 +1307,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-incr")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1225,6 +1337,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "incr"),
+                            equalTo(DB_QUERY_TEXT, "incr " + key("test-incr-non-existent") + " 5"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -1253,6 +1366,8 @@ class SpymemcachedTest {
                             equalTo(ERROR_TYPE, "java.lang.IllegalArgumentException"),
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "incr"),
+                            equalTo(
+                                DB_QUERY_TEXT, "incr " + key("long key: " + longString()) + " 5"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(SERVER_PORT, (long) memcachedAddress.getPort()))));
   }
@@ -1338,6 +1453,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + keys.get(0)),
                             equalTo(SERVER_ADDRESS, target),
                             equalTo(stringKey("spymemcached.result"), experimental("miss"))),
                 span ->
@@ -1347,6 +1463,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + keys.get(1)),
                             equalTo(SERVER_ADDRESS, target),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
@@ -1418,6 +1535,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + requestKey),
                             equalTo(SERVER_ADDRESS, target),
                             equalTo(NETWORK_PEER_ADDRESS, peer.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) peer.getPort()),
@@ -1502,6 +1620,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + requestKey),
                             equalTo(SERVER_ADDRESS, target),
                             equalTo(NETWORK_PEER_ADDRESS, retryPeer.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) retryPeer.getPort()),
@@ -1533,6 +1652,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-several-nodes")),
                             satisfies(
                                 SERVER_ADDRESS,
                                 val -> {
@@ -1591,6 +1711,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-node-list-mutation")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
