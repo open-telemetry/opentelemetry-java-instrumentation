@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent;
 
+import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
@@ -52,10 +53,14 @@ public final class OpenTelemetryAgent {
       Instrumentation inst, @Nullable String agentArgs, boolean fromPremain) {
     try {
       File javaagentFile = installBootstrapJar(inst);
-      // A child-first system loader may define agent classes even after bootstrap is set up.
-      Class.forName("io.opentelemetry.javaagent.bootstrap.AgentInitializer", true, null)
-          .getMethod("initialize", Instrumentation.class, File.class, boolean.class, String.class)
-          .invoke(null, inst, javaagentFile, fromPremain, agentArgs);
+      if (AgentInitializer.class.getClassLoader() == null) {
+        AgentInitializer.initialize(inst, javaagentFile, fromPremain, agentArgs);
+      } else {
+        // A child-first system loader may define agent classes even after bootstrap is set up.
+        Class.forName("io.opentelemetry.javaagent.bootstrap.AgentInitializer", true, null)
+            .getMethod("initialize", Instrumentation.class, File.class, boolean.class, String.class)
+            .invoke(null, inst, javaagentFile, fromPremain, agentArgs);
+      }
     } catch (Throwable t) {
       // Don't rethrow.  We don't have a log manager here, so just print.
       System.err.println("ERROR " + OpenTelemetryAgent.class.getName());
