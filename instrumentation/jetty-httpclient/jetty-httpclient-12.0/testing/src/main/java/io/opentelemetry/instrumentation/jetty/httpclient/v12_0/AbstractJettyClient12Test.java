@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -173,7 +174,8 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     "true, inlineFailure, true",
     "false, inlineFailure, true"
   })
-  void lifecycleContexts(boolean withParent, String outcome, boolean throwingListeners) {
+  void lifecycleContexts(boolean withParent, String outcome, boolean throwingListeners)
+      throws ReflectiveOperationException {
     ContextKey<String> key = ContextKey.named("jetty-test");
     Map<String, Context> requestContexts = new ConcurrentHashMap<>();
     Map<String, Context> responseContexts = new ConcurrentHashMap<>();
@@ -278,6 +280,18 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     request.onResponseFailure(
         (response, cause) -> responseContexts.put("registeredFailure", Context.current()));
     request.onComplete(result -> responseContexts.put("registeredComplete", Context.current()));
+    if (testLatestDeps()) {
+      Request.class
+          .getMethod("onResponseListener", Response.Listener.class)
+          .invoke(
+              request,
+              new Response.Listener() {
+                @Override
+                public void onComplete(Result result) {
+                  responseContexts.put("aggregateComplete", Context.current());
+                }
+              });
+    }
 
     Runnable send =
         () -> {
@@ -298,6 +312,9 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
       send.run();
     }
     Result result = completed.join();
+    if (testLatestDeps()) {
+      assertThat(responseContexts).containsKey("aggregateComplete");
+    }
     assertThat(result.isSucceeded()).isEqualTo(outcome.equals("success"));
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
     assertThat(Context.current().get(key)).isNull();

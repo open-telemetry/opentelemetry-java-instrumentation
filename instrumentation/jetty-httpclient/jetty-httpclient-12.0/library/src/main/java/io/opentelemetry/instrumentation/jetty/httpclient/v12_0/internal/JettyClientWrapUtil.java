@@ -29,7 +29,8 @@ public final class JettyClientWrapUtil {
     Response.ContentListener.class,
     Response.HeadersListener.class,
     Response.HeaderListener.class,
-    Response.BeginListener.class
+    Response.BeginListener.class,
+    Response.Listener.class
   };
 
   private JettyClientWrapUtil() {}

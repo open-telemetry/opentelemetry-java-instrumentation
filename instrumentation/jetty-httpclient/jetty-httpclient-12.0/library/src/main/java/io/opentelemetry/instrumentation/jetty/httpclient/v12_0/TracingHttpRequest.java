@@ -51,6 +51,13 @@ class TracingHttpRequest extends HttpRequest {
     return context != null ? context.makeCurrent() : null;
   }
 
+  // Added in Jetty 12.0.20.
+  public Request onResponseListener(Response.Listener listener) {
+    getResponseListeners()
+        .addCompleteListener(JettyClientWrapUtil.wrapListener(listener, () -> parentContext), true);
+    return this;
+  }
+
   @Override
   public Request onResponseBegin(Response.BeginListener listener) {
     return super.onResponseBegin(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
