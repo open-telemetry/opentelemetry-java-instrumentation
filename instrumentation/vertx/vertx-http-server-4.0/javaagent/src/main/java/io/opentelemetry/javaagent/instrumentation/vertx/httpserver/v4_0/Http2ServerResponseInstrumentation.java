@@ -57,6 +57,10 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("handlerWritabilityChanged").and(takesArguments(boolean.class)),
         getClass().getName() + "$WritabilityAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("headersEndHandler", "bodyEndHandler", "endHandler", "closeHandler")
+            .and(takesArgument(0, named("io.vertx.core.Handler"))),
+        getClass().getName() + "$ResponseHandlerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -174,6 +178,19 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
       if (scope != null) {
         scope.close();
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ResponseHandlerAdvice {
+    @Nullable
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Handler<?> onEnter(
+        @Advice.This HttpServerResponse response,
+        @Advice.Argument(0) @Nullable Handler<?> handler) {
+      VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
+      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state.context);
     }
   }
 }

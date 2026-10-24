@@ -27,6 +27,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -343,6 +345,7 @@ class VertxHttp2ServerTest {
   void responseEndsBeforeUpload(boolean trailers) throws Exception {
     CompletableFuture<Void> requestEnd = new CompletableFuture<>();
     CompletableFuture<Void> responseEnd = new CompletableFuture<>();
+    CompletableFuture<Void> responseClose = new CompletableFuture<>();
     start(
         HttpClient.Version.HTTP_2,
         request -> {
@@ -352,6 +355,13 @@ class VertxHttp2ServerTest {
                 testing.runWithSpan("late request end", () -> {});
                 requestEnd.complete(null);
               });
+          request
+              .response()
+              .closeHandler(
+                  ignored -> {
+                    testing.runWithSpan("response close", () -> {});
+                    responseClose.complete(null);
+                  });
           if (trailers) {
             request.response().putTrailer("x-finished", "yes");
           }
@@ -405,11 +415,13 @@ class VertxHttp2ServerTest {
       assertDuration(SCOPE, 1);
       request.end().toCompletionStage().toCompletableFuture().get(10, SECONDS);
       requestEnd.get(10, SECONDS);
+      responseClose.get(10, SECONDS);
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
-                  span -> span.hasName("late request end").hasParent(trace.getSpan(0))));
+                  span -> span.hasName("late request end").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("response close").hasParent(trace.getSpan(0))));
       assertDuration(SCOPE, 1);
     } finally {
       client.close();
@@ -454,6 +466,99 @@ class VertxHttp2ServerTest {
                         .hasParentSpanId(PARENT_ID)
                         .hasAttributesSatisfying(equalTo(HTTP_RESPONSE_STATUS_CODE, 200))));
     assertDuration(SCOPE, 1);
+  }
+
+  @Test
+  void responseLifecycleHandlersRetainContextWhenEndedFromNeutralContext() throws Exception {
+    CompletableFuture<Void> responseEnd = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request -> {
+              request
+                  .response()
+                  .headersEndHandler(ignored -> testing.runWithSpan("headers end", () -> {}))
+                  .bodyEndHandler(ignored -> testing.runWithSpan("body end", () -> {}))
+                  .endHandler(
+                      ignored -> {
+                        testing.runWithSpan("response end", () -> {});
+                        responseEnd.complete(null);
+                      });
+              vertx.setTimer(
+                  1,
+                  ignored -> {
+                    try (Scope neutral = Context.root().makeCurrent()) {
+                      request.response().end("response body");
+                    }
+                  });
+            });
+
+    HttpResponse<String> response = send(client, "/neutral-context", TRACE_ID).get(10, SECONDS);
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).isEqualTo("response body");
+    responseEnd.get(10, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
+                span -> span.hasName("headers end").hasParent(trace.getSpan(0)),
+                span -> span.hasName("body end").hasParent(trace.getSpan(0)),
+                span -> span.hasName("response end").hasParent(trace.getSpan(0))));
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
+  void sendFileHeaderHandlerRetainsContextWhenCompletedFromNeutralContext() throws Exception {
+    Path file = Files.createTempFile("vertx-http2-send-file-context", ".txt");
+    try {
+      Files.writeString(file, "send file");
+      CompletableFuture<Void> headersEnd = new CompletableFuture<>();
+      CompletableFuture<Void> sendFileEnd = new CompletableFuture<>();
+      HttpClient client =
+          start(
+              HttpClient.Version.HTTP_2,
+              request -> {
+                request
+                    .response()
+                    .headersEndHandler(
+                        ignored -> {
+                          testing.runWithSpan("sendFile headers end", () -> {});
+                          headersEnd.complete(null);
+                        });
+                vertx.setTimer(
+                    1,
+                    ignored -> {
+                      try (Scope neutral = Context.root().makeCurrent()) {
+                        request
+                            .response()
+                            .sendFile(
+                                file.toString(),
+                                result -> {
+                                  assertThat(result.succeeded()).isTrue();
+                                  testing.runWithSpan("sendFile callback", () -> {});
+                                  sendFileEnd.complete(null);
+                                });
+                      }
+                    });
+              });
+
+      HttpResponse<String> response = send(client, "/send-file-context", TRACE_ID).get(10, SECONDS);
+      assertThat(response.statusCode()).isEqualTo(200);
+      assertThat(response.body()).isEqualTo("send file");
+      headersEnd.get(10, SECONDS);
+      sendFileEnd.get(10, SECONDS);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
+                  span -> span.hasName("sendFile headers end").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("sendFile callback").hasParent(trace.getSpan(0))));
+      assertDuration(SCOPE, 1);
+    } finally {
+      Files.deleteIfExists(file);
+    }
   }
 
   @Test
