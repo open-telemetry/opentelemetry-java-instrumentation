@@ -5248,7 +5248,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-019ae5d4:
+    rpc.client.call.duration-3bb27bbc:
       name: rpc.client.call.duration
       description: Measures the duration of outbound remote procedure calls (RPC).
       instrument: histogram
@@ -5259,7 +5259,7 @@ definitions:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -5377,6 +5377,25 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    rpc.server.call.duration-80918298:
+      name: rpc.server.call.duration
+      description: Measures the duration of inbound remote procedure calls (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.status_code
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     rpc.server.call.duration-a87cce7a:
       name: rpc.server.call.duration
       description: Measures the duration of inbound remote procedure calls (RPC).
@@ -5400,25 +5419,6 @@ definitions:
       - name: error.type
         type: STRING
       - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.server.call.duration-f7f75ef6:
-      name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.response.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6743,7 +6743,7 @@ libraries:
       attributes:
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6755,7 +6755,7 @@ libraries:
       attributes:
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6771,9 +6771,9 @@ libraries:
         type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
-        type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING
@@ -6789,9 +6789,9 @@ libraries:
         type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
-        type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING
@@ -7102,6 +7102,8 @@ libraries:
         type: STRING
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: faas.invocation_id
         type: STRING
       - name: faas.trigger
@@ -7164,6 +7166,8 @@ libraries:
       - name: cloud.account.id
         type: STRING
       - name: cloud.resource_id
+        type: STRING
+      - name: error.type
         type: STRING
       - name: faas.invocation_id
         type: STRING
@@ -7525,7 +7529,6 @@ libraries:
         type: STRING
     event_refs:
     - messaging.settle.exception-b39bdaf3
-    - rpc.client.call.exception-fadee4e0
   - when: default
     metric_refs:
     - db.client.operation.duration-5d89ffb2
@@ -7876,46 +7879,6 @@ libraries:
       - name: rpc.service
         type: STRING
       - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: aws.s3.bucket
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc/dup
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: aws.s3.bucket
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: rpc.system.name
         type: STRING
       - name: server.address
         type: STRING
@@ -8359,7 +8322,6 @@ libraries:
         type: STRING
     event_refs:
     - messaging.settle.exception-b39bdaf3
-    - rpc.client.call.exception-fadee4e0
   - when: AwsSdkTelemetryBuilder.setRecordIndividualHttpError(true)
     spans:
     - span_kind: CLIENT
@@ -8930,46 +8892,6 @@ libraries:
     - gen_ai.choice-c87a79de
     - gen_ai.tool.message-ebf6809d
     - gen_ai.user.message-443462e0
-  - when: otel.semconv-stability.preview=rpc
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: aws.s3.bucket
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc/dup
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: aws.s3.bucket
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.full
-        type: STRING
 - name: azure-core-1.14
   display_name: Azure Core
   description: This instrumentation enables context propagation for the Azure Core
@@ -10084,6 +10006,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -10134,8 +10058,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -10699,8 +10621,8 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-019ae5d4
-    - rpc.server.call.duration-f7f75ef6
+    - rpc.client.call.duration-3bb27bbc
+    - rpc.server.call.duration-80918298
     spans:
     - span_kind: CLIENT
       attributes:
@@ -10708,7 +10630,7 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -10728,7 +10650,7 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -13010,7 +12932,6 @@ libraries:
     - kafka.consumer.fetch_throttle_time_max-d243de50
     - kafka.consumer.fetch_total-ba8b0ac1
     - kafka.consumer.heartbeat_rate-c1755689
-    - kafka.consumer.heartbeat_response_time_max-46b109c5
     - kafka.consumer.heartbeat_total-243f09b7
     - kafka.consumer.incoming_byte_rate-20a9a2be
     - kafka.consumer.incoming_byte_total-bae60fc2
@@ -16482,6 +16403,10 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+- name: opentelemetry
+  source_path: instrumentation/spring/spring-integration-4.1/library/src/version41Test/java/io/opentelemetry
+  scope:
+    name: io.opentelemetry.opentelemetry
 - name: oracle-ucp-11.2
   display_name: Oracle UCP
   description: |
@@ -17171,93 +17096,6 @@ libraries:
   - messaging.headers.included
   - otel.instrumentation.rabbitmq.experimental-span-attributes
   telemetry:
-  - when: default
-    metric_refs:
-    - messaging.client.consumed.messages-f3bb81cb
-    - messaging.client.operation.duration-2dcc8fe4
-    - messaging.client.sent.messages-90cfa605
-    - messaging.process.duration-049f91c8
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: messaging.destination.anonymous
-        type: BOOLEAN
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.rabbitmq.destination.routing_key
-        type: STRING
-      - name: messaging.rabbitmq.message.delivery_tag
-        type: LONG
-      - name: messaging.system
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: CONSUMER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: messaging.destination.anonymous
-        type: BOOLEAN
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.rabbitmq.destination.routing_key
-        type: STRING
-      - name: messaging.rabbitmq.message.delivery_tag
-        type: LONG
-      - name: messaging.system
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: PRODUCER
-      attributes:
-      - name: messaging.destination.anonymous
-        type: BOOLEAN
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.rabbitmq.destination.routing_key
-        type: STRING
-      - name: messaging.system
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false
     metric_refs:
     - messaging.client.consumed.messages-f3bb81cb
@@ -17345,7 +17183,94 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.instrumentation.rabbitmq.experimental-span-attributes=true
+  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+    metric_refs:
+    - messaging.client.consumed.messages-f3bb81cb
+    - messaging.client.operation.duration-2dcc8fe4
+    - messaging.client.sent.messages-90cfa605
+    - messaging.process.duration-049f91c8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.rabbitmq.experimental-span-attributes=true
     metric_refs:
     - messaging.client.consumed.messages-f3bb81cb
     - messaging.client.operation.duration-2dcc8fe4
@@ -19021,19 +18946,19 @@ libraries:
     event_refs:
     - rpc.client.call.exception-fadee4e0
     - rpc.server.call.exception-738e89fe
-- name: spark-2.3
+- name: spark-2.4
   display_name: Spark Web Framework
   description: |
     This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to HTTP server spans and HTTP server metrics.
   library_link: https://sparkjava.com/
   features:
   - HTTP_ROUTE
-  source_path: instrumentation/spark-2.3
+  source_path: instrumentation/spark-2.4
   scope:
-    name: io.opentelemetry.spark-2.3
+    name: io.opentelemetry.spark-2.4
   has_javaagent: true
   javaagent_target_versions:
-  - com.sparkjava:spark-core:[2.3,)
+  - com.sparkjava:spark-core:[2.4,)
 - name: spring-ai-1.0
   display_name: Spring AI
   description: |
@@ -19540,20 +19465,20 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-- name: spring-rabbit-1.0
+- name: spring-rabbit-1.1
   display_name: Spring Rabbit
   description: This instrumentation enables consumer messaging spans for Spring RabbitMQ
     listeners.
   semantic_conventions:
   - MESSAGING_SPANS
   library_link: https://spring.io/projects/spring-amqp
-  source_path: instrumentation/spring/spring-rabbit-1.0
+  source_path: instrumentation/spring/spring-rabbit-1.1
   scope:
-    name: io.opentelemetry.spring-rabbit-1.0
+    name: io.opentelemetry.spring-rabbit-1.1
     schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
-  - org.springframework.amqp:spring-rabbit:(,)
+  - org.springframework.amqp:spring-rabbit:[1.1.0.RELEASE,)
   configuration_refs:
   - messaging.headers.excluded
   - messaging.headers.included
@@ -19567,6 +19492,8 @@ libraries:
       attributes:
       - name: error.type
         type: STRING
+      - name: messaging.batch.message_count
+        type: LONG
       - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
@@ -19600,7 +19527,7 @@ libraries:
   source_path: instrumentation/spring/spring-rmi-4.0
   scope:
     name: io.opentelemetry.spring-rmi-4.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework:spring-context:[4.0.0.RELEASE,6)
@@ -19622,6 +19549,50 @@ libraries:
       - name: rpc.service
         type: STRING
       - name: rpc.system
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc/dup
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
         type: STRING
 - name: spring-scheduling-3.1
   display_name: Spring Scheduling
@@ -21131,7 +21102,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -21144,6 +21115,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: network.peer.address
         type: STRING
@@ -21157,7 +21130,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -21170,6 +21143,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: network.peer.address
         type: STRING
