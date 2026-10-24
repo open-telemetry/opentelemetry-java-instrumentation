@@ -11,12 +11,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Collection;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -51,7 +53,11 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic().and(namedOneOf("incr", "decr")), getClass().getName() + "$SyncOperationAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(named("getBulk")), getClass().getName() + "$SyncBulkAdvice");
+        isPublic()
+            .and(named("getBulk"))
+            .and(takesArgument(0, Collection.class))
+            .and(takesArgument(1, named("net.spy.memcached.transcoders.Transcoder"))),
+        getClass().getName() + "$SyncBulkAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -142,8 +148,8 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
   public static class SyncBulkAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static Scope methodEnter(@Advice.AllArguments Object[] args) {
-      String queryText = SpymemcachedQuerySanitizer.sanitize("getBulk", "", args);
+    public static Scope methodEnter(@Advice.Argument(0) Collection<String> keys) {
+      String queryText = SpymemcachedQuerySanitizer.sanitize("getBulk", "", new Object[] {keys});
       if (queryText.equals("getBulk")) {
         return null;
       }
