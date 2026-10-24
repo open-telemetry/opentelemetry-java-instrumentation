@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
@@ -19,7 +20,45 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  * any time.
  */
 public class WebClientHttpAttributesGetter
-    implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
+    implements HttpClientExperimentalAttributesGetter<ClientRequest, ClientResponse> {
+  @Nullable
+  @Override
+  public String getUrlTemplate(ClientRequest request) {
+    // Populated by Spring's string-template URI overloads since 5.0.5.
+    Object template =
+        request
+            .attributes()
+            .get("org.springframework.web.reactive.function.client.WebClient.uriTemplate");
+    if (!(template instanceof String)) {
+      return null;
+    }
+    return extractPathTemplate((String) template);
+  }
+
+  @Nullable
+  static String extractPathTemplate(String template) {
+    // Strip first so slashes in query or fragment values cannot be mistaken for a path.
+    String urlTemplate = stripQueryAndFragment(template);
+    if (urlTemplate.isEmpty()) {
+      return null;
+    }
+    if (urlTemplate.regionMatches(true, 0, "http://", 0, 7)
+        || urlTemplate.regionMatches(true, 0, "https://", 0, 8)) {
+      return UrlParser.getPath(urlTemplate);
+    }
+    return urlTemplate;
+  }
+
+  private static String stripQueryAndFragment(String template) {
+    for (int i = 0; i < template.length(); i++) {
+      char c = template.charAt(i);
+      if (c == '?' || c == '#') {
+        return template.substring(0, i);
+      }
+    }
+    return template;
+  }
+
   @Override
   public String getUrlFull(ClientRequest request) {
     return request.url().toString();
