@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -260,6 +261,7 @@ class SpymemcachedTest {
                                 NETWORK_PEER_ADDRESS,
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()),
+                            equalTo(DB_RESPONSE_STATUS_CODE, testLatestDeps() ? "ERR_2BIG" : null),
                             equalTo(ERROR_TYPE, errorType))));
     assertDurationMetric(
         testing,

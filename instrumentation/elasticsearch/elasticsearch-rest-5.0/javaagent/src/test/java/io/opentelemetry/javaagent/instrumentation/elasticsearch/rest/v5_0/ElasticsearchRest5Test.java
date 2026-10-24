@@ -11,7 +11,9 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -28,6 +30,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -90,6 +93,31 @@ class ElasticsearchRest5Test {
   }
 
   @Test
+  void recordsFailureResponseStatus() throws IOException {
+    // HEAD requests return 404 responses without throwing.
+    Response response = client.performRequest("HEAD", "/missing-index");
+    assertThat(response.getStatusLine().getStatusCode()).isEqualTo(404);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "404"),
+                            equalTo(ERROR_TYPE, "404"),
+                            equalTo(HTTP_REQUEST_METHOD, "HEAD"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(URL_FULL, httpHost.toURI() + "/missing-index")),
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void elasticsearchStatus() throws IOException {
     Response response = client.performRequest("GET", "_cluster/health");
 
@@ -112,7 +140,7 @@ class ElasticsearchRest5Test {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
                 span ->
-                    span.hasName("GET")
+                    span.hasName("HEAD")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

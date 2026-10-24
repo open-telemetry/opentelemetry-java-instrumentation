@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -170,7 +171,12 @@ class JdbcTelemetryTest {
                             equalTo(DB_QUERY_TEXT, "SELECT ?;"),
                             equalTo(DB_QUERY_SUMMARY, "SELECT"),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(ERROR_TYPE, expectedErrorType))));
+                            equalTo(ERROR_TYPE, expectedErrorType),
+                            equalTo(
+                                DB_RESPONSE_STATUS_CODE,
+                                expectedErrorType.equals(SQLException.class.getName())
+                                    ? null
+                                    : expectedErrorType))));
 
     assertDurationMetric(
         testing,

@@ -37,6 +37,7 @@ import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class MongoDbAttributesGetterTest {
 
@@ -133,6 +134,7 @@ class MongoDbAttributesGetterTest {
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
     assertThat(getter.getErrorType(null, null, error)).isEqualTo(expectedErrorType);
+    assertThat(getter.getDbResponseStatusCode(null, null, error)).isEqualTo(expectedErrorType);
   }
 
   @Test
@@ -148,6 +150,28 @@ class MongoDbAttributesGetterTest {
             1);
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("64");
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isEqualTo("64");
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "{\"ok\": 1}",
+        "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}]}",
+        "{\"ok\": 1, \"writeConcernError\": {\"code\": 0}}"
+      })
+  void omitsResponseStatusWithoutServerErrorCode(String document) {
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+    CommandSucceededEvent response =
+        new CommandSucceededEvent(
+            1,
+            new ConnectionDescription(new ServerId(new ClusterId(), new ServerAddress())),
+            "insert",
+            BsonDocument.parse(document),
+            1);
+
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isNull();
   }
 
   @Test

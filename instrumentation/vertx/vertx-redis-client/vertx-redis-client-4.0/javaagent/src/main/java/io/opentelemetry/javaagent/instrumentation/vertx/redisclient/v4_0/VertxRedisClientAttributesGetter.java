@@ -76,6 +76,13 @@ final class VertxRedisClientAttributesGetter
 
   @Override
   @Nullable
+  public String getDbResponseStatusCode(
+      VertxRedisClientRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return VertxRedisClientError.getErrorType(error);
+  }
+
+  @Override
+  @Nullable
   public String getErrorType(
       VertxRedisClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     return VertxRedisClientError.getErrorType(error);

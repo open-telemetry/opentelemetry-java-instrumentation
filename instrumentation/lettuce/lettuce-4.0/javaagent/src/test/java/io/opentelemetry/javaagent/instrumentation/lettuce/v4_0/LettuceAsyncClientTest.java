@@ -14,6 +14,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -221,6 +222,7 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "WRONGTYPE"),
                             equalTo(ERROR_TYPE, "WRONGTYPE"))));
 
     assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", "WRONGTYPE", 1);
@@ -769,6 +771,7 @@ class LettuceAsyncClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(DB_RESPONSE_STATUS_CODE, scenario.errorType),
                             equalTo(ERROR_TYPE, scenario.errorType))));
 
     assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", scenario.errorType, 1);

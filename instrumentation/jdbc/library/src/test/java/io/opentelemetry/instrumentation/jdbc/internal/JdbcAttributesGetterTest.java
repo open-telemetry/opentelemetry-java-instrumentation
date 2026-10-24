@@ -79,6 +79,20 @@ class JdbcAttributesGetterTest {
             attributesGetter.getErrorType(
                 request, null, new SQLException("test", sqlState, errorCode)))
         .isEqualTo(expectedErrorType);
+    assertThat(
+            attributesGetter.getDbResponseStatusCode(
+                request, null, new SQLException("test", sqlState, errorCode)))
+        .isEqualTo(expectedErrorType);
+  }
+
+  @Test
+  void omitsResponseStatusWithoutSqlException() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, null)).isNull();
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, new IllegalStateException()))
+        .isNull();
   }
 
   private static Stream<Arguments> errorCodes() {

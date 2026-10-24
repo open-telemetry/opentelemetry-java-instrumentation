@@ -22,11 +22,16 @@ class LettuceDbAttributesGetterTest {
             "WRONGTYPE Operation against a key holding the wrong kind of value");
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isEqualTo("WRONGTYPE");
   }
 
   @Test
   void ignoresClientErrorWithoutResponse() {
     assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
+        .isNull();
+    assertThat(
+            getter.getDbResponseStatusCode(
+                null, null, new RedisCommandTimeoutException("timed out")))
         .isNull();
   }
 
@@ -35,6 +40,7 @@ class LettuceDbAttributesGetterTest {
     LettuceResponse response = LettuceResponse.fromErrorMessage("   ");
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isNull();
     assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
         .isNull();
   }
@@ -43,11 +49,15 @@ class LettuceDbAttributesGetterTest {
   void doesNotInventExceptionClassForUnknownFailure() {
     assertThat(getter.getErrorType(null, LettuceResponse.unknownFailure(), null))
         .isEqualTo("_OTHER");
+    assertThat(getter.getDbResponseStatusCode(null, LettuceResponse.unknownFailure(), null))
+        .isNull();
   }
 
   @Test
   void omitsErrorTypeOnSuccess() {
     assertThat(getter.getErrorType(null, LettuceResponse.fromErrorMessage(null), null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, LettuceResponse.fromErrorMessage(null), null))
+        .isNull();
   }
 
   @Test
@@ -63,5 +73,6 @@ class LettuceDbAttributesGetterTest {
   @Test
   void ignoresMissingResponse() {
     assertThat(getter.getErrorType(null, null, null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
   }
 }

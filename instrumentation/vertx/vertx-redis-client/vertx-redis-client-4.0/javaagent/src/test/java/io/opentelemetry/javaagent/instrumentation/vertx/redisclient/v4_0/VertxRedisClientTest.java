@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -280,7 +281,11 @@ class VertxRedisClientTest {
     AttributeAssertion[] operationAttributes =
         redisSpanAttributes(operationName, queryText, batchSize);
     AttributeAssertion[] attributes =
-        Arrays.copyOf(operationAttributes, operationAttributes.length + 1);
+        Arrays.copyOf(operationAttributes, operationAttributes.length + 2);
+    attributes[attributes.length - 2] =
+        equalTo(
+            DB_RESPONSE_STATUS_CODE,
+            ErrorType.class.getName().equals(errorType) ? null : errorType);
     attributes[attributes.length - 1] = equalTo(ERROR_TYPE, errorType);
 
     testing.waitAndAssertTraces(

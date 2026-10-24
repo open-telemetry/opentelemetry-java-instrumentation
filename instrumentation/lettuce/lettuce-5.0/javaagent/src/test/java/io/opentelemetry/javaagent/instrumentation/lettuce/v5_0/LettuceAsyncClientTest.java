@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -281,6 +282,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(DB_QUERY_TEXT, "GET TESTHM"),
                             equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "WRONGTYPE"),
                             equalTo(ERROR_TYPE, "WRONGTYPE"))));
 
     assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", "WRONGTYPE", 1);
@@ -752,6 +754,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_QUERY_TEXT, scenario.queryText),
                             equalTo(DB_OPERATION_NAME, scenario.operationName),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(DB_RESPONSE_STATUS_CODE, scenario.errorType),
                             equalTo(ERROR_TYPE, scenario.errorType))));
 
     assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", scenario.errorType, 1);

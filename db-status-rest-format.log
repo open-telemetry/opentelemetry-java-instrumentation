@@ -1,0 +1,67 @@
+Parallel Configuration Cache is an incubating feature.
+Calculating task graph as no cached configuration is available for tasks: :instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent:spotlessJavaApply :instrumentation:opensearch:opensearch-rest-common-1.0:testing:spotlessJavaApply
+> Task :conventions:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :conventions:extractPrecompiledScriptPluginPlugins UP-TO-DATE
+> Task :gradle-plugins:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :conventions:generateScriptPluginAdapters UP-TO-DATE
+> Task :conventions:pluginDescriptors UP-TO-DATE
+> Task :conventions:processResources UP-TO-DATE
+> Task :gradle-plugins:generateExternalPluginSpecBuilders UP-TO-DATE
+> Task :gradle-plugins:extractPrecompiledScriptPluginPlugins UP-TO-DATE
+> Task :gradle-plugins:compilePluginsBlocks UP-TO-DATE
+> Task :gradle-plugins:generatePrecompiledScriptPluginAccessors UP-TO-DATE
+> Task :gradle-plugins:generateScriptPluginAdapters UP-TO-DATE
+> Task :gradle-plugins:compileKotlin UP-TO-DATE
+> Task :gradle-plugins:compileJava NO-SOURCE
+> Task :gradle-plugins:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugins:processResources UP-TO-DATE
+> Task :gradle-plugins:classes UP-TO-DATE
+> Task :gradle-plugins:jar UP-TO-DATE
+> Task :conventions:generateExternalPluginSpecBuilders UP-TO-DATE
+> Task :conventions:compilePluginsBlocks UP-TO-DATE
+> Task :conventions:generatePrecompiledScriptPluginAccessors UP-TO-DATE
+> Task :conventions:compileKotlin UP-TO-DATE
+> Task :conventions:compileJava NO-SOURCE
+> Task :conventions:classes UP-TO-DATE
+> Task :conventions:jar UP-TO-DATE
+> Task :quarkus-2.0-plugin:pluginDescriptors UP-TO-DATE
+> Task :quarkus-2.0-plugin:processResources UP-TO-DATE
+> Task :quarkus-common-plugin:compileJava UP-TO-DATE
+> Task :quarkus-common-plugin:processResources NO-SOURCE
+> Task :quarkus-common-plugin:classes UP-TO-DATE
+> Task :quarkus-common-plugin:jar UP-TO-DATE
+> Task :quarkus-2.0-plugin:compileJava UP-TO-DATE
+> Task :quarkus-2.0-plugin:classes UP-TO-DATE
+> Task :quarkus-2.0-plugin:jar UP-TO-DATE
+> Task :quarkus-3.0-plugin:compileJava UP-TO-DATE
+> Task :quarkus-3.0-plugin:pluginDescriptors UP-TO-DATE
+> Task :quarkus-3.0-plugin:processResources UP-TO-DATE
+> Task :quarkus-3.0-plugin:classes UP-TO-DATE
+> Task :quarkus-3.0-plugin:jar UP-TO-DATE
+> Task :quarkus-3.9-plugin:compileJava UP-TO-DATE
+> Task :quarkus-3.9-plugin:pluginDescriptors UP-TO-DATE
+> Task :quarkus-3.9-plugin:processResources UP-TO-DATE
+> Task :quarkus-3.9-plugin:classes UP-TO-DATE
+> Task :quarkus-3.9-plugin:jar UP-TO-DATE
+> Task :instrumentation:opensearch:opensearch-rest-common-1.0:testing:spotlessJava
+> Task :instrumentation:opensearch:opensearch-rest-common-1.0:testing:spotlessJavaApply
+> Task :instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent:spotlessJava
+> Task :instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent:spotlessJavaApply
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_27-1792884104119.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/opentelemetry-java-instrumentation/opentelemetry-java-instrumentation/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.2/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+36 actionable tasks: 4 executed, 32 up-to-date
+
+Publishing Build Scan to Develocity...
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-scans/__run_27-1792884104119.json
+https://gradle.com/s/oqa32t5fjgabk
+
+Configuration cache entry stored.

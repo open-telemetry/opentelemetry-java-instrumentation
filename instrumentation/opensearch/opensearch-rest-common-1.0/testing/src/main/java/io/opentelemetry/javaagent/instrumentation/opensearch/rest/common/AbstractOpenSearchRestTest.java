@@ -10,7 +10,9 @@ import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServ
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -23,6 +25,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
@@ -78,6 +81,33 @@ public abstract class AbstractOpenSearchRestTest {
   }
 
   @Test
+  void recordsFailureResponseStatus() throws IOException {
+    // HEAD requests return 404 responses without throwing.
+    Request request = new Request("HEAD", "/missing-index");
+    Response response = client.performRequest(request);
+    assertThat(getResponseStatus(response)).isEqualTo(404);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("HEAD " + httpHost.getHost() + ":" + httpHost.getPort())
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                                equalTo(DB_OPERATION_NAME, "HEAD"),
+                                equalTo(DB_RESPONSE_STATUS_CODE, "404"),
+                                equalTo(ERROR_TYPE, "404"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
+                    span ->
+                        span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void shouldGetStatusWithTraces() throws IOException {
     Response response = client.performRequest(new Request("GET", "_cluster/health"));
     assertThat(getResponseStatus(response)).isEqualTo(200);
@@ -95,7 +125,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
-                        span.hasName("GET")
+                        span.hasName("HEAD")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
