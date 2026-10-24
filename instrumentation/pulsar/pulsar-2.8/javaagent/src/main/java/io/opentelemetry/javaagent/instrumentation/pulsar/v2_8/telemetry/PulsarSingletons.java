@@ -81,6 +81,10 @@ public class PulsarSingletons {
     return producerInstrumenter;
   }
 
+  public static void inject(Context context, PulsarRequest request) {
+    propagator.inject(context, request, new MessageTextMapSetter());
+  }
+
   public static ScopedThreadSuppression listenerProcessingScope() {
     return listenerProcessingScope;
   }

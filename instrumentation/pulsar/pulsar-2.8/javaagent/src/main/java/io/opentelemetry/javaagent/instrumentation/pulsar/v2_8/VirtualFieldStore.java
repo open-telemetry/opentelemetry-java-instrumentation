@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.impl.SendCallback;
 import org.apache.pulsar.client.impl.TopicMessageImpl;
@@ -35,10 +37,19 @@ public class VirtualFieldStore {
     CONSUMER_FIELD.set(instance, serviceUrl);
   }
 
-  public static void inject(SendCallback instance, Context context, PulsarRequest request) {
+  public static void inject(SendCallback instance, SendCallbackData data) {
     if (instance != null) {
-      CALLBACK_FIELD.set(instance, SendCallbackData.create(context, request));
+      CALLBACK_FIELD.set(instance, data);
+      CompletableFuture<MessageId> future = instance.getFuture();
+      if (future != null) {
+        // Linked batch callbacks complete their futures without invoking sendComplete.
+        future.whenComplete((unused, error) -> CALLBACK_FIELD.set(instance, null));
+      }
     }
+  }
+
+  public static void inject(SendCallback instance, Context context, PulsarRequest request) {
+    inject(instance, SendCallbackData.create(Context.current(), context, request));
   }
 
   public static void clearProcessParentContext(Message<?> instance) {

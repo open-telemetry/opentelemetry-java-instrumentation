@@ -5,19 +5,78 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
+import org.apache.pulsar.client.api.MessageId;
 
 public class SendCallbackData {
-  public final Context context;
-  public final PulsarRequest request;
+  private static final Logger logger = Logger.getLogger(SendCallbackData.class.getName());
+  private static final ContextKey<SendCallbackData> KEY =
+      ContextKey.named("opentelemetry-pulsar-send");
 
-  public static SendCallbackData create(Context context, PulsarRequest request) {
-    return new SendCallbackData(context, request);
+  private final Context parent;
+  public final Context context;
+  private final AtomicBoolean ended = new AtomicBoolean();
+  public PulsarRequest request;
+
+  public static SendCallbackData create(Context parent, Context context, PulsarRequest request) {
+    return new SendCallbackData(parent, context, request);
   }
 
-  private SendCallbackData(Context context, PulsarRequest request) {
+  private SendCallbackData(Context parent, Context context, PulsarRequest request) {
+    this.parent = parent;
     this.context = context;
     this.request = request;
+  }
+
+  @Nullable
+  public static SendCallbackData current() {
+    return Context.current().get(KEY);
+  }
+
+  public Context invocationContext() {
+    return context.with(KEY, this);
+  }
+
+  public static Context withoutOperation(Context context) {
+    return context.with(KEY, null);
+  }
+
+  public void end(@Nullable Throwable error) {
+    if (ended.compareAndSet(false, true)) {
+      try {
+        producerInstrumenter().end(context, request, null, error);
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to end Pulsar send", t);
+      }
+    }
+  }
+
+  public CompletableFuture<MessageId> wrap(CompletableFuture<MessageId> future) {
+    CompletableFuture<MessageId> result = new CompletableFuture<>();
+    future.whenComplete(
+        (messageId, error) -> {
+          try {
+            end(error);
+          } finally {
+            try (Scope ignored = parent.makeCurrent()) {
+              if (error == null) {
+                result.complete(messageId);
+              } else {
+                result.completeExceptionally(error);
+              }
+            }
+          }
+        });
+    return result;
   }
 }
