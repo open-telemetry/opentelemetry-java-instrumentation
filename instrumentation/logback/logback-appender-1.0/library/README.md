@@ -80,6 +80,48 @@ public class Application {
 }
 ```
 
+#### Asynchronous logging and trace correlation
+
+Attach the library exporting `OpenTelemetryAppender` directly to your logger, not behind
+Logback's `AsyncAppender`. An `AsyncAppender` invokes downstream appenders on its worker thread,
+where the application's OpenTelemetry context is unavailable, so exported log records lose
+trace/span correlation. Copying trace/span ID strings into MDC does not restore the exported
+record's actual span context. This limitation concerns the library exporting appender configuration,
+not the Java agent's automatic log capture.
+
+Use the SDK's `BatchLogRecordProcessor` for asynchronous export. Formatting, attribute extraction,
+and any synchronous log record processor work still execute on the logging thread (the application
+thread when OTel is attached directly). Console or file output can use a separate async branch:
+
+```xml
+<configuration>
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <appender name="async-console" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="console"/>
+  </appender>
+  <appender name="OpenTelemetry"
+            class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender"/>
+  <root level="INFO">
+    <appender-ref ref="OpenTelemetry"/>
+    <appender-ref ref="async-console"/>
+  </root>
+</configuration>
+```
+
+For library installation, configure a `BatchLogRecordProcessor` on your `SdkLoggerProvider` and
+call `OpenTelemetryAppender.install(openTelemetrySdk)` after Logback configuration, as shown above.
+With the OpenTelemetry Spring Boot starter, use the same appender layout in `logback-spring.xml`;
+the starter installs the SDK on the exporting appender automatically. The starter's SDK
+autoconfiguration uses batch log export by default (`otel.blrp.*` properties tune batching).
+
+The exporting appender reports an advisory Logback status warning once per appender instance if
+configuration inspection finds it downstream of a known Logback async appender, including through
+nested attachments. The warning does not reject the configuration or change log export.
+
 #### Settings for the Logback Appender
 
 Settings can be configured in `logback.xml`, for example:
