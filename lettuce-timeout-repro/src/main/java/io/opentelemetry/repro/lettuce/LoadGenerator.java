@@ -28,9 +28,9 @@ import java.util.concurrent.locks.LockSupport;
  * <p>By default it runs closed-loop: {@code concurrency} workers each send one request at a time.
  * With {@code --rate=<n>} it runs open-loop instead: requests are started at a fixed rate
  * regardless of response times, with at most {@code concurrency} in flight; requests that cannot
- * start because that limit is reached are counted as skipped rather than queued. Requests in flight
- * at the deadline are allowed to finish (bounded by the request timeout), so that commands stuck
- * until the Redis command timeout are still observed.
+ * start because that limit is reached, or because their task misses the deadline, are counted as
+ * skipped rather than queued. Requests in flight at the deadline are allowed to finish (bounded by
+ * the request timeout), so that commands stuck until the Redis command timeout are still observed.
  */
 final class LoadGenerator {
 
@@ -154,14 +154,25 @@ final class LoadGenerator {
       if (wait > 0) {
         LockSupport.parkNanos(wait);
       }
+      if (System.nanoTime() >= deadline) {
+        break;
+      }
       if (!inFlight.tryAcquire()) {
         skipped.increment();
         continue;
       }
+      if (System.nanoTime() >= deadline) {
+        inFlight.release();
+        break;
+      }
       requests.execute(
           () -> {
             try {
-              send(client);
+              if (System.nanoTime() < deadline) {
+                send(client);
+              } else {
+                skipped.increment();
+              }
             } finally {
               inFlight.release();
             }

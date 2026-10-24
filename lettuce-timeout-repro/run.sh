@@ -17,6 +17,8 @@ WARMUP_SECONDS=${WARMUP_SECONDS:-30}
 DURATION_SECONDS=${DURATION_SECONDS:-120}
 REDIS_TIMEOUT=${REDIS_TIMEOUT:-60s}
 REQUEST_TIMEOUT_SECONDS=${REQUEST_TIMEOUT_SECONDS:-90}
+REDIS_STARTUP_TIMEOUT_SECONDS=${REDIS_STARTUP_TIMEOUT_SECONDS:-30}
+CLUSTER_READY_TIMEOUT_SECONDS=${CLUSTER_READY_TIMEOUT_SECONDS:-30}
 KEY_COUNT=${KEY_COUNT:-10000}
 APP_HEAP=${APP_HEAP:-512m}
 REDIS_IMAGE=${REDIS_IMAGE:-redis:7.4.6-alpine}
@@ -27,9 +29,13 @@ APP_PORT=18080
 CLUSTER_PORTS="17000 17001 17002"
 STANDALONE_PORT=16379
 PREFIX=lettuce-timeout-repro
+RUN_ID="${BASHPID:-$$}-$RANDOM"
+CONTAINER_PREFIX="$PREFIX-$RUN_ID"
 APP_JAR=build/libs/lettuce-timeout-repro.jar
-RESULTS=build/results/$(date +%Y%m%d-%H%M%S)
+RESULTS=build/results/$(date +%Y%m%d-%H%M%S)-$RUN_ID
 APP_PID=
+CONTAINER_IDS=()
+REDIS_CONTAINER_IDS=()
 
 cleanup() {
   if [[ -n "$APP_PID" ]]; then
@@ -37,42 +43,137 @@ cleanup() {
     wait "$APP_PID" 2>/dev/null || true
     APP_PID=
   fi
-  docker ps -aq --filter "name=^${PREFIX}-" | xargs -r docker rm -f >/dev/null
+  for container_id in "${CONTAINER_IDS[@]}"; do
+    docker rm -f "$container_id" >/dev/null 2>&1 || true
+  done
 }
 trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-start_redis() {
-  docker ps -aq --filter "name=^${PREFIX}-redis" | xargs -r docker rm -f >/dev/null
+cleanup_redis() {
+  for container_id in "${REDIS_CONTAINER_IDS[@]}"; do
+    docker rm -f "$container_id" >/dev/null 2>&1 || true
+  done
+  REDIS_CONTAINER_IDS=()
+}
+
+check_port_is_free() {
+  local port=$1
+  if (true >/dev/tcp/127.0.0.1/"$port") 2>/dev/null; then
+    echo "port $port is already in use; refusing to reuse an existing service" >&2
+    return 1
+  fi
+}
+
+check_ports() {
   if [[ "$MODE" == cluster ]]; then
-    local nodes=()
     for port in $CLUSTER_PORTS; do
-      docker run -d --rm --name "$PREFIX-redis-$port" --network host "$REDIS_IMAGE" \
-        redis-server --port "$port" --cluster-enabled yes --cluster-announce-ip 127.0.0.1 \
-        --save "" --appendonly no >/dev/null
-      nodes+=("127.0.0.1:$port")
+      check_port_is_free "$port"
+      check_port_is_free "$((port + 10000))"
     done
-    for port in $CLUSTER_PORTS; do
-      until docker exec "$PREFIX-redis-$port" redis-cli -p "$port" ping >/dev/null 2>&1; do
-        sleep 0.5
-      done
-    done
-    docker exec "$PREFIX-redis-${CLUSTER_PORTS%% *}" \
-      redis-cli --cluster create "${nodes[@]}" --cluster-replicas 0 --cluster-yes >/dev/null
-    until docker exec "$PREFIX-redis-${CLUSTER_PORTS%% *}" redis-cli -p "${CLUSTER_PORTS%% *}" \
-      cluster info | grep -q cluster_state:ok; do
-      sleep 0.5
-    done
-    REDIS_ARGS=("--spring.data.redis.cluster.nodes=$(IFS=,; echo "${nodes[*]}")")
   elif [[ "$MODE" == standalone ]]; then
-    docker run -d --rm --name "$PREFIX-redis" --network host "$REDIS_IMAGE" \
-      redis-server --port "$STANDALONE_PORT" --save "" --appendonly no >/dev/null
-    until docker exec "$PREFIX-redis" redis-cli -p "$STANDALONE_PORT" ping >/dev/null 2>&1; do
-      sleep 0.5
-    done
-    REDIS_ARGS=("--spring.data.redis.host=127.0.0.1" "--spring.data.redis.port=$STANDALONE_PORT")
+    check_port_is_free "$STANDALONE_PORT"
   else
     echo "unknown MODE=$MODE (expected cluster or standalone)" >&2
-    exit 1
+    return 1
+  fi
+  for port in "$APP_PORT" 4317 4318; do
+    check_port_is_free "$port"
+  done
+}
+
+start_container() {
+  local name=$1
+  shift
+  local container_id
+  if ! container_id=$(docker run -d --name "$name" --network host "$@"); then
+    echo "failed to start container '$name'; check Docker and host port availability" >&2
+    return 1
+  fi
+  CONTAINER_IDS+=("$container_id")
+  CREATED_CONTAINER_ID=$container_id
+}
+
+start_redis_container() {
+  start_container "$@"
+  REDIS_CONTAINER_IDS+=("$CREATED_CONTAINER_ID")
+}
+
+wait_for_redis() {
+  local container_id=$1
+  local name=$2
+  local port=$3
+  local deadline=$((SECONDS + REDIS_STARTUP_TIMEOUT_SECONDS))
+  while ((SECONDS <= deadline)); do
+    if ! docker inspect --format '{{.State.Running}}' "$container_id" 2>/dev/null | grep -qx true; then
+      echo "Redis container '$name' exited before becoming ready" >&2
+      docker logs "$container_id" >&2 || true
+      return 1
+    fi
+    if docker exec "$container_id" redis-cli -p "$port" ping >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "Redis container '$name' did not become ready within ${REDIS_STARTUP_TIMEOUT_SECONDS}s" >&2
+  docker logs "$container_id" >&2 || true
+  return 1
+}
+
+wait_for_cluster() {
+  local container_id=$1
+  local name=$2
+  local port=$3
+  local deadline=$((SECONDS + CLUSTER_READY_TIMEOUT_SECONDS))
+  local cluster_info=
+  while ((SECONDS <= deadline)); do
+    if ! docker inspect --format '{{.State.Running}}' "$container_id" 2>/dev/null | grep -qx true; then
+      echo "Redis container '$name' exited while waiting for cluster health" >&2
+      docker logs "$container_id" >&2 || true
+      return 1
+    fi
+    cluster_info=$(docker exec "$container_id" redis-cli -p "$port" cluster info 2>/dev/null || true)
+    if grep -q '^cluster_state:ok' <<<"$cluster_info"; then
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "Redis cluster did not become healthy within ${CLUSTER_READY_TIMEOUT_SECONDS}s" >&2
+  echo "$cluster_info" >&2
+  docker logs "$container_id" >&2 || true
+  return 1
+}
+
+start_redis() {
+  cleanup_redis
+  if [[ "$MODE" == cluster ]]; then
+    local nodes=()
+    local first_container_id=
+    for port in $CLUSTER_PORTS; do
+      local name="$CONTAINER_PREFIX-redis-$port"
+      start_redis_container "$name" "$REDIS_IMAGE" \
+        redis-server --port "$port" --cluster-enabled yes --cluster-announce-ip 127.0.0.1 \
+        --save "" --appendonly no
+      if [[ -z "$first_container_id" ]]; then
+        first_container_id=$CREATED_CONTAINER_ID
+      fi
+      nodes+=("127.0.0.1:$port")
+      wait_for_redis "$CREATED_CONTAINER_ID" "$name" "$port"
+    done
+    local first_port=${CLUSTER_PORTS%% *}
+    local first_container="$CONTAINER_PREFIX-redis-$first_port"
+    docker exec "$first_container_id" \
+      redis-cli --cluster create "${nodes[@]}" --cluster-replicas 0 --cluster-yes >/dev/null
+    wait_for_cluster "$first_container_id" "$first_container" "$first_port"
+    REDIS_ARGS=("--spring.data.redis.cluster.nodes=$(IFS=,; echo "${nodes[*]}")")
+  elif [[ "$MODE" == standalone ]]; then
+    local name="$CONTAINER_PREFIX-redis"
+    start_redis_container "$name" "$REDIS_IMAGE" \
+      redis-server --port "$STANDALONE_PORT" --save "" --appendonly no
+    wait_for_redis "$CREATED_CONTAINER_ID" "$name" "$STANDALONE_PORT"
+    REDIS_ARGS=("--spring.data.redis.host=127.0.0.1" "--spring.data.redis.port=$STANDALONE_PORT")
   fi
 }
 
@@ -136,6 +237,7 @@ run_one() {
   kill "$APP_PID"
   wait "$APP_PID" 2>/dev/null || true
   APP_PID=
+  cleanup_redis
 }
 
 summary() {
@@ -162,13 +264,26 @@ summary() {
   cat "$file"
 }
 
+if ! JAVA_EXECUTABLE=$(command -v "$JAVA"); then
+  echo "JAVA executable not found: $JAVA" >&2
+  exit 1
+fi
+JAVA_EXECUTABLE=$(readlink -f "$JAVA_EXECUTABLE")
+JAVA_HOME=$(dirname "$(dirname "$JAVA_EXECUTABLE")")
+if [[ ! -x "$JAVA_HOME/bin/java" ]]; then
+  echo "cannot determine JDK home from JAVA=$JAVA" >&2
+  exit 1
+fi
+export JAVA_HOME
+JAVA=$JAVA_EXECUTABLE
 "$JAVA" -version 2>&1 | head -1
 if [[ ! -f "$APP_JAR" ]]; then
   ./gradlew --no-daemon -q bootJar
 fi
 mkdir -p "$RESULTS"
-docker run -d --rm --name "$PREFIX-collector" --network host \
-  -v "$PWD/collector.yaml:/etc/otelcol-contrib/config.yaml:ro" "$COLLECTOR_IMAGE" >/dev/null
+check_ports
+start_container "$CONTAINER_PREFIX-collector" \
+  -v "$PWD/collector.yaml:/etc/otelcol-contrib/config.yaml:ro" "$COLLECTOR_IMAGE"
 
 for agent in $AGENTS; do
   run_one "$agent"
