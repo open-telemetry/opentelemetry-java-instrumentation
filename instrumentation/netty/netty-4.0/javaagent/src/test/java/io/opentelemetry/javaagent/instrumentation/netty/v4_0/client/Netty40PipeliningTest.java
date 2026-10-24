@@ -450,6 +450,41 @@ class Netty40PipeliningTest {
     }
   }
 
+  @Test
+  void failedControlWriteDoesNotFailPendingRequests() {
+    List<SpanContext> parents = new ArrayList<>();
+    EmbeddedChannel channel = channel(new ArrayList<>());
+    Object controlMessage = new Object();
+    channel
+        .pipeline()
+        .addFirst(
+            "fail-control-write",
+            new ChannelOutboundHandlerAdapter() {
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                if (msg == controlMessage) {
+                  promise.setFailure(new IOException("control write failed"));
+                } else {
+                  super.write(ctx, msg, promise);
+                }
+              }
+            });
+    try {
+      write(channel, "first", parents);
+      ChannelPromise controlPromise = channel.newPromise();
+      channel.writeAndFlush(controlMessage, controlPromise);
+      assertThat(controlPromise.isSuccess()).isFalse();
+
+      respond(channel, "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
+      write(channel, "second", parents);
+      respond(channel, "HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n");
+      assertResponses(200, 201);
+    } finally {
+      close(channel);
+    }
+  }
+
   private static EmbeddedChannel channel(List<SpanContext> callbacks) {
     return new EmbeddedChannel(new HttpClientCodec(), callbacks(callbacks));
   }

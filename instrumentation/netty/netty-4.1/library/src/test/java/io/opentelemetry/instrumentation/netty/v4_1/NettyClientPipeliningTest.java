@@ -576,6 +576,60 @@ class NettyClientPipeliningTest {
   }
 
   @Test
+  void unrelatedWriteFailureDoesNotDisableCorrelationWithPendingRequests() {
+    Object unrelated = new Object();
+    EmbeddedChannel channel =
+        channel(
+            new ChannelOutboundHandlerAdapter() {
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                if (msg == unrelated) {
+                  promise.setFailure(new IOException("unrelated write failed"));
+                } else {
+                  super.write(ctx, msg, promise);
+                }
+              }
+            });
+    try {
+      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      assertThat(channel.writeAndFlush(unrelated).isSuccess()).isFalse();
+      response(channel, 201);
+      testing.runWithSpan(
+          "second",
+          () -> {
+            DefaultFullHttpRequest second = request("/second");
+            channel.writeOutbound(second);
+            assertThat(second.headers().contains("traceparent")).isTrue();
+          });
+      response(channel, 202);
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("first"),
+                  span ->
+                      span.hasName("GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(201L))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("second"),
+                  span ->
+                      span.hasName("GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(202L))));
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
   void unrelatedWriteFailureDoesNotDisableCorrelation() {
     Object unrelated = new Object();
     EmbeddedChannel channel =

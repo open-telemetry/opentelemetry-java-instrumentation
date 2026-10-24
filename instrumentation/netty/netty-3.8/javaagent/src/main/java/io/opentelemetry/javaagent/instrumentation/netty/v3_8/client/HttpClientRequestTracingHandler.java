@@ -18,21 +18,29 @@ import javax.annotation.Nullable;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
+import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
 public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHandler {
 
   @Override
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent event) throws Exception {
+    Object message = event.getMessage();
+    boolean requestWrite = message instanceof HttpRequest;
+    if (!requestWrite && !(message instanceof HttpChunk)) {
+      super.writeRequested(ctx, event);
+      return;
+    }
     NettyClientRequestAndContexts requests =
-        event.getMessage() instanceof HttpRequest
+        requestWrite
             ? NettyClientRequestAndContexts.getOrCreate(ctx.getChannel())
             : NettyClientRequestAndContexts.get(ctx.getChannel());
     if (requests == null || requests.isFailed()) {
       super.writeRequested(ctx, event);
       return;
     }
-    if (!requests.beginWrite()) {
+    NettyClientRequestAndContexts.Write write = requests.beginWrite(requestWrite);
+    if (write == null) {
       // Netty 3 executes outbound handlers on caller threads. Overlapping writes can reach the
       // socket in a different order than they entered this handler.
       requests.fail(new IllegalStateException("Overlapping HTTP writes"));
@@ -40,14 +48,17 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       return;
     }
     try {
-      traceWrite(ctx, event, requests);
+      traceWrite(ctx, event, requests, write);
     } finally {
-      requests.endWrite();
+      requests.endWrite(write);
     }
   }
 
   private void traceWrite(
-      ChannelHandlerContext ctx, MessageEvent event, NettyClientRequestAndContexts requests)
+      ChannelHandlerContext ctx,
+      MessageEvent event,
+      NettyClientRequestAndContexts requests,
+      NettyClientRequestAndContexts.Write write)
       throws Exception {
     Object message = event.getMessage();
     if (!(message instanceof HttpRequest)) {
@@ -70,7 +81,7 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
             ? instrumenter().start(parentContext, request)
             : null;
     RequestAndContexts entry = new RequestAndContexts(parentContext, context, request);
-    if (!requests.add(entry)) {
+    if (!requests.add(entry, write)) {
       entry.closed();
       super.writeRequested(ctx, event);
       return;

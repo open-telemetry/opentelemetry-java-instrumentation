@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
@@ -30,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -62,6 +64,7 @@ class Netty38ClientPipeliningTest {
   private final List<SpanContext> callbacks = new ArrayList<>();
   private final List<SpanContext> bodyCallbacks = new ArrayList<>();
   private final CountDownLatch responses = new CountDownLatch(2);
+  private final AtomicReference<Runnable> responseAction = new AtomicReference<>();
   private ServerSocket server;
   private Socket peer;
   private BufferedReader requests;
@@ -87,6 +90,10 @@ class Netty38ClientPipeliningTest {
                       if (status >= 200 || status == 101) {
                         callbacks.add(Span.current().getSpanContext());
                         responses.countDown();
+                        Runnable action = responseAction.getAndSet(null);
+                        if (action != null) {
+                          action.run();
+                        }
                       }
                     } else if (event.getMessage() instanceof HttpChunk) {
                       bodyCallbacks.add(Span.current().getSpanContext());
@@ -239,6 +246,47 @@ class Netty38ClientPipeliningTest {
   }
 
   @Test
+  void failedControlWriteDoesNotFailPendingRequests() throws Exception {
+    SpanContext[] parents = new SpanContext[2];
+    channel
+        .getPipeline()
+        .addFirst(
+            "fail-control-write",
+            new SimpleChannelDownstreamHandler() {
+              @Override
+              public void writeRequested(ChannelHandlerContext ctx, MessageEvent event)
+                  throws Exception {
+                if ("control".equals(event.getMessage())) {
+                  event.getFuture().setFailure(new IllegalStateException("control write failed"));
+                } else {
+                  super.writeRequested(ctx, event);
+                }
+              }
+            });
+    testing.runWithSpan(
+        "first",
+        () -> {
+          parents[0] = Span.current().getSpanContext();
+          write("/first");
+        });
+    readRequest();
+    assertThat(channel.write("control").awaitUninterruptibly().isSuccess()).isFalse();
+    testing.runWithSpan(
+        "second",
+        () -> {
+          parents[1] = Span.current().getSpanContext();
+          write("/second");
+        });
+    readRequest();
+    respond(
+        "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"
+            + "HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n");
+    assertThat(responses.await(10, SECONDS)).isTrue();
+    assertThat(callbacks).containsExactly(parents);
+    assertRequests(200, 201);
+  }
+
+  @Test
   void exceptionEndsAllPendingRequests() throws Exception {
     testing.runWithSpan("first", () -> write("/first"));
     testing.runWithSpan("second", () -> write("/second"));
@@ -292,6 +340,78 @@ class Netty38ClientPipeliningTest {
                           .hasParent(trace.getSpan(0))
                           .hasStatus(StatusData.error())),
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("second")));
+    } finally {
+      release.countDown();
+      writer.shutdownNow();
+      assertThat(writer.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
+  void completedRequestAllowsSequentialWriteBeforePriorWriteReturns() throws Exception {
+    CountDownLatch forwarded = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    CountDownLatch secondWrite = new CountDownLatch(1);
+    SpanContext[] parents = new SpanContext[2];
+    responseAction.set(
+        () ->
+            testing.runWithSpan(
+                "second",
+                () -> {
+                  parents[1] = Span.current().getSpanContext();
+                  channel.write(request("/second"));
+                  secondWrite.countDown();
+                }));
+    channel
+        .getPipeline()
+        .addFirst(
+            "delay-write-return",
+            new SimpleChannelDownstreamHandler() {
+              private final AtomicBoolean first = new AtomicBoolean(true);
+
+              @Override
+              public void writeRequested(ChannelHandlerContext ctx, MessageEvent event)
+                  throws Exception {
+                super.writeRequested(ctx, event);
+                if (first.compareAndSet(true, false)) {
+                  forwarded.countDown();
+                  assertThat(release.await(10, SECONDS)).isTrue();
+                }
+              }
+            });
+    ExecutorService writer = Executors.newSingleThreadExecutor();
+    Future<?> first =
+        writer.submit(
+            () ->
+                testing.runWithSpan(
+                    "first",
+                    () -> {
+                      parents[0] = Span.current().getSpanContext();
+                      write("/first");
+                    }));
+    try {
+      assertThat(forwarded.await(10, SECONDS)).isTrue();
+      readRequest();
+      respond("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
+      assertThat(secondWrite.await(10, SECONDS)).isTrue();
+      readRequest();
+      respond("HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n");
+      assertThat(responses.await(10, SECONDS)).isTrue();
+      release.countDown();
+      first.get(10, SECONDS);
+      assertThat(callbacks).containsExactly(parents);
+      testing.waitForTraces(1);
+      List<SpanData> clientSpans =
+          testing.spans().stream()
+              .filter(span -> span.getKind() == SpanKind.CLIENT)
+              .collect(toList());
+      assertThat(clientSpans).hasSize(2);
+      assertThat(clientSpans)
+          .extracting(SpanData::getParentSpanId)
+          .containsExactly(parents[0].getSpanId(), parents[1].getSpanId());
+      assertThat(clientSpans)
+          .extracting(span -> span.getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .containsExactly(200L, 201L);
     } finally {
       release.countDown();
       writer.shutdownNow();

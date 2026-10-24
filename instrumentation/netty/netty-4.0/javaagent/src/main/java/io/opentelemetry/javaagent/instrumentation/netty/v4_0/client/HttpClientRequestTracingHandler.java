@@ -11,6 +11,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
@@ -25,6 +26,11 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
+    boolean requestWrite = msg instanceof HttpRequest;
+    if (!requestWrite && !(msg instanceof HttpContent)) {
+      super.write(ctx, msg, prm);
+      return;
+    }
     HttpClientRequestQueue queue = HttpClientRequestQueue.get(ctx.channel());
     if (queue.isFailed()) {
       super.write(ctx, msg, prm);
@@ -33,7 +39,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     Context parentContext = Context.current();
     Context context = parentContext;
-    if (msg instanceof HttpRequest) {
+    if (requestWrite) {
       NettyCommonRequest request = NettyCommonRequest.create((HttpRequest) msg, ctx.channel());
       Context clientContext =
           instrumenter().shouldStart(parentContext, request)

@@ -27,8 +27,8 @@ final class NettyClientRequestAndContexts {
       VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
 
   private final Queue<RequestAndContexts> requests = new ArrayDeque<>();
+  private final List<Write> writes = new ArrayList<>();
   private boolean failed;
-  private boolean writing;
   @Nullable private RequestAndContexts response;
 
   static NettyClientRequestAndContexts getOrCreate(Channel channel) {
@@ -47,11 +47,12 @@ final class NettyClientRequestAndContexts {
     return REQUEST_AND_CONTEXTS.get(channel);
   }
 
-  synchronized boolean add(RequestAndContexts request) {
+  synchronized boolean add(RequestAndContexts request, Write write) {
     if (failed) {
       return false;
     }
     requests.add(request);
+    write.request = request;
     return true;
   }
 
@@ -59,16 +60,26 @@ final class NettyClientRequestAndContexts {
     return failed;
   }
 
-  synchronized boolean beginWrite() {
-    if (failed || writing) {
-      return false;
+  @Nullable
+  synchronized Write beginWrite(boolean requestWrite) {
+    if (failed) {
+      return null;
     }
-    writing = true;
-    return true;
+    for (Write write : writes) {
+      if (write.request == null || !write.request.responseComplete) {
+        return null;
+      }
+    }
+    Write write = new Write();
+    if (!requestWrite) {
+      write.request = requests.peek();
+    }
+    writes.add(write);
+    return write;
   }
 
-  synchronized void endWrite() {
-    writing = false;
+  synchronized void endWrite(Write write) {
+    writes.remove(write);
   }
 
   @Nullable
@@ -79,6 +90,9 @@ final class NettyClientRequestAndContexts {
   @Nullable
   synchronized RequestAndContexts poll(boolean chunked) {
     RequestAndContexts request = requests.poll();
+    if (request != null && !chunked) {
+      request.responseComplete = true;
+    }
     response = chunked ? request : null;
     return request;
   }
@@ -88,6 +102,9 @@ final class NettyClientRequestAndContexts {
     RequestAndContexts request = response;
     if (last) {
       response = null;
+      if (request != null) {
+        request.responseComplete = true;
+      }
     }
     return request;
   }
@@ -106,11 +123,16 @@ final class NettyClientRequestAndContexts {
     }
   }
 
+  static final class Write {
+    @Nullable RequestAndContexts request;
+  }
+
   static final class RequestAndContexts {
     final Context parentContext;
     @Nullable final Context context;
     private final NettyRequest request;
     private final AtomicBoolean ended = new AtomicBoolean();
+    private boolean responseComplete;
 
     RequestAndContexts(Context parentContext, @Nullable Context context, NettyRequest request) {
       this.parentContext = parentContext;
