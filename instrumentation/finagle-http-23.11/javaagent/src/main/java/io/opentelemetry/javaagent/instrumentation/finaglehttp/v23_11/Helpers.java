@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 
 import com.twitter.finagle.ChannelTransportHelpers;
@@ -29,6 +28,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper;
@@ -98,13 +98,10 @@ public class Helpers {
         // upgrade request whose tracing state is stored on the parent connection.
         if (channel instanceof Http2StreamChannel
             && ((Http2StreamChannel) channel).stream().id() == 1) {
-          channel
-              .attr(AttributeKeys.CLIENT_PARENT_CONTEXT)
-              .set(channel.parent().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get());
-          channel
-              .attr(AttributeKeys.CLIENT_CONTEXT)
-              .set(channel.parent().attr(AttributeKeys.CLIENT_CONTEXT).get());
-          channel.attr(HTTP_CLIENT_REQUEST).set(channel.parent().attr(HTTP_CLIENT_REQUEST).get());
+          Channel parent = channel.parent();
+          if (parent != null) {
+            ClientContexts.transferUpgradedRequest(parent, channel);
+          }
         }
 
         // todo add way to propagate the protocol version override up to the netty instrumentation;

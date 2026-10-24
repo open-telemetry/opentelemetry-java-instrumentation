@@ -44,7 +44,7 @@ class AbstractChannelHandlerContextInstrumentation implements TypeInstrumentatio
       // we can't rely on exception handling in HttpClientTracingHandler because it can't catch
       // exceptions from handlers that run after it, for example ratpack has ReadTimeoutHandler
       // (trigger ReadTimeoutException) after HttpClientCodec (or handler is inserted after it)
-      ClientContexts.end(ctx.channel(), instrumenter(), throwable, false);
+      ClientContexts.fail(ctx.channel(), instrumenter(), throwable);
       ServerContext serverContext = ServerContexts.peekFirst(ctx.channel());
       if (serverContext != null) {
         NettyErrorHolder.set(serverContext.context(), throwable);

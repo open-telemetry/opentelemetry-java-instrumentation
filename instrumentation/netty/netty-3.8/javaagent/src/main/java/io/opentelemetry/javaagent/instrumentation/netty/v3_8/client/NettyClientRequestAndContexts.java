@@ -27,7 +27,7 @@ final class NettyClientRequestAndContexts {
       VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
 
   private final Queue<RequestAndContexts> requests = new ArrayDeque<>();
-  private final List<Write> writes = new ArrayList<>();
+  @Nullable private Write write;
   private boolean failed;
   @Nullable private RequestAndContexts response;
 
@@ -65,21 +65,21 @@ final class NettyClientRequestAndContexts {
     if (failed) {
       return null;
     }
-    for (Write write : writes) {
-      if (write.request == null || !write.request.responseComplete) {
-        return null;
-      }
+    if (write != null && (write.request == null || !write.request.responseComplete)) {
+      return null;
     }
-    Write write = new Write();
+    Write newWrite = new Write();
     if (!requestWrite) {
-      write.request = requests.peek();
+      newWrite.request = requests.peek();
     }
-    writes.add(write);
-    return write;
+    write = newWrite;
+    return newWrite;
   }
 
   synchronized void endWrite(Write write) {
-    writes.remove(write);
+    if (this.write == write) {
+      this.write = null;
+    }
   }
 
   @Nullable

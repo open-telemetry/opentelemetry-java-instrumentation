@@ -15,7 +15,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts.RequestState;
@@ -54,10 +53,9 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
           if (state.waitingForFinalResponse && !switchingProtocols) {
             state.response = null;
           }
-          if (switchingProtocols && state.context != null) {
-            // Finagle copies the upgrade's span, request, and parent onto its HTTP/2 stream.
+          if (switchingProtocols) {
+            // Finagle transfers the upgrade request to its HTTP/2 stream.
             state.upgraded = true;
-            ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(state.parent);
           }
           if (msg instanceof FullHttpResponse && switchingProtocols) {
             // A full 101 is an event, not the eventual response on an upgraded HTTP/2 stream.
@@ -68,11 +66,6 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
             && !state.waitingForFinalResponse) {
           contexts.remove(state);
           complete = true;
-          if (state.upgraded) {
-            ctx.channel()
-                .attr(AttributeKeys.CLIENT_PARENT_CONTEXT)
-                .compareAndSet(state.parent, null);
-          }
         }
       }
     }
@@ -101,7 +94,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
   @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     Context parent = ClientContexts.get(ctx.channel()).callbackParent();
-    ClientContexts.end(ctx.channel(), instrumenter, new ClosedChannelException(), true);
+    ClientContexts.close(ctx.channel(), instrumenter, new ClosedChannelException());
     if (parent == null) {
       super.channelInactive(ctx);
     } else {
@@ -114,7 +107,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     ClientContexts contexts = ClientContexts.get(ctx.channel());
-    ClientContexts.end(ctx.channel(), instrumenter, cause, false);
+    ClientContexts.fail(ctx.channel(), instrumenter, cause);
     Context parent = contexts.exceptionParent(cause);
     if (parent == null) {
       super.exceptionCaught(ctx, cause);

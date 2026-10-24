@@ -44,46 +44,44 @@ public final class ClientContexts {
       ClientContexts contexts = attribute.get();
       if (contexts == null) {
         contexts = new ClientContexts();
-        // Finagle transfers an HTTP/1 upgrade's attributes to the HTTP/2 stream channel.
-        Context context = channel.attr(AttributeKeys.CLIENT_CONTEXT).get();
-        NettyCommonRequest request = channel.attr(HTTP_CLIENT_REQUEST).get();
-        if (context != null && request != null) {
-          Context parent = channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).getAndSet(null);
-          RequestState transferred = takeUpgradedRequest(channel, request);
-          if (transferred != null) {
-            transferred.upgraded = false;
-            contexts.requests.add(transferred);
-          } else if (channel.parent() == null || channel.parent().attr(KEY).get() == null) {
-            contexts.requests.add(
-                new RequestState(parent == null ? Context.root() : parent, context, request));
-          }
-          // If the parent's FIFO already owned this request but no longer contains it, its
-          // lifecycle has already ended. Do not reconstruct a second completion owner.
-          contexts.publish(channel);
-        }
         attribute.set(contexts);
       }
       return contexts;
     }
   }
 
-  @Nullable
-  private static RequestState takeUpgradedRequest(Channel channel, NettyCommonRequest request) {
-    Channel parent = channel.parent();
-    ClientContexts contexts = parent == null ? null : parent.attr(KEY).get();
-    if (contexts != null && parent != null) {
-      synchronized (contexts) {
-        for (RequestState state : contexts.requests) {
-          if (state.request == request) {
-            contexts.requests.remove(state);
-            contexts.publish(parent);
-            parent.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).compareAndSet(state.parent, null);
-            return state;
+  public static void transferUpgradedRequest(Channel parent, Channel stream) {
+    if (!parent.hasAttr(KEY)) {
+      return;
+    }
+    ClientContexts parentContexts = parent.attr(KEY).get();
+    if (parentContexts == null) {
+      return;
+    }
+    synchronized (parentContexts) {
+      RequestState state = parentContexts.requests.peek();
+      if (state == null || !state.upgraded) {
+        return;
+      }
+      Attribute<ClientContexts> streamAttribute = stream.attr(KEY);
+      synchronized (streamAttribute) {
+        ClientContexts streamContexts = streamAttribute.get();
+        if (streamContexts == null) {
+          streamContexts = new ClientContexts();
+        }
+        synchronized (streamContexts) {
+          if (!streamContexts.requests.isEmpty()) {
+            return;
           }
+          parentContexts.requests.remove();
+          parentContexts.publish(parent);
+          state.upgraded = false;
+          streamContexts.requests.add(state);
+          streamContexts.publish(stream);
+          streamAttribute.set(streamContexts);
         }
       }
     }
-    return null;
   }
 
   Context parent(Channel channel) {
@@ -126,7 +124,7 @@ public final class ClientContexts {
     return parent;
   }
 
-  void fail(
+  void failRequests(
       Channel channel,
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
       Throwable cause) {
@@ -164,41 +162,37 @@ public final class ClientContexts {
     channel.attr(HTTP_CLIENT_REQUEST).set(state == null ? null : state.request);
   }
 
-  /** Ends outstanding spans, disabling correlation when an exception makes responses ambiguous. */
-  public static void end(
+  /** Ends outstanding spans and disables correlation when a failure makes responses ambiguous. */
+  public static void fail(
       Channel channel,
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
-      @Nullable Throwable cause,
-      boolean clear) {
+      Throwable cause) {
+    ClientContexts contexts = channel.hasAttr(KEY) ? channel.attr(KEY).get() : null;
+    if (contexts != null) {
+      contexts.failRequests(channel, instrumenter, cause);
+    }
+  }
+
+  /** Ends outstanding spans when the channel closes or becomes inactive. */
+  public static void close(
+      Channel channel,
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
+      @Nullable Throwable cause) {
     ClientContexts contexts = channel.hasAttr(KEY) ? channel.attr(KEY).get() : null;
     if (contexts == null) {
-      if (!channel.hasAttr(AttributeKeys.CLIENT_CONTEXT)
-          || !channel.hasAttr(HTTP_CLIENT_REQUEST)
-          || channel.attr(AttributeKeys.CLIENT_CONTEXT).get() == null
-          || channel.attr(HTTP_CLIENT_REQUEST).get() == null) {
-        return;
-      }
-      // Finagle may copy the HTTP/1 upgrade state before the stream has initialized its handlers.
-      contexts = get(channel);
-    }
-    if (cause != null && !clear) {
-      contexts.fail(channel, instrumenter, cause);
       return;
     }
     List<RequestState> states;
     synchronized (contexts) {
       states = new ArrayList<>(contexts.requests);
-      if (clear) {
-        contexts.requests.clear();
-        contexts.publish(channel);
-        channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(null);
-        contexts.failureParent = null;
-      }
+      contexts.requests.clear();
+      contexts.publish(channel);
+      channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(null);
+      contexts.failureParent = null;
     }
     for (RequestState state : states) {
       state.end(
-          instrumenter,
-          clear && state.upgraded && cause instanceof ClosedChannelException ? null : cause);
+          instrumenter, state.upgraded && cause instanceof ClosedChannelException ? null : cause);
     }
   }
 

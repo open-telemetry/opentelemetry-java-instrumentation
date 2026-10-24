@@ -37,7 +37,7 @@ public class HttpClientTracingHandler
   @Override
   public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
     Context parent = ClientContexts.get(ctx.channel()).callbackParent();
-    ClientContexts.end(ctx.channel(), instrumenter, null, true);
+    ClientContexts.close(ctx.channel(), instrumenter, null);
     if (parent != null) {
       try (Scope ignored = parent.makeCurrent()) {
         super.close(ctx, promise);

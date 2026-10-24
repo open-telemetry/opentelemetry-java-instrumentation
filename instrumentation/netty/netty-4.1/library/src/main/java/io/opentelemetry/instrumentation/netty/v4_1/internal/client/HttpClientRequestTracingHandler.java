@@ -79,13 +79,13 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     promise.addListener(
         future -> {
           if (!future.isSuccess()) {
-            contexts.fail(ctx.channel(), instrumenter, future.cause());
+            contexts.failRequests(ctx.channel(), instrumenter, future.cause());
           }
         });
     try {
       super.write(ctx, msg, promise);
     } catch (Throwable t) {
-      contexts.fail(ctx.channel(), instrumenter, t);
+      contexts.failRequests(ctx.channel(), instrumenter, t);
       throw t;
     }
   }

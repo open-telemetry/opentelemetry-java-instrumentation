@@ -47,7 +47,6 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyC
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -71,13 +70,12 @@ class NettyClientPipeliningTest {
     try {
       AttributeKey<ClientContexts> key =
           AttributeKey.valueOf(ClientContexts.class, "client-contexts");
-      ClientContexts.end(
+      ClientContexts.fail(
           channel,
           Instrumenter.<NettyCommonRequest, HttpResponse>builder(
                   testing.getOpenTelemetry(), "test", request -> "GET")
               .buildInstrumenter(),
-          new IOException("unrelated exception"),
-          false);
+          new IOException("unrelated exception"));
       assertThat(channel.hasAttr(key)).isFalse();
     } finally {
       channel.finishAndReleaseAll();
@@ -575,8 +573,9 @@ class NettyClientPipeliningTest {
     }
   }
 
-  @Test
-  void unrelatedWriteFailureDoesNotDisableCorrelationWithPendingRequests() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void unrelatedWriteFailureDoesNotDisableCorrelation(boolean requestPending) {
     Object unrelated = new Object();
     EmbeddedChannel channel =
         channel(
@@ -592,69 +591,59 @@ class NettyClientPipeliningTest {
               }
             });
     try {
-      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      if (requestPending) {
+        testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      }
       assertThat(channel.writeAndFlush(unrelated).isSuccess()).isFalse();
-      response(channel, 201);
       testing.runWithSpan(
-          "second",
+          requestPending ? "second" : "first",
           () -> {
-            DefaultFullHttpRequest second = request("/second");
-            channel.writeOutbound(second);
-            assertThat(second.headers().contains("traceparent")).isTrue();
+            DefaultFullHttpRequest request = request("/success");
+            channel.writeOutbound(request);
+            assertThat(request.headers().contains("traceparent")).isTrue();
           });
+      if (requestPending) {
+        response(channel, 201);
+      }
       response(channel, 202);
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("first"),
-                  span ->
-                      span.hasName("GET")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
-                                      .isEqualTo(201L))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("second"),
-                  span ->
-                      span.hasName("GET")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
-                                      .isEqualTo(202L))));
-    } finally {
-      channel.finishAndReleaseAll();
-    }
-  }
-
-  @Test
-  void unrelatedWriteFailureDoesNotDisableCorrelation() {
-    Object unrelated = new Object();
-    EmbeddedChannel channel =
-        channel(
-            new ChannelOutboundHandlerAdapter() {
-              @Override
-              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
-                  throws Exception {
-                if (msg == unrelated) {
-                  promise.setFailure(new IOException("unrelated write failed"));
-                } else {
-                  super.write(ctx, msg, promise);
-                }
-              }
-            });
-    try {
-      assertThat(channel.writeAndFlush(unrelated).isSuccess()).isFalse();
-      DefaultFullHttpRequest request = request("/success");
-      channel.writeOutbound(request);
-      assertThat(request.headers().contains("traceparent")).isTrue();
-      response(channel, 200);
-      assertThat(testing.spans()).hasSize(1);
-      assertThat(testing.spans().get(0).getEvents()).isEmpty();
-      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
-          .isEqualTo(200);
+      if (requestPending) {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("first"),
+                    span ->
+                        span.hasName("GET")
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfying(
+                                attributes ->
+                                    assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                        .isEqualTo(201L))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("second"),
+                    span ->
+                        span.hasName("GET")
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfying(
+                                attributes ->
+                                    assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                        .isEqualTo(202L))));
+      } else {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("first"),
+                    span ->
+                        span.hasName("GET")
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfying(
+                                attributes ->
+                                    assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                        .isEqualTo(202L))));
+        assertThat(testing.spans())
+            .singleElement()
+            .satisfies(span -> assertThat(span.getEvents()).isEmpty());
+      }
     } finally {
       channel.finishAndReleaseAll();
     }
@@ -676,21 +665,24 @@ class NettyClientPipeliningTest {
         };
     try {
       parent.writeOutbound(request("/upgrade"));
+      Context pendingParent = Context.root().with(Span.getInvalid());
+      if (!parentClosedBeforeRead) {
+        NettyClientTelemetry.setParentContext(parent, pendingParent);
+      }
       response(parent, 101);
-      // Finagle's HTTP/2 bridge copies these attributes when it initializes the stream channel.
-      stream
-          .attr(AttributeKeys.CLIENT_CONTEXT)
-          .set(parent.attr(AttributeKeys.CLIENT_CONTEXT).get());
-      stream
-          .attr(AttributeKeys.CLIENT_PARENT_CONTEXT)
-          .set(parent.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get());
-      stream
-          .attr(HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST)
-          .set(parent.attr(HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST).get());
       if (parentClosedBeforeRead) {
         parent.close();
       }
+      ClientContexts.transferUpgradedRequest(parent, stream);
+      if (!parentClosedBeforeRead) {
+        assertThat(parent.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get()).isSameAs(pendingParent);
+      }
       response(stream, 103);
+      if (parentClosedBeforeRead) {
+        assertThat(stream.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
+      } else {
+        assertThat(stream.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNotNull();
+      }
       assertThat(stream.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get()).isNull();
       parent.close();
       if (parentClosedBeforeRead) {
@@ -726,7 +718,7 @@ class NettyClientPipeliningTest {
     try {
       parent.writeOutbound(request("/upgrade"));
       response(parent, 101);
-      copyUpgradedRequest(parent, stream);
+      ClientContexts.transferUpgradedRequest(parent, stream);
 
       if (partialResponse) {
         stream.writeInbound(new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.OK));
@@ -754,7 +746,7 @@ class NettyClientPipeliningTest {
   }
 
   @Test
-  void downstreamExceptionBeforeStreamInitializationEndsCopiedRequest() {
+  void downstreamExceptionBeforeFirstStreamReadEndsTransferredRequest() {
     Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
         new NettyClientInstrumenterFactory(
                 NettyClientInstrumenterBuilderFactory.create(
@@ -774,13 +766,13 @@ class NettyClientPipeliningTest {
     try {
       parent.writeOutbound(request("/upgrade"));
       response(parent, 101);
-      copyUpgradedRequest(parent, stream);
+      ClientContexts.transferUpgradedRequest(parent, stream);
       AttributeKey<ClientContexts> key =
           AttributeKey.valueOf(ClientContexts.class, "client-contexts");
-      assertThat(stream.hasAttr(key)).isFalse();
+      assertThat(stream.hasAttr(key)).isTrue();
 
       IOException failure = new IOException("downstream handler failed");
-      ClientContexts.end(stream, instrumenter, failure, false);
+      ClientContexts.fail(stream, instrumenter, failure);
       parent.close();
 
       assertThat(testing.spans()).hasSize(1);
@@ -798,16 +790,6 @@ class NettyClientPipeliningTest {
       stream.finishAndReleaseAll();
       parent.finishAndReleaseAll();
     }
-  }
-
-  private static void copyUpgradedRequest(Channel parent, Channel stream) {
-    stream.attr(AttributeKeys.CLIENT_CONTEXT).set(parent.attr(AttributeKeys.CLIENT_CONTEXT).get());
-    stream
-        .attr(AttributeKeys.CLIENT_PARENT_CONTEXT)
-        .set(parent.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get());
-    stream
-        .attr(HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST)
-        .set(parent.attr(HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST).get());
   }
 
   private static DefaultFullHttpRequest request(String uri) {
