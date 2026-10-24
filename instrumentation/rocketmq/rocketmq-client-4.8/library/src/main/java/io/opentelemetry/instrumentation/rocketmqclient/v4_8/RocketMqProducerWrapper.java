@@ -120,16 +120,13 @@ final class RocketMqProducerWrapper implements InvocationHandler {
     }
     // Each encoded batch needs its own carriers when messages are reused before async completion.
     List<SendMessage> messages = new ArrayList<>();
-    for (Message original : originals) {
-      messages.add(new SendMessage(original));
-    }
 
     Message envelope = new Message();
-    envelope.setTopic(messages.get(0).getTopic());
-    envelope.setWaitStoreMsgOK(messages.get(0).isWaitStoreMsgOK());
+    envelope.setTopic(originals.get(0).getTopic());
+    envelope.setWaitStoreMsgOK(originals.get(0).isWaitStoreMsgOK());
     BatchSendContext request =
         new BatchSendContext(
-            envelope, RocketMqNamespaceUtil.getNamespace(producer), messages.size());
+            envelope, RocketMqNamespaceUtil.getNamespace(producer), originals.size());
     int callbackIndex = -1;
     for (int i = 1; i < method.getParameterTypes().length; i++) {
       if (method.getParameterTypes()[i] == SendCallback.class) {
@@ -145,9 +142,12 @@ final class RocketMqProducerWrapper implements InvocationHandler {
             ? instrumenter.start(parentContext, request)
             : null;
     SendState state = new SendState(instrumenter, request, parentContext, context, messages);
-    try {
-      for (SendMessage message : messages) {
+    try (Scope ignored = context == null ? null : context.makeCurrent()) {
+      for (Message original : originals) {
+        SendMessage message = new SendMessage(original);
         message.state = state;
+        state.messages.add(message);
+        messages.add(message);
         if (context != null) {
           propagator.inject(context, message, RocketMqProducerWrapper::setProperty);
         }
@@ -157,14 +157,12 @@ final class RocketMqProducerWrapper implements InvocationHandler {
       if (callbackIndex != -1) {
         delegateArgs[callbackIndex] = state.wrap((SendCallback) args[callbackIndex]);
       }
-      try (Scope ignored = context == null ? null : context.makeCurrent()) {
-        Object result = invokeDelegate(method, delegateArgs);
-        if (callbackIndex == -1) {
-          request.setSendResult((SendResult) result);
-          state.end(null);
-        }
-        return result;
+      Object result = invokeDelegate(method, delegateArgs);
+      if (callbackIndex == -1) {
+        request.setSendResult((SendResult) result);
+        state.end(null);
       }
+      return result;
     } catch (Throwable t) {
       state.end(t);
       throw t;

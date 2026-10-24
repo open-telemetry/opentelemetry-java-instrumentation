@@ -90,12 +90,14 @@ public final class RocketMqBatchSendHelper {
     }
   }
 
-  public void beforeBatchEncode(Message batch) {
+  @Nullable
+  public Context beforeBatchEncode(Message batch) {
     BatchSendState state = currentBatchSendState().get();
     if (state == null || state.request != null) {
-      return;
+      return null;
     }
     state.prepare(batch);
+    return state.sendContext;
   }
 
   public void completeBatchSend(BatchSendState state, @Nullable Throwable error) {

@@ -92,7 +92,15 @@ abstract class AbstractRocketMqSendHookTest {
     // deterministically.
     setField(producer, DefaultMQProducer.class, "defaultMQProducerImpl", implementation);
     setField(implementation, DefaultMQProducerImpl.class, "serviceState", ServiceState.RUNNING);
-    MQClientInstance factory = mock(MQClientInstance.class);
+    MQClientInstance factory =
+        mock(
+            MQClientInstance.class,
+            invocation -> {
+              if (invocation.getMethod().getName().equals("getBrokerNameFromMessageQueue")) {
+                return ((MessageQueue) invocation.getArgument(0)).getBrokerName();
+              }
+              return Answers.RETURNS_DEFAULTS.answer(invocation);
+            });
     when(factory.getClientConfig()).thenReturn(producer);
     when(factory.findBrokerAddressInPublish("broker")).thenReturn("127.0.0.1:10911");
     setField(implementation, DefaultMQProducerImpl.class, "mQClientFactory", factory);
@@ -113,6 +121,7 @@ abstract class AbstractRocketMqSendHookTest {
     AtomicReference<Context> early = new AtomicReference<>();
     AtomicReference<Context> late = new AtomicReference<>();
     AtomicReference<SpanContext> transportSpan = new AtomicReference<>();
+    AtomicReference<SpanContext> preparationSpan = new AtomicReference<>();
     AtomicReference<String> propagation = new AtomicReference<>();
     AtomicInteger attempts = new AtomicInteger();
     AtomicReference<Runnable> completion = new AtomicReference<>();
@@ -214,7 +223,8 @@ abstract class AbstractRocketMqSendHookTest {
       try (Scope ignored = caller.makeCurrent()) {
         if (failure && mode != CommunicationMode.ASYNC) {
           Throwable thrown =
-              catchThrowable(() -> send(sendingProducer, batch, mode, callback, retry));
+              catchThrowable(
+                  () -> send(sendingProducer, batch, mode, callback, retry, preparationSpan));
           if (retry || mode == CommunicationMode.ONEWAY) {
             assertThat(thrown).hasCause(error);
           } else {
@@ -224,7 +234,7 @@ abstract class AbstractRocketMqSendHookTest {
             expectedError.set(thrown);
           }
         } else {
-          send(sendingProducer, batch, mode, callback, retry);
+          send(sendingProducer, batch, mode, callback, retry, preparationSpan);
         }
         assertCurrentContext(caller);
       }
@@ -239,6 +249,7 @@ abstract class AbstractRocketMqSendHookTest {
         callbackDone.get(10, SECONDS);
       }
       assertThat(transportSpan.get().isValid()).isTrue();
+      assertThat(preparationSpan.get()).isEqualTo(transportSpan.get());
       assertThat(attempts.get()).isEqualTo(retry ? 2 : 1);
       for (Context hookContext : new Context[] {early.get(), late.get()}) {
         assertThat(hookContext.get(CALLER_VALUE)).isEqualTo("caller");
@@ -349,9 +360,17 @@ abstract class AbstractRocketMqSendHookTest {
       boolean batch,
       CommunicationMode mode,
       SendCallback callback,
-      boolean retry)
+      boolean retry,
+      AtomicReference<SpanContext> preparationSpan)
       throws InterruptedException, MQBrokerException, MQClientException, RemotingException {
-    Message message = new Message("topic", "body".getBytes(UTF_8));
+    Message message =
+        new Message("topic", "body".getBytes(UTF_8)) {
+          @Override
+          public byte[] getBody() {
+            preparationSpan.set(Span.current().getSpanContext());
+            return super.getBody();
+          }
+        };
     MessageQueue queue = new MessageQueue("topic", "broker", 0);
     if (retry) {
       producer.send(singletonList(message));
