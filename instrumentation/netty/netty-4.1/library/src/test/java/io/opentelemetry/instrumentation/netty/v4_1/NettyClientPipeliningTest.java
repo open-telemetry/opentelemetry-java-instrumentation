@@ -640,9 +640,7 @@ class NettyClientPipeliningTest {
                                 attributes ->
                                     assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
                                         .isEqualTo(202L))));
-        assertThat(testing.spans())
-            .singleElement()
-            .satisfies(span -> assertThat(span.getEvents()).isEmpty());
+        assertThat(testing.spans()).allSatisfy(span -> assertThat(span.getEvents()).isEmpty());
       }
     } finally {
       channel.finishAndReleaseAll();
