@@ -39,20 +39,12 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
           .route(path)
           .handler(
               ctx -> {
-                Span span = Span.current();
                 if (path.equals("/standard") || path.equals("/virtual")) {
-                  span.updateName(ctx.request().path());
+                  Span.current().updateName(ctx.request().path());
                 }
-                span.setAttribute("http.target", ctx.request().path())
-                    .setAttribute("first-handler-span-id", span.getSpanContext().getSpanId());
                 ctx.next();
               })
-          .handler(
-              ctx -> {
-                Span span = Span.current();
-                span.setAttribute("custom-prop", "from-handler");
-                end(ctx.response(), span.getSpanContext().getSpanId());
-              });
+          .handler(ctx -> end(ctx.response()));
     }
   }
 

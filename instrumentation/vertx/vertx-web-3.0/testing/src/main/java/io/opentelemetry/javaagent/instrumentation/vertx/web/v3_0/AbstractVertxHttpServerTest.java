@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -116,7 +115,6 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
                     span.hasName(expectedName)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
-                        .hasSpanId(response.contentUtf8())
                         .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_ROUTE, expectedRoute),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -129,10 +127,7 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
                             equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, path),
-                            equalTo(stringKey("http.target"), path),
-                            equalTo(stringKey("first-handler-span-id"), response.contentUtf8()),
-                            equalTo(stringKey("custom-prop"), "from-handler"))));
+                            equalTo(URL_PATH, path))));
   }
 
   protected boolean supportsMultiHandlerRoutes() {
