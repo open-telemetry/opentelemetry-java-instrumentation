@@ -39,8 +39,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.SpringVersion;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -104,46 +102,70 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     return Boolean.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry");
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"varargs", "map", "absolute", "signed-query", "uri", "builder"})
-  void shouldCaptureUriTemplate(String overload) {
+  @Test
+  void shouldCaptureUriTemplateFromVarargs() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri("/hello/{id}", "some-account"),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate("/hello/{id}"));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateFromMap() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri("/hello/{id}", singletonMap("id", "some-account")),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate("/hello/{id}"));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateFromAbsoluteUri() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri(resolveAddress("/hello/") + "{id}", "some-account"),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate("/hello/{id}"));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateAndRedactSignedQuery() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri("/hello/{id}?sig=secret", "some-account"),
+        resolveAddress("/hello/some-account?sig=REDACTED"),
+        expectedTemplate("/hello/{id}"));
+  }
+
+  @Test
+  void shouldNotCaptureUriTemplateFromUriObject() {
+    WebClient client = createWebClient();
+
     URI uri = resolveAddress("/hello/some-account");
-    WebClient client =
-        instrument(
-                WebClient.builder()
-                    .baseUrl(resolveAddress("").toString())
-                    .clientConnector(ClientHttpConnectorFactory.create()))
-            .build();
-    WebClient.RequestHeadersSpec<?> request;
-    String template = "/hello/{id}";
-    switch (overload) {
-      case "varargs":
-        request = client.get().uri(template, "some-account");
-        break;
-      case "map":
-        request = client.get().uri(template, singletonMap("id", "some-account"));
-        break;
-      case "absolute":
-        request = client.get().uri(resolveAddress("/hello/") + "{id}", "some-account");
-        break;
-      case "signed-query":
-        template += "?sig=secret";
-        request = client.get().uri(template, "some-account");
-        uri = resolveAddress("/hello/some-account?sig=REDACTED");
-        template = "/hello/{id}";
-        break;
-      case "uri":
-        request = client.get().uri(uri);
-        template = null;
-        break;
-      case "builder":
-        request = client.get().uri(builder -> builder.path("/hello/{id}").build("some-account"));
-        template = null;
-        break;
-      default:
-        throw new AssertionError(overload);
-    }
-    assertTemplateRequest(request, uri, expectedTemplate(template));
+    assertTemplateRequest(client.get().uri(uri), uri, expectedTemplate(null));
+  }
+
+  @Test
+  void shouldNotCaptureUriTemplateFromUriBuilder() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri(builder -> builder.path("/hello/{id}").build("some-account")),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate(null));
+  }
+
+  private WebClient createWebClient() {
+    return instrument(
+            WebClient.builder()
+                .baseUrl(resolveAddress("").toString())
+                .clientConnector(ClientHttpConnectorFactory.create()))
+        .build();
   }
 
   @Test
