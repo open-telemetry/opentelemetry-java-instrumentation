@@ -32,6 +32,14 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("version45Test") {
+      dependencies {
+        implementation("io.vertx:vertx-grpc-client:4.5.8")
+        implementation("io.vertx:vertx-grpc-server:4.5.8")
+        implementation("io.vertx:vertx-web:4.5.8")
+      }
+    }
+
     named<JvmTestSuite>("test") {
       executions {
         register("PreviewSemconv") {
@@ -39,5 +47,11 @@ testing {
         }
       }
     }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }
