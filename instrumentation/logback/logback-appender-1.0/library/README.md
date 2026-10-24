@@ -111,10 +111,6 @@ still run on the logging thread. Console or file appenders can remain asynchrono
 With the OpenTelemetry Spring Boot starter, use the same layout in `logback-spring.xml`. The starter
 configures SDK batch export by default.
 
-When the SDK is installed, `OpenTelemetryAppender` checks the configuration and warns once if it is
-behind a Logback async appender. Configure appenders before installing the SDK; later changes are
-not checked automatically. The warning does not change logging behavior.
-
 #### Settings for the Logback Appender
 
 Settings can be configured in `logback.xml`, for example:
