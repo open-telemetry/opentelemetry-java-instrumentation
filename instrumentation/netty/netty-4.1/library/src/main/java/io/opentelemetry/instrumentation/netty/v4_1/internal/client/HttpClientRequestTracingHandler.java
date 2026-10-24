@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.client;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.FileRegion;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -39,6 +41,10 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
     if (!(msg instanceof HttpRequest) && !(msg instanceof HttpContent)) {
+      if (msg instanceof ByteBuf || msg instanceof FileRegion) {
+        writeAndTrackFailure(ctx, msg, prm, ClientContexts.getOutboundRequest(ctx.channel()));
+        return;
+      }
       super.write(ctx, msg, prm);
       return;
     }

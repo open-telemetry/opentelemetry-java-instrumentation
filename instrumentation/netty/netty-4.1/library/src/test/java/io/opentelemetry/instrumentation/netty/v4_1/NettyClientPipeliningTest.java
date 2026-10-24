@@ -11,12 +11,15 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.FileRegion;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -44,6 +47,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -618,15 +623,9 @@ class NettyClientPipeliningTest {
       }
       channel.close();
       assertThat(testing.spans()).hasSize(2);
-      if (event.equals("close")) {
-        assertThat(testing.spans())
-            .allSatisfy(
-                span -> assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET));
-      } else {
-        assertThat(testing.spans())
-            .allSatisfy(
-                span -> assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR));
-      }
+      assertThat(testing.spans())
+          .allSatisfy(
+              span -> assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR));
       assertThat(channel.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
       assertThat(channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get()).isNull();
     } finally {
@@ -755,6 +754,85 @@ class NettyClientPipeliningTest {
       assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE)).isNull();
     } finally {
       channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "ByteBuf, false, false",
+    "ByteBuf, false, true",
+    "ByteBuf, true, false",
+    "ByteBuf, true, true",
+    "FileRegion, false, false",
+    "FileRegion, false, true",
+    "FileRegion, true, false",
+    "FileRegion, true, true"
+  })
+  void failedRawRequestBodyTracksItsRequest(
+      String bodyType, boolean voidPromise, boolean lateFailure) throws Exception {
+    List<ChannelPromise> promises = new ArrayList<>();
+    EmbeddedChannel channel =
+        channel(
+            new ChannelOutboundHandlerAdapter() {
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                if ((bodyType.equals("ByteBuf") && msg instanceof ByteBuf)
+                    || (bodyType.equals("FileRegion") && msg instanceof FileRegion)) {
+                  promises.add(promise);
+                  ReferenceCountUtil.release(msg);
+                } else {
+                  super.write(ctx, msg, promise);
+                }
+              }
+            });
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {}
+            });
+    Path file = Files.createTempFile("netty", "region");
+    try {
+      channel.writeOutbound(new DefaultHttpRequest(HTTP_1_1, HttpMethod.POST, "/first"));
+      Object body =
+          bodyType.equals("ByteBuf")
+              ? Unpooled.buffer(1).writeByte(1)
+              : new DefaultFileRegion(file.toFile(), 0, 1);
+      channel.write(body, voidPromise ? channel.voidPromise() : channel.newPromise());
+      assertThat(promises).hasSize(1);
+
+      if (lateFailure) {
+        response(channel, 201);
+      }
+      if (!lateFailure) {
+        IOException failure = new IOException("body failed");
+        promises.get(0).setFailure(failure);
+        channel.runPendingTasks();
+      }
+      channel.writeOutbound(request("/second"));
+      DefaultFullHttpRequest subsequent = request("/third");
+      channel.writeOutbound(subsequent);
+      if (lateFailure) {
+        assertThat(subsequent.headers().contains("traceparent")).isTrue();
+        promises.get(0).setFailure(new IOException("late body failed"));
+        channel.runPendingTasks();
+        response(channel, 202);
+        response(channel, 203);
+        assertThat(testing.spans()).hasSize(3);
+        assertThat(testing.spans())
+            .allSatisfy(
+                span -> assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET));
+      } else {
+        assertThat(subsequent.headers().contains("traceparent")).isFalse();
+        response(channel, 202);
+        assertThat(testing.spans()).hasSize(1);
+        assertThat(testing.spans().get(0).getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+      }
+    } finally {
+      channel.finishAndReleaseAll();
+      Files.deleteIfExists(file);
     }
   }
 

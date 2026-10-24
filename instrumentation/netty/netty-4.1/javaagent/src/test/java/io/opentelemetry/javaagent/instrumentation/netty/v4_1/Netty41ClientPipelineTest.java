@@ -596,6 +596,57 @@ class Netty41ClientPipelineTest {
   }
 
   @Test
+  void applicationFailureClosingPartialPipelinedResponseEndsRequestsWithError() {
+    EmbeddedChannel channel = new EmbeddedChannel(new HttpClientCodec());
+    IOException failure = new IOException("response body callback failed");
+    List<Throwable> failures = new ArrayList<>();
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                boolean fail = msg instanceof HttpContent && !(msg instanceof LastHttpContent);
+                ReferenceCountUtil.release(msg);
+                if (fail) {
+                  throw failure;
+                }
+              }
+            });
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                failures.add(cause);
+                ctx.close();
+              }
+            });
+    try {
+      channel.writeOutbound(request("/first"), request("/second"));
+      channel.writeInbound(
+          Unpooled.copiedBuffer("HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\nbody", UTF_8));
+
+      assertThat(channel.isActive()).isFalse();
+      assertThat(failures).hasSize(1);
+      assertThat(failures.get(0)).isSameAs(failure);
+      assertThat(testing.spans()).hasSize(2);
+      assertThat(testing.spans())
+          .allSatisfy(
+              span ->
+                  assertThat(span.getStatus().getStatusCode())
+                      .isEqualTo(StatusData.error().getStatusCode()));
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(200L);
+      channel.pipeline().fireChannelInactive();
+      assertThat(testing.spans()).hasSize(2);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
   void downstreamReadTimeoutEndsPendingRequestsWithTimeoutError() throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new HttpClientCodec());
     TestReadTimeoutHandler timeout = new TestReadTimeoutHandler();

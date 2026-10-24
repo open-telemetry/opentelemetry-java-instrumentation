@@ -60,6 +60,15 @@ public final class ClientContexts {
     return contexts;
   }
 
+  @Nullable
+  static RequestState getOutboundRequest(Channel channel) {
+    if (!channel.hasAttr(KEY)) {
+      return null;
+    }
+    ClientContexts contexts = channel.attr(KEY).get();
+    return contexts == null ? null : contexts.outboundRequest((Object) null);
+  }
+
   public static void transferUpgradedRequest(Channel parent, Channel stream) {
     if (!parent.hasAttr(KEY)) {
       return;
@@ -303,9 +312,14 @@ public final class ClientContexts {
       contexts.publish(channel);
       channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(null);
     }
+    Throwable closeCause = cause;
+    if (closeCause == null && !states.isEmpty()) {
+      closeCause = new ClosedChannelException();
+    }
     for (RequestState state : states) {
       state.end(
-          instrumenter, state.upgraded && cause instanceof ClosedChannelException ? null : cause);
+          instrumenter,
+          state.upgraded && closeCause instanceof ClosedChannelException ? null : closeCause);
     }
   }
 
