@@ -58,7 +58,8 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
         !isAwsRequest(request) && instrumenter.shouldStart(parentContext, request)
             ? instrumenter.start(parentContext, request)
             : null;
-    RequestState state = new RequestState(contexts, instrumenter, parentContext, context, request);
+    RequestState state =
+        new RequestState(contexts, instrumenter, ctx, parentContext, context, request);
     if (!contexts.add(ctx.channel(), state, !(msg instanceof LastHttpContent))) {
       state.end(instrumenter, contexts.failure());
       super.write(ctx, msg, prm);

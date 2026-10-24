@@ -84,14 +84,9 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       state.end(instrumenter, null);
     }
     // We want the callback in the scope of the parent, not the client span
-    ClientContexts.ResponseCallbackScope previousCallback =
-        complete ? ClientContexts.beginResponseCallback(state, msg) : null;
     try (Scope ignored = state.parent.makeCurrent()) {
       super.channelRead(ctx, msg);
     } finally {
-      if (complete) {
-        ClientContexts.endResponseCallback(previousCallback);
-      }
       contexts.publish(ctx.channel());
     }
   }
@@ -111,9 +106,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-    ClientContexts contexts = ClientContexts.get(ctx.channel());
-    ClientContexts.fail(ctx.channel(), instrumenter, cause);
-    Context parent = contexts.exceptionParent(cause);
+    Context parent = ClientContexts.fail(ctx.channel(), instrumenter, cause);
     if (parent == null) {
       super.exceptionCaught(ctx, cause);
     } else {

@@ -38,6 +38,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.opentelemetry.api.trace.SpanKind;
@@ -46,6 +47,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -516,7 +518,7 @@ class Netty41ClientPipelineTest {
   }
 
   @Test
-  void decompressionFailureDisablesAmbiguousPipelining() throws Exception {
+  void handledDecompressionFailurePreservesPipelining() throws Exception {
     EmbeddedChannel channel =
         new EmbeddedChannel(new HttpClientCodec(), new HttpContentDecompressor());
     List<Throwable> failures = new ArrayList<>();
@@ -540,31 +542,103 @@ class Netty41ClientPipelineTest {
 
       byte[] compressedBody = compressedBody("bad");
       compressedBody[compressedBody.length - 1] ^= 1;
-      writeCompressedResponse(channel, 200, compressedBody);
+      writeCompressedResponse(channel, 201, compressedBody);
       assertThat(failures).hasSize(1);
 
+      writeCompressedResponse(channel, 202);
       testing.runWithSpan(
           "third",
           () -> {
             DefaultFullHttpRequest subsequent = request("/third");
             channel.writeOutbound(subsequent);
-            assertThat(subsequent.headers().contains("traceparent")).isFalse();
+            assertThat(subsequent.headers().contains("traceparent")).isTrue();
           });
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("first"),
-                  span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("second"),
-                  span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasNoParent().hasName("third").hasKind(SpanKind.INTERNAL)));
+      writeCompressedResponse(channel, 203);
+      assertThreeRequestTraces();
     } finally {
       channel.finishAndReleaseAll();
     }
+  }
+
+  @Test
+  void truncatedResponseEndsPipelinedRequestsOnChannelInactive() {
+    EmbeddedChannel channel = new EmbeddedChannel(new HttpClientCodec());
+    try {
+      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      testing.runWithSpan("second", () -> channel.writeOutbound(request("/second")));
+      channel.writeInbound(
+          Unpooled.copiedBuffer("HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\nbody", UTF_8));
+      channel.pipeline().fireChannelInactive();
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("first").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(
+                            attributes ->
+                                assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                    .isEqualTo(200L))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("second").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())));
+  }
+
+  @Test
+  void downstreamReadTimeoutEndsPendingRequestsWithTimeoutError() throws Exception {
+    EmbeddedChannel channel = new EmbeddedChannel(new HttpClientCodec());
+    TestReadTimeoutHandler timeout = new TestReadTimeoutHandler();
+    channel.pipeline().addLast(timeout);
+    List<Throwable> failures = new ArrayList<>();
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                failures.add(cause);
+              }
+            });
+    try {
+      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      testing.runWithSpan("second", () -> channel.writeOutbound(request("/second")));
+      timeout.trigger(channel.pipeline().context(timeout));
+
+      assertThat(channel.isActive()).isFalse();
+      assertThat(failures).hasSize(1);
+      assertThat(failures.get(0).getClass().getName())
+          .isEqualTo("io.netty.handler.timeout.ReadTimeoutException");
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("first").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("second").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())));
   }
 
   @Test
@@ -784,6 +858,16 @@ class Netty41ClientPipelineTest {
     response.write(headers, 0, headers.length);
     response.write(compressedBody, 0, compressedBody.length);
     channel.writeInbound(Unpooled.wrappedBuffer(response.toByteArray()));
+  }
+
+  private static class TestReadTimeoutHandler extends ReadTimeoutHandler {
+    TestReadTimeoutHandler() {
+      super(60, SECONDS);
+    }
+
+    void trigger(ChannelHandlerContext ctx) throws Exception {
+      readTimedOut(ctx);
+    }
   }
 
   private static byte[] compressedBody(String body) throws IOException {

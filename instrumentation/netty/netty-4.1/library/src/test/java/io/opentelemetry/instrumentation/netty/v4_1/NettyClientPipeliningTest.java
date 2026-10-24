@@ -28,26 +28,18 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
-import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
-import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
-import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
-import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
-import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
@@ -63,24 +55,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 class NettyClientPipeliningTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
-  @Test
-  void unrelatedExceptionDoesNotAllocateClientState() {
-    EmbeddedChannel channel = new EmbeddedChannel();
-    try {
-      AttributeKey<ClientContexts> key =
-          AttributeKey.valueOf(ClientContexts.class, "client-contexts");
-      ClientContexts.fail(
-          channel,
-          Instrumenter.<NettyCommonRequest, HttpResponse>builder(
-                  testing.getOpenTelemetry(), "test", request -> "GET")
-              .buildInstrumenter(),
-          new IOException("unrelated exception"));
-      assertThat(channel.hasAttr(key)).isFalse();
-    } finally {
-      channel.finishAndReleaseAll();
-    }
-  }
 
   private static EmbeddedChannel channel(ChannelOutboundHandlerAdapter outbound) {
     return channel(outbound, false);
@@ -434,13 +408,6 @@ class NettyClientPipeliningTest {
                 }
               }
             });
-    Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
-        new NettyClientInstrumenterFactory(
-                NettyClientInstrumenterBuilderFactory.create(
-                    "io.opentelemetry.netty-4.1", testing.getOpenTelemetry()),
-                NettyConnectionInstrumentationFlag.DISABLED,
-                NettyConnectionInstrumentationFlag.DISABLED)
-            .instrumenter();
     channel
         .pipeline()
         .addLast(
@@ -448,7 +415,6 @@ class NettyClientPipeliningTest {
               @Override
               public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
                 visibleFailures.add(cause);
-                ClientContexts.fail(ctx.channel(), instrumenter, cause);
               }
             });
     List<SpanContext> parents = new ArrayList<>();
@@ -716,189 +682,6 @@ class NettyClientPipeliningTest {
   }
 
   @Test
-  void downstreamExceptionAfterResponseDoesNotDisableCorrelationWithPipelinedRequest() {
-    Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
-        new NettyClientInstrumenterFactory(
-                NettyClientInstrumenterBuilderFactory.create(
-                    "io.opentelemetry.netty-4.1", testing.getOpenTelemetry()),
-                NettyConnectionInstrumentationFlag.DISABLED,
-                NettyConnectionInstrumentationFlag.DISABLED)
-            .instrumenter();
-    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
-    IOException failure = new IOException("downstream handler failed");
-    List<SpanContext> callbackParents = new ArrayList<>();
-    List<SpanContext> parents = new ArrayList<>();
-    boolean[] raised = {false};
-    channel
-        .pipeline()
-        .addLast(
-            new ChannelInboundHandlerAdapter() {
-              @Override
-              public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                callbackParents.add(Span.current().getSpanContext());
-                int previousDepth = ClientContexts.enterChannelRead(ctx.channel(), msg);
-                try {
-                  ReferenceCountUtil.release(msg);
-                  if (!raised[0]) {
-                    raised[0] = true;
-                    ctx.fireExceptionCaught(failure);
-                  }
-                } finally {
-                  ClientContexts.exitChannelRead(previousDepth);
-                }
-              }
-            })
-        .addLast(
-            new ChannelInboundHandlerAdapter() {
-              @Override
-              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                ClientContexts.fail(ctx.channel(), instrumenter, cause);
-              }
-            });
-    try {
-      testing.runWithSpan(
-          "first",
-          () -> {
-            parents.add(Span.current().getSpanContext());
-            channel.writeOutbound(request("/first"));
-          });
-      testing.runWithSpan(
-          "second",
-          () -> {
-            parents.add(Span.current().getSpanContext());
-            channel.writeOutbound(request("/second"));
-          });
-      response(channel, 201);
-
-      assertThat(channel.isActive()).isTrue();
-      testing.runWithSpan(
-          "third",
-          () -> {
-            parents.add(Span.current().getSpanContext());
-            DefaultFullHttpRequest subsequent = request("/third");
-            channel.writeOutbound(subsequent);
-            assertThat(subsequent.headers().contains("traceparent")).isTrue();
-          });
-      response(channel, 202);
-      response(channel, 203);
-
-      assertThat(callbackParents).containsExactly(parents.get(0), parents.get(1), parents.get(2));
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("first"),
-                  span ->
-                      span.hasName("GET")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
-                                      .isEqualTo(201L))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("second"),
-                  span ->
-                      span.hasName("GET")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
-                                      .isEqualTo(202L))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("third"),
-                  span ->
-                      span.hasName("GET")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
-                                      .isEqualTo(203L))));
-    } finally {
-      channel.finishAndReleaseAll();
-    }
-  }
-
-  @Test
-  void nestedReadFailureDuringCompletedResponseCallbackStillFailsPendingRequest() {
-    Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
-        new NettyClientInstrumenterFactory(
-                NettyClientInstrumenterBuilderFactory.create(
-                    "io.opentelemetry.netty-4.1", testing.getOpenTelemetry()),
-                NettyConnectionInstrumentationFlag.DISABLED,
-                NettyConnectionInstrumentationFlag.DISABLED)
-            .instrumenter();
-    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
-    Object nestedMessage = new Object();
-    IOException failure = new IOException("nested read failed");
-    channel
-        .pipeline()
-        .addLast(
-            new ChannelInboundHandlerAdapter() {
-              @Override
-              public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                int previousDepth = ClientContexts.enterChannelRead(ctx.channel(), msg);
-                try {
-                  if (msg == nestedMessage) {
-                    ReferenceCountUtil.release(msg);
-                    ctx.fireExceptionCaught(failure);
-                  } else if (msg instanceof HttpResponse) {
-                    ctx.pipeline().fireChannelRead(nestedMessage);
-                    ReferenceCountUtil.release(msg);
-                  } else {
-                    ReferenceCountUtil.release(msg);
-                  }
-                } finally {
-                  ClientContexts.exitChannelRead(previousDepth);
-                }
-              }
-            })
-        .addLast(
-            new ChannelInboundHandlerAdapter() {
-              @Override
-              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                ClientContexts.fail(ctx.channel(), instrumenter, cause);
-              }
-            });
-    try {
-      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
-      testing.runWithSpan("second", () -> channel.writeOutbound(request("/second")));
-      response(channel, 201);
-
-      DefaultFullHttpRequest subsequent = request("/subsequent");
-      channel.writeOutbound(subsequent);
-      assertThat(subsequent.headers().contains("traceparent")).isFalse();
-      response(channel, 202);
-      assertThat(channel.isActive()).isTrue();
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("first"),
-                  span ->
-                      span.hasName("GET")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
-                                      .isEqualTo(201L))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("second"),
-                  span -> span.hasName("GET").hasParent(trace.getSpan(0))));
-      assertThat(testing.spans()).hasSize(4);
-      assertThat(testing.spans().get(3).getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
-      assertThat(testing.spans().get(3).getEvents())
-          .singleElement()
-          .satisfies(
-              event ->
-                  assertThat(event.getAttributes().get(EXCEPTION_TYPE))
-                      .isEqualTo(IOException.class.getName()));
-    } finally {
-      channel.finishAndReleaseAll();
-    }
-  }
-
-  @Test
   void synchronousWriteFailureDisablesCorrelation() {
     EmbeddedChannel channel =
         channel(
@@ -1140,55 +923,6 @@ class NettyClientPipeliningTest {
           .isEqualTo(partialResponse ? 200L : null);
       assertThat(parent.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
       assertThat(stream.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
-    } finally {
-      stream.finishAndReleaseAll();
-      parent.finishAndReleaseAll();
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void downstreamExceptionBeforeFirstStreamReadEndsTransferredRequest(boolean fullUpgradeResponse) {
-    Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
-        new NettyClientInstrumenterFactory(
-                NettyClientInstrumenterBuilderFactory.create(
-                    "io.opentelemetry.netty-4.1", testing.getOpenTelemetry()),
-                NettyConnectionInstrumentationFlag.DISABLED,
-                NettyConnectionInstrumentationFlag.DISABLED)
-            .instrumenter();
-    NettyClientHandlerFactory handlerFactory = new NettyClientHandlerFactory(instrumenter, false);
-    EmbeddedChannel parent = new EmbeddedChannel(handlerFactory.createCombinedHandler());
-    EmbeddedChannel stream =
-        new EmbeddedChannel() {
-          @Override
-          public Channel parent() {
-            return parent;
-          }
-        };
-    try {
-      parent.writeOutbound(request("/upgrade"));
-      switchingProtocolsResponse(parent, fullUpgradeResponse);
-      ClientContexts.transferUpgradedRequest(parent, stream);
-      AttributeKey<ClientContexts> key =
-          AttributeKey.valueOf(ClientContexts.class, "client-contexts");
-      assertThat(stream.hasAttr(key)).isTrue();
-
-      IOException failure = new IOException("downstream handler failed");
-      ClientContexts.fail(stream, instrumenter, failure);
-      parent.close();
-
-      assertThat(testing.spans()).hasSize(1);
-      assertThat(testing.spans().get(0).getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
-      assertThat(testing.spans().get(0).getEvents())
-          .singleElement()
-          .satisfies(
-              event ->
-                  assertThat(event.getAttributes().get(EXCEPTION_TYPE))
-                      .isEqualTo(IOException.class.getName()));
-      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE)).isNull();
-      assertThat(parent.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
-      assertThat(stream.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
-      assertThat(stream.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get()).isNull();
     } finally {
       stream.finishAndReleaseAll();
       parent.finishAndReleaseAll();
