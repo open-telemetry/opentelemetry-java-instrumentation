@@ -4,6 +4,7 @@
 
 ### ⚠️ Breaking changes
 
+- AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to

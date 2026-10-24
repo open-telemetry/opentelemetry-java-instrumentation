@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -96,7 +96,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333")),
+                                equalTo(stringKey("faas.invocation.id"), "1-22-333")),
                     span ->
                         span.hasName("process queue1")
                             .hasKind(SpanKind.CONSUMER)
@@ -145,7 +145,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333")),
+                                equalTo(stringKey("faas.invocation.id"), "1-22-333")),
                     span ->
                         span.hasName("process")
                             .hasKind(SpanKind.CONSUMER)
