@@ -23,6 +23,8 @@ final class TracingFilter extends Filter {
 
   private static final String OTEL_CONTEXT_KEY = "otel.context";
   private static final String OTEL_REQUEST_KEY = "otel.request";
+  // Instrumenter.end() invokes attribute and metric extractors synchronously.
+  private static final ThreadLocal<Boolean> SYNTHETIC_FALLBACK_ERROR = new ThreadLocal<>();
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
   private final boolean isClientSide;
@@ -56,13 +58,12 @@ final class TracingFilter extends Filter {
         request.addRequestProp(OTEL_REQUEST_KEY, sofaRpcRequest);
       }
     } catch (Throwable t) {
-      instrumenter.end(context, sofaRpcRequest, null, t);
+      end(context, sofaRpcRequest, null, new ExtractedException(t, false));
       throw t;
     }
 
     if (isSynchronous) {
-      Throwable exception = extractException(response);
-      instrumenter.end(context, sofaRpcRequest, response, exception);
+      end(context, sofaRpcRequest, response, extractException(response));
     }
 
     return response;
@@ -92,25 +93,48 @@ final class TracingFilter extends Filter {
     return false;
   }
 
-  private static Throwable extractException(SofaResponse response) {
+  private void end(
+      Context context,
+      SofaRpcRequest sofaRpcRequest,
+      SofaResponse response,
+      ExtractedException extractedException) {
+    Boolean previous = SYNTHETIC_FALLBACK_ERROR.get();
+    SYNTHETIC_FALLBACK_ERROR.set(extractedException.syntheticFallback);
+    try {
+      instrumenter.end(context, sofaRpcRequest, response, extractedException.error);
+    } finally {
+      if (previous == null) {
+        SYNTHETIC_FALLBACK_ERROR.remove();
+      } else {
+        SYNTHETIC_FALLBACK_ERROR.set(previous);
+      }
+    }
+  }
+
+  static boolean isSyntheticFallbackError() {
+    return Boolean.TRUE.equals(SYNTHETIC_FALLBACK_ERROR.get());
+  }
+
+  private static ExtractedException extractException(SofaResponse response) {
     if (response == null) {
-      return null;
+      return new ExtractedException(null, false);
     }
 
     Object appResponse = response.getAppResponse();
     if (appResponse instanceof Throwable) {
-      return (Throwable) appResponse;
+      return new ExtractedException((Throwable) appResponse, false);
     }
 
     if (response.isError()
         || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR))) {
       String errorMsg = response.getErrorMsg();
       if (errorMsg != null) {
-        return new SofaRpcException(SERVER_UNDECLARED_ERROR, errorMsg);
+        return new ExtractedException(
+            new SofaRpcException(SERVER_UNDECLARED_ERROR, errorMsg), true);
       }
     }
 
-    return null;
+    return new ExtractedException(null, false);
   }
 
   @Override
@@ -126,7 +150,18 @@ final class TracingFilter extends Filter {
     if (context == null || sofaRpcRequest == null) {
       return;
     }
-    Throwable error = exception != null ? exception : extractException(response);
-    instrumenter.end(context, sofaRpcRequest, response, error);
+    ExtractedException extractedException =
+        exception != null ? new ExtractedException(exception, false) : extractException(response);
+    end(context, sofaRpcRequest, response, extractedException);
+  }
+
+  private static final class ExtractedException {
+    private final Throwable error;
+    private final boolean syntheticFallback;
+
+    private ExtractedException(Throwable error, boolean syntheticFallback) {
+      this.error = error;
+      this.syntheticFallback = syntheticFallback;
+    }
   }
 }
