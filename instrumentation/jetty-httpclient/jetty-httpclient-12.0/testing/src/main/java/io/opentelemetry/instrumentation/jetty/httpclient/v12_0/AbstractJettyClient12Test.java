@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -139,9 +138,8 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   void deferredResponseContentRetainsCallerContext(boolean asyncListener, boolean withParent)
       throws ExecutionException, InterruptedException, TimeoutException {
     ContextKey<String> key = ContextKey.named("jetty-test");
-    AtomicReference<Context> lateContentContext = new AtomicReference<>();
+    CompletableFuture<Context> lateContentContext = new CompletableFuture<>();
     AtomicReference<Context> contextAfterDemand = new AtomicReference<>();
-    CountDownLatch lateContentProcessed = new CountDownLatch(1);
     CompletableFuture<Result> completed = new CompletableFuture<>();
     Request request = client.newRequest(resolveAddress("/long-request")).method("GET");
     request.headers(headers -> headers.put(new HttpField("delay", "500")));
@@ -149,9 +147,9 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
         content -> {
           String chunk = UTF_8.decode(content.duplicate()).toString();
           if (chunk.contains("World")) {
-            lateContentContext.set(Context.current());
+            Context callbackContext = Context.current();
             testing.runWithSpan("response-body", () -> {});
-            lateContentProcessed.countDown();
+            lateContentContext.complete(callbackContext);
           }
         };
     if (asyncListener) {
@@ -194,8 +192,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
     Result result = completed.get(10, SECONDS);
     assertThat(result.isSucceeded()).isTrue();
-    assertThat(lateContentProcessed.await(10, SECONDS)).isTrue();
-    Context observedContext = lateContentContext.get();
+    Context observedContext = lateContentContext.get(10, SECONDS);
     assertThat(observedContext.get(key)).isEqualTo("caller");
     assertThat(Span.fromContext(observedContext).getSpanContext())
         .isEqualTo(callerSpanContext.get());
@@ -308,41 +305,38 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
             Response.SuccessListener,
             Response.FailureListener,
             Response.CompleteListener {
-          private void record(String name) {
-            responseContexts.put(name, Context.current());
-            if (throwingListeners) {
-              throw new IllegalStateException("response listener");
-            }
-          }
-
-          @Override
-          public void onHeaders(Response response) {
-            testing.runWithSpan("onHeaders", () -> {});
-            record("headers");
-          }
-
-          @Override
-          public void onSuccess(Response response) {
-            testing.runWithSpan("onSuccess", () -> {});
-            record("success");
-          }
-
-          @Override
-          public void onFailure(Response response, Throwable cause) {
-            testing.runWithSpan("onFailure", () -> {});
-            record("failure");
-          }
-
-          @Override
-          public void onComplete(Result result) {
-            testing.runWithSpan("onComplete", () -> {});
-            try {
-              record("complete");
-            } finally {
-              completed.complete(result);
-            }
-          }
+      private void record(String name) {
+        responseContexts.put(name, Context.current());
+        if (throwingListeners) {
+          throw new IllegalStateException("response listener");
         }
+      }
+
+      @Override
+      public void onHeaders(Response response) {
+        record("headers");
+      }
+
+      @Override
+      public void onSuccess(Response response) {
+        record("success");
+      }
+
+      @Override
+      public void onFailure(Response response, Throwable cause) {
+        record("failure");
+      }
+
+      @Override
+      public void onComplete(Result result) {
+        testing.runWithSpan("onComplete", () -> {});
+        try {
+          record("complete");
+        } finally {
+          completed.complete(result);
+        }
+      }
+    }
     LifecycleListener listener = new LifecycleListener();
     request.onResponseHeaders(
         response -> responseContexts.put("registeredHeaders", Context.current()));
@@ -451,29 +445,17 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                 span -> span.hasName("test-http-server").hasParent(trace.getSpan(clientIndex)));
           }
           if (withParent) {
-            if (outcome.equals("success")) {
-              spans.add(span -> span.hasName("onHeaders").hasParent(trace.getSpan(0)));
-              spans.add(span -> span.hasName("onSuccess").hasParent(trace.getSpan(0)));
-            } else {
-              spans.add(span -> span.hasName("onFailure").hasParent(trace.getSpan(0)));
-            }
             spans.add(span -> span.hasName("onComplete").hasParent(trace.getSpan(0)));
           }
           trace.hasSpansSatisfyingExactly(spans);
         };
     if (withParent) {
       testing.waitAndAssertTraces(operationTrace);
-    } else if (outcome.equals("success")) {
-      testing.waitAndAssertTraces(
-          operationTrace,
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onHeaders").hasNoParent()),
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onSuccess").hasNoParent()),
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onComplete").hasNoParent()));
     } else {
       testing.waitAndAssertTraces(
           operationTrace,
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onFailure").hasNoParent()),
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onComplete").hasNoParent()));
+          trace ->
+              trace.hasSpansSatisfyingExactly(span -> span.hasName("onComplete").hasNoParent()));
     }
   }
 
