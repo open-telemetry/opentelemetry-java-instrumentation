@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -681,7 +683,15 @@ class Netty41ClientPipelineTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())),
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfying(
+                                        equalTo(
+                                            EXCEPTION_TYPE,
+                                            "io.netty.handler.timeout.ReadTimeoutException")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasNoParent().hasName("second").hasKind(SpanKind.INTERNAL),
@@ -689,7 +699,15 @@ class Netty41ClientPipelineTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())));
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfying(
+                                        equalTo(
+                                            EXCEPTION_TYPE,
+                                            "io.netty.handler.timeout.ReadTimeoutException")))));
   }
 
   @Test
