@@ -24,6 +24,11 @@ dependencies {
 testing {
   suites {
     register<JvmTestSuite>("version3Test") {
+      targets.all {
+        testTask.configure {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
+      }
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
