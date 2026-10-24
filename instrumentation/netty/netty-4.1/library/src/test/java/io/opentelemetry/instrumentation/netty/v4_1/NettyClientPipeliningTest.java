@@ -212,6 +212,89 @@ class NettyClientPipeliningTest {
     }
   }
 
+  @Test
+  void overflowQueuePromotesRequestsAndKeepsSequentialKeepAlive() {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    try {
+      channel.writeOutbound(request("/first"), request("/second"), request("/third"));
+      assertThat(channel.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNotNull();
+
+      response(channel, 201);
+      assertThat(testing.spans()).hasSize(1);
+      assertThat(channel.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNotNull();
+
+      response(channel, 202);
+      assertThat(testing.spans()).hasSize(2);
+      assertThat(channel.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNotNull();
+
+      response(channel, 203);
+      assertThat(testing.spans()).hasSize(3);
+      assertThat(channel.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
+
+      channel.writeOutbound(request("/sequential"));
+      response(channel, 204);
+      assertThat(testing.spans()).hasSize(4);
+      assertThat(testing.spans())
+          .extracting(span -> span.getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .containsExactly(201L, 202L, 203L, 204L);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void requestFromResponseCallbackKeepsReentrantRequestContextPublished() {
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    List<SpanContext> parents = new ArrayList<>();
+    List<SpanContext> callbackContexts = new ArrayList<>();
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              private int responses;
+
+              @Override
+              public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                callbackContexts.add(Span.current().getSpanContext());
+                ReferenceCountUtil.release(msg);
+                if (responses++ == 0) {
+                  try (Scope ignored = Context.root().makeCurrent()) {
+                    testing.runWithSpan(
+                        "second",
+                        () -> {
+                          parents.add(Span.current().getSpanContext());
+                          ctx.channel().writeAndFlush(request("/second"));
+                        });
+                  }
+                }
+              }
+            });
+    try {
+      testing.runWithSpan(
+          "first",
+          () -> {
+            parents.add(Span.current().getSpanContext());
+            channel.writeOutbound(request("/first"));
+          });
+
+      response(channel, 201);
+      response(channel, 202);
+
+      assertThat(callbackContexts).containsExactlyElementsOf(parents);
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("first"),
+                  span -> span.hasName("GET").hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("second"),
+                  span -> span.hasName("GET").hasParent(trace.getSpan(0))));
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
   @ParameterizedTest
   @CsvSource({"false, false", "false, true", "true, false", "true, true"})
   void asynchronousWriteFailureDisablesCorrelation(boolean voidPromise, boolean delivered) {

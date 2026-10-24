@@ -20,7 +20,6 @@ import java.nio.channels.ClosedChannelException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
@@ -32,7 +31,10 @@ public final class ClientContexts {
   private static final AttributeKey<ClientContexts> KEY =
       AttributeKey.valueOf(ClientContexts.class, "client-contexts");
 
-  private final Queue<RequestState> requests = new ArrayDeque<>();
+  @Nullable private RequestState firstRequest;
+  @Nullable private ArrayDeque<RequestState> overflowRequests;
+  @Nullable private RequestState publishedHead;
+  private boolean published;
   @Nullable private Throwable failure;
   @Nullable private Context failureParent;
 
@@ -40,14 +42,15 @@ public final class ClientContexts {
 
   static ClientContexts get(Channel channel) {
     Attribute<ClientContexts> attribute = channel.attr(KEY);
-    synchronized (attribute) {
-      ClientContexts contexts = attribute.get();
+    ClientContexts contexts = attribute.get();
+    if (contexts == null) {
+      ClientContexts newContexts = new ClientContexts();
+      contexts = attribute.setIfAbsent(newContexts);
       if (contexts == null) {
-        contexts = new ClientContexts();
-        attribute.set(contexts);
+        contexts = newContexts;
       }
-      return contexts;
     }
+    return contexts;
   }
 
   public static void transferUpgradedRequest(Channel parent, Channel stream) {
@@ -59,27 +62,28 @@ public final class ClientContexts {
       return;
     }
     synchronized (parentContexts) {
-      RequestState state = parentContexts.requests.peek();
+      RequestState state = parentContexts.firstRequest;
       if (state == null || !state.upgraded) {
         return;
       }
       Attribute<ClientContexts> streamAttribute = stream.attr(KEY);
-      synchronized (streamAttribute) {
-        ClientContexts streamContexts = streamAttribute.get();
+      ClientContexts streamContexts = streamAttribute.get();
+      if (streamContexts == null) {
+        ClientContexts newContexts = new ClientContexts();
+        streamContexts = streamAttribute.setIfAbsent(newContexts);
         if (streamContexts == null) {
-          streamContexts = new ClientContexts();
+          streamContexts = newContexts;
         }
-        synchronized (streamContexts) {
-          if (!streamContexts.requests.isEmpty()) {
-            return;
-          }
-          parentContexts.requests.remove();
-          parentContexts.publish(parent);
-          state.upgraded = false;
-          streamContexts.requests.add(state);
-          streamContexts.publish(stream);
-          streamAttribute.set(streamContexts);
+      }
+      synchronized (streamContexts) {
+        if (!streamContexts.isEmpty()) {
+          return;
         }
+        parentContexts.removeFirst();
+        parentContexts.publish(parent);
+        state.upgraded = false;
+        streamContexts.addRequest(state);
+        streamContexts.publish(stream);
       }
     }
   }
@@ -100,8 +104,9 @@ public final class ClientContexts {
     if (failure != null) {
       return false;
     }
-    requests.add(state);
-    if (requests.peek() == state) {
+    boolean first = firstRequest == null;
+    addRequest(state);
+    if (first) {
       publish(channel);
     }
     return true;
@@ -113,7 +118,7 @@ public final class ClientContexts {
 
   @Nullable
   synchronized Context callbackParent() {
-    RequestState state = requests.peek();
+    RequestState state = firstRequest;
     return state == null ? null : state.parent;
   }
 
@@ -132,11 +137,9 @@ public final class ClientContexts {
     synchronized (this) {
       if (failure == null) {
         failure = cause;
-        RequestState first = requests.peek();
-        failureParent = first == null ? null : first.parent;
+        failureParent = firstRequest == null ? null : firstRequest.parent;
       }
-      states = new ArrayList<>(requests);
-      requests.clear();
+      states = drainRequests();
       publish(channel);
       channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(null);
     }
@@ -149,17 +152,75 @@ public final class ClientContexts {
 
   @Nullable
   synchronized RequestState peek() {
-    return requests.peek();
+    return firstRequest;
   }
 
   synchronized void remove(RequestState state) {
-    requests.remove(state);
+    if (firstRequest == state) {
+      removeFirst();
+    } else if (overflowRequests != null) {
+      overflowRequests.remove(state);
+      if (overflowRequests.isEmpty()) {
+        overflowRequests = null;
+      }
+    }
   }
 
   synchronized void publish(Channel channel) {
-    RequestState state = requests.peek();
+    RequestState state = firstRequest;
+    if (published && publishedHead == state) {
+      return;
+    }
     channel.attr(AttributeKeys.CLIENT_CONTEXT).set(state == null ? null : state.context);
     channel.attr(HTTP_CLIENT_REQUEST).set(state == null ? null : state.request);
+    publishedHead = state;
+    published = true;
+  }
+
+  private boolean isEmpty() {
+    return firstRequest == null;
+  }
+
+  private void addRequest(RequestState state) {
+    if (firstRequest == null) {
+      firstRequest = state;
+    } else {
+      if (overflowRequests == null) {
+        overflowRequests = new ArrayDeque<>();
+      }
+      overflowRequests.addLast(state);
+    }
+  }
+
+  @Nullable
+  private RequestState removeFirst() {
+    RequestState state = firstRequest;
+    if (state == null) {
+      return null;
+    }
+    if (overflowRequests == null || overflowRequests.isEmpty()) {
+      firstRequest = null;
+      overflowRequests = null;
+    } else {
+      firstRequest = overflowRequests.removeFirst();
+      if (overflowRequests.isEmpty()) {
+        overflowRequests = null;
+      }
+    }
+    return state;
+  }
+
+  private List<RequestState> drainRequests() {
+    List<RequestState> states = new ArrayList<>();
+    if (firstRequest != null) {
+      states.add(firstRequest);
+    }
+    if (overflowRequests != null) {
+      states.addAll(overflowRequests);
+    }
+    firstRequest = null;
+    overflowRequests = null;
+    return states;
   }
 
   /** Ends outstanding spans and disables correlation when a failure makes responses ambiguous. */
@@ -184,8 +245,7 @@ public final class ClientContexts {
     }
     List<RequestState> states;
     synchronized (contexts) {
-      states = new ArrayList<>(contexts.requests);
-      contexts.requests.clear();
+      states = contexts.drainRequests();
       contexts.publish(channel);
       channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(null);
       contexts.failureParent = null;

@@ -5,85 +5,44 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientSingletons.instrumenter;
+
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientRequestAndContexts.RequestAndContexts;
-import java.nio.channels.ClosedChannelException;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandler {
 
+  private static final VirtualField<Channel, NettyClientRequestAndContexts> REQUEST_AND_CONTEXTS =
+      VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
+
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent msg) throws Exception {
-    NettyClientRequestAndContexts requests = NettyClientRequestAndContexts.get(ctx.getChannel());
+    NettyClientRequestAndContexts requestAndContexts = REQUEST_AND_CONTEXTS.get(ctx.getChannel());
 
-    if (requests == null) {
+    if (requestAndContexts == null) {
       super.messageReceived(ctx, msg);
       return;
     }
 
-    Object message = msg.getMessage();
-    RequestAndContexts request;
-    if (message instanceof HttpResponse) {
-      HttpResponse response = (HttpResponse) message;
-      int status = response.getStatus().getCode();
-      if (status >= 100 && status < 200 && status != 101) {
-        request = requests.peek();
-      } else {
-        request = requests.poll(response.isChunked());
-        if (request != null) {
-          request.end(response, null);
-        }
-      }
-    } else if (message instanceof HttpChunk) {
-      request = requests.response(((HttpChunk) message).isLast());
-      if (request == null) {
-        request = requests.peek();
-      }
-    } else {
-      request = requests.peek();
-    }
-    if (request == null) {
-      super.messageReceived(ctx, msg);
-      return;
+    if (msg.getMessage() instanceof HttpResponse) {
+      instrumenter()
+          .end(
+              requestAndContexts.context(),
+              requestAndContexts.request(),
+              (HttpResponse) msg.getMessage(),
+              NettyErrorHolder.getOrDefault(requestAndContexts.context(), null));
+      REQUEST_AND_CONTEXTS.set(ctx.getChannel(), null);
     }
 
     // We want the callback in the scope of the parent, not the client span
-    try (Scope ignored = request.parentContext.makeCurrent()) {
+    try (Scope ignored = requestAndContexts.parentContext().makeCurrent()) {
       super.messageReceived(ctx, msg);
     }
-  }
-
-  @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent event) throws Exception {
-    NettyClientRequestAndContexts requests = NettyClientRequestAndContexts.get(ctx.getChannel());
-    if (requests != null) {
-      requests.fail(event.getCause());
-    }
-    super.exceptionCaught(ctx, event);
-  }
-
-  @Override
-  public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent event)
-      throws Exception {
-    NettyClientRequestAndContexts requests = NettyClientRequestAndContexts.get(ctx.getChannel());
-    if (requests != null) {
-      requests.fail(new ClosedChannelException());
-    }
-    super.channelDisconnected(ctx, event);
-  }
-
-  @Override
-  public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent event) throws Exception {
-    NettyClientRequestAndContexts requests = NettyClientRequestAndContexts.get(ctx.getChannel());
-    if (requests != null) {
-      requests.fail(new ClosedChannelException());
-    }
-    super.channelClosed(ctx, event);
   }
 }

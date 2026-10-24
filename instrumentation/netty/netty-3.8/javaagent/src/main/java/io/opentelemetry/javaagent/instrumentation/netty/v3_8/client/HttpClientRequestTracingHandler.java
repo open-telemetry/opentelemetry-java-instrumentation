@@ -10,59 +10,25 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.Netty
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyConnectionContext;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientRequestAndContexts.RequestAndContexts;
-import java.util.concurrent.CancellationException;
-import javax.annotation.Nullable;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
-import org.jboss.netty.handler.codec.http.HttpChunk;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
 public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHandler {
 
+  private static final VirtualField<Channel, NettyClientRequestAndContexts> REQUEST_AND_CONTEXTS =
+      VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
+
   @Override
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent event) throws Exception {
     Object message = event.getMessage();
-    boolean requestWrite = message instanceof HttpRequest;
-    if (!requestWrite && !(message instanceof HttpChunk)) {
-      super.writeRequested(ctx, event);
-      return;
-    }
-    NettyClientRequestAndContexts requests =
-        requestWrite
-            ? NettyClientRequestAndContexts.getOrCreate(ctx.getChannel())
-            : NettyClientRequestAndContexts.get(ctx.getChannel());
-    if (requests == null || requests.isFailed()) {
-      super.writeRequested(ctx, event);
-      return;
-    }
-    NettyClientRequestAndContexts.Write write = requests.beginWrite(requestWrite);
-    if (write == null) {
-      // Netty 3 executes outbound handlers on caller threads. Overlapping writes can reach the
-      // socket in a different order than they entered this handler.
-      requests.fail(new IllegalStateException("Overlapping HTTP writes"));
-      super.writeRequested(ctx, event);
-      return;
-    }
-    try {
-      traceWrite(ctx, event, requests, write);
-    } finally {
-      requests.endWrite(write);
-    }
-  }
-
-  private void traceWrite(
-      ChannelHandlerContext ctx,
-      MessageEvent event,
-      NettyClientRequestAndContexts requests,
-      NettyClientRequestAndContexts.Write write)
-      throws Exception {
-    Object message = event.getMessage();
     if (!(message instanceof HttpRequest)) {
-      write(ctx, event, requests);
+      super.writeRequested(ctx, event);
       return;
     }
 
@@ -76,45 +42,21 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     }
 
     NettyRequest request = NettyRequest.create((HttpRequest) message, ctx.getChannel());
-    Context context =
-        instrumenter().shouldStart(parentContext, request)
-            ? instrumenter().start(parentContext, request)
-            : null;
-    RequestAndContexts entry = new RequestAndContexts(parentContext, context, request);
-    if (!requests.add(entry, write)) {
-      entry.closed();
+    if (!instrumenter().shouldStart(parentContext, request)) {
       super.writeRequested(ctx, event);
       return;
     }
-    try (Scope ignored = (context != null ? context : parentContext).makeCurrent()) {
-      write(ctx, event, requests);
-    }
-    // span is ended normally in HttpClientResponseTracingHandler
-  }
 
-  private void write(
-      ChannelHandlerContext ctx,
-      MessageEvent event,
-      @Nullable NettyClientRequestAndContexts requests)
-      throws Exception {
-    if (requests == null || requests.peek() == null) {
-      super.writeRequested(ctx, event);
-      return;
-    }
-    event
-        .getFuture()
-        .addListener(
-            future -> {
-              if (!future.isSuccess()) {
-                Throwable cause = future.getCause();
-                requests.fail(cause != null ? cause : new CancellationException());
-              }
-            });
-    try {
+    Context context = instrumenter().start(parentContext, request);
+    REQUEST_AND_CONTEXTS.set(
+        ctx.getChannel(), NettyClientRequestAndContexts.create(parentContext, context, request));
+
+    try (Scope ignored = context.makeCurrent()) {
       super.writeRequested(ctx, event);
     } catch (Throwable t) {
-      requests.fail(t);
+      instrumenter().end(context, request, null, t);
       throw t;
     }
+    // span is ended normally in HttpClientResponseTracingHandler
   }
 }

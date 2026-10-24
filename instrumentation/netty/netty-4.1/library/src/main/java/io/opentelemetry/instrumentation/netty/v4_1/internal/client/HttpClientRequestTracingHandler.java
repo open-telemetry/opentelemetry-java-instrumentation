@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.client;
 
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -28,10 +29,17 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       AttributeKey.valueOf(HttpClientRequestTracingHandler.class, "http-client-request");
 
   private final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
+  private final ChannelFutureListener failureListener;
 
   public HttpClientRequestTracingHandler(
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter) {
     this.instrumenter = instrumenter;
+    failureListener =
+        future -> {
+          if (!future.isSuccess()) {
+            ClientContexts.fail(future.channel(), this.instrumenter, future.cause());
+          }
+        };
   }
 
   @Override
@@ -76,12 +84,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       return;
     }
     ChannelPromise promise = prm.unvoid();
-    promise.addListener(
-        future -> {
-          if (!future.isSuccess()) {
-            contexts.failRequests(ctx.channel(), instrumenter, future.cause());
-          }
-        });
+    promise.addListener(failureListener);
     try {
       super.write(ctx, msg, promise);
     } catch (Throwable t) {
