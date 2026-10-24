@@ -24,17 +24,25 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
   private final boolean completeResponse;
   private final boolean completeOnFailure;
 
-  static WriteScope beginWrite(HttpServerResponse response) {
+  static void beginWrite(HttpServerResponse response) {
     CurrentWriteState previous = CURRENT_WRITE_STATE.get();
     VertxHttpServerResponseState responseState = RESPONSE_STATE.get(response);
-    if (responseState == null) {
+    HttpServerRequest request = responseState == null ? null : responseState.request.get();
+    Object connection = request == null ? null : request.connection();
+    VertxHttpServerState state = responseState == null ? null : responseState.state;
+    CURRENT_WRITE_STATE.set(new CurrentWriteState(response, state, connection, previous));
+  }
+
+  static void endWrite(HttpServerResponse response) {
+    CurrentWriteState state = CURRENT_WRITE_STATE.get();
+    if (state == null || state.response != response) {
+      return;
+    }
+    if (state.previous == null) {
       CURRENT_WRITE_STATE.remove();
     } else {
-      HttpServerRequest request = responseState.request.get();
-      Object connection = request == null ? null : request.connection();
-      CURRENT_WRITE_STATE.set(new CurrentWriteState(response, responseState.state, connection));
+      CURRENT_WRITE_STATE.set(state.previous);
     }
-    return new WriteScope(previous);
   }
 
   @Nullable
@@ -68,7 +76,7 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
   public static Handler<AsyncResult<Void>> wrapData(
       Object connection, boolean end, @Nullable Handler<AsyncResult<Void>> handler) {
     CurrentWriteState state = CURRENT_WRITE_STATE.get();
-    if (state == null || state.connection != connection) {
+    if (state == null || state.state == null || state.connection != connection) {
       return handler;
     }
     return new ResponseCompletionHandler(state.response, state.state, handler, end);
@@ -114,32 +122,21 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
     }
   }
 
-  public static final class WriteScope {
-    @Nullable private final CurrentWriteState previous;
-
-    private WriteScope(@Nullable CurrentWriteState previous) {
-      this.previous = previous;
-    }
-
-    public void close() {
-      if (previous == null) {
-        CURRENT_WRITE_STATE.remove();
-      } else {
-        CURRENT_WRITE_STATE.set(previous);
-      }
-    }
-  }
-
   private static final class CurrentWriteState {
     private final HttpServerResponse response;
-    private final VertxHttpServerState state;
+    @Nullable private final VertxHttpServerState state;
     @Nullable private final Object connection;
+    @Nullable private final CurrentWriteState previous;
 
     private CurrentWriteState(
-        HttpServerResponse response, VertxHttpServerState state, @Nullable Object connection) {
+        HttpServerResponse response,
+        @Nullable VertxHttpServerState state,
+        @Nullable Object connection,
+        @Nullable CurrentWriteState previous) {
       this.response = response;
       this.state = state;
       this.connection = connection;
+      this.previous = previous;
     }
   }
 }

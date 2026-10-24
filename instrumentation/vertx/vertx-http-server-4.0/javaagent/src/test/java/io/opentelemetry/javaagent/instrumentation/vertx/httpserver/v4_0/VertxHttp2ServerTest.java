@@ -509,6 +509,41 @@ class VertxHttp2ServerTest {
   }
 
   @Test
+  void headerOnlyEndCallbackRetainsContextWhenEndedFromNeutralContext() throws Exception {
+    CompletableFuture<Void> responseEnd = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request ->
+                vertx.setTimer(
+                    1,
+                    ignored -> {
+                      try (Scope neutral = Context.root().makeCurrent()) {
+                        request
+                            .response()
+                            .end(
+                                result -> {
+                                  assertThat(result.succeeded()).isTrue();
+                                  testing.runWithSpan("response end callback", () -> {});
+                                  responseEnd.complete(null);
+                                });
+                      }
+                    }));
+
+    HttpResponse<String> response = send(client, "/header-only", TRACE_ID).get(10, SECONDS);
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).isEmpty();
+    responseEnd.get(10, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
+                span -> span.hasName("response end callback").hasParent(trace.getSpan(0))));
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
   void sendFileHeaderHandlerRetainsContextWhenCompletedFromNeutralContext() throws Exception {
     Path file = Files.createTempFile("vertx-http2-send-file-context", ".txt");
     try {

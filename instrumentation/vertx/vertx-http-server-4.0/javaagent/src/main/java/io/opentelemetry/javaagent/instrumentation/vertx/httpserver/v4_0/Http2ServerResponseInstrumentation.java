@@ -65,20 +65,20 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class WriteAdvice {
+    @AssignReturned.ToArguments(@ToArgument(2))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static ResponseCompletionHandler.WriteScope onEnter(
-        @Advice.This HttpServerResponse response) {
-      return ResponseCompletionHandler.beginWrite(response);
+    public static Handler<AsyncResult<Void>> onEnter(
+        @Advice.This HttpServerResponse response,
+        @Advice.Argument(2) @Nullable Handler<AsyncResult<Void>> handler) {
+      ResponseCompletionHandler.beginWrite(response);
+      VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
+      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state.context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This HttpServerResponse response,
-        @Advice.Enter @Nullable ResponseCompletionHandler.WriteScope scope,
-        @Advice.Thrown @Nullable Throwable error) {
-      if (scope != null) {
-        scope.close();
-      }
+        @Advice.This HttpServerResponse response, @Advice.Thrown @Nullable Throwable error) {
+      ResponseCompletionHandler.endWrite(response);
       if (error != null) {
         VertxHttpServerSingletons.endResponse(response, error);
       }
