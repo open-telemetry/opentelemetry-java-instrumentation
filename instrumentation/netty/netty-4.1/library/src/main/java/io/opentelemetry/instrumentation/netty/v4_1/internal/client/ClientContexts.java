@@ -82,6 +82,7 @@ public final class ClientContexts {
         parentContexts.removeFirst();
         parentContexts.publish(parent);
         state.upgraded = false;
+        state.response = null;
         streamContexts.addRequest(state);
         streamContexts.publish(stream);
       }

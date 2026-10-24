@@ -851,8 +851,9 @@ class NettyClientPipeliningTest {
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void upgradedRequestEndsWithErrorWhenStreamCloses(boolean partialResponse) {
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void upgradedRequestEndsWithErrorWhenStreamCloses(
+      boolean fullUpgradeResponse, boolean partialResponse) {
     EmbeddedChannel parent = channel(new ChannelOutboundHandlerAdapter());
     EmbeddedChannel stream =
         new EmbeddedChannel(
@@ -866,7 +867,7 @@ class NettyClientPipeliningTest {
         };
     try {
       parent.writeOutbound(request("/upgrade"));
-      response(parent, 101);
+      switchingProtocolsResponse(parent, fullUpgradeResponse);
       ClientContexts.transferUpgradedRequest(parent, stream);
 
       if (partialResponse) {
@@ -894,8 +895,9 @@ class NettyClientPipeliningTest {
     }
   }
 
-  @Test
-  void downstreamExceptionBeforeFirstStreamReadEndsTransferredRequest() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void downstreamExceptionBeforeFirstStreamReadEndsTransferredRequest(boolean fullUpgradeResponse) {
     Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
         new NettyClientInstrumenterFactory(
                 NettyClientInstrumenterBuilderFactory.create(
@@ -914,7 +916,7 @@ class NettyClientPipeliningTest {
         };
     try {
       parent.writeOutbound(request("/upgrade"));
-      response(parent, 101);
+      switchingProtocolsResponse(parent, fullUpgradeResponse);
       ClientContexts.transferUpgradedRequest(parent, stream);
       AttributeKey<ClientContexts> key =
           AttributeKey.valueOf(ClientContexts.class, "client-contexts");
@@ -932,6 +934,7 @@ class NettyClientPipeliningTest {
               event ->
                   assertThat(event.getAttributes().get(EXCEPTION_TYPE))
                       .isEqualTo(IOException.class.getName()));
+      assertThat(testing.spans().get(0).getAttributes().get(HTTP_RESPONSE_STATUS_CODE)).isNull();
       assertThat(parent.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
       assertThat(stream.attr(AttributeKeys.CLIENT_CONTEXT).get()).isNull();
       assertThat(stream.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get()).isNull();
@@ -949,5 +952,15 @@ class NettyClientPipeliningTest {
 
   private static void response(EmbeddedChannel channel, int status) {
     channel.writeInbound(new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(status)));
+  }
+
+  private static void switchingProtocolsResponse(EmbeddedChannel channel, boolean fullResponse) {
+    if (fullResponse) {
+      response(channel, 101);
+    } else {
+      channel.writeInbound(
+          new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS));
+      channel.writeInbound(LastHttpContent.EMPTY_LAST_CONTENT);
+    }
   }
 }
