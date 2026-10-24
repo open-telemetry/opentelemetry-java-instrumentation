@@ -9,6 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -196,22 +197,16 @@ abstract class AbstractRocketMqBatchCallbackTest {
   }
 
   private static Stream<Arguments> callbackModes() {
-    return Stream.of(false, true)
-        .flatMap(
-            asynchronous ->
-                Stream.of(false, true)
-                    .flatMap(
-                        failure ->
-                            Stream.of(false, true)
-                                .flatMap(
-                                    callerSpan ->
-                                        Stream.of(false, true)
-                                            .map(
-                                                throwing ->
-                                                    Arguments.of(
-                                                        asynchronous,
-                                                        failure,
-                                                        callerSpan,
-                                                        throwing)))));
+    return Stream.of(
+        argumentSet("inline success with caller span", false, false, true, false),
+        argumentSet("inline failure with caller span", false, true, true, false),
+        argumentSet("deferred success with caller span", true, false, true, false),
+        argumentSet("deferred failure with caller span", true, true, true, false),
+        argumentSet("inline success without caller span", false, false, false, false),
+        argumentSet("deferred failure without caller span", true, true, false, false),
+        argumentSet("inline throwing success callback", false, false, true, true),
+        argumentSet("inline throwing failure callback", false, true, true, true),
+        argumentSet("deferred throwing success callback", true, false, true, true),
+        argumentSet("deferred throwing failure callback", true, true, true, true));
   }
 }

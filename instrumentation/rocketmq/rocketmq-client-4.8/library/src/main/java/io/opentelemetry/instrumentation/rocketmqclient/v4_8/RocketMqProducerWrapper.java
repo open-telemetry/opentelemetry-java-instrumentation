@@ -112,7 +112,7 @@ final class RocketMqProducerWrapper implements InvocationHandler {
         instrumenter.shouldStart(parentContext, request)
             ? instrumenter.start(parentContext, request)
             : null;
-    SendState state = new SendState(instrumenter, request, parentContext, context, messages);
+    SendState state = new SendState(instrumenter, request, context, messages);
     try {
       for (SendMessage message : messages) {
         message.state = state;
@@ -123,7 +123,7 @@ final class RocketMqProducerWrapper implements InvocationHandler {
       Object[] delegateArgs = args.clone();
       delegateArgs[0] = messages;
       if (callbackIndex != -1) {
-        delegateArgs[callbackIndex] = state.wrap((SendCallback) args[callbackIndex]);
+        delegateArgs[callbackIndex] = state.wrap((SendCallback) args[callbackIndex], parentContext);
       }
       try (Scope ignored = context == null ? null : context.makeCurrent()) {
         Object result = invokeDelegate(method, delegateArgs);
@@ -214,7 +214,6 @@ final class RocketMqProducerWrapper implements InvocationHandler {
   static final class SendState {
     private final Instrumenter<SendMessageContext, Void> instrumenter;
     private final SendMessageContext request;
-    private final Context parentContext;
     @Nullable private final Context context;
     private final List<SendMessage> messages;
     private final AtomicBoolean ended = new AtomicBoolean();
@@ -222,12 +221,10 @@ final class RocketMqProducerWrapper implements InvocationHandler {
     private SendState(
         Instrumenter<SendMessageContext, Void> instrumenter,
         SendMessageContext request,
-        Context parentContext,
         @Nullable Context context,
         List<SendMessage> messages) {
       this.instrumenter = instrumenter;
       this.request = request;
-      this.parentContext = parentContext;
       this.context = context;
       this.messages = new ArrayList<>(messages);
     }
@@ -239,7 +236,7 @@ final class RocketMqProducerWrapper implements InvocationHandler {
       request.setException(context.getException());
     }
 
-    private SendCallback wrap(@Nullable SendCallback delegate) {
+    private SendCallback wrap(@Nullable SendCallback delegate, Context parentContext) {
       return new SendCallback() {
         @Override
         public void onSuccess(SendResult sendResult) {
