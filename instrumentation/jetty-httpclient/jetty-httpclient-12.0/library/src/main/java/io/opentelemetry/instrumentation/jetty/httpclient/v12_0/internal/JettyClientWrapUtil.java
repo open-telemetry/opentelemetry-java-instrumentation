@@ -7,13 +7,16 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.io.Content;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -73,11 +76,58 @@ public final class JettyClientWrapUtil {
             listenerClass.getClassLoader(),
             interfaces.toArray(new Class<?>[0]),
             (proxy, method, args) -> {
-              try (Scope ignored = contextSupplier.get().makeCurrent()) {
-                return method.invoke(listener, args);
+              Context context = contextSupplier.get();
+              try (Scope ignored = context.makeCurrent()) {
+                Object[] invocationArgs = args;
+                if (method.getName().equals("onContentSource")
+                    && args != null
+                    && args.length == 2
+                    && args[1] instanceof Content.Source) {
+                  invocationArgs = args.clone();
+                  invocationArgs[1] = wrapContentSource((Content.Source) args[1], context);
+                }
+                return method.invoke(listener, invocationArgs);
               } catch (InvocationTargetException e) {
                 throw e.getCause();
               }
             });
+  }
+
+  public static Content.Source wrapContentSource(Content.Source source, Context context) {
+    if (Proxy.isProxyClass(source.getClass())
+        && Proxy.getInvocationHandler(source) instanceof ContentSourceInvocationHandler) {
+      return source;
+    }
+    InvocationHandler handler = new ContentSourceInvocationHandler(source, context);
+    return (Content.Source)
+        Proxy.newProxyInstance(
+            Content.Source.class.getClassLoader(), new Class<?>[] {Content.Source.class}, handler);
+  }
+
+  private static final class ContentSourceInvocationHandler implements InvocationHandler {
+    private final Content.Source source;
+    private final Context context;
+
+    private ContentSourceInvocationHandler(Content.Source source, Context context) {
+      this.source = source;
+      this.context = context;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      Object[] invocationArgs = args;
+      if (method.getName().equals("demand")
+          && args != null
+          && args.length == 1
+          && args[0] instanceof Runnable) {
+        invocationArgs = args.clone();
+        invocationArgs[0] = context.wrap((Runnable) args[0]);
+      }
+      try {
+        return method.invoke(source, invocationArgs);
+      } catch (InvocationTargetException e) {
+        throw e.getCause();
+      }
+    }
   }
 }

@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -29,8 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
@@ -39,6 +43,7 @@ import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.client.StringRequestContent;
 import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -163,6 +168,100 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                     span.hasName("onComplete")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void deferredResponseContentRetainsCallerContext(boolean asyncListener, boolean withParent)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    ContextKey<String> key = ContextKey.named("jetty-test");
+    AtomicReference<Context> lateContentContext = new AtomicReference<>();
+    AtomicReference<Context> contextAfterDemand = new AtomicReference<>();
+    CountDownLatch lateContentProcessed = new CountDownLatch(1);
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    Request request = client.newRequest(resolveAddress("/long-request")).method("GET");
+    request.headers(headers -> headers.put(new HttpField("delay", "500")));
+    Consumer<ByteBuffer> processContent =
+        content -> {
+          String chunk = UTF_8.decode(content.duplicate()).toString();
+          if (chunk.contains("World")) {
+            lateContentContext.set(Context.current());
+            testing.runWithSpan("response-body", () -> {});
+            lateContentProcessed.countDown();
+          }
+        };
+    if (asyncListener) {
+      request.onResponseContentAsync(
+          new Response.AsyncContentListener() {
+            @Override
+            public void onContent(Response response, Content.Chunk chunk, Runnable demander) {
+              processContent.accept(chunk.getByteBuffer());
+              Context deliveryContext = Context.current().with(key, "delivery");
+              try (Scope ignored = deliveryContext.makeCurrent()) {
+                demander.run();
+                contextAfterDemand.set(Context.current());
+              }
+            }
+          });
+    } else {
+      request.onResponseContent(
+          new Response.ContentListener() {
+            @Override
+            public void onContent(Response response, ByteBuffer content) {
+              processContent.accept(content);
+            }
+          });
+    }
+
+    AtomicReference<SpanContext> callerSpanContext = new AtomicReference<>();
+    Runnable send =
+        () -> {
+          Context caller = Context.current().with(key, "caller");
+          callerSpanContext.set(Span.fromContext(caller).getSpanContext());
+          try (Scope ignored = caller.makeCurrent()) {
+            request.send(completed::complete);
+          }
+        };
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+
+    Result result = completed.get(10, SECONDS);
+    assertThat(result.isSucceeded()).isTrue();
+    assertThat(lateContentProcessed.await(10, SECONDS)).isTrue();
+    Context observedContext = lateContentContext.get();
+    assertThat(observedContext.get(key)).isEqualTo("caller");
+    assertThat(Span.fromContext(observedContext).getSpanContext())
+        .isEqualTo(callerSpanContext.get());
+    if (asyncListener) {
+      assertThat(contextAfterDemand.get().get(key)).isEqualTo("delivery");
+    }
+
+    if (withParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                  span ->
+                      span.hasName("test-http-server")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1)),
+                  span -> span.hasName("response-body").hasParent(trace.getSpan(0))));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
+                  span ->
+                      span.hasName("test-http-server")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(span -> span.hasName("response-body").hasNoParent()));
+    }
   }
 
   @ParameterizedTest
