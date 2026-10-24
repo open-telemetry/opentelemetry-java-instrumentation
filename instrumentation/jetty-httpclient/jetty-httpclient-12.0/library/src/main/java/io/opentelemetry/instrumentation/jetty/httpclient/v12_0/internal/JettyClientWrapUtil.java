@@ -7,9 +7,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,19 +35,6 @@ public final class JettyClientWrapUtil {
   };
 
   private JettyClientWrapUtil() {}
-
-  /**
-   * Utility to wrap the response listeners only, this includes the important CompleteListener.
-   *
-   * @param context top level context that is above the Jetty client span context
-   * @param listener listener passed to Jetty client send() method
-   * @return wrapped listener
-   */
-  @Nullable
-  public static Response.CompleteListener wrapTheListener(
-      @Nullable Response.CompleteListener listener, Context context) {
-    return wrapListener(listener, () -> context);
-  }
 
   @Nullable
   // Callers use the supported response-listener interfaces implemented by the proxy.
@@ -94,40 +79,49 @@ public final class JettyClientWrapUtil {
   }
 
   public static Content.Source wrapContentSource(Content.Source source, Context context) {
-    if (Proxy.isProxyClass(source.getClass())
-        && Proxy.getInvocationHandler(source) instanceof ContentSourceInvocationHandler) {
+    if (source instanceof ContextAwareContentSource) {
       return source;
     }
-    InvocationHandler handler = new ContentSourceInvocationHandler(source, context);
-    return (Content.Source)
-        Proxy.newProxyInstance(
-            Content.Source.class.getClassLoader(), new Class<?>[] {Content.Source.class}, handler);
+    return new ContextAwareContentSource(source, context);
   }
 
-  private static final class ContentSourceInvocationHandler implements InvocationHandler {
-    private final Content.Source source;
+  private static final class ContextAwareContentSource implements Content.Source {
+    private final Content.Source delegate;
     private final Context context;
 
-    private ContentSourceInvocationHandler(Content.Source source, Context context) {
-      this.source = source;
+    private ContextAwareContentSource(Content.Source delegate, Context context) {
+      this.delegate = delegate;
       this.context = context;
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      Object[] invocationArgs = args;
-      if (method.getName().equals("demand")
-          && args != null
-          && args.length == 1
-          && args[0] instanceof Runnable) {
-        invocationArgs = args.clone();
-        invocationArgs[0] = context.wrap((Runnable) args[0]);
-      }
-      try {
-        return method.invoke(source, invocationArgs);
-      } catch (InvocationTargetException e) {
-        throw e.getCause();
-      }
+    public Content.Chunk read() {
+      return delegate.read();
+    }
+
+    @Override
+    public void demand(Runnable callback) {
+      delegate.demand(context.wrap(callback));
+    }
+
+    @Override
+    public long getLength() {
+      return delegate.getLength();
+    }
+
+    @Override
+    public boolean rewind() {
+      return delegate.rewind();
+    }
+
+    @Override
+    public void fail(Throwable failure) {
+      delegate.fail(failure);
+    }
+
+    @Override
+    public void fail(Throwable failure, boolean close) {
+      delegate.fail(failure, close);
     }
   }
 }

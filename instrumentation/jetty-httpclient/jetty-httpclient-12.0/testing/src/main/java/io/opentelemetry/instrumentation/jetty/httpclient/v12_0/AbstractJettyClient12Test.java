@@ -46,7 +46,6 @@ import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -133,41 +132,6 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
           requestResult.complete(result.getResponse().getStatus());
         });
-  }
-
-  @Test
-  void callbacksCalled() {
-    URI uri = resolveAddress("/success");
-    Request request = client.newRequest(uri).method("GET");
-
-    CompletableFuture<Response> responseFuture = new CompletableFuture<>();
-    TracingResponseListener responseListener = new TracingResponseListener(responseFuture);
-
-    testing.runWithSpan("parent", () -> request.send(responseListener));
-    Response response = responseFuture.join();
-
-    assertThat(response.getStatus()).isEqualTo(200);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("onHeaders")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("onSuccess")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("onComplete")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
   }
 
   @ParameterizedTest
@@ -339,8 +303,11 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
             record("failure");
           }
         });
-    Response.Listener listener =
-        new Response.Listener() {
+    class LifecycleListener
+        implements Response.HeadersListener,
+            Response.SuccessListener,
+            Response.FailureListener,
+            Response.CompleteListener {
           private void record(String name) {
             responseContexts.put(name, Context.current());
             if (throwingListeners) {
@@ -350,30 +317,35 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
           @Override
           public void onHeaders(Response response) {
+            testing.runWithSpan("onHeaders", () -> {});
             record("headers");
           }
 
           @Override
           public void onSuccess(Response response) {
+            testing.runWithSpan("onSuccess", () -> {});
             record("success");
           }
 
           @Override
           public void onFailure(Response response, Throwable cause) {
+            testing.runWithSpan("onFailure", () -> {});
             record("failure");
           }
 
           @Override
           public void onComplete(Result result) {
-            testing.runWithSpan("callback", () -> {});
+            testing.runWithSpan("onComplete", () -> {});
             try {
               record("complete");
             } finally {
               completed.complete(result);
             }
           }
-        };
-    request.onResponseHeaders(response -> listener.onHeaders(response));
+        }
+    LifecycleListener listener = new LifecycleListener();
+    request.onResponseHeaders(
+        response -> responseContexts.put("registeredHeaders", Context.current()));
     request.onResponseSuccess(
         response -> responseContexts.put("registeredSuccess", Context.current()));
     request.onResponseFailure(
@@ -415,6 +387,9 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
       assertThat(responseContexts).containsKey("aggregateComplete");
     }
     assertThat(result.isSucceeded()).isEqualTo(outcome.equals("success"));
+    if (outcome.equals("success")) {
+      assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
     assertThat(Context.current().get(key)).isNull();
 
@@ -423,7 +398,12 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
           .containsKeys("queued", "begin", "headers", "commit", "content", "success");
       assertThat(responseContexts)
           .containsKeys(
-              "headers", "success", "complete", "registeredSuccess", "registeredComplete");
+              "headers",
+              "success",
+              "complete",
+              "registeredHeaders",
+              "registeredSuccess",
+              "registeredComplete");
     } else {
       assertThat(requestContexts).containsKey("failure");
       assertThat(responseContexts)
@@ -471,49 +451,29 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                 span -> span.hasName("test-http-server").hasParent(trace.getSpan(clientIndex)));
           }
           if (withParent) {
-            spans.add(span -> span.hasName("callback").hasParent(trace.getSpan(0)));
+            if (outcome.equals("success")) {
+              spans.add(span -> span.hasName("onHeaders").hasParent(trace.getSpan(0)));
+              spans.add(span -> span.hasName("onSuccess").hasParent(trace.getSpan(0)));
+            } else {
+              spans.add(span -> span.hasName("onFailure").hasParent(trace.getSpan(0)));
+            }
+            spans.add(span -> span.hasName("onComplete").hasParent(trace.getSpan(0)));
           }
           trace.hasSpansSatisfyingExactly(spans);
         };
     if (withParent) {
       testing.waitAndAssertTraces(operationTrace);
+    } else if (outcome.equals("success")) {
+      testing.waitAndAssertTraces(
+          operationTrace,
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onHeaders").hasNoParent()),
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onSuccess").hasNoParent()),
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onComplete").hasNoParent()));
     } else {
       testing.waitAndAssertTraces(
           operationTrace,
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("callback").hasNoParent()));
-    }
-  }
-
-  private class TracingResponseListener
-      implements Response.HeadersListener, Response.SuccessListener, Response.CompleteListener {
-
-    private final CompletableFuture<Response> responseFuture;
-
-    TracingResponseListener(CompletableFuture<Response> responseFuture) {
-      this.responseFuture = responseFuture;
-    }
-
-    @Override
-    public void onHeaders(Response response) {
-      testing.runWithSpan("onHeaders", () -> {});
-    }
-
-    @Override
-    public void onSuccess(Response response) {
-      testing.runWithSpan("onSuccess", () -> {});
-    }
-
-    @Override
-    public void onComplete(Result result) {
-      testing.runWithSpan(
-          "onComplete",
-          () -> {
-            if (result.isSucceeded()) {
-              responseFuture.complete(result.getResponse());
-            } else {
-              responseFuture.completeExceptionally(result.getFailure());
-            }
-          });
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onFailure").hasNoParent()),
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("onComplete").hasNoParent()));
     }
   }
 

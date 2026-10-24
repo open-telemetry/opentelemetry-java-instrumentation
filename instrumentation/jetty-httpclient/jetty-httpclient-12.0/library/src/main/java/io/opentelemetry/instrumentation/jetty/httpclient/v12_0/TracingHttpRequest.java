@@ -42,7 +42,7 @@ class TracingHttpRequest extends HttpRequest {
         JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
     context = startedContext == null ? parentContext : startedContext;
     try (Scope ignored = openScope()) {
-      super.send(JettyClientWrapUtil.wrapTheListener(listener, parentContext));
+      super.send(JettyClientWrapUtil.wrapListener(listener, () -> parentContext));
     }
   }
 
