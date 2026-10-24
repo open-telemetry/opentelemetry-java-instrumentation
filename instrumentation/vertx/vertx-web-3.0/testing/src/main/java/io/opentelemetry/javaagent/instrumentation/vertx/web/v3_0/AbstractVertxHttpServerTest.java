@@ -7,7 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.vertx.web.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -105,8 +117,19 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasSpanId(response.contentUtf8())
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_ROUTE, expectedRoute),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isPositive()),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(URL_PATH, path),
                             equalTo(stringKey("http.target"), path),
                             equalTo(stringKey("first-handler-span-id"), response.contentUtf8()),
                             equalTo(stringKey("custom-prop"), "from-handler"))));
