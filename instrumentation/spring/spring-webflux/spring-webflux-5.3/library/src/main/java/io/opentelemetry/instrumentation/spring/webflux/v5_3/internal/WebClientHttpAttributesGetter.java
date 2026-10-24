@@ -32,17 +32,8 @@ public class WebClientHttpAttributesGetter
     if (!(template instanceof String)) {
       return null;
     }
-    String urlTemplate = (String) template;
-    int queryIndex = urlTemplate.indexOf('?');
-    int fragmentIndex = urlTemplate.indexOf('#');
-    int endIndex = urlTemplate.length();
-    if (queryIndex != -1) {
-      endIndex = queryIndex;
-    }
-    if (fragmentIndex != -1 && fragmentIndex < endIndex) {
-      endIndex = fragmentIndex;
-    }
-    urlTemplate = urlTemplate.substring(0, endIndex);
+    // Strip first so slashes in query or fragment values cannot be mistaken for a path.
+    String urlTemplate = stripQueryAndFragment((String) template);
     if (urlTemplate.isEmpty()) {
       return null;
     }
@@ -51,6 +42,16 @@ public class WebClientHttpAttributesGetter
       return UrlParser.getPath(urlTemplate);
     }
     return urlTemplate;
+  }
+
+  private static String stripQueryAndFragment(String template) {
+    for (int i = 0; i < template.length(); i++) {
+      char c = template.charAt(i);
+      if (c == '?' || c == '#') {
+        return template.substring(0, i);
+      }
+    }
+    return template;
   }
 
   @Override
