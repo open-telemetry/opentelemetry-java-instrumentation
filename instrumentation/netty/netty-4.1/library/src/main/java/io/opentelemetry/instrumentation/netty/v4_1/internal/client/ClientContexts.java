@@ -136,8 +136,11 @@ public final class ClientContexts {
     List<RequestState> states;
     synchronized (this) {
       if (failure == null) {
+        if (firstRequest == null) {
+          return;
+        }
         failure = cause;
-        failureParent = firstRequest == null ? null : firstRequest.parent;
+        failureParent = firstRequest.parent;
       }
       states = drainRequests();
       publish(channel);

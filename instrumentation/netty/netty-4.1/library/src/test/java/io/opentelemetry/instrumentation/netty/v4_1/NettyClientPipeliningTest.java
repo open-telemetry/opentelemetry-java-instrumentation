@@ -592,6 +592,74 @@ class NettyClientPipeliningTest {
   }
 
   @Test
+  void downstreamExceptionAfterResponseDoesNotDisableCorrelation() {
+    Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
+        new NettyClientInstrumenterFactory(
+                NettyClientInstrumenterBuilderFactory.create(
+                    "io.opentelemetry.netty-4.1", testing.getOpenTelemetry()),
+                NettyConnectionInstrumentationFlag.DISABLED,
+                NettyConnectionInstrumentationFlag.DISABLED)
+            .instrumenter();
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    IOException failure = new IOException("downstream handler failed");
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                ReferenceCountUtil.release(msg);
+                ctx.fireExceptionCaught(failure);
+              }
+            })
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                ClientContexts.fail(ctx.channel(), instrumenter, cause);
+              }
+            });
+    try {
+      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      response(channel, 201);
+
+      assertThat(channel.isActive()).isTrue();
+      testing.runWithSpan(
+          "second",
+          () -> {
+            DefaultFullHttpRequest subsequent = request("/second");
+            channel.writeOutbound(subsequent);
+            assertThat(subsequent.headers().contains("traceparent")).isTrue();
+          });
+      response(channel, 202);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("first"),
+                  span ->
+                      span.hasName("GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(201L))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("second"),
+                  span ->
+                      span.hasName("GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(202L))));
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
   void synchronousWriteFailureDisablesCorrelation() {
     EmbeddedChannel channel =
         channel(
