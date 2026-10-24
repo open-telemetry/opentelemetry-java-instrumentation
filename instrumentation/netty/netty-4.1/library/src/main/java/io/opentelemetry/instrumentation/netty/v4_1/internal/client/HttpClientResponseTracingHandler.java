@@ -84,13 +84,13 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       state.end(instrumenter, null);
     }
     // We want the callback in the scope of the parent, not the client span
-    RequestState previousCallback =
+    ClientContexts.ResponseCallbackScope previousCallback =
         complete ? ClientContexts.beginResponseCallback(state, msg) : null;
     try (Scope ignored = state.parent.makeCurrent()) {
       super.channelRead(ctx, msg);
     } finally {
       if (complete) {
-        ClientContexts.endResponseCallback(state, previousCallback);
+        ClientContexts.endResponseCallback(previousCallback);
       }
       contexts.publish(ctx.channel());
     }

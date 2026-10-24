@@ -34,9 +34,10 @@ import javax.annotation.Nullable;
 public final class ClientContexts {
   private static final AttributeKey<ClientContexts> KEY =
       AttributeKey.valueOf(ClientContexts.class, "client-contexts");
-  private static final ThreadLocal<RequestState> RESPONSE_CALLBACK = new ThreadLocal<>();
+  private static final ThreadLocal<ResponseCallbackScope> RESPONSE_CALLBACK = new ThreadLocal<>();
   private static final ThreadLocal<ReadDispatch> READ_DISPATCH = new ThreadLocal<>();
-  private static final ThreadLocal<FailureNotification> FAILURE_NOTIFICATION = new ThreadLocal<>();
+  private static final ThreadLocal<FailureNotificationScope> FAILURE_NOTIFICATION =
+      new ThreadLocal<>();
 
   private final Channel channel;
   @Nullable private RequestState firstRequest;
@@ -112,15 +113,13 @@ public final class ClientContexts {
     return parent == null ? Context.current() : parent;
   }
 
-  static RequestState beginResponseCallback(RequestState state, Object msg) {
-    RequestState previous = RESPONSE_CALLBACK.get();
-    state.callbackMessage = msg;
-    RESPONSE_CALLBACK.set(state);
+  static ResponseCallbackScope beginResponseCallback(RequestState state, Object msg) {
+    ResponseCallbackScope previous = RESPONSE_CALLBACK.get();
+    RESPONSE_CALLBACK.set(new ResponseCallbackScope(new ResponseCallback(state), msg));
     return previous;
   }
 
-  static void endResponseCallback(RequestState state, @Nullable RequestState previous) {
-    state.callbackMessage = null;
+  static void endResponseCallback(@Nullable ResponseCallbackScope previous) {
     if (previous == null) {
       RESPONSE_CALLBACK.remove();
     } else {
@@ -128,9 +127,96 @@ public final class ClientContexts {
     }
   }
 
+  @Nullable
+  public static ResponseCallback currentResponseCallback(Channel channel, Object msg) {
+    ResponseCallbackScope scope = RESPONSE_CALLBACK.get();
+    if (scope == null || scope.callback.state.owner.channel != channel || scope.message != msg) {
+      return null;
+    }
+    return scope.callback;
+  }
+
+  @Nullable
+  public static ResponseCallback currentResponseCallback(Object msg) {
+    ResponseCallbackScope scope = RESPONSE_CALLBACK.get();
+    return scope == null || scope.message != msg ? null : scope.callback;
+  }
+
+  public static boolean hasResponseCallback(Channel channel) {
+    ResponseCallbackScope scope = RESPONSE_CALLBACK.get();
+    return scope != null && scope.callback.state.owner.channel == channel;
+  }
+
+  public static ResponseCallbackDispatch responseCallbackForMessage(
+      ResponseCallback callback, Object msg) {
+    return new ResponseCallbackDispatch(callback, msg);
+  }
+
+  @Nullable
+  public static FailureNotification currentFailureNotification(Channel channel, Throwable cause) {
+    for (FailureNotificationScope scope = FAILURE_NOTIFICATION.get();
+        scope != null;
+        scope = scope.previous) {
+      FailureNotification notification = scope.notification;
+      if (notification.channel == channel && notification.cause == cause) {
+        return notification;
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  public static DispatchScope enterDispatch(
+      @Nullable ResponseCallbackDispatch responseCallback,
+      @Nullable FailureNotification failureNotification) {
+    if (responseCallback == null && failureNotification == null) {
+      return null;
+    }
+    ResponseCallbackScope previousCallback = RESPONSE_CALLBACK.get();
+    FailureNotificationScope previousFailure = FAILURE_NOTIFICATION.get();
+    if (responseCallback != null) {
+      RESPONSE_CALLBACK.set(
+          new ResponseCallbackScope(responseCallback.callback, responseCallback.message));
+    }
+    if (failureNotification != null) {
+      FAILURE_NOTIFICATION.set(new FailureNotificationScope(failureNotification, previousFailure));
+    }
+    return new DispatchScope(previousCallback, previousFailure);
+  }
+
+  public static void exitDispatch(@Nullable DispatchScope scope) {
+    if (scope == null) {
+      return;
+    }
+    if (scope.previousCallback == null) {
+      RESPONSE_CALLBACK.remove();
+    } else {
+      RESPONSE_CALLBACK.set(scope.previousCallback);
+    }
+    if (scope.previousFailure == null) {
+      FAILURE_NOTIFICATION.remove();
+    } else {
+      FAILURE_NOTIFICATION.set(scope.previousFailure);
+    }
+  }
+
   public static int enterChannelRead(Channel channel, Object msg) {
-    RequestState callback = RESPONSE_CALLBACK.get();
-    if (callback == null || callback.owner.channel != channel) {
+    return enterChannelRead(channel, msg, null);
+  }
+
+  public static int enterChannelRead(
+      Channel channel, Object msg, @Nullable ResponseCallback callback) {
+    if (callback != null && callback.state.owner.channel != channel) {
+      callback = null;
+    }
+    ResponseCallbackScope current = RESPONSE_CALLBACK.get();
+    if (callback == null
+        && current != null
+        && current.callback.state.owner.channel == channel
+        && current.message == msg) {
+      callback = current.callback;
+    }
+    if (callback == null && (current == null || current.callback.state.owner.channel != channel)) {
       return -1;
     }
     ReadDispatch dispatch = READ_DISPATCH.get();
@@ -139,7 +225,12 @@ public final class ClientContexts {
       READ_DISPATCH.set(dispatch);
     }
     int previousDepth = dispatch.depth;
-    dispatch.push(channel, msg);
+    dispatch.push(channel, msg, current);
+    if (callback == null) {
+      RESPONSE_CALLBACK.remove();
+    } else {
+      RESPONSE_CALLBACK.set(new ResponseCallbackScope(callback, msg));
+    }
     return previousDepth;
   }
 
@@ -345,21 +436,22 @@ public final class ClientContexts {
   }
 
   private static boolean isResponseCallbackException(Channel channel) {
-    RequestState callback = RESPONSE_CALLBACK.get();
-    if (callback == null || callback.owner.channel != channel) {
+    ResponseCallbackScope callback = RESPONSE_CALLBACK.get();
+    if (callback == null || callback.callback.state.owner.channel != channel) {
       return false;
     }
     ReadDispatch dispatch = READ_DISPATCH.get();
     return dispatch != null
         && dispatch.depth > 0
         && dispatch.channels[dispatch.depth - 1] == channel
-        && dispatch.messages[dispatch.depth - 1] == callback.callbackMessage;
+        && dispatch.messages[dispatch.depth - 1] == callback.message;
   }
 
   private static boolean isWriteFailureNotification(Channel channel, Throwable cause) {
-    for (FailureNotification notification = FAILURE_NOTIFICATION.get();
-        notification != null;
-        notification = notification.previous) {
+    for (FailureNotificationScope scope = FAILURE_NOTIFICATION.get();
+        scope != null;
+        scope = scope.previous) {
+      FailureNotification notification = scope.notification;
       if (notification.channel == channel && notification.cause == cause) {
         return true;
       }
@@ -371,8 +463,9 @@ public final class ClientContexts {
     if (!channel.isRegistered()) {
       return;
     }
-    FailureNotification previous = FAILURE_NOTIFICATION.get();
-    FAILURE_NOTIFICATION.set(new FailureNotification(channel, cause, previous));
+    FailureNotification notification = new FailureNotification(channel, cause);
+    FailureNotificationScope previous = FAILURE_NOTIFICATION.get();
+    FAILURE_NOTIFICATION.set(new FailureNotificationScope(notification, previous));
     try {
       channel.pipeline().fireExceptionCaught(cause);
     } finally {
@@ -411,7 +504,6 @@ public final class ClientContexts {
     private volatile ClientContexts owner;
     private final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
     private final ChannelFutureListener voidFailureListener = new VoidFailureListener();
-    @Nullable private Object callbackMessage;
     final Context parent;
     @Nullable final Context context;
     final NettyCommonRequest request;
@@ -468,40 +560,115 @@ public final class ClientContexts {
     }
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class ResponseCallback {
+    private final RequestState state;
+
+    private ResponseCallback(RequestState state) {
+      this.state = state;
+    }
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class ResponseCallbackDispatch {
+    private final ResponseCallback callback;
+    private final Object message;
+
+    private ResponseCallbackDispatch(ResponseCallback callback, Object message) {
+      this.callback = callback;
+      this.message = message;
+    }
+  }
+
+  static final class ResponseCallbackScope {
+    private final ResponseCallback callback;
+    private final Object message;
+
+    private ResponseCallbackScope(ResponseCallback callback, Object message) {
+      this.callback = callback;
+      this.message = message;
+    }
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class FailureNotification {
+    private final Channel channel;
+    private final Throwable cause;
+
+    private FailureNotification(Channel channel, Throwable cause) {
+      this.channel = channel;
+      this.cause = cause;
+    }
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class DispatchScope {
+    @Nullable private final ResponseCallbackScope previousCallback;
+    @Nullable private final FailureNotificationScope previousFailure;
+
+    private DispatchScope(
+        @Nullable ResponseCallbackScope previousCallback,
+        @Nullable FailureNotificationScope previousFailure) {
+      this.previousCallback = previousCallback;
+      this.previousFailure = previousFailure;
+    }
+  }
+
+  private static final class FailureNotificationScope {
+    private final FailureNotification notification;
+    @Nullable private final FailureNotificationScope previous;
+
+    private FailureNotificationScope(
+        FailureNotification notification, @Nullable FailureNotificationScope previous) {
+      this.notification = notification;
+      this.previous = previous;
+    }
+  }
+
   private static final class ReadDispatch {
     private Channel[] channels = new Channel[4];
     private Object[] messages = new Object[4];
+    private ResponseCallbackScope[] previousCallbacks = new ResponseCallbackScope[4];
     private int depth;
 
-    private void push(Channel channel, Object msg) {
+    private void push(
+        Channel channel, Object msg, @Nullable ResponseCallbackScope previousCallback) {
       if (depth == channels.length) {
         channels = Arrays.copyOf(channels, depth * 2);
         messages = Arrays.copyOf(messages, depth * 2);
+        previousCallbacks = Arrays.copyOf(previousCallbacks, depth * 2);
       }
       channels[depth] = channel;
       messages[depth] = msg;
+      previousCallbacks[depth] = previousCallback;
       depth++;
     }
 
     private void clearTo(int previousDepth) {
       while (depth > previousDepth) {
         depth--;
+        ResponseCallbackScope previousCallback = previousCallbacks[depth];
+        if (previousCallback == null) {
+          RESPONSE_CALLBACK.remove();
+        } else {
+          RESPONSE_CALLBACK.set(previousCallback);
+        }
         channels[depth] = null;
         messages[depth] = null;
+        previousCallbacks[depth] = null;
       }
-    }
-  }
-
-  private static final class FailureNotification {
-    private final Channel channel;
-    private final Throwable cause;
-    @Nullable private final FailureNotification previous;
-
-    private FailureNotification(
-        Channel channel, Throwable cause, @Nullable FailureNotification previous) {
-      this.channel = channel;
-      this.cause = cause;
-      this.previous = previous;
     }
   }
 }

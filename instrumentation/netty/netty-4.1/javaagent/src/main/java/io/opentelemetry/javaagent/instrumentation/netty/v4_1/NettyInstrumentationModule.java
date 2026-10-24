@@ -34,6 +34,8 @@ public class NettyInstrumentationModule extends InstrumentationModule {
         new NettyFutureInstrumentation(),
         new NettyChannelPipelineInstrumentation(),
         new AbstractChannelHandlerContextInstrumentation(),
+        new AbstractChannelHandlerContextTaskInstrumentation(),
+        new HttpObjectAggregatorInstrumentation(),
         new SingleThreadEventExecutorInstrumentation());
   }
 }

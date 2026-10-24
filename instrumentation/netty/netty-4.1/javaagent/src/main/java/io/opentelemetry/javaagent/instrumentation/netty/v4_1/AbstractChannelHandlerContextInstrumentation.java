@@ -11,10 +11,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpObject;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts.ResponseCallback;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -62,11 +64,25 @@ class AbstractChannelHandlerContextInstrumentation implements TypeInstrumentatio
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static int onEnter(
         @Advice.This ChannelHandlerContext ctx, @Advice.Argument(0) Object msg) {
-      return ClientContexts.enterChannelRead(ctx.channel(), msg);
+      ResponseCallback callback = null;
+      boolean fromField = false;
+      if (msg instanceof HttpObject && ClientContexts.hasResponseCallback(ctx.channel())) {
+        callback = ClientContexts.currentResponseCallback(ctx.channel(), msg);
+        if (callback == null) {
+          callback = NettyClientSingletons.RESPONSE_CALLBACK.get((HttpObject) msg);
+          fromField = callback != null;
+        }
+      }
+      int previousDepth = ClientContexts.enterChannelRead(ctx.channel(), msg, callback);
+      return fromField && previousDepth >= 0 ? -previousDepth - 2 : previousDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter int previousDepth) {
+    public static void onExit(@Advice.Argument(0) Object msg, @Advice.Enter int previousDepth) {
+      if (previousDepth < -1) {
+        NettyClientSingletons.RESPONSE_CALLBACK.set((HttpObject) msg, null);
+        previousDepth = -previousDepth - 2;
+      }
       ClientContexts.exitChannelRead(previousDepth);
     }
   }
