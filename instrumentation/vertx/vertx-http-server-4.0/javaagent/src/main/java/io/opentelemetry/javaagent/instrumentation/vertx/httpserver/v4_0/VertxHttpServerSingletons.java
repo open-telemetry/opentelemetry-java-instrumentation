@@ -50,13 +50,19 @@ public final class VertxHttpServerSingletons {
     }
   }
 
+  @Nullable
+  static VertxHttpServerState getState(HttpServerRequest request) {
+    VertxHttpServerState state = STATE.get(request);
+    if (state == null) {
+      VertxHttpServerResponseState responseState = RESPONSE_STATE.get(request.response());
+      state = responseState == null ? null : responseState.state;
+    }
+    return state;
+  }
+
   public static void end(HttpServerRequest request, @Nullable Throwable error) {
     try {
-      VertxHttpServerState state = STATE.get(request);
-      if (state == null) {
-        VertxHttpServerResponseState responseState = RESPONSE_STATE.get(request.response());
-        state = responseState == null ? null : responseState.state;
-      }
+      VertxHttpServerState state = getState(request);
       if (state != null) {
         STATE.set(request, null);
         RESPONSE_STATE.set(request.response(), null);

@@ -70,15 +70,21 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("trailers") @Nullable Object trailers,
         @Advice.Argument(2) @Nullable Handler<AsyncResult<Void>> handler) {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
-      // Header-only responses and trailers complete through the terminal HEADERS write instead.
-      return end && state != null && trailers == null && (data != null || headWritten)
-          ? new ResponseCompletionHandler(response, state.state, handler)
+      // Header-only responses complete through the terminal HEADERS write instead.
+      return end && state != null && (data != null || headWritten)
+          ? new ResponseCompletionHandler(response, state.state, handler, true, trailers != null)
           : handler;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This HttpServerResponse response, @Advice.Thrown @Nullable Throwable error) {
+        @Advice.This HttpServerResponse response,
+        @Advice.Enter @Nullable Handler<AsyncResult<Void>> handler,
+        @Advice.FieldValue("trailers") @Nullable Object trailers,
+        @Advice.Thrown @Nullable Throwable error) {
+      if (handler instanceof ResponseCompletionHandler) {
+        ((ResponseCompletionHandler) handler).setCompleteOnlyWithoutTrailers(trailers != null);
+      }
       if (error != null) {
         VertxHttpServerSingletons.endResponse(response, error);
       }

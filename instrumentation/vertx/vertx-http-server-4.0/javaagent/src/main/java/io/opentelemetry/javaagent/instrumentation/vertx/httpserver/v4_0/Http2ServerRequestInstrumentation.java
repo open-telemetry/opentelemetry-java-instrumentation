@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.STATE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -68,7 +67,7 @@ public class Http2ServerRequestInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This HttpServerRequest request) {
-      VertxHttpServerState state = STATE.get(request);
+      VertxHttpServerState state = VertxHttpServerSingletons.getState(request);
       return state == null ? null : state.context.makeCurrent();
     }
 
@@ -97,7 +96,7 @@ public class Http2ServerRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This HttpServerRequest request, @Advice.Argument(0) Throwable error) {
-      VertxHttpServerState state = STATE.get(request);
+      VertxHttpServerState state = VertxHttpServerSingletons.getState(request);
       Scope scope = state == null ? null : state.context.makeCurrent();
       VertxHttpServerSingletons.end(request, error);
       return scope;
@@ -117,7 +116,7 @@ public class Http2ServerRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.This HttpServerRequest request, @Advice.Argument(0) long code) {
-      VertxHttpServerState state = STATE.get(request);
+      VertxHttpServerState state = VertxHttpServerSingletons.getState(request);
       Scope scope = state == null ? null : state.context.makeCurrent();
       VertxHttpServerSingletons.end(request, new StreamResetException(code));
       return scope;

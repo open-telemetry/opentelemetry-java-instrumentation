@@ -446,6 +446,38 @@ class VertxHttp2ServerTest {
   }
 
   @Test
+  void trailersAddedDuringHeaderPreparationCompleteOnTerminalWrite() throws Exception {
+    CompletableFuture<Void> writeCallback = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request ->
+                request
+                    .response()
+                    .headersEndHandler(
+                        ignored -> request.response().trailers().set("x-finished", "yes"))
+                    .end(
+                        "response body",
+                        result -> {
+                          assertThat(result.succeeded()).isTrue();
+                          testing.runWithSpan("write callback", () -> {});
+                          writeCallback.complete(null);
+                        }));
+
+    HttpResponse<String> response = send(client, "/trailers", TRACE_ID).get(10, SECONDS);
+    writeCallback.get(10, SECONDS);
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).isEqualTo("response body");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
+                span -> span.hasName("write callback").hasParent(trace.getSpan(0))));
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
   void sendFileFailureCanRecover() throws Exception {
     Path missingFile = Files.createTempFile("vertx-http2-missing", ".txt");
     Files.delete(missingFile);
@@ -555,6 +587,69 @@ class VertxHttp2ServerTest {
   }
 
   @Test
+  void resetAfterInboundEndRetainsCallbackContext() throws Exception {
+    CompletableFuture<Void> inboundEnded = new CompletableFuture<>();
+    CompletableFuture<Void> responseException = new CompletableFuture<>();
+    AtomicInteger responseExceptionCount = new AtomicInteger();
+    start(
+        HttpClient.Version.HTTP_2,
+        request -> {
+          request
+              .response()
+              .exceptionHandler(
+                  error -> {
+                    if (responseExceptionCount.getAndIncrement() == 0) {
+                      testing.runWithSpan("response exception", () -> {});
+                      responseException.complete(null);
+                    }
+                  });
+          request.endHandler(
+              ignored -> vertx.runOnContext(ignored2 -> inboundEnded.complete(null)));
+        });
+    io.vertx.core.http.HttpClient client =
+        vertx.createHttpClient(
+            new HttpClientOptions()
+                .setSsl(true)
+                .setUseAlpn(true)
+                .setProtocolVersion(HttpVersion.HTTP_2)
+                .setTrustOptions(
+                    new PfxOptions()
+                        .setPath(System.getProperty("test.keystore"))
+                        .setPassword("testing")));
+    try {
+      HttpClientRequest request =
+          client
+              .request(
+                  new RequestOptions()
+                      .setHost("localhost")
+                      .setPort(port)
+                      .setURI("/reset-after-end")
+                      .setMethod(HttpMethod.POST))
+              .toCompletionStage()
+              .toCompletableFuture()
+              .get(10, SECONDS);
+      request.putHeader("traceparent", "00-" + TRACE_ID + "-" + PARENT_ID + "-01");
+      request.end("request body").toCompletionStage().toCompletableFuture().get(10, SECONDS);
+      inboundEnded.get(10, SECONDS);
+      assertThat(request.reset(8)).isTrue();
+      responseException.get(10, SECONDS);
+    } finally {
+      client.close();
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SERVER)
+                        .hasTraceId(TRACE_ID)
+                        .hasParentSpanId(PARENT_ID)
+                        .hasStatusSatisfying(status -> status.hasCode(ERROR)),
+                span -> span.hasName("response exception").hasParent(trace.getSpan(0))));
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
   void resetDuringHeaderPreparation() throws Exception {
     CompletableFuture<Boolean> resetAccepted = new CompletableFuture<>();
     HttpClient client =
@@ -566,6 +661,39 @@ class VertxHttp2ServerTest {
                     .headersEndHandler(
                         ignored -> resetAccepted.complete(request.response().reset(8)))
                     .end());
+    CompletableFuture<HttpResponse<String>> response = send(client, "/reset", TRACE_ID);
+    boolean accepted = resetAccepted.get(10, SECONDS);
+    if (accepted) {
+      assertThatThrownBy(() -> response.get(10, SECONDS)).isInstanceOf(ExecutionException.class);
+    } else {
+      assertThat(response.get(10, SECONDS).statusCode()).isEqualTo(200);
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SERVER)
+                        .hasTraceId(TRACE_ID)
+                        .hasParentSpanId(PARENT_ID)
+                        .hasStatusSatisfying(status -> status.hasCode(accepted ? ERROR : UNSET))));
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
+  void resetDuringTrailerHeaderPreparation() throws Exception {
+    CompletableFuture<Boolean> resetAccepted = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request ->
+                request
+                    .response()
+                    .headersEndHandler(
+                        ignored -> {
+                          request.response().trailers().set("x-finished", "yes");
+                          resetAccepted.complete(request.response().reset(8));
+                        })
+                    .end("response body"));
     CompletableFuture<HttpResponse<String>> response = send(client, "/reset", TRACE_ID);
     boolean accepted = resetAccepted.get(10, SECONDS);
     if (accepted) {

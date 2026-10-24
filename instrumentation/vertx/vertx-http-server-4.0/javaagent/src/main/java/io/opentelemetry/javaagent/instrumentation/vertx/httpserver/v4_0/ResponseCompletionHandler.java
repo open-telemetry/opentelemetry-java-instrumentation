@@ -20,6 +20,7 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
   private final VertxHttpServerState state;
   @Nullable private final Handler<AsyncResult<Void>> delegate;
   private final boolean completeResponse;
+  private volatile boolean completeOnlyWithoutTrailers;
 
   @Nullable
   public static Handler<AsyncResult<Void>> wrapHeaders(
@@ -50,15 +51,29 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
       VertxHttpServerState state,
       @Nullable Handler<AsyncResult<Void>> delegate,
       boolean completeResponse) {
+    this(response, state, delegate, completeResponse, false);
+  }
+
+  public ResponseCompletionHandler(
+      HttpServerResponse response,
+      VertxHttpServerState state,
+      @Nullable Handler<AsyncResult<Void>> delegate,
+      boolean completeResponse,
+      boolean completeOnlyWithoutTrailers) {
     this.response = response;
     this.state = state;
     this.delegate = delegate;
     this.completeResponse = completeResponse;
+    this.completeOnlyWithoutTrailers = completeOnlyWithoutTrailers;
+  }
+
+  void setCompleteOnlyWithoutTrailers(boolean completeOnlyWithoutTrailers) {
+    this.completeOnlyWithoutTrailers = completeOnlyWithoutTrailers;
   }
 
   @Override
   public void handle(AsyncResult<Void> result) {
-    if (completeResponse) {
+    if (completeResponse && !completeOnlyWithoutTrailers) {
       VertxHttpServerSingletons.endResponse(response, result.cause());
     }
     if (delegate != null) {
