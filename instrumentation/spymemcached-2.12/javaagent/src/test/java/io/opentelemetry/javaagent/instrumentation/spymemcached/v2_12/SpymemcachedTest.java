@@ -426,8 +426,17 @@ class SpymemcachedTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"varargs,true", "collection,true", "transcoder-varargs,true", "iterator,false"})
-  void bulkGet(String overload, boolean capturesKeys) {
+  @CsvSource({
+    "varargs,false,true",
+    "collection,false,true",
+    "transcoder-varargs,false,true",
+    "iterator,false,false",
+    "varargs,true,true",
+    "collection,true,true",
+    "transcoder-varargs,true,true",
+    "iterator,true,false"
+  })
+  void bulkGet(String overload, boolean async, boolean capturesKeys) throws Exception {
     Map<String, String> testData = new HashMap<>();
     testData.put("test-get", "get test");
     testData.put("test-get-2", "get test 2");
@@ -439,13 +448,21 @@ class SpymemcachedTest {
             () -> {
               switch (overload) {
                 case "collection":
-                  return memcached.getBulk(keys);
+                  return async ? memcached.asyncGetBulk(keys).get() : memcached.getBulk(keys);
                 case "transcoder-varargs":
-                  return memcached.getBulk(memcached.getTranscoder(), keys.toArray(new String[0]));
+                  return async
+                      ? memcached
+                          .asyncGetBulk(memcached.getTranscoder(), keys.toArray(new String[0]))
+                          .get()
+                      : memcached.getBulk(memcached.getTranscoder(), keys.toArray(new String[0]));
                 case "iterator":
-                  return memcached.getBulk(keys.iterator());
+                  return async
+                      ? memcached.asyncGetBulk(keys.iterator()).get()
+                      : memcached.getBulk(keys.iterator());
                 default:
-                  return memcached.getBulk(keys.toArray(new String[0]));
+                  return async
+                      ? memcached.asyncGetBulk(keys.toArray(new String[0])).get()
+                      : memcached.getBulk(keys.toArray(new String[0]));
               }
             });
     assertThat(result)
@@ -1013,7 +1030,8 @@ class SpymemcachedTest {
               withExpiration
                   ? memcached.asyncCAS(
                       key("numeric-cas"), 1234, EXPIRATION_SECONDS, 5678, memcached.getTranscoder())
-                  : memcached.asyncCAS(key("numeric-cas"), 1234, 5678, memcached.getTranscoder());
+                  : memcached.asyncCAS(
+                      key("numeric-cas"), 1234, (Object) 5678, memcached.getTranscoder());
           assertThat(future.get()).isEqualTo(CASResponse.NOT_FOUND);
         });
 
