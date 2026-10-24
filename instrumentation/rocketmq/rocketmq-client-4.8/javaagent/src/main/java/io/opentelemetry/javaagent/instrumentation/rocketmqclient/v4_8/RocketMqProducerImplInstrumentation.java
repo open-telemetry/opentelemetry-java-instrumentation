@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.batchSendHelper;
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.sendMessageHook;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -14,11 +15,13 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHelper.BatchSendState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.rocketmq.client.hook.SendMessageHook;
 import org.apache.rocketmq.client.impl.CommunicationMode;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.common.message.Message;
@@ -45,10 +48,14 @@ class RocketMqProducerImplInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 3, index = 2))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
+        @Advice.FieldValue("sendMessageHookList") List<SendMessageHook> hooks,
         @Advice.FieldValue("defaultMQProducer") Object producer,
         @Advice.Argument(0) Message message,
         @Advice.Argument(2) CommunicationMode mode,
         @Advice.Argument(3) SendCallback callback) {
+      if (!hooks.contains(sendMessageHook())) {
+        return null;
+      }
       BatchSendState state = batchSendHelper().startSend(producer, message, mode, callback != null);
       Context context = state.getSendContext();
       SendCallback wrapped = batchSendHelper().wrap(callback, state);

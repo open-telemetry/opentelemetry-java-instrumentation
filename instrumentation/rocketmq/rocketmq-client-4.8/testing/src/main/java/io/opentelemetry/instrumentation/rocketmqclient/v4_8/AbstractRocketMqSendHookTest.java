@@ -11,9 +11,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
@@ -84,11 +82,14 @@ abstract class AbstractRocketMqSendHookTest {
       throws Exception {
     InstrumentationExtension testing = testing();
     DefaultMQProducer producer = new DefaultMQProducer("hook-test");
-    DefaultMQProducerImpl implementation = spy(producer.getDefaultMQProducerImpl());
+    DefaultMQProducerImpl implementation =
+        new DefaultMQProducerImpl(producer) {
+          @Override
+          public void start() {}
+        };
     // Keep the real public send API, hook dispatch, encoding, and kernel; replace only startup and
     // the network transport so completion and failure boundaries can be exercised
     // deterministically.
-    doNothing().when(implementation).start();
     setField(producer, DefaultMQProducer.class, "defaultMQProducerImpl", implementation);
     setField(implementation, DefaultMQProducerImpl.class, "serviceState", ServiceState.RUNNING);
     MQClientInstance factory = mock(MQClientInstance.class);
