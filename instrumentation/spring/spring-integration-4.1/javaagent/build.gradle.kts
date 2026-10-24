@@ -58,7 +58,6 @@ testing {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
           jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-          jvmArgs("-Dreactor.schedulers.defaultBoundedElasticSize=1")
         }
       }
     }
