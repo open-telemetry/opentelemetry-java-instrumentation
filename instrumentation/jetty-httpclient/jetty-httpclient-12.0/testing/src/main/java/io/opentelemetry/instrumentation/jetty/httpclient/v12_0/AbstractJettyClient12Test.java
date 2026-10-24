@@ -48,6 +48,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
@@ -220,6 +221,114 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                       span.hasName("test-http-server")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(span -> span.hasName("response-body").hasNoParent()));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void pendingContentDemandFailureRetainsCallerContext(boolean withParent)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    ContextKey<String> key = ContextKey.named("jetty-test");
+    CompletableFuture<Content.Source> pendingSource = new CompletableFuture<>();
+    CompletableFuture<Content.Source> idleSource = new CompletableFuture<>();
+    CompletableFuture<Context> demandContext = new CompletableFuture<>();
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    IOException failure = new IOException("content failed");
+    Request request = client.newRequest(resolveAddress("/success"));
+    request.onResponseContentSource(
+        (response, source) -> {
+          assertThat(source.read()).isNull();
+          source.demand(
+              () -> {
+                Content.Chunk chunk = source.read();
+                try {
+                  assertThat(chunk.getFailure()).isSameAs(failure);
+                  Context callbackContext = Context.current();
+                  testing.runWithSpan("response-body", () -> {});
+                  demandContext.complete(callbackContext);
+                } finally {
+                  chunk.release();
+                }
+              });
+          pendingSource.complete(source);
+        });
+    // Withhold this listener's demand so no content can satisfy the other listener's demand.
+    request.onResponseContentSource((response, source) -> idleSource.complete(source));
+
+    AtomicReference<SpanContext> callerSpanContext = new AtomicReference<>();
+    Runnable send =
+        () -> {
+          Context caller = Context.current().with(key, "caller");
+          callerSpanContext.set(Span.fromContext(caller).getSpanContext());
+          try (Scope ignored = caller.makeCurrent()) {
+            request.send(completed::complete);
+          }
+        };
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+
+    Content.Source pending = pendingSource.get(10, SECONDS);
+    Content.Source idle = idleSource.get(10, SECONDS);
+    assertThat(demandContext).isNotDone();
+    testing.runWithSpan(
+        "failing-thread",
+        () -> {
+          Context failingContext = Context.current().with(key, "failing-thread");
+          try (Scope ignored = failingContext.makeCurrent()) {
+            pending.fail(failure);
+            assertThat(demandContext).isCompleted();
+            assertThat(Span.current().getSpanContext())
+                .isEqualTo(Span.fromContext(failingContext).getSpanContext());
+            assertThat(Context.current().get(key)).isEqualTo("failing-thread");
+            idle.fail(failure);
+            assertThat(Span.current().getSpanContext())
+                .isEqualTo(Span.fromContext(failingContext).getSpanContext());
+            assertThat(Context.current().get(key)).isEqualTo("failing-thread");
+          }
+        });
+
+    Context observedContext = demandContext.get(10, SECONDS);
+    assertThat(observedContext.get(key)).isEqualTo("caller");
+    assertThat(Span.fromContext(observedContext).getSpanContext())
+        .isEqualTo(callerSpanContext.get());
+    assertThat(completed.get(10, SECONDS).getFailure()).isSameAs(failure);
+
+    Consumer<TraceAssert> operationTrace =
+        trace -> {
+          List<Consumer<SpanDataAssert>> spans = new ArrayList<>();
+          if (withParent) {
+            spans.add(span -> span.hasName("parent").hasNoParent());
+          }
+          int clientIndex = withParent ? 1 : 0;
+          spans.add(
+              span -> {
+                span.hasName("GET").hasKind(SpanKind.CLIENT);
+                if (withParent) {
+                  span.hasParent(trace.getSpan(0));
+                } else {
+                  span.hasNoParent();
+                }
+              });
+          spans.add(span -> span.hasName("test-http-server").hasParent(trace.getSpan(clientIndex)));
+          if (withParent) {
+            spans.add(span -> span.hasName("response-body").hasParent(trace.getSpan(0)));
+          }
+          trace.hasSpansSatisfyingExactly(spans);
+        };
+    Consumer<TraceAssert> failingThreadTrace =
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("failing-thread").hasNoParent());
+    if (withParent) {
+      testing.waitAndAssertTraces(operationTrace, failingThreadTrace);
+    } else {
+      testing.waitAndAssertTraces(
+          operationTrace,
+          failingThreadTrace,
           trace ->
               trace.hasSpansSatisfyingExactly(span -> span.hasName("response-body").hasNoParent()));
     }
