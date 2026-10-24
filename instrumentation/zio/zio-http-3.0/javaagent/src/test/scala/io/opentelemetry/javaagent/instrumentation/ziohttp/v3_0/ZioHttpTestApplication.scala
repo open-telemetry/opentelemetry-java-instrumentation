@@ -19,19 +19,14 @@ object ZioHttpTestApplication extends ZIOAppDefault {
       }
     )
 
-  @volatile var port = -1
+  var port = -1
   val started = new CountDownLatch(1)
 
-  override def run =
-    Server
-      .install(routes)
-      .flatMap { _ =>
-        ZIO.serviceWithZIO[Server](_.port).flatMap { actualPort =>
-          ZIO.succeed {
-            port = actualPort
-            started.countDown()
-          } *> ZIO.never
-        }
-      }
-      .provide(Server.defaultWithPort(0))
+  override def run = Server
+    .serve(routes)
+    .flatMap { _ =>
+      started.countDown()
+      ZIO.never
+    }
+    .provide(Server.defaultWithPort(port))
 }

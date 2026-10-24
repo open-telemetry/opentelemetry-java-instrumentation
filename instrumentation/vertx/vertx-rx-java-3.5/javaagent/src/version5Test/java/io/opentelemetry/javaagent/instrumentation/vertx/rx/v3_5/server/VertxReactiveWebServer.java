@@ -47,16 +47,14 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static Pool client;
-  private int port;
 
-  public static VertxReactiveWebServer start(int port)
+  public static Vertx start(int port)
       throws ExecutionException, InterruptedException, TimeoutException {
     /* This is highly against Vertx ideas, but our tests are synchronous
     so we have to make sure server is up and running */
-    CompletableFuture<VertxReactiveWebServer> future = new CompletableFuture<>();
+    CompletableFuture<Void> future = new CompletableFuture<>();
 
     Vertx server = Vertx.newInstance(io.vertx.core.Vertx.vertx(new VertxOptions()));
-    VertxReactiveWebServer verticle = new VertxReactiveWebServer();
     client =
         JDBCPool.pool(
             server,
@@ -65,9 +63,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
     logger.info("Starting on port {}", port);
     server
-        .getDelegate()
         .deployVerticle(
-            verticle,
+            VertxReactiveWebServer.class.getName(),
             new DeploymentOptions().setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port)))
         .onComplete(
             res -> {
@@ -77,10 +74,13 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                 future.completeExceptionally(exception);
                 return;
               }
-              future.complete(verticle);
+              future.complete(null);
             });
 
-    return future.get(30, SECONDS);
+    // block until vertx server is up
+    future.get(30, SECONDS);
+
+    return server;
   }
 
   @Override
@@ -107,15 +107,10 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                       startPromise.fail(httpServerAsyncResult.cause());
                       return;
                     }
-                    this.port = httpServerAsyncResult.result().actualPort();
                     startPromise.complete();
                   });
         },
         throwable -> startPromise.fail(throwable));
-  }
-
-  int port() {
-    return port;
   }
 
   @SuppressWarnings("CheckReturnValue")

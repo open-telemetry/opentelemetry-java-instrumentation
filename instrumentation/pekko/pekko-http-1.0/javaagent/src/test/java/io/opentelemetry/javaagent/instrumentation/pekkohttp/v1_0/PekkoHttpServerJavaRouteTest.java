@@ -58,14 +58,7 @@ class PekkoHttpServerJavaRouteTest extends AllDirectives {
       testing.waitAndAssertTraces(
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("GET /test/*")));
     } finally {
-      binding.whenComplete(
-          (serverBinding, error) -> {
-            if (serverBinding == null) {
-              system.terminate();
-            } else {
-              serverBinding.unbind().thenAccept(unbound -> system.terminate());
-            }
-          });
+      binding.thenCompose(ServerBinding::unbind).thenAccept(unbound -> system.terminate());
     }
   }
 }
