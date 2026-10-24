@@ -32,8 +32,13 @@ public class WebClientHttpAttributesGetter
     if (!(template instanceof String)) {
       return null;
     }
+    return extractPathTemplate((String) template);
+  }
+
+  @Nullable
+  static String extractPathTemplate(String template) {
     // Strip first so slashes in query or fragment values cannot be mistaken for a path.
-    String urlTemplate = stripQueryAndFragment((String) template);
+    String urlTemplate = stripQueryAndFragment(template);
     if (urlTemplate.isEmpty()) {
       return null;
     }
