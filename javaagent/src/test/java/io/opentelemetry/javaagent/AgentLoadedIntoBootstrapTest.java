@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import jvmbootstraptest.AgentLoadedChecker;
+import jvmbootstraptest.ChildFirstSystemClassLoader;
 import jvmbootstraptest.MyClassLoaderIsNotBootstrap;
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +20,31 @@ class AgentLoadedIntoBootstrapTest {
   void agentLoadsWhenSeparateJvmIsLaunched() throws Exception {
     int exitCode =
         IntegrationTestUtils.runOnSeparateJvm(
-            AgentLoadedChecker.class.getName(), new String[0], new String[0], emptyMap(), true);
+            AgentLoadedChecker.class.getName(),
+            new String[0],
+            new String[] {IntegrationTestUtils.getAgentJarPath()},
+            emptyMap(),
+            true);
 
     assertThat(exitCode).isZero();
+  }
+
+  @Test
+  void agentLoadsWithChildFirstSystemClassLoader() throws Exception {
+    IntegrationTestUtils.ProcessResult result =
+        IntegrationTestUtils.runOnSeparateJvmAndCaptureOutput(
+            AgentLoadedChecker.class.getName(),
+            new String[] {
+              "-Djava.system.class.loader=" + ChildFirstSystemClassLoader.class.getName()
+            },
+            new String[] {IntegrationTestUtils.getAgentJarPath()},
+            emptyMap(),
+            System.getProperty("java.class.path"),
+            true);
+
+    assertThat(result.getExitCode()).isZero();
+    assertThat(result.getOutput())
+        .doesNotContain("ERROR io.opentelemetry.javaagent.OpenTelemetryAgent");
   }
 
   @Test
@@ -32,7 +55,7 @@ class AgentLoadedIntoBootstrapTest {
         IntegrationTestUtils.runOnSeparateJvmAndCaptureOutput(
             AgentLoadedChecker.class.getName(),
             new String[] {"-Xbootclasspath/a:" + agentJarPath, "-Djdk.instrument.traceUsage=true"},
-            new String[0],
+            new String[] {agentJarPath},
             emptyMap(),
             System.getProperty("java.class.path"),
             true);
