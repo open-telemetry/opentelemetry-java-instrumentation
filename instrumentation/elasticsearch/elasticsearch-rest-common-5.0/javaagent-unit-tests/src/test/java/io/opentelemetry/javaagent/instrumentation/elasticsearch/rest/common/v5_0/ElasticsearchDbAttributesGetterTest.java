@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,9 +19,12 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import org.apache.http.HttpEntity;
+import org.apache.http.ProtocolVersion;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicStatusLine;
+import org.elasticsearch.client.Response;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -31,6 +36,31 @@ class ElasticsearchDbAttributesGetterTest {
   private static final String SEARCH_BODY =
       "{\"query\":{\"match\":{\"title\":\"secret user data\"}}}";
   private static final String SANITIZED_BODY = "{\"query\":{\"match\":{\"title\":\"?\"}}}";
+
+  @ParameterizedTest
+  @ValueSource(ints = {99, 200, 302, 404, 503})
+  void recordsResponseStatusOnlyForFailureCodes(int statusCode) {
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(null);
+    ElasticsearchRestRequest request = searchRequest(null);
+    Response response = mock(Response.class);
+    when(response.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, ""));
+
+    assertThat(getter.getDbResponseStatusCode(request, response, null))
+        .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
+    assertThat(getter.getErrorType(request, response, null))
+        .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
+  }
+
+  @Test
+  void omitsResponseStatusWithoutResponse() {
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(null);
+    ElasticsearchRestRequest request = searchRequest(null);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(request, null, new IOException("connection failed")))
+        .isNull();
+  }
 
   /** Records the bodies it is given and returns whatever it was configured to return. */
   private static class RecordingSanitizer implements UnaryOperator<String> {

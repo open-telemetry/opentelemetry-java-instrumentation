@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -183,7 +184,8 @@ public abstract class AbstractMongoClientTest<T> {
                               equalTo(
                                   NETWORK_PEER_PORT,
                                   supportsNetworkPeer() ? Long.valueOf(port) : null),
-                              equalTo(ERROR_TYPE, errorType));
+                              equalTo(ERROR_TYPE, errorType),
+                              equalTo(DB_RESPONSE_STATUS_CODE, errorType));
                     }));
     List<AttributeKey<?>> expectedMetricKeys =
         new ArrayList<>(

@@ -18,6 +18,7 @@ import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
 import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.R2dbcBadGrammarException;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,26 @@ import org.junit.jupiter.params.provider.ValueSource;
 class R2dbcSqlAttributesGetterTest {
 
   private final R2dbcSqlAttributesGetter getter = new R2dbcSqlAttributesGetter();
+
+  @ParameterizedTest
+  @MethodSource("responseStatuses")
+  void responseStatus(Throwable error, String expectedStatus) {
+    DbExecution request =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedStatus);
+  }
+
+  private static Stream<Arguments> responseStatuses() {
+    return Stream.of(
+        argumentSet("SQLSTATE", new R2dbcBadGrammarException("test", "42601", 42), "42601"),
+        argumentSet("no SQLSTATE", new R2dbcBadGrammarException("test"), null),
+        argumentSet("non-database failure", new IllegalStateException("test"), null),
+        argumentSet("success", null, null));
+  }
 
   @Test
   void rawQueryTextsForSingleQuery() {

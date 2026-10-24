@@ -26,11 +26,46 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.StatusCode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class SpymemcachedAttributesGetterTest {
 
   private final SpymemcachedAttributesGetter getter = new SpymemcachedAttributesGetter();
+
+  @Test
+  void responseStatusUsesOnlyExistingServerFailureClassification() {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "too large", StatusCode.ERR_2BIG));
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("ERR_2BIG");
+    assertThat(getter.getErrorType(null, future, null)).isEqualTo("ERR_2BIG");
+
+    when(future.getStatus()).thenReturn(new OperationStatus(true, "stored", StatusCode.SUCCESS));
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "cancelled", StatusCode.CANCELLED));
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, null, new IllegalStateException("failed")))
+        .isNull();
+    assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = StatusCode.class,
+      names = {"TIMEDOUT", "INTERRUPTED", "ERR_CLIENT"})
+  void clientStatusesRemainErrorsWithoutResponseStatusCodes(StatusCode code) {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.getStatus()).thenReturn(new OperationStatus(false, "client failure", code));
+
+    assertThat(getter.getErrorType(null, future, null)).isEqualTo(code.name());
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
+  }
 
   @Test
   void singleDefaultPortIsOmitted() {

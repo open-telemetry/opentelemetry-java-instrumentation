@@ -179,6 +179,15 @@ class MongoDbAttributesGetter
       CommandStartedEvent request,
       @Nullable CommandSucceededEvent response,
       @Nullable Throwable error) {
+    return getDbResponseStatusCode(request, response, error);
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      CommandStartedEvent request,
+      @Nullable CommandSucceededEvent response,
+      @Nullable Throwable error) {
     Integer writeErrorCode = getWriteErrorCode(response);
     if (writeErrorCode != null) {
       return writeErrorCode.toString();

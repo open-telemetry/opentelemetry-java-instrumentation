@@ -56,6 +56,13 @@ final class OpenSearchAttributesGetter
 
   @Override
   @Nullable
+  public String getDbResponseStatusCode(
+      OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return getErrorType(request, null, error);
+  }
+
+  @Override
+  @Nullable
   public String getServerAddress(OpenSearchRequest request) {
     DbServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;

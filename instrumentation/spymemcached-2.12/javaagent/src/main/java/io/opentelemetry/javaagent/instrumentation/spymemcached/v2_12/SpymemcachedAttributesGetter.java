@@ -40,6 +40,19 @@ class SpymemcachedAttributesGetter
 
   @Override
   @Nullable
+  public String getDbResponseStatusCode(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    String code = getErrorType(request, response, error);
+    if (StatusCode.TIMEDOUT.name().equals(code)
+        || StatusCode.INTERRUPTED.name().equals(code)
+        || StatusCode.ERR_CLIENT.name().equals(code)) {
+      return null;
+    }
+    return code;
+  }
+
+  @Override
+  @Nullable
   public String getErrorType(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
     if (error != null || !(response instanceof OperationFuture)) {

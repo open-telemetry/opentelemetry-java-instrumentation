@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.vertx.core.net.NetSocket;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.redis.client.impl.RedisURI;
+import io.vertx.redis.client.impl.types.ErrorType;
 import org.junit.jupiter.api.Test;
 
 class VertxRedisClientAttributesGetterTest {
@@ -25,6 +26,22 @@ class VertxRedisClientAttributesGetterTest {
   private static final int PEER_PORT = 6380;
 
   private final VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
+
+  @Test
+  void responseStatusUsesOnlyServerErrorPrefixes() {
+    ErrorType error = mock(ErrorType.class);
+    when(error.getMessage()).thenReturn("WRONGTYPE detail");
+    VertxRedisClientError.captureServerError(error);
+    assertThat(getter.getDbResponseStatusCode(null, null, error)).isEqualTo("WRONGTYPE");
+    ErrorType localError = mock(ErrorType.class);
+    when(localError.getMessage()).thenReturn("WRONGTYPE detail");
+    assertThat(getter.getDbResponseStatusCode(null, null, localError)).isNull();
+    assertThat(
+            getter.getDbResponseStatusCode(
+                null, null, new IllegalStateException("WRONGTYPE detail")))
+        .isNull();
+    assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
+  }
 
   @Test
   void capturedUnrepresentableTargetOmitsSelectedEndpoint() {

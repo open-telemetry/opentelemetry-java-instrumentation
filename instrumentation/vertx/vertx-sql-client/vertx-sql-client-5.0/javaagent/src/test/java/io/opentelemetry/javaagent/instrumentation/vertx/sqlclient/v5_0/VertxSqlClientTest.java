@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -1882,7 +1883,8 @@ class VertxSqlClientTest {
                     equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                     equalTo(SERVER_ADDRESS, "127.0.0.1"),
                     equalTo(SERVER_PORT, 1),
-                    equalTo(ERROR_TYPE, "66000")));
+                    equalTo(ERROR_TYPE, "66000"),
+                    equalTo(DB_RESPONSE_STATUS_CODE, "66000")));
   }
 
   private static void select(SqlClient client) throws Exception {
@@ -2003,7 +2005,8 @@ class VertxSqlClientTest {
                             equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(ERROR_TYPE, "42601")),
+                            equalTo(ERROR_TYPE, "42601"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "42601")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -2143,7 +2146,8 @@ class VertxSqlClientTest {
                             equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(ERROR_TYPE, "22012"))));
+                            equalTo(ERROR_TYPE, "22012"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "22012"))));
   }
 
   private static Future<?> executePreparedStatement(String query, Tuple tuple) {

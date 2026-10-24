@@ -150,6 +150,13 @@ final class ElasticsearchDbAttributesGetter
 
   @Override
   @Nullable
+  public String getDbResponseStatusCode(
+      ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
+    return getErrorType(request, response, error);
+  }
+
+  @Override
+  @Nullable
   public String getServerAddress(ElasticsearchRestRequest request) {
     DbServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;

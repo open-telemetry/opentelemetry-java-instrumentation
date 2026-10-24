@@ -65,6 +65,13 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return getDbResponseStatusCode(request, null, error);
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     return responseStatusExtractor.apply(error);
   }
 
