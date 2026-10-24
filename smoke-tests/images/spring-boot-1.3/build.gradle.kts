@@ -1,4 +1,7 @@
 import org.springframework.boot.loader.tools.Libraries
+import org.springframework.boot.loader.tools.Library
+import org.springframework.boot.loader.tools.LibraryCallback
+import org.springframework.boot.loader.tools.LibraryScope
 import org.springframework.boot.loader.tools.Repackager
 
 buildscript {
@@ -19,13 +22,29 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+dependencies {
+  implementation("io.opentelemetry:opentelemetry-api")
+  implementation("org.apache.logging.log4j:log4j-api:2.17.2")
+  implementation("org.apache.logging.log4j:log4j-core:2.17.2")
+}
+
+val runtimeClasspath = configurations.runtimeClasspath
+
 tasks.jar {
+  inputs.files(runtimeClasspath)
+
   doLast {
     // Use the legacy packager, not the modern Boot plugin's launcher.
     Repackager(archiveFile.get().asFile).apply {
-      setMainClass("io.opentelemetry.smoketest.springboot13.ResourceApplication")
+      setMainClass("io.opentelemetry.smoketest.springboot13.LogCorrelationApplication")
       setBackupSource(false)
-      repackage(Libraries.NONE)
+      repackage(object : Libraries {
+        override fun doWithLibraries(callback: LibraryCallback) {
+          inputs.files.files
+            .filter { it.isFile && it.extension == "jar" }
+            .forEach { callback.library(Library(it, LibraryScope.COMPILE)) }
+        }
+      })
     }
   }
 }
