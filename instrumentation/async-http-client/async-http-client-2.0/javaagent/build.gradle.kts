@@ -46,9 +46,6 @@ testing {
             enabled = false
           }
         }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-        }
       }
     }
   }

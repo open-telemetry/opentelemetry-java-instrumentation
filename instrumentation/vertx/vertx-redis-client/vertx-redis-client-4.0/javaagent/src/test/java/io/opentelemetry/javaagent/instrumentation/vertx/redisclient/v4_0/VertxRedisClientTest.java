@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -157,7 +157,8 @@ class VertxRedisClientTest {
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(
+                                stringKey("server.service.name"), testing.expectedPeerService()),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
 
@@ -648,7 +649,7 @@ class VertxRedisClientTest {
       equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
       equalTo(SERVER_ADDRESS, host),
       equalTo(SERVER_PORT, port),
-      equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+      equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
       equalTo(NETWORK_PEER_PORT, port),
       equalTo(NETWORK_PEER_ADDRESS, ip)
     };

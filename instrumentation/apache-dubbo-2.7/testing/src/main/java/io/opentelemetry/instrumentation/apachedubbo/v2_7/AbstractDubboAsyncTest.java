@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -187,7 +187,7 @@ public abstract class AbstractDubboAsyncTest {
                         emitPreviewRpcSemconv()
                             ? DelayedService.class.getName() + "/" + method
                             : method),
-                    equalTo(maybeStablePeerService(), null),
+                    equalTo(stringKey("server.service.name"), null),
                     satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                     satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                     satisfies(NETWORK_TYPE, val -> val.isIn(null, "ipv4", "ipv6")),

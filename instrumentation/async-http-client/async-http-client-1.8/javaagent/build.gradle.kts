@@ -38,9 +38,6 @@ testing {
 
           systemProperty("testLatestDeps", otelProps.testLatestDeps)
         }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-        }
       }
     }
   }

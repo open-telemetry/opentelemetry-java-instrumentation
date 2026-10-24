@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -82,7 +82,8 @@ class ArmeriaHttp2Test {
                             equalTo(SERVER_PORT, server2.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
+                            equalTo(
+                                stringKey("server.service.name"), testing.expectedPeerService())),
                 span ->
                     span.hasName("GET /")
                         .hasKind(SpanKind.SERVER)
@@ -113,7 +114,8 @@ class ArmeriaHttp2Test {
                             equalTo(SERVER_PORT, server1.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
+                            equalTo(
+                                stringKey("server.service.name"), testing.expectedPeerService())),
                 span ->
                     span.hasName("GET /")
                         .hasKind(SpanKind.SERVER)

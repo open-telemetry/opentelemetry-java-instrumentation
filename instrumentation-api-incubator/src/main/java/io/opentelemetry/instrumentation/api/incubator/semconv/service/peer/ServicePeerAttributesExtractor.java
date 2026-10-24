@@ -14,9 +14,8 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGett
 import javax.annotation.Nullable;
 
 /**
- * Extractor of the {@code service.peer.name} span attribute, described in <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-remote-service-attributes">the
- * specification</a>.
+ * Extractor of the configured {@code server.service.name} and {@code server.service.namespace} span
+ * attributes.
  */
 public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
@@ -26,10 +25,12 @@ public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
 
   /**
    * Returns a new {@link ServicePeerAttributesExtractor} that will use the passed {@code
-   * attributesGetter} instance to determine the value of the {@code service.peer.name} attribute.
+   * attributesGetter} instance to determine the values of the configured server service identity
+   * attributes.
    *
    * @param attributesGetter the getter to extract server address and port from the request
-   * @param openTelemetry the OpenTelemetry instance to read service peer mapping configuration from
+   * @param openTelemetry the OpenTelemetry instance to read server service mapping configuration
+   *     from
    */
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()

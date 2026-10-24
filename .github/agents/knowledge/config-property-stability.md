@@ -208,7 +208,7 @@ and what an absent selector means, because a reader on IDE hover does not see th
 Some configurations require structured data only expressible in YAML:
 
 - **Structured lists** (`getStructuredList()`): e.g. `url_template_rules` (pattern/template/override
-  objects), `service_peer_mapping` (with `service_namespace` not available via flat property)
+  objects), `server_service_mapping` (with `service_namespace` not available via flat property)
 - **Distribution config** (`distribution.javaagent`): `instrumentation` block with
   `default_enabled`, `enabled`/`disabled` lists — deserialized into `AgentDistributionConfig`
 - **`ComponentProvider` components**: YAML nodes matched by `getName()` (snake_case),

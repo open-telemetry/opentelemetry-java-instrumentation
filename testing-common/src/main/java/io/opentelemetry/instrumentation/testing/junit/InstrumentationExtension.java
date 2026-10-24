@@ -72,12 +72,12 @@ public abstract class InstrumentationExtension
   }
 
   /**
-   * Returns the peer service name expected on spans that target a local test server, or {@code
-   * null} when no peer service is expected.
+   * Returns the server service name expected on spans that target a local test server, or {@code
+   * null} when no server service mapping is configured.
    *
-   * <p>Peer service mapping is a javaagent-only feature, so only javaagent tests expect a value.
-   * Library instrumentation never applies the peer service extractor; library users add peer
-   * service through their own attributes extractor.
+   * <p>Server service mapping is a javaagent-only feature, so only javaagent tests expect a value.
+   * Library instrumentation never applies the service identity extractor; library users add service
+   * identity through their own attributes extractor.
    */
   @Nullable
   public String expectedPeerService() {

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -175,7 +175,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -227,7 +229,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"
                                         : "hello"),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -449,7 +453,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     emitPreviewRpcSemconv()
                                         ? genericServiceSpanName()
                                         : genericMethodName()),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

@@ -9,4 +9,4 @@ semantic_conventions:
   - RPC_SERVER_METRICS
 library_link: https://github.com/apache/dubbo/
 configurations:
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping

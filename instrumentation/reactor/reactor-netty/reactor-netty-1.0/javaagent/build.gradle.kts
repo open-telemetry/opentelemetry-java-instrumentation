@@ -67,13 +67,6 @@ testing {
           telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
           telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
         }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          filter {
-            excludeTestsMatching("ReactorNettyConnectionSpanTest")
-            excludeTestsMatching("ReactorNettyClientSslTest")
-          }
-        }
       }
     }
   }

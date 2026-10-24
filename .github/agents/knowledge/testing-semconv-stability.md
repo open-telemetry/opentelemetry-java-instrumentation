@@ -21,9 +21,9 @@ unchanged. Multiple domains can be comma-separated, for example
 Test all modes the domain supports. A domain that always emits the same conventions needs
 no semconv selection task. Code and database conventions are stable-only.
 
-### RPC and service-peer preview selection
+### RPC preview selection
 
-RPC and service-peer use `otel.semconv-stability.preview`. For RPC:
+RPC uses `otel.semconv-stability.preview`:
 
 | `otel.semconv-stability.preview` value | Old attrs emitted | Preview attrs emitted | Purpose                     |
 | -------------------------------------- | :---------------: | :-------------------: | --------------------------- |
@@ -31,20 +31,17 @@ RPC and service-peer use `otel.semconv-stability.preview`. For RPC:
 | `rpc`                                  |        ❌         |          ✅           | Preview-only                |
 | `rpc/dup`                              |        ✅         |          ✅           | Legacy and preview together |
 
-To select both domains, use `otel.semconv-stability.preview=rpc,service.peer`.
-
-Legacy `opt-in` values for RPC and service-peer, including `/dup`, remain accepted and combine with
-preview values. Preserve tests that explicitly cover this compatibility behavior.
+Legacy `opt-in` values for RPC, including `/dup`, remain accepted and combine with preview values.
+Preserve tests that explicitly cover this compatibility behavior.
 
 The naming convention is `emitStable*Semconv()` for stable selection and
 `emitPreview*Semconv()` for preview selection.
 
 Target `SemconvStability` method names:
 
-| Domain       | Property                         | Values                              | Methods                                                          |
-| ------------ | -------------------------------- | ----------------------------------- | ---------------------------------------------------------------- |
-| RPC          | `otel.semconv-stability.preview` | `rpc` / `rpc/dup`                   | `emitOldRpcSemconv()`, `emitPreviewRpcSemconv()`                 |
-| Service peer | `otel.semconv-stability.preview` | `service.peer` / `service.peer/dup` | `emitOldServicePeerSemconv()`, `emitPreviewServicePeerSemconv()` |
+| Domain | Property                         | Values            | Methods                                          |
+| ------ | -------------------------------- | ----------------- | ------------------------------------------------ |
+| RPC    | `otel.semconv-stability.preview` | `rpc` / `rpc/dup` | `emitOldRpcSemconv()`, `emitPreviewRpcSemconv()` |
 
 The accessor class is `io.opentelemetry.instrumentation.api.internal.SemconvStability`.
 
@@ -56,8 +53,7 @@ Define both when the tests exercise both kinds of selection. This includes `java
 projects whose tests branch on an `emitOld*()`, `emitStable*()`, or `emitPreview*()` accessor.
 Keep the default `test` task for the default mode.
 
-RPC requires a `testBothSemconv` task for the `/dup` mode. Service-peer does not need
-that task; its default `test` and `testPreviewSemconv` tasks cover the required modes.
+RPC requires a `testBothSemconv` task for the `/dup` mode.
 
 Preserve mixed variants that exercise selectable domains and variants for experimental telemetry,
 disabled adapters, connection telemetry, exception signals, and dependency versions.

@@ -50,16 +50,6 @@ testing {
 }
 
 tasks {
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-      }
-    }
 
   val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
@@ -73,6 +63,6 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, previewSemconvSuites, exceptionSignalLogsSuites)
+    dependsOn(testing.suites, exceptionSignalLogsSuites)
   }
 }

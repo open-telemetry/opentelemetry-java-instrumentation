@@ -40,8 +40,8 @@ val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { su
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc,service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
   }
 }
 
@@ -50,8 +50,8 @@ val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup,service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
   }
 }
 

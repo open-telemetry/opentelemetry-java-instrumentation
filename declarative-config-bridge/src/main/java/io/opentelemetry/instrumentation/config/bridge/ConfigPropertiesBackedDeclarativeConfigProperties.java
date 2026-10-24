@@ -31,7 +31,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private static final String JAVA_DECLARATIVE_PREFIX = "java.";
   private static final String INSTRUMENTATION_PROPERTY_PREFIX = "otel.instrumentation.";
-  private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
+  private static final String JAVA_COMMON_SERVER_SERVICE_MAPPING =
+      "java.common.server_service_mapping";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
 
@@ -252,7 +253,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
-    if (instrumentationConfig && fullPath.equals(JAVA_COMMON_SERVICE_PEER_MAPPING)) {
+    if (instrumentationConfig && fullPath.equals(JAVA_COMMON_SERVER_SERVICE_MAPPING)) {
       return ServicePeerMapping.getList(configProperties);
     }
     return null;

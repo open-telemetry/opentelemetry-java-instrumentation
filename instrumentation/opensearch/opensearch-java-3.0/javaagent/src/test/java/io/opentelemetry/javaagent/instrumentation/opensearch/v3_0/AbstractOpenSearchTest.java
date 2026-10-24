@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -108,7 +108,9 @@ abstract class AbstractOpenSearchTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    testing.expectedPeerService()))));
   }
 
   @Test
@@ -155,7 +157,9 @@ abstract class AbstractOpenSearchTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), testing.expectedPeerService())),
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    testing.expectedPeerService())),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
