@@ -18,6 +18,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.StreamResetException;
+import java.nio.channels.ClosedChannelException;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -50,6 +51,7 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("handleException").and(takesArguments(Throwable.class)),
         getClass().getName() + "$ExceptionAdvice");
+    transformer.applyAdviceToMethod(named("handleClose"), getClass().getName() + "$CloseAdvice");
     transformer.applyAdviceToMethod(
         named("reset").and(takesArguments(long.class)), getClass().getName() + "$ResetAdvice");
     transformer.applyAdviceToMethod(
@@ -90,7 +92,7 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
       return state == null
           ? handler
-          : new ResponseCompletionHandler(response, state.state, handler, false);
+          : new ResponseCompletionHandler(response, state.state, handler, false, false);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -104,10 +106,44 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ExceptionAdvice {
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
+    public static Scope onEnter(
         @Advice.This HttpServerResponse response, @Advice.Argument(0) Throwable error) {
-      VertxHttpServerSingletons.endResponse(response, error);
+      VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
+      if (state == null) {
+        return null;
+      }
+      state.state.failure.compareAndSet(null, error);
+      return state.state.context.makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CloseAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.This HttpServerResponse response) {
+      VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
+      return state == null ? null : state.state.context.makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This HttpServerResponse response, @Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+      if (!response.ended()) {
+        VertxHttpServerSingletons.endResponse(response, new ClosedChannelException());
+      }
     }
   }
 

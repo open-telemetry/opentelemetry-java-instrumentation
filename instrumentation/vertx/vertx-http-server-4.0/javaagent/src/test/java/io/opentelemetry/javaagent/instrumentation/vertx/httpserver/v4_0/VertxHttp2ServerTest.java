@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.StatusCode.UNSET;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
@@ -600,6 +601,100 @@ class VertxHttp2ServerTest {
     }
 
     assertDuration(SCOPE, 1);
+  }
+
+  @Test
+  void formDecoderFailureCanRecoverAsynchronously() throws Exception {
+    CompletableFuture<Throwable> decoderFailure = new CompletableFuture<>();
+    CompletableFuture<Throwable> responseFailure = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request -> {
+              assertThat(request.version()).isEqualTo(HttpVersion.HTTP_2);
+              request.setExpectMultipart(true);
+              request
+                  .response()
+                  .exceptionHandler(
+                      error -> {
+                        if (responseFailure.complete(error)) {
+                          testing.runWithSpan("response exception", () -> {});
+                        }
+                      });
+              request.exceptionHandler(
+                  error -> {
+                    testing.runWithSpan("request exception", () -> {});
+                    vertx.setTimer(
+                        200,
+                        ignored ->
+                            testing.runWithSpan(
+                                "recovery",
+                                () -> request.response().setStatusCode(400).end("invalid form")));
+                    decoderFailure.complete(error);
+                  });
+              request.handler(ignored -> {});
+            });
+    HttpResponse<String> response =
+        client
+            .sendAsync(
+                HttpRequest.newBuilder(URI.create("https://localhost:" + port + "/invalid-form"))
+                    .timeout(Duration.ofSeconds(10))
+                    .header("traceparent", "00-" + TRACE_ID + "-" + PARENT_ID + "-01")
+                    .header("content-type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString("field=%GG&"))
+                    .build(),
+                HttpResponse.BodyHandlers.ofString())
+            .get(10, SECONDS);
+    Throwable error = decoderFailure.get(10, SECONDS);
+    assertThat(error.getClass().getName())
+        .isEqualTo(
+            "io.netty.handler.codec.http.multipart.HttpPostRequestDecoder$ErrorDataDecoderException");
+    assertThat(responseFailure.get(10, SECONDS)).isSameAs(error);
+    assertThat(response.version()).isEqualTo(HttpClient.Version.HTTP_2);
+    assertThat(response.statusCode()).isEqualTo(400);
+    assertThat(response.body()).isEqualTo("invalid form");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SERVER)
+                        .hasTraceId(TRACE_ID)
+                        .hasParentSpanId(PARENT_ID)
+                        .hasStatusSatisfying(status -> status.hasCode(ERROR))
+                        .hasException(error)
+                        .hasAttributesSatisfying(
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 400),
+                            equalTo(ERROR_TYPE, error.getClass().getName())),
+                span -> span.hasName("request exception").hasParent(trace.getSpan(0)),
+                span -> span.hasName("response exception").hasParent(trace.getSpan(0)),
+                span -> span.hasName("recovery").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertMetrics(
+        SCOPE,
+        "http.server.request.duration",
+        metrics ->
+            metrics.satisfies(
+                data -> {
+                  assertThat(
+                          data.stream()
+                              .flatMap(metric -> metric.getHistogramData().getPoints().stream())
+                              .mapToLong(point -> point.getCount())
+                              .sum())
+                      .isEqualTo(1);
+                  assertThat(
+                          data.stream()
+                              .flatMap(metric -> metric.getHistogramData().getPoints().stream())
+                              .mapToDouble(point -> point.getSum())
+                              .sum())
+                      .isGreaterThan(0.1);
+                  data.forEach(
+                      metric ->
+                          assertThat(metric.getHistogramData().getPoints())
+                              .allSatisfy(
+                                  point ->
+                                      assertThat(
+                                              point.getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+                                          .isEqualTo(400L)));
+                }));
   }
 
   @Test

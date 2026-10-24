@@ -95,7 +95,8 @@ public final class VertxHttpServerSingletons {
   private static void endTelemetry(
       VertxHttpServerState state, HttpServerRequest request, @Nullable Throwable error) {
     if (state.ended.compareAndSet(false, true) && state.started) {
-      instrumenter.end(state.context, request, request.response(), error);
+      instrumenter.end(
+          state.context, request, request.response(), error == null ? state.failure.get() : error);
     }
   }
 

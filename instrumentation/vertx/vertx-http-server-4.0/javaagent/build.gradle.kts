@@ -72,6 +72,17 @@ tasks.named<Test>("version45Test") {
   systemProperty("test.vertx.http2.syncTrailerWrite", "true")
 }
 
+val testExperimental by tasks.registering(Test::class) {
+  testClassesDirs = sourceSets.test.get().output.classesDirs
+  classpath = sourceSets.test.get().runtimeClasspath
+  filter {
+    includeTestsMatching("*VertxHttp2ExperimentalTelemetryTest")
+  }
+  val experimentalConfig = "otel.instrumentation.http.server.emit-experimental-telemetry=true"
+  jvmArgs("-D$experimentalConfig")
+  systemProperty("metadataConfig", experimentalConfig)
+}
+
 tasks.withType<Test>().configureEach {
   systemProperty(
     "test.keystore",
@@ -97,5 +108,5 @@ tasks.named<JavaCompile>("compileVersion45TestJava") {
 }
 
 tasks.check {
-  dependsOn(testing.suites)
+  dependsOn(testing.suites, testExperimental)
 }

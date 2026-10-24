@@ -22,6 +22,7 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
   private final VertxHttpServerState state;
   @Nullable private final Handler<AsyncResult<Void>> delegate;
   private final boolean completeResponse;
+  private final boolean completeOnFailure;
 
   static WriteScope beginWrite(HttpServerResponse response) {
     CurrentWriteState previous = CURRENT_WRITE_STATE.get();
@@ -66,9 +67,6 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
   @Nullable
   public static Handler<AsyncResult<Void>> wrapData(
       Object connection, boolean end, @Nullable Handler<AsyncResult<Void>> handler) {
-    if (!end && handler == null) {
-      return handler;
-    }
     CurrentWriteState state = CURRENT_WRITE_STATE.get();
     if (state == null || state.connection != connection) {
       return handler;
@@ -88,15 +86,25 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
       VertxHttpServerState state,
       @Nullable Handler<AsyncResult<Void>> delegate,
       boolean completeResponse) {
+    this(response, state, delegate, completeResponse, true);
+  }
+
+  public ResponseCompletionHandler(
+      HttpServerResponse response,
+      VertxHttpServerState state,
+      @Nullable Handler<AsyncResult<Void>> delegate,
+      boolean completeResponse,
+      boolean completeOnFailure) {
     this.response = response;
     this.state = state;
     this.delegate = delegate;
     this.completeResponse = completeResponse;
+    this.completeOnFailure = completeOnFailure;
   }
 
   @Override
   public void handle(AsyncResult<Void> result) {
-    if (completeResponse) {
+    if (completeResponse || (completeOnFailure && result.failed())) {
       VertxHttpServerSingletons.endResponse(response, result.cause());
     }
     if (delegate != null) {

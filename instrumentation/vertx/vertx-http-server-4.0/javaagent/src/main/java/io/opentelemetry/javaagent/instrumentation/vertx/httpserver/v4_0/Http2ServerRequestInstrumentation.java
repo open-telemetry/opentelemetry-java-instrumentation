@@ -104,7 +104,9 @@ public class Http2ServerRequestInstrumentation implements TypeInstrumentation {
         @Advice.This HttpServerRequest request, @Advice.Argument(0) Throwable error) {
       VertxHttpServerState state = VertxHttpServerSingletons.getState(request);
       Scope scope = state == null ? null : state.context.makeCurrent();
-      VertxHttpServerSingletons.end(request, error);
+      if (state != null) {
+        state.failure.compareAndSet(null, error);
+      }
       return scope;
     }
 
