@@ -59,31 +59,19 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class WriteAdvice {
-    @Nullable
-    @AssignReturned.ToArguments(@ToArgument(2))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Handler<AsyncResult<Void>> onEnter(
-        @Advice.This HttpServerResponse response,
-        @Advice.Argument(0) @Nullable Object data,
-        @Advice.Argument(1) boolean end,
-        @Advice.FieldValue("headWritten") boolean headWritten,
-        @Advice.FieldValue("trailers") @Nullable Object trailers,
-        @Advice.Argument(2) @Nullable Handler<AsyncResult<Void>> handler) {
-      VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
-      // Header-only responses complete through the terminal HEADERS write instead.
-      return end && state != null && (data != null || headWritten)
-          ? new ResponseCompletionHandler(response, state.state, handler, true, trailers != null)
-          : handler;
+    public static ResponseCompletionHandler.WriteScope onEnter(
+        @Advice.This HttpServerResponse response) {
+      return ResponseCompletionHandler.beginWrite(response);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This HttpServerResponse response,
-        @Advice.Enter @Nullable Handler<AsyncResult<Void>> handler,
-        @Advice.FieldValue("trailers") @Nullable Object trailers,
+        @Advice.Enter @Nullable ResponseCompletionHandler.WriteScope scope,
         @Advice.Thrown @Nullable Throwable error) {
-      if (handler instanceof ResponseCompletionHandler) {
-        ((ResponseCompletionHandler) handler).setCompleteOnlyWithoutTrailers(trailers != null);
+      if (scope != null) {
+        scope.close();
       }
       if (error != null) {
         VertxHttpServerSingletons.endResponse(response, error);

@@ -42,6 +42,12 @@ public class Http2ServerRequestInstrumentation implements TypeInstrumentation {
         named("handleData")
             .and(takesArgument(0, named("io.vertx.core.buffer.Buffer")))
             .or(named("handleEnd").and(takesArgument(0, named("io.vertx.core.MultiMap"))))
+            .or(
+                named("handleCustomFrame")
+                    .and(takesArgument(0, named("io.vertx.core.http.HttpFrame"))))
+            .or(
+                named("handlePriorityChange")
+                    .and(takesArgument(0, named("io.vertx.core.http.StreamPriority"))))
             .or(named("handleClose")),
         getClass().getName() + "$CallbackAdvice");
     transformer.applyAdviceToMethod(

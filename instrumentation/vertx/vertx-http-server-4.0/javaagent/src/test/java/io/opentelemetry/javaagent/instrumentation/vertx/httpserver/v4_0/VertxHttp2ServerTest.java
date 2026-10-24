@@ -41,6 +41,7 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpVersion;
 import io.vertx.core.http.RequestOptions;
+import io.vertx.core.http.StreamPriority;
 import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.web.Router;
 import java.io.InputStream;
@@ -55,14 +56,16 @@ import java.security.KeyStore;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class VertxHttp2ServerTest {
@@ -123,11 +126,18 @@ class VertxHttp2ServerTest {
         HttpResponse.BodyHandlers.ofString());
   }
 
-  @ParameterizedTest
-  @EnumSource(
-      value = HttpClient.Version.class,
-      names = {"HTTP_1_1", "HTTP_2"})
-  void tlsServerMetrics(HttpClient.Version version) throws Exception {
+  @Test
+  @Tag("http1")
+  void tlsHttp1ServerMetrics() throws Exception {
+    tlsServerMetrics(HttpClient.Version.HTTP_1_1);
+  }
+
+  @Test
+  void tlsHttp2ServerMetrics() throws Exception {
+    tlsServerMetrics(HttpClient.Version.HTTP_2);
+  }
+
+  private void tlsServerMetrics(HttpClient.Version version) throws Exception {
     Router router = Router.router(vertx);
     router
         .get("/hello/:id")
@@ -478,6 +488,121 @@ class VertxHttp2ServerTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "test.vertx.http2.syncTrailerWrite", matches = "true")
+  void synchronousDataCallbackWithLateTrailersRetainsContext() throws Exception {
+    CompletableFuture<Boolean> dataCallbackWasSynchronous = new CompletableFuture<>();
+    CompletableFuture<Boolean> resetAccepted = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request -> {
+              request
+                  .response()
+                  .headersEndHandler(
+                      ignored -> request.response().trailers().set("x-finished", "yes"));
+              vertx.setTimer(
+                  1,
+                  ignored -> {
+                    AtomicBoolean endReturned = new AtomicBoolean();
+                    request
+                        .response()
+                        .end(
+                            "response body",
+                            result -> {
+                              testing.runWithSpan("data write callback", () -> {});
+                              dataCallbackWasSynchronous.complete(!endReturned.get());
+                              resetAccepted.complete(request.response().reset(8));
+                            });
+                    endReturned.set(true);
+                  });
+            });
+
+    CompletableFuture<HttpResponse<String>> response =
+        send(client, "/synchronous-trailers", TRACE_ID);
+    boolean reset = resetAccepted.get(10, SECONDS);
+    assertThat(reset).isTrue();
+    assertThatThrownBy(() -> response.get(10, SECONDS)).isInstanceOf(ExecutionException.class);
+    assertThat(dataCallbackWasSynchronous.get(10, SECONDS)).isTrue();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SERVER)
+                        .hasTraceId(TRACE_ID)
+                        .hasParentSpanId(PARENT_ID)
+                        .hasStatusSatisfying(status -> status.hasCode(ERROR)),
+                span -> span.hasName("data write callback").hasParent(trace.getSpan(0))));
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
+  void customFrameAndPriorityCallbacksRetainStreamContext() throws Exception {
+    CompletableFuture<HttpServerRequest> serverRequest = new CompletableFuture<>();
+    AtomicInteger callbacks = new AtomicInteger();
+    start(
+        HttpClient.Version.HTTP_2,
+        request -> {
+          request.customFrameHandler(
+              frame -> {
+                testing.runWithSpan("custom frame callback", () -> {});
+                if (callbacks.incrementAndGet() == 2) {
+                  request.response().end("done");
+                }
+              });
+          try {
+            request
+                .getClass()
+                .getMethod("streamPriorityHandler", Handler.class)
+                .invoke(
+                    request,
+                    (Handler<StreamPriority>)
+                        priority -> {
+                          testing.runWithSpan("priority change callback", () -> {});
+                          if (callbacks.incrementAndGet() == 2) {
+                            request.response().end("done");
+                          }
+                        });
+          } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+          }
+          serverRequest.complete(request);
+        });
+    io.vertx.core.http.HttpClient client =
+        vertx.createHttpClient(
+            new HttpClientOptions()
+                .setSsl(true)
+                .setUseAlpn(true)
+                .setProtocolVersion(HttpVersion.HTTP_2)
+                .setMaxPoolSize(1)
+                .setTrustOptions(
+                    new PfxOptions()
+                        .setPath(System.getProperty("test.keystore"))
+                        .setPassword("testing")));
+    try {
+      String traceId = "03030303030303030303030303030303";
+      HttpClientRequest clientRequest = openStreamingRequest(client, "/callbacks", traceId);
+      CompletableFuture<HttpClientResponse> response =
+          clientRequest.response().toCompletionStage().toCompletableFuture();
+      serverRequest.get(10, SECONDS);
+      clientRequest.writeCustomFrame(0xB, 0, Buffer.buffer());
+      clientRequest.setStreamPriority(new StreamPriority().setWeight((short) 10));
+      clientRequest.end();
+      assertThat(response.get(10, SECONDS).statusCode()).isEqualTo(200);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasKind(SERVER).hasTraceId(traceId).hasParentSpanId(PARENT_ID),
+                  span -> span.hasName("custom frame callback").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("priority change callback").hasParent(trace.getSpan(0))));
+    } finally {
+      client.close();
+    }
+
+    assertDuration(SCOPE, 1);
+  }
+
+  @Test
   void sendFileFailureCanRecover() throws Exception {
     Path missingFile = Files.createTempFile("vertx-http2-missing", ".txt");
     Files.delete(missingFile);
@@ -771,5 +896,23 @@ class VertxHttp2ServerTest {
               response.pause();
               return response;
             });
+  }
+
+  private HttpClientRequest openStreamingRequest(
+      io.vertx.core.http.HttpClient client, String path, String traceId) throws Exception {
+    HttpClientRequest request =
+        client
+            .request(
+                new RequestOptions()
+                    .setHost("localhost")
+                    .setPort(port)
+                    .setURI(path)
+                    .setMethod(HttpMethod.POST))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(10, SECONDS);
+    request.putHeader("traceparent", "00-" + traceId + "-" + PARENT_ID + "-01").setChunked(true);
+    request.write("request body").toCompletionStage().toCompletableFuture().get(10, SECONDS);
+    return request;
   }
 }

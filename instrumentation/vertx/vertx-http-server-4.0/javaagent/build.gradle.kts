@@ -23,13 +23,22 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 
-  latestDepTestLibrary("io.vertx:vertx-core:4.+")
-  latestDepTestLibrary("io.vertx:vertx-codegen:4.+")
-  latestDepTestLibrary("io.vertx:vertx-web:4.+")
+  latestDepTestLibrary("io.vertx:vertx-core:4.+") // related dependency
+  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // related dependency
+  latestDepTestLibrary("io.vertx:vertx-web:4.+") // related dependency
 }
 
 testing {
   suites {
+    register<JvmTestSuite>("version40Test") {
+      sources.java.setSrcDirs(listOf("src/test/java"))
+      dependencies {
+        implementation("io.vertx:vertx-core:4.0.0")
+        implementation("io.vertx:vertx-codegen:4.0.0")
+        implementation("io.vertx:vertx-web:4.0.0")
+        implementation("io.netty:netty-codec-haproxy")
+      }
+    }
     register<JvmTestSuite>("version43Test") {
       sources.java.setSrcDirs(listOf("src/test/java"))
       dependencies {
@@ -53,6 +62,16 @@ testing {
   }
 }
 
+tasks.named<Test>("version40Test") {
+  useJUnitPlatform {
+    excludeTags("http1")
+  }
+}
+
+tasks.named<Test>("version45Test") {
+  systemProperty("test.vertx.http2.syncTrailerWrite", "true")
+}
+
 tasks.withType<Test>().configureEach {
   systemProperty(
     "test.keystore",
@@ -66,6 +85,10 @@ tasks.compileTestJava {
 }
 
 tasks.named<JavaCompile>("compileVersion43TestJava") {
+  options.release.set(11)
+}
+
+tasks.named<JavaCompile>("compileVersion40TestJava") {
   options.release.set(11)
 }
 

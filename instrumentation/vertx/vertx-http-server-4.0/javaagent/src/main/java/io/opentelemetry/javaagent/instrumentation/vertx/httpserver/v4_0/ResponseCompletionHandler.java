@@ -16,11 +16,25 @@ import io.vertx.core.http.HttpServerResponse;
 import javax.annotation.Nullable;
 
 public final class ResponseCompletionHandler implements Handler<AsyncResult<Void>> {
+  private static final ThreadLocal<CurrentWriteState> CURRENT_WRITE_STATE = new ThreadLocal<>();
+
   private final HttpServerResponse response;
   private final VertxHttpServerState state;
   @Nullable private final Handler<AsyncResult<Void>> delegate;
   private final boolean completeResponse;
-  private volatile boolean completeOnlyWithoutTrailers;
+
+  static WriteScope beginWrite(HttpServerResponse response) {
+    CurrentWriteState previous = CURRENT_WRITE_STATE.get();
+    VertxHttpServerResponseState responseState = RESPONSE_STATE.get(response);
+    if (responseState == null) {
+      CURRENT_WRITE_STATE.remove();
+    } else {
+      HttpServerRequest request = responseState.request.get();
+      Object connection = request == null ? null : request.connection();
+      CURRENT_WRITE_STATE.set(new CurrentWriteState(response, responseState.state, connection));
+    }
+    return new WriteScope(previous);
+  }
 
   @Nullable
   public static Handler<AsyncResult<Void>> wrapHeaders(
@@ -39,6 +53,29 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
     return handler;
   }
 
+  @Nullable
+  public static Handler<AsyncResult<Void>> wrapHeaders(
+      HttpServerResponse response, boolean end, @Nullable Handler<AsyncResult<Void>> handler) {
+    if (!end) {
+      return handler;
+    }
+    VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
+    return state == null ? handler : new ResponseCompletionHandler(response, state.state, handler);
+  }
+
+  @Nullable
+  public static Handler<AsyncResult<Void>> wrapData(
+      Object connection, boolean end, @Nullable Handler<AsyncResult<Void>> handler) {
+    if (!end && handler == null) {
+      return handler;
+    }
+    CurrentWriteState state = CURRENT_WRITE_STATE.get();
+    if (state == null || state.connection != connection) {
+      return handler;
+    }
+    return new ResponseCompletionHandler(state.response, state.state, handler, end);
+  }
+
   public ResponseCompletionHandler(
       HttpServerResponse response,
       VertxHttpServerState state,
@@ -51,35 +88,50 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
       VertxHttpServerState state,
       @Nullable Handler<AsyncResult<Void>> delegate,
       boolean completeResponse) {
-    this(response, state, delegate, completeResponse, false);
-  }
-
-  public ResponseCompletionHandler(
-      HttpServerResponse response,
-      VertxHttpServerState state,
-      @Nullable Handler<AsyncResult<Void>> delegate,
-      boolean completeResponse,
-      boolean completeOnlyWithoutTrailers) {
     this.response = response;
     this.state = state;
     this.delegate = delegate;
     this.completeResponse = completeResponse;
-    this.completeOnlyWithoutTrailers = completeOnlyWithoutTrailers;
-  }
-
-  void setCompleteOnlyWithoutTrailers(boolean completeOnlyWithoutTrailers) {
-    this.completeOnlyWithoutTrailers = completeOnlyWithoutTrailers;
   }
 
   @Override
   public void handle(AsyncResult<Void> result) {
-    if (completeResponse && !completeOnlyWithoutTrailers) {
+    if (completeResponse) {
       VertxHttpServerSingletons.endResponse(response, result.cause());
     }
     if (delegate != null) {
       try (Scope ignored = state.context.makeCurrent()) {
         delegate.handle(result);
       }
+    }
+  }
+
+  public static final class WriteScope {
+    @Nullable private final CurrentWriteState previous;
+
+    private WriteScope(@Nullable CurrentWriteState previous) {
+      this.previous = previous;
+    }
+
+    public void close() {
+      if (previous == null) {
+        CURRENT_WRITE_STATE.remove();
+      } else {
+        CURRENT_WRITE_STATE.set(previous);
+      }
+    }
+  }
+
+  private static final class CurrentWriteState {
+    private final HttpServerResponse response;
+    private final VertxHttpServerState state;
+    @Nullable private final Object connection;
+
+    private CurrentWriteState(
+        HttpServerResponse response, VertxHttpServerState state, @Nullable Object connection) {
+      this.response = response;
+      this.state = state;
+      this.connection = connection;
     }
   }
 }
