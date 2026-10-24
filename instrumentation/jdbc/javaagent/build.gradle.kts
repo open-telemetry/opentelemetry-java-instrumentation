@@ -157,8 +157,6 @@ tasks {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    if (name in setOf("test", "testPreviewSemconv", "testExceptionSignalLogs", "latestDepTest")) {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    }
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
