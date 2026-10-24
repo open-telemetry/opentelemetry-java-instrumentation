@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,12 +41,15 @@ class FluxMessageChannelTest {
       FluxMessageChannel channel = application.getBean(FluxMessageChannel.class);
       CompletableFuture<FluxSink<Message<?>>> subscribed = new CompletableFuture<>();
       CompletableFuture<Message<?>> delivered = new CompletableFuture<>();
+      CompletableFuture<Thread> producerThread = new CompletableFuture<>();
+      CompletableFuture<Thread> handlerThread = new CompletableFuture<>();
       Flux<Message<?>> source = Flux.create(subscribed::complete);
       Context before = Context.current();
       Disposable subscription =
           Flux.from(channel)
               .subscribe(
                   message -> {
+                    handlerThread.complete(Thread.currentThread());
                     testing.runWithSpan("handler", () -> {});
                     delivered.complete(message);
                   },
@@ -58,12 +62,18 @@ class FluxMessageChannelTest {
             "producer",
             () -> {
               Context producer = Context.current();
+              producerThread.complete(Thread.currentThread());
               emitter.next(MessageBuilder.withPayload("test").build());
               assertThat(Span.current().getSpanContext())
                   .isEqualTo(Span.fromContext(producer).getSpanContext());
             });
         assertThat(Context.current()).isSameAs(before);
         assertThat(delivered.get(10, SECONDS).getPayload()).isEqualTo("test");
+        if (testLatestDeps()) {
+          assertThat(handlerThread.get(10, SECONDS)).isNotSameAs(producerThread.get(10, SECONDS));
+        } else {
+          assertThat(handlerThread.get(10, SECONDS)).isSameAs(producerThread.get(10, SECONDS));
+        }
 
         testing.waitAndAssertTraces(
             trace ->

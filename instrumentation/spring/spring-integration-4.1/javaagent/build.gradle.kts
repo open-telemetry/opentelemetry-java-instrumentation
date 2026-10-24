@@ -48,12 +48,6 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("fluxChannelTest") {
-      dependencies {
-        implementation("org.springframework.integration:spring-integration-core:5.5.20")
-        implementation("io.projectreactor:reactor-core:3.4.29")
-      }
-    }
     register<JvmTestSuite>("version41Test") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
@@ -144,7 +138,7 @@ tasks {
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    if (name != "version41Test" && name != "fluxChannelTest") {
+    if (name != "version41Test") {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     }
   }
