@@ -61,7 +61,12 @@ class DriverInstrumentation implements TypeInstrumentation {
       }
       DbInfo dbInfo = JdbcData.intern(JdbcConnectionUrlParser.parse(url, props));
       JdbcData.CONNECTION_INFO.set(connection, dbInfo);
-      // Multi-host drivers may expose the unwrapped connection through their statements.
+      // Query instrumentation looks up DbInfo after unwrapping the connection,
+      // which can return a different object than Driver.connect() returned.
+      // On a cache miss, it parses connection.getMetaData().getURL(). For MySQL
+      // replication, that URL can contain an internally generated identifier
+      // instead of the configured hosts. Cache the original URL's DbInfo on
+      // the unwrapped object too, so query instrumentation finds it there.
       Connection unwrappedConnection = JdbcUtils.unwrapConnection(connection);
       if (unwrappedConnection != null && unwrappedConnection != connection) {
         JdbcData.CONNECTION_INFO.set(unwrappedConnection, dbInfo);
