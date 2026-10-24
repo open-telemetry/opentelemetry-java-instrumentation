@@ -187,11 +187,15 @@ private static Stream<Arguments> testCases() {
 
 ## Test Port Allocation
 
+Prefer binding the test server to port `0` when it exposes the actual bound port. Wait for
+binding to complete before reading that port and connecting clients. The server keeps the
+socket bound, so there is no gap between choosing the port and binding it.
+
 When a test needs an available TCP port that another server or container will bind later, use
 `PortUtils.findOpenPort()` or `PortUtils.findOpenPorts(count)`. Do not implement a local probe by
 opening `new ServerSocket(0)`, reading its port, and closing it; that bypasses the repository
-allocator's coordination between parallel test processes. Keep port `0` when the same socket
-remains bound and becomes the test server.
+allocator's coordination between parallel test processes. Use `findOpenPorts(count)` when a
+service requires consecutive ports instead of assuming adjacent ports are available.
 
 ## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
 
