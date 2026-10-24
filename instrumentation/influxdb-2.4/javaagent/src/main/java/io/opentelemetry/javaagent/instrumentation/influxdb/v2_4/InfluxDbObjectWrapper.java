@@ -10,6 +10,7 @@ import io.opentelemetry.context.Scope;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import org.influxdb.dto.QueryResult;
 
 public class InfluxDbObjectWrapper {
 
@@ -20,7 +21,9 @@ public class InfluxDbObjectWrapper {
       return null;
     }
     return value -> {
-      if (value instanceof Throwable) {
+      if (value instanceof QueryResult) {
+        state.observe((QueryResult) value);
+      } else if (value instanceof Throwable) {
         state.onFailure((Throwable) value);
       }
       try (Scope ignore = parentContext.makeCurrent()) {
@@ -39,6 +42,9 @@ public class InfluxDbObjectWrapper {
       return null;
     }
     return (value1, value2) -> {
+      if (value2 instanceof QueryResult) {
+        state.observe((QueryResult) value2);
+      }
       try (Scope ignore = parentContext.makeCurrent()) {
         callback.accept(value1, value2);
       } catch (Throwable t) {

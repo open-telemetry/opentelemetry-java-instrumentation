@@ -29,6 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.HttpUrl;
 import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
@@ -130,9 +131,10 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable QueryResult result,
         @Advice.Enter @Nullable InfluxDbQueryAdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.end(throwable);
+        adviceScope.end(throwable, result);
       }
     }
   }
@@ -170,7 +172,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
       }
     }
   }
@@ -201,7 +203,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
       }
     }
   }
@@ -232,7 +234,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
       }
     }
   }
@@ -270,7 +272,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
       }
     }
   }
@@ -308,7 +310,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
       }
     }
   }
@@ -349,7 +351,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
       if (enterArgs != null) {
-        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable);
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
       }
     }
   }
