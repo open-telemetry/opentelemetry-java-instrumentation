@@ -14,6 +14,7 @@ dependencies {
   testLibrary("org.apache.tomcat:tomcat-catalina:8.0.14")
 
   testImplementation("org.jboss.modules:jboss-modules:1.3.10.Final")
+  testImplementation("org.springframework.boot:spring-boot-loader:1.3.8.RELEASE")
 
   // TODO: we should separate core and Eclipse tests at some point,
   // but right now core-specific tests are quite dumb and are run with
