@@ -1,0 +1,1 @@
+injected by the smoke test extension
