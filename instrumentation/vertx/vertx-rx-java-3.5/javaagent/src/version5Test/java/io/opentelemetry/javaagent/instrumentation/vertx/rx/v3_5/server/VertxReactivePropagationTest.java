@@ -65,13 +65,13 @@ class VertxReactivePropagationTest {
 
   private static WebClient client;
   private static int port;
-  private static VertxReactiveWebServer.StartedServer server;
+  private static VertxReactiveWebServer server;
 
   @BeforeAll
   static void setUp() throws ExecutionException, InterruptedException, TimeoutException {
     server = VertxReactiveWebServer.start(0);
-    port = server.port;
-    cleanup.deferAfterAll(server.vertx::close);
+    port = server.port();
+    cleanup.deferAfterAll(server.getVertx()::close);
     client = WebClient.of("h1c://localhost:" + port);
   }
 

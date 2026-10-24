@@ -44,17 +44,16 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static JDBCClient client;
-  private static volatile CompletableFuture<Integer> boundPortFuture;
+  private int port;
 
-  public static StartedServer start(int port)
+  public static VertxReactiveWebServer start(int port)
       throws ExecutionException, InterruptedException, TimeoutException {
     /* This is highly against Vertx ideas, but our tests are synchronous
     so we have to make sure server is up and running */
-    CompletableFuture<StartedServer> future = new CompletableFuture<>();
-    CompletableFuture<Integer> boundPort = new CompletableFuture<>();
-    boundPortFuture = boundPort;
+    CompletableFuture<VertxReactiveWebServer> future = new CompletableFuture<>();
 
     Vertx server = Vertx.vertx(new VertxOptions());
+    VertxReactiveWebServer verticle = new VertxReactiveWebServer();
 
     client =
         JDBCClient.createShared(
@@ -64,18 +63,20 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                 .put("driver_class", "org.hsqldb.jdbcDriver"));
 
     logger.info("Starting on port {}", port);
-    server.deployVerticle(
-        VertxReactiveWebServer.class.getName(),
-        new DeploymentOptions().setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port)),
-        res -> {
-          if (!res.succeeded()) {
-            RuntimeException exception =
-                new RuntimeException("Cannot deploy server Verticle", res.cause());
-            future.completeExceptionally(exception);
-            return;
-          }
-          future.complete(new StartedServer(server, boundPort.join()));
-        });
+    server
+        .getDelegate()
+        .deployVerticle(
+            verticle,
+            new DeploymentOptions().setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port)),
+            res -> {
+              if (!res.succeeded()) {
+                RuntimeException exception =
+                    new RuntimeException("Cannot deploy server Verticle", res.cause());
+                future.completeExceptionally(exception);
+                return;
+              }
+              future.complete(verticle);
+            });
     return future.get(30, SECONDS);
   }
 
@@ -103,21 +104,15 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                       startPromise.fail(httpServerAsyncResult.cause());
                       return;
                     }
-                    boundPortFuture.complete(httpServerAsyncResult.result().actualPort());
+                    this.port = httpServerAsyncResult.result().actualPort();
                     startPromise.complete();
                   });
         },
         throwable -> startPromise.fail(throwable));
   }
 
-  static final class StartedServer {
-    final Vertx vertx;
-    final int port;
-
-    StartedServer(Vertx vertx, int port) {
-      this.vertx = vertx;
-      this.port = port;
-    }
+  int port() {
+    return port;
   }
 
   @SuppressWarnings("CheckReturnValue")

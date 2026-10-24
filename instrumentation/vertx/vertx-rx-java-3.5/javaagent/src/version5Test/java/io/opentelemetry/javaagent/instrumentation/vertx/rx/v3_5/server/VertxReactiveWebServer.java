@@ -47,17 +47,16 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static Pool client;
-  private static volatile CompletableFuture<Integer> boundPortFuture;
+  private int port;
 
-  public static StartedServer start(int port)
+  public static VertxReactiveWebServer start(int port)
       throws ExecutionException, InterruptedException, TimeoutException {
     /* This is highly against Vertx ideas, but our tests are synchronous
     so we have to make sure server is up and running */
-    CompletableFuture<StartedServer> future = new CompletableFuture<>();
-    CompletableFuture<Integer> boundPort = new CompletableFuture<>();
-    boundPortFuture = boundPort;
+    CompletableFuture<VertxReactiveWebServer> future = new CompletableFuture<>();
 
     Vertx server = Vertx.newInstance(io.vertx.core.Vertx.vertx(new VertxOptions()));
+    VertxReactiveWebServer verticle = new VertxReactiveWebServer();
     client =
         JDBCPool.pool(
             server,
@@ -66,8 +65,9 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
     logger.info("Starting on port {}", port);
     server
+        .getDelegate()
         .deployVerticle(
-            VertxReactiveWebServer.class.getName(),
+            verticle,
             new DeploymentOptions().setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port)))
         .onComplete(
             res -> {
@@ -77,7 +77,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                 future.completeExceptionally(exception);
                 return;
               }
-              future.complete(new StartedServer(server, boundPort.join()));
+              future.complete(verticle);
             });
 
     return future.get(30, SECONDS);
@@ -107,21 +107,15 @@ public class VertxReactiveWebServer extends AbstractVerticle {
                       startPromise.fail(httpServerAsyncResult.cause());
                       return;
                     }
-                    boundPortFuture.complete(httpServerAsyncResult.result().actualPort());
+                    this.port = httpServerAsyncResult.result().actualPort();
                     startPromise.complete();
                   });
         },
         throwable -> startPromise.fail(throwable));
   }
 
-  static final class StartedServer {
-    final Vertx vertx;
-    final int port;
-
-    StartedServer(Vertx vertx, int port) {
-      this.vertx = vertx;
-      this.port = port;
-    }
+  int port() {
+    return port;
   }
 
   @SuppressWarnings("CheckReturnValue")
