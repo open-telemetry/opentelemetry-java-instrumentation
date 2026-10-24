@@ -21,3 +21,21 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-2.2:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
 }
+
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
+        implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}

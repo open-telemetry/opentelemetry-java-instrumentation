@@ -51,7 +51,7 @@ public final class InjectionState {
     if (inHeadTag(b)) {
       headTagBytesSeen++;
     } else {
-      headTagBytesSeen = 0;
+      headTagBytesSeen = b == '<' ? 1 : 0;
     }
     if (headTagBytesSeen > HEAD_TAG_PREFIX_LENGTH && b == '>') {
       setHeadTagWritten();

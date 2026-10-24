@@ -105,6 +105,23 @@ class LateContentTypeTest {
     assertThat(fixture.content()).isEqualTo("<heignoredad><head>" + SNIPPET);
   }
 
+  @Test
+  void matchesHeadAcrossDelegatedBulkWrites() throws IOException {
+    Fixture fixture = new Fixture(Output.STREAM_BYTES);
+    fixture.wrapper.setContentType("text/html");
+    byte[] prefix = "<he".getBytes(UTF_8);
+    InjectionState state = ServletOutputStreamInjectionState.getInjectionState(fixture.stream);
+
+    assertThat(fixture.helper.handleWrite(state, fixture.stream, prefix, 0, prefix.length))
+        .isFalse();
+    assertThat(fixture.helper.handleWrite(state, fixture.stream, prefix, 0, prefix.length))
+        .isFalse();
+    fixture.stream.write(prefix);
+    fixture.write("ad>late<head>");
+
+    assertThat(fixture.content()).isEqualTo("<head>" + SNIPPET + "late<head>");
+  }
+
   @ParameterizedTest
   @EnumSource(Output.class)
   void doesNotInjectTwiceAfterTypeChangesAndReacquisition(Output output) throws IOException {

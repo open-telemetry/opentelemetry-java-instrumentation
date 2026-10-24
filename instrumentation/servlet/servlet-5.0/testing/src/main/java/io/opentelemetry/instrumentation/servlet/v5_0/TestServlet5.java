@@ -27,7 +27,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
@@ -97,12 +96,10 @@ public class TestServlet5 {
               if ("true".equals(req.getParameter("lateContentType"))) {
                 String body = "<head>late content type</head>";
                 ServletOutputStream output = resp.getOutputStream();
-                BufferedOutputStream bufferedOutput = new BufferedOutputStream(output);
                 resp.setContentLength(body.length());
                 resp.setContentType("text/html");
-                bufferedOutput.write("<he".getBytes(UTF_8));
-                bufferedOutput.write("ad>late content type</head>".getBytes(UTF_8));
-                bufferedOutput.flush();
+                output.write("<he".getBytes(UTF_8));
+                output.write("ad>late content type</head>".getBytes(UTF_8));
               } else {
                 resp.setContentType("text/html");
                 resp.setContentLength(endpoint.getBody().length());
