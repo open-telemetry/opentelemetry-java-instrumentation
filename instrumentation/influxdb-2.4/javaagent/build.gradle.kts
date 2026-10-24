@@ -83,6 +83,7 @@ tasks {
   val test225 = register<Test>("test225") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().output + test225RuntimeClasspath
+    systemProperty("influxdb.test.client-version", "2.25")
 
     filter {
       includeTestsMatching("InfluxDbQueryLifecycleTest")

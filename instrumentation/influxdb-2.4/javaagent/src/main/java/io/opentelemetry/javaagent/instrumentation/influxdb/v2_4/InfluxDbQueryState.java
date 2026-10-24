@@ -86,9 +86,8 @@ public final class InfluxDbQueryState {
   }
 
   public void endResponse(Response<?> response, @Nullable Throwable error) {
-    if (!response.isSuccessful()) {
-      errorType = Integer.toString(response.code());
-    }
+    // The synchronous query API does not expose HTTP responses, so status alone cannot be
+    // classified consistently.
     Object body = response.body();
     if (body instanceof QueryResult) {
       observe((QueryResult) body);
