@@ -31,6 +31,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -44,6 +46,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +55,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.GZIPOutputStream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -438,6 +442,132 @@ class Netty41ClientPipelineTest {
   }
 
   @Test
+  void decompressedCompletedResponseCallbackPreservesPipelinedRequest() throws Exception {
+    DefaultEventExecutorGroup executor = new DefaultEventExecutorGroup(1);
+    cleanup.deferCleanup(() -> executor.shutdownGracefully().syncUninterruptibly());
+    EmbeddedChannel channel =
+        new EmbeddedChannel(new HttpClientCodec(), new HttpContentDecompressor());
+    IOException failure = new IOException("decompressed response callback failed");
+    List<Throwable> failures = new ArrayList<>();
+    CountDownLatch[] responses = responseLatches();
+    CountDownLatch failureHandled = new CountDownLatch(1);
+    channel
+        .pipeline()
+        .addLast(
+            executor,
+            new ChannelInboundHandlerAdapter() {
+              private boolean failFirstResponse = true;
+              private int responseIndex;
+              private final StringBuilder body = new StringBuilder();
+
+              @Override
+              public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                if (msg instanceof HttpContent) {
+                  body.append(((HttpContent) msg).content().toString(UTF_8));
+                  boolean completeResponse = msg instanceof LastHttpContent;
+                  ReferenceCountUtil.release(msg);
+                  if (completeResponse) {
+                    assertThat(body.toString()).isEqualTo("response " + (201 + responseIndex));
+                    body.setLength(0);
+                    responses[responseIndex++].countDown();
+                    if (failFirstResponse) {
+                      failFirstResponse = false;
+                      throw failure;
+                    }
+                  }
+                } else {
+                  ReferenceCountUtil.release(msg);
+                }
+              }
+
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                failures.add(cause);
+                failureHandled.countDown();
+              }
+            });
+    try {
+      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      testing.runWithSpan("second", () -> channel.writeOutbound(request("/second")));
+
+      writeCompressedResponse(channel, 201);
+      assertThat(responses[0].await(20, SECONDS)).isTrue();
+      assertThat(failureHandled.await(20, SECONDS)).isTrue();
+      assertThat(channel.isActive()).isTrue();
+
+      writeCompressedResponse(channel, 202);
+      assertThat(responses[1].await(20, SECONDS)).isTrue();
+      testing.runWithSpan(
+          "third",
+          () -> {
+            DefaultFullHttpRequest subsequent = request("/third");
+            channel.writeOutbound(subsequent);
+            assertThat(subsequent.headers().contains("traceparent")).isTrue();
+          });
+      writeCompressedResponse(channel, 203);
+      assertThat(responses[2].await(20, SECONDS)).isTrue();
+
+      assertThat(failures).containsExactly(failure);
+      assertThreeRequestTraces();
+    } finally {
+      channel.finishAndReleaseAll();
+      executor.shutdownGracefully().syncUninterruptibly();
+    }
+  }
+
+  @Test
+  void decompressionFailureDisablesAmbiguousPipelining() throws Exception {
+    EmbeddedChannel channel =
+        new EmbeddedChannel(new HttpClientCodec(), new HttpContentDecompressor());
+    List<Throwable> failures = new ArrayList<>();
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                ReferenceCountUtil.release(msg);
+              }
+
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                failures.add(cause);
+              }
+            });
+    try {
+      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      testing.runWithSpan("second", () -> channel.writeOutbound(request("/second")));
+
+      byte[] compressedBody = compressedBody("bad");
+      compressedBody[compressedBody.length - 1] ^= 1;
+      writeCompressedResponse(channel, 200, compressedBody);
+      assertThat(failures).hasSize(1);
+
+      testing.runWithSpan(
+          "third",
+          () -> {
+            DefaultFullHttpRequest subsequent = request("/third");
+            channel.writeOutbound(subsequent);
+            assertThat(subsequent.headers().contains("traceparent")).isFalse();
+          });
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("first"),
+                  span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("second"),
+                  span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasNoParent().hasName("third").hasKind(SpanKind.INTERNAL)));
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
   void delayedVoidWriteFailureOnOffloadedExecutorPreservesPipelinedRequest() throws Exception {
     DefaultEventExecutorGroup executor = new DefaultEventExecutorGroup(1);
     cleanup.deferCleanup(() -> executor.shutdownGracefully().syncUninterruptibly());
@@ -634,6 +764,34 @@ class Netty41ClientPipelineTest {
   private static void writeResponse(EmbeddedChannel channel, int status) {
     channel.writeInbound(
         Unpooled.copiedBuffer("HTTP/1.1 " + status + " OK\r\nContent-Length: 0\r\n\r\n", UTF_8));
+  }
+
+  private static void writeCompressedResponse(EmbeddedChannel channel, int status)
+      throws IOException {
+    writeCompressedResponse(channel, status, compressedBody("response " + status));
+  }
+
+  private static void writeCompressedResponse(
+      EmbeddedChannel channel, int status, byte[] compressedBody) {
+    byte[] headers =
+        ("HTTP/1.1 "
+                + status
+                + " OK\r\nContent-Encoding: gzip\r\nContent-Length: "
+                + compressedBody.length
+                + "\r\n\r\n")
+            .getBytes(UTF_8);
+    ByteArrayOutputStream response = new ByteArrayOutputStream();
+    response.write(headers, 0, headers.length);
+    response.write(compressedBody, 0, compressedBody.length);
+    channel.writeInbound(Unpooled.wrappedBuffer(response.toByteArray()));
+  }
+
+  private static byte[] compressedBody(String body) throws IOException {
+    ByteArrayOutputStream compressedBody = new ByteArrayOutputStream();
+    try (GZIPOutputStream gzip = new GZIPOutputStream(compressedBody)) {
+      gzip.write(body.getBytes(UTF_8));
+    }
+    return compressedBody.toByteArray();
   }
 
   private static void assertThreeRequestTraces() {

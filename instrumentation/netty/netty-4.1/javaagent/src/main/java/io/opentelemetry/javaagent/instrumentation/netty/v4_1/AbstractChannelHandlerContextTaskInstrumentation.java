@@ -75,6 +75,9 @@ class AbstractChannelHandlerContextTaskInstrumentation implements TypeInstrument
           callback = RESPONSE_CALLBACK.get((HttpObject) event);
           fromField = callback != null;
         }
+        if (callback == null) {
+          callback = ClientContexts.decodedResponseCallback(ctx.channel(), event);
+        }
         if (callback != null) {
           ResponseCallbackDispatch dispatch =
               ClientContexts.responseCallbackForMessage(callback, event);

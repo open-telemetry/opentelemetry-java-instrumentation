@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpContentDecoder;
 import io.netty.handler.codec.http.HttpObject;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
@@ -72,8 +73,17 @@ class AbstractChannelHandlerContextInstrumentation implements TypeInstrumentatio
           callback = NettyClientSingletons.RESPONSE_CALLBACK.get((HttpObject) msg);
           fromField = callback != null;
         }
+        if (callback == null) {
+          callback = ClientContexts.decodedResponseCallback(ctx.channel(), msg);
+        }
       }
-      int previousDepth = ClientContexts.enterChannelRead(ctx.channel(), msg, callback);
+      int previousDepth =
+          ClientContexts.enterChannelRead(
+              ctx.channel(),
+              msg,
+              callback,
+              ctx,
+              callback != null && ctx.handler() instanceof HttpContentDecoder);
       return fromField && previousDepth >= 0 ? -previousDepth - 2 : previousDepth;
     }
 

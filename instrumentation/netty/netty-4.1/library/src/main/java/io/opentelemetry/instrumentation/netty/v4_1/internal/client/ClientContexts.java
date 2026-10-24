@@ -11,6 +11,8 @@ import static java.util.Objects.requireNonNull;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.Attribute;
@@ -36,6 +38,7 @@ public final class ClientContexts {
       AttributeKey.valueOf(ClientContexts.class, "client-contexts");
   private static final ThreadLocal<ResponseCallbackScope> RESPONSE_CALLBACK = new ThreadLocal<>();
   private static final ThreadLocal<ReadDispatch> READ_DISPATCH = new ThreadLocal<>();
+  private static final ThreadLocal<DecoderReadScope> DECODER_READ = new ThreadLocal<>();
   private static final ThreadLocal<FailureNotificationScope> FAILURE_NOTIFICATION =
       new ThreadLocal<>();
 
@@ -144,7 +147,11 @@ public final class ClientContexts {
 
   public static boolean hasResponseCallback(Channel channel) {
     ResponseCallbackScope scope = RESPONSE_CALLBACK.get();
-    return scope != null && scope.callback.state.owner.channel == channel;
+    if (scope != null && scope.callback.state.owner.channel == channel) {
+      return true;
+    }
+    DecoderReadScope decoderRead = DECODER_READ.get();
+    return decoderRead != null && decoderRead.channel == channel;
   }
 
   public static ResponseCallbackDispatch responseCallbackForMessage(
@@ -209,17 +216,36 @@ public final class ClientContexts {
 
   public static int enterChannelRead(
       Channel channel, Object msg, @Nullable ResponseCallback callback) {
+    return enterChannelRead(channel, msg, callback, null, false);
+  }
+
+  public static int enterChannelRead(
+      Channel channel,
+      Object msg,
+      @Nullable ResponseCallback callback,
+      @Nullable ChannelHandlerContext ctx,
+      boolean contentDecoder) {
+    ResponseCallbackScope current = RESPONSE_CALLBACK.get();
     if (callback != null && callback.state.owner.channel != channel) {
       callback = null;
     }
-    ResponseCallbackScope current = RESPONSE_CALLBACK.get();
     if (callback == null
         && current != null
         && current.callback.state.owner.channel == channel
         && current.message == msg) {
       callback = current.callback;
     }
-    if (callback == null && (current == null || current.callback.state.owner.channel != channel)) {
+    DecoderReadScope decoderRead = null;
+    if (contentDecoder && callback != null && ctx != null) {
+      decoderRead = new DecoderReadScope(channel, ctx, msg, callback, DECODER_READ.get(), current);
+      DECODER_READ.set(decoderRead);
+      RESPONSE_CALLBACK.remove();
+      current = null;
+      callback = null;
+    }
+    if (callback == null
+        && (current == null || current.callback.state.owner.channel != channel)
+        && decoderRead == null) {
       return -1;
     }
     ReadDispatch dispatch = READ_DISPATCH.get();
@@ -228,13 +254,35 @@ public final class ClientContexts {
       READ_DISPATCH.set(dispatch);
     }
     int previousDepth = dispatch.depth;
-    dispatch.push(channel, msg, current);
+    dispatch.push(channel, msg, current, ctx, decoderRead);
     if (callback == null) {
       RESPONSE_CALLBACK.remove();
     } else {
       RESPONSE_CALLBACK.set(new ResponseCallbackScope(callback, msg));
     }
     return previousDepth;
+  }
+
+  @Nullable
+  public static ResponseCallback decodedResponseCallback(Channel channel, Object msg) {
+    if (!(msg instanceof HttpObject)) {
+      return null;
+    }
+    DecoderReadScope decoderRead = DECODER_READ.get();
+    ReadDispatch dispatch = READ_DISPATCH.get();
+    if (decoderRead == null
+        || decoderRead.channel != channel
+        || dispatch == null
+        || dispatch.depth == 0) {
+      return null;
+    }
+    int parent = dispatch.depth - 1;
+    if (dispatch.channels[parent] != channel
+        || dispatch.contexts[parent] != decoderRead.context
+        || dispatch.messages[parent] != decoderRead.message) {
+      return null;
+    }
+    return decoderRead.callback;
   }
 
   public static void exitChannelRead(int previousDepth) {
@@ -640,22 +688,56 @@ public final class ClientContexts {
     }
   }
 
+  private static final class DecoderReadScope {
+    private final Channel channel;
+    private final ChannelHandlerContext context;
+    private final Object message;
+    private final ResponseCallback callback;
+    @Nullable private final DecoderReadScope previous;
+    @Nullable private final ResponseCallbackScope previousCallback;
+
+    private DecoderReadScope(
+        Channel channel,
+        ChannelHandlerContext context,
+        Object message,
+        ResponseCallback callback,
+        @Nullable DecoderReadScope previous,
+        @Nullable ResponseCallbackScope previousCallback) {
+      this.channel = channel;
+      this.context = context;
+      this.message = message;
+      this.callback = callback;
+      this.previous = previous;
+      this.previousCallback = previousCallback;
+    }
+  }
+
   private static final class ReadDispatch {
     private Channel[] channels = new Channel[4];
     private Object[] messages = new Object[4];
+    private ChannelHandlerContext[] contexts = new ChannelHandlerContext[4];
     private ResponseCallbackScope[] previousCallbacks = new ResponseCallbackScope[4];
+    private DecoderReadScope[] decoderReads = new DecoderReadScope[4];
     private int depth;
 
     private void push(
-        Channel channel, Object msg, @Nullable ResponseCallbackScope previousCallback) {
+        Channel channel,
+        Object msg,
+        @Nullable ResponseCallbackScope previousCallback,
+        @Nullable ChannelHandlerContext context,
+        @Nullable DecoderReadScope decoderRead) {
       if (depth == channels.length) {
         channels = Arrays.copyOf(channels, depth * 2);
         messages = Arrays.copyOf(messages, depth * 2);
+        contexts = Arrays.copyOf(contexts, depth * 2);
         previousCallbacks = Arrays.copyOf(previousCallbacks, depth * 2);
+        decoderReads = Arrays.copyOf(decoderReads, depth * 2);
       }
       channels[depth] = channel;
       messages[depth] = msg;
+      contexts[depth] = context;
       previousCallbacks[depth] = previousCallback;
+      decoderReads[depth] = decoderRead;
       depth++;
     }
 
@@ -668,9 +750,24 @@ public final class ClientContexts {
         } else {
           RESPONSE_CALLBACK.set(previousCallback);
         }
+        DecoderReadScope decoderRead = decoderReads[depth];
+        if (decoderRead != null) {
+          if (decoderRead.previous == null) {
+            DECODER_READ.remove();
+          } else {
+            DECODER_READ.set(decoderRead.previous);
+          }
+          if (decoderRead.previousCallback == null) {
+            RESPONSE_CALLBACK.remove();
+          } else {
+            RESPONSE_CALLBACK.set(decoderRead.previousCallback);
+          }
+        }
         channels[depth] = null;
         messages[depth] = null;
+        contexts[depth] = null;
         previousCallbacks[depth] = null;
+        decoderReads[depth] = null;
       }
     }
   }
