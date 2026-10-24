@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.vertx.core.http.HttpServerRequest;
@@ -22,6 +23,8 @@ public final class VertxHttpServerSingletons {
   public static final VirtualField<HttpServerResponse, VertxHttpServerResponseState>
       RESPONSE_STATE =
           VirtualField.find(HttpServerResponse.class, VertxHttpServerResponseState.class);
+  private static final ScopedThreadValue<ResponseCompletionHandler.CurrentWriteState>
+      currentWriteState = new ScopedThreadValue<>();
 
   private static final Instrumenter<HttpServerRequest, HttpServerResponse> instrumenter =
       JavaagentHttpServerInstrumenters.create(
@@ -29,6 +32,10 @@ public final class VertxHttpServerSingletons {
           new VertxHttpServerAttributesGetter(),
           new HttpServerRequestHeaderGetter());
   private static final Logger logger = Logger.getLogger(VertxHttpServerSingletons.class.getName());
+
+  public static ScopedThreadValue<ResponseCompletionHandler.CurrentWriteState> currentWriteState() {
+    return currentWriteState;
+  }
 
   @Nullable
   static VertxHttpServerState start(HttpServerRequest request) {

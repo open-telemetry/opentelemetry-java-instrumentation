@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.RESPONSE_STATE;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.STATE;
+import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.currentWriteState;
 
 import io.opentelemetry.context.Scope;
 import io.vertx.core.AsyncResult;
@@ -16,33 +17,21 @@ import io.vertx.core.http.HttpServerResponse;
 import javax.annotation.Nullable;
 
 public final class ResponseCompletionHandler implements Handler<AsyncResult<Void>> {
-  private static final ThreadLocal<CurrentWriteState> CURRENT_WRITE_STATE = new ThreadLocal<>();
-
   private final HttpServerResponse response;
   private final VertxHttpServerState state;
   @Nullable private final Handler<AsyncResult<Void>> delegate;
   private final boolean completeResponse;
-  private final boolean completeOnFailure;
 
-  static void beginWrite(HttpServerResponse response) {
-    CurrentWriteState previous = CURRENT_WRITE_STATE.get();
+  static CurrentWriteState writeState(HttpServerResponse response) {
     VertxHttpServerResponseState responseState = RESPONSE_STATE.get(response);
     HttpServerRequest request = responseState == null ? null : responseState.request.get();
     Object connection = request == null ? null : request.connection();
     VertxHttpServerState state = responseState == null ? null : responseState.state;
-    CURRENT_WRITE_STATE.set(new CurrentWriteState(response, state, connection, previous));
+    return new CurrentWriteState(response, state, connection);
   }
 
-  static void endWrite(HttpServerResponse response) {
-    CurrentWriteState state = CURRENT_WRITE_STATE.get();
-    if (state == null || state.response != response) {
-      return;
-    }
-    if (state.previous == null) {
-      CURRENT_WRITE_STATE.remove();
-    } else {
-      CURRENT_WRITE_STATE.set(state.previous);
-    }
+  static final class WriteState {
+    @Nullable CurrentWriteState previous;
   }
 
   @Nullable
@@ -75,7 +64,7 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
   @Nullable
   public static Handler<AsyncResult<Void>> wrapData(
       Object connection, boolean end, @Nullable Handler<AsyncResult<Void>> handler) {
-    CurrentWriteState state = CURRENT_WRITE_STATE.get();
+    CurrentWriteState state = currentWriteState().get();
     if (state == null || state.state == null || state.connection != connection) {
       return handler;
     }
@@ -94,25 +83,15 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
       VertxHttpServerState state,
       @Nullable Handler<AsyncResult<Void>> delegate,
       boolean completeResponse) {
-    this(response, state, delegate, completeResponse, true);
-  }
-
-  public ResponseCompletionHandler(
-      HttpServerResponse response,
-      VertxHttpServerState state,
-      @Nullable Handler<AsyncResult<Void>> delegate,
-      boolean completeResponse,
-      boolean completeOnFailure) {
     this.response = response;
     this.state = state;
     this.delegate = delegate;
     this.completeResponse = completeResponse;
-    this.completeOnFailure = completeOnFailure;
   }
 
   @Override
   public void handle(AsyncResult<Void> result) {
-    if (completeResponse || (completeOnFailure && result.failed())) {
+    if (completeResponse) {
       VertxHttpServerSingletons.endResponse(response, result.cause());
     }
     if (delegate != null) {
@@ -122,21 +101,18 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
     }
   }
 
-  private static final class CurrentWriteState {
+  public static final class CurrentWriteState {
     private final HttpServerResponse response;
     @Nullable private final VertxHttpServerState state;
     @Nullable private final Object connection;
-    @Nullable private final CurrentWriteState previous;
 
     private CurrentWriteState(
         HttpServerResponse response,
         @Nullable VertxHttpServerState state,
-        @Nullable Object connection,
-        @Nullable CurrentWriteState previous) {
+        @Nullable Object connection) {
       this.response = response;
       this.state = state;
       this.connection = connection;
-      this.previous = previous;
     }
   }
 }

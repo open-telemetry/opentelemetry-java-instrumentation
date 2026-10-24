@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.RESPONSE_STATE;
+import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.currentWriteState;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -23,6 +24,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -37,12 +39,8 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("write")
-            .and(takesArgument(0, named("io.netty.buffer.ByteBuf")))
-            .and(takesArgument(1, boolean.class))
-            .and(takesArgument(2, named("io.vertx.core.Handler"))),
-        getClass().getName() + "$WriteAdvice");
+    transformer.applyAdviceToMethod(writeMatcher(), getClass().getName() + "$WriteAdvice");
+    transformer.applyAdviceToMethod(writeMatcher(), getClass().getName() + "$WriteStateAdvice");
     transformer.applyAdviceToMethod(
         named("sendFile")
             .and(takesArguments(4))
@@ -63,6 +61,13 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ResponseHandlerAdvice");
   }
 
+  private static ElementMatcher.Junction<MethodDescription> writeMatcher() {
+    return named("write")
+        .and(takesArgument(0, named("io.netty.buffer.ByteBuf")))
+        .and(takesArgument(1, boolean.class))
+        .and(takesArgument(2, named("io.vertx.core.Handler")));
+  }
+
   @SuppressWarnings("unused")
   public static class WriteAdvice {
     @AssignReturned.ToArguments(@ToArgument(2))
@@ -70,15 +75,31 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
     public static Handler<AsyncResult<Void>> onEnter(
         @Advice.This HttpServerResponse response,
         @Advice.Argument(2) @Nullable Handler<AsyncResult<Void>> handler) {
-      ResponseCompletionHandler.beginWrite(response);
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
       return state == null ? handler : ResponseContextHandler.wrap(handler, state.state.context);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class WriteStateAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static ResponseCompletionHandler.WriteState onEnter(
+        @Advice.This HttpServerResponse response) {
+      ResponseCompletionHandler.CurrentWriteState current =
+          ResponseCompletionHandler.writeState(response);
+      ResponseCompletionHandler.WriteState writeState = new ResponseCompletionHandler.WriteState();
+      writeState.previous = currentWriteState().set(current);
+      return writeState;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This HttpServerResponse response, @Advice.Thrown @Nullable Throwable error) {
-      ResponseCompletionHandler.endWrite(response);
+        @Advice.This HttpServerResponse response,
+        @Advice.Enter @Nullable ResponseCompletionHandler.WriteState writeState,
+        @Advice.Thrown @Nullable Throwable error) {
+      if (writeState != null) {
+        currentWriteState().restore(writeState.previous);
+      }
       if (error != null) {
         VertxHttpServerSingletons.endResponse(response, error);
       }
@@ -94,9 +115,7 @@ public class Http2ServerResponseInstrumentation implements TypeInstrumentation {
         @Advice.This HttpServerResponse response,
         @Advice.Argument(3) @Nullable Handler<AsyncResult<Void>> handler) {
       VertxHttpServerResponseState state = RESPONSE_STATE.get(response);
-      return state == null
-          ? handler
-          : new ResponseCompletionHandler(response, state.state, handler, false, false);
+      return state == null ? handler : ResponseContextHandler.wrap(handler, state.state.context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

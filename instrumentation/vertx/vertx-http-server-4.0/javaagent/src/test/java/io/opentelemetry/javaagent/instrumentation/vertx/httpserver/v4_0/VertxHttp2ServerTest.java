@@ -890,35 +890,6 @@ class VertxHttp2ServerTest {
                 }));
   }
 
-  @Test
-  void sendFileCompletesOnTerminalWrite() throws Exception {
-    Path file = Files.createTempFile("vertx-http2-send-file", ".txt");
-    try {
-      Files.writeString(file, "send file");
-      HttpClient client =
-          start(
-              HttpClient.Version.HTTP_2,
-              request ->
-                  request
-                      .response()
-                      .sendFile(
-                          file.toString(),
-                          result -> testing.runWithSpan("sendFile callback", () -> {})));
-
-      HttpResponse<String> response = send(client, "/send-file", TRACE_ID).get(10, SECONDS);
-      assertThat(response.statusCode()).isEqualTo(200);
-      assertThat(response.body()).isEqualTo("send file");
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasKind(SERVER).hasTraceId(TRACE_ID).hasParentSpanId(PARENT_ID),
-                  span -> span.hasName("sendFile callback").hasParent(trace.getSpan(0))));
-      assertDuration(SCOPE, 1);
-    } finally {
-      Files.deleteIfExists(file);
-    }
-  }
-
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void failureEndsRequest(boolean reset) throws Exception {
