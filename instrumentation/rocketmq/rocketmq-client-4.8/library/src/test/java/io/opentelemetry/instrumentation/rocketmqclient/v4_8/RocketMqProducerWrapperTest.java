@@ -60,6 +60,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.stubbing.Answer;
 
 @SuppressWarnings("deprecation") // asserting incubating messaging attributes
@@ -418,8 +419,9 @@ class RocketMqProducerWrapperTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("send topic")));
   }
 
-  @Test
-  void supportsMessagesWithoutAnInitializedPropertyMap() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void supportsMessagesWithoutAnInitializedPropertyMap(boolean batch) throws Exception {
     Message message = new Message();
     message.setTopic("topic");
     message.setBody("body".getBytes(UTF_8));
@@ -429,9 +431,13 @@ class RocketMqProducerWrapperTest {
                 invocation.getMethod().getName().equals("send")
                     ? new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0)
                     : null);
-    producer.send(singletonList(message));
+    if (batch) {
+      producer.send(singletonList(message));
+      assertStateCleared();
+    } else {
+      producer.send(message);
+    }
     assertThat(message.getProperty("traceparent")).isNotNull();
-    assertStateCleared();
     testing.waitAndAssertTraces(
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("send topic")));
   }
@@ -444,7 +450,8 @@ class RocketMqProducerWrapperTest {
               if (invocation.getMethod().getName().equals("getDefaultMQProducerImpl")) {
                 return implementation;
               }
-              if (invocation.getMethod().getName().equals("send")) {
+              if (invocation.getMethod().getName().equals("send")
+                  && invocation.getArgument(0) instanceof Collection<?>) {
                 sentMessages.set(invocation.getArgument(0));
               }
               return answer.answer(invocation);

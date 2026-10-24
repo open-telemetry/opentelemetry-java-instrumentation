@@ -22,6 +22,7 @@ public class RocketMqInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new RocketMqProducerInstrumentation(),
+        new RocketMqProducerImplInstrumentation(),
         new RocketMqMessageBatchInstrumentation(),
         new RocketMqConsumerInstrumentation());
   }

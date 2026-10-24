@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
@@ -30,6 +31,8 @@ public final class RocketMqBatchSendHelper {
 
   private static final VirtualField<Message, BatchSendState> BATCH_SEND_STATE =
       VirtualField.find(Message.class, BatchSendState.class);
+  private static final VirtualField<SendMessageContext, BatchSendState> HOOK_SEND_STATE =
+      VirtualField.find(SendMessageContext.class, BatchSendState.class);
 
   private final Instrumenter<SendMessageContext, Void> singleSendInstrumenter;
   private final Instrumenter<SendMessageContext, Void> sendInstrumenter;
@@ -59,6 +62,32 @@ public final class RocketMqBatchSendHelper {
         Context.current(),
         RocketMqNamespaceUtil.getNamespace(producer),
         callbackCompletionExpected);
+  }
+
+  public BatchSendState startSend(
+      Object producer, Message message, CommunicationMode mode, boolean hasCallback) {
+    BatchSendState state = BATCH_SEND_STATE.get(message);
+    if (state != null) {
+      return state;
+    }
+    state = createBatchSendState(producer, hasCallback);
+    state.request = new MessageCreateContext(message, state.namespace);
+    state.request.setCommunicationMode(mode);
+    state.operationInstrumenter = singleSendInstrumenter;
+    if (singleSendInstrumenter.shouldStart(state.parentContext, state.request)) {
+      state.sendContext = singleSendInstrumenter.start(state.parentContext, state.request);
+    }
+    BATCH_SEND_STATE.set(message, state);
+    return state;
+  }
+
+  public void completeSend(BatchSendState state, @Nullable Throwable error) {
+    if (state.operationInstrumenter == singleSendInstrumenter) {
+      if (state.request != null && BATCH_SEND_STATE.get(state.request.getMessage()) == state) {
+        BATCH_SEND_STATE.set(state.request.getMessage(), null);
+      }
+      completeBatchSend(state, error);
+    }
   }
 
   public void beforeBatchEncode(Message batch) {
@@ -114,6 +143,11 @@ public final class RocketMqBatchSendHelper {
           delegate.sendMessageBefore(context);
           return;
         }
+        if (state.hookContext != null) {
+          HOOK_SEND_STATE.set(state.hookContext, null);
+        }
+        HOOK_SEND_STATE.set(context, state);
+        state.hookContext = context;
         state.copyFrom(context);
       }
 
@@ -135,25 +169,34 @@ public final class RocketMqBatchSendHelper {
 
   @Nullable
   private static BatchSendState getState(@Nullable SendMessageContext context) {
-    return context == null || context.getMessage() == null
-        ? null
-        : BATCH_SEND_STATE.get(context.getMessage());
+    if (context == null || context.getMessage() == null) {
+      return null;
+    }
+    BatchSendState state = HOOK_SEND_STATE.get(context);
+    return state == null ? BATCH_SEND_STATE.get(context.getMessage()) : state;
   }
 
   public final class BatchSendState {
     private final Context parentContext;
     @Nullable private final String namespace;
     private final boolean callbackCompletionExpected;
+    private final AtomicBoolean ended = new AtomicBoolean();
 
-    @Nullable private BatchSendContext request;
+    @Nullable private SendMessageContext request;
     @Nullable private Context sendContext;
-    private boolean ended;
+    @Nullable private SendMessageContext hookContext;
+    private Instrumenter<SendMessageContext, Void> operationInstrumenter = sendInstrumenter;
 
     private BatchSendState(
         Context parentContext, @Nullable String namespace, boolean callbackCompletionExpected) {
       this.parentContext = parentContext;
       this.namespace = namespace;
       this.callbackCompletionExpected = callbackCompletionExpected;
+    }
+
+    @Nullable
+    public Context getSendContext() {
+      return sendContext;
     }
 
     private void prepare(Message batch) {
@@ -210,16 +253,20 @@ public final class RocketMqBatchSendHelper {
     }
 
     private void end(@Nullable Throwable error) {
-      if (ended) {
+      if (!ended.compareAndSet(false, true)) {
         return;
       }
-      ended = true;
       if (sendContext != null && request != null) {
-        sendInstrumenter.end(sendContext, request, null, error);
+        operationInstrumenter.end(sendContext, request, null, error);
       }
       if (request != null) {
         RocketMqBatchSendSpanLinksExtractor.clearContexts(request);
-        BATCH_SEND_STATE.set(request.getMessage(), null);
+        if (BATCH_SEND_STATE.get(request.getMessage()) == this) {
+          BATCH_SEND_STATE.set(request.getMessage(), null);
+        }
+      }
+      if (hookContext != null) {
+        HOOK_SEND_STATE.set(hookContext, null);
       }
     }
   }

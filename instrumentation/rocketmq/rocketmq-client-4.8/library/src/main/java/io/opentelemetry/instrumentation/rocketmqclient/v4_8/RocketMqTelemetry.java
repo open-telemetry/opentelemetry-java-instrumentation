@@ -61,6 +61,9 @@ public final class RocketMqTelemetry {
    * <p>Configure the supplied producer before wrapping it, and send messages through the returned
    * producer. The wrapper registers its send hook automatically. Use the collection-based {@code
    * send} overloads for batches so context can be injected before encoding.
+   *
+   * <p>User before-send hooks run with the producer span current. Terminal send callbacks run with
+   * the captured caller context.
    */
   public MQProducer wrap(DefaultMQProducer producer) {
     return RocketMqProducerWrapper.wrap(producer, rocketMqProducerInstrumenter, propagator);
@@ -69,6 +72,7 @@ public final class RocketMqTelemetry {
   /**
    * Returns a new {@link SendMessageHook} for use with methods like {@link
    * org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl#registerSendMessageHook(SendMessageHook)}.
+   * This hook alone does not make the producer span current in other hooks.
    *
    * @deprecated Use {@link #wrap(DefaultMQProducer)} instead. May be removed in the next minor
    *     release.

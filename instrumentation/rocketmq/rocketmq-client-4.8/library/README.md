@@ -33,6 +33,10 @@ and batch sends. Send messages through the returned `MQProducer`; the wrapper re
 hook automatically and injects batch context before RocketMQ encodes the messages.
 For batches, pass a collection of `Message` objects to `send`.
 
+User before-send hooks run with the producer span current, regardless of hook registration order.
+Terminal send callbacks run with the caller context captured when `send` was called.
+The deprecated hook-only API does not provide these context-scoping guarantees.
+
 ```java
 RocketMqTelemetry telemetry = RocketMqTelemetry.create(openTelemetry);
 
