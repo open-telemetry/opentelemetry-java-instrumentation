@@ -19,6 +19,7 @@ public final class ResourceApplication {
   private static final String RESOURCE = "otel-smoke/injected-resource.txt";
   private static final String CONTENT = "injected by the smoke test extension\n";
 
+  @SuppressWarnings("SystemOut")
   public static void main(String[] args) throws IOException {
     ClassLoader loader = ResourceApplication.class.getClassLoader();
     if (!loader
