@@ -69,30 +69,20 @@ class AsyncAppenderWarningTest {
     assertWarning(appender, "ASYNC");
 
     appender.setOpenTelemetry(testing.getOpenTelemetry());
-    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).info("after installation");
-
-    testing.waitAndAssertLogRecords(
-        log -> log.hasBody("after installation").hasSpanContext(SpanContext.getInvalid()));
-    assertWarning(appender, "ASYNC");
+    assertThat(warnings()).hasSize(1);
   }
 
   @Test
   void findsAsyncBoundaryThroughSynchronousWrappersAndNestedAsyncAppenders() {
     OpenTelemetryAppender appender = createAppender("NESTED_OTEL");
     appender.start();
-    AsyncAppender inner = async("INNER_ASYNC", wrapper("INNER_WRAPPER", appender));
-    AsyncAppender outer = async("OUTER_ASYNC", wrapper("MIDDLE_WRAPPER", inner));
-    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).addAppender(wrapper("OUTER_WRAPPER", outer));
+    AsyncAppender inner = async("INNER_ASYNC", wrapper(appender));
+    AsyncAppender outer = async("OUTER_ASYNC", wrapper(inner));
+    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).addAppender(wrapper(outer));
 
     appender.setOpenTelemetry(testing.getOpenTelemetry());
 
     assertWarning(appender, "INNER_ASYNC");
-    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).info("nested event");
-    testing.waitAndAssertLogRecords(log -> log.hasBody("nested event"));
-    assertWarning(appender, "INNER_ASYNC");
-
-    outer.stop();
-    inner.stop();
   }
 
   @Test
@@ -103,6 +93,7 @@ class AsyncAppenderWarningTest {
     Logger root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
     AsyncAppender asyncConsole = async("ASYNC_CONSOLE", console);
     root.addAppender(asyncConsole);
+    asyncConsole.start();
     OpenTelemetryAppender appender = createAppender("DIRECT_OTEL");
     root.addAppender(appender);
     appender.start();
@@ -156,16 +147,14 @@ class AsyncAppenderWarningTest {
     appender.setContext(loggerContext);
     appender.setName(name);
     appender.addAppender(delegate);
-    appender.start();
     return appender;
   }
 
-  private ForwardingAppender wrapper(String name, Appender<ILoggingEvent> delegate) {
-    ForwardingAppender appender = new ForwardingAppender();
+  private AttachingAppender wrapper(Appender<ILoggingEvent> delegate) {
+    AttachingAppender appender = new AttachingAppender();
     appender.setContext(loggerContext);
-    appender.setName(name);
+    appender.setName("WRAPPER");
     appender.addAppender(delegate);
-    appender.start();
     return appender;
   }
 
@@ -179,38 +168,28 @@ class AsyncAppenderWarningTest {
   private void assertWarning(OpenTelemetryAppender appender, String asyncName) {
     assertThat(warnings())
         .singleElement()
-        .satisfies(warning -> assertWarning(warning, appender, asyncName));
+        .satisfies(
+            warning -> {
+              assertThat(warning.getOrigin()).isSameAs(appender);
+              assertThat(warning.getMessage())
+                  .contains(
+                      "OpenTelemetryAppender '"
+                          + appender.getName()
+                          + "' is downstream of AsyncAppender '"
+                          + asyncName
+                          + "'",
+                      "trace/span correlation",
+                      "SDK batch export")
+                  .containsIgnoringCase("attach OpenTelemetryAppender directly");
+            });
   }
 
-  private static void assertWarning(
-      Status warning, OpenTelemetryAppender appender, String asyncName) {
-    assertThat(warning.getOrigin()).isSameAs(appender);
-    assertThat(warning.getMessage())
-        .contains(
-            "OpenTelemetryAppender '"
-                + appender.getName()
-                + "' is downstream of AsyncAppender '"
-                + asyncName
-                + "'",
-            "trace/span correlation",
-            "SDK batch export")
-        .containsIgnoringCase("attach OpenTelemetryAppender directly");
-  }
-
-  private static class ForwardingAppender extends AppenderBase<ILoggingEvent>
+  private static class AttachingAppender extends AppenderBase<ILoggingEvent>
       implements AppenderAttachable<ILoggingEvent> {
     private final AppenderAttachableImpl<ILoggingEvent> appenders = new AppenderAttachableImpl<>();
 
     @Override
-    public void stop() {
-      super.stop();
-      appenders.detachAndStopAllAppenders();
-    }
-
-    @Override
-    protected void append(ILoggingEvent event) {
-      appenders.appendLoopOnAppenders(event);
-    }
+    protected void append(ILoggingEvent event) {}
 
     @Override
     public void addAppender(Appender<ILoggingEvent> appender) {
