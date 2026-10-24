@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil
-    .maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
