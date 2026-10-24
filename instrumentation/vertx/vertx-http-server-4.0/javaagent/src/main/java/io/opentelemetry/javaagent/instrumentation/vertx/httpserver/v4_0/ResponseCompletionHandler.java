@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.RESPONSE_STATE;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpserver.v4_0.VertxHttpServerSingletons.STATE;
 
 import io.opentelemetry.context.Scope;
@@ -26,6 +27,10 @@ public final class ResponseCompletionHandler implements Handler<AsyncResult<Void
     if (end && streamRequest instanceof HttpServerRequest) {
       HttpServerRequest request = (HttpServerRequest) streamRequest;
       VertxHttpServerState state = STATE.get(request);
+      if (state == null) {
+        VertxHttpServerResponseState responseState = RESPONSE_STATE.get(request.response());
+        state = responseState == null ? null : responseState.state;
+      }
       if (state != null) {
         return new ResponseCompletionHandler(request.response(), state, handler);
       }

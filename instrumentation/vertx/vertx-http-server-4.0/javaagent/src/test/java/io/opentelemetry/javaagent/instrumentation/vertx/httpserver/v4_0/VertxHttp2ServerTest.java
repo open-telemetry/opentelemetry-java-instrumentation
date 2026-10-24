@@ -124,7 +124,9 @@ class VertxHttp2ServerTest {
   }
 
   @ParameterizedTest
-  @EnumSource(HttpClient.Version.class)
+  @EnumSource(
+      value = HttpClient.Version.class,
+      names = {"HTTP_1_1", "HTTP_2"})
   void tlsServerMetrics(HttpClient.Version version) throws Exception {
     Router router = Router.router(vertx);
     router
@@ -401,6 +403,46 @@ class VertxHttp2ServerTest {
     } finally {
       client.close();
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void delayedResponseEndsAfterRequest(boolean trailers) throws Exception {
+    CompletableFuture<Void> requestEnd = new CompletableFuture<>();
+    CompletableFuture<Void> responseEnd = new CompletableFuture<>();
+    HttpClient client =
+        start(
+            HttpClient.Version.HTTP_2,
+            request ->
+                request.endHandler(
+                    ignored -> {
+                      requestEnd.complete(null);
+                      vertx.setTimer(
+                          1,
+                          timer -> {
+                            if (trailers) {
+                              request.response().putTrailer("x-finished", "yes");
+                            }
+                            request.response().endHandler(end -> responseEnd.complete(null)).end();
+                          });
+                    }));
+
+    HttpResponse<String> response = send(client, "/delayed", TRACE_ID).get(10, SECONDS);
+    requestEnd.get(10, SECONDS);
+    responseEnd.get(10, SECONDS);
+    assertThat(response.version()).isEqualTo(HttpClient.Version.HTTP_2);
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body()).isEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SERVER)
+                        .hasTraceId(TRACE_ID)
+                        .hasParentSpanId(PARENT_ID)
+                        .hasAttributesSatisfying(equalTo(HTTP_RESPONSE_STATUS_CODE, 200))));
+    assertDuration(SCOPE, 1);
   }
 
   @Test
