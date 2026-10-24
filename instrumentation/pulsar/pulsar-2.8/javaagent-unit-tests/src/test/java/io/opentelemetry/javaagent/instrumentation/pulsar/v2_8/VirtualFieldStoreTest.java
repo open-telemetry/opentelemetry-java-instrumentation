@@ -93,12 +93,15 @@ class VirtualFieldStoreTest {
   @Test
   void sendCompletionTakesCapturedInvocationOnce() {
     SendCallback callback = mock(SendCallback.class);
+    Context parent = Context.root().with(TEST_KEY, "parent");
     Context context = Context.root().with(TEST_KEY, "send");
     PulsarRequest request = mock(PulsarRequest.class);
+    SendCallbackData data = SendCallbackData.create(parent, context, request);
 
-    VirtualFieldStore.inject(callback, context, request);
+    VirtualFieldStore.inject(callback, data);
 
     SendCallbackData callbackData = VirtualFieldStore.takeSendCallbackData(callback);
+    assertThat(callbackData).isSameAs(data);
     assertThat(callbackData.context).isSameAs(context);
     assertThat(callbackData.request).isSameAs(request);
     assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isNull();

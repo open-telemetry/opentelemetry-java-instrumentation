@@ -275,16 +275,7 @@ abstract class AbstractPulsarClientTest {
       assertThat(Span.current().getSpanContext())
           .isEqualTo(Span.fromContext(caller).getSpanContext());
       assertThatThrownBy(future::join).hasCauseInstanceOf(PulsarClientException.class);
-      future
-          .handle(
-              (id, error) -> {
-                assertThat(Context.current().get(key)).isEqualTo("caller");
-                assertThat(Span.current().getSpanContext())
-                    .isEqualTo(Span.fromContext(caller).getSpanContext());
-                assertThat(testing.spans()).hasSize(1);
-                return null;
-              })
-          .join();
+      assertThat(testing.spans()).hasSize(1);
     }
     testing.waitAndAssertTraces(
         trace ->
@@ -292,8 +283,90 @@ abstract class AbstractPulsarClientTest {
                 span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER).hasNoParent()));
   }
 
-  @ParameterizedTest
+  @Test
   @SuppressWarnings({"rawtypes", "unchecked"})
+  void replacementMessagePropagatesProducerContext() throws Exception {
+    String topic = "persistent://public/default/replacementMessagePropagatesProducerContext";
+    AtomicReference<SpanContext> producerContext = new AtomicReference<>();
+    AtomicReference<Message<?>> replacement = new AtomicReference<>();
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .enableBatching(true)
+            .batchingMaxPublishDelay(1, HOURS)
+            .intercept(
+                new ProducerInterceptor() {
+                  @Override
+                  public void close() {}
+
+                  @Override
+                  public boolean eligible(Message message) {
+                    return true;
+                  }
+
+                  @Override
+                  public Message beforeSend(Producer producer, Message message) {
+                    producerContext.set(Span.current().getSpanContext());
+                    Message<?> copy =
+                        ((TypedMessageBuilderImpl<?>)
+                                producer
+                                    .newMessage()
+                                    .value(message.getValue())
+                                    .properties(message.getProperties()))
+                            .getMessage();
+                    replacement.set(copy);
+                    return copy;
+                  }
+
+                  @Override
+                  public void onSendAcknowledgement(
+                      Producer producer, Message message, MessageId id, Throwable error) {}
+                })
+            .create();
+
+    CompletableFuture<MessageId> future;
+    try (Scope ignored = Baggage.builder().put("pulsar-test", "caller").build().makeCurrent()) {
+      future =
+          producer
+              .newMessage()
+              .value("message")
+              .property("traceparent", "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01")
+              .property("baggage", "pulsar-test=stale")
+              .sendAsync();
+    }
+    assertThat(producerContext.get().isValid()).isTrue();
+    assertThat(
+            ((MessageImpl<?>) replacement.get())
+                .getMessageBuilder().getPropertiesList().stream()
+                    .filter(property -> property.getKey().equals("traceparent"))
+                    .map(property -> property.getValue()))
+        .containsExactly(
+            String.format(
+                "00-%s-%s-%s",
+                producerContext.get().getTraceId(),
+                producerContext.get().getSpanId(),
+                producerContext.get().getTraceFlags().asHex()));
+    assertThat(
+            ((MessageImpl<?>) replacement.get())
+                .getMessageBuilder().getPropertiesList().stream()
+                    .filter(property -> property.getKey().equals("baggage"))
+                    .map(property -> property.getValue()))
+        .containsExactly("pulsar-test=caller");
+    producer.flush();
+    future.get(1, MINUTES);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasSpanId(producerContext.get().getSpanId())
+                        .hasNoParent()));
+  }
+
+  @ParameterizedTest
+  @SuppressWarnings("rawtypes")
   @CsvSource({
     "false,false,false",
     "false,false,true",
@@ -320,7 +393,6 @@ abstract class AbstractPulsarClientTest {
     List<SpanContext> preparations = new ArrayList<>();
     List<SpanContext> acknowledgements = new ArrayList<>();
     List<String> preparationValues = new ArrayList<>();
-    List<Message<?>> replacements = new ArrayList<>();
     List<CompletableFuture<Void>> continuations = new ArrayList<>();
     producer =
         client
@@ -342,15 +414,7 @@ abstract class AbstractPulsarClientTest {
                   public Message beforeSend(Producer producer, Message message) {
                     preparations.add(Span.current().getSpanContext());
                     preparationValues.add(Context.current().get(key));
-                    Message<?> replacement =
-                        ((TypedMessageBuilderImpl<?>)
-                                producer
-                                    .newMessage()
-                                    .value(message.getValue())
-                                    .properties(message.getProperties()))
-                            .getMessage();
-                    replacements.add(replacement);
-                    return replacement;
+                    return message;
                   }
 
                   @Override
@@ -377,15 +441,8 @@ abstract class AbstractPulsarClientTest {
           try (Scope ignored = caller.get().makeCurrent()) {
             for (int i = 0; i < (batching ? 2 : 1); i++) {
               CompletableFuture<MessageId> future =
-                  producer
-                      .newMessage()
-                      .value("message-" + i)
-                      .property(
-                          "traceparent", "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01")
-                      .property("baggage", "pulsar-test=stale")
-                      .sendAsync();
+                  producer.newMessage().value("message-" + i).sendAsync();
               SpanContext producerContext = preparations.get(i);
-              Message<?> replacement = replacements.get(i);
               assertThat(future.isDone()).isFalse();
               continuations.add(
                   future.handle(
@@ -396,23 +453,6 @@ abstract class AbstractPulsarClientTest {
                         assertThat(error != null).isEqualTo(failure);
                         assertThat(Baggage.current().getEntryValue("pulsar-test"))
                             .isEqualTo("caller");
-                        assertThat(
-                                ((MessageImpl<?>) replacement)
-                                    .getMessageBuilder().getPropertiesList().stream()
-                                        .filter(property -> property.getKey().equals("traceparent"))
-                                        .map(property -> property.getValue()))
-                            .containsExactly(
-                                String.format(
-                                    "00-%s-%s-%s",
-                                    producerContext.getTraceId(),
-                                    producerContext.getSpanId(),
-                                    producerContext.getTraceFlags().asHex()));
-                        assertThat(
-                                ((MessageImpl<?>) replacement)
-                                    .getMessageBuilder().getPropertiesList().stream()
-                                        .filter(property -> property.getKey().equals("baggage"))
-                                        .map(property -> property.getValue()))
-                            .containsExactly("pulsar-test=caller");
                         assertThat(
                                 testing.spans().stream()
                                     .filter(span -> span.getKind() == SpanKind.PRODUCER)

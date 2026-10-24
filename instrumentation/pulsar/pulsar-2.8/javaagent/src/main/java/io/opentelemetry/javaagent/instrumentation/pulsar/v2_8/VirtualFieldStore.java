@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
@@ -46,10 +45,6 @@ public class VirtualFieldStore {
         future.whenComplete((unused, error) -> CALLBACK_FIELD.set(instance, null));
       }
     }
-  }
-
-  public static void inject(SendCallback instance, Context context, PulsarRequest request) {
-    inject(instance, SendCallbackData.create(Context.current(), context, request));
   }
 
   public static void clearProcessParentContext(Message<?> instance) {
