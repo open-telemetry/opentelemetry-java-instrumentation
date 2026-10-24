@@ -192,6 +192,27 @@ class LateContentTypeTest {
     verify(fixture.response, times(6)).getContentType();
   }
 
+  @Test
+  void singleByteWritesFallBackAndInjectAfterLateContentType() throws IOException {
+    Fixture fixture = new Fixture(Output.STREAM);
+    fixture.wrapper.setContentType("text/plain");
+    InjectionState state = ServletOutputStreamInjectionState.getInjectionState(fixture.stream);
+    for (byte b : "plain".getBytes(UTF_8)) {
+      if (!fixture.helper.handleWrite(state, fixture.stream, b)) {
+        fixture.stream.write(b);
+      }
+    }
+    assertThat(fixture.content()).isEqualTo("plain");
+
+    fixture.wrapper.setContentType("text/html");
+    for (byte b : "<head><head>".getBytes(UTF_8)) {
+      if (!fixture.helper.handleWrite(state, fixture.stream, b)) {
+        fixture.stream.write(b);
+      }
+    }
+    assertThat(fixture.content()).isEqualTo("plain<head>" + SNIPPET + "<head>");
+  }
+
   enum Output {
     STREAM,
     WRITER
