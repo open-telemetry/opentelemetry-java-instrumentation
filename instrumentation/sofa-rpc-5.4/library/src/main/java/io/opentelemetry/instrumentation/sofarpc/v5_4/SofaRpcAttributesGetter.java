@@ -51,6 +51,13 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
   @Nullable
   public String getErrorType(
       SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
+    return getRpcStatusCode(request, response, error);
+  }
+
+  @Override
+  @Nullable
+  public String getRpcStatusCode(
+      SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
     if (!(error instanceof SofaRpcException)) {
       return null;
     }
