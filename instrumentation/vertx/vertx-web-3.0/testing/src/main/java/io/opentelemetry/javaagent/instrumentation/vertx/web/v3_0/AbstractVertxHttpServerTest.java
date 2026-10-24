@@ -116,9 +116,7 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
     return true;
   }
 
-  protected DeploymentOptions deploymentOptions() {
-    return new DeploymentOptions();
-  }
+  protected void configureDeploymentOptions(DeploymentOptions options) {}
 
   @Override
   protected Vertx setupServer() throws ExecutionException, InterruptedException, TimeoutException {
@@ -130,14 +128,18 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
             );
     CompletableFuture<Void> future = new CompletableFuture<>();
 
-    server.deployVerticle(
-        verticle().getName(),
-        deploymentOptions()
+    DeploymentOptions deploymentOptions =
+        new DeploymentOptions()
             // casting port to Object because the put override that takes Integer is removed in
             // later versions of vertx-core
             .setConfig(
                 new JsonObject().put(AbstractVertxWebServer.CONFIG_HTTP_SERVER_PORT, (Object) port))
-            .setInstances(3),
+            .setInstances(3);
+    configureDeploymentOptions(deploymentOptions);
+
+    server.deployVerticle(
+        verticle().getName(),
+        deploymentOptions,
         res -> {
           if (!res.succeeded()) {
             future.completeExceptionally(

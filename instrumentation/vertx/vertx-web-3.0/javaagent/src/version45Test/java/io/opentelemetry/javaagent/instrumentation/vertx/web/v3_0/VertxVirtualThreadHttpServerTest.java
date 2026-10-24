@@ -10,7 +10,7 @@ import io.vertx.core.ThreadingModel;
 
 class VertxVirtualThreadHttpServerTest extends Vertx41HttpServerTest {
   @Override
-  protected DeploymentOptions deploymentOptions() {
-    return super.deploymentOptions().setThreadingModel(ThreadingModel.VIRTUAL_THREAD);
+  protected void configureDeploymentOptions(DeploymentOptions options) {
+    options.setThreadingModel(ThreadingModel.VIRTUAL_THREAD);
   }
 }
