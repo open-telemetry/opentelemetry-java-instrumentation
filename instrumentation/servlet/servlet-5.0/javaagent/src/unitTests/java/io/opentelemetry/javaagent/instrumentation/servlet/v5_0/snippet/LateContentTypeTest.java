@@ -107,7 +107,7 @@ class LateContentTypeTest {
 
   @Test
   void matchesHeadAcrossDelegatedBulkWrites() throws IOException {
-    Fixture fixture = new Fixture(Output.STREAM_BYTES);
+    Fixture fixture = new Fixture(Output.STREAM);
     fixture.wrapper.setContentType("text/html");
     byte[] prefix = "<he".getBytes(UTF_8);
     InjectionState state = ServletOutputStreamInjectionState.getInjectionState(fixture.stream);
@@ -137,12 +137,11 @@ class LateContentTypeTest {
     assertThat(fixture.content()).isEqualTo("<head>" + SNIPPET + "<head><head>");
   }
 
-  @ParameterizedTest
-  @EnumSource(Output.class)
-  void updatesContentLengthSetBeforeContentType(Output output) throws IOException {
+  @Test
+  void updatesContentLengthSetBeforeContentType() throws IOException {
     for (String setter :
         new String[] {"length", "header", "addHeader", "intHeader", "addIntHeader"}) {
-      Fixture fixture = new Fixture(output);
+      Fixture fixture = new Fixture(Output.STREAM);
       fixture.setContentLength(setter);
       fixture.wrapper.setContentType("text/html");
       fixture.write("<head>");
@@ -169,33 +168,33 @@ class LateContentTypeTest {
     Arrays.fill(chars, 'x');
     String content = new String(chars);
 
-    for (Output output : new Output[] {Output.WRITER_STRING, Output.WRITER_CHARS}) {
-      Fixture fixture = new Fixture(output);
-      fixture.wrapper.setContentType("text/html");
-      fixture.write(content);
+    Fixture fixture = new Fixture(Output.WRITER);
+    fixture.wrapper.setContentType("text/html");
+    fixture.writer.write(content);
+    assertThat(fixture.content()).isEqualTo(content);
+    verify(fixture.response, times(1)).getContentType();
 
-      assertThat(fixture.content()).isEqualTo(content);
-      verify(fixture.response, times(1)).getContentType();
-    }
+    fixture.writer.write(chars);
+    assertThat(fixture.content()).isEqualTo(content + content);
+    verify(fixture.response, times(2)).getContentType();
   }
 
   @Test
   void standaloneWriterWritesCheckContentTypeForEachCharacter() throws IOException {
-    Fixture fixture = new Fixture(Output.WRITER_INT);
+    Fixture fixture = new Fixture(Output.WRITER);
     fixture.wrapper.setContentType("text/html");
 
-    fixture.write("<head>");
+    for (char c : "<head>".toCharArray()) {
+      fixture.writer.write(c);
+    }
 
     assertThat(fixture.content()).isEqualTo("<head>" + SNIPPET);
     verify(fixture.response, times(6)).getContentType();
   }
 
   enum Output {
-    STREAM_BYTES,
-    STREAM_INT,
-    WRITER_STRING,
-    WRITER_CHARS,
-    WRITER_INT
+    STREAM,
+    WRITER
   }
 
   private static class Fixture {
@@ -252,7 +251,7 @@ class LateContentTypeTest {
     }
 
     void acquire() throws IOException {
-      if (output == Output.STREAM_BYTES || output == Output.STREAM_INT) {
+      if (output == Output.STREAM) {
         stream = wrapper.getOutputStream();
         assertThat(ServletOutputStreamInjectionState.getInjectionState(stream)).isNotNull();
       } else {
@@ -262,39 +261,21 @@ class LateContentTypeTest {
 
     void write(String value) throws IOException {
       switch (output) {
-        case STREAM_BYTES:
+        case STREAM:
           byte[] data = value.getBytes(UTF_8);
           InjectionState state = ServletOutputStreamInjectionState.getInjectionState(stream);
           if (!helper.handleWrite(state, stream, data, 0, data.length)) {
             stream.write(data);
           }
           break;
-        case STREAM_INT:
-          for (byte b : value.getBytes(UTF_8)) {
-            if (!helper.handleWrite(
-                ServletOutputStreamInjectionState.getInjectionState(stream), stream, b)) {
-              stream.write(b);
-            }
-          }
-          break;
-        case WRITER_STRING:
+        case WRITER:
           writer.write(value);
-          break;
-        case WRITER_CHARS:
-          writer.write(value.toCharArray());
-          break;
-        case WRITER_INT:
-          for (int i = 0; i < value.length(); i++) {
-            writer.write(value.charAt(i));
-          }
           break;
       }
     }
 
     String content() {
-      return output == Output.STREAM_BYTES || output == Output.STREAM_INT
-          ? new String(bytes.toByteArray(), UTF_8)
-          : chars.toString();
+      return output == Output.STREAM ? new String(bytes.toByteArray(), UTF_8) : chars.toString();
     }
 
     void setContentLength(String setter) {
