@@ -9,7 +9,10 @@ import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpCl
 import static java.util.Objects.requireNonNull;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
@@ -19,6 +22,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import java.nio.channels.ClosedChannelException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
@@ -30,21 +34,28 @@ import javax.annotation.Nullable;
 public final class ClientContexts {
   private static final AttributeKey<ClientContexts> KEY =
       AttributeKey.valueOf(ClientContexts.class, "client-contexts");
+  private static final ThreadLocal<RequestState> RESPONSE_CALLBACK = new ThreadLocal<>();
+  private static final ThreadLocal<ReadDispatch> READ_DISPATCH = new ThreadLocal<>();
+  private static final ThreadLocal<FailureNotification> FAILURE_NOTIFICATION = new ThreadLocal<>();
 
+  private final Channel channel;
   @Nullable private RequestState firstRequest;
   @Nullable private ArrayDeque<RequestState> overflowRequests;
+  @Nullable private RequestState outboundRequest;
   @Nullable private RequestState publishedHead;
   private boolean published;
   @Nullable private Throwable failure;
   @Nullable private Context failureParent;
 
-  private ClientContexts() {}
+  private ClientContexts(Channel channel) {
+    this.channel = channel;
+  }
 
   static ClientContexts get(Channel channel) {
     Attribute<ClientContexts> attribute = channel.attr(KEY);
     ClientContexts contexts = attribute.get();
     if (contexts == null) {
-      ClientContexts newContexts = new ClientContexts();
+      ClientContexts newContexts = new ClientContexts(channel);
       contexts = attribute.setIfAbsent(newContexts);
       if (contexts == null) {
         contexts = newContexts;
@@ -69,7 +80,7 @@ public final class ClientContexts {
       Attribute<ClientContexts> streamAttribute = stream.attr(KEY);
       ClientContexts streamContexts = streamAttribute.get();
       if (streamContexts == null) {
-        ClientContexts newContexts = new ClientContexts();
+        ClientContexts newContexts = new ClientContexts(stream);
         streamContexts = streamAttribute.setIfAbsent(newContexts);
         if (streamContexts == null) {
           streamContexts = newContexts;
@@ -80,9 +91,13 @@ public final class ClientContexts {
           return;
         }
         parentContexts.removeFirst();
+        if (parentContexts.outboundRequest == state) {
+          parentContexts.outboundRequest = null;
+        }
         parentContexts.publish(parent);
         state.upgraded = false;
         state.response = null;
+        state.owner = streamContexts;
         streamContexts.addRequest(state);
         streamContexts.publish(stream);
       }
@@ -97,20 +112,72 @@ public final class ClientContexts {
     return parent == null ? Context.current() : parent;
   }
 
+  static RequestState beginResponseCallback(RequestState state, Object msg) {
+    RequestState previous = RESPONSE_CALLBACK.get();
+    state.callbackMessage = msg;
+    RESPONSE_CALLBACK.set(state);
+    return previous;
+  }
+
+  static void endResponseCallback(RequestState state, @Nullable RequestState previous) {
+    state.callbackMessage = null;
+    if (previous == null) {
+      RESPONSE_CALLBACK.remove();
+    } else {
+      RESPONSE_CALLBACK.set(previous);
+    }
+  }
+
+  public static int enterChannelRead(Channel channel, Object msg) {
+    RequestState callback = RESPONSE_CALLBACK.get();
+    if (callback == null || callback.owner.channel != channel) {
+      return -1;
+    }
+    ReadDispatch dispatch = READ_DISPATCH.get();
+    if (dispatch == null) {
+      dispatch = new ReadDispatch();
+      READ_DISPATCH.set(dispatch);
+    }
+    int previousDepth = dispatch.depth;
+    dispatch.push(channel, msg);
+    return previousDepth;
+  }
+
+  public static void exitChannelRead(int previousDepth) {
+    if (previousDepth < 0) {
+      return;
+    }
+    ReadDispatch dispatch = READ_DISPATCH.get();
+    if (dispatch != null) {
+      dispatch.clearTo(previousDepth);
+    }
+  }
+
   synchronized boolean isUsable() {
     return failure == null;
   }
 
-  synchronized boolean add(Channel channel, RequestState state) {
+  synchronized boolean add(Channel channel, RequestState state, boolean hasMoreContent) {
     if (failure != null) {
       return false;
     }
     boolean first = firstRequest == null;
     addRequest(state);
+    if (hasMoreContent) {
+      outboundRequest = state;
+    }
     if (first) {
       publish(channel);
     }
     return true;
+  }
+
+  synchronized RequestState outboundRequest(Object msg) {
+    RequestState state = outboundRequest;
+    if (msg instanceof LastHttpContent) {
+      outboundRequest = null;
+    }
+    return state;
   }
 
   synchronized Throwable failure() {
@@ -134,24 +201,59 @@ public final class ClientContexts {
       Channel channel,
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
       Throwable cause) {
-    List<RequestState> states;
+    failRequestsWithOwner(channel, instrumenter, cause, null);
+  }
+
+  private static void failRequest(
+      RequestState state,
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
+      Throwable cause) {
+    ClientContexts owner = state.owner;
+    owner.failRequestsWithOwner(owner.channel, instrumenter, cause, state);
+  }
+
+  private void failRequestsWithOwner(
+      Channel channel,
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
+      Throwable cause,
+      @Nullable RequestState failedState) {
+    @Nullable List<RequestState> states = null;
+    ClientContexts transferredOwner = null;
     synchronized (this) {
       if (failure == null) {
-        if (firstRequest == null) {
+        if (failedState != null && !contains(failedState)) {
+          if (failedState.owner != this) {
+            transferredOwner = failedState.owner;
+          } else {
+            return;
+          }
+        } else if (firstRequest == null) {
           return;
+        } else {
+          failure = cause;
+          failureParent = firstRequest.parent;
         }
-        failure = cause;
-        failureParent = firstRequest.parent;
       }
-      states = drainRequests();
-      publish(channel);
-      channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(null);
+      if (transferredOwner == null) {
+        states = drainRequests();
+        publish(channel);
+        channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(null);
+      }
+    }
+    if (transferredOwner != null) {
+      transferredOwner.failRequestsWithOwner(
+          transferredOwner.channel, instrumenter, cause, failedState);
+      return;
     }
     // A failed write or decoder exception can make the remaining responses ambiguous. Neither
     // retaining nor removing a FIFO entry permits safe response attribution after this point.
-    for (RequestState state : states) {
+    for (RequestState state : requireNonNull(states)) {
       state.end(instrumenter, cause);
     }
+  }
+
+  private boolean contains(RequestState state) {
+    return firstRequest == state || (overflowRequests != null && overflowRequests.contains(state));
   }
 
   @Nullable
@@ -224,6 +326,7 @@ public final class ClientContexts {
     }
     firstRequest = null;
     overflowRequests = null;
+    outboundRequest = null;
     return states;
   }
 
@@ -232,9 +335,52 @@ public final class ClientContexts {
       Channel channel,
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
       Throwable cause) {
+    if (isWriteFailureNotification(channel, cause)) {
+      return;
+    }
     ClientContexts contexts = channel.hasAttr(KEY) ? channel.attr(KEY).get() : null;
-    if (contexts != null) {
+    if (contexts != null && !isResponseCallbackException(channel)) {
       contexts.failRequests(channel, instrumenter, cause);
+    }
+  }
+
+  private static boolean isResponseCallbackException(Channel channel) {
+    RequestState callback = RESPONSE_CALLBACK.get();
+    if (callback == null || callback.owner.channel != channel) {
+      return false;
+    }
+    ReadDispatch dispatch = READ_DISPATCH.get();
+    return dispatch != null
+        && dispatch.depth > 0
+        && dispatch.channels[dispatch.depth - 1] == channel
+        && dispatch.messages[dispatch.depth - 1] == callback.callbackMessage;
+  }
+
+  private static boolean isWriteFailureNotification(Channel channel, Throwable cause) {
+    for (FailureNotification notification = FAILURE_NOTIFICATION.get();
+        notification != null;
+        notification = notification.previous) {
+      if (notification.channel == channel && notification.cause == cause) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static void fireWriteFailure(Channel channel, Throwable cause) {
+    if (!channel.isRegistered()) {
+      return;
+    }
+    FailureNotification previous = FAILURE_NOTIFICATION.get();
+    FAILURE_NOTIFICATION.set(new FailureNotification(channel, cause, previous));
+    try {
+      channel.pipeline().fireExceptionCaught(cause);
+    } finally {
+      if (previous == null) {
+        FAILURE_NOTIFICATION.remove();
+      } else {
+        FAILURE_NOTIFICATION.set(previous);
+      }
     }
   }
 
@@ -260,8 +406,12 @@ public final class ClientContexts {
     }
   }
 
-  static final class RequestState {
+  static final class RequestState implements ChannelFutureListener {
     private final AtomicBoolean ended = new AtomicBoolean();
+    private volatile ClientContexts owner;
+    private final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
+    private final ChannelFutureListener voidFailureListener = new VoidFailureListener();
+    @Nullable private Object callbackMessage;
     final Context parent;
     @Nullable final Context context;
     final NettyCommonRequest request;
@@ -269,10 +419,32 @@ public final class ClientContexts {
     boolean waitingForFinalResponse;
     boolean upgraded;
 
-    RequestState(Context parent, @Nullable Context context, NettyCommonRequest request) {
+    RequestState(
+        ClientContexts owner,
+        Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
+        Context parent,
+        @Nullable Context context,
+        NettyCommonRequest request) {
+      this.owner = owner;
+      this.instrumenter = instrumenter;
       this.parent = parent;
       this.context = context;
       this.request = request;
+    }
+
+    ChannelFutureListener voidFailureListener() {
+      return voidFailureListener;
+    }
+
+    void fail(Throwable cause) {
+      failRequest(this, instrumenter, cause);
+    }
+
+    @Override
+    public void operationComplete(ChannelFuture future) {
+      if (!future.isSuccess()) {
+        failRequest(this, instrumenter, future.cause());
+      }
     }
 
     void end(
@@ -282,6 +454,54 @@ public final class ClientContexts {
           instrumenter.end(context, request, response, cause);
         }
       }
+    }
+
+    private final class VoidFailureListener implements ChannelFutureListener {
+      @Override
+      public void operationComplete(ChannelFuture future) {
+        if (!future.isSuccess()) {
+          Throwable cause = future.cause();
+          failRequest(RequestState.this, instrumenter, cause);
+          fireWriteFailure(future.channel(), cause);
+        }
+      }
+    }
+  }
+
+  private static final class ReadDispatch {
+    private Channel[] channels = new Channel[4];
+    private Object[] messages = new Object[4];
+    private int depth;
+
+    private void push(Channel channel, Object msg) {
+      if (depth == channels.length) {
+        channels = Arrays.copyOf(channels, depth * 2);
+        messages = Arrays.copyOf(messages, depth * 2);
+      }
+      channels[depth] = channel;
+      messages[depth] = msg;
+      depth++;
+    }
+
+    private void clearTo(int previousDepth) {
+      while (depth > previousDepth) {
+        depth--;
+        channels[depth] = null;
+        messages[depth] = null;
+      }
+    }
+  }
+
+  private static final class FailureNotification {
+    private final Channel channel;
+    private final Throwable cause;
+    @Nullable private final FailureNotification previous;
+
+    private FailureNotification(
+        Channel channel, Throwable cause, @Nullable FailureNotification previous) {
+      this.channel = channel;
+      this.cause = cause;
+      this.previous = previous;
     }
   }
 }

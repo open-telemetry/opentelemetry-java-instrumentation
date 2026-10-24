@@ -5,19 +5,20 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.client;
 
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.ClientContexts.RequestState;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -29,17 +30,10 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       AttributeKey.valueOf(HttpClientRequestTracingHandler.class, "http-client-request");
 
   private final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
-  private final ChannelFutureListener failureListener;
 
   public HttpClientRequestTracingHandler(
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter) {
     this.instrumenter = instrumenter;
-    failureListener =
-        future -> {
-          if (!future.isSuccess()) {
-            ClientContexts.fail(future.channel(), this.instrumenter, future.cause());
-          }
-        };
   }
 
   @Override
@@ -50,7 +44,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     }
     ClientContexts contexts = ClientContexts.get(ctx.channel());
     if (!(msg instanceof HttpRequest)) {
-      writeAndTrackFailure(ctx, msg, prm, contexts);
+      writeAndTrackFailure(ctx, msg, prm, contexts.outboundRequest(msg));
       return;
     }
 
@@ -64,31 +58,37 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
         !isAwsRequest(request) && instrumenter.shouldStart(parentContext, request)
             ? instrumenter.start(parentContext, request)
             : null;
-    RequestState state = new RequestState(parentContext, context, request);
-    if (!contexts.add(ctx.channel(), state)) {
+    RequestState state = new RequestState(contexts, instrumenter, parentContext, context, request);
+    if (!contexts.add(ctx.channel(), state, !(msg instanceof LastHttpContent))) {
       state.end(instrumenter, contexts.failure());
       super.write(ctx, msg, prm);
       return;
     }
     try (Scope ignored = (context == null ? parentContext : context).makeCurrent()) {
-      writeAndTrackFailure(ctx, msg, prm, contexts);
+      writeAndTrackFailure(ctx, msg, prm, state);
     }
     // span is ended normally in HttpClientResponseTracingHandler
   }
 
   private void writeAndTrackFailure(
-      ChannelHandlerContext ctx, Object msg, ChannelPromise prm, ClientContexts contexts)
+      ChannelHandlerContext ctx, Object msg, ChannelPromise prm, @Nullable RequestState state)
       throws Exception {
-    if (contexts.peek() == null) {
+    if (state == null) {
       super.write(ctx, msg, prm);
       return;
     }
-    ChannelPromise promise = prm.unvoid();
-    promise.addListener(failureListener);
+    ChannelPromise promise;
+    if (prm.isVoid()) {
+      promise = ctx.newPromise();
+      promise.addListener(state.voidFailureListener());
+    } else {
+      promise = prm;
+      promise.addListener(state);
+    }
     try {
       super.write(ctx, msg, promise);
     } catch (Throwable t) {
-      contexts.failRequests(ctx.channel(), instrumenter, t);
+      state.fail(t);
       throw t;
     }
   }

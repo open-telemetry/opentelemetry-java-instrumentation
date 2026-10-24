@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
@@ -32,6 +33,9 @@ class AbstractChannelHandlerContextInstrumentation implements TypeInstrumentatio
     transformer.applyAdviceToMethod(
         named("invokeExceptionCaught").and(takesArgument(0, named(Throwable.class.getName()))),
         getClass().getName() + "$InvokeExceptionCaughtAdvice");
+    transformer.applyAdviceToMethod(
+        named("invokeChannelRead").and(takesArguments(1)).and(takesArgument(0, Object.class)),
+        getClass().getName() + "$InvokeChannelReadAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -49,6 +53,21 @@ class AbstractChannelHandlerContextInstrumentation implements TypeInstrumentatio
       if (serverContext != null) {
         NettyErrorHolder.set(serverContext.context(), throwable);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InvokeChannelReadAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static int onEnter(
+        @Advice.This ChannelHandlerContext ctx, @Advice.Argument(0) Object msg) {
+      return ClientContexts.enterChannelRead(ctx.channel(), msg);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter int previousDepth) {
+      ClientContexts.exitChannelRead(previousDepth);
     }
   }
 }

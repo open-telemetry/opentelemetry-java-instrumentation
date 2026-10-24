@@ -412,6 +412,130 @@ class NettyClientPipeliningTest {
   }
 
   @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void delayedWriteFailureDoesNotFailAnotherRequest(boolean voidPromise, boolean bodyWrite) {
+    List<ChannelPromise> delayedPromises = new ArrayList<>();
+    List<Throwable> visibleFailures = new ArrayList<>();
+    boolean[] delayed = {false};
+    EmbeddedChannel channel =
+        channel(
+            new ChannelOutboundHandlerAdapter() {
+              @Override
+              public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
+                  throws Exception {
+                boolean targetWrite =
+                    bodyWrite ? msg instanceof HttpContent : msg instanceof HttpRequest;
+                if (!delayed[0] && targetWrite) {
+                  delayed[0] = true;
+                  delayedPromises.add(promise);
+                  super.write(ctx, msg, ctx.newPromise());
+                } else {
+                  super.write(ctx, msg, promise);
+                }
+              }
+            });
+    Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
+        new NettyClientInstrumenterFactory(
+                NettyClientInstrumenterBuilderFactory.create(
+                    "io.opentelemetry.netty-4.1", testing.getOpenTelemetry()),
+                NettyConnectionInstrumentationFlag.DISABLED,
+                NettyConnectionInstrumentationFlag.DISABLED)
+            .instrumenter();
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                visibleFailures.add(cause);
+                ClientContexts.fail(ctx.channel(), instrumenter, cause);
+              }
+            });
+    List<SpanContext> parents = new ArrayList<>();
+    try {
+      testing.runWithSpan(
+          "first",
+          () -> {
+            parents.add(Span.current().getSpanContext());
+            if (bodyWrite) {
+              channel.writeAndFlush(new DefaultHttpRequest(HTTP_1_1, HttpMethod.POST, "/first"));
+              channel.writeAndFlush(
+                  new DefaultLastHttpContent(),
+                  voidPromise ? channel.voidPromise() : channel.newPromise());
+            } else {
+              channel.writeAndFlush(
+                  request("/first"), voidPromise ? channel.voidPromise() : channel.newPromise());
+            }
+          });
+      testing.runWithSpan(
+          "second",
+          () -> {
+            parents.add(Span.current().getSpanContext());
+            channel.writeOutbound(request("/second"));
+          });
+
+      response(channel, 201);
+      assertThat(delayedPromises).hasSize(1);
+      IOException failure = new IOException("late write failure");
+      delayedPromises.get(0).setFailure(failure);
+      channel.runPendingTasks();
+      response(channel, 202);
+
+      testing.runWithSpan(
+          "third",
+          () -> {
+            parents.add(Span.current().getSpanContext());
+            DefaultFullHttpRequest subsequent = request("/third");
+            channel.writeOutbound(subsequent);
+            assertThat(subsequent.headers().contains("traceparent")).isTrue();
+          });
+      response(channel, 203);
+
+      assertThat(channel.isActive()).isTrue();
+      if (voidPromise) {
+        assertThat(visibleFailures).containsExactly(failure);
+      } else {
+        assertThat(visibleFailures).isEmpty();
+      }
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("first"),
+                  span ->
+                      span.hasName(bodyWrite ? "POST" : "GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(201L))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("second"),
+                  span ->
+                      span.hasName("GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(202L))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("third"),
+                  span ->
+                      span.hasName("GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(203L))));
+      assertThat(testing.spans()).allSatisfy(span -> assertThat(span.getEvents()).isEmpty());
+      assertThat(parents).hasSize(3);
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void websocketUpgradeEndsOnClose(boolean fullResponse) {
     EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter(), true);
@@ -592,7 +716,7 @@ class NettyClientPipeliningTest {
   }
 
   @Test
-  void downstreamExceptionAfterResponseDoesNotDisableCorrelation() {
+  void downstreamExceptionAfterResponseDoesNotDisableCorrelationWithPipelinedRequest() {
     Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
         new NettyClientInstrumenterFactory(
                 NettyClientInstrumenterBuilderFactory.create(
@@ -602,14 +726,26 @@ class NettyClientPipeliningTest {
             .instrumenter();
     EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
     IOException failure = new IOException("downstream handler failed");
+    List<SpanContext> callbackParents = new ArrayList<>();
+    List<SpanContext> parents = new ArrayList<>();
+    boolean[] raised = {false};
     channel
         .pipeline()
         .addLast(
             new ChannelInboundHandlerAdapter() {
               @Override
               public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                ReferenceCountUtil.release(msg);
-                ctx.fireExceptionCaught(failure);
+                callbackParents.add(Span.current().getSpanContext());
+                int previousDepth = ClientContexts.enterChannelRead(ctx.channel(), msg);
+                try {
+                  ReferenceCountUtil.release(msg);
+                  if (!raised[0]) {
+                    raised[0] = true;
+                    ctx.fireExceptionCaught(failure);
+                  }
+                } finally {
+                  ClientContexts.exitChannelRead(previousDepth);
+                }
               }
             })
         .addLast(
@@ -620,19 +756,33 @@ class NettyClientPipeliningTest {
               }
             });
     try {
-      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      testing.runWithSpan(
+          "first",
+          () -> {
+            parents.add(Span.current().getSpanContext());
+            channel.writeOutbound(request("/first"));
+          });
+      testing.runWithSpan(
+          "second",
+          () -> {
+            parents.add(Span.current().getSpanContext());
+            channel.writeOutbound(request("/second"));
+          });
       response(channel, 201);
 
       assertThat(channel.isActive()).isTrue();
       testing.runWithSpan(
-          "second",
+          "third",
           () -> {
-            DefaultFullHttpRequest subsequent = request("/second");
+            parents.add(Span.current().getSpanContext());
+            DefaultFullHttpRequest subsequent = request("/third");
             channel.writeOutbound(subsequent);
             assertThat(subsequent.headers().contains("traceparent")).isTrue();
           });
       response(channel, 202);
+      response(channel, 203);
 
+      assertThat(callbackParents).containsExactly(parents.get(0), parents.get(1), parents.get(2));
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -653,7 +803,96 @@ class NettyClientPipeliningTest {
                           .hasAttributesSatisfying(
                               attributes ->
                                   assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
-                                      .isEqualTo(202L))));
+                                      .isEqualTo(202L))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("third"),
+                  span ->
+                      span.hasName("GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(203L))));
+    } finally {
+      channel.finishAndReleaseAll();
+    }
+  }
+
+  @Test
+  void nestedReadFailureDuringCompletedResponseCallbackStillFailsPendingRequest() {
+    Instrumenter<NettyCommonRequest, HttpResponse> instrumenter =
+        new NettyClientInstrumenterFactory(
+                NettyClientInstrumenterBuilderFactory.create(
+                    "io.opentelemetry.netty-4.1", testing.getOpenTelemetry()),
+                NettyConnectionInstrumentationFlag.DISABLED,
+                NettyConnectionInstrumentationFlag.DISABLED)
+            .instrumenter();
+    EmbeddedChannel channel = channel(new ChannelOutboundHandlerAdapter());
+    Object nestedMessage = new Object();
+    IOException failure = new IOException("nested read failed");
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                int previousDepth = ClientContexts.enterChannelRead(ctx.channel(), msg);
+                try {
+                  if (msg == nestedMessage) {
+                    ReferenceCountUtil.release(msg);
+                    ctx.fireExceptionCaught(failure);
+                  } else if (msg instanceof HttpResponse) {
+                    ctx.pipeline().fireChannelRead(nestedMessage);
+                    ReferenceCountUtil.release(msg);
+                  } else {
+                    ReferenceCountUtil.release(msg);
+                  }
+                } finally {
+                  ClientContexts.exitChannelRead(previousDepth);
+                }
+              }
+            })
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                ClientContexts.fail(ctx.channel(), instrumenter, cause);
+              }
+            });
+    try {
+      testing.runWithSpan("first", () -> channel.writeOutbound(request("/first")));
+      testing.runWithSpan("second", () -> channel.writeOutbound(request("/second")));
+      response(channel, 201);
+
+      DefaultFullHttpRequest subsequent = request("/subsequent");
+      channel.writeOutbound(subsequent);
+      assertThat(subsequent.headers().contains("traceparent")).isFalse();
+      response(channel, 202);
+      assertThat(channel.isActive()).isTrue();
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("first"),
+                  span ->
+                      span.hasName("GET")
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfying(
+                              attributes ->
+                                  assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
+                                      .isEqualTo(201L))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("second"),
+                  span -> span.hasName("GET").hasParent(trace.getSpan(0))));
+      assertThat(testing.spans()).hasSize(4);
+      assertThat(testing.spans().get(3).getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+      assertThat(testing.spans().get(3).getEvents())
+          .singleElement()
+          .satisfies(
+              event ->
+                  assertThat(event.getAttributes().get(EXCEPTION_TYPE))
+                      .isEqualTo(IOException.class.getName()));
     } finally {
       channel.finishAndReleaseAll();
     }
@@ -693,8 +932,9 @@ class NettyClientPipeliningTest {
     }
   }
 
-  @Test
-  void failedRequestContentDisablesCorrelation() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void failedRequestContentDisablesCorrelation(boolean voidPromise) {
     EmbeddedChannel channel =
         channel(
             new ChannelOutboundHandlerAdapter() {
@@ -709,11 +949,22 @@ class NettyClientPipeliningTest {
                 }
               }
             });
+    channel
+        .pipeline()
+        .addLast(
+            new ChannelInboundHandlerAdapter() {
+              @Override
+              public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {}
+            });
     try {
       HttpRequest request = new DefaultHttpRequest(HTTP_1_1, HttpMethod.POST, "/first");
       request.headers().set("host", "localhost");
       channel.writeOutbound(request);
-      assertThat(channel.writeAndFlush(new DefaultLastHttpContent()).isSuccess()).isFalse();
+      if (voidPromise) {
+        channel.writeAndFlush(new DefaultLastHttpContent(), channel.voidPromise());
+      } else {
+        assertThat(channel.writeAndFlush(new DefaultLastHttpContent()).isSuccess()).isFalse();
+      }
       response(channel, 201);
       assertThat(channel.isActive()).isTrue();
       assertThat(testing.spans()).hasSize(1);
