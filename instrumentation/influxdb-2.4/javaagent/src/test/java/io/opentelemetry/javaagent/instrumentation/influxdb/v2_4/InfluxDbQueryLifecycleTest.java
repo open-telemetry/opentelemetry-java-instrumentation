@@ -383,12 +383,13 @@ class InfluxDbQueryLifecycleTest {
         assertThat(nestedCallback.getCount()).isZero();
         assertThat(testing.spans()).isEmpty();
         assertNoDuration();
+        releaseOuter.countDown();
+        assertQuery(IOException.class.getName());
       } finally {
         releaseOuter.countDown();
         nestedExecutor.shutdownNow();
         outerExecutor.shutdownNow();
       }
-      assertQuery(IOException.class.getName());
     }
   }
 
