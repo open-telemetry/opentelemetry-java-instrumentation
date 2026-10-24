@@ -172,6 +172,9 @@ final class RocketMqProducerWrapper implements InvocationHandler {
   @Nullable
   private Object invokeSingle(Method method, Object[] args) throws Throwable {
     Message message = (Message) args[0];
+    if (message.getTopic() == null) {
+      return invokeDelegate(method, args);
+    }
     if (message.getProperties() == null) {
       MessageAccessor.setProperties(message, new HashMap<>());
     }

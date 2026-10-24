@@ -364,13 +364,16 @@ abstract class AbstractRocketMqSendHookTest {
       AtomicReference<SpanContext> preparationSpan)
       throws InterruptedException, MQBrokerException, MQClientException, RemotingException {
     Message message =
-        new Message("topic", "body".getBytes(UTF_8)) {
+        new Message() {
           @Override
           public byte[] getBody() {
             preparationSpan.set(Span.current().getSpanContext());
             return super.getBody();
           }
         };
+    message.setTopic("topic");
+    message.setBody("body".getBytes(UTF_8));
+    assertThat(message.getProperties()).isNull();
     MessageQueue queue = new MessageQueue("topic", "broker", 0);
     if (retry) {
       producer.send(singletonList(message));

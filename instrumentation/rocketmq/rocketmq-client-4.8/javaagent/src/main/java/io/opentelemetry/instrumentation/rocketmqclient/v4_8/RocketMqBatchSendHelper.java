@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
@@ -26,6 +27,7 @@ import org.apache.rocketmq.client.impl.CommunicationMode;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageAccessor;
 
 public final class RocketMqBatchSendHelper {
 
@@ -75,6 +77,9 @@ public final class RocketMqBatchSendHelper {
     state.request.setCommunicationMode(mode);
     state.operationInstrumenter = singleSendInstrumenter;
     if (singleSendInstrumenter.shouldStart(state.parentContext, state.request)) {
+      if (message.getProperties() == null) {
+        MessageAccessor.setProperties(message, new HashMap<>());
+      }
       state.sendContext = singleSendInstrumenter.start(state.parentContext, state.request);
     }
     BATCH_SEND_STATE.set(message, state);

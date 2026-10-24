@@ -18,12 +18,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -39,6 +41,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.apache.rocketmq.client.Validators;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
@@ -336,6 +339,98 @@ class RocketMqProducerWrapperTest {
     verify(producer).send(message);
     verify(producer).sendOneway(message);
     verify(producer).shutdown();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preservesMissingTopicValidation(boolean callback) throws Exception {
+    DefaultMQProducer delegate =
+        mock(
+            DefaultMQProducer.class,
+            invocation -> {
+              if (invocation.getMethod().getName().equals("getDefaultMQProducerImpl")) {
+                return implementation;
+              }
+              if (invocation.getMethod().getName().equals("send")
+                  && invocation.getArgument(0) instanceof Message) {
+                try {
+                  Validators.checkMessage(
+                      invocation.getArgument(0), (DefaultMQProducer) invocation.getMock());
+                } catch (MQClientException e) {
+                  for (Object argument : invocation.getArguments()) {
+                    if (argument instanceof SendCallback) {
+                      ((SendCallback) argument).onException(e);
+                      return null;
+                    }
+                  }
+                  throw e;
+                }
+              }
+              return null;
+            });
+    AtomicReference<Throwable> unwrappedCallbackError = new AtomicReference<>();
+    AtomicReference<Throwable> wrappedCallbackError = new AtomicReference<>();
+    Span parent = testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+    Context caller = Context.root().with(parent);
+
+    Throwable unwrappedError;
+    Throwable wrappedError;
+    try {
+      try (Scope ignored = caller.makeCurrent()) {
+        unwrappedError =
+            catchThrowable(() -> sendWithoutTopic(delegate, callback, unwrappedCallbackError));
+        MQProducer wrapped = RocketMqTelemetry.create(testing.getOpenTelemetry()).wrap(delegate);
+        wrappedError =
+            catchThrowable(() -> sendWithoutTopic(wrapped, callback, wrappedCallbackError));
+        assertThat(Context.current()).isSameAs(caller);
+        assertThat(Span.current().getSpanContext()).isEqualTo(parent.getSpanContext());
+      }
+    } finally {
+      parent.end();
+      delegate.shutdown();
+    }
+
+    if (callback) {
+      assertThat(unwrappedError).isNull();
+      assertThat(unwrappedCallbackError.get()).isInstanceOf(MQClientException.class);
+      assertThat(wrappedError).isNull();
+      assertThat(wrappedCallbackError.get())
+          .isExactlyInstanceOf(unwrappedCallbackError.get().getClass())
+          .hasMessage(unwrappedCallbackError.get().getMessage());
+    } else {
+      assertThat(unwrappedError).isInstanceOf(MQClientException.class);
+      assertThat(wrappedError)
+          .isExactlyInstanceOf(unwrappedError.getClass())
+          .hasMessage(unwrappedError.getMessage());
+      assertThat(unwrappedCallbackError.get()).isNull();
+      assertThat(wrappedCallbackError.get()).isNull();
+    }
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
+  }
+
+  private static void sendWithoutTopic(
+      MQProducer producer, boolean callback, AtomicReference<Throwable> callbackError)
+      throws Exception {
+    Message message = new Message();
+    message.setBody("body".getBytes(UTF_8));
+    if (callback) {
+      producer.send(
+          message,
+          new SendCallback() {
+            @Override
+            public void onSuccess(SendResult sendResult) {
+              callbackError.set(new AssertionError(sendResult));
+            }
+
+            @Override
+            public void onException(Throwable e) {
+              callbackError.set(e);
+            }
+          });
+    } else {
+      producer.send(message);
+    }
   }
 
   @Test
