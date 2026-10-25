@@ -44,6 +44,16 @@ class VertxRedisClientAttributesGetterTest {
   }
 
   @Test
+  void unclassifiedErrorFallsBackToExceptionClass() {
+    VertxRedisClientRequest request = request(null, false);
+    IllegalStateException error = new IllegalStateException();
+
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(IllegalStateException.class.getName());
+    assertThat(getter.getErrorType(request, null, null)).isNull();
+  }
+
+  @Test
   void capturedUnrepresentableTargetOmitsSelectedEndpoint() {
     VertxRedisClientRequest request = request(null, true);
 

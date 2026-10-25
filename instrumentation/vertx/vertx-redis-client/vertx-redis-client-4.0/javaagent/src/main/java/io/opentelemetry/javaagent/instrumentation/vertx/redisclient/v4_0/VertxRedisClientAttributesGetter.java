@@ -85,6 +85,10 @@ final class VertxRedisClientAttributesGetter
   @Nullable
   public String getErrorType(
       VertxRedisClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return VertxRedisClientError.getErrorCode(error);
+    String errorType = VertxRedisClientError.getErrorCode(error);
+    if (errorType != null) {
+      return errorType;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 }
