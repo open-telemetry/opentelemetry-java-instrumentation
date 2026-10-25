@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
@@ -26,6 +27,7 @@ public class SendCallbackData {
   private final Context parent;
   public final Context context;
   private final AtomicBoolean ended = new AtomicBoolean();
+  @Nullable private CompletableFuture<MessageId> sendFuture;
   public PulsarRequest request;
 
   public static SendCallbackData create(Context parent, Context context, PulsarRequest request) {
@@ -47,6 +49,10 @@ public class SendCallbackData {
     return context.with(KEY, this);
   }
 
+  public Context preparationContext() {
+    return parent.with(KEY, this);
+  }
+
   Context parentContext() {
     return parent;
   }
@@ -66,6 +72,9 @@ public class SendCallbackData {
   }
 
   public CompletableFuture<MessageId> wrap(CompletableFuture<MessageId> future) {
+    if (sendFuture != null) {
+      return sendFuture;
+    }
     CompletableFuture<MessageId> result = new CompletableFuture<>();
     future.whenComplete(
         (messageId, error) -> {
@@ -82,5 +91,44 @@ public class SendCallbackData {
           }
         });
     return result;
+  }
+
+  public CompletableFuture<MessageId> createSendFuture() {
+    CompletableFuture<MessageId> future = new SendFuture(this);
+    sendFuture = future;
+    return future;
+  }
+
+  private static class SendFuture extends CompletableFuture<MessageId> {
+    @Nullable private SendCallbackData data;
+
+    SendFuture(SendCallbackData data) {
+      this.data = data;
+    }
+
+    @Override
+    public boolean complete(MessageId messageId) {
+      return finish(messageId, null);
+    }
+
+    @Override
+    public boolean completeExceptionally(Throwable error) {
+      return finish(null, requireNonNull(error));
+    }
+
+    private boolean finish(@Nullable MessageId messageId, @Nullable Throwable error) {
+      SendCallbackData callbackData = data;
+      if (callbackData == null) {
+        return error == null ? super.complete(messageId) : super.completeExceptionally(error);
+      }
+      try {
+        callbackData.end(error);
+        try (Scope ignored = callbackData.parent.makeCurrent()) {
+          return error == null ? super.complete(messageId) : super.completeExceptionally(error);
+        }
+      } finally {
+        data = null;
+      }
+    }
   }
 }

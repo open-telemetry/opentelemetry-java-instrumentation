@@ -84,7 +84,7 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
       }
       Context context = producerInstrumenter().start(parent, request);
       SendCallbackData data = SendCallbackData.create(parent, context, request);
-      return new AdviceScope(data, data.invocationContext().makeCurrent());
+      return new AdviceScope(data, data.preparationContext().makeCurrent());
     }
 
     @AssignReturned.ToReturned
@@ -132,8 +132,8 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
         // An interceptor can replace the message after the span was started.
         if (message != data.request.getMessage()) {
           data.request = PulsarRequest.create(message, VirtualFieldStore.extract(producer));
-          PulsarSingletons.inject(data.context, data.request);
         }
+        PulsarSingletons.inject(data.context, data.request);
         VirtualFieldStore.inject(callback, data);
       }
     }

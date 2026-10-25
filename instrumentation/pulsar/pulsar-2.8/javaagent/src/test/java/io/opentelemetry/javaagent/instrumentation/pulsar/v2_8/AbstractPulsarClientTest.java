@@ -44,6 +44,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ import java.util.function.Supplier;
 import org.apache.pulsar.PulsarVersion;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.BatchMessageContainer;
+import org.apache.pulsar.client.api.BatcherBuilder;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.Message;
@@ -70,6 +72,7 @@ import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.interceptor.ProducerInterceptor;
+import org.apache.pulsar.client.impl.BatchMessageContainerBase;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.client.impl.ProducerBuilderImpl;
 import org.apache.pulsar.client.impl.ProducerImpl;
@@ -83,6 +86,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -291,10 +295,12 @@ abstract class AbstractPulsarClientTest {
                 span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER).hasNoParent()));
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
   @SuppressWarnings({"rawtypes", "unchecked"})
-  void replacementMessagePropagatesProducerContext() throws Exception {
-    String topic = "persistent://public/default/replacementMessagePropagatesProducerContext";
+  void replacementMessagePropagatesProducerContext(boolean replace) throws Exception {
+    String topic =
+        "persistent://public/default/replacementMessagePropagatesProducerContext-" + replace;
     ContextKey<String> key = ContextKey.named("pulsar-replacement-caller");
     AtomicReference<SpanContext> interceptorContext = new AtomicReference<>();
     AtomicReference<String> interceptorValue = new AtomicReference<>();
@@ -324,13 +330,28 @@ abstract class AbstractPulsarClientTest {
                     interceptorValue.set(Context.current().get(key));
                     interceptorBaggage.set(Baggage.current().getEntryValue("pulsar-test"));
                     producerTraceparent.set((String) message.getProperties().get("traceparent"));
-                    Message<?> copy =
-                        ((TypedMessageBuilderImpl<?>)
-                                producer
-                                    .newMessage()
-                                    .value(message.getValue())
-                                    .properties(message.getProperties()))
-                            .getMessage();
+                    Message<?> copy = message;
+                    if (replace) {
+                      copy =
+                          ((TypedMessageBuilderImpl<?>)
+                                  producer
+                                      .newMessage()
+                                      .value(message.getValue())
+                                      .properties(message.getProperties()))
+                              .getMessage();
+                    } else {
+                      ((MessageImpl<?>) copy).getMessageBuilder().clearProperties();
+                      ((MessageImpl<?>) copy)
+                          .getMessageBuilder()
+                          .addProperty()
+                          .setKey("traceparent")
+                          .setValue("00-0123456789abcdef0123456789abcdef-0123456789abcdef-01");
+                      ((MessageImpl<?>) copy)
+                          .getMessageBuilder()
+                          .addProperty()
+                          .setKey("baggage")
+                          .setValue("pulsar-test=stale");
+                    }
                     replacement.set(copy);
                     return copy;
                   }
@@ -376,8 +397,14 @@ abstract class AbstractPulsarClientTest {
                     .filter(property -> property.getKey().equals("baggage"))
                     .map(property -> property.getValue()))
         .containsExactly("pulsar-test=caller");
+    consumer =
+        client.newConsumer(Schema.STRING).topic(topic).subscriptionName("propagation").subscribe();
     producer.flush();
     future.get(1, MINUTES);
+    Message<String> received = consumer.receive(10, SECONDS);
+    assertThat(received).isNotNull();
+    assertThat(received.getProperty("traceparent")).isEqualTo(producerTraceparent.get());
+    assertThat(received.getProperty("baggage")).isEqualTo("pulsar-test=caller");
     assertThat(Span.fromContext(acknowledgementContext.get()).getSpanContext())
         .isEqualTo(Span.fromContext(caller).getSpanContext());
     assertThat(acknowledgementContext.get().get(key)).isEqualTo("caller");
@@ -390,7 +417,10 @@ abstract class AbstractPulsarClientTest {
                     span.hasName("send " + topic)
                         .hasKind(SpanKind.PRODUCER)
                         .hasSpanId(producerTraceparent.get().substring(36, 52))
-                        .hasNoParent()));
+                        .hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasKind(CLIENT).hasName("receive " + topic).hasNoParent()));
   }
 
   @ParameterizedTest
@@ -890,6 +920,82 @@ abstract class AbstractPulsarClientTest {
                 span -> span.hasName("parent").hasNoParent(),
                 span -> span.hasName("send " + topic).hasParent(trace.getSpan(0)),
                 span -> span.hasName("send " + nestedTopic).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void customBatcherUsesCallerContext() throws Exception {
+    String topic = "persistent://public/default/customBatcherUsesCallerContext";
+    String nestedTopic = topic + "-nested";
+    ContextKey<String> key = ContextKey.named("pulsar-batcher-caller");
+    List<Context> hookContexts = new ArrayList<>();
+    AtomicReference<CompletableFuture<MessageId>> nestedFuture = new AtomicReference<>();
+    producer2 = client.newProducer(Schema.STRING).topic(nestedTopic).enableBatching(false).create();
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .batchingMaxPublishDelay(1, HOURS)
+            .batcherBuilder(
+                () -> {
+                  BatchMessageContainer delegate = BatcherBuilder.DEFAULT.build();
+                  return (BatchMessageContainer)
+                      Proxy.newProxyInstance(
+                          BatchMessageContainerBase.class.getClassLoader(),
+                          new Class<?>[] {BatchMessageContainerBase.class},
+                          (proxy, method, arguments) -> {
+                            if (method.getName().equals("haveEnoughSpace")
+                                || method.getName().equals("add")) {
+                              hookContexts.add(Context.current());
+                            }
+                            if (method.getName().equals("add")) {
+                              testing.runWithSpan(
+                                  "batcher", () -> nestedFuture.set(producer2.sendAsync("nested")));
+                            }
+                            return method.invoke(delegate, arguments);
+                          });
+                })
+            .create();
+    AtomicReference<Context> caller = new AtomicReference<>();
+    Context context =
+        Baggage.builder()
+            .put("pulsar-test", "caller")
+            .build()
+            .storeInContext(Context.current().with(key, "caller"));
+    CompletableFuture<MessageId> future;
+    try (Scope ignored = context.makeCurrent()) {
+      future =
+          testing.runWithSpan(
+              "parent",
+              () -> {
+                caller.set(Context.current());
+                CompletableFuture<MessageId> send = producer.sendAsync("message");
+                assertThat(Span.current().getSpanContext())
+                    .isEqualTo(Span.fromContext(caller.get()).getSpanContext());
+                assertThat(Context.current().get(key)).isEqualTo("caller");
+                assertThat(Baggage.current().getEntryValue("pulsar-test")).isEqualTo("caller");
+                return send;
+              });
+    }
+    assertThat(hookContexts).hasSize(2);
+    for (Context hookContext : hookContexts) {
+      assertThat(Span.fromContext(hookContext).getSpanContext())
+          .isEqualTo(Span.fromContext(caller.get()).getSpanContext());
+      assertThat(hookContext.get(key)).isEqualTo("caller");
+      assertThat(Baggage.fromContext(hookContext).getEntryValue("pulsar-test")).isEqualTo("caller");
+    }
+    producer.flush();
+    future.get(1, MINUTES);
+    nestedFuture.get().get(1, MINUTES);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("send " + topic).hasParent(trace.getSpan(0)),
+                span -> span.hasName("batcher").hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("send " + nestedTopic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(2))));
   }
 
   @Test
