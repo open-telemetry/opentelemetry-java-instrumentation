@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationSingletons.attributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
@@ -38,12 +39,14 @@ class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.AddingSpanAttributes")))
-            // Avoid repeat extraction if method is already annotated with WithSpan
+            // Avoid repeat extraction if method is already annotated with WithSpan, directly or by
+            // overriding an annotated method
             .and(
                 not(
-                    isAnnotatedWith(
-                        named(
-                            "application.io.opentelemetry.instrumentation.annotations.WithSpan"))));
+                    hasSuperMethod(
+                        isAnnotatedWith(
+                            named(
+                                "application.io.opentelemetry.instrumentation.annotations.WithSpan")))));
     annotatedParametersMatcher =
         hasParameters(
             whereAny(

@@ -143,6 +143,21 @@ class WithSpanInstrumentationTest {
   void excludedMethod() throws InterruptedException {
     new TracedWithSpan().ignored();
 
+    Thread.sleep(500);
+    assertThat(testing.waitForTraces(0)).isEmpty();
+  }
+
+  static class ExtendedTracedWithSpan extends TracedWithSpan {
+    @Override
+    String ignored() {
+      return "extended";
+    }
+  }
+
+  @Test
+  void excludedMethodOverriddenInSubclass() throws InterruptedException {
+    new ExtendedTracedWithSpan().ignored();
+
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
     assertThat(testing.waitForTraces(0)).isEmpty();
   }

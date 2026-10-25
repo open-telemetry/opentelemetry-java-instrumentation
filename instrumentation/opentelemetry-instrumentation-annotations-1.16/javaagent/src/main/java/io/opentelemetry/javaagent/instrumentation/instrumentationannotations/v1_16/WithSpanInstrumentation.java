@@ -5,13 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationSingletons.instrumenterWithAttributes;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.KotlinCoroutineUtil.isKotlinSuspendMethod;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
+import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isNative;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.whereAny;
@@ -52,23 +56,27 @@ class WithSpanInstrumentation implements TypeInstrumentation {
                         "application.io.opentelemetry.instrumentation.annotations.SpanAttribute"))));
     // exclude all kotlin suspend methods, these are handled in kotlinx-coroutines instrumentation
     excludedMethodsMatcher =
-        AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());
+        AnnotationExcludedMethods.configureExcludedMethods(annotatedMethodMatcher)
+            .or(isKotlinSuspendMethod());
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return declaresMethod(annotatedMethodMatcher);
+    return declaresMethod(isMethod().and(not(isAbstract())).and(not(isNative())))
+        .and(hasSuperType(declaresMethod(annotatedMethodMatcher)));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     ElementMatcher.Junction<MethodDescription> tracedMethods =
-        annotatedMethodMatcher.and(not(excludedMethodsMatcher));
+        hasSuperMethod(annotatedMethodMatcher).and(not(excludedMethodsMatcher));
 
+    ElementMatcher.Junction<MethodDescription> hasAnnotatedParameters =
+        hasSuperMethod(annotatedParametersMatcher);
     ElementMatcher.Junction<MethodDescription> tracedMethodsWithParameters =
-        tracedMethods.and(annotatedParametersMatcher);
+        tracedMethods.and(hasAnnotatedParameters);
     ElementMatcher.Junction<MethodDescription> tracedMethodsWithoutParameters =
-        tracedMethods.and(not(annotatedParametersMatcher));
+        tracedMethods.and(not(hasAnnotatedParameters));
 
     transformer.applyAdviceToMethod(
         tracedMethodsWithoutParameters, getClass().getName() + "$WithSpanAdvice");
@@ -95,6 +103,9 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static WithSpanAdviceScope start(Method method) {
+        if (MethodAnnotationResolver.findWithSpanOrNull(method) == null) {
+          return null;
+        }
         Instrumenter<Method, Object> instrumenter = instrumenter();
         Context current = AnnotationSingletons.getContextForMethod(method);
         if (!instrumenter.shouldStart(current, method)) {
@@ -152,6 +163,9 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static WithSpanAttributesAdviceScope start(Method method, Object[] args) {
+        if (MethodAnnotationResolver.findWithSpanOrNull(method) == null) {
+          return null;
+        }
         Instrumenter<MethodRequest, Object> instrumenter = instrumenterWithAttributes();
         Context current = AnnotationSingletons.getContextForMethod(method);
         MethodRequest request = new MethodRequest(method, args);
