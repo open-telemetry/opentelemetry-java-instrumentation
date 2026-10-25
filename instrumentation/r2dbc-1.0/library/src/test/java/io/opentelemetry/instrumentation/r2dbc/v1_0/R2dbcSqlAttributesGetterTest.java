@@ -19,6 +19,7 @@ import io.r2dbc.proxy.test.MockConnectionInfo;
 import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.R2dbcBadGrammarException;
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,56 @@ class R2dbcSqlAttributesGetterTest {
         argumentSet("no SQLSTATE", new R2dbcBadGrammarException("test"), null),
         argumentSet("non-database failure", new IllegalStateException("test"), null),
         argumentSet("success", null, null));
+  }
+
+  @Test
+  void omitsPostgresqlLocalClosedConnectionCodeWithoutChangingErrorType()
+      throws ReflectiveOperationException {
+    DbExecution request =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
+    Throwable error = postgresqlConnectionClosedException();
+
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("08006");
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isNull();
+  }
+
+  @Test
+  void keepsPostgresqlServerConnectionFailureCode() throws ReflectiveOperationException {
+    DbExecution request =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
+    Throwable error = postgresqlServerConnectionFailure();
+
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("08006");
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("08006");
+  }
+
+  private static Throwable postgresqlConnectionClosedException()
+      throws ReflectiveOperationException {
+    Class<?> exceptionClass =
+        Class.forName(
+            "io.r2dbc.postgresql.client.ReactorNettyClient$PostgresConnectionClosedException");
+    Constructor<?> constructor = exceptionClass.getDeclaredConstructor(String.class);
+    constructor.setAccessible(true);
+    return (Throwable) constructor.newInstance("Connection closed");
+  }
+
+  private static Throwable postgresqlServerConnectionFailure() throws ReflectiveOperationException {
+    Class<?> errorDetailsClass = Class.forName("io.r2dbc.postgresql.api.ErrorDetails");
+    Object errorDetails =
+        errorDetailsClass
+            .getMethod("fromCodeAndMessage", String.class, String.class)
+            .invoke(null, "08006", "Server connection failure");
+    Class<?> exceptionClass =
+        Class.forName(
+            "io.r2dbc.postgresql.ExceptionFactory$PostgresqlNonTransientResourceException");
+    Constructor<?> constructor =
+        exceptionClass.getDeclaredConstructor(errorDetailsClass, String.class);
+    constructor.setAccessible(true);
+    return (Throwable) constructor.newInstance(errorDetails, "SELECT 1");
   }
 
   @Test

@@ -121,6 +121,30 @@ class JdbcAttributesGetterTest {
   }
 
   @Test
+  void omitsPostgresqlLocalClosedConnectionCodeWithoutChangingErrorType() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("This connection has been closed.", "08003");
+    error.setStackTrace(
+        new StackTraceElement[] {
+          new StackTraceElement("org.postgresql.jdbc.PgConnection", "checkClosed", null, -1)
+        });
+
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("08003");
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isNull();
+  }
+
+  @Test
+  void keepsPostgresqlServerConnectionDoesNotExistCode() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Server connection does not exist", "08003");
+
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("08003");
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("08003");
+  }
+
+  @Test
   void keepsH2ClosedObjectCodeForOtherDatabaseSystems() {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);

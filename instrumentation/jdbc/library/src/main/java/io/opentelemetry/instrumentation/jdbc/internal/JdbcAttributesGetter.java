@@ -24,6 +24,9 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   private static final String H2_DATABASE = "h2database";
   private static final int H2_OBJECT_CLOSED_ERROR_CODE = 90007;
+  private static final String POSTGRESQL_DATABASE = "postgresql";
+  private static final String POSTGRESQL_CONNECTION_DOES_NOT_EXIST = "08003";
+  private static final String POSTGRESQL_CONNECTION_CLASS = "org.postgresql.jdbc.PgConnection";
 
   @Override
   public String getDbSystemName(DbRequest request) {
@@ -75,7 +78,22 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
         return null;
       }
     }
+    if (POSTGRESQL_DATABASE.equals(getDbSystemName(request))
+        && error instanceof SQLException
+        && isPostgresqlConnectionClosed((SQLException) error)) {
+      return null;
+    }
     return getSqlExceptionCode(error);
+  }
+
+  private static boolean isPostgresqlConnectionClosed(SQLException error) {
+    if (!POSTGRESQL_CONNECTION_DOES_NOT_EXIST.equals(error.getSQLState())) {
+      return false;
+    }
+    StackTraceElement[] stackTrace = error.getStackTrace();
+    return stackTrace.length > 0
+        && POSTGRESQL_CONNECTION_CLASS.equals(stackTrace[0].getClassName())
+        && "checkClosed".equals(stackTrace[0].getMethodName());
   }
 
   @Nullable
