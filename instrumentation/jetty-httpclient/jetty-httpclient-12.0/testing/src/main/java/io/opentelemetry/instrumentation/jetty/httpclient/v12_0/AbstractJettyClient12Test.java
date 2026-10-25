@@ -446,6 +446,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
         }
       }
     }
+
     LifecycleListener listener = new LifecycleListener();
     request.onResponseHeaders(
         response -> responseContexts.put("registeredHeaders", Context.current()));
