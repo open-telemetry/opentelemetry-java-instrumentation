@@ -11,8 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import akka.actor.ActorSystem;
-import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.Context;
@@ -72,23 +70,19 @@ class HttpExtClientInstrumentation implements TypeInstrumentation {
         return setter().inject(request);
       }
 
-      public Future<HttpResponse> end(
-          @Nullable ActorSystem actorSystem,
+      public void end(
           HttpRequest request,
           @Nullable Future<HttpResponse> responseFuture,
           @Nullable Throwable throwable) {
 
         scope.close();
-        if (actorSystem != null) {
-          if (throwable == null) {
-            responseFuture.onComplete(
-                new OnCompleteHandler(context, request), actorSystem.dispatcher());
-            return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), Context.current());
-          } else {
-            instrumenter().end(context, request, null, throwable);
-          }
+        if (throwable != null) {
+          instrumenter().end(context, request, null, throwable);
+        } else if (responseFuture != null) {
+          responseFuture.onComplete(
+              new OnCompleteHandler(context, request), SpanExecutionContext.INSTANCE);
+          ResponseFutureCallbacks.mark(responseFuture);
         }
-        return responseFuture;
       }
     }
 
@@ -108,20 +102,17 @@ class HttpExtClientInstrumentation implements TypeInstrumentation {
       };
     }
 
-    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static Future<HttpResponse> methodExit(
-        @Advice.This HttpExt thiz,
+    public static void methodExit(
         @Advice.Return @Nullable Future<HttpResponse> responseFuture,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
       if (adviceScope == null) {
-        return responseFuture;
+        return;
       }
-      ActorSystem actorSystem = AkkaHttpClientUtil.getActorSystem(thiz);
-      return adviceScope.end(actorSystem, (HttpRequest) enterResult[1], responseFuture, throwable);
+      adviceScope.end((HttpRequest) enterResult[1], responseFuture, throwable);
     }
   }
 }

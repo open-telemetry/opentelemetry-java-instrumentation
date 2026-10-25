@@ -20,6 +20,9 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new HttpExtClientInstrumentation(), new PoolMasterActorInstrumentation());
+    return asList(
+        new HttpExtClientInstrumentation(),
+        new PoolMasterActorInstrumentation(),
+        new ResponseFutureInstrumentation());
   }
 }
